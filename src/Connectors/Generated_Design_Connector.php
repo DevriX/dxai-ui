@@ -105,7 +105,9 @@ final class Generated_Design_Connector {
 				// page with the design it has to be measured against, byte for
 				// byte — which is why it is not sanitize_file_name()'d.
 				'source_name'    => wp_strip_all_tags( wp_basename( (string) ( $file['name'] ?? '' ) ) ),
-				'static_html'    => $html_pages !== array() || str_contains( $stack, 'html' ),
+				// A static HTML design keeps the browser's own margins (blank-canvas.css), unless it runs Tailwind from
+				// its CDN: that page had Tailwind's preflight, so it gets the isolate reset like a Lovable build.
+				'static_html'    => ( $html_pages !== array() || str_contains( $stack, 'html' ) ) && ! preg_match( '#cdn\.tailwindcss\.com|@tailwindcss/browser#i', implode( ' ', $limited_sources ) ),
 			),
 			$assets,
 			array(

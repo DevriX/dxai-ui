@@ -19,6 +19,7 @@ final class Html_Zip_Pages {
 	 */
 	public static function from_sources( array $sources ): array {
 		$pages = array();
+		$files = array();
 		foreach ( $sources as $path => $code ) {
 			if ( ! is_string( $path ) || ! is_string( $code ) || $code === '' ) {
 				continue;
@@ -27,10 +28,20 @@ final class Html_Zip_Pages {
 			if ( ! preg_match( '/\.(?:dc\.)?html?$/i', $norm ) ) {
 				continue;
 			}
-			if ( preg_match( '#(?:^|/)(?:node_modules|\.git|partials?|includes?|components?)/#i', $norm ) ) {
+			// Folders that ship demo and documentation pages of fonts and libraries, not the site's pages.
+			if ( preg_match( '#(?:^|/)(?:node_modules|\.git|partials?|includes?|components?|assets?|fonts?|vendor|libs?|icons?|images?|img|docs?|documentation|examples?|demos?)/#i', $norm ) ) {
 				continue;
 			}
-			$slug = self::slug_from_path( $norm );
+			if ( ! self::is_page_file( $norm, $code ) ) {
+				continue;
+			}
+			$files[ $norm ] = $code;
+		}
+		// An archive that holds its site in one folder (acme-site/index.html, acme-site/about.html): that folder
+		// is the root, not a page path, so its index.html is the Home.
+		$root = self::common_folder( array_keys( $files ) );
+		foreach ( $files as $norm => $code ) {
+			$slug = self::slug_from_path( $root !== '' ? substr( $norm, strlen( $root ) ) : $norm );
 			$pages[] = array(
 				'slug'  => $slug,
 				'title' => self::title_from( $norm, $code ),
@@ -50,6 +61,12 @@ final class Html_Zip_Pages {
 				$bh = ( $b['slug'] ?? '' ) === '/' ? 0 : 1;
 				if ( $ah !== $bh ) {
 					return $ah - $bh;
+				}
+				// For the Home, index.html before home/default/main.html (a web server serves index.html).
+				$ai = preg_match( '#(?:^|/)index\.html?$#i', (string) ( $a['file'] ?? '' ) ) ? 0 : 1;
+				$bi = preg_match( '#(?:^|/)index\.html?$#i', (string) ( $b['file'] ?? '' ) ) ? 0 : 1;
+				if ( $ah === 0 && $ai !== $bi ) {
+					return $ai - $bi;
 				}
 				$ad = substr_count( (string) ( $a['file'] ?? '' ), '/' );
 				$bd = substr_count( (string) ( $b['file'] ?? '' ), '/' );
@@ -74,6 +91,41 @@ final class Html_Zip_Pages {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Whether an HTML file is a page of the site, not an error page, a search-console verification file, a
+	 * backup or a fragment: those were each published as a page of their own.
+	 */
+	private static function is_page_file( string $path, string $code ): bool {
+		$base = strtolower( (string) pathinfo( $path, PATHINFO_FILENAME ) );
+		if ( preg_match( '/^(?:40[0-9]|50[0-9]|error|offline|maintenance|google[0-9a-f]{6,}|yandex_[0-9a-f]+|bingsiteauth|_.*|.*[-_.](?:old|bak|backup|copy|tmp))$/', $base ) ) {
+			return false;
+		}
+		// A fragment (no document and no body) is a partial, included by other pages.
+		if ( ! preg_match( '/<(?:html|body)\b/i', $code ) ) {
+			return false;
+		}
+
+		return trim( wp_strip_all_tags( (string) preg_replace( '/<(script|style)\b[^>]*>.*?<\/\1>/is', '', $code ) ) ) !== '';
+	}
+
+	/**
+	 * The one folder every file is in (`acme-site/`), '' when they do not all share one.
+	 *
+	 * @param array<int, string> $paths
+	 */
+	private static function common_folder( array $paths ): string {
+		$first = null;
+		foreach ( $paths as $path ) {
+			$seg = str_contains( $path, '/' ) ? strstr( $path, '/', true ) . '/' : '';
+			if ( $seg === '' || ( $first !== null && $seg !== $first ) ) {
+				return '';
+			}
+			$first = $seg;
+		}
+
+		return (string) $first;
 	}
 
 	/**
