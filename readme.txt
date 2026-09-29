@@ -1,7 +1,7 @@
 === DXAI-UI ===
 Contributors: devrix
 Tags: gutenberg, figma, lovable, ai, blocks, patterns
-Requires at least: 6.5
+Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
 Stable tag: 0.4.0-beta.8
@@ -28,7 +28,7 @@ Anthropic Claude, OpenAI, xAI Grok, and DeepSeek. API keys are encrypted at rest
 = Requirements =
 
 * PHP 8.2 or newer with the dom, libxml, mbstring and zip extensions. Without zip, archives are read through the PclZip bundled with WordPress, which needs zlib and a filesystem WordPress writes to directly. Activation stops and names any extension that is missing.
-* WordPress 6.5 or newer. A block theme is not required: converted pages render through the plugin's own "DXAI Blank" page template, which works under classic themes too. Each import asks what to do with the site's header and footer: install the design's (the header is built in Appearance > Menus, the footer in Appearance > Widgets) or keep the site's (the design's header and footer stay template parts on its pages, and Menus and Widgets are not touched). The automatic choice keeps them on a classic theme, which draws its own header and footer from those menus and widget areas, for a one-page import, and when another imported design's header and footer are the site's.
+* WordPress 6.6 or newer. A block theme is not required: converted pages render through the plugin's own "DXAI Blank" page template, which works under classic themes too. Each import asks what to do with the site's header and footer: install the design's (the header is built in Appearance > Menus, the footer in Appearance > Widgets) or keep the site's (the design's header and footer stay template parts on its pages, and Menus and Widgets are not touched). The automatic choice keeps them on a classic theme, which draws its own header and footer from those menus and widget areas, for a one-page import, and when another imported design's header and footer are the site's.
 * A writable wp-content/uploads folder. Archives are unpacked in the system temp directory when PHP can write there (the `dxai_ui_zip_work_root` filter moves it), otherwise in uploads/dxai-ui behind an access-deny rule, and the work folder is removed when the request ends.
 * Uploads are limited by PHP's upload_max_filesize and post_max_size; an archive over upload_max_filesize is reported together with the limit. Archive ceilings (entries, size per file, total size) can be changed with the `dxai_ui_zip_limits` filter.
 * Outbound HTTPS from the server, to fetch the remote images and fonts a design references and to reach the AI engine you choose.

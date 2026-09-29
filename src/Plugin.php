@@ -117,9 +117,10 @@ final class Plugin {
 		}
 
 		global $wp_version;
-		// The oldest WordPress the plugin supports, as its header and readme say.
-		if ( version_compare( (string) $wp_version, '6.5', '<' ) ) {
-			self::refuse_activation( esc_html__( 'DXAI-UI requires WordPress 6.5 or higher.', 'dxai-ui' ), $network_wide );
+		// The oldest WordPress the plugin supports, as its header and readme say: 6.6 registers the
+		// react-jsx-runtime script the admin screens are built against.
+		if ( version_compare( (string) $wp_version, '6.6', '<' ) ) {
+			self::refuse_activation( esc_html__( 'DXAI-UI requires WordPress 6.6 or higher.', 'dxai-ui' ), $network_wide );
 			return;
 		}
 
