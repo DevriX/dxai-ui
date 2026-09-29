@@ -600,6 +600,28 @@ CSS;
 		$len    = strlen( $css );
 		$i      = 0;
 		while ( $i < $len ) {
+			/*
+			 * A comment or a string is copied whole: one that mentions @import or @font-face is not an at-rule.
+			 * Read as one, its text went to the global part and left an unclosed comment in front of the scoped
+			 * CSS, which commented out every design rule after it.
+			 */
+			if ( $css[ $i ] === '/' && ( $css[ $i + 1 ] ?? '' ) === '*' ) {
+				$end     = strpos( $css, '*/', $i + 2 );
+				$end     = $end === false ? $len : $end + 2;
+				$scoped .= substr( $css, $i, $end - $i );
+				$i       = $end;
+				continue;
+			}
+			if ( $css[ $i ] === '"' || $css[ $i ] === "'" ) {
+				$q = $css[ $i ];
+				$j = $i + 1;
+				while ( $j < $len && $css[ $j ] !== $q ) {
+					$j += $css[ $j ] === '\\' ? 2 : 1;
+				}
+				$scoped .= substr( $css, $i, min( $len, $j + 1 ) - $i );
+				$i       = min( $len, $j + 1 );
+				continue;
+			}
 			if ( preg_match( '/\G@(?:import|font-face)\b/i', $css, $m, 0, $i ) ) {
 				$start = $i;
 				$i    += strlen( $m[0] );

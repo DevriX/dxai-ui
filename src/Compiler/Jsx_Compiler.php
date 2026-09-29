@@ -1562,6 +1562,10 @@ final class Jsx_Compiler {
 		 * childless component on the page was silently dropped.
 		 */
 		$prev_driven  = $this->driven;
+		// And the scroll-driven states and derived booleans (`scrolled`, `solid = scrolled || open`): a stateful
+		// child inside a sticky header reset them, and the header never turned solid on scroll.
+		$prev_scroll  = $this->scroll_states;
+		$prev_derived = $this->derived;
 
 		$scope   = array_merge( $this->globals, $props );
 		// `$props` as well as the merged scope: the rest element must collect the
@@ -1593,6 +1597,8 @@ final class Jsx_Compiler {
 		$this->toggles    = $prev_toggles;
 		$this->state_init = $prev_init;
 		$this->driven     = $prev_driven;
+		$this->scroll_states = $prev_scroll;
+		$this->derived       = $prev_derived;
 		--$this->depth;
 		return $html;
 	}
