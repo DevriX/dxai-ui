@@ -714,6 +714,48 @@ final class Token_Styles {
 	 *
 	 * @return array<string, string>
 	 */
+	/**
+	 * A declaration list with its text colours on their own channel: in a foreground property (`color`, `fill`,
+	 * `stroke` and the like) each `var(--dxai-T)` becomes `var(--dxai-T--fg,var(--dxai-T))`.
+	 *
+	 * The design has one token per colour, but on a theme a token can follow one theme colour as a background and
+	 * keep its own as text (Theme_Binding: Semper's yellow buttons turn the theme's orange, while its yellow
+	 * headings on dark bands stay yellow — orange there is unreadable). With `--dxai-T--fg` unset the value is
+	 * exactly what it was, so this is applied to every rule written, bound or not. Already channelled references
+	 * are left alone.
+	 */
+	public static function fg_channel( string $decls ): string {
+		if ( ! str_contains( $decls, 'var(--dxai-' ) ) {
+			return $decls;
+		}
+
+		return (string) preg_replace_callback(
+			'/(^|[;{\s])((?:-webkit-text-fill-|text-decoration-|text-emphasis-|caret-|column-rule-)?color|fill|stroke)(\s*:\s*)([^;{}]*)/i',
+			static fn( array $m ): string => $m[1] . $m[2] . $m[3] . (string) preg_replace( '/(?<!--fg,)var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/i', 'var(--dxai-$1--fg,var(--dxai-$1))', $m[4] ),
+			$decls
+		);
+	}
+
+	/** The marker a channelled design sheet starts with (channelize_css()). */
+	public const CHANNELS_MARK = '/* dxai-ui: channels v1 */';
+
+	/**
+	 * A design stylesheet with fg_channel() applied to every rule body, once: a sheet that starts with
+	 * CHANNELS_MARK is returned as it is. The token definitions (`--dxai-*:` declarations) are not foreground
+	 * properties and are never touched.
+	 */
+	public static function channelize_css( string $css ): string {
+		if ( str_starts_with( ltrim( $css ), self::CHANNELS_MARK ) || ! str_contains( $css, 'var(--dxai-' ) ) {
+			return $css;
+		}
+
+		return self::CHANNELS_MARK . "\n" . (string) preg_replace_callback(
+			'/\{([^{}]*)\}/',
+			static fn( array $m ): string => '{' . self::fg_channel( $m[1] ) . '}',
+			$css
+		);
+	}
+
 	private static function role_slugs( array $palette, array $roles ): array {
 		$out = array();
 		foreach ( array_keys( Design_Palette::ROLES ) as $role ) {

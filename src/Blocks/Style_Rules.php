@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 5;
+	private const CACHE_SCHEMA = 6;
 
 	/** How long a computed stylesheet may sit unread. Validated on every read. */
 	private const CACHE_TTL = WEEK_IN_SECONDS;
@@ -907,7 +907,7 @@ final class Style_Rules {
 		if ( $presets !== array() && ! Token_Styles::is_brand( $brand_of ) ) {
 			$scope = self::preset_scope( $post_id );
 			foreach ( array_keys( $presets ) as $slug ) {
-				$out .= '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . ') !important}';
+				$out .= '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . ')) !important}';
 			}
 		}
 
@@ -918,7 +918,9 @@ final class Style_Rules {
 	 * One class's rule, with inline-style precedence (see the class comment).
 	 */
 	public static function rule( string $class, string $css ): string {
-		$css = self::safe( $css );
+		// Text colours on their own channel (Token_Styles::fg_channel(), Theme_Binding): the stored attribute and
+		// its hash are untouched, only the rule written from it.
+		$css = self::safe( Token_Styles::fg_channel( $css ) );
 		if ( $css === '' || preg_match( '/^dxs-[a-z0-9]+$/', $class ) !== 1 ) {
 			return '';
 		}

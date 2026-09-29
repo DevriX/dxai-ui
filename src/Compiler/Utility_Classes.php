@@ -142,7 +142,7 @@ final class Utility_Classes {
 	 * The plugin's own classes (family()) — part of version(), so a change to
 	 * them invalidates every cached stylesheet built with the old ones.
 	 */
-	private const LAYER_VERSION = 'l3';
+	private const LAYER_VERSION = 'l4';
 
 	/**
 	 * The class Style_Rules adds, on the front end, to a block that carries
@@ -713,7 +713,8 @@ final class Utility_Classes {
 				$family   = $own[ $item[3] ];
 				$selector = self::scoped( '.' . $item[3], $item[3], $editor );
 				$media    = '';
-				$decls    = $family['prop'] . ':' . $family['value'] . ' !important';
+				// A text colour on its own channel (Token_Styles::fg_channel()).
+				$decls    = Token_Styles::fg_channel( $family['prop'] . ':' . $family['value'] ) . ' !important';
 			}
 			if ( $selector === '' ) {
 				continue;
