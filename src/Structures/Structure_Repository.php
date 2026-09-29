@@ -686,6 +686,8 @@ final class Structure_Repository {
 		);
 		// The design's colours fitted to the active theme's, from its first view (Theme_Binding).
 		\DXAI_UI\Theme\Theme_Binding::after_import( (int) $page_id );
+		// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
+		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
 
 		/*
 		 * Audit every page this import wrote, here rather than in the REST
@@ -1789,6 +1791,7 @@ final class Structure_Repository {
 		\DXAI_UI\Compiler\Style_Hoister::hoist_import( $crawled, self::preset_slugs( $page_id ), array_values( array_filter( $chrome_markup ) ) );
 		// The pages built from the old site count for the design's colour use too.
 		\DXAI_UI\Theme\Theme_Binding::after_import( $page_id );
+		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $page_id );
 
 		$auditor = new Import_Audit();
 		foreach ( $crawled as $audit_id ) {

@@ -27,6 +27,7 @@ final class Rest_Registrar {
 				( new Transfer_Controller() )->register_routes();
 				( new Site_Pages_Controller() )->register_routes();
 				( new Theme_Colors_Controller() )->register_routes();
+				( new Native_Blocks_Controller() )->register_routes();
 			}
 		);
 	}

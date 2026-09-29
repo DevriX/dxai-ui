@@ -30,6 +30,7 @@ final class Transfer_Admin {
 		add_action( 'admin_post_' . self::ACTION, array( $this, 'download' ) );
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
 			Transfer_Cli::register();
+			\DXAI_UI\Blocks\Native\Native_Cli::register();
 		}
 	}
 

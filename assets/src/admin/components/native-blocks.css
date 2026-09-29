@@ -1,0 +1,18 @@
+.dxai-native-blocks__list {
+	list-style: none;
+	margin: 12px 0;
+	padding: 0;
+	max-width: 520px;
+}
+
+.dxai-native-blocks__list li {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 8px 0;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.dxai-native-blocks__list strong {
+	font-variant-numeric: tabular-nums;
+}
