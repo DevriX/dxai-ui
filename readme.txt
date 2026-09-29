@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.9
+Stable tag: 0.4.0-beta.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.10 =
+* Theme colours: on a theme with colour settings (american-restoration and any theme whose palette WordPress knows), a design's colours follow the theme's. Brand, accent and ink take the theme colour with the same role; neutrals only where the theme has practically the same one; tints and shades follow relatively.
+* The binding is applied when a page is shown, as references to the theme's presets, so a later change in the theme's colour settings reaches every page with nothing rewritten. It works for designs imported earlier (bound on the next admin visit), for pages built from the old site, for sections copied into ordinary pages, and with the plugin deactivated or deleted.
+* Contrast is checked on every request: a text colour that would not read on its backgrounds keeps the design's own, or turns black or white. No new WCAG AA failure is served.
+* Library > Theme colours: what follows what, what changed noticeably (marked for review), per-colour choices, and a switch to keep the design's own colours.
+* On a block theme whose chrome the plugin owns, designs keep the existing behaviour (their colours become the theme's presets).
 
 = 0.4.0-beta.9 =
 * Blocks copied from a converted page into an ordinary page keep the design's look (styles, fonts, colours, interactions), also with the plugin deactivated or deleted. The theme's CSS no longer reaches into those sections, and pages imported by earlier versions work too.
