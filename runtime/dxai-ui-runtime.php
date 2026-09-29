@@ -77,6 +77,11 @@ add_action(
 					return;
 				}
 				$message = (string) ( $error['message'] ?? '' );
+				// A request that ran out of time or memory hit the host's limits, not a fault in this code: it does
+				// not stand the runtime down (one slow request would leave every converted page unstyled for an hour).
+				if ( preg_match( '/^(Maximum execution time|Allowed memory size)/', $message ) === 1 ) {
+					return;
+				}
 				if ( ! str_starts_with( wp_normalize_path( (string) ( $error['file'] ?? '' ) ), $dir ) && ! str_contains( str_replace( '\\', '/', $message ), '#0 ' . $dir ) ) {
 					return;
 				}
