@@ -83,6 +83,35 @@ final class Live_Page_Fetcher {
 			}
 
 			$body = (string) wp_remote_retrieve_body( $response );
+			// The site asks to slow down: the crawl waits (Crawl_Politeness), it does not retry at once.
+			if ( $code === 429 ) {
+				$retry = (int) wp_remote_retrieve_header( $response, 'retry-after' );
+
+				return new \WP_Error(
+					'dxai_ui_live_rate_limited',
+					sprintf(
+						/* translators: %s: URL */
+						__( '%s asked to slow down (HTTP 429).', 'dxai-ui' ),
+						$url
+					),
+					array(
+						'status'      => 502,
+						'retry_after' => $retry > 0 ? min( 600, $retry ) : 60,
+					)
+				);
+			}
+			// A bot-protection page, however it is served: the crawl stops (Site_From_Menu), it is never worked around.
+			if ( ( $code === 403 || $code === 503 ) && ( (string) wp_remote_retrieve_header( $response, 'cf-mitigated' ) !== '' || Html_Main::is_challenge( $body ) ) ) {
+				return new \WP_Error(
+					'dxai_ui_live_blocked',
+					sprintf(
+						/* translators: %s: URL */
+						__( 'Blocked by bot protection on %s — the page cannot be scraped from the server.', 'dxai-ui' ),
+						$url
+					),
+					array( 'status' => 502 )
+				);
+			}
 			if ( $code < 200 || $code >= 300 || $body === '' ) {
 				return new \WP_Error(
 					'dxai_ui_live',

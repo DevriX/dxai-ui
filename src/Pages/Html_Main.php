@@ -16,7 +16,8 @@ namespace DXAI_UI\Pages;
 final class Html_Main {
 
 	/** Class/id tokens that mark site chrome (header, footer, cookies), not page content. */
-	private const CHROME_CLASS = '/\b(elementor-location-(header|footer)|site-header|site-footer|site-navigation|main-navigation|navbar|nav-bar|cookie|cmplz|gdpr|consent|screen-reader-text|skip-link|visually-hidden|sr-only|wpadminbar|announcement-bar|top-bar|utility-bar)\b/i';
+	// elementor-hidden-desktop: Elementor's mobile-only copy of a widget the desktop version already shows.
+	private const CHROME_CLASS = '/\b(elementor-hidden-desktop|elementor-location-(header|footer)|site-header|site-footer|site-navigation|main-navigation|navbar|nav-bar|cookie|cmplz|gdpr|consent|screen-reader-text|skip-link|visually-hidden|sr-only|wpadminbar|announcement-bar|top-bar|utility-bar)\b/i';
 
 	private const CHROME_ID = '/^(masthead|colophon|site-header|site-footer|site-navigation|cookie|wpadminbar|header|footer|nav|navigation|menu-primary)$/i';
 
@@ -25,14 +26,16 @@ final class Html_Main {
 	 */
 	public static function is_challenge( string $html ): bool {
 		$sample = strtolower( substr( $html, 0, 12000 ) );
+		// Markers only a challenge page carries. Phrases such as "just a moment" count only as the page's title:
+		// in body copy they are ordinary words, and a false match would stop a crawl.
+		if ( str_contains( $sample, 'cf-browser-verification' ) || str_contains( $sample, 'cf_chl_' ) || str_contains( $sample, '/cdn-cgi/challenge-platform/' ) || str_contains( $sample, 'id="challenge-form"' ) ) {
+			return true;
+		}
+		if ( preg_match( '#<title[^>]*>\s*(just a moment|attention required|checking your browser|access denied|please wait)[^<]*</title>#i', $sample ) !== 1 ) {
+			return false;
+		}
 
-		return str_contains( $sample, 'cf-browser-verification' )
-			|| str_contains( $sample, 'cf-challenge' )
-			|| str_contains( $sample, 'attention required' )
-			|| str_contains( $sample, 'just a moment' )
-			|| str_contains( $sample, 'checking your browser' )
-			|| str_contains( $sample, 'enable javascript and cookies' )
-			|| ( str_contains( $sample, 'challenge-platform' ) && str_contains( $sample, 'cloudflare' ) );
+		return str_contains( $sample, 'cloudflare' ) || str_contains( $sample, 'captcha' ) || str_contains( $sample, 'sucuri' ) || str_contains( $sample, 'incapsula' ) || strlen( trim( wp_strip_all_tags( $html ) ) ) < 600;
 	}
 
 	/**
@@ -98,23 +101,39 @@ final class Html_Main {
 			'//*[contains(concat(" ", normalize-space(@class), " "), " page-content ")]',
 			'//article[not(ancestor::article)]',
 		);
+		$body = $dom->getElementsByTagName( 'body' )->item( 0 );
+		if ( ! $body instanceof \DOMElement ) {
+			return null;
+		}
+		// These are guesses, not landmarks: one counts only when it holds a good share of the page's words. On an
+		// Elementor single template the first <article> is a related-post card of ~200 characters beside a ~6,000
+		// character post; taking it lost the whole page.
+		$words = strlen( (string) preg_replace( '/\s+/', ' ', $body->textContent ?? '' ) );
 		foreach ( $queries as $query ) {
 			$list = $xpath->query( $query );
 			if ( ! $list instanceof \DOMNodeList || $list->length < 1 ) {
 				continue;
 			}
-			$node = $list->item( 0 );
-			if ( $node instanceof \DOMElement && ! self::is_chrome_element( $node ) ) {
-				return self::unwrap( $node );
+			$pick = null;
+			$most = 0;
+			foreach ( $list as $node ) {
+				if ( ! $node instanceof \DOMElement || self::is_chrome_element( $node ) ) {
+					continue;
+				}
+				$len = strlen( (string) preg_replace( '/\s+/', ' ', $node->textContent ?? '' ) );
+				if ( $len > $most ) {
+					$most = $len;
+					$pick = $node;
+				}
+			}
+			if ( $pick instanceof \DOMElement && $most >= 0.4 * $words ) {
+				return self::unwrap( $pick );
 			}
 		}
 
-		$body = $dom->getElementsByTagName( 'body' )->item( 0 );
-		if ( ! $body instanceof \DOMElement ) {
-			return null;
-		}
-
-		return self::best_descendant( $body );
+		// No landmark: the whole body. Callers strip the header, footer and navigation (strip_chrome(), and
+		// Content_Extractor's ignored()); taking only its densest child dropped every other section.
+		return $body;
 	}
 
 	/**
@@ -298,56 +317,6 @@ final class Html_Main {
 		}
 
 		return $main;
-	}
-
-	/**
-	 * Score descendants of body for content density.
-	 */
-	private static function best_descendant( \DOMElement $body ): ?\DOMElement {
-		$best     = null;
-		$best_score = 0;
-		$queue    = array( $body );
-		$depth    = 0;
-
-		while ( $queue !== array() && $depth < 4 ) {
-			$next = array();
-			foreach ( $queue as $node ) {
-				foreach ( $node->childNodes as $child ) {
-					if ( ! $child instanceof \DOMElement ) {
-						continue;
-					}
-					$tag = strtolower( $child->tagName );
-					if ( in_array( $tag, array( 'script', 'style', 'noscript', 'svg' ), true ) ) {
-						continue;
-					}
-					if ( self::is_chrome_element( $child ) ) {
-						continue;
-					}
-					$score = self::content_score( $child );
-					if ( $score > $best_score ) {
-						$best_score = $score;
-						$best       = $child;
-					}
-					$next[] = $child;
-				}
-			}
-			$queue = $next;
-			++$depth;
-		}
-
-		return $best;
-	}
-
-	private static function content_score( \DOMElement $el ): int {
-		$text = strlen( trim( preg_replace( '/\s+/', ' ', $el->textContent ?? '' ) ?? '' ) );
-		$imgs = $el->getElementsByTagName( 'img' )->length;
-		$heads = 0;
-		foreach ( array( 'h1', 'h2', 'h3' ) as $h ) {
-			$heads += $el->getElementsByTagName( $h )->length;
-		}
-		$paras = $el->getElementsByTagName( 'p' )->length;
-
-		return $text + ( $imgs * 80 ) + ( $heads * 120 ) + ( $paras * 40 );
 	}
 
 	private static function looks_like_content( \DOMElement $el ): bool {

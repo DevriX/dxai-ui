@@ -438,9 +438,56 @@ final class Site_From_Menu {
 				return $this->next_page( $run );
 			}
 
+			// What the old site asks of crawlers (Crawl_Politeness): a path robots.txt disallows is not fetched, and
+			// requests are spaced by its Crawl-delay. A wait longer than one step may take yields; the next step
+			// comes back to this same page.
+			$robots = \DXAI_UI\Http\Crawl_Politeness::rules( $url );
+			if ( ! \DXAI_UI\Http\Crawl_Politeness::allowed( $url, $robots ) ) {
+				$run['summary']['pages_skipped'][] = array(
+					'label'  => $label,
+					'path'   => $path,
+					'reason' => 'robots',
+				);
+
+				return $this->next_page( $run );
+			}
+			if ( ! \DXAI_UI\Http\Crawl_Politeness::wait( $url, $robots['delay'] ) ) {
+				return true;
+			}
+
 			// Pinned to the design's own origin: a menu href — or a redirect it
 			// answers with — that leads anywhere else is refused, not crawled.
 			$fetched = ( new Live_Page_Fetcher() )->fetch( $url, 45, $origin );
+			$wait    = is_wp_error( $fetched ) && $fetched->get_error_code() === 'dxai_ui_live_rate_limited' ? (float) ( $fetched->get_error_data()['retry_after'] ?? 60 ) : 0.0;
+			\DXAI_UI\Http\Crawl_Politeness::mark( $url, max( $robots['delay'], $wait ) );
+			// Asked to slow down: this page is tried again after the wait, up to three times.
+			if ( $wait > 0 && (int) ( $run['slowed'] ?? 0 ) < 3 ) {
+				$run['slowed'] = (int) ( $run['slowed'] ?? 0 ) + 1;
+
+				return true;
+			}
+			$run['slowed'] = 0;
+			// Bot protection: the crawl stops here. The rest of the pages are reported, never fetched around it.
+			if ( is_wp_error( $fetched ) && $fetched->get_error_code() === 'dxai_ui_live_blocked' ) {
+				$run['summary']['crawl_errors'][] = array(
+					'label'   => $label,
+					'url'     => $url,
+					'message' => $fetched->get_error_message() . ' ' . __( 'The page builder stopped: the old site does not allow automated requests. Allow this server in its firewall, or build the remaining pages by hand.', 'dxai-ui' ),
+				);
+				$total = count( $candidates );
+				for ( $rest = $index + 1; $rest < $total; $rest++ ) {
+					$run['summary']['pages_skipped'][] = array(
+						'label'  => sanitize_text_field( (string) ( $candidates[ $rest ]['label'] ?? '' ) ),
+						'path'   => (string) ( $candidates[ $rest ]['path'] ?? '' ),
+						'reason' => 'blocked',
+					);
+				}
+				$run['index']   = $total;
+				$run['phase']   = 'fetch';
+				$run['current'] = array();
+
+				return false;
+			}
 			if ( is_wp_error( $fetched ) ) {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
