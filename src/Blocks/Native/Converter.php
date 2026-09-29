@@ -59,6 +59,19 @@ abstract class Converter {
 	abstract public function convert( array $block, ?array $parent = null ): ?array;
 
 	/**
+	 * Runs of adjacent siblings this converter turns into ONE block (several calls to action into one Buttons block).
+	 * Each: [ 'start' => first index, 'end' => last index, 'block' => the block that replaces them ].
+	 *
+	 * @param array<int, array<string, mixed>>  $siblings The blocks of one container, already converted one by one.
+	 * @param array<string, mixed>|null         $parent   The attributes of that container.
+	 * @param array<int, string|null>|null      $content  The container's innerContent (null at the top level of a post).
+	 * @return array<int, array{start:int, end:int, block:array<string, mixed>}>
+	 */
+	public function runs( array $siblings, ?array $parent, ?array $content = null ): array {
+		return array();
+	}
+
+	/**
 	 * What the converters may need to know about the content they are working on: [ 'home' => the design's Home, 'post' => the post ].
 	 *
 	 * @var array<string, int>

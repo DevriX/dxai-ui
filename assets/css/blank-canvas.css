@@ -43,6 +43,14 @@ body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(
 	max-width: none;
 }
 
+/* A Buttons block's row. Its `is-layout-flex` class is core's, and the rule that makes it flex is in the global
+   styles this canvas does not load; the gap and the wrapping the block chose are written next to the block. */
+body.dxai-ui-blank .dxai-ui :where(.wp-block-buttons.is-layout-flex) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
 body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(.is-layout-flow) > * {
 	margin-block-start: 0;
 	margin-block-end: 0;

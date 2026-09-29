@@ -909,6 +909,8 @@ final class Design_Blocks {
 		// ordinary one. The blocks' own CSS is also previewed from their
 		// attribute.
 		Style_Rules::attach( 'dxai-ui-rules-editor', Style_Rules::css_for_post( $post_id ) );
+		// The theme's button styles, for the buttons that wear them.
+		\DXAI_UI\Theme\Theme_Buttons::enqueue();
 
 		// The design this page shows: its own, or the one its copied blocks come from (Design_Attach).
 		$source = \DXAI_UI\Structures\Design_Attach::source_for( $post_id );

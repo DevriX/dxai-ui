@@ -87,6 +87,14 @@
 	max-width: none;
 }
 
+/* A Buttons block's row (see blank-canvas.css). */
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(.wp-block-buttons.is-layout-flex),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(.wp-block-buttons.is-layout-flex) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
 /* Not the root block list's children: on the front end the page's top-level
    blocks are children of the scope <div> itself, which this rule never
    reaches. */
@@ -96,14 +104,16 @@
 	margin-block-end: 0;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image) {
+/* A figure marked dxai-part-img is a native image the plugin converted (Native_Blocks): the design's classes and CSS
+   are written for the image inside it (Style_Rules::PARTS), so none of the figure rules apply to it. */
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image:not(.dxai-part-img)),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img)) {
 	display: block;
 	line-height: 0;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image > img),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image > img) {
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image:not(.dxai-part-img) > img),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img) > img) {
 	display: block;
 	width: 100%;
 	height: 100%;

@@ -42,10 +42,12 @@ final class Native_Blocks {
 	 */
 	public static function converters(): array {
 		$all = array(
+			new Button(),
 			new Link_Box(),
 			new Group(),
 			new Image(),
 			new Span(),
+			new Section_Names(),
 		);
 		/**
 		 * Converters, in the order they run.
@@ -77,6 +79,7 @@ final class Native_Blocks {
 		foreach ( $blocks as $i => $block ) {
 			$blocks[ $i ] = self::convert_block( $block, $converters, $counts );
 		}
+		$blocks = self::top_runs( $blocks, $converters, $counts );
 
 		return array(
 			'content' => $counts === array() ? $content : serialize_blocks( $blocks ),
@@ -94,6 +97,7 @@ final class Native_Blocks {
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
 			$block['innerBlocks'][ $i ] = self::convert_block( (array) $child, $converters, $counts, is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array() );
 		}
+		$block = self::runs_in( $block, $converters, $counts );
 		foreach ( $converters as $converter ) {
 			if ( ! in_array( $block['blockName'] ?? '', $converter->sources(), true ) ) {
 				continue;
@@ -107,6 +111,107 @@ final class Native_Blocks {
 		}
 
 		return $block;
+	}
+
+	/**
+	 * The runs of adjacent inner blocks that a converter makes one block (Converter::runs()), inside a container.
+	 *
+	 * @param array<string, mixed>  $block
+	 * @param array<int, Converter> $converters
+	 * @param array<string, int>    $counts
+	 * @return array<string, mixed>
+	 */
+	private static function runs_in( array $block, array $converters, array &$counts ): array {
+		if ( ( $block['innerBlocks'] ?? array() ) === array() ) {
+			return $block;
+		}
+		foreach ( $converters as $converter ) {
+			$children = array_values( (array) $block['innerBlocks'] );
+			$runs     = $converter->runs( $children, is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array(), is_array( $block['innerContent'] ?? null ) ? $block['innerContent'] : null );
+			usort( $runs, static fn( $a, $b ) => $b['start'] <=> $a['start'] );
+			foreach ( $runs as $run ) {
+				$block = self::replace_range( $block, (int) $run['start'], (int) $run['end'], (array) $run['block'] );
+				$counts[ $converter->id() ] = ( $counts[ $converter->id() ] ?? 0 ) + ( (int) $run['end'] - (int) $run['start'] + 1 );
+			}
+		}
+
+		return $block;
+	}
+
+	/**
+	 * Inner blocks $start..$end replaced by one block, with the container's innerContent to match.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<string, mixed> $new
+	 * @return array<string, mixed>
+	 */
+	private static function replace_range( array $block, int $start, int $end, array $new ): array {
+		$inner = array_values( (array) $block['innerBlocks'] );
+		array_splice( $inner, $start, $end - $start + 1, array( $new ) );
+		$content = array();
+		$k       = -1;
+		foreach ( (array) ( $block['innerContent'] ?? array() ) as $chunk ) {
+			if ( $chunk === null ) {
+				++$k;
+				if ( $k > $start && $k <= $end ) {
+					continue;
+				}
+				$content[] = null;
+				continue;
+			}
+			// The whitespace between the blocks that became one goes with them.
+			if ( $k >= $start && $k < $end ) {
+				continue;
+			}
+			$content[] = $chunk;
+		}
+		$block['innerBlocks']  = $inner;
+		$block['innerContent'] = $content;
+		$block['innerHTML']    = implode( '', array_filter( $content, 'is_string' ) );
+
+		return $block;
+	}
+
+	/**
+	 * The same for the top level of a post: real blocks with only blank freeform between them.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks
+	 * @param array<int, Converter>            $converters
+	 * @param array<string, int>               $counts
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function top_runs( array $blocks, array $converters, array &$counts ): array {
+		foreach ( $converters as $converter ) {
+			$real = array();
+			foreach ( $blocks as $i => $b ) {
+				if ( ! empty( $b['blockName'] ) ) {
+					$real[] = $i;
+				}
+			}
+			$runs = $converter->runs( array_map( static fn( $i ) => $blocks[ $i ], $real ), null, null );
+			usort( $runs, static fn( $a, $b ) => $b['start'] <=> $a['start'] );
+			foreach ( $runs as $run ) {
+				// Only blank freeform between the run's blocks (the loose text of a page is not a separator).
+				$from = $real[ (int) $run['start'] ];
+				$to   = $real[ (int) $run['end'] ];
+				foreach ( array_slice( $blocks, $from, $to - $from + 1, true ) as $b ) {
+					if ( empty( $b['blockName'] ) && trim( (string) ( $b['innerHTML'] ?? '' ) ) !== '' ) {
+						continue 2;
+					}
+				}
+				array_splice( $blocks, $from, $to - $from + 1, array( (array) $run['block'] ) );
+				$counts[ $converter->id() ] = ( $counts[ $converter->id() ] ?? 0 ) + ( (int) $run['end'] - (int) $run['start'] + 1 );
+				$blocks                     = array_values( $blocks );
+				$real                       = array();
+				foreach ( $blocks as $i => $b ) {
+					if ( ! empty( $b['blockName'] ) ) {
+						$real[] = $i;
+					}
+				}
+			}
+		}
+
+		return $blocks;
 	}
 
 	/** Whether a design's pages carry native blocks from this. */

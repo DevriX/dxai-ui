@@ -370,6 +370,12 @@ final class Assets {
 		$content = (string) get_post_field( 'post_content', $id );
 		// Template-part refs expand at render — scan linked dxai parts for icons.
 		$content .= $this->template_part_markup( $content );
+		// Buttons in the theme's button style: its rules, on the pages where the theme's stylesheet does not reach them
+		// (a design page drops it, and a page holding a design's sections keeps it out of them). Anywhere else the theme's
+		// own sheet is there, and a second copy would only weigh the page.
+		if ( ( \DXAI_UI\Theme\Theme_Compat::is_converted_page() || \DXAI_UI\Theme\Theme_Fence::applies() ) && \DXAI_UI\Theme\Theme_Buttons::used_in( $content ) ) {
+			\DXAI_UI\Theme\Theme_Buttons::enqueue();
+		}
 		/*
 		 * Both locations are built from the current upload URL, whichever form
 		 * they were stored in, and versioned by the resolved file's mtime. The
