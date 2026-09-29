@@ -563,6 +563,9 @@ final class Site_Pages {
 			);
 		}
 
+		// The new pages count for the design's colour use (Theme_Binding).
+		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id );
+
 		return array(
 			'mode'          => self::MODE,
 			'pages_created' => $created,

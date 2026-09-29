@@ -531,6 +531,16 @@ final class Theme_Binding {
 	}
 
 	/**
+	 * After an import or a page build: the design's binding for the current theme, proposed again from its colour
+	 * use now, with the mode and the per-colour choices a person made kept. Nothing when the theme has no palette.
+	 */
+	public static function after_import( int $home ): void {
+		if ( $home > 0 && Theme_Palette::current()['has_palette'] && is_array( get_post_meta( $home, Token_Styles::META, true ) ) ) {
+			self::apply( $home );
+		}
+	}
+
+	/**
 	 * Designs on this site without a binding for the current theme get one: one design per admin request, in the
 	 * background of normal work, so an update needs no step of its own.
 	 */
