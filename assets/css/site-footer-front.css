@@ -1,0 +1,145 @@
+/*
+ * The site footer rendered outside its own design's page (Site_Footer_Block::frame()):
+ *
+ *   <div class="dxai-ui-site-footer alignfull dxai-ui-site-footer--static dxai-ui-static">   (or --dynamic)
+ *     <div class="wp-block-group alignfull dxai-ui dxai-ui--{footer scope} … is-layout-flow …">
+ *       <footer>…</footer>
+ *
+ * The inner element is the scope element the footer's own page gives it, so
+ * the design's stylesheet reaches the footer as there. What else differs on
+ * another page is the page-wide CSS this plugin prints for a converted page,
+ * which is keyed on the PAGE's kind of design: frontend-isolate.css for a
+ * design that ran under Tailwind, blank-canvas.css's margin resets unless
+ * `body.dxai-ui-static`. The rules below undo the ones the footer's own page
+ * did not have and supply the ones it had, each at the specificity of the
+ * rule it stands for or one step past it, and always below the design's own
+ * rules — `.dxai-ui.dxai-ui--{id} …`, (0,2,0) and up — so the design still
+ * decides everything it declares.
+ */
+
+/* No margin of its own: a theme's flow layout would put its block gap above
+   it (`:root :where(.is-layout-constrained) > *`, (0,1,0), printed after this
+   sheet by a block theme). A theme's `.has-global-padding > .alignfull`
+   still pulls it out to the page's edges. */
+div.dxai-ui-site-footer {
+	margin-block: 0;
+}
+
+/*
+ * A Claude Design footer on the page of a design that ran under Tailwind.
+ * That page loads frontend-isolate.css, whose `.dxai-ui, .dxai-ui *
+ * { box-sizing: border-box }` (0,1,0) and `.dxai-ui img, .dxai-ui video
+ * { max-width: 100% }` (0,1,1) reach every `.dxai-ui` element on the page —
+ * this one too. Its own page never loads that sheet (every padded width in
+ * such a design is content-box). The initial values back, at (0,1,1) and
+ * (0,1,2).
+ */
+div.dxai-ui-site-footer--static :where(.dxai-ui, .dxai-ui *) {
+	box-sizing: content-box;
+}
+
+div.dxai-ui-site-footer--static :where(.dxai-ui) :is(img, video) {
+	max-width: none;
+}
+
+/*
+ * A Tailwind footer on a page that does not load frontend-isolate.css (a
+ * Claude Design page, an ordinary page): that sheet's two rules, for the
+ * footer only, at their own specificity.
+ */
+:where(.dxai-ui-site-footer--dynamic) .dxai-ui,
+:where(.dxai-ui-site-footer--dynamic) .dxai-ui * {
+	box-sizing: border-box;
+}
+
+:where(.dxai-ui-site-footer--dynamic) .dxai-ui :is(img, video) {
+	max-width: 100%;
+}
+
+/*
+ * A Tailwind footer on a Claude Design page (`body.dxai-ui-static`): the
+ * block-margin resets blank-canvas.css gives a Tailwind design's page and
+ * withholds from a static one — so this footer had them on its own page —
+ * at the same specificity, (0,2,1) and (0,2,2). A static footer on a
+ * Tailwind page is kept out of the originals by its own `dxai-ui-static`.
+ */
+body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui :where(
+	.wp-block-group,
+	.wp-block-image,
+	.wp-block-list,
+	.wp-block-heading,
+	.wp-block-paragraph,
+	.wp-block-html,
+	.wp-block-quote,
+	.wp-block-table
+) {
+	margin: 0;
+	max-width: none;
+}
+
+body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui :where(.is-layout-flow) > * {
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+
+body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui p {
+	margin: 0;
+}
+
+/*
+ * On a page the theme renders (not the plugin's blank canvas), the theme's
+ * global styles are there too: its body type, inherited into the footer,
+ * and its element styles and flow-layout gaps on the footer's own elements.
+ * A converted page renders without them (Blank_Template), so on the
+ * footer's own page it inherits the browser's defaults and its headings,
+ * links and paragraphs keep the browser's own type and margins wherever the
+ * design sets none. The same here: the inherited type starts from the
+ * initial values, and on the footer's elements the theme's declarations —
+ * type, colour, margins (`:root :where(.wp-block-list li)` is 0.5rem) — are
+ * rolled back to the browser's (`revert`). (0,1,1): one step past the
+ * theme's global styles — `:root :where(h3)`, `:root :where(.is-layout-flow)
+ * > *`, (0,1,0) — which a block theme prints after this sheet (measured on
+ * Twenty Twenty-Five: the flow gap, 1.2rem, won the tie on 25 of the
+ * footer's 67 elements); below the design's rules and its preset colour
+ * classes (important).
+ *
+ * The inherited type is also reset where the frame stands inside another
+ * design's scope element: the editor canvas of a page of another design,
+ * whose <body> carries that design's scope classes, or the footer moved up
+ * the page, where lift() leaves it (measured in the canvas: the other
+ * design's `line-height: 1.5` made the footer 51px taller).
+ */
+:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer,
+.dxai-ui div.dxai-ui-site-footer {
+	color: initial;
+	font-family: initial;
+	font-size: medium;
+	font-style: normal;
+	font-weight: normal;
+	line-height: normal;
+	letter-spacing: normal;
+	word-spacing: normal;
+	text-align: start;
+	text-indent: 0;
+	text-transform: none;
+	text-shadow: none;
+}
+
+:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, b, i, small, figure, figcaption, blockquote, cite, address) {
+	font-family: revert;
+	font-size: revert;
+	font-weight: revert;
+	line-height: revert;
+	letter-spacing: revert;
+	text-transform: revert;
+	text-decoration: revert;
+	text-wrap: revert;
+	color: revert;
+	margin-block-start: revert;
+	margin-block-end: revert;
+}
+
+:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer :where(.is-layout-flow, .is-layout-constrained) > * {
+	margin-block-start: revert;
+	margin-block-end: revert;
+}

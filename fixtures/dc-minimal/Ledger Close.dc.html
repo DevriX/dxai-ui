@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Northwind Ledger — Close the books in three days</title>
+<meta name="description" content="Month-end close with every reconciliation owned by name and due before the period opens.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#12211c;background:#fbfaf7;-webkit-font-smoothing:antialiased}
+  a{color:#2f6b50;text-decoration:none}
+  h1,h2,h3{margin:0}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,textarea{font-family:inherit}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,107,80,.5)}100%{box-shadow:0 0 0 12px rgba(47,107,80,0)}}
+</style>
+</helmet>
+<div>
+<header style="{{ headerStyle }}">
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:{{ navHeight }}">
+    <a href="#top" style="display:flex;align-items:center;gap:10px;font-weight:700;color:#12211c"><img src="assets/logo.png" alt="Northwind Ledger" style="height:{{ logoHeight }};width:auto;display:block">Northwind Ledger</a>
+    <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+      <nav style="display:flex;gap:6px;align-items:center">
+        <div style="position:relative">
+          <button onClick="{{ onProductClick }}" style="{{ navLink }}">Product ▾</button>
+          <sc-if value="{{ productOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="{{ dropStyle }}">
+              <a href="#close" style="{{ dropItem }}">Close calendar</a>
+              <a href="#recon" style="{{ dropItem }}">Reconciliation</a>
+              <a href="#faq" style="{{ dropItemLast }}">Flux commentary</a>
+            </div>
+          </sc-if>
+        </div>
+        <div style="position:relative">
+          <button onClick="{{ onPricingClick }}" style="{{ navLink }}">Pricing ▾</button>
+          <sc-if value="{{ pricingOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="{{ dropStyle }}">
+              <a href="#book" style="{{ dropItem }}">Per entity</a>
+              <a href="#book" style="{{ dropItemLast }}">Per group</a>
+            </div>
+          </sc-if>
+        </div>
+        <a href="#faq" style="{{ navLink }}">FAQ</a>
+        <a href="#book" style="{{ ctaStyle }}">Book a parallel close</a>
+      </nav>
+    </sc-if>
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleMenu }}" aria-label="Open menu" style="display:flex;flex-direction:column;gap:5px;padding:8px">
+        <span style="width:24px;height:3px;background:#12211c;border-radius:2px"></span>
+        <span style="width:24px;height:3px;background:#12211c;border-radius:2px"></span>
+        <span style="width:24px;height:3px;background:#12211c;border-radius:2px"></span>
+      </button>
+    </sc-if>
+  </div>
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMenu }}" style="{{ overlayStyle }}"></div>
+    <div style="{{ drawerStyle }}">
+      <button onClick="{{ closeMenu }}" aria-label="Close menu" style="align-self:flex-end;font-size:28px;padding:4px 10px">×</button>
+      <a href="#close" onClick="{{ closeMenu }}" style="{{ mLink }}">Close calendar</a>
+      <a href="#recon" onClick="{{ closeMenu }}" style="{{ mLink }}">Reconciliation</a>
+      <a href="#faq" onClick="{{ closeMenu }}" style="{{ mLinkLast }}">FAQ</a>
+    </div>
+  </sc-if>
+</header>
+
+<section id="top" style="{{ heroStyle }}">
+  <div style="{{ heroInner }}">
+    <p style="margin:0 0 14px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#5a6b62">Month-end, owned by name</p>
+    <h1 style="font-size:clamp(34px,5vw,60px);line-height:1.05;letter-spacing:-.02em;max-width:720px">Close the books in three days, not three weeks</h1>
+    <p style="margin:20px 0 0;font-size:18px;line-height:1.6;max-width:560px;color:#3d4b44">Every reconciliation has an owner and a due date before the period opens, so the review meeting starts from the exceptions.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px">
+      <a href="#book" style="{{ primaryBtn }}">{{ iconCheck }}Book a parallel close</a>
+      <a href="#faq" style="{{ secondaryBtn }}">See how it works</a>
+    </div>
+    <div style="display:grid;grid-template-columns:{{ statCols }};gap:20px;margin-top:40px">
+      <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
+        <div style="padding:16px 18px;border:1px solid #dfe6e1;border-radius:10px;background:#fff">
+          <div style="font-size:26px;font-weight:700">{{ st.value }}</div>
+          <div style="font-size:13px;color:#5a6b62">{{ st.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="close" style="background:#fff;padding:clamp(48px,7vw,88px) 24px">
+  <div style="max-width:1100px;margin:0 auto">
+    <h2 style="font-size:clamp(26px,3.4vw,40px)">The close calendar</h2>
+    <div style="display:flex;gap:8px;margin-top:22px">
+      <button onClick="{{ goDay1 }}" style="{{ tab1Style }}">Day 1</button>
+      <button onClick="{{ goDay2 }}" style="{{ tab2Style }}">Day 2</button>
+      <button onClick="{{ goDay3 }}" style="{{ tab3Style }}">Day 3</button>
+    </div>
+    <p style="margin:12px 0 0;font-size:13px;color:#5a6b62">{{ dayLabel }}</p>
+    <sc-if value="{{ isDay1 }}" hint-placeholder-val="{{ true }}"><ul style="margin:18px 0 0;padding:0 0 0 18px;line-height:1.7"><li>Cut-off posted, subledgers locked</li><li>Accruals templated with their reversal dates</li></ul></sc-if>
+    <sc-if value="{{ isDay2 }}" hint-placeholder-val="{{ false }}"><ul style="margin:18px 0 0;padding:0 0 0 18px;line-height:1.7"><li>Bank and card feeds matched to the subledger</li><li>Intercompany proved on both sides</li></ul></sc-if>
+    <sc-if value="{{ isDay3 }}" hint-placeholder-val="{{ false }}"><ul style="margin:18px 0 0;padding:0 0 0 18px;line-height:1.7"><li>Flux commentary attached to the balance that moved</li><li>Review pack issued from the exceptions</li></ul></sc-if>
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <button onClick="{{ back }}" style="{{ secondaryBtn }}">← Previous day</button>
+      <button onClick="{{ next }}" style="{{ primaryBtn }}">Next day →</button>
+    </div>
+    <div style="height:6px;background:#eef2ef;border-radius:3px;margin-top:16px;max-width:360px"><div style="height:100%;background:#2f6b50;border-radius:3px;transition:width .3s;width:{{ dayWidth }}"></div></div>
+  </div>
+</section>
+
+<section id="recon" style="background:#f3f6f4;padding:clamp(48px,7vw,88px) 24px">
+  <div style="max-width:1100px;margin:0 auto">
+    <h2 style="font-size:clamp(26px,3.4vw,40px)">Entities in scope</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px">
+      <sc-for list="{{ entities }}" as="e" hint-placeholder-count="4">
+        <span style="padding:7px 12px;border:1px solid #cfdad3;border-radius:999px;background:#fff;font-size:14px">{{ e }}</span>
+      </sc-for>
+      <sc-if value="{{ entitiesExpanded }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ moreEntities }}" as="e" hint-placeholder-count="3">
+          <span style="padding:7px 12px;border:1px solid #cfdad3;border-radius:999px;background:#fff;font-size:14px">{{ e }}</span>
+        </sc-for>
+      </sc-if>
+    </div>
+    <button onClick="{{ toggleEntities }}" style="margin-top:16px;color:#2f6b50;font-weight:600;padding:0">{{ entitiesLabel }}</button>
+    <a href="#book" style="display:inline-flex;align-items:center;gap:8px;margin-top:24px;margin-left:18px;padding:12px 18px;border:1px solid #cfdad3;border-radius:8px;background:#fff;color:#12211c;transition:transform .2s,box-shadow .2s" style-hover="transform:translateY(-3px);box-shadow:0 12px 28px rgba(18,33,28,.12)">{{ iconArrow }}Talk to a controller</a>
+  </div>
+</section>
+
+<section id="faq" style="background:#fff;padding:clamp(48px,7vw,88px) 24px">
+  <div style="max-width:760px;margin:0 auto">
+    <h2 style="font-size:clamp(26px,3.4vw,40px)">Questions</h2>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3">
+        <div style="border:1px solid #dfe6e1;border-radius:10px;overflow:hidden;background:#fff">
+          <button onClick="{{ f.toggle }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;text-align:left;font-weight:600;font-size:16px;color:#12211c">
+            <span>{{ f.q }}</span>
+            <span style="display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:50%;background:{{ f.iconBg }};color:{{ f.iconColor }};font-size:18px;flex:0 0 auto;transition:.2s">{{ f.sign }}</span>
+          </button>
+          <div style="{{ f.answerStyle }}"><div style="padding:0 20px 18px;color:#3d4b44;line-height:1.6">{{ f.a }}</div></div>
+        </div>
+      </sc-for>
+    </div>
+    <details data-faq-first="true" style="margin-top:20px;border:1px solid #dfe6e1;border-radius:10px;padding:0 18px">
+      <summary style="padding:14px 0;font-weight:600;cursor:pointer;list-style:none">Which ledgers are supported?</summary>
+      <p style="margin:0;padding:0 0 16px;color:#3d4b44;line-height:1.6">NetSuite, Xero and QuickBooks Online, through read-only connections.</p>
+    </details>
+  </div>
+</section>
+
+<section id="book" style="background:#12211c;color:#fff;padding:clamp(48px,7vw,88px) 24px">
+  <div style="max-width:760px;margin:0 auto">
+    <h2 style="font-size:clamp(26px,3.4vw,40px)">Book a parallel close</h2>
+    <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+      <label for="bk-email" style="{{ fieldLabel }}">Work email</label>
+      <input id="bk-email" type="email" value="{{ fEmail }}" onInput="{{ setEmail }}" placeholder="you@company.com" style="{{ fieldInput }}"/>
+      <label for="bk-notes" style="{{ fieldLabel }}">What moved last quarter?</label>
+      <textarea id="bk-notes" onInput="{{ setNotes }}" placeholder="Balances that moved more than the threshold" style="{{ fieldInput }};height:96px;resize:vertical"></textarea>
+      <button onClick="{{ submit }}" style="{{ primaryBtn }};margin-top:18px;animation:pulse 2.4s infinite">Request the parallel close</button>
+    </sc-if>
+    <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:22px;border:1px solid rgba(255,255,255,.2);border-radius:10px;margin-top:18px">
+        <div style="display:inline-flex;width:28px;height:28px;color:#8ed0ad">{{ iconCheck }}</div>
+        <p style="margin:10px 0 0;font-size:18px;font-weight:600">Request received</p>
+        <p style="margin:6px 0 0;color:#c9d6cf">A controller replies within one business day.</p>
+      </div>
+    </sc-if>
+  </div>
+</section>
+
+<footer style="background:#0c1612;color:#c9d6cf;padding:40px 24px {{ footerPadBottom }}">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:{{ footerCols }};gap:28px">
+    <div>
+      <img src="assets/logo.png" alt="Northwind Ledger" style="height:40px;margin-bottom:12px">
+      <p style="font-size:14px;line-height:1.6;max-width:300px;margin:0 0 8px">Close the books in three days, owned by name.</p>
+      <p style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700">Since 2019</p>
+    </div>
+    <div>
+      <div style="color:#fff;font-weight:700;font-size:14px;text-transform:uppercase;margin-bottom:12px">Product</div>
+      <div style="display:flex;flex-direction:column;gap:9px"><a href="#close" style="color:#c9d6cf;font-size:14px">Close calendar</a><a href="#recon" style="color:#c9d6cf;font-size:14px">Reconciliation</a></div>
+    </div>
+    <div>
+      <div style="color:#fff;font-weight:700;font-size:14px;text-transform:uppercase;margin-bottom:12px">Company</div>
+      <div style="display:flex;flex-direction:column;gap:9px"><a href="#faq" style="color:#c9d6cf;font-size:14px">FAQ</a><a href="#book" style="color:#c9d6cf;font-size:14px">Contact</a></div>
+    </div>
+  </div>
+</footer>
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;left:0;right:0;bottom:0;z-index:60;background:#2f6b50;padding:12px 16px;display:flex;justify-content:center"><a href="#book" style="color:#fff;font-weight:700">Book a parallel close</a></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { isMobile: false, scrolled: false, menuOpen: false, dropdown: null, day: 1, openFaq: 0, entitiesExpanded: false, submitted: false, form: { email: '', notes: '' } };
+
+  componentDidMount() {
+    this._mq = window.matchMedia('(max-width: 900px)');
+    const onMq = () => this.setState({ isMobile: this._mq.matches, menuOpen: false, dropdown: null });
+    onMq(); this._mq.addEventListener('change', onMq); this._onMq = onMq;
+    this._onScroll = () => { const s = window.scrollY > 24; if (s !== this.state.scrolled) this.setState({ scrolled: s }); };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onDoc = () => { if (this.state.dropdown) this.setState({ dropdown: null }); };
+    document.addEventListener('click', this._onDoc);
+    const first = document.querySelector('details[data-faq-first]');
+    if (first) first.open = true;
+  }
+  componentWillUnmount() {
+    this._mq && this._mq.removeEventListener('change', this._onMq);
+    window.removeEventListener('scroll', this._onScroll);
+    document.removeEventListener('click', this._onDoc);
+  }
+
+  ico(d) {
+    const paths = Array.isArray(d) ? d : [d];
+    return React.createElement('svg', { viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': true },
+      paths.map((p, i) => React.createElement('path', { key: i, d: p })));
+  }
+  _faqData() {
+    return [
+      { q: 'Does this replace our general ledger?', a: 'No. It sits beside NetSuite, Xero or QuickBooks and reads from them.' },
+      { q: 'How long does onboarding take?', a: 'One close cycle: we run in parallel with your current process for a month.' },
+      { q: 'Who owns the exceptions?', a: 'The account owner named on the calendar, with the controller as the reviewer.' }
+    ];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const navLink = 'color:#12211c;font-weight:600;font-size:14.5px;padding:10px 13px;border-radius:6px;display:inline-flex;align-items:center;gap:5px';
+    const dropStyle = 'position:absolute;top:calc(100% + 6px);left:0;background:#fff;border-radius:8px;box-shadow:0 18px 44px rgba(18,33,28,.18);padding:8px;min-width:220px;border-top:3px solid #2f6b50;z-index:60';
+    const dropItem = 'display:block;padding:10px 12px;color:#12211c;font-weight:600;font-size:14px;border-radius:4px;border-bottom:1px solid #f0f3f1';
+    const dropItemLast = dropItem.replace(';border-bottom:1px solid #f0f3f1', '');
+    const tab = (n) => 'padding:9px 16px;border-radius:8px;font-weight:600;font-size:14px;border:1px solid ' + (s.day === n ? '#2f6b50' : '#cfdad3') + ';background:' + (s.day === n ? '#2f6b50' : '#fff') + ';color:' + (s.day === n ? '#fff' : '#12211c');
+    const btn = 'display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:13px 20px;border-radius:8px;white-space:nowrap';
+    return {
+      isMobile: s.isMobile,
+      isDesktop: !s.isMobile,
+      productOpen: s.dropdown === 'product',
+      pricingOpen: s.dropdown === 'pricing',
+      navHeight: s.isMobile ? '64px' : '84px',
+      logoHeight: s.isMobile ? '28px' : '36px',
+      headerStyle: (s.isMobile ? 'position:relative' : 'position:sticky;top:0') + ';z-index:50;' + (s.scrolled ? 'background:#fff;box-shadow:0 4px 20px rgba(18,33,28,.08)' : 'background:rgba(251,250,247,.9)') + ';transition:background .3s',
+      navLink, dropStyle, dropItem, dropItemLast,
+      ctaStyle: 'margin-left:8px;background:#2f6b50;color:#fff;font-weight:700;font-size:14.5px;padding:10px 16px;border-radius:8px',
+      overlayStyle: (s.menuOpen ? 'opacity:1;pointer-events:auto' : 'opacity:0;pointer-events:none') + ';position:fixed;inset:0;background:rgba(18,33,28,.5);z-index:70;transition:opacity .3s',
+      drawerStyle: 'position:fixed;top:0;left:0;bottom:0;width:min(300px,82vw);background:#fff;z-index:80;padding:20px;display:flex;flex-direction:column;transition:transform .3s;transform:translateX(' + (s.menuOpen ? '0' : '-105%') + ')',
+      mLink: 'padding:14px 6px;font-weight:700;font-size:17px;color:#12211c;border-bottom:1px solid #eef2ef',
+      mLinkLast: 'padding:14px 6px;font-weight:700;font-size:17px;color:#12211c',
+      heroStyle: 'position:relative;min-height:' + (s.isMobile ? '520px' : '68vh') + ';display:flex;align-items:center;background:#fbfaf7',
+      heroInner: 'max-width:1100px;margin:0 auto;padding:' + (s.isMobile ? '48px 22px' : '64px 24px') + ';width:100%',
+      statCols: s.isMobile ? '1fr 1fr' : 'repeat(3, minmax(0, 1fr))',
+      stats: [ { value: '3 days', label: 'Median close' }, { value: '140+', label: 'Entities reconciled' }, { value: '0', label: 'Late adjustments last quarter' } ],
+      primaryBtn: btn + ';background:#2f6b50;color:#fff',
+      secondaryBtn: btn + ';background:#fff;color:#12211c;border:1px solid #cfdad3',
+      iconCheck: this.ico('M20 6 9 17l-5-5'),
+      iconArrow: this.ico(['M5 12h14', 'm12 5 7 7-7 7']),
+      tab1Style: tab(1), tab2Style: tab(2), tab3Style: tab(3),
+      isDay1: s.day === 1, isDay2: s.day === 2, isDay3: s.day === 3,
+      dayLabel: 'Day ' + s.day + ' of 3',
+      dayWidth: s.day === 1 ? '33%' : s.day === 2 ? '66%' : '100%',
+      goDay1: () => this.setState({ day: 1 }),
+      goDay2: () => this.setState({ day: 2 }),
+      goDay3: () => this.setState({ day: 3 }),
+      next: () => this.setState({ day: Math.min(3, s.day + 1) }),
+      back: () => this.setState({ day: Math.max(1, s.day - 1) }),
+      entities: ['Northwind UK', 'Northwind US', 'Northwind Group', 'Contoso Ltd'],
+      moreEntities: ['Fabrikam', 'Tailspin', 'Wide World Importers'],
+      entitiesExpanded: s.entitiesExpanded,
+      entitiesLabel: s.entitiesExpanded ? '− Show fewer' : '+ 3 more entities',
+      toggleEntities: () => this.setState({ entitiesExpanded: !s.entitiesExpanded }),
+      faqs: this._faqData().map((f, i) => {
+        const open = s.openFaq === i;
+        return { q: f.q, a: f.a, sign: open ? '−' : '+', iconBg: open ? '#2f6b50' : '#eef2ef', iconColor: open ? '#fff' : '#2f6b50',
+          answerStyle: 'overflow:hidden;transition:max-height .3s ease,opacity .25s;max-height:' + (open ? '300px' : '0') + ';opacity:' + (open ? '1' : '0'),
+          toggle: () => this.setState({ openFaq: open ? -1 : i }) };
+      }),
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      onProductClick: (e) => { e.stopPropagation(); this.setState({ dropdown: s.dropdown === 'product' ? null : 'product' }); },
+      onPricingClick: (e) => { e.stopPropagation(); this.setState({ dropdown: s.dropdown === 'pricing' ? null : 'pricing' }); },
+      notSubmitted: !s.submitted,
+      submitted: s.submitted,
+      fEmail: s.form.email,
+      fNotes: s.form.notes,
+      setEmail: (e) => this.setState({ form: { ...s.form, email: e.target.value } }),
+      setNotes: (e) => this.setState({ form: { ...s.form, notes: e.target.value } }),
+      submit: () => this.setState({ submitted: true }),
+      fieldLabel: 'display:block;font-weight:600;font-size:13.5px;margin:16px 0 7px;color:#c9d6cf',
+      fieldInput: 'width:100%;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:12px 14px;font-size:15px;color:#fff;background:rgba(255,255,255,.06)',
+      footerCols: s.isMobile ? '1fr 1fr' : '2fr 1fr 1fr',
+      footerPadBottom: s.isMobile ? '96px' : '40px'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "id": "northwind-ledger",
+  "name": "Northwind Ledger",
+  "template": "vite_react_shadcn_ts"
+}

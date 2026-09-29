@@ -1,0 +1,144 @@
+.dxai-slider {
+	position: relative;
+	overflow: hidden;
+}
+
+.dxai-slider-track {
+	display: flex;
+	transition: transform 0.35s ease;
+}
+
+.dxai-slider-track > * {
+	flex: 0 0 100%;
+	max-width: 100%;
+}
+
+.dxai-slider-prev,
+.dxai-slider-next {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 2;
+	border: 0;
+	background: color-mix(in srgb, var(--dxai-ink, #111827) 70%, transparent);
+	color: #fff;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.dxai-slider-prev { left: 0.75rem; }
+.dxai-slider-next { right: 0.75rem; }
+
+/*
+ * Form chrome — 100% token-driven from the imported template
+ * (.dxai-ui--{id} sets --dxai-* via Design_Tokens). Neutral fallbacks only.
+ */
+.dxai-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	font-family: var(--dxai-font, inherit);
+	color: var(--dxai-ink, #111827);
+}
+
+.dxai-form-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	width: 100%;
+}
+
+.dxai-form-field > span {
+	font-size: 0.875rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: var(--dxai-ink, #111827);
+}
+
+.dxai-form-field input,
+.dxai-form-field textarea,
+.dxai-form-field select {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0.8125rem 0.875rem;
+	border: 1px solid var(--dxai-border, #d0d5dd);
+	border-radius: var(--dxai-radius, 0.625rem);
+	background: #ffffff;
+	color: var(--dxai-ink, #111827);
+	font: inherit;
+	font-size: 1rem;
+	line-height: 1.4;
+	appearance: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dxai-form-field textarea {
+	min-height: 7.5rem;
+	resize: vertical;
+}
+
+.dxai-form-field input:focus,
+.dxai-form-field textarea:focus,
+.dxai-form-field select:focus {
+	outline: 3px solid var(--dxai-accent, var(--dxai-brand, #2563eb));
+	outline-offset: 2px;
+	border-color: var(--dxai-brand, #2563eb);
+}
+
+.dxai-form-hp {
+	position: absolute;
+	left: -9999px;
+	height: 0;
+	width: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.dxai-form-submit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	align-self: flex-start;
+	gap: 0.5rem;
+	margin: 0.25rem 0 0;
+	padding: 0.9rem 1.6rem;
+	border: 0;
+	border-radius: var(--dxai-radius, 0.625rem);
+	background: var(--dxai-accent, var(--dxai-brand, #2563eb));
+	color: var(--dxai-button-fg, #ffffff);
+	font: inherit;
+	font-size: 1.05rem;
+	font-weight: 800;
+	line-height: 1.2;
+	cursor: pointer;
+	box-shadow: 0 10px 24px color-mix(in srgb, var(--dxai-accent, var(--dxai-brand, #2563eb)) 28%, transparent);
+	transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.dxai-form-submit:hover,
+.dxai-form-submit:focus-visible {
+	filter: brightness(1.05);
+}
+
+.dxai-form-submit:focus-visible {
+	outline: 3px solid var(--dxai-accent, var(--dxai-brand, #2563eb));
+	outline-offset: 3px;
+}
+
+.dxai-form-status {
+	margin: 0.25rem 0 0;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--dxai-brand, #2563eb);
+}
+
+.dxai-form-status[data-state="error"] {
+	color: var(--dxai-danger, #dc2626);
+}

@@ -1,0 +1,26 @@
+# Dependencies and build output (the release builds assets/build: npm run release -- <version>)
+node_modules/
+vendor/
+assets/build/
+
+# Release ZIPs (attach them to a GitHub release instead)
+dist/
+
+# Local tooling, inputs and scratch
+.verify/
+_inbox/
+.tmp-*/
+.claude/
+.cursor/
+.cursor.zip
+*.done
+
+# Logs and caches
+*.log
+.phpunit.result.cache
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*

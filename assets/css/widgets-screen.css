@@ -1,0 +1,48 @@
+/*
+ * Appearance > Widgets: the footer's areas shown in the footer's design.
+ *
+ * widgets-screen.js puts the design's scope classes and `dxai-ui-widget-area`
+ * on each footer area's block container; Widgets_Screen adds, per area, the
+ * frame's paint (background, text colour and type of the <footer> and the
+ * column around it). This file holds what is the same for every design.
+ */
+
+/*
+ * The type the footer inherits on the front end. A converted page renders
+ * without the theme's global styles (Blank_Template), so its footer inherits
+ * the browser's defaults under the design's own rules — while the widgets
+ * editor applies the theme's body type (Twenty Twenty-Five: 21.76px, weight
+ * 300, line-height 1.4) to every area. The area starts from the defaults
+ * instead; the frame's paint, written after this, overrides what the design
+ * sets. (0,3,1): above the editor styles, which core scopes with a
+ * zero-specificity `:where(.editor-styles-wrapper)`.
+ */
+body .dxai-ui.dxai-ui-widget-area {
+	font-size: medium;
+	font-weight: normal;
+	font-style: normal;
+	line-height: normal;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
+/*
+ * The theme's element styles (heading sizes and line-heights, link colour
+ * and underline) reach blocks the design styles only partly, and the front
+ * end never has them. `revert` rolls each of these properties back to the
+ * browser's own value for that element — inherited where the browser sets
+ * none — which is what the page renders with. (0,2,0) inside :where(): above
+ * the editor styles, below every rule of the design (its scoped rules are
+ * (0,2,1) and up, its dxs- rules (3,0,0), its preset colour classes
+ * !important), so the design still decides everything it declares.
+ */
+.dxai-ui.dxai-ui-widget-area :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, small, figure, figcaption, blockquote, cite, address) {
+	font-family: revert;
+	font-size: revert;
+	font-weight: revert;
+	line-height: revert;
+	letter-spacing: revert;
+	text-transform: revert;
+	text-decoration: revert;
+	color: revert;
+}

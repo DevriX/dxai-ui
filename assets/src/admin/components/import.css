@@ -1,0 +1,1510 @@
+/*
+ * Import progress, the AI pages option and the finished-import summary.
+ *
+ * Built on the admin sheet's own tokens (assets/css/admin.css): graphite
+ * panels, hairlines, one accent for the thing happening now, and green,
+ * amber and red for state only. Every selector is scoped to #dxai-ui-app,
+ * as the admin sheet's are, so this file (loaded after it) wins ties.
+ */
+
+/* ---------------------------------------------------------------- */
+/* Progress card                                                     */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-progress {
+	padding: 24px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 24px;
+	background:
+		linear-gradient(180deg, rgba(79, 193, 240, 0.05), rgba(255, 255, 255, 0) 120px),
+		var(--dxai-panel);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+#dxai-ui-app .dxai-progress.has-error {
+	border-color: rgba(255, 111, 107, 0.35);
+}
+
+#dxai-ui-app .dxai-progress__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 18px;
+}
+
+#dxai-ui-app .dxai-progress__title {
+	margin: 0;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 24px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	line-height: 1.25;
+}
+
+#dxai-ui-app .dxai-progress__title:focus {
+	outline: none;
+}
+
+/* Focused by the script so screen readers start here; it is not a control,
+   so it gets no ring (the admin sheet rings every :focus-visible). */
+#dxai-ui-app .dxai-progress__title:focus-visible {
+	outline: none;
+}
+
+#dxai-ui-app .dxai-progress__clock {
+	margin: 0;
+	text-align: right;
+	flex: 0 0 auto;
+}
+
+#dxai-ui-app .dxai-progress__clock span {
+	display: block;
+	font-size: 11px;
+	font-weight: 650;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-progress__clock strong {
+	display: block;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 26px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- */
+/* Phase rows                                                        */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-phases {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+}
+
+#dxai-ui-app .dxai-phase {
+	position: relative;
+	display: grid;
+	grid-template-columns: 28px minmax(0, 1fr);
+	gap: 14px;
+	margin: 0;
+	padding: 10px 12px 10px 8px;
+	border-radius: 14px;
+}
+
+/* The rail between marks. */
+#dxai-ui-app .dxai-phase + .dxai-phase::before {
+	content: "";
+	position: absolute;
+	left: 21px;
+	top: -10px;
+	height: 20px;
+	width: 1px;
+	background: var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-phase.is-active,
+#dxai-ui-app .dxai-phase.is-waiting {
+	background: rgba(79, 193, 240, 0.06);
+	box-shadow: inset 0 0 0 1px rgba(79, 193, 240, 0.18);
+}
+
+#dxai-ui-app .dxai-phase.is-error {
+	background: rgba(255, 111, 107, 0.06);
+	box-shadow: inset 0 0 0 1px rgba(255, 111, 107, 0.25);
+}
+
+#dxai-ui-app .dxai-phase__mark {
+	position: relative;
+	width: 28px;
+	height: 28px;
+	border-radius: 99px;
+	border: 1px solid var(--dxai-line-strong);
+	background: var(--dxai-bg-2);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--dxai-muted);
+	font-size: 11px;
+	font-weight: 650;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+}
+
+#dxai-ui-app .dxai-phase__num {
+	line-height: 1;
+}
+
+/* Running: a turning arc around the number. */
+#dxai-ui-app .is-active > .dxai-phase__mark {
+	border-color: rgba(79, 193, 240, 0.35);
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .is-active > .dxai-phase__mark::after {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: 99px;
+	border: 2px solid transparent;
+	border-top-color: var(--dxai-accent);
+	border-right-color: var(--dxai-accent);
+	animation: dxai-turn 0.9s linear infinite;
+}
+
+/* Waiting for the person: steady accent ring, no motion. */
+#dxai-ui-app .is-waiting > .dxai-phase__mark {
+	border: 2px solid var(--dxai-accent);
+	color: var(--dxai-accent);
+}
+
+/* Done: a tick. */
+#dxai-ui-app .is-done > .dxai-phase__mark,
+#dxai-ui-app .is-warn > .dxai-phase__mark {
+	border-color: var(--dxai-ok);
+	background: rgba(95, 211, 155, 0.12);
+	color: transparent;
+}
+
+#dxai-ui-app .is-warn > .dxai-phase__mark {
+	border-color: var(--dxai-warn);
+	background: rgba(255, 176, 58, 0.12);
+}
+
+#dxai-ui-app .is-done > .dxai-phase__mark::after,
+#dxai-ui-app .is-warn > .dxai-phase__mark::after {
+	content: "";
+	position: absolute;
+	left: 9px;
+	top: 6px;
+	width: 6px;
+	height: 11px;
+	border-right: 2px solid var(--dxai-ok);
+	border-bottom: 2px solid var(--dxai-ok);
+	transform: rotate(40deg);
+}
+
+#dxai-ui-app .is-warn > .dxai-phase__mark::after {
+	border-color: var(--dxai-warn);
+}
+
+/* Skipped: a dash. */
+#dxai-ui-app .is-skipped > .dxai-phase__mark {
+	color: transparent;
+	border-style: dashed;
+}
+
+#dxai-ui-app .is-skipped > .dxai-phase__mark::after {
+	content: "";
+	position: absolute;
+	left: 8px;
+	top: 12.5px;
+	width: 10px;
+	height: 2px;
+	background: var(--dxai-muted);
+	border-radius: 2px;
+}
+
+/* Failed: an exclamation. */
+#dxai-ui-app .is-error > .dxai-phase__mark {
+	border-color: var(--dxai-danger);
+	background: rgba(255, 111, 107, 0.14);
+	color: transparent;
+}
+
+#dxai-ui-app .is-error > .dxai-phase__mark::after {
+	content: "!";
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--dxai-danger);
+	font-size: 14px;
+	font-weight: 800;
+}
+
+#dxai-ui-app .dxai-phase__body {
+	min-width: 0;
+	padding-top: 3px;
+}
+
+#dxai-ui-app .dxai-phase__line {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px 10px;
+}
+
+#dxai-ui-app .dxai-phase__label {
+	color: var(--dxai-muted);
+	font-weight: 600;
+	font-size: 14.5px;
+}
+
+#dxai-ui-app .is-active .dxai-phase__label,
+#dxai-ui-app .is-waiting .dxai-phase__label,
+#dxai-ui-app .is-error .dxai-phase__label,
+#dxai-ui-app .is-done .dxai-phase__label,
+#dxai-ui-app .is-warn .dxai-phase__label {
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-phase__where {
+	font-size: 12px;
+	color: var(--dxai-muted);
+	padding: 1px 8px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 99px;
+}
+
+#dxai-ui-app .dxai-phase__time {
+	margin-left: auto;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+#dxai-ui-app .is-active .dxai-phase__time {
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-phase__detail {
+	margin: 4px 0 0;
+	color: var(--dxai-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+#dxai-ui-app .is-active .dxai-phase__detail,
+#dxai-ui-app .is-waiting .dxai-phase__detail {
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .is-warn .dxai-phase__detail {
+	color: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-phase__patience {
+	margin: 8px 0 0;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-phase__link {
+	display: inline-block;
+	margin-top: 6px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--dxai-accent);
+	text-decoration: none;
+}
+
+#dxai-ui-app .dxai-phase__link:hover,
+#dxai-ui-app .dxai-phase__link:focus {
+	text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------- */
+/* Bars                                                              */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-meter {
+	position: relative;
+	height: 6px;
+	margin: 10px 0 2px;
+	border-radius: 99px;
+	background: rgba(138, 176, 208, 0.14);
+	overflow: hidden;
+	max-width: 560px;
+}
+
+#dxai-ui-app .dxai-meter__fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	border-radius: 99px;
+	background: linear-gradient(90deg, var(--dxai-accent), var(--dxai-accent-2));
+	transition: width 0.4s ease;
+}
+
+/* Indeterminate: a band that travels, because nobody knows the percentage. */
+#dxai-ui-app .dxai-meter.is-indeterminate .dxai-meter__fill {
+	width: 32%;
+	animation: dxai-travel 1.6s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------- */
+/* Crawl panel                                                       */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-crawl {
+	margin-top: 6px;
+}
+
+#dxai-ui-app .dxai-crawl__now {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px 10px;
+	margin: 4px 0 0;
+	color: #fff;
+	font-size: 15px;
+}
+
+#dxai-ui-app .dxai-crawl__count {
+	font-size: 11px;
+	font-weight: 650;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-crawl code,
+#dxai-ui-app .dxai-ai-option code,
+#dxai-ui-app .dxai-done code,
+#dxai-ui-app .dxai-phase-error code {
+	font-family: var(--dxai-mono);
+	font-size: 12px;
+	color: var(--dxai-muted);
+	background: rgba(138, 176, 208, 0.08);
+	border-radius: 5px;
+	padding: 1px 6px;
+}
+
+#dxai-ui-app .dxai-crawl__step {
+	margin: 4px 0 0;
+	color: var(--dxai-text);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-crawl__clock {
+	color: var(--dxai-accent);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+#dxai-ui-app .dxai-crawl__tally {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 14px;
+	margin: 6px 0 0;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-crawl__tally .is-bad,
+#dxai-ui-app .dxai-done__counts .is-bad strong {
+	color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-crawl__note {
+	margin: 10px 0 0;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-crawl__queue,
+#dxai-ui-app .dxai-done__list {
+	margin-top: 12px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 12px;
+	background: var(--dxai-bg-2);
+}
+
+#dxai-ui-app .dxai-crawl__queue summary,
+#dxai-ui-app .dxai-done__list summary {
+	cursor: pointer;
+	padding: 10px 14px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--dxai-text);
+	border-radius: 12px;
+}
+
+#dxai-ui-app .dxai-crawl__queue ol,
+#dxai-ui-app .dxai-done__list ul {
+	list-style: none;
+	margin: 0;
+	padding: 0 14px 10px;
+	max-height: 280px;
+	overflow: auto;
+}
+
+#dxai-ui-app .dxai-crawl__queue li,
+#dxai-ui-app .dxai-done__list li {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 2px 10px;
+	margin: 0;
+	padding: 6px 0;
+	border-top: 1px solid var(--dxai-line);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-crawl__dot {
+	position: relative;
+	top: 1px;
+	width: 8px;
+	height: 8px;
+	flex: 0 0 8px;
+	border-radius: 99px;
+	border: 1px solid var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-created .dxai-crawl__dot,
+#dxai-ui-app .dxai-crawl__queue .is-done .dxai-crawl__dot {
+	background: var(--dxai-ok);
+	border-color: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-current .dxai-crawl__dot {
+	background: var(--dxai-accent);
+	border-color: var(--dxai-accent);
+	box-shadow: 0 0 0 3px rgba(79, 193, 240, 0.25);
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-error .dxai-crawl__dot {
+	background: var(--dxai-danger);
+	border-color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-skipped .dxai-crawl__dot {
+	border-style: dashed;
+}
+
+#dxai-ui-app .dxai-crawl__label,
+#dxai-ui-app .dxai-done__name {
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-pending .dxai-crawl__label {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-crawl__state,
+#dxai-ui-app .dxai-done__msg {
+	margin-left: auto;
+	color: var(--dxai-muted);
+	font-size: 12px;
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-error .dxai-crawl__state,
+#dxai-ui-app .dxai-done__list.is-bad .dxai-done__msg {
+	color: var(--dxai-danger);
+	margin-left: 0;
+	flex-basis: 100%;
+}
+
+#dxai-ui-app .dxai-crawl__queue .is-current .dxai-crawl__state {
+	color: var(--dxai-accent);
+}
+
+/* ---------------------------------------------------------------- */
+/* A phase that failed                                               */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-phase-error {
+	margin-top: 10px;
+	padding: 14px 16px;
+	border-radius: 12px;
+	border: 1px solid rgba(255, 111, 107, 0.3);
+	background: rgba(255, 111, 107, 0.08);
+}
+
+#dxai-ui-app .dxai-phase-error p {
+	margin: 0 0 8px;
+	font-size: 13.5px;
+	line-height: 1.55;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-phase-error__title {
+	color: #fff !important;
+	font-weight: 650;
+	font-size: 14.5px !important;
+}
+
+#dxai-ui-app .dxai-phase-error__title:focus {
+	outline: none;
+}
+
+/* Focused by the script so screen readers start here; it is not a control,
+   so it gets no ring (the admin sheet rings every :focus-visible). */
+#dxai-ui-app .dxai-phase-error__title:focus-visible {
+	outline: none;
+}
+
+#dxai-ui-app .dxai-phase-error__k {
+	color: var(--dxai-muted);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-phase-error code {
+	margin-left: 6px;
+}
+
+#dxai-ui-app .dxai-phase-error__actions {
+	margin-top: 12px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Compact: one line of chips on the review step                     */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-progress--compact {
+	padding: 12px 14px;
+	border-radius: 18px;
+}
+
+#dxai-ui-app .dxai-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 4px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#dxai-ui-app .dxai-chipstep {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	padding: 5px 12px 5px 6px;
+	border-radius: 99px;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-chipstep .dxai-phase__mark {
+	width: 18px;
+	height: 18px;
+	font-size: 0;
+}
+
+#dxai-ui-app .dxai-chipstep.is-done .dxai-phase__mark::after,
+#dxai-ui-app .dxai-chipstep.is-warn .dxai-phase__mark::after {
+	left: 5.5px;
+	top: 3px;
+	width: 4px;
+	height: 8px;
+}
+
+#dxai-ui-app .dxai-chipstep.is-skipped .dxai-phase__mark::after {
+	left: 4px;
+	top: 7.5px;
+	width: 8px;
+}
+
+#dxai-ui-app .dxai-chipstep.is-error .dxai-phase__mark::after {
+	font-size: 11px;
+}
+
+#dxai-ui-app .dxai-chipstep.is-waiting,
+#dxai-ui-app .dxai-chipstep.is-active {
+	background: rgba(79, 193, 240, 0.1);
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-chipstep.is-done,
+#dxai-ui-app .dxai-chipstep.is-warn {
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-chipstep__time {
+	color: var(--dxai-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- */
+/* AI pages option                                                   */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-ai-option {
+	margin-top: 18px;
+	padding: 18px 20px;
+	border-radius: 18px;
+	border: 1px solid var(--dxai-line-strong);
+	background:
+		linear-gradient(135deg, rgba(79, 193, 240, 0.07), rgba(126, 224, 184, 0.03) 60%, transparent),
+		var(--dxai-panel-2);
+}
+
+#dxai-ui-app .dxai-ai-option.is-on {
+	border-color: rgba(79, 193, 240, 0.55);
+	box-shadow: 0 0 0 1px rgba(79, 193, 240, 0.25), 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+#dxai-ui-app .dxai-ai-option.is-disabled {
+	background: var(--dxai-panel-2);
+}
+
+#dxai-ui-app .dxai-ai-option__head {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	gap: 14px;
+	align-items: start;
+}
+
+#dxai-ui-app .dxai-ai-option__glyph {
+	position: relative;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	background: rgba(79, 193, 240, 0.12);
+}
+
+/* Four-point spark: the one place the screen says "AI". */
+#dxai-ui-app .dxai-ai-option__glyph::before,
+#dxai-ui-app .dxai-ai-option__glyph::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 18px;
+	height: 18px;
+	background: var(--dxai-accent);
+	transform: translate(-50%, -50%) rotate(45deg) scale(0.5, 1.15);
+	border-radius: 2px;
+	clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+#dxai-ui-app .dxai-ai-option__glyph::before {
+	transform: translate(-50%, -50%);
+	clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+	border-radius: 0;
+}
+
+#dxai-ui-app .dxai-ai-option__glyph::after {
+	width: 8px;
+	height: 8px;
+	left: 76%;
+	top: 26%;
+	transform: translate(-50%, -50%);
+	clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+	background: var(--dxai-accent-2);
+	border-radius: 0;
+}
+
+#dxai-ui-app .is-disabled .dxai-ai-option__glyph::before,
+#dxai-ui-app .is-disabled .dxai-ai-option__glyph::after {
+	background: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-ai-option__title {
+	margin: 0 0 4px;
+	color: #fff;
+	font-size: 16px;
+	font-weight: 650;
+	letter-spacing: -0.01em;
+}
+
+#dxai-ui-app .dxai-ai-option__desc {
+	margin: 0;
+	color: var(--dxai-muted);
+	font-size: 13.5px;
+	line-height: 1.5;
+	max-width: 62ch;
+}
+
+#dxai-ui-app .dxai-ai-option__facts {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin: 16px 0 0;
+	padding: 14px 0 0;
+	border-top: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-ai-option__facts div {
+	min-width: 0;
+}
+
+#dxai-ui-app .dxai-ai-option__facts dt {
+	margin: 0 0 4px;
+	font-size: 11px;
+	font-weight: 650;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-ai-option__facts dd {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-ai-option__facts dd code {
+	color: #fff;
+	font-size: 12.5px;
+}
+
+#dxai-ui-app .dxai-ai-option__aside {
+	display: block;
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--dxai-warn);
+}
+
+/* The old site's address, when the person types it. */
+#dxai-ui-app .dxai-ai-option__origin {
+	display: grid;
+	gap: 6px;
+	margin: 14px 0 0;
+	max-width: 520px;
+}
+
+#dxai-ui-app .dxai-ai-option__origin p {
+	margin: 0;
+	color: var(--dxai-muted);
+	font-size: 12.5px;
+}
+
+/* Which menu pages to build: a ticked list, in the panel's own colours. */
+#dxai-ui-app .dxai-ai-option__pick {
+	margin: 14px 0 0;
+	padding: 12px 14px;
+	min-width: 0;
+	border-radius: 12px;
+	background: var(--dxai-bg-2);
+	border: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-ai-option__pick legend {
+	padding: 0 6px;
+	color: var(--dxai-text);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-ai-option__bulk {
+	display: flex;
+	gap: 14px;
+	margin-bottom: 8px;
+	font-size: 12.5px;
+}
+
+#dxai-ui-app .dxai-ai-option__bulk .dxai-link:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+#dxai-ui-app .dxai-ai-option__pick ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	columns: 2;
+	column-gap: 24px;
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-ai-option__pick li {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	margin: 0;
+	padding: 5px 0;
+	break-inside: avoid;
+}
+
+#dxai-ui-app .dxai-ai-option__pick input[type="checkbox"] {
+	appearance: auto;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	min-height: 0;
+	margin: 2px 0 0;
+	padding: 0;
+	border-radius: 3px;
+	accent-color: var(--dxai-accent);
+	box-shadow: none;
+}
+
+#dxai-ui-app .dxai-ai-option__pick label {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+	margin: 0;
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--dxai-text);
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-ai-option__pick label code {
+	color: var(--dxai-muted);
+	font-size: 11.5px;
+	overflow-wrap: anywhere;
+}
+
+#dxai-ui-app .dxai-ai-option__why,
+#dxai-ui-app .dxai-ai-option__confirm {
+	margin: 14px 0 0;
+	padding: 10px 12px;
+	border-radius: 10px;
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-ai-option__why {
+	background: rgba(255, 176, 58, 0.08);
+	border: 1px solid rgba(255, 176, 58, 0.25);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-ai-option__why a {
+	color: var(--dxai-accent);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-ai-option__confirm {
+	background: rgba(79, 193, 240, 0.08);
+	border: 1px solid rgba(79, 193, 240, 0.22);
+	color: var(--dxai-text);
+}
+
+/* The switch. */
+#dxai-ui-app .dxai-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin: 2px 0 0;
+	padding: 4px;
+	border: 0;
+	border-radius: 99px;
+	background: none;
+	color: var(--dxai-muted);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 650;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-switch__track {
+	position: relative;
+	width: 46px;
+	height: 26px;
+	border-radius: 99px;
+	background: rgba(138, 176, 208, 0.2);
+	border: 1px solid var(--dxai-line-strong);
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+	box-sizing: border-box;
+}
+
+#dxai-ui-app .dxai-switch__thumb {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 18px;
+	height: 18px;
+	border-radius: 99px;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	transition: transform 0.2s ease;
+}
+
+#dxai-ui-app .dxai-switch[aria-checked="true"] {
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-switch[aria-checked="true"] .dxai-switch__track {
+	background: var(--dxai-accent);
+	border-color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-switch[aria-checked="true"] .dxai-switch__thumb {
+	transform: translateX(20px);
+	background: #0b1016;
+}
+
+#dxai-ui-app .dxai-switch:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+#dxai-ui-app .dxai-switch:focus-visible {
+	outline: 2px solid var(--dxai-accent);
+	outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Finished import                                                   */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-done {
+	padding: 32px 24px 24px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 24px;
+	background:
+		linear-gradient(180deg, rgba(95, 211, 155, 0.06), rgba(255, 255, 255, 0) 160px),
+		var(--dxai-panel);
+	text-align: center;
+}
+
+#dxai-ui-app .dxai-success-mark.is-warn {
+	border-color: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-success-mark.is-warn::after {
+	border-color: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-done__title {
+	margin: 0 0 8px;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 32px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+
+#dxai-ui-app .dxai-done__title:focus {
+	outline: none;
+}
+
+/* Focused by the script so screen readers start here; it is not a control,
+   so it gets no ring (the admin sheet rings every :focus-visible). */
+#dxai-ui-app .dxai-done__title:focus-visible {
+	outline: none;
+}
+
+#dxai-ui-app .dxai-done__lede {
+	margin: 0 auto;
+	color: var(--dxai-muted);
+	max-width: 56ch;
+}
+
+#dxai-ui-app .dxai-done__counts {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 12px;
+	list-style: none;
+	margin: 22px 0 0;
+	padding: 0;
+}
+
+#dxai-ui-app .dxai-done__counts li {
+	min-width: 150px;
+	margin: 0;
+	padding: 14px 18px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 16px;
+	background: var(--dxai-bg-2);
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-done__counts strong {
+	display: block;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 30px;
+	font-weight: 600;
+	line-height: 1.1;
+}
+
+#dxai-ui-app .dxai-done__counts span {
+	display: block;
+	color: var(--dxai-text);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-done__counts em {
+	display: block;
+	margin-top: 2px;
+	color: var(--dxai-muted);
+	font-size: 12px;
+	font-style: normal;
+}
+
+#dxai-ui-app .dxai-done__warn {
+	max-width: 60ch;
+	margin: 16px auto 0;
+	padding: 10px 14px;
+	border-radius: 10px;
+	border: 1px solid rgba(255, 176, 58, 0.3);
+	background: rgba(255, 176, 58, 0.08);
+	color: var(--dxai-text);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-done__actions {
+	justify-content: center;
+}
+
+#dxai-ui-app .dxai-done__actions a.components-button {
+	text-decoration: none;
+}
+
+#dxai-ui-app .dxai-done__list {
+	max-width: 760px;
+	margin: 14px auto 0;
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-done__list.is-bad {
+	border-color: rgba(255, 111, 107, 0.3);
+}
+
+#dxai-ui-app .dxai-done__links {
+	margin-left: auto;
+	display: inline-flex;
+	gap: 12px;
+}
+
+#dxai-ui-app .dxai-done__links a {
+	color: var(--dxai-accent);
+	font-weight: 600;
+	font-size: 12.5px;
+	text-decoration: none;
+}
+
+#dxai-ui-app .dxai-done__links a:hover,
+#dxai-ui-app .dxai-done__links a:focus {
+	text-decoration: underline;
+}
+
+#dxai-ui-app .dxai-review-options {
+	margin: 18px 0 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Motion                                                            */
+/* ---------------------------------------------------------------- */
+
+@keyframes dxai-turn {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes dxai-travel {
+	0% {
+		left: -32%;
+	}
+	100% {
+		left: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/* Still clearly "running": a solid ring, and a striped bar that does not move. */
+	#dxai-ui-app .is-active > .dxai-phase__mark::after {
+		animation: none;
+		border-color: var(--dxai-accent);
+	}
+
+	#dxai-ui-app .dxai-meter.is-indeterminate .dxai-meter__fill {
+		animation: none;
+		left: 0;
+		width: 100%;
+		opacity: 0.55;
+		background: repeating-linear-gradient(135deg, var(--dxai-accent) 0 8px, rgba(79, 193, 240, 0.35) 8px 16px);
+	}
+
+	#dxai-ui-app .dxai-meter__fill,
+	#dxai-ui-app .dxai-switch__track,
+	#dxai-ui-app .dxai-switch__thumb {
+		transition: none;
+	}
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-progress,
+	#dxai-ui-app .dxai-done {
+		padding: 18px;
+	}
+
+	#dxai-ui-app .dxai-ai-option__head {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	#dxai-ui-app .dxai-ai-option__glyph {
+		display: none;
+	}
+
+	#dxai-ui-app .dxai-ai-option__facts {
+		grid-template-columns: 1fr;
+	}
+
+	#dxai-ui-app .dxai-ai-option__pick ul {
+		columns: 1;
+	}
+
+	#dxai-ui-app .dxai-progress__title {
+		font-size: 20px;
+	}
+}
+
+#dxai-ui-app .dxai-crawl__note.is-retry {
+	padding: 8px 12px;
+	border-radius: 10px;
+	border: 1px solid rgba(255, 176, 58, 0.25);
+	background: rgba(255, 176, 58, 0.08);
+	color: var(--dxai-text);
+}
+
+/* Where the header and footer went (done screen). */
+#dxai-ui-app .dxai-done__chrome {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 12px;
+	max-width: 760px;
+	margin: 18px auto 0;
+	padding: 0;
+	list-style: none;
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-done__chrome > li {
+	margin: 0;
+	padding: 14px 16px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 14px;
+	background: var(--dxai-bg-2);
+	min-width: 0;
+}
+
+#dxai-ui-app .dxai-done__chrome > li.is-bad {
+	border-color: rgba(255, 176, 58, 0.35);
+	background: rgba(255, 176, 58, 0.06);
+}
+
+#dxai-ui-app .dxai-done__chrome-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	margin: 0 0 6px;
+	font-size: 13.5px;
+}
+
+#dxai-ui-app .dxai-done__chrome-head strong {
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-done__chrome a {
+	color: var(--dxai-accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+#dxai-ui-app .dxai-done__chrome a:hover,
+#dxai-ui-app .dxai-done__chrome a:focus {
+	text-decoration: underline;
+}
+
+#dxai-ui-app .dxai-done__chrome-head a,
+#dxai-ui-app .dxai-done__chrome-head span {
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+#dxai-ui-app .dxai-done__chrome ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#dxai-ui-app .dxai-done__chrome ul li {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+	margin: 0;
+	padding: 4px 0;
+	border-top: 1px solid var(--dxai-line);
+	font-size: 13px;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-done__chrome ul li em {
+	color: var(--dxai-muted);
+	font-size: 12px;
+	font-style: normal;
+	white-space: nowrap;
+}
+
+#dxai-ui-app .dxai-done__chrome-note {
+	margin: 8px 0 0;
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-done__chrome > li.is-bad .dxai-done__chrome-note {
+	color: var(--dxai-text);
+}
+
+/*
+ * The admin shell on a phone. Below 960 px admin.css stacks the shell into
+ * one "1fr" column — minmax(auto, 1fr), which cannot shrink below the widest
+ * thing in it — and lays the rail's four links out in a row that does not
+ * wrap. Measured at a 390 px window: the column came out 471 px, the whole
+ * screen scrolled sideways by 81 px, and a phone zoomed the page out to fit
+ * it. This sheet loads after admin.css, so the fix lives here with the
+ * import screen that needs it.
+ */
+@media (max-width: 960px) {
+	#dxai-ui-app .dxai-shell {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	#dxai-ui-app .dxai-nav {
+		flex-wrap: wrap;
+	}
+}
+
+/* "Adjust pieces" and "View markup" sit side by side on the review step and
+   read as one run of text ("Adjust piecesView markup") without a gap. */
+#dxai-ui-app .dxai-link + .dxai-link {
+	margin-left: 18px;
+}
+
+/* ---------------------------------------------------------------- */
+/* The header and footer choice (ChromeChoice)                       */
+/* ---------------------------------------------------------------- */
+
+#dxai-ui-app .dxai-chrome-choice {
+	min-width: 0;
+	margin: 20px 0 0;
+	padding: 18px 20px;
+	border: 1px solid var(--dxai-line-strong);
+	border-radius: 18px;
+	background: var(--dxai-panel-2);
+}
+
+/* A legend drawn inside the box, not over its border. */
+#dxai-ui-app .dxai-chrome-choice__legend {
+	float: left;
+	width: 100%;
+	margin: 0 0 4px;
+	padding: 0;
+	color: #fff;
+	font-size: 16px;
+	font-weight: 650;
+	letter-spacing: -0.01em;
+}
+
+#dxai-ui-app .dxai-chrome-choice__now {
+	clear: both;
+	margin: 0 0 14px;
+	color: var(--dxai-muted);
+	font-size: 13.5px;
+	line-height: 1.5;
+	max-width: 72ch;
+}
+
+#dxai-ui-app .dxai-chrome-choice.is-empty .dxai-chrome-choice__now {
+	margin-bottom: 0;
+}
+
+#dxai-ui-app .dxai-chrome-choice__options {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+#dxai-ui-app .dxai-chrome-option {
+	position: relative;
+	display: grid;
+	grid-template-columns: 20px minmax(0, 1fr);
+	column-gap: 12px;
+	align-content: start;
+	min-width: 0;
+	padding: 16px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 14px;
+	background: var(--dxai-bg-2);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#dxai-ui-app .dxai-chrome-option:hover {
+	border-color: var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-chrome-option.is-selected {
+	border-color: var(--dxai-accent);
+	box-shadow: inset 0 0 0 1px var(--dxai-accent);
+}
+
+/* The radio: admin.css paints every input as a text field, so it is drawn here. */
+#dxai-ui-app .dxai-chrome-option input[type="radio"] {
+	-webkit-appearance: none;
+	appearance: none;
+	position: relative;
+	z-index: 1;
+	display: grid;
+	place-content: center;
+	grid-row: 1 / span 3;
+	width: 20px !important;
+	min-width: 20px;
+	height: 20px;
+	margin: 1px 0 0;
+	padding: 0 !important;
+	border: 1.5px solid var(--dxai-line-strong) !important;
+	border-radius: 50% !important;
+	background: var(--dxai-bg) !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-chrome-option input[type="radio"]::before {
+	content: "";
+	float: none;
+	width: 10px;
+	height: 10px;
+	margin: 0;
+	border-radius: 50%;
+	background: var(--dxai-accent);
+	transform: scale(0);
+	transition: transform 0.12s ease;
+}
+
+#dxai-ui-app .dxai-chrome-option input[type="radio"]:checked {
+	border-color: var(--dxai-accent) !important;
+}
+
+#dxai-ui-app .dxai-chrome-option input[type="radio"]:checked::before {
+	transform: scale(1);
+}
+
+#dxai-ui-app .dxai-chrome-option input[type="radio"]:focus-visible {
+	outline: 2px solid var(--dxai-accent);
+	outline-offset: 3px;
+}
+
+#dxai-ui-app .dxai-chrome-option:focus-within {
+	border-color: var(--dxai-accent);
+}
+
+/* admin.css sets every label as an uppercase caption; this one is the option's name. */
+#dxai-ui-app .dxai-chrome-option .dxai-chrome-option__title {
+	grid-column: 2;
+	margin: 0;
+	color: #fff;
+	font-size: 14.5px;
+	font-weight: 650;
+	line-height: 1.4;
+	letter-spacing: -0.005em;
+	text-transform: none;
+	cursor: pointer;
+}
+
+/* The whole card clicks the radio. */
+#dxai-ui-app .dxai-chrome-option .dxai-chrome-option__title::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+
+#dxai-ui-app .dxai-chrome-option__desc {
+	grid-column: 2;
+	margin: 6px 0 0;
+	color: var(--dxai-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+#dxai-ui-app .dxai-chrome-option__tag {
+	grid-column: 2;
+	justify-self: start;
+	margin-top: 10px;
+	color: var(--dxai-accent);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn {
+	margin: 14px 0 0;
+	padding: 12px 14px;
+	border: 1px solid rgba(255, 176, 58, 0.3);
+	border-radius: 12px;
+	background: rgba(255, 176, 58, 0.06);
+	color: var(--dxai-text);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn.is-armed {
+	border-color: rgba(255, 176, 58, 0.6);
+	background: rgba(255, 176, 58, 0.12);
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn-title {
+	margin: 0 0 6px;
+	color: var(--dxai-warn);
+	font-weight: 650;
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn ul {
+	margin: 0;
+	padding-left: 18px;
+	list-style: disc;
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn li {
+	margin: 0 0 4px;
+}
+
+#dxai-ui-app .dxai-chrome-choice__warn li:last-child {
+	margin-bottom: 0;
+}
+
+/* Done screen: what other designs and the person's own menus got from this import. */
+#dxai-ui-app .dxai-done__chrome-notices {
+	max-width: 760px;
+	margin: 12px auto 0;
+	padding: 10px 14px 10px 30px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 12px;
+	background: var(--dxai-bg-2);
+	color: var(--dxai-text);
+	font-size: 12.5px;
+	line-height: 1.5;
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-done__chrome-notices li {
+	margin: 0 0 4px;
+}
+
+#dxai-ui-app .dxai-done__chrome-notices li:last-child {
+	margin-bottom: 0;
+}
+
+#dxai-ui-app .dxai-done__chrome > li.is-kept {
+	border-color: var(--dxai-line-strong);
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-chrome-choice {
+		padding: 16px;
+	}
+
+	#dxai-ui-app .dxai-chrome-choice__options {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#dxai-ui-app .dxai-chrome-option,
+	#dxai-ui-app .dxai-chrome-option input[type="radio"]::before {
+		transition: none;
+	}
+}

@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 162 29% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 162 29% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 162 29% 10%;
+
+    --primary: 154 39% 30%;
+    --primary-foreground: 40 33% 98%;
+
+    --secondary: 140 22% 90%;
+    --secondary-foreground: 162 29% 10%;
+
+    --muted: 140 18% 94%;
+    --muted-foreground: 162 12% 38%;
+
+    --accent: 18 48% 53%;
+    --accent-foreground: 40 33% 98%;
+
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 40 33% 98%;
+
+    --border: 150 14% 86%;
+    --input: 150 14% 86%;
+    --ring: 154 39% 30%;
+
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    --background: 162 29% 8%;
+    --foreground: 40 33% 96%;
+    --card: 162 24% 11%;
+    --card-foreground: 40 33% 96%;
+    --popover: 162 24% 11%;
+    --popover-foreground: 40 33% 96%;
+    --primary: 154 34% 62%;
+    --primary-foreground: 162 29% 8%;
+    --secondary: 162 18% 18%;
+    --secondary-foreground: 40 33% 96%;
+    --muted: 162 18% 16%;
+    --muted-foreground: 150 10% 66%;
+    --accent: 18 52% 62%;
+    --accent-foreground: 162 29% 8%;
+    --border: 162 14% 22%;
+    --input: 162 14% 22%;
+    --ring: 154 34% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .band {
+    @apply border-b border-border py-band;
+  }
+
+  .rule-list > li {
+    @apply flex gap-3 border-t border-border py-4 text-sm leading-relaxed;
+  }
+}

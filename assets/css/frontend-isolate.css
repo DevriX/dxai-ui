@@ -1,0 +1,30 @@
+.dxai-ui,
+.dxai-ui * {
+	box-sizing: border-box;
+}
+
+/*
+ * `svg` is deliberately absent, and the split is Tailwind's rather than an
+ * opinion of ours. Its preflight emits two rules over two element lists:
+ *
+ *     img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}
+ *     img,video{max-width:100%;height:auto}
+ *
+ * An SVG sized by attributes — a lucide icon arrives as
+ * `<i data-lucide="chevron-down" width="14" height="14">` and the runtime
+ * turns it into one — lays out 0px wide under `max-width: 100%` inside a flex
+ * row, because an attribute width is not a used width and the percentage
+ * resolves against a containing block sized by its own children. ARA's
+ * practice-areas chevron measured `w 9→0` against the design, every nav item
+ * came out 14px narrower, and the logo took the slack.
+ *
+ * Kept in step with Tailwind_Purger::scoped_preflight(), which had the same
+ * rule and the same defect. bin/preflight-parity.php checks BOTH against the
+ * real Tailwind CLI output — this file is why it checks both: fixing only the
+ * generated copy changed nothing, because this static one is what the page
+ * actually loads.
+ */
+.dxai-ui img,
+.dxai-ui video {
+	max-width: 100%;
+}

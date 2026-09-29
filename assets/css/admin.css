@@ -1,0 +1,1936 @@
+/* DXAI Convert admin studio. Scoped to plugin screens; WP chrome is receded. */
+
+body.dxai-ui-admin-screen #wpcontent {
+	padding-left: 0;
+}
+
+body.dxai-ui-admin-screen #wpbody-content {
+	padding-bottom: 48px;
+}
+
+body.dxai-ui-admin-screen #wpfooter {
+	display: none;
+}
+
+body.dxai-ui-admin-screen .wrap.dxai-ui-wrap {
+	margin: 0;
+	max-width: none;
+}
+
+body.dxai-ui-admin-screen .wrap.dxai-ui-wrap > .notice,
+body.dxai-ui-admin-screen #wpbody-content > .notice,
+body.dxai-ui-admin-screen #wpbody-content > .update-nag {
+	margin: 12px 20px 0;
+}
+
+.dxai-ui-wrap #dxai-ui-app.dxai-ui-admin,
+#dxai-ui-app.dxai-ui-admin {
+	/*
+	 * An instrument, not a magazine.
+	 *
+	 * This screen reports measurements — sections found, blocks written, pixels
+	 * of difference — so the surface is a cool graphite ground with hairlines,
+	 * one precision accent, and figures set in tabular numerals. The palette it
+	 * replaces was cream on warm black with a display serif and a terracotta
+	 * accent, which is the look every generated dashboard arrives in; nothing
+	 * about it said what this tool does.
+	 *
+	 * One accent, spent in one place at a time: the current rail item, a focus
+	 * ring, a live figure. Green, amber and red are state only and never
+	 * decoration, so a red number always means something is wrong.
+	 */
+	--dxai-bg: #090d12;
+	--dxai-bg-2: #0d1319;
+	--dxai-panel: #121a22;
+	--dxai-panel-2: #18222c;
+	--dxai-line: rgba(138, 176, 208, 0.14);
+	--dxai-line-strong: rgba(138, 176, 208, 0.3);
+	--dxai-grid: rgba(138, 176, 208, 0.035);
+	--dxai-text: #e7eef5;
+	--dxai-muted: #8497a8;
+	--dxai-accent: #4fc1f0;
+	--dxai-accent-2: #7ee0b8;
+	--dxai-ok: #5fd39b;
+	--dxai-danger: #ff6f6b;
+	--dxai-warn: #ffb03a;
+	/*
+	 * One family, two roles. The display role is the same grotesque held
+	 * tighter and heavier — a measuring tool has no second voice.
+	 */
+	--dxai-display: "Inter var", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--dxai-sans: "Inter var", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--dxai-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+	--dxai-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+	--dxai-radius: 10px;
+	color: var(--dxai-text);
+	font-family: var(--dxai-sans);
+	font-size: 14.5px;
+	line-height: 1.55;
+	margin: 0;
+	max-width: none;
+}
+
+/* Every figure on this screen lines up in its column. */
+#dxai-ui-app.dxai-ui-admin {
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A visible focus ring on everything operable. The old sheet removed the
+ * outline on rail links and put nothing back, so keyboard focus vanished
+ * inside the one navigation this plugin has.
+ */
+#dxai-ui-app :focus-visible {
+	outline: 2px solid var(--dxai-accent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+#dxai-ui-app .dxai-ui-php-fallback {
+	margin: 28px;
+	padding: 20px 24px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 16px;
+	background: var(--dxai-panel);
+	color: var(--dxai-muted);
+}
+
+/*
+ * A drafting sheet: a 32px blueprint grid at the edge of visibility, with one
+ * cool light source at the top right. It replaces two warm glows that made the
+ * ground look like paper; a grid is what this tool measures against.
+ */
+#dxai-ui-app .dxai-shell {
+	display: grid;
+	grid-template-columns: 252px minmax(0, 1fr);
+	min-height: calc(100vh - 32px);
+	background:
+		radial-gradient(900px 420px at 88% -12%, rgba(79, 193, 240, 0.08), transparent 60%),
+		repeating-linear-gradient(to right, var(--dxai-grid) 0 1px, transparent 1px 32px),
+		repeating-linear-gradient(to bottom, var(--dxai-grid) 0 1px, transparent 1px 32px),
+		var(--dxai-bg);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-rail {
+	display: flex;
+	flex-direction: column;
+	gap: 26px;
+	padding: 26px 18px 22px;
+	border-right: 1px solid var(--dxai-line);
+	background: linear-gradient(180deg, rgba(9, 13, 18, 0.92), rgba(9, 13, 18, 0.82));
+	backdrop-filter: blur(14px);
+}
+
+#dxai-ui-app .dxai-brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	text-decoration: none;
+	color: inherit;
+}
+
+#dxai-ui-app .dxai-mark {
+	width: 36px;
+	height: 36px;
+	flex: 0 0 36px;
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-brand strong {
+	display: block;
+	font-size: 14px;
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-brand em {
+	display: block;
+	font-style: normal;
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/*
+ * The current item is marked, not filled. A 2px accent bar on the leading edge
+ * reads at a glance and spends the accent once; the filled pill it replaces put
+ * a coloured block behind text on every visit to every screen.
+ */
+#dxai-ui-app .dxai-nav-link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 12px 9px 14px;
+	border-left: 2px solid transparent;
+	border-radius: 0 6px 6px 0;
+	color: var(--dxai-muted);
+	text-decoration: none;
+	font-size: 14px;
+	font-weight: 500;
+	transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+#dxai-ui-app .dxai-nav-link:hover {
+	color: var(--dxai-text);
+	background: rgba(138, 176, 208, 0.06);
+	box-shadow: none;
+}
+
+#dxai-ui-app .dxai-nav-link.is-current {
+	color: #fff;
+	background: rgba(79, 193, 240, 0.08);
+	border-left-color: var(--dxai-accent);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-nav-link.is-current .dxai-nav-ico {
+	color: var(--dxai-accent);
+	opacity: 1;
+}
+
+#dxai-ui-app .dxai-nav-ico {
+	width: 18px;
+	height: 18px;
+	border: 1.5px solid currentColor;
+	border-radius: 5px;
+	position: relative;
+	opacity: 0.85;
+}
+
+#dxai-ui-app .dxai-nav-ico--convert::after {
+	content: "";
+	position: absolute;
+	inset: 4px;
+	border-top: 1.5px solid currentColor;
+	border-right: 1.5px solid currentColor;
+}
+
+#dxai-ui-app .dxai-nav-ico--library {
+	border: 0;
+	box-shadow:
+		inset 0 4px 0 currentColor,
+		inset 0 9px 0 0 transparent,
+		inset 0 11px 0 currentColor,
+		inset 0 16px 0 0 transparent,
+		inset 0 18px 0 currentColor;
+	opacity: 0.8;
+}
+
+#dxai-ui-app .dxai-nav-ico--forms {
+	border-radius: 3px 3px 6px 6px;
+}
+
+#dxai-ui-app .dxai-nav-ico--settings {
+	border-radius: 99px;
+}
+
+#dxai-ui-app .dxai-rail-meta {
+	margin-top: auto;
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-main {
+	min-width: 0;
+	padding: 28px 36px 48px;
+}
+
+#dxai-ui-app .dxai-hero {
+	padding: 8px 0 20px;
+	max-width: 720px;
+}
+
+#dxai-ui-app .dxai-kicker {
+	margin: 0 0 10px;
+	color: var(--dxai-accent);
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-hero h2 {
+	margin: 0 0 10px;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: clamp(32px, 4vw, 44px);
+	font-weight: 600;
+	letter-spacing: -0.025em;
+	line-height: 1.15;
+}
+
+#dxai-ui-app .dxai-hero p {
+	margin: 0;
+	color: var(--dxai-muted);
+	font-size: 16px;
+	max-width: 46ch;
+}
+
+#dxai-ui-app .dxai-levels {
+	display: flex;
+	gap: 0;
+	list-style: none;
+	margin: 0 0 8px;
+	padding: 0 0 4px;
+	border-bottom: 1px solid var(--dxai-line);
+	flex-wrap: wrap;
+}
+
+#dxai-ui-app .dxai-levels li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--dxai-muted);
+	padding: 12px 20px 14px 0;
+	font-size: 13px;
+	position: relative;
+}
+
+#dxai-ui-app .dxai-levels li + li {
+	padding-left: 20px;
+}
+
+#dxai-ui-app .dxai-levels li + li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 12px;
+	height: 1px;
+	margin-top: -8px;
+	background: var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-levels li span {
+	width: 22px;
+	height: 22px;
+	border-radius: 99px;
+	border: 1px solid var(--dxai-line-strong);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-levels li.is-current {
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-levels li.is-current span,
+#dxai-ui-app .dxai-levels li.is-done span {
+	background: var(--dxai-accent);
+	color: #1a140e;
+	border-color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-panel {
+	padding: 20px 0 0;
+}
+
+#dxai-ui-app .dxai-step-title {
+	margin: 0 0 18px;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -0.025em;
+}
+
+#dxai-ui-app .dxai-paths {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+}
+
+#dxai-ui-app .dxai-paths--two {
+	grid-template-columns: 1fr 1fr;
+}
+
+#dxai-ui-app .dxai-path {
+	text-align: left;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%), var(--dxai-panel);
+	border: 1px solid var(--dxai-line);
+	border-radius: 20px;
+	padding: 22px;
+	color: inherit;
+	cursor: pointer;
+	min-height: 200px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#dxai-ui-app .dxai-path:hover,
+#dxai-ui-app .dxai-path:focus {
+	border-color: var(--dxai-accent);
+	transform: translateY(-3px);
+	box-shadow: var(--dxai-shadow);
+	outline: none;
+}
+
+#dxai-ui-app .dxai-path.is-selected {
+	border-color: var(--dxai-accent);
+	box-shadow: inset 0 0 0 1px var(--dxai-accent), var(--dxai-shadow);
+}
+
+#dxai-ui-app .dxai-path-glyph {
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	margin-bottom: 16px;
+	background: rgba(79, 193, 240, 0.12);
+	color: var(--dxai-accent);
+	position: relative;
+}
+
+#dxai-ui-app .dxai-path-glyph--figma::before,
+#dxai-ui-app .dxai-path-glyph--figma::after {
+	content: "";
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	border-radius: 4px;
+	background: currentColor;
+	top: 10px;
+	left: 10px;
+}
+
+#dxai-ui-app .dxai-path-glyph--figma::after {
+	left: 20px;
+	top: 20px;
+	border-radius: 99px;
+	opacity: 0.55;
+}
+
+#dxai-ui-app .dxai-path-glyph--design::before {
+	content: "";
+	position: absolute;
+	inset: 12px 10px 11px;
+	border: 1.5px solid currentColor;
+	border-radius: 3px;
+}
+
+/* The lid band, which is what separates an archive from a plain rectangle. */
+#dxai-ui-app .dxai-path-glyph--design::after {
+	content: "";
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	top: 18px;
+	border-top: 1.5px solid currentColor;
+	opacity: 0.6;
+}
+
+#dxai-ui-app .dxai-path-glyph--code::before,
+#dxai-ui-app .dxai-path-glyph--code::after {
+	content: "";
+	position: absolute;
+	width: 9px;
+	height: 9px;
+	top: 15px;
+	border-top: 1.5px solid currentColor;
+	border-right: 1.5px solid currentColor;
+}
+
+#dxai-ui-app .dxai-path-glyph--code::before {
+	left: 12px;
+	transform: rotate(-135deg);
+}
+
+#dxai-ui-app .dxai-path-glyph--code::after {
+	right: 12px;
+	transform: rotate(45deg);
+	opacity: 0.6;
+}
+
+#dxai-ui-app .dxai-path-glyph--page::before {
+	content: "";
+	position: absolute;
+	inset: 9px 12px;
+	border: 1.5px solid currentColor;
+	border-radius: 4px;
+}
+
+#dxai-ui-app .dxai-path-glyph--site::before {
+	content: "";
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	top: 9px;
+	height: 8px;
+	border: 1.5px solid currentColor;
+	border-radius: 3px;
+}
+
+#dxai-ui-app .dxai-path-glyph--site::after {
+	content: "";
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	bottom: 9px;
+	top: 20px;
+	border: 1.5px solid currentColor;
+	border-radius: 3px;
+	opacity: 0.6;
+}
+
+#dxai-ui-app .dxai-path strong {
+	display: block;
+	color: #fff;
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	margin-bottom: 8px;
+}
+
+#dxai-ui-app .dxai-path p {
+	margin: 0 0 16px;
+	color: var(--dxai-muted);
+	font-size: 14px;
+	flex: 1;
+}
+
+#dxai-ui-app .dxai-path em {
+	color: var(--dxai-accent);
+	font-style: normal;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+#dxai-ui-app .dxai-drop {
+	border: 1px dashed var(--dxai-line-strong);
+	border-radius: 24px;
+	min-height: 240px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	background:
+		radial-gradient(400px 160px at 50% 0%, rgba(79, 193, 240, 0.08), transparent 70%),
+		var(--dxai-bg-2);
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Which exports this zone takes, since the wizard no longer asks. */
+#dxai-ui-app .dxai-drop-hint {
+	margin-top: -4px;
+	font-size: 11.5px;
+	font-style: normal;
+	letter-spacing: 0.04em;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-drop.is-drag {
+	border-color: var(--dxai-accent);
+	background: rgba(79, 193, 240, 0.06);
+}
+
+#dxai-ui-app .dxai-drop-mark {
+	width: 48px;
+	height: 48px;
+	border-radius: 16px;
+	border: 1px solid var(--dxai-line-strong);
+	position: relative;
+	margin-bottom: 6px;
+}
+
+#dxai-ui-app .dxai-drop-mark::before,
+#dxai-ui-app .dxai-drop-mark::after {
+	content: "";
+	position: absolute;
+	background: var(--dxai-accent);
+	left: 50%;
+	top: 50%;
+}
+
+#dxai-ui-app .dxai-drop-mark::before {
+	width: 16px;
+	height: 1.5px;
+	margin: -0.75px 0 0 -8px;
+}
+
+#dxai-ui-app .dxai-drop-mark::after {
+	width: 1.5px;
+	height: 16px;
+	margin: -8px 0 0 -0.75px;
+}
+
+#dxai-ui-app .dxai-drop p {
+	margin: 0;
+	font-family: var(--dxai-display);
+	font-size: 28px;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-file {
+	cursor: pointer;
+	color: var(--dxai-accent);
+	font-weight: 600;
+	font-size: 14px;
+}
+
+#dxai-ui-app .dxai-file input {
+	display: none;
+}
+
+#dxai-ui-app .dxai-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	max-width: 640px;
+}
+
+#dxai-ui-app .dxai-muted {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+
+#dxai-ui-app .dxai-section {
+	margin-bottom: 28px;
+	padding: 22px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 20px;
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-section h3 {
+	margin: 0 0 6px;
+	font-size: 15px;
+	font-weight: 650;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-section > p {
+	margin: 0 0 16px;
+	color: var(--dxai-muted);
+	font-size: 13px;
+}
+
+#dxai-ui-app label,
+#dxai-ui-app .components-base-control__label,
+#dxai-ui-app .components-input-control__label {
+	display: block;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+	margin-bottom: 6px;
+	font-weight: 600;
+}
+
+#dxai-ui-app input,
+#dxai-ui-app select,
+#dxai-ui-app textarea,
+#dxai-ui-app .components-text-control__input,
+#dxai-ui-app .components-textarea-control__input,
+#dxai-ui-app .components-select-control__input,
+#dxai-ui-app .components-input-control__input {
+	width: 100%;
+	background: var(--dxai-bg-2) !important;
+	border: 1px solid var(--dxai-line-strong) !important;
+	color: #fff !important;
+	border-radius: 12px !important;
+	padding: 11px 14px;
+	box-shadow: none !important;
+}
+
+#dxai-ui-app textarea {
+	min-height: 140px;
+	font-family: var(--dxai-mono);
+	font-size: 12px;
+}
+
+#dxai-ui-app .dxai-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 24px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+#dxai-ui-app .dxai-btn,
+#dxai-ui-app .components-button.is-primary {
+	background: var(--dxai-accent);
+	color: #1a140e;
+	border: 0;
+	border-radius: 999px;
+	padding: 10px 18px;
+	height: auto;
+	font-weight: 650;
+	cursor: pointer;
+	box-shadow: none;
+}
+
+#dxai-ui-app .dxai-btn:hover,
+#dxai-ui-app .components-button.is-primary:hover:not(:disabled) {
+	filter: brightness(1.06);
+	color: #1a140e;
+}
+
+#dxai-ui-app .dxai-btn:focus,
+#dxai-ui-app .components-button:focus:not(:disabled) {
+	box-shadow: 0 0 0 2px var(--dxai-bg), 0 0 0 4px var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-btn:disabled,
+#dxai-ui-app .components-button:disabled,
+#dxai-ui-app .dxai-path:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+	transform: none;
+}
+
+#dxai-ui-app .dxai-btn.secondary,
+#dxai-ui-app .components-button.is-secondary,
+#dxai-ui-app .components-button.is-tertiary {
+	background: transparent;
+	color: #fff;
+	border: 1px solid var(--dxai-line-strong);
+	box-shadow: none;
+	border-radius: 999px;
+	height: auto;
+	padding: 10px 18px;
+}
+
+#dxai-ui-app .components-button.is-link {
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-link {
+	background: none;
+	border: 0;
+	color: var(--dxai-accent);
+	cursor: pointer;
+	padding: 0;
+	margin: 14px 0;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-link:hover,
+#dxai-ui-app .dxai-link:focus {
+	text-decoration: underline;
+}
+
+#dxai-ui-app .dxai-log {
+	margin-top: 16px;
+	background: #05060a;
+	border: 1px solid var(--dxai-line);
+	border-radius: 14px;
+	padding: 14px;
+	font-family: var(--dxai-mono);
+	font-size: 12px;
+	max-height: 220px;
+	overflow: auto;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-notice {
+	margin: 12px 0;
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: rgba(143, 191, 154, 0.12);
+	color: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-notice.is-error {
+	background: rgba(224, 122, 106, 0.12);
+	color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-card {
+	border: 1px solid var(--dxai-line);
+	border-radius: 16px;
+	padding: 16px 18px;
+	margin-bottom: 10px;
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-card strong {
+	color: #fff;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-row:last-child {
+	border-bottom: 0;
+}
+
+#dxai-ui-app .dxai-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 9px;
+	border-radius: 99px;
+	font-size: 11px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-weight: 650;
+	background: rgba(79, 193, 240, 0.14);
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-run {
+	text-align: center;
+	padding: 48px 12px;
+}
+
+#dxai-ui-app .dxai-run .components-spinner {
+	width: 28px;
+	height: 28px;
+}
+
+#dxai-ui-app .dxai-run h3 {
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 28px;
+	font-weight: 600;
+	margin: 16px 0 8px;
+}
+
+#dxai-ui-app .dxai-run-stages {
+	list-style: none;
+	padding: 0;
+	max-width: 320px;
+	margin: 20px auto;
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-run-stages li {
+	color: var(--dxai-muted);
+	padding: 8px 0 8px 22px;
+	position: relative;
+}
+
+#dxai-ui-app .dxai-run-stages li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 14px;
+	width: 8px;
+	height: 8px;
+	border-radius: 99px;
+	border: 1px solid var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-run-stages li.is-on {
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-run-stages li.is-on::before {
+	background: var(--dxai-accent);
+	border-color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-preview-stage {
+	border: 1px solid var(--dxai-line);
+	border-radius: 20px;
+	padding: 16px;
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-preview {
+	width: 100%;
+	height: 560px;
+	border: 0;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 0 0 1px var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-preview.is-mobile {
+	width: 390px;
+	margin: 0 auto;
+	display: block;
+	border-radius: 28px;
+	height: 680px;
+}
+
+#dxai-ui-app .dxai-preview-toolbar,
+#dxai-ui-app .dxai-seg {
+	display: inline-flex;
+	gap: 0;
+	margin-bottom: 14px;
+	padding: 4px;
+	border-radius: 999px;
+	background: var(--dxai-bg-2);
+	border: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-seg .components-button {
+	border-radius: 999px;
+	border: 0;
+	box-shadow: none;
+	height: 32px;
+	padding: 0 14px;
+}
+
+#dxai-ui-app .dxai-pieces {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	list-style: none;
+	padding: 16px 0 4px;
+	margin: 0;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-pieces li {
+	margin: 0;
+}
+
+#dxai-ui-app .dxai-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border-radius: 999px;
+	border: 1px solid var(--dxai-line);
+	background: var(--dxai-panel-2);
+	font-size: 13px;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-chip input {
+	width: auto;
+	margin: 0;
+	accent-color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-thumbs {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+#dxai-ui-app .dxai-thumbs button {
+	padding: 0;
+	border: 1px solid var(--dxai-line);
+	border-radius: 10px;
+	overflow: hidden;
+	background: #05060a;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-thumbs img {
+	display: block;
+	width: 100%;
+	height: 64px;
+	object-fit: cover;
+}
+
+#dxai-ui-app .dxai-stats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 0 0 18px;
+	padding: 0;
+	list-style: none;
+	color: var(--dxai-muted);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-stats strong {
+	display: block;
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 28px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-success {
+	text-align: center;
+	padding: 56px 16px;
+}
+
+#dxai-ui-app .dxai-success-mark {
+	width: 64px;
+	height: 64px;
+	margin: 0 auto 20px;
+	border-radius: 99px;
+	border: 1px solid var(--dxai-ok);
+	position: relative;
+}
+
+#dxai-ui-app .dxai-success-mark::after {
+	content: "";
+	position: absolute;
+	left: 22px;
+	top: 18px;
+	width: 14px;
+	height: 24px;
+	border-right: 2px solid var(--dxai-ok);
+	border-bottom: 2px solid var(--dxai-ok);
+	transform: rotate(40deg);
+}
+
+#dxai-ui-app .dxai-success h3 {
+	color: #fff;
+	font-family: var(--dxai-display);
+	font-size: 36px;
+	font-weight: 600;
+	margin: 0 0 8px;
+}
+
+#dxai-ui-app .dxai-success p {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-success .dxai-actions {
+	justify-content: center;
+}
+
+#dxai-ui-app .dxai-table,
+#dxai-ui-app table.dxai-data {
+	width: 100%;
+	border-collapse: collapse;
+	color: var(--dxai-text);
+	background: var(--dxai-panel);
+	border-radius: 16px;
+	overflow: hidden;
+	border: 1px solid var(--dxai-line);
+	margin-top: 16px;
+}
+
+#dxai-ui-app table.dxai-data th,
+#dxai-ui-app table.dxai-data td {
+	padding: 12px 16px;
+	text-align: left;
+	border-bottom: 1px solid var(--dxai-line);
+	font-size: 14px;
+}
+
+#dxai-ui-app table.dxai-data th {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+	font-weight: 650;
+}
+
+#dxai-ui-app table.dxai-data tr:last-child td {
+	border-bottom: 0;
+}
+
+#dxai-ui-app .components-notice {
+	margin: 0 0 18px;
+	background: rgba(79, 193, 240, 0.1);
+	border: 1px solid rgba(79, 193, 240, 0.24);
+	border-left-width: 3px;
+	color: var(--dxai-text);
+	box-shadow: none;
+}
+
+#dxai-ui-app .components-notice.is-error {
+	background: rgba(224, 122, 106, 0.1);
+	border-color: rgba(224, 122, 106, 0.3);
+}
+
+#dxai-ui-app .components-notice.is-success {
+	background: rgba(143, 191, 154, 0.1);
+	border-color: rgba(143, 191, 154, 0.3);
+}
+
+#dxai-ui-app .components-notice.is-warning {
+	background: rgba(224, 184, 106, 0.1);
+	border-color: rgba(224, 184, 106, 0.3);
+}
+
+#dxai-ui-app .components-notice__content,
+#dxai-ui-app .components-notice__content * {
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .components-base-control {
+	margin-bottom: 4px;
+}
+
+#dxai-ui-app .components-input-control__backdrop {
+	display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#dxai-ui-app .dxai-path,
+	#dxai-ui-app .dxai-nav-link {
+		transition: none;
+	}
+
+	#dxai-ui-app .dxai-path:hover,
+	#dxai-ui-app .dxai-path:focus {
+		transform: none;
+	}
+}
+
+@media (max-width: 960px) {
+	#dxai-ui-app .dxai-shell {
+		grid-template-columns: 1fr;
+	}
+
+	#dxai-ui-app .dxai-rail {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 16px;
+		border-right: 0;
+		border-bottom: 1px solid var(--dxai-line);
+		padding: 16px 20px;
+	}
+
+	#dxai-ui-app .dxai-nav {
+		flex-direction: row;
+		flex: 1;
+	}
+
+	#dxai-ui-app .dxai-rail-meta {
+		margin-top: 0;
+		width: 100%;
+	}
+
+	#dxai-ui-app .dxai-main {
+		padding: 20px 16px 40px;
+	}
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-grid,
+	#dxai-ui-app .dxai-paths,
+	#dxai-ui-app .dxai-paths--two,
+	#dxai-ui-app .dxai-thumbs {
+		grid-template-columns: 1fr;
+	}
+
+	/*
+	 * Stacked, the readings are separated by a rule between them, not on their
+	 * leading edge. The strip's hairlines are vertical while it is a row, so
+	 * without this a one-column stack drew four short lines down the left.
+	 */
+	#dxai-ui-app .dxai-stat-card {
+		border-left: 0;
+		border-top: 1px solid var(--dxai-line);
+	}
+
+	#dxai-ui-app .dxai-stat-card:first-child {
+		border-top: 0;
+	}
+
+	#dxai-ui-app .dxai-preview.is-mobile {
+		width: 100%;
+		height: 520px;
+	}
+
+	#dxai-ui-app .dxai-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+
+/* Premium admin refresh */
+
+#dxai-ui-app .dxai-main {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+#dxai-ui-app .dxai-shell-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 24px;
+	align-items: flex-end;
+	padding: 4px 0 0;
+}
+
+#dxai-ui-app .dxai-shell-copy {
+	max-width: 840px;
+}
+
+#dxai-ui-app .dxai-shell-copy h1 {
+	margin: 0 0 10px;
+	font-family: var(--dxai-display);
+	font-size: clamp(36px, 5vw, 56px);
+	font-weight: 600;
+	line-height: 1.02;
+	letter-spacing: -0.04em;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-shell-copy p {
+	margin: 0;
+	max-width: 60ch;
+	font-size: 15px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-shell-actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+#dxai-ui-app .dxai-shell-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	padding: 0 16px;
+	border-radius: 999px;
+	text-decoration: none;
+	border: 1px solid var(--dxai-line-strong);
+	background: rgba(255, 255, 255, 0.03);
+	color: #fff;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-shell-link:hover,
+#dxai-ui-app .dxai-shell-link:focus {
+	border-color: var(--dxai-accent);
+	color: #fff;
+	outline: none;
+}
+
+/*
+ * An instrument row, not four cards.
+ *
+ * These are four readings of one machine — provider, pages, conversions,
+ * version — so they sit in one strip divided by hairlines. Four separate
+ * rounded cards with their own borders and shadows said "four objects" and
+ * made the page's most ordinary information its loudest.
+ */
+#dxai-ui-app .dxai-shell-stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0;
+	border: 1px solid var(--dxai-line);
+	border-radius: var(--dxai-radius);
+	background: var(--dxai-panel);
+	overflow: hidden;
+}
+
+#dxai-ui-app .dxai-stat-card {
+	padding: 14px 18px 15px;
+	border-left: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-stat-card:first-child {
+	border-left: 0;
+}
+
+#dxai-ui-app .dxai-stat-card span {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-stat-card strong {
+	display: block;
+	font-family: var(--dxai-mono);
+	font-size: 21px;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-rail-card {
+	padding: 16px;
+	border-radius: 16px;
+	border: 1px solid var(--dxai-line);
+	background: linear-gradient(180deg, rgba(79, 193, 240, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+#dxai-ui-app .dxai-rail-label,
+#dxai-ui-app .dxai-section-kicker {
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 650;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-rail-card strong {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 15px;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-rail-card p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-screen {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+#dxai-ui-app .dxai-screen-intro {
+	display: flex;
+	justify-content: space-between;
+	gap: 18px;
+}
+
+#dxai-ui-app .dxai-panel.dxai-panel--stack {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding-top: 0;
+}
+
+#dxai-ui-app .dxai-stage-card,
+#dxai-ui-app .dxai-toolbar-card,
+#dxai-ui-app .dxai-section {
+	padding: 24px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 24px;
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+		var(--dxai-panel);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+#dxai-ui-app .dxai-toolbar-card--spread,
+#dxai-ui-app .dxai-section-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+#dxai-ui-app .dxai-toolbar-title {
+	margin: 0 0 8px;
+	font-size: 20px;
+	font-weight: 600;
+	color: #fff;
+}
+
+#dxai-ui-app .dxai-card-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+}
+
+#dxai-ui-app .dxai-card-grid--tight {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#dxai-ui-app .dxai-card--library,
+#dxai-ui-app .dxai-field-card {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-height: 0;
+}
+
+#dxai-ui-app .dxai-card-top,
+#dxai-ui-app .dxai-field-card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+#dxai-ui-app .dxai-card-id {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-field-card {
+	padding: 18px;
+	border-radius: 18px;
+	border: 1px solid var(--dxai-line);
+	background: rgba(255, 255, 255, 0.02);
+}
+
+#dxai-ui-app .dxai-field-card--muted {
+	justify-content: space-between;
+}
+
+#dxai-ui-app .dxai-empty-state {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	align-items: flex-start;
+	justify-content: center;
+	min-height: 140px;
+}
+
+#dxai-ui-app .dxai-empty-state strong {
+	color: #fff;
+	font-size: 18px;
+}
+
+/*
+ * The conversion report.
+ *
+ * It replaces a one-line "compiler coverage" card that reported the single
+ * measurement of five the compiler takes. Four rows, each a hairline apart, a
+ * state dot per row, and every figure in tabular numerals so two conversions
+ * read as comparable. The green/amber/red here is state, never decoration: a
+ * red dot means that row is the reason the page is not pixel perfect.
+ */
+#dxai-ui-app .dxai-fidelity {
+	border: 1px solid var(--dxai-line);
+	border-radius: var(--dxai-radius);
+	background: var(--dxai-panel);
+	overflow: hidden;
+}
+
+#dxai-ui-app .dxai-fidelity.is-perfect {
+	border-color: rgba(95, 211, 155, 0.32);
+}
+
+#dxai-ui-app .dxai-fidelity-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px 28px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--dxai-line);
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent);
+}
+
+#dxai-ui-app .dxai-fidelity-head h4 {
+	margin: 2px 0 0;
+	font-family: var(--dxai-display);
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-fidelity.is-perfect .dxai-fidelity-head h4 {
+	color: var(--dxai-ok);
+}
+
+/* Four figures on one baseline, separated by hairlines rather than boxes. */
+#dxai-ui-app .dxai-fidelity-tally {
+	display: flex;
+	gap: 0;
+	margin: 0;
+}
+
+#dxai-ui-app .dxai-fidelity-tally > div {
+	padding: 0 16px;
+	border-left: 1px solid var(--dxai-line);
+	text-align: right;
+}
+
+#dxai-ui-app .dxai-fidelity-tally > div:first-child {
+	border-left: 0;
+}
+
+#dxai-ui-app .dxai-fidelity-tally > div:last-child {
+	padding-right: 0;
+}
+
+#dxai-ui-app .dxai-fidelity-tally dt {
+	margin: 0;
+	font-size: 10.5px;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-fidelity-tally dd {
+	margin: 1px 0 0;
+	font-family: var(--dxai-display);
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 1.15;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-fidelity-rows {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#dxai-ui-app .dxai-fidelity-rows li {
+	display: grid;
+	grid-template-columns: 10px minmax(120px, max-content) minmax(64px, max-content) 1fr;
+	align-items: baseline;
+	gap: 0 14px;
+	margin: 0;
+	padding: 11px 20px;
+	border-top: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li:first-child {
+	border-top: 0;
+}
+
+#dxai-ui-app .dxai-fidelity-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	/* Sits on the text baseline rather than the line box. */
+	transform: translateY(-1px);
+	background: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li.is-ok .dxai-fidelity-dot {
+	background: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li.is-warn .dxai-fidelity-dot {
+	background: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li.is-bad .dxai-fidelity-dot {
+	background: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-fidelity-label {
+	font-size: 13px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-fidelity-value {
+	font-family: var(--dxai-display);
+	font-size: 14.5px;
+	font-weight: 600;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li.is-bad .dxai-fidelity-value {
+	color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-fidelity-rows li.is-warn .dxai-fidelity-value {
+	color: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-fidelity-detail {
+	font-size: 12.5px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-fidelity-more {
+	padding: 14px 20px 16px;
+	border-top: 1px solid var(--dxai-line);
+	background: rgba(255, 255, 255, 0.014);
+}
+
+#dxai-ui-app .dxai-fidelity-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0;
+	padding: 0;
+	list-style: none;
+}
+
+#dxai-ui-app .dxai-fidelity-tags li {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin: 0;
+	padding: 3px 4px 3px 8px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 999px;
+	background: var(--dxai-panel-2);
+}
+
+#dxai-ui-app .dxai-fidelity-tags code {
+	padding: 0;
+	background: none;
+	font-family: var(--dxai-mono);
+	font-size: 11.5px;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-fidelity-tags li span {
+	min-width: 20px;
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: rgba(255, 111, 107, 0.14);
+	font-size: 11px;
+	text-align: center;
+	color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-fidelity-assets {
+	margin: 0;
+	padding: 12px 20px;
+	border-top: 1px solid var(--dxai-line);
+	font-size: 12.5px;
+}
+
+/*
+ * The import-coverage table.
+ *
+ * Three groups of two counts each, so the eye compares down a column rather
+ * than across a sentence: what the design has, what the page got. Figures are
+ * tabular so two rows of four digits line up, and the only colour is state —
+ * red where something did not arrive, and nothing anywhere else, because a
+ * table where every row is decorated has no emphasis left for the one row that
+ * matters.
+ */
+#dxai-ui-app .dxai-coverage {
+	margin-top: 0;
+	border-top: 1px solid var(--dxai-line);
+	background: rgba(255, 255, 255, 0.014);
+}
+
+#dxai-ui-app .dxai-coverage-head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px 24px;
+	padding: 14px 20px 12px;
+}
+
+#dxai-ui-app .dxai-coverage-head h4 {
+	margin: 2px 0 0;
+	font-family: var(--dxai-display);
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.005em;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-coverage.is-whole .dxai-coverage-head h4 {
+	color: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-coverage-score {
+	margin: 0;
+	text-align: right;
+	white-space: nowrap;
+}
+
+#dxai-ui-app .dxai-coverage-score strong {
+	display: block;
+	font-family: var(--dxai-display);
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 1.1;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-coverage-score span {
+	font-size: 10.5px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-coverage-group {
+	padding: 10px 20px 14px;
+	border-top: 1px solid var(--dxai-line);
+}
+
+#dxai-ui-app .dxai-coverage-table {
+	width: 100%;
+	margin-top: 6px;
+	border-collapse: collapse;
+	font-size: 12.5px;
+}
+
+#dxai-ui-app .dxai-coverage-table th,
+#dxai-ui-app .dxai-coverage-table td {
+	padding: 5px 10px 5px 0;
+	text-align: left;
+	vertical-align: baseline;
+	font-weight: 400;
+}
+
+#dxai-ui-app .dxai-coverage-table thead th {
+	font-size: 10.5px;
+	font-weight: 500;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--dxai-muted);
+	border-bottom: 1px solid var(--dxai-line);
+}
+
+/* The two count columns, narrow and right-aligned so they compare. */
+#dxai-ui-app .dxai-coverage-table thead th:nth-child(2),
+#dxai-ui-app .dxai-coverage-table thead th:nth-child(3),
+#dxai-ui-app .dxai-coverage-table tbody td:nth-child(2),
+#dxai-ui-app .dxai-coverage-table tbody td:nth-child(3) {
+	width: 15%;
+	text-align: right;
+	padding-right: 18px;
+	font-variant-numeric: tabular-nums;
+}
+
+#dxai-ui-app .dxai-coverage-table tbody th {
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-coverage-table tbody tr + tr th,
+#dxai-ui-app .dxai-coverage-table tbody tr + tr td {
+	border-top: 1px solid rgba(138, 176, 208, 0.07);
+}
+
+#dxai-ui-app .dxai-coverage-table tbody td:last-child {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-coverage-table tr.is-info th,
+#dxai-ui-app .dxai-coverage-table tr.is-unknown th,
+#dxai-ui-app .dxai-coverage-table tr.is-info td,
+#dxai-ui-app .dxai-coverage-table tr.is-unknown td {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-coverage-table tr.is-short th,
+#dxai-ui-app .dxai-coverage-table tr.is-short td {
+	color: var(--dxai-danger);
+}
+
+#dxai-ui-app .dxai-coverage-table tr.is-short td:nth-child(3) {
+	font-weight: 600;
+}
+
+/* What did not arrive, named, under the count that says how many. */
+#dxai-ui-app .dxai-coverage-missing {
+	display: block;
+	margin-top: 3px;
+	font-family: var(--dxai-mono);
+	font-size: 11px;
+	line-height: 1.45;
+	color: var(--dxai-danger);
+	opacity: 0.85;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-coverage-table thead th:nth-child(2),
+	#dxai-ui-app .dxai-coverage-table thead th:nth-child(3),
+	#dxai-ui-app .dxai-coverage-table tbody td:nth-child(2),
+	#dxai-ui-app .dxai-coverage-table tbody td:nth-child(3) {
+		width: 18%;
+		padding-right: 8px;
+	}
+
+	#dxai-ui-app .dxai-coverage-table thead th:last-child,
+	#dxai-ui-app .dxai-coverage-table tbody td:last-child {
+		font-size: 11.5px;
+	}
+}
+
+/* On the success screen the report sits under a verdict, so it loses its own. */
+#dxai-ui-app .dxai-fidelity.is-compact {
+	text-align: left;
+}
+
+#dxai-ui-app .dxai-fidelity.is-compact .dxai-fidelity-detail,
+#dxai-ui-app .dxai-fidelity.is-compact .dxai-fidelity-more {
+	display: none;
+}
+
+#dxai-ui-app .dxai-fidelity.is-compact .dxai-fidelity-rows li {
+	grid-template-columns: 10px minmax(120px, max-content) 1fr;
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-fidelity-rows li {
+		grid-template-columns: 10px 1fr max-content;
+	}
+
+	#dxai-ui-app .dxai-fidelity-detail {
+		grid-column: 2 / -1;
+	}
+
+	/*
+	 * Wrapped figures lose their separators. The hairline belongs between two
+	 * cells on one line; on a second row it reads as a rule hanging off the
+	 * left of the first figure, which is what a narrow pane showed.
+	 */
+	#dxai-ui-app .dxai-fidelity-tally {
+		flex-wrap: wrap;
+		gap: 10px 22px;
+		text-align: left;
+	}
+
+	#dxai-ui-app .dxai-fidelity-tally > div,
+	#dxai-ui-app .dxai-fidelity-tally > div:last-child {
+		padding: 0;
+		border-left: 0;
+		text-align: left;
+	}
+}
+
+#dxai-ui-app .dxai-preview-stage--premium {
+	padding: 18px;
+	border-radius: 24px;
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 35%),
+		var(--dxai-panel-2);
+}
+
+#dxai-ui-app .dxai-harvest {
+	padding: 18px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.02);
+}
+
+#dxai-ui-app .dxai-table-wrap {
+	border: 1px solid var(--dxai-line);
+	border-radius: 20px;
+	overflow: hidden;
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-cell-wrap {
+	max-width: 420px;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+#dxai-ui-app .dxai-chip.is-on {
+	border-color: rgba(79, 193, 240, 0.4);
+	background: rgba(79, 193, 240, 0.12);
+}
+
+#dxai-ui-app .dxai-library-group + .dxai-library-group {
+	margin-top: 0;
+}
+
+@media (max-width: 1200px) {
+	#dxai-ui-app .dxai-shell-stats,
+	#dxai-ui-app .dxai-card-grid,
+	#dxai-ui-app .dxai-card-grid--tight {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 960px) {
+	#dxai-ui-app .dxai-shell-head,
+	#dxai-ui-app .dxai-toolbar-card--spread,
+	#dxai-ui-app .dxai-section-head {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	#dxai-ui-app .dxai-shell-actions {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-shell-stats,
+	#dxai-ui-app .dxai-card-grid,
+	#dxai-ui-app .dxai-card-grid--tight {
+		grid-template-columns: 1fr;
+	}
+
+	#dxai-ui-app .dxai-stage-card,
+	#dxai-ui-app .dxai-toolbar-card,
+	#dxai-ui-app .dxai-section {
+		padding: 18px;
+	}
+}
+
+/* Post-import audit, on the success screen. Green states its count and gets
+   out of the way; a finding has to be readable enough to act on. */
+#dxai-ui-app .dxai-audit {
+	margin: 14px auto 0;
+	max-width: 46rem;
+	border-radius: 8px;
+	padding: 12px 16px;
+	text-align: left;
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+#dxai-ui-app .dxai-audit--ok {
+	border: 1px solid #b7dfc2;
+	background: #f2fbf5;
+	color: #1f4d2e;
+}
+
+#dxai-ui-app .dxai-audit--warn {
+	border: 1px solid #e6c68a;
+	background: #fdf8ee;
+	color: #5a4113;
+}
+
+#dxai-ui-app .dxai-audit ul {
+	margin: 8px 0 0;
+	padding-left: 20px;
+	list-style: disc;
+}
+
+#dxai-ui-app .dxai-audit li + li {
+	margin-top: 6px;
+}
+
+#dxai-ui-app .dxai-audit code {
+	background: rgba(0, 0, 0, 0.06);
+	border-radius: 3px;
+	padding: 1px 5px;
+	font-size: 12px;
+}
+
+/*
+ * Advisory measurements, set apart from the pass/fail list above. They are
+ * deliberately quieter than a finding — none of them can fail an import — but
+ * they are the numbers that say how much of the page a person can actually
+ * edit and how many of its controls do anything, so they must not read as
+ * decoration either.
+ */
+#dxai-ui-app .dxai-audit-notices {
+	margin: 12px 0 0;
+	padding: 10px 12px 10px 30px;
+	border-left: 3px solid rgba(0, 0, 0, 0.18);
+	background: rgba(0, 0, 0, 0.03);
+	font-size: 12px;
+	line-height: 1.55;
+	list-style: disc;
+}
+
+#dxai-ui-app .dxai-audit-note {
+	margin: 10px 0 0;
+	opacity: 0.8;
+	font-size: 12px;
+}

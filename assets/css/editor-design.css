@@ -1,0 +1,231 @@
+/*
+ * The block editor canvas of a converted page, rendered the way the page's
+ * front end is.
+ *
+ * blocks-editor.js marks the canvas's `.editor-styles-wrapper` — the iframe's
+ * <body>, or the <div> of that class where the editor is not iframed (an
+ * older WordPress with meta boxes on the screen) — with:
+ *   dxai-ui-canvas          the post is a converted page;
+ *   dxai-ui dxai-ui--{id}   the design's scope classes (Page_Scope). On the
+ *                           front end they sit on a <div> around the content;
+ *                           here they sit on that wrapper, so the rules
+ *                           below name it where blank-canvas.css names the
+ *                           <div>. A page stored with its own scope group
+ *                           (before Page_Scope) has them on that group
+ *                           instead, and each rule names that form too;
+ *   dxai-ui-static          a Claude Design export (the front end's body class);
+ *   dxai-ui-blank           the page renders on the plugin's blank template.
+ *
+ * Every rule is keyed on those classes or on a dxai-ui block's own element,
+ * so no other post's content changes. The sheet loads after the design's
+ * (Design_Blocks::enqueue_editor_canvas()), as blank-canvas.css does on the
+ * front end.
+ * The theme's global styles and its constrained root layout are taken out
+ * of the canvas in the editor's settings (blocks-editor.js), not overridden
+ * here — an override would also have beaten the design's own margins.
+ */
+
+/* ---- Editor chrome the blank template never prints ---- */
+
+/* The post title above the content: 4rem of margin and a heading the page
+   does not have. The title stays editable through the Rename action in
+   the page's settings panel (core offers it for any type with a title). */
+.editor-styles-wrapper.dxai-ui-blank .editor-visual-editor__post-title-wrapper {
+	display: none;
+}
+
+/* The root block list is the page's content box, as the scope <div> is on
+   the front end: no theme padding, width cap or margin. */
+.editor-styles-wrapper.dxai-ui-blank .block-editor-block-list__layout.is-root-container {
+	margin: 0;
+	padding: 0;
+	max-width: none;
+}
+
+/* blank-canvas.css's own reset of the page, at element specificity so the
+   design's rules for its scope (`.dxai-ui.dxai-ui--{id} { margin: 0 … }`)
+   still decide, as they do for the scope <div>. */
+:is(body, div):where(.editor-styles-wrapper.dxai-ui-blank) {
+	margin: 0;
+	padding: 0;
+}
+
+.editor-styles-wrapper.dxai-ui-canvas.dxai-ui,
+.editor-styles-wrapper.dxai-ui-canvas .dxai-ui {
+	--wp--style--block-gap: 0;
+}
+
+/* ---- blank-canvas.css, for this structure ----
+   Same declarations, same specificity — (0,2,1), (0,2,2), (0,0,0) — and the
+   same exclusion of a static design, whose browser margins are part of
+   what its author saw. On the blank template only, as that sheet is.
+   `:is(body, div)` is the wrapper in either editor — the iframe's <body> or
+   the non-iframed editor's <div> — at the one type selector's specificity
+   the front end's `body` has. */
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) :where(
+	.wp-block-group,
+	.wp-block-image,
+	.wp-block-list,
+	.wp-block-heading,
+	.wp-block-paragraph,
+	.wp-block-html,
+	.wp-block-quote,
+	.wp-block-table
+),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui :where(
+	.wp-block-group,
+	.wp-block-image,
+	.wp-block-list,
+	.wp-block-heading,
+	.wp-block-paragraph,
+	.wp-block-html,
+	.wp-block-quote,
+	.wp-block-table
+) {
+	margin: 0;
+	max-width: none;
+}
+
+/* Not the root block list's children: on the front end the page's top-level
+   blocks are children of the scope <div> itself, which this rule never
+   reaches. */
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) :where(.is-layout-flow:not(.is-root-container)) > *,
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui :where(.is-layout-flow) > * {
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image) {
+	display: block;
+	line-height: 0;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image > img),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image > img) {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-cover > img),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-cover > img) {
+	object-fit: cover;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-contain > img),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-contain > img) {
+	object-fit: contain;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-fill > img),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-fill > img) {
+	object-fit: fill;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) p,
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui p {
+	margin: 0;
+}
+
+:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank p.dxai-not-p),
+:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui p.dxai-not-p) {
+	margin: 0;
+}
+
+/* ---- Editing structures that are not the design's ---- */
+
+/* A list item's text is a rich-text <div> inside the <li> in the editor,
+   and that one box was the <li>'s only flex or grid item: the checklist
+   rows' tick and copy, the footer's city / address / phone rows, all laid
+   out as one block (the footer 68px short, the phone links inline).
+
+   Where the <li> lays out its children itself — flex, grid, or an inline
+   <li> whose text runs on its line — the <div> takes that layout over: it
+   inherits the <li>'s display and every property that lays out children,
+   so the <li>'s own items are laid out by the same flex or grid, and it
+   fills the <li> as its one item, across every track the <li> defines (a
+   <li> with two explicit rows and a row gap was 8px taller in the canvas
+   while its <div> sat in the first row only). blocks-editor.js names those
+   <li>s with data-dxai-li, from their computed display, and renames them
+   when a viewport, a stylesheet or a block's CSS changes it.
+
+   Every other <li> — `display: list-item`, the default — keeps core's
+   block <div>. Inheriting `list-item` made the <div> a list item of the
+   <ol> too, so an ordered list counted every row twice (1, 3, 5, 7 in the
+   canvas against 1, 2, 3, 4 on the page) and a design's counter(list-item)
+   with it. Except where the marker is inside (`list-style-position:
+   inside`, data-dxai-li="inside"): the marker is the first thing on the
+   <li>'s first line, and a block <div> after it put the text on a line of
+   its own — every item a line taller (38px against the page's 19px). An
+   inline <div> keeps the text on the marker's line, as the page has it.
+
+   `display: contents` would have got the same boxes, but an editing host
+   with no box of its own cannot take focus: a click on a list item's text
+   selected the <li> and every key typed after it went nowhere (measured:
+   the store unchanged after clicking and typing). */
+.editor-styles-wrapper.dxai-ui-canvas li[data-type="core/list-item"][data-dxai-li]:not([data-dxai-li="inside"]) > .block-editor-rich-text__editable {
+	display: inherit;
+	flex-direction: inherit;
+	flex-wrap: inherit;
+	grid-template-columns: inherit;
+	grid-template-rows: inherit;
+	grid-template-areas: inherit;
+	grid-auto-columns: inherit;
+	grid-auto-rows: inherit;
+	grid-auto-flow: inherit;
+	align-items: inherit;
+	align-content: inherit;
+	justify-items: inherit;
+	justify-content: inherit;
+	row-gap: inherit;
+	column-gap: inherit;
+	grid-column: 1 / -1;
+	grid-row: 1 / -1;
+	flex: 1 1 auto;
+	align-self: stretch;
+	justify-self: stretch;
+	min-width: 0;
+}
+
+.editor-styles-wrapper.dxai-ui-canvas li[data-type="core/list-item"][data-dxai-li="inside"] > .block-editor-rich-text__editable {
+	display: inline;
+}
+
+/* core stops pointer events on every image and icon inside a block so a
+   click selects the block around it; when the image or icon IS the block
+   (dxai-ui/image, an <img> dxai-ui/box, dxai-ui/svg) that left it
+   unselectable in the canvas. */
+.editor-styles-wrapper :is(img, svg).block-editor-block-list__block[data-type^="dxai-ui/"] {
+	pointer-events: auto;
+}
+
+/* A server-rendered preview — the site header and footer, whose content
+   lives in Appearance > Menus and Appearance > Widgets: the design's own
+   root is laid out as the block's child, as it is the scope's child on the
+   front end, with no box between them. Between the block element and that
+   root sit an inert <div> (Disabled, in both blocks) and ServerSideRender's
+   own class-less <div>; neither may hold a box of its own. While the header
+   preview reloads — on first load and after every attribute change —
+   ServerSideRender's default loading placeholder puts two more around the
+   last content: a `position: relative` <div> and an `opacity` one, then the
+   class-less <div>. They are named by the inline style ServerSideRender
+   gives them (the design's own markup carries none), and they lose their
+   box too, so the preview does not shift while it reloads; the spinner
+   stays, centred on the block. The footer's own placeholder
+   (site-footer-editor.js) returns the last content as that class-less <div>
+   alone, and its first-load spinner carries a class, so it keeps its box.
+   `display: contents` keeps what they are for — inert still
+   covers the subtree and pointer-events is still inherited — and drops
+   only the box (measured: a click on the header or on a footer link
+   selects the block and navigates nowhere). Any post's canvas, not only a
+   converted page's: the blocks can be inserted anywhere. `.dxai-ui-ssr` is
+   the same for any block that names its ServerSideRender wrapper with it. */
+.editor-styles-wrapper .dxai-ui-ssr,
+.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled,
+.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div:not([class]),
+.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]),
+.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]) > div:not([class]) {
+	display: contents;
+}

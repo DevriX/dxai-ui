@@ -1,0 +1,1934 @@
+# Copyright (C) 2026 DevriX
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: DXAI-UI 0.3.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/dxai-ui\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-09-24T15:38:30+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: dxai-ui\n"
+
+#. Plugin Name of the plugin
+#: dxai-ui.php
+#: src/Admin/Dashboard.php:74
+#: src/Admin/Dashboard.php:75
+msgid "DXAI-UI"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: dxai-ui.php
+msgid "https://devrix.com/dxai-ui"
+msgstr ""
+
+#. Description of the plugin
+#: dxai-ui.php
+msgid "Convert Figma, Lovable, and generated frontend ZIPs into native Gutenberg structures using Claude, ChatGPT, Grok, or DeepSeek."
+msgstr ""
+
+#. Author of the plugin
+#: dxai-ui.php
+#: assets/src/admin/Chrome.js:108
+msgid "DevriX"
+msgstr ""
+
+#. Author URI of the plugin
+#: dxai-ui.php
+msgid "https://devrix.com"
+msgstr ""
+
+#: src/Admin/Dashboard.php:28
+#: src/Admin/Dashboard.php:29
+#: src/Admin/Dashboard.php:208
+#: assets/src/admin/Chrome.js:89
+#: assets/src/admin/Chrome.js:116
+msgid "DXAI Convert"
+msgstr ""
+
+#: src/Admin/Dashboard.php:39
+#: src/Admin/Dashboard.php:40
+#: src/Admin/Dashboard.php:87
+#: src/Admin/Dashboard.php:108
+#: assets/src/admin/Chrome.js:6
+#: assets/src/admin/screens/ConvertWizard.js:52
+msgid "Convert"
+msgstr ""
+
+#: src/Admin/Dashboard.php:48
+#: src/Admin/Dashboard.php:49
+#: src/Admin/Dashboard.php:109
+#: src/Admin/Dashboard.php:205
+#: assets/src/admin/Chrome.js:7
+msgid "Library"
+msgstr ""
+
+#: src/Admin/Dashboard.php:57
+#: src/Admin/Dashboard.php:58
+#: src/Admin/Dashboard.php:110
+#: src/Admin/Dashboard.php:206
+#: src/Content/Content_Types.php:73
+msgid "Form entries"
+msgstr ""
+
+#: src/Admin/Dashboard.php:66
+#: src/Admin/Dashboard.php:67
+#: src/Admin/Dashboard.php:88
+#: src/Admin/Dashboard.php:111
+#: assets/src/admin/Chrome.js:9
+msgid "Settings"
+msgstr ""
+
+#: src/Admin/Dashboard.php:96
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: src/Admin/Dashboard.php:106
+msgid "DXAI Convert is loading. If this message stays, JavaScript failed to start. Use the links below."
+msgstr ""
+
+#: src/Admin/Dashboard.php:207
+msgid "DXAI-UI Settings"
+msgstr ""
+
+#: src/Admin/Part_Shortcuts.php:41
+#: assets/src/admin/screens/ConvertWizard.js:913
+msgid "Edit header"
+msgstr ""
+
+#: src/Admin/Part_Shortcuts.php:41
+#: assets/src/admin/screens/ConvertWizard.js:914
+msgid "Edit footer"
+msgstr ""
+
+#: src/API/Converter_Controller.php:165
+#: src/API/Converter_Controller.php:174
+msgid "This crawl is no longer available. Start the import again."
+msgstr ""
+
+#: src/API/Converter_Controller.php:208
+msgid "Importing a design publishes its HTML, CSS and JavaScript, which on a multisite network only a Super Admin may do. Ask a Super Admin to run the import."
+msgstr ""
+
+#: src/API/Converter_Controller.php:209
+msgid "Importing a design publishes its HTML, CSS and JavaScript, and this site does not allow your account to publish unfiltered HTML (DISALLOW_UNFILTERED_HTML may be set in wp-config.php)."
+msgstr ""
+
+#: src/API/Converter_Controller.php:271
+msgid "This ZIP compiled to no Gutenberg blocks. Use a Lovable/Vite source archive with src/pages or src/routes — a dist-only export cannot be split into editable blocks."
+msgstr ""
+
+#: src/API/Converter_Controller.php:374
+#: src/Compiler/Generation_Merger.php:82
+#: src/Compiler/Generation_Parser.php:94
+#: src/Compiler/Source_Compiler.php:76
+msgid "DXAI-UI Pattern"
+msgstr ""
+
+#: src/API/Converter_Controller.php:549
+msgid "Nothing to save: provide Gutenberg markup or structures."
+msgstr ""
+
+#: src/API/Converter_Controller.php:583
+msgid "No Gutenberg markup to preview."
+msgstr ""
+
+#: src/API/Converter_Controller.php:649
+msgid "Provide a structure object to refine."
+msgstr ""
+
+#: src/API/Converter_Controller.php:707
+msgid "Strict fidelity requested but no LLM key is configured — keeping Pass 1."
+msgstr ""
+
+#: src/API/Converter_Controller.php:708
+msgid "Fidelity refine skipped (no LLM key)."
+msgstr ""
+
+#: src/API/Converter_Controller.php:802
+msgid "Upload a Figma ZIP archive."
+msgstr ""
+
+#: src/API/Converter_Controller.php:817
+#: src/Connectors/Zip_Router.php:109
+msgid "Upload a design archive (.zip)."
+msgstr ""
+
+#: src/API/Converter_Controller.php:825
+msgid "Upload a generated design ZIP (HTML/CSS/JS, Vue, React, Next.js, or a Claude Design .dc.html export)."
+msgstr ""
+
+#: src/API/Converter_Controller.php:826
+msgid "Unknown source type."
+msgstr ""
+
+#. translators: %s datetime
+#: src/API/Form_Controller.php:113
+#, php-format
+msgid "Form entry %s"
+msgstr ""
+
+#: src/API/Form_Controller.php:223
+msgid "Too many form submissions. Please wait a few minutes."
+msgstr ""
+
+#: src/API/Settings_Controller.php:117
+msgid "Lovable has no public source API. Use ZIP or paste instead."
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:34
+msgid "DXAI Design HTML"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:74
+msgid "DXAI Text"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:204
+msgid "DXAI Box"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:416
+msgid "DXAI Icon"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:460
+msgid "DXAI Link"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:604
+msgid "DXAI Image"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:678
+msgid "DXAI Details"
+msgstr ""
+
+#: src/Blocks/Design_Blocks.php:706
+msgid "DXAI Count Up"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:55
+#: src/Compiler/Dynamic_Rewriter.php:118
+msgid "Send"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:57
+msgid "Thank you."
+msgstr ""
+
+#: src/Blocks/Form_Block.php:67
+msgid "Name"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:73
+#: src/Compiler/Dynamic_Rewriter.php:103
+#: assets/src/admin/screens/FormsScreen.js:76
+msgid "Email"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:79
+msgid "Phone"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:85
+#: src/Compiler/Dynamic_Rewriter.php:109
+#: assets/src/admin/screens/FormsScreen.js:77
+msgid "Message"
+msgstr ""
+
+#: src/Blocks/Form_Block.php:92
+msgid "Send message"
+msgstr ""
+
+#: src/Compiler/Chunked_Generator.php:46
+msgid "Unknown generation chunk."
+msgstr ""
+
+#: src/Compiler/Fidelity_Validator.php:22
+msgid "Refine response had no Gutenberg blocks."
+msgstr ""
+
+#: src/Compiler/Fidelity_Validator.php:44
+msgid "Refine response could not be parsed as blocks."
+msgstr ""
+
+#: src/Compiler/Fidelity_Validator.php:59
+msgid "Refine collapsed the structure into a single HTML block."
+msgstr ""
+
+#: src/Compiler/Fidelity_Validator.php:67
+msgid "Refine response still contains JSX leftovers."
+msgstr ""
+
+#. translators: 1: JSON error, 2: response snippet
+#: src/Compiler/Generation_Parser.php:32
+#, php-format
+msgid "The model returned invalid JSON (%1$s). %2$s"
+msgstr ""
+
+#: src/Compiler/Generation_Parser.php:34
+msgid "The response was empty or truncated."
+msgstr ""
+
+#: src/Compiler/Generation_Parser.php:70
+msgid "The model did not return Gutenberg block markup."
+msgstr ""
+
+#: src/Compiler/Gutenberg_Mapper.php:19
+msgid "Generated markup is not valid Gutenberg — the compiler produced no `<!-- wp:` blocks."
+msgstr ""
+
+#: src/Compiler/Gutenberg_Mapper.php:38
+msgid "WordPress could not parse the generated blocks."
+msgstr ""
+
+#: src/Compiler/Structure_Normalizer.php:34
+msgid "Section"
+msgstr ""
+
+#: src/Compiler/Tailwind_Purger.php:296
+msgid "Unable to write isolated CSS."
+msgstr ""
+
+#: src/Compiler/Tailwind_Purger.php:319
+msgid "Unable to write isolated JavaScript."
+msgstr ""
+
+#: src/Connectors/Dc_Connector.php:82
+msgid "No .dc.html page was found in the ZIP."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:22
+#: src/Connectors/Figma_Connector.php:90
+msgid "Figma token is not configured."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:38
+msgid "Figma rejected the access token."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:50
+msgid "A Figma file URL is required."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:67
+msgid "Could not parse a Figma file key from the URL."
+msgstr ""
+
+#. translators: %d: seconds to wait
+#: src/Connectors/Figma_Connector.php:127
+#, php-format
+msgid "Figma rate limit reached. Retry in %d seconds."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:138
+msgid "Figma file request failed. Check the token, file key, and sharing."
+msgstr ""
+
+#: src/Connectors/Figma_Connector.php:148
+msgid "Figma returned no node for that ID."
+msgstr ""
+
+#: src/Connectors/Generated_Design_Connector.php:75
+msgid "No HTML/CSS/JS, Vue, React, or Next.js source was found in the ZIP."
+msgstr ""
+
+#: src/Connectors/Live_Page_Fetcher.php:48
+msgid "Empty URL."
+msgstr ""
+
+#. translators: 1: HTTP status, 2: URL
+#: src/Connectors/Live_Page_Fetcher.php:90
+#, php-format
+msgid "Could not fetch %2$s (HTTP %1$d)."
+msgstr ""
+
+#. translators: %s: URL
+#: src/Connectors/Live_Page_Fetcher.php:105
+#, php-format
+msgid "Gave up on %s: too many redirects."
+msgstr ""
+
+#. translators: %s: URL
+#: src/Connectors/Live_Page_Fetcher.php:121
+#, php-format
+msgid "Refused to fetch %s: not a public web address."
+msgstr ""
+
+#. translators: 1: URL, 2: the design's own host
+#: src/Connectors/Live_Page_Fetcher.php:132
+#, php-format
+msgid "Refused to fetch %1$s: it is not on %2$s."
+msgstr ""
+
+#: src/Connectors/Lovable_Connector.php:74
+msgid "No React/Tailwind source files were found in the ZIP."
+msgstr ""
+
+#: src/Connectors/Lovable_Connector.php:155
+msgid "Paste JSX/TSX source code first."
+msgstr ""
+
+#: src/Connectors/Lovable_Connector.php:206
+msgid "Lovable does not offer a public source API. Upload a ZIP or paste TSX instead."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:188
+msgid "The uploaded ZIP file could not be read."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:237
+msgid "This server cannot read ZIP archives: PHP has neither the zip extension nor zlib, which the PclZip fallback in WordPress needs. Ask your host to enable the PHP zip extension."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:287
+msgid "Upload one .zip file at a time."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:296
+msgid "The ZIP file was only partly uploaded. Try again; if it keeps happening, the connection or a proxy is cutting large uploads short."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:297
+#: src/Connectors/Zip_Extractor.php:318
+msgid "No ZIP file was uploaded."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:298
+msgid "The server has no temporary folder for uploads (PHP upload_tmp_dir). Ask your host to fix it."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:299
+msgid "The server could not write the uploaded ZIP file to disk. The disk may be full; ask your host."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:300
+msgid "A PHP extension on the server stopped the upload. Ask your host which one."
+msgstr ""
+
+#. translators: %d: PHP upload error code.
+#: src/Connectors/Zip_Extractor.php:302
+#, php-format
+msgid "The upload failed (PHP upload error %d)."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:324
+msgid "Only .zip archives are accepted."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:464
+#, php-format
+msgid "The ZIP archive contains an unsafe path (%s), so nothing was unpacked."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:480
+#, php-format
+msgid "Uploaded archives may not contain PHP or other executable files (%s)."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:499
+#, php-format
+msgid "The ZIP archive is password-protected (%s). Export it again without a password."
+msgstr ""
+
+#. translators: %s: WordPress filesystem method, e.g. ftpext.
+#: src/Connectors/Zip_Extractor.php:708
+#, php-format
+msgid "This server has no PHP zip extension, and WordPress could not start its filesystem layer (method \"%s\") to unpack the archive another way. Ask your host to enable the PHP zip extension."
+msgstr ""
+
+#. translators: %s: WordPress filesystem method, e.g. ftpext.
+#: src/Connectors/Zip_Extractor.php:716
+#, php-format
+msgid "This server has no PHP zip extension, and WordPress writes files here through \"%s\" rather than directly, so an unpacked archive would belong to another account. Ask your host to enable the PHP zip extension."
+msgstr ""
+
+#. translators: %s: the reason WordPress gave.
+#: src/Connectors/Zip_Extractor.php:726
+#, php-format
+msgid "Unable to unpack the ZIP archive: %s"
+msgstr ""
+
+#. translators: 1: bytes the archive needs, 2: bytes free.
+#: src/Connectors/Zip_Extractor.php:855
+#, php-format
+msgid "Not enough free disk space to unpack the archive: it needs %1$s and %2$s is free."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:862
+msgid "No folder could be written to unpack the archive: neither the system temp directory nor wp-content/uploads is writable by PHP."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:1097
+msgid "This file is not a ZIP archive, or it is damaged."
+msgstr ""
+
+#. translators: 1: entries in the archive, 2: the limit.
+#: src/Connectors/Zip_Extractor.php:1109
+#, php-format
+msgid "The ZIP archive holds %1$s entries, more than the %2$s this site accepts. Zip the project without node_modules, or raise the limit with the dxai_ui_zip_limits filter."
+msgstr ""
+
+#. translators: %s: the largest upload this site accepts, e.g. 64 MB.
+#: src/Connectors/Zip_Extractor.php:1121
+#, php-format
+msgid "The ZIP file is larger than the upload form allows. This site accepts uploads up to %s."
+msgstr ""
+
+#. translators: %s: the largest upload this site accepts, e.g. 64 MB.
+#: src/Connectors/Zip_Extractor.php:1123
+#, php-format
+msgid "The ZIP file is larger than this server accepts for an upload (%s). Upload a smaller archive, or ask your host to raise upload_max_filesize and post_max_size."
+msgstr ""
+
+#. translators: 1: the entry name, 2: the per-file limit.
+#: src/Connectors/Zip_Extractor.php:1132
+#, php-format
+msgid "%1$s in the ZIP archive unpacks to more than %2$s, the most one file may take. The archive was refused."
+msgstr ""
+
+#. translators: %s: the total limit.
+#: src/Connectors/Zip_Extractor.php:1141
+#, php-format
+msgid "The ZIP archive unpacks to more than %s. Remove large media from it, or raise the limit with the dxai_ui_zip_limits filter."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:1150
+#, php-format
+msgid "%s could not be read from the ZIP archive; the archive may be damaged."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:1179
+#, php-format
+msgid "The ZIP archive has a file and a folder with the same name (%s), so it cannot be unpacked. Export it again."
+msgstr ""
+
+#. translators: %s: the entry name.
+#: src/Connectors/Zip_Extractor.php:1188
+#, php-format
+msgid "%s could not be written to the work folder. The disk may be full."
+msgstr ""
+
+#: src/Connectors/Zip_Extractor.php:1194
+msgid "The ZIP archive did not contain supported files."
+msgstr ""
+
+#: src/Connectors/Zip_Router.php:130
+#: assets/src/admin/screens/ConvertWizard.js:41
+msgid "React source (Lovable, Vite)"
+msgstr ""
+
+#: src/Connectors/Zip_Router.php:131
+#: assets/src/admin/screens/ConvertWizard.js:42
+msgid "Claude Design export"
+msgstr ""
+
+#: src/Connectors/Zip_Router.php:132
+#: assets/src/admin/screens/ConvertWizard.js:43
+msgid "Generated design (HTML, Vue, Next.js)"
+msgstr ""
+
+#: src/Content/Content_Types.php:46
+msgid "DXAI Conversions"
+msgstr ""
+
+#: src/Content/Content_Types.php:47
+msgid "DXAI Conversion"
+msgstr ""
+
+#: src/Content/Content_Types.php:74
+msgid "Form entry"
+msgstr ""
+
+#: src/Content/Content_Types.php:91
+msgid "DXAI Primary"
+msgstr ""
+
+#: src/Content/Content_Types.php:92
+msgid "DXAI Footer"
+msgstr ""
+
+#. translators: 1: HTTP status, 2: error message
+#: src/Engines/Abstract_Engine.php:47
+#, php-format
+msgid "Provider error (%1$d): %2$s"
+msgstr ""
+
+#: src/Engines/Claude_Engine.php:32
+#: src/Engines/Claude_Engine.php:64
+msgid "Anthropic API key is not configured."
+msgstr ""
+
+#: src/Engines/Claude_Engine.php:56
+msgid "Anthropic connection failed."
+msgstr ""
+
+#: src/Engines/Claude_Engine.php:99
+msgid "Claude generation failed."
+msgstr ""
+
+#: src/Engines/DeepSeek_Engine.php:32
+#: src/Engines/DeepSeek_Engine.php:59
+msgid "DeepSeek API key is not configured."
+msgstr ""
+
+#: src/Engines/DeepSeek_Engine.php:51
+msgid "DeepSeek connection failed."
+msgstr ""
+
+#: src/Engines/DeepSeek_Engine.php:103
+msgid "DeepSeek generation failed."
+msgstr ""
+
+#. translators: %s: original parse error
+#: src/Engines/DeepSeek_Engine.php:141
+#, php-format
+msgid "The model hit the output token limit before finishing JSON. %s"
+msgstr ""
+
+#: src/Engines/Engine_Factory.php:44
+msgid "Unknown AI engine."
+msgstr ""
+
+#: src/Engines/Grok_Engine.php:32
+#: src/Engines/Grok_Engine.php:59
+msgid "xAI API key is not configured."
+msgstr ""
+
+#: src/Engines/Grok_Engine.php:51
+msgid "Grok connection failed."
+msgstr ""
+
+#: src/Engines/Grok_Engine.php:93
+msgid "Grok generation failed."
+msgstr ""
+
+#: src/Engines/OpenAI_Engine.php:32
+#: src/Engines/OpenAI_Engine.php:75
+msgid "OpenAI API key is not configured."
+msgstr ""
+
+#: src/Engines/OpenAI_Engine.php:63
+#: src/Engines/OpenAI_Engine.php:66
+msgid "OpenAI connection failed."
+msgstr ""
+
+#: src/Engines/OpenAI_Engine.php:118
+msgid "OpenAI generation failed."
+msgstr ""
+
+#: src/Http/Remote_Client.php:60
+msgid "Unable to encode JSON payload."
+msgstr ""
+
+#: src/Http/Remote_Client.php:74
+msgid "Provider returned invalid JSON."
+msgstr ""
+
+#: src/Media/Sideloader.php:62
+msgid "Remote asset URL is not allowed."
+msgstr ""
+
+#: src/Media/Sideloader.php:90
+msgid "Remote asset is too large."
+msgstr ""
+
+#: src/Media/Sideloader.php:120
+msgid "Asset file is not readable."
+msgstr ""
+
+#: src/Media/Sideloader.php:133
+msgid "Unable to copy SVG for sanitizing."
+msgstr ""
+
+#: src/Media/Sideloader.php:138
+msgid "This SVG could not be sanitized, so it was not imported."
+msgstr ""
+
+#: src/Media/Sideloader.php:175
+msgid "Unable to copy asset for sideload."
+msgstr ""
+
+#: src/Media/Sideloader.php:240
+msgid "This kind of file is not stored as a design asset."
+msgstr ""
+
+#: src/Media/Sideloader.php:243
+msgid "Unable to sanitize SVG."
+msgstr ""
+
+#: src/Media/Sideloader.php:256
+msgid "Unable to read design asset."
+msgstr ""
+
+#: src/Media/Sideloader.php:283
+#: src/Media/Sideloader.php:289
+msgid "Unable to store design asset."
+msgstr ""
+
+#: src/Plugin.php:85
+msgid "DXAI-UI requires PHP 8.2 or higher."
+msgstr ""
+
+#: src/Plugin.php:91
+msgid "DXAI-UI requires WordPress 6.4 or higher."
+msgstr ""
+
+#. translators: %s: comma-separated PHP extension names.
+#: src/Plugin.php:101
+#, php-format
+msgid "DXAI-UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again."
+msgstr ""
+
+#: src/Plugin.php:219
+msgid "DXAI-UI could not be activated"
+msgstr ""
+
+#: src/Structures/Live_Content_Shell.php:54
+msgid "Use the contact options above, or call us — we respond within 24 hours."
+msgstr ""
+
+#: src/Structures/Live_Content_Shell.php:275
+msgid "Home stylesheet not found for live pages."
+msgstr ""
+
+#: src/Structures/Live_Content_Shell.php:283
+msgid "Unable to create CSS directory."
+msgstr ""
+
+#: src/Structures/Live_Content_Shell.php:289
+msgid "Unable to write site CSS."
+msgstr ""
+
+#: src/Structures/Live_Page_Restyler.php:67
+msgid "Nothing to restyle."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:137
+msgid "Sorry — no live site origin found in the menu links, so pages could not be crawled."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:148
+msgid "Sorry — the menu had no same-host page URLs to crawl."
+msgstr ""
+
+#. translators: %s: error detail
+#: src/Structures/Site_From_Menu.php:304
+#, php-format
+msgid "Sorry — could not fetch this page: %s"
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:317
+msgid "Sorry — no usable text or images found on the live page."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:398
+msgid "Sorry — content could not be converted to Gutenberg blocks."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:445
+msgid "Page save failed."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:481
+msgid "Sorry — no additional pages were created from the live menu."
+msgstr ""
+
+#: src/Structures/Site_From_Menu.php:546
+msgid "Kept as it is — this page was edited after it was imported."
+msgstr ""
+
+#: src/Structures/Structure_Repository.php:44
+msgid "Importing a design publishes its HTML, CSS and JavaScript, so it must run as a user allowed to publish unfiltered HTML. From WP-CLI, add --user=<an administrator>."
+msgstr ""
+
+#: src/Structures/Structure_Repository.php:870
+msgid "Conversion snapshot not found."
+msgstr ""
+
+#: src/Structures/Structure_Repository.php:875
+msgid "Conversion snapshot is not valid JSON."
+msgstr ""
+
+#: src/Theme/Blank_Template.php:27
+msgid "DXAI Blank (pixel-perfect)"
+msgstr ""
+
+#: src/Verification/Import_Audit.php:89
+msgid "Geometry, editor block validity and page behaviour are not covered here — run bin/verify-import.cjs for those."
+msgstr ""
+
+#. translators: 1: opaque block count, 2: total blocks, 3: percentage.
+#: src/Verification/Import_Audit.php:129
+#, php-format
+msgid "%1$d of %2$d blocks (%3$d%%) are raw-HTML blocks, which cannot be edited in the editor beyond their markup."
+msgstr ""
+
+#. translators: 1: trigger count, 2: target count.
+#: src/Verification/Import_Audit.php:168
+#, php-format
+msgid "%1$d clickable control(s) but only %2$d element(s) the runtime can change, so some controls will do nothing."
+msgstr ""
+
+#. translators: 1: lossy count, 2: total count.
+#: src/Verification/Import_Audit.php:224
+#, php-format
+msgid "%1$d of %2$d inline styles would lose a declaration if a user without unfiltered_html saved this page."
+msgstr ""
+
+#. translators: %d: number of blocks found.
+#: src/Verification/Import_Audit.php:274
+#, php-format
+msgid "The page holds %d block(s) — the conversion produced nothing to show."
+msgstr ""
+
+#. translators: %s: comma-separated block names.
+#: src/Verification/Import_Audit.php:310
+#, php-format
+msgid "Unregistered block(s): %s. They render as nothing and cannot be edited."
+msgstr ""
+
+#. translators: %d: number of fragments.
+#: src/Verification/Import_Audit.php:320
+#, php-format
+msgid "%d markup fragment(s) sit outside any block — the serialized output is malformed."
+msgstr ""
+
+#. translators: %s: comma-separated template part slugs.
+#: src/Verification/Import_Audit.php:349
+#, php-format
+msgid "The page references template part(s) that do not exist: %s."
+msgstr ""
+
+#. translators: %d: number of images.
+#: src/Verification/Import_Audit.php:385
+#, php-format
+msgid "%d image(s) have no source — an asset import did not resolve."
+msgstr ""
+
+#. translators: %s: the offending snippet.
+#: src/Verification/Import_Audit.php:408
+#, php-format
+msgid "Component source is being rendered as page copy, near: %s"
+msgstr ""
+
+#: src/Verification/Import_Audit.php:424
+msgid "No stylesheet was written for this page."
+msgstr ""
+
+#. translators: %s: stylesheet URL.
+#: src/Verification/Import_Audit.php:439
+#, php-format
+msgid "The stylesheet is missing from disk: %s"
+msgstr ""
+
+#. translators: %s: the at-rule, e.g. @utility.
+#: src/Verification/Import_Audit.php:460
+#, php-format
+msgid "%s survived into the page stylesheet; a browser ignores it, so those rules never apply."
+msgstr ""
+
+#. translators: %s: comma-separated font families.
+#: src/Verification/Import_Audit.php:505
+#, php-format
+msgid "Font famil(ies) requested more than once: %s. The browser may synthesise weights instead of using the real face."
+msgstr ""
+
+#: assets/src/admin/App.js:10
+#: assets/src/admin/Chrome.js:115
+msgid "DXAI Studio"
+msgstr ""
+
+#: assets/src/admin/App.js:11
+msgid "Convert the design, keep the craft."
+msgstr ""
+
+#: assets/src/admin/App.js:12
+msgid "Figma, Lovable, or a generated ZIP compiled into native Gutenberg with structure, assets, and motion intact."
+msgstr ""
+
+#: assets/src/admin/App.js:15
+msgid "DXAI Library"
+msgstr ""
+
+#: assets/src/admin/App.js:16
+msgid "Review every generated asset."
+msgstr ""
+
+#: assets/src/admin/App.js:17
+msgid "Pages, patterns, template parts, menus, and revisions in one product-style workspace."
+msgstr ""
+
+#: assets/src/admin/App.js:20
+msgid "DXAI Entries"
+msgstr ""
+
+#: assets/src/admin/App.js:21
+msgid "Track submissions from generated forms."
+msgstr ""
+
+#: assets/src/admin/App.js:22
+msgid "Inspect captured leads, export them quickly, and keep delivery quality visible from inside the plugin."
+msgstr ""
+
+#: assets/src/admin/App.js:25
+msgid "DXAI Engine Room"
+msgstr ""
+
+#: assets/src/admin/App.js:26
+msgid "Control providers, models, and secrets."
+msgstr ""
+
+#: assets/src/admin/App.js:27
+msgid "Encrypted credentials, active model routing, and connection checks in one place."
+msgstr ""
+
+#: assets/src/admin/Chrome.js:8
+msgid "Entries"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:26
+msgid "Loading"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:36
+msgid "Not set"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:60
+#: assets/src/admin/screens/SettingsScreen.js:104
+msgid "Active provider"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:64
+msgid "Pages saved"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:68
+#: assets/src/admin/screens/LibraryScreen.js:156
+msgid "Conversions"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:72
+msgid "Plugin version"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:86
+msgid "Design to Gutenberg"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:103
+msgid "Workspace"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:104
+msgid "Pixel-perfect Gutenberg pipeline"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:105
+msgid "Convert, review, store, and restore generated structures from one branded control center."
+msgstr ""
+
+#: assets/src/admin/Chrome.js:117
+msgid "A premium control layer for design-to-Gutenberg workflows inside WordPress."
+msgstr ""
+
+#: assets/src/admin/Chrome.js:121
+msgid "New conversion"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:124
+msgid "Open settings"
+msgstr ""
+
+#: assets/src/admin/Chrome.js:128
+msgid "DXAI status"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:20
+msgid "Styles and animation"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:28
+msgid "Vectors and media"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:32
+msgid "Behaviour"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:41
+msgid "Keyframes"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:42
+msgid "Animations with keyframes"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:43
+msgid "Tokens resolved"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:44
+msgid "Stylesheet assets"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:45
+msgid "Icon runtime"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:46
+msgid "Scroll state"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:47
+msgid "Behaviour wired"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:48
+msgid "Animations"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:49
+msgid "Transitions"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:50
+msgid "Design tokens"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:51
+msgid "CSS rules"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:52
+msgid "Breakpoints"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:53
+msgid "Font faces"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:54
+msgid "Font stylesheets"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:55
+msgid "Inline SVG"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:56
+msgid "SVG shapes"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:57
+msgid "Gradients and masks"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:58
+msgid "SVG files"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:59
+msgid "Icons"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:60
+msgid "Images"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:61
+msgid "Videos"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:62
+msgid "Files in the archive"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:63
+msgid "Behaviour hooks"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:64
+msgid "State classes"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:65
+msgid "JSX handlers"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:66
+msgid "Behaviour script"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:89
+msgid "Also measured"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:97
+msgid "Import coverage"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:100
+msgid "Every measurable dimension came across"
+msgstr ""
+
+#. translators: %d: number of dimensions that lost something.
+#: assets/src/admin/components/FidelityReport.js:103
+#, js-format
+msgid "%d dimension lost something"
+msgid_plural "%d dimensions lost something"
+msgstr[0] ""
+msgstr[1] ""
+
+#: assets/src/admin/components/FidelityReport.js:111
+msgid "carried"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:128
+msgid "Dimension"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:129
+msgid "In the design"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:130
+msgid "On the page"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:131
+msgid "Result"
+msgstr ""
+
+#. translators: %d: how many items did not arrive.
+#: assets/src/admin/components/FidelityReport.js:147
+#, js-format
+msgid "%d missing"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:151
+msgid "Not measurable"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:152
+msgid "For reference"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:152
+#: assets/src/admin/components/FidelityReport.js:233
+msgid "Carried"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:200
+msgid "Editable blocks"
+msgstr ""
+
+#. translators: %d: number of blocks.
+#: assets/src/admin/components/FidelityReport.js:206
+#, js-format
+msgid "%d block, all of it editable in Gutenberg."
+msgid_plural "%d blocks, all of them editable in Gutenberg."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: raw-HTML blocks, 2: total blocks.
+#: assets/src/admin/components/FidelityReport.js:211
+#, js-format
+msgid "%1$d of %2$d blocks stayed raw HTML: right on screen, not editable."
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:218
+msgid "Tailwind rules"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:219
+msgid "Complete"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:222
+msgid "Every utility class in this markup compiled to a rule."
+msgstr ""
+
+#. translators: 1: number of classes, 2: an example class.
+#: assets/src/admin/components/FidelityReport.js:225
+#, js-format
+msgid "%1$d classes have no rule. First: %2$s."
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:232
+msgid "Design theme"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:233
+msgid "Missing"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:236
+msgid "This design never ran under Tailwind, so it takes no Preflight and no reset."
+msgstr ""
+
+#. translators: 1: stylesheet size in KB, 2: tailwind.config note.
+#: assets/src/admin/components/FidelityReport.js:240
+#, js-format
+msgid "The design’s own stylesheet travelled (%1$s KB)%2$s."
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:242
+msgid ", with its tailwind.config"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:244
+msgid "No stylesheet came with this conversion: the page will be painted with Tailwind defaults."
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:248
+msgid "Expressions"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:249
+msgid "All read"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:252
+msgid "Every value in the design evaluated to what the design shows."
+msgstr ""
+
+#. translators: 1: number of expressions, 2: an example source.
+#: assets/src/admin/components/FidelityReport.js:255
+#, js-format
+msgid "%1$d values could not be evaluated, so they may differ from the design. First: %2$s."
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:263
+msgid "Pixel perfect and fully editable"
+msgstr ""
+
+#. translators: %d: number of gaps.
+#: assets/src/admin/components/FidelityReport.js:266
+#, js-format
+msgid "%d thing between this and pixel perfect"
+msgid_plural "%d things between this and pixel perfect"
+msgstr[0] ""
+msgstr[1] ""
+
+#: assets/src/admin/components/FidelityReport.js:274
+msgid "Conversion report"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:279
+msgid "Sections"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:283
+msgid "Blocks"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:287
+#: assets/src/admin/screens/ConvertWizard.js:503
+msgid "Assets"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:292
+msgid "Score"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:312
+msgid "Elements that stayed raw HTML"
+msgstr ""
+
+#: assets/src/admin/components/FidelityReport.js:322
+msgid "These render exactly as designed. They are the parts an editor cannot take apart yet — each one needs a block of its own."
+msgstr ""
+
+#. translators: 1: images, 2: videos, 3: fonts, 4: links.
+#: assets/src/admin/components/FidelityReport.js:333
+#, js-format
+msgid "%1$d images · %2$d videos · %3$d fonts · %4$d links came across with the design."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:21
+msgid "Design archive → Gutenberg"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:22
+msgid "Drop any export: Lovable, Claude Design, Vite/React, Vue, Next.js, or plain HTML. We read the archive and pick the compiler — colors, images, motion, pages, no LLM."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:23
+msgid "One .zip"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:27
+msgid "Paste a component"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:28
+msgid "A single JSX/TSX component and, if you have it, its CSS. Useful for one section at a time."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:29
+msgid "Paste"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:33
+msgid "Figma → Gutenberg"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:34
+msgid "Paste a Figma file URL. We turn frames into WordPress blocks."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:35
+msgid "One URL"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:44
+msgid "Pasted component"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:45
+msgid "Figma file"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:49
+msgid "Pick"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:50
+msgid "Page or site"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:51
+msgid "Add file"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:53
+msgid "Preview"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:68
+msgid "Reading design"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:69
+msgid "Collecting images, fonts, links"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:70
+msgid "Writing Gutenberg"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:71
+msgid "Checking blocks"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:213
+msgid "Could not save the Figma token."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:240
+msgid "Add at least one engine key to convert."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:247
+msgid "Could not save keys."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:310
+msgid "Conversion failed."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:333
+msgid "Preview failed, but Gutenberg was still generated. You can add it to WordPress."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:385
+msgid "Could not add this to WordPress."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:434
+msgid "The page crawl stopped answering. If WordPress cron runs on this site it carries on in the background; the pages will appear in the Library."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:496
+msgid "Source"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:499
+msgid "Not selected"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:501
+msgid "Scope"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:501
+#: assets/src/admin/screens/ConvertWizard.js:598
+msgid "Whole site"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:501
+#: assets/src/admin/screens/ConvertWizard.js:593
+msgid "One page"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:502
+msgid "Pieces"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:523
+msgid "Refine returned nothing."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:531
+msgid "Improve with AI failed."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:551
+msgid "Paste code"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:552
+msgid "Add URL"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:561
+msgid "Pick your design"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:562
+msgid "Start with what you have. Every path runs the same compiler, and an archive is read for what it actually contains."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:580
+#: assets/src/admin/screens/ConvertWizard.js:633
+#: assets/src/admin/screens/ConvertWizard.js:719
+msgid "Next"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:588
+msgid "One page or a whole site?"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:589
+msgid "We keep template parts safe: no header/footer overwrite and no homepage reassignment."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:594
+msgid "A WordPress page with heroes, blogs, forms, and sliders. Header and footer stay as reusable patterns."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:599
+msgid "Header, menu, footer, and a page. We never overwrite the theme header/footer or change the homepage."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:610
+msgid "Create all missing pages from live menu"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:612
+msgid "Fetches same-site menu URLs, restyles them with DeepSeek to match this Home’s look, then links the menu."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:618
+msgid "Fidelity"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:620
+msgid "When to use AI refine"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:623
+msgid "Auto — Pass 1, AI only on low confidence"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:624
+msgid "Strict — pixel-perfect refine (needs LLM key)"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:625
+msgid "Off — deterministic only"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:628
+msgid "Strict mode runs Pass 2 DeepSeek/Claude/GPT on flagged sections so Lovable matches stay editable and separated."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:632
+#: assets/src/admin/screens/ConvertWizard.js:717
+#: assets/src/admin/screens/ConvertWizard.js:760
+#: assets/src/admin/screens/ConvertWizard.js:854
+msgid "Back"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:641
+msgid "Add your Figma file"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:642
+msgid "Drop your design archive"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:643
+msgid "Paste your component"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:647
+msgid "Any export works. We read the file list and compile it with the right connector — you do not have to say which generator made it."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:653
+msgid "Figma file URL"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:659
+msgid "Node ID (optional)"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:665
+#: assets/src/admin/screens/SettingsScreen.js:11
+msgid "Figma personal access token"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:669
+msgid "Saved encrypted. Used only to read this file."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:685
+msgid "Drop a .zip here"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:687
+msgid "Lovable · Claude Design · Vite/React · Vue · Next.js · plain HTML"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:695
+msgid "or browse your files"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:701
+msgid "One component, compiled into editable blocks on its own."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:703
+msgid "JSX / TSX"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:709
+msgid "Optional CSS"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:719
+#: assets/src/admin/screens/SettingsScreen.js:168
+msgid "Saving…"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:727
+msgid "Connect an engine"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:728
+msgid "One key is enough. Claude, OpenAI, Grok, or DeepSeek."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:753
+msgid "Active engine"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:762
+msgid "Save and convert"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:778
+msgid "Hide details"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:778
+msgid "Show details"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:784
+msgid "Working…"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:792
+msgid "Your WordPress preview"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:798
+msgid "Desktop"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:801
+msgid "Mobile"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:805
+msgid "Conversion preview"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:826
+msgid "Hide adjust pieces"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:826
+msgid "Adjust pieces"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:843
+msgid "Improve with AI"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:850
+msgid "Hide markup"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:850
+msgid "View markup"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:856
+msgid "Adding…"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:856
+msgid "Add to WordPress"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:865
+msgid "Creating the pages from the menu"
+msgstr ""
+
+#. translators: 1: page number, 2: page count, 3: page name
+#: assets/src/admin/screens/ConvertWizard.js:870
+#, js-format
+msgid "Page %1$d of %2$d: %3$s"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:875
+msgid "Planning the pages…"
+msgstr ""
+
+#. translators: 1: pages created so far, 2: pages that failed
+#: assets/src/admin/screens/ConvertWizard.js:881
+#, js-format
+msgid "%1$d created, %2$d could not be fetched. You can leave this screen open; each page takes up to a few minutes."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:893
+msgid "It is in WordPress"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:894
+msgid "Saved as native blocks. The site homepage was not changed."
+msgstr ""
+
+#. translators: 1: pages created, 2: restyled with AI, 3: crawl errors
+#: assets/src/admin/screens/ConvertWizard.js:899
+#, js-format
+msgid "Live menu: %1$d pages created (%2$d restyled with AI), %3$d skipped fetches."
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:910
+msgid "View page"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:911
+msgid "Edit in Gutenberg"
+msgstr ""
+
+#: assets/src/admin/screens/ConvertWizard.js:915
+msgid "Convert another"
+msgstr ""
+
+#. translators: %d: number of checks that ran.
+#: assets/src/admin/screens/ConvertWizard.js:964
+#, js-format
+msgid "All %d import checks passed."
+msgstr ""
+
+#. translators: %d: number of problems found.
+#: assets/src/admin/screens/ConvertWizard.js:979
+#, js-format
+msgid "The import finished, but %d check(s) found a problem:"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:13
+msgid "Unable to load form entries."
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:27
+msgid "Export failed."
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:33
+msgid "Submissions"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:34
+msgid "With email"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:35
+msgid "Export"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:35
+msgid "CSV"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:55
+msgid "Lead capture"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:56
+msgid "Submission inbox"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:57
+msgid "Entries are stored in WordPress and can be exported whenever you need to hand them off."
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:61
+msgid "Download CSV"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:67
+msgid "No submissions yet."
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:68
+msgid "Once a generated form receives entries, they will appear here with export support."
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:75
+msgid "Date"
+msgstr ""
+
+#: assets/src/admin/screens/FormsScreen.js:78
+msgid "Page"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:11
+msgid "Collection"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:18
+msgid "Nothing here yet"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:30
+msgid "Saved in your DXAI workspace and ready to open, edit, or restore."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:32
+msgid "View"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:33
+msgid "Edit"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:36
+msgid "Restore"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:65
+msgid "Unable to load library."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:103
+msgid "Conversion restored."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:106
+msgid "Restore failed."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:112
+msgid "Pages"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:113
+msgid "Patterns"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:114
+#: assets/src/admin/screens/LibraryScreen.js:154
+msgid "Menus"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:115
+msgid "Revisions"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:138
+msgid "Search the workspace"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:141
+msgid "Search pages, patterns, menus, conversions…"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:146
+msgid "Nothing converted yet."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:147
+msgid "Run your first conversion and the resulting pages, patterns, and revisions will appear here."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:148
+msgid "Go to Convert"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:151
+msgid "Generated pages"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:151
+msgid "No generated pages yet."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:152
+msgid "Synced patterns"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:152
+msgid "No patterns yet."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:153
+msgid "Headers / footers"
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:153
+msgid "No template parts yet."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:154
+msgid "No menus yet."
+msgstr ""
+
+#: assets/src/admin/screens/LibraryScreen.js:158
+msgid "No conversion snapshots yet."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:7
+msgid "Anthropic API key"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:8
+msgid "OpenAI API key"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:9
+msgid "xAI (Grok) API key"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:10
+msgid "DeepSeek API key"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:19
+msgid "Configured"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:48
+msgid "Unable to load settings."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:59
+msgid "Try again"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:68
+msgid "Loading settings…"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:97
+msgid "Connection verified."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:97
+msgid "Settings saved."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:99
+msgid "Save failed."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:105
+msgid "Models available"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:106
+msgid "Secrets configured"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:125
+msgid "Routing"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:126
+msgid "Provider and model"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:131
+msgid "Active model provider"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:137
+msgid "Model"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:147
+msgid "Security"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:148
+msgid "Encrypted credentials"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:150
+msgid "At rest"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:152
+msgid "API keys are encrypted at rest and never sent back to the browser after save."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:159
+msgid "Lovable API key"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:160
+msgid "ZIP or paste"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:162
+msgid "Lovable has no public source API. Use ZIP or paste in Convert."
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:168
+msgid "Save settings"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:171
+msgid "Test active engine"
+msgstr ""
+
+#: assets/src/admin/screens/SettingsScreen.js:174
+msgid "Test Figma token"
+msgstr ""

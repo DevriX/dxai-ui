@@ -1,0 +1,104 @@
+html:has(body.dxai-ui-blank),
+body.dxai-ui-blank {
+	margin: 0;
+	padding: 0;
+	min-height: 100%;
+}
+
+body.dxai-ui-blank .dxai-ui-root {
+	display: block;
+	margin: 0;
+	padding: 0;
+	max-width: none;
+	width: 100%;
+}
+
+body.dxai-ui-blank .dxai-ui {
+	--wp--style--block-gap: 0;
+}
+
+/* Strip the block defaults, but stay under the design's own utilities.
+   Listing the block classes directly scores (0,3,1), which outranks a scoped
+   Tailwind utility at (0,3,0) — so the moment a section became a real
+   core/group instead of a raw-HTML island, its `mt-8` died and the section
+   lost its vertical rhythm. :where() drops this to (0,2,1) and the design wins
+   again, while WP's own unscoped block CSS still loses to it. */
+/* Not on a static design (`body.dxai-ui-static`, a Claude Design export):
+   that page never ran under Tailwind's preflight, so the browser's own
+   paragraph, heading and list margins are part of what its author saw. A
+   footer column there is `<p>` after `<p>` with no margin of its own, and
+   zeroing them took 16px out of every column. The Tailwind designs lose
+   nothing by the exclusion — preflight zeroes the same margins for them. */
+body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(
+	.wp-block-group,
+	.wp-block-image,
+	.wp-block-list,
+	.wp-block-heading,
+	.wp-block-paragraph,
+	.wp-block-html,
+	.wp-block-quote,
+	.wp-block-table
+) {
+	margin: 0;
+	max-width: none;
+}
+
+body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(.is-layout-flow) > * {
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+
+/* core/image puts the design's classes on the <figure> and leaves the <img>
+   bare. Collapsing the figure with `display: contents` therefore threw those
+   classes away: an image with `h-full object-cover` inside an aspect-ratio card
+   fell back to its intrinsic size (242px of design became 290px on the page),
+   and `group-hover:scale-[1.04]` stopped animating altogether.
+
+   So let the figure be the box and carry the design, and make the image fill
+   it. object-fit can't be inherited, so the handful of utilities that matter
+   are mapped through explicitly.
+
+   All of it inside :where(), because a design's own rule for its own image is
+   the one that should win. Unwrapped, `figure.wp-block-image > img` scores
+   (0,3,2) and beat a design's `.rv-footer-brand img { height: 20px }` at
+   (0,3,1) — the footer logo rendered 174px too tall. */
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image) {
+	display: block;
+	line-height: 0;
+}
+
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image > img) {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image.object-cover > img) {
+	object-fit: cover;
+}
+
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image.object-contain > img) {
+	object-fit: contain;
+}
+
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image.object-fill > img) {
+	object-fit: fill;
+}
+
+body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) p {
+	margin: 0;
+}
+
+/* A paragraph block the design authored as a <div> or <span>: no margin of
+   its own. Wrapped whole in :where() so it scores (0,0,0) — above the UA's
+   `p { margin: 1em 0 }`, below every rule the design wrote, class or inline,
+   which is exactly where the div's margin stood. (An inline `margin: 0`
+   here overrode `.rv-kpi-label { margin-top: 20px }` and its kind: 55 nodes
+   on Messaging Architecture.) */
+:where(body.dxai-ui-blank .dxai-ui p.dxai-not-p) {
+	margin: 0;
+}
+
+body.admin-bar .dxai-ui .rv-header {
+	top: var(--wp-admin--admin-bar--height, 32px);
+}

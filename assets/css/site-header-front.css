@@ -1,0 +1,16 @@
+/*
+ * dxai-ui/site-header: the one look a converted header can need that its
+ * design never drew.
+ *
+ * A menu in Appearance > Menus can go three levels deep. When the design's
+ * dropdown panel has no nested dropdown of its own, Header_Renderer draws the
+ * third level as a clone of the dropdown above it (same panel, same links),
+ * marked with these classes. The clone's panel keeps the design's
+ * `top:100%; left:0` in its dxs- rule, which has an inline style's weight;
+ * the flyout opens beside its trigger instead of over it. Nothing else here:
+ * every other pixel of the header is the design's.
+ */
+.dxai-hdr-flyout > .dxai-hdr-flyout__panel {
+	top: 0 !important;
+	left: 100% !important;
+}
