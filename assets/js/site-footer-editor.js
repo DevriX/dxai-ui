@@ -202,9 +202,9 @@
 
 	registerBlockType( 'dxai-ui/site-footer', {
 		apiVersion: 3,
-		title: __( 'Site Footer', 'dxai-ui' ),
+		title: __( 'DX Site Footer', 'dxai-ui' ),
 		description: __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dxai-ui' ),
-		category: 'theme',
+		category: 'dx-blocks',
 		keywords: [ 'footer', 'widgets' ],
 		icon,
 		attributes: {},

@@ -11,11 +11,15 @@ namespace DXAI_UI\Blocks;
 
 final class Design_Blocks {
 
+	/** The inserter category of the plugin's own blocks. */
+	public const CATEGORY = 'dx-blocks';
+
 	public function register(): void {
 		add_action( 'init', array( $this, 'register_blocks' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_script' ) );
 		add_action( 'enqueue_block_assets', array( $this, 'enqueue_editor_canvas' ) );
 		add_filter( 'wp_kses_allowed_html', array( $this, 'allow_design_html' ), 10, 2 );
+		add_filter( 'block_categories_all', array( $this, 'add_category' ) );
 		/*
 		 * The front-end half of these blocks — reveals, dropdowns, tabs, the
 		 * keyboard handling of hover menus — is Motion_Runtime, compiled into
@@ -25,6 +29,40 @@ final class Design_Blocks {
 		 * before it, instead of waiting for each to be re-imported.
 		 */
 		\DXAI_UI\Compiler\Motion_Runtime::register_refresh();
+	}
+
+	/**
+	 * The inserter group for the blocks this plugin adds — the ones no core block (or the theme's) can stand in for.
+	 * Everything the plugin can say with a core block is a core block; these are what is left, so they are together.
+	 *
+	 * @param mixed $categories Registered block categories.
+	 * @return mixed
+	 */
+	public function add_category( $categories ) {
+		if ( ! is_array( $categories ) ) {
+			return $categories;
+		}
+		foreach ( $categories as $category ) {
+			if ( is_array( $category ) && ( $category['slug'] ?? '' ) === self::CATEGORY ) {
+				return $categories;
+			}
+		}
+		$entry = array(
+			'slug'  => self::CATEGORY,
+			'title' => __( 'DX Blocks', 'dxai-ui' ),
+			'icon'  => null,
+		);
+		// Next to core's Design group.
+		foreach ( $categories as $i => $category ) {
+			if ( is_array( $category ) && ( $category['slug'] ?? '' ) === 'design' ) {
+				array_splice( $categories, $i + 1, 0, array( $entry ) );
+
+				return $categories;
+			}
+		}
+		$categories[] = $entry;
+
+		return $categories;
 	}
 
 	public function register_blocks(): void {
@@ -39,8 +77,8 @@ final class Design_Blocks {
 			'dxai-ui/html',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Design HTML', 'dxai-ui' ),
-				'category'      => 'design',
+				'title'         => __( 'DX HTML', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class, and no "Edit as HTML" that could
@@ -85,8 +123,8 @@ final class Design_Blocks {
 			'dxai-ui/text',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Text', 'dxai-ui' ),
-				'category'      => 'text',
+				'title'         => __( 'DX Text', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class and no custom-CSS class, so the saved
@@ -220,8 +258,8 @@ final class Design_Blocks {
 			'dxai-ui/box',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Box', 'dxai-ui' ),
-				'category'      => 'design',
+				'title'         => __( 'DX Box', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class and no inspector-added one: the saved
@@ -432,8 +470,8 @@ final class Design_Blocks {
 			'dxai-ui/svg',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Icon', 'dxai-ui' ),
-				'category'      => 'design',
+				'title'         => __( 'DX Icon', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					'className'       => false,
@@ -482,8 +520,8 @@ final class Design_Blocks {
 			'dxai-ui/link',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Link', 'dxai-ui' ),
-				'category'      => 'design',
+				'title'         => __( 'DX Link', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,
@@ -626,8 +664,8 @@ final class Design_Blocks {
 			'dxai-ui/image',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Image', 'dxai-ui' ),
-				'category'      => 'media',
+				'title'         => __( 'DX Image', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					// The point of the block is that the saved element carries
@@ -700,8 +738,8 @@ final class Design_Blocks {
 			'dxai-ui/details',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Details', 'dxai-ui' ),
-				'category'      => 'text',
+				'title'         => __( 'DX Details', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,
@@ -728,8 +766,8 @@ final class Design_Blocks {
 			'dxai-ui/countup',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DXAI Count Up', 'dxai-ui' ),
-				'category'      => 'text',
+				'title'         => __( 'DX Count Up', 'dxai-ui' ),
+				'category'      => 'dx-blocks',
 				'editor_script' => 'dxai-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,

@@ -154,9 +154,9 @@ final class Site_Footer_Block {
 			self::NAME,
 			array(
 				'api_version'           => 3,
-				'title'                 => __( 'Site Footer', 'dxai-ui' ),
+				'title'                 => __( 'DX Site Footer', 'dxai-ui' ),
 				'description'           => __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dxai-ui' ),
-				'category'              => 'theme',
+				'category'              => 'dx-blocks',
 				'keywords'              => array( 'footer', 'widgets' ),
 				'editor_script_handles' => array( self::SCRIPT ),
 				'render_callback'       => array( self::class, 'render' ),

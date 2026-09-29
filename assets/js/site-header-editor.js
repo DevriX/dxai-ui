@@ -260,8 +260,8 @@
 
 	registerBlockType( 'dxai-ui/site-header', {
 		apiVersion: 3,
-		title: __( 'Site Header', 'dxai-ui' ),
-		category: 'theme',
+		title: __( 'DX Site Header', 'dxai-ui' ),
+		category: 'dx-blocks',
 		icon: 'menu',
 		attributes: {},
 		usesContext: [ 'postId' ],

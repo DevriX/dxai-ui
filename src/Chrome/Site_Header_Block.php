@@ -84,9 +84,9 @@ final class Site_Header_Block {
 			self::NAME,
 			array(
 				'api_version'     => 3,
-				'title'           => __( 'Site Header', 'dxai-ui' ),
+				'title'           => __( 'DX Site Header', 'dxai-ui' ),
 				'description'     => __( 'The site header: links from Appearance > Menus, the logo from the Site Logo, the look from the imported design.', 'dxai-ui' ),
-				'category'        => 'theme',
+				'category'        => 'dx-blocks',
 				'icon'            => 'menu',
 				'keywords'        => array( 'header', 'menu', 'navigation', 'logo' ),
 				'editor_script'   => self::SCRIPT,

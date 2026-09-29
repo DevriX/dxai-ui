@@ -10,7 +10,8 @@
 	// Blocks that carry a raw inline style off the design. Core's own `style`
 	// attribute is a theme.json object and cannot hold `font-size: clamp(...)`,
 	// which is where these designs keep their type scale.
-	const DXAI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item' ];
+	// The theme's own Link box and Span take the same (Native_Blocks): the design's CSS rides their dxs- class too.
+	const DXAI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'amr/link-box', 'amr/span' ];
 
 	// Core blocks whose design data attributes save() writes (see the
 	// getSaveContent filters below), so the canvas carries them too.
@@ -1443,8 +1444,8 @@
 	// dynamic block the page still renders if the plugin is deactivated.
 	registerBlockType( 'dxai-ui/html', {
 		apiVersion: 3,
-		title: 'DXAI Design HTML',
-		category: 'design',
+		title: 'DX HTML',
+		category: 'dx-blocks',
 		icon: 'editor-code',
 		supports: { className: false, customClassName: false, html: false, customCSS: false, anchor: false },
 		attributes: {
@@ -1552,9 +1553,9 @@
 	// designs style separately (`.rv-testimonial p { font-size: 20px }`).
 	registerBlockType( 'dxai-ui/text', {
 		apiVersion: 3,
-		title: 'DXAI Text',
+		title: 'DX Text',
 		icon: 'editor-textcolor',
-		category: 'text',
+		category: 'dx-blocks',
 		description: 'One inline run of the design’s own copy, in the design’s own element.',
 		// No className/customClassName, so nothing is appended to the design's
 		// own class list; no align/spacing/typography, so the inspector cannot
@@ -1743,8 +1744,8 @@
 	 */
 	wp.blocks.registerBlockType( 'dxai-ui/box', {
 		apiVersion: 3,
-		title: 'DXAI Box',
-		category: 'design',
+		title: 'DX Box',
+		category: 'dx-blocks',
 		icon: 'editor-code',
 		attributes: {
 			tagName: { type: 'string', default: 'div' },
@@ -1927,8 +1928,8 @@
 
 	registerBlockType( 'dxai-ui/svg', {
 		apiVersion: 3,
-		title: 'DXAI Icon',
-		category: 'design',
+		title: 'DX Icon',
+		category: 'dx-blocks',
 		icon: 'star-filled',
 		description: 'The design’s own inline SVG, with its size and colours editable.',
 		supports: {
@@ -2089,9 +2090,9 @@
 
 	registerBlockType( 'dxai-ui/link', {
 		apiVersion: 3,
-		title: 'DXAI Link',
+		title: 'DX Link',
 		icon: 'admin-links',
-		category: 'design',
+		category: 'dx-blocks',
 		description: 'Design link or button that keeps ZIP class names.',
 		attributes: {
 			url: { type: 'string', default: '' },
@@ -2308,9 +2309,9 @@
 	// than the presentational attributes the design shipped.
 	registerBlockType( 'dxai-ui/image', {
 		apiVersion: 3,
-		title: 'DXAI Image',
+		title: 'DX Image',
 		icon: 'format-image',
-		category: 'media',
+		category: 'dx-blocks',
 		description: 'The design’s own <img>, with no figure around it.',
 		// Nothing may append a class, an id or a theme.json style: the saved
 		// element carries exactly what the design put on it.
@@ -2386,9 +2387,9 @@
 
 	registerBlockType( 'dxai-ui/details', {
 		apiVersion: 3,
-		title: 'DXAI Details',
+		title: 'DX Details',
 		icon: 'editor-ul',
-		category: 'text',
+		category: 'dx-blocks',
 		description: 'FAQ details/summary that stays editable.',
 		attributes: {
 			num: { type: 'string', default: '' },
@@ -2446,9 +2447,9 @@
 
 	registerBlockType( 'dxai-ui/countup', {
 		apiVersion: 3,
-		title: 'DXAI Count Up',
+		title: 'DX Count Up',
 		icon: 'chart-bar',
-		category: 'text',
+		category: 'dx-blocks',
 		attributes: {
 			value: { type: 'string', default: '' },
 			suffix: { type: 'string', default: '' },
@@ -2499,9 +2500,9 @@
 
 	registerBlockType( 'dxai-ui/slider', {
 		apiVersion: 3,
-		title: 'DXAI Slider',
+		title: 'DX Slider',
 		icon: 'images-alt2',
-		category: 'media',
+		category: 'dx-blocks',
 		description: 'Pixel-perfect slider whose slides stay editable in Gutenberg.',
 		supports: { className: true, html: false, align: [ 'wide', 'full' ] },
 		edit: function () {
@@ -2524,9 +2525,9 @@
 
 	registerBlockType( 'dxai-ui/form', {
 		apiVersion: 3,
-		title: 'DXAI Form',
+		title: 'DX Form',
 		icon: 'email',
-		category: 'widgets',
+		category: 'dx-blocks',
 		description: 'Working form that stores entries in WordPress.',
 		attributes: {
 			fields: { type: 'array', default: [] },
@@ -2567,7 +2568,7 @@
 					)
 				),
 				el( 'div', blockProps,
-					el( 'p', null, 'DXAI Form — ' + ( props.attributes.submitLabel || 'Send' ) ),
+					el( 'p', null, 'DX Form — ' + ( props.attributes.submitLabel || 'Send' ) ),
 					el( 'p', { style: { opacity: 0.7 } }, ( props.attributes.fields || [] ).length + ' fields · submissions save as Form entries' )
 				)
 			);
