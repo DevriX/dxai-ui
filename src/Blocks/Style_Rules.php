@@ -701,7 +701,9 @@ final class Style_Rules {
 			return $empty;
 		}
 		$extra     = self::extra_markup( $post_id );
-		$extra_sig = md5( implode( "\0", $extra ) );
+		// The preset fallbacks are written for the design the post shows (preset_scope()): part of the key, so
+		// a page that starts or stops showing a copied design gets its rules again.
+		$extra_sig = md5( implode( "\0", $extra ) . "\0scope:" . self::preset_scope( $post_id ) );
 		$cached    = get_transient( self::CACHE . $post_id );
 		if ( is_array( $cached ) && isset( $cached['key'], $cached['deps'], $cached['data'] ) && is_array( $cached['deps'] ) && is_array( $cached['data'] )
 			&& hash_equals( (string) $cached['key'], self::signature( $post_id, $cached['deps'], $extra_sig ) ) ) {
@@ -901,9 +903,9 @@ final class Style_Rules {
 		 * page's own tokens are still defined in its stylesheet, so point the
 		 * classes back at them, inside the page's scope only.
 		 */
-		if ( $presets !== array() && ! Token_Styles::is_brand( $post_id ) ) {
-			$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
-			$scope = $scope > 0 ? $scope : $post_id;
+		$brand_of = \DXAI_UI\Structures\Design_Attach::attached( $post_id ) ? \DXAI_UI\Structures\Design_Attach::source_for( $post_id ) : $post_id;
+		if ( $presets !== array() && ! Token_Styles::is_brand( $brand_of ) ) {
+			$scope = self::preset_scope( $post_id );
 			foreach ( array_keys( $presets ) as $slug ) {
 				$out .= '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . ') !important}';
 			}
@@ -923,6 +925,18 @@ final class Style_Rules {
 		$one = ':is(.' . $class . ',#dxai-h)';
 
 		return $one . $one . $one . '{' . $css . '}';
+	}
+
+	/**
+	 * The scope a post's preset-colour fallbacks are written for: its own design scope, or — an ordinary page
+	 * holding blocks copied from a design page — that design's (Design_Attach). Written for the page's own id
+	 * there, `.dxai-ui--{page}` matched nothing, and every `has-brand-color` heading of a copied section lost
+	 * its colour.
+	 */
+	private static function preset_scope( int $post_id ): int {
+		$scope = \DXAI_UI\Structures\Design_Attach::scope_for( $post_id );
+
+		return $scope > 0 ? $scope : $post_id;
 	}
 
 	/**
