@@ -273,6 +273,48 @@ final class Theme_Binding {
 		return self::$css[ $key ] = $css;
 	}
 
+	/**
+	 * What the Library shows for a design: the theme's colours, the binding and, per token, the value its text
+	 * gets on this request (where the contrast check chose something else).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function report( int $home ): array {
+		$binding = self::get( $home );
+		$design  = $binding !== null ? array_map( 'strval', (array) ( $binding['design'] ?? array() ) ) : array_map( static fn( $d ) => $d['value'], self::design_colors( $home ) );
+		$text    = array();
+		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', self::css( $home ), $m, PREG_SET_ORDER ) ) {
+			foreach ( $m as $hit ) {
+				$value            = trim( $hit[2] );
+				$text[ $hit[1] ] = preg_match( '/,\s*(#[0-9a-f]{3,8})\)$/i', $value, $hex ) ? $hex[1] : $value;
+			}
+		}
+		$usage = (array) ( $binding['usage']['tokens'] ?? array() );
+		$rows  = array();
+		foreach ( $design as $token => $value ) {
+			$row    = (array) ( $binding['tokens'][ $token ] ?? array() );
+			$rows[] = array(
+				'token'  => $token,
+				'design' => $value,
+				'to'     => (string) ( $row['to'] ?? '' ),
+				'tier'   => (string) ( $row['tier'] ?? '' ),
+				'role'   => (string) ( $row['role'] ?? '' ),
+				'text'   => (string) ( $text[ $token ] ?? '' ),
+				'uses'   => array_sum( array_map( 'intval', (array) ( $usage[ $token ] ?? array() ) ) ),
+			);
+		}
+		usort( $rows, static fn( $a, $b ) => ( $b['to'] !== '' ) <=> ( $a['to'] !== '' ) ?: $b['uses'] <=> $a['uses'] );
+
+		return array(
+			'id'      => $home,
+			'title'   => get_the_title( $home ),
+			'mode'    => (string) ( $binding['mode'] ?? '' ),
+			'default' => self::default_mode( $home ),
+			'rows'    => $rows,
+			'review'  => count( array_filter( $rows, static fn( $r ) => $r['tier'] === 'review' ) ),
+		);
+	}
+
 	/** What changes a post's binding output (for the rules cache and the like). */
 	public static function signature( int $post_id ): string {
 		$binding = self::get( self::home_of( $post_id ) );

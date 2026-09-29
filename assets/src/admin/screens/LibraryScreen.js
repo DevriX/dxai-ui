@@ -5,6 +5,7 @@ import { Button, Notice, Spinner, TextControl } from '@wordpress/components';
 import TransferExport, { loadTransferInfo } from '../components/TransferExport';
 import TransferImport from '../components/TransferImport';
 import SitePages from '../components/SitePages';
+import ThemeColors from '../components/ThemeColors';
 
 function Group( { title, items, empty, onRestore, exportUrl } ) {
 	return (
@@ -181,6 +182,7 @@ export default function LibraryScreen() {
 							</div>
 						) }
 						<SitePages />
+						<ThemeColors />
 						<Group
 							title={ __( 'Generated pages', 'dxai-ui' ) }
 							items={ filtered.pages }

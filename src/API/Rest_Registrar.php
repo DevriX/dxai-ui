@@ -26,6 +26,7 @@ final class Rest_Registrar {
 				( new Form_Controller() )->register_routes();
 				( new Transfer_Controller() )->register_routes();
 				( new Site_Pages_Controller() )->register_routes();
+				( new Theme_Colors_Controller() )->register_routes();
 			}
 		);
 	}
