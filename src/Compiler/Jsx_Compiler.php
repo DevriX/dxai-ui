@@ -4904,15 +4904,18 @@ final class Jsx_Compiler {
 		}
 
 		/*
-		 * Next's `<Image>` and a router's `<Link>` only when nothing else by
-		 * that name exists. lucide exports an `Image` and a `Link` icon too,
-		 * and taking either for the element turned the icon into an empty
-		 * `<img src="">` or an `<a href="#">`.
+		 * Next's `<Image>` and a router's `<Link>`, told from lucide's `Image`
+		 * and `Link` icons by their shape, not by the import list: the lucide
+		 * map is one for the whole compile, so a copy-link icon imported in one
+		 * file turned every router `<Link>` on the site into an icon. An image
+		 * has a `src`; a link has a `to`, an `href` or something inside it.
+		 * Without either it is the icon (an empty `<img src="">` or
+		 * `<a href="#">` would be worse).
 		 */
-		if ( ( $name === 'Image' || $name === 'NextImage' ) && ! isset( $this->components[ $name ] ) && ! isset( $this->lucide[ $name ] ) ) {
+		if ( ( $name === 'Image' || $name === 'NextImage' ) && ! isset( $this->components[ $name ] ) && ( ! isset( $this->lucide[ $name ] ) || isset( $attrs['src'] ) ) ) {
 			return $this->emit_image( $attrs );
 		}
-		if ( $name === 'Link' && ! isset( $this->components['Link'] ) && ! isset( $this->lucide['Link'] ) ) {
+		if ( $name === 'Link' && ! isset( $this->components['Link'] ) && ( ! isset( $this->lucide['Link'] ) || isset( $attrs['to'] ) || isset( $attrs['href'] ) || trim( $children ) !== '' ) ) {
 			$attrs['href'] = $attrs['href'] ?? $attrs['to'] ?? '#';
 			$name          = 'a';
 			// React Router's own prop: its <Link> renders only href, so a
