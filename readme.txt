@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.8
+Stable tag: 0.4.0-beta.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,16 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.9 =
+* Blocks copied from a converted page into an ordinary page keep the design's look (styles, fonts, colours, interactions), also with the plugin deactivated or deleted. The theme's CSS no longer reaches into those sections, and pages imported by earlier versions work too.
+* Header and footer: a page that carries them in its content never gets a second one. A body-only page gets the Home's own header and footer, the design's installed ones or its template parts, as its chrome mode says. Export and the admin-bar edit links include them.
+* Old-site page builder: an honest User-Agent, robots.txt and Crawl-delay respected, a 429 waits, bot protection stops the crawl. Every section of a page is kept, including pages without a main landmark, and Elementor's mobile-only duplicates are skipped.
+* HTML ZIP: only the site's own pages are published, a Home in a top-level folder is found, desktop and mobile headers are kept together, in-page headers and navs stay sections, and Tailwind-CDN designs keep their reset.
+* Compiler: lucide Link/Image icons are told from router links and images, a CSS comment mentioning @import no longer disables the design CSS, and a sticky header keeps its scroll state.
+* Runtime: a timeout or out-of-memory request no longer stands it down.
+* Requires WordPress 6.6.
+* Release ZIPs are built with npm run release, which refuses a ZIP with backslash paths or development files.
 
 = 0.3.1 =
 * Requires WordPress 6.5.
