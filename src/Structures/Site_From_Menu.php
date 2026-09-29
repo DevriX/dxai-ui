@@ -396,7 +396,10 @@ final class Site_From_Menu {
 		$current   = is_array( $run['current'] ?? null ) ? $run['current'] : array();
 
 		if ( $phase === 'fetch' ) {
-			if ( $path === '' || $path === $setup['home_slug'] || $path === '/' ) {
+			// An HTML design's own file names (about.html, ./contact.html, index.html) are the routes it was
+			// compiled into (/about, /contact, /): matched here, they are kept, not fetched from the old site.
+			$route = self::route_of( $path );
+			if ( $path === '' || $path === $setup['home_slug'] || $path === '/' || $route === '/' ) {
 				$run['summary']['pages_skipped'][] = array(
 					'label'  => $label,
 					'path'   => $path,
@@ -431,7 +434,7 @@ final class Site_From_Menu {
 			 * Prefer the ZIP/design route already compiled and saved. Live scrape
 			 * would overwrite a good page with foreign markup (or fail on SPA/WAF).
 			 */
-			$zip_hit = is_array( $setup['zip_pages'][ $path ] ?? null ) ? $setup['zip_pages'][ $path ] : null;
+			$zip_hit = is_array( $setup['zip_pages'][ $path ] ?? null ) ? $setup['zip_pages'][ $path ] : ( is_array( $setup['zip_pages'][ $route ] ?? null ) ? $setup['zip_pages'][ $route ] : null );
 			if ( is_array( $zip_hit ) && (int) ( $zip_hit['page_id'] ?? 0 ) > 0 ) {
 				$this->keep_zip_route( $run['summary'], $zip_hit, $label, $path, $origin );
 
@@ -860,6 +863,15 @@ final class Site_From_Menu {
 	 *
 	 * @param array<string, mixed> $run
 	 */
+	/** A path as a route: `.html`/`.htm` dropped, `index.html` as its folder (`/about.html` => `/about`, `/index.html` => `/`). */
+	private static function route_of( string $path ): string {
+		$route = (string) preg_replace( '#(^|/)index\.html?$#i', '$1', $path );
+		$route = (string) preg_replace( '#\.html?$#i', '', $route );
+		$route = '/' . trim( $route, '/' );
+
+		return $route === '/' ? '/' : $route;
+	}
+
 	private function next_page( array &$run ): bool {
 		++$run['index'];
 		$run['phase']   = 'fetch';
