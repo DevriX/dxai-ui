@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.10
+Stable tag: 0.4.0-beta.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.11 =
+* Theme classes in the content: where a design's text colour follows a theme colour directly, its blocks carry the theme's own name for it — american-restoration's text-white, or core's text colour setting ("Primary" in the block's Colour panel). Only classes change; blocks stay valid and pages look the same. New imports get it; earlier imports from Library > Theme colours, where it can be undone.
+* Pages built from the Home's sections: their header and footer links to Home sections no longer open as invalid blocks in the editor. New pages store the link in the block too; pages built before open valid with the link they show.
 
 = 0.4.0-beta.10 =
 * Theme colours: on a theme with colour settings (american-restoration and any theme whose palette WordPress knows), a design's colours follow the theme's. Brand, accent and ink take the theme colour with the same role; neutrals only where the theme has practically the same one; tints and shades follow relatively.
