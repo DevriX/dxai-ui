@@ -75,6 +75,10 @@ final class Plugin {
 		// …and on such a page of the theme: the theme's CSS kept off the copied sections, and what their design
 		// page gives them (the inherited-value reset, the canvas rules, tokens, the web fonts from uploads).
 		( new \DXAI_UI\Theme\Theme_Fence() )->register();
+		// A design's colours following the active theme's (the rule itself is applied in both modes, by Token_Styles).
+		if ( ! $render_only ) {
+			( new \DXAI_UI\Theme\Theme_Binding() )->register();
+		}
 		( new \DXAI_UI\Blocks\Attached_Styles() )->register();
 		// "Edit header" / "Edit footer" in the admin bar on converted pages.
 		if ( ! $render_only ) {

@@ -248,6 +248,18 @@ final class Token_Styles {
 	 * its stylesheet.
 	 */
 	public static function brand_css( int $post_id ): string {
+		// A design that follows the active theme's colours is fitted to them (Theme_Binding); otherwise the design
+		// that is the site's brand points its tokens at its own presets, as below.
+		$follow = \DXAI_UI\Theme\Theme_Binding::css( $post_id );
+		if ( $follow !== '' ) {
+			return $follow;
+		}
+
+		return self::adopt_css( $post_id );
+	}
+
+	/** The brand design's tokens pointed at the presets it registered (Design_Theme_Json). */
+	private static function adopt_css( int $post_id ): string {
 		if ( ! self::is_brand( $post_id ) ) {
 			return '';
 		}
