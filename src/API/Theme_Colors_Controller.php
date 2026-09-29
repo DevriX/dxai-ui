@@ -50,6 +50,26 @@ final class Theme_Colors_Controller {
 		);
 		register_rest_route(
 			DXAI_UI_REST_NAMESPACE,
+			'/theme-colors/classes',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'classes' ),
+				'permission_callback' => array( $this, 'permissions' ),
+				'args'                => array(
+					'design' => array(
+						'type'     => 'integer',
+						'required' => true,
+					),
+					'action' => array(
+						'type'     => 'string',
+						'enum'     => array( 'apply', 'revert' ),
+						'required' => true,
+					),
+				),
+			)
+		);
+		register_rest_route(
+			DXAI_UI_REST_NAMESPACE,
 			'/theme-colors/propose',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -116,6 +136,17 @@ final class Theme_Colors_Controller {
 		Theme_Binding::apply( $home, (string) ( $prior['mode'] ?? Theme_Binding::default_mode( $home ) ), array() );
 
 		return new \WP_REST_Response( Theme_Binding::report( $home ) );
+	}
+
+	/** Put the theme's own colour classes into the design's content, or its own back (Theme_Class_Swap). */
+	public function classes( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$home = $this->design( $request );
+		if ( $home instanceof \WP_Error ) {
+			return $home;
+		}
+		$done = $request->get_param( 'action' ) === 'revert' ? \DXAI_UI\Theme\Theme_Class_Swap::revert( $home ) : \DXAI_UI\Theme\Theme_Class_Swap::apply( $home );
+
+		return new \WP_REST_Response( Theme_Binding::report( $home ) + array( 'done' => $done ) );
 	}
 
 	/** The design Home a request names, if it is one this person may change. */

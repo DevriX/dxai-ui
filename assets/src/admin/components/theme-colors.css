@@ -59,3 +59,18 @@
 	background: #e7f5ec;
 	color: #1c6b3a;
 }
+
+.dxai-theme-colors__classes {
+	margin: 16px 0;
+	padding: 12px 16px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.dxai-theme-colors__classes h4 {
+	margin: 0 0 4px;
+}
+
+.dxai-theme-colors__swaps {
+	margin: 8px 0 12px;
+}

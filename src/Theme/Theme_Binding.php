@@ -282,13 +282,7 @@ final class Theme_Binding {
 	public static function report( int $home ): array {
 		$binding = self::get( $home );
 		$design  = $binding !== null ? array_map( 'strval', (array) ( $binding['design'] ?? array() ) ) : array_map( static fn( $d ) => $d['value'], self::design_colors( $home ) );
-		$text    = array();
-		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', self::css( $home ), $m, PREG_SET_ORDER ) ) {
-			foreach ( $m as $hit ) {
-				$value            = trim( $hit[2] );
-				$text[ $hit[1] ] = preg_match( '/,\s*(#[0-9a-f]{3,8})\)$/i', $value, $hex ) ? $hex[1] : $value;
-			}
-		}
+		$text    = self::text_values( $home );
 		$usage = (array) ( $binding['usage']['tokens'] ?? array() );
 		$rows  = array();
 		foreach ( $design as $token => $value ) {
@@ -308,11 +302,30 @@ final class Theme_Binding {
 		return array(
 			'id'      => $home,
 			'title'   => get_the_title( $home ),
+			'classes' => Theme_Class_Swap::summary( $home ),
 			'mode'    => (string) ( $binding['mode'] ?? '' ),
 			'default' => self::default_mode( $home ),
 			'rows'    => $rows,
 			'review'  => count( array_filter( $rows, static fn( $r ) => $r['tier'] === 'review' ) ),
 		);
+	}
+
+	/**
+	 * The text colours set apart on this request (kept or adjusted for readability): token => colour.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function text_values( int $home ): array {
+		$binding = self::get( $home );
+		$text    = array();
+		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', self::css( $home ), $m, PREG_SET_ORDER ) ) {
+			foreach ( $m as $hit ) {
+				$value           = trim( $hit[2] );
+				$text[ $hit[1] ] = preg_match( '/,\s*(#[0-9a-f]{3,8})\)$/i', $value, $hex ) ? $hex[1] : $value;
+			}
+		}
+
+		return $text;
 	}
 
 	/** What changes a post's binding output (for the rules cache and the like). */
@@ -533,10 +546,18 @@ final class Theme_Binding {
 	/**
 	 * After an import or a page build: the design's binding for the current theme, proposed again from its colour
 	 * use now, with the mode and the per-colour choices a person made kept. Nothing when the theme has no palette.
+	 *
+	 * The theme's own classes go into the content (Theme_Class_Swap) on an import ($fresh), and on a page build only
+	 * where the design already carries them: a design imported before keeps its classes until someone chooses
+	 * otherwise in the Library.
 	 */
-	public static function after_import( int $home ): void {
-		if ( $home > 0 && Theme_Palette::current()['has_palette'] && is_array( get_post_meta( $home, Token_Styles::META, true ) ) ) {
-			self::apply( $home );
+	public static function after_import( int $home, bool $fresh = true ): void {
+		if ( $home < 1 || ! Theme_Palette::current()['has_palette'] || ! is_array( get_post_meta( $home, Token_Styles::META, true ) ) ) {
+			return;
+		}
+		self::apply( $home );
+		if ( self::follows( $home ) && ( $fresh || Theme_Class_Swap::applied( $home ) ) ) {
+			Theme_Class_Swap::apply( $home );
 		}
 	}
 

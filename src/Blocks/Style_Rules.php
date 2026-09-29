@@ -906,7 +906,17 @@ final class Style_Rules {
 		$brand_of = \DXAI_UI\Structures\Design_Attach::attached( $post_id ) ? \DXAI_UI\Structures\Design_Attach::source_for( $post_id ) : $post_id;
 		if ( $presets !== array() && ! Token_Styles::is_brand( $brand_of ) ) {
 			$scope = self::preset_scope( $post_id );
+			// Only the design's own colours have a token to point at. A theme colour a block was given (a design
+			// fitted to its theme, Theme_Class_Swap) is the theme's preset, and a rule here would blank it.
+			$palette = get_post_meta( $scope, Token_Styles::META, true );
+			$own     = array();
+			foreach ( is_array( $palette['colors'] ?? null ) ? $palette['colors'] : array() as $row ) {
+				$own[ (string) ( is_array( $row ) ? ( $row['slug'] ?? '' ) : '' ) ] = true;
+			}
 			foreach ( array_keys( $presets ) as $slug ) {
+				if ( $own !== array() && ! isset( $own[ $slug ] ) ) {
+					continue;
+				}
 				$out .= '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . ')) !important}';
 			}
 		}

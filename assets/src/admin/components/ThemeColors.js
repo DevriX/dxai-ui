@@ -77,6 +77,26 @@ export default function ThemeColors() {
 	];
 	const rows = design ? design.rows.filter( ( r ) => showAll || r.to || draft[ r.token ] || r.text ) : [];
 
+	function classes( action ) {
+		setBusy( true );
+		setSaved( '' );
+		apiFetch( { path: '/dxai-ui/v1/theme-colors/classes', method: 'POST', data: { design: home, action } } )
+			.then( ( report ) => {
+				setData( { ...data, designs: data.designs.map( ( d ) => ( d.id === report.id ? report : d ) ) } );
+				setSaved(
+					action === 'apply'
+						? sprintf(
+							/* translators: %d: number of pages. */
+							_n( 'The theme’s classes are in %d page.', 'The theme’s classes are in %d pages.', report.done.posts, 'dxai-ui' ),
+							report.done.posts
+						)
+						: __( 'The design’s own classes are back.', 'dxai-ui' )
+				);
+			} )
+			.catch( ( e ) => setError( e.message || __( 'Could not change the classes.', 'dxai-ui' ) ) )
+			.finally( () => setBusy( false ) );
+	}
+
 	function save( propose ) {
 		setBusy( true );
 		setSaved( '' );
@@ -212,6 +232,30 @@ export default function ThemeColors() {
 									checked={ showAll }
 									onChange={ setShowAll }
 								/>
+							) }
+							{ follow && design.classes && ( design.classes.applied || design.classes.swaps.length > 0 ) && (
+								<div className="dxai-theme-colors__classes">
+									<h4>{ __( 'Theme classes in the content', 'dxai-ui' ) }</h4>
+									<p className="dxai-muted">
+										{ design.classes.applied
+											? __( 'The pages use the theme’s own names for these colours, so the block’s Colour panel shows the theme’s colour. Putting the design’s classes back restores each page as it was, unless it was edited since.', 'dxai-ui' )
+											: __( 'The pages can use the theme’s own names for these colours, so the block’s Colour panel shows the theme’s colour. The pages look the same, and this can be undone.', 'dxai-ui' ) }
+									</p>
+									<ul className="dxai-theme-colors__swaps">
+										{ design.classes.swaps.map( ( s ) => (
+											<li key={ s.token }>
+												<code>text-dxai-{ s.token }</code> → { s.class ? <code>{ s.class }</code> : sprintf(
+													/* translators: %s: theme colour name. */
+													__( 'the “%s” text colour', 'dxai-ui' ),
+													s.setting
+												) }
+											</li>
+										) ) }
+									</ul>
+									<Button variant="secondary" onClick={ () => classes( design.classes.applied ? 'revert' : 'apply' ) } disabled={ busy }>
+										{ design.classes.applied ? __( 'Put the design’s classes back', 'dxai-ui' ) : __( 'Use the theme’s classes', 'dxai-ui' ) }
+									</Button>
+								</div>
 							) }
 							{ saved && <Notice status="success" isDismissible={ false }>{ saved }</Notice> }
 							<div className="dxai-actions">

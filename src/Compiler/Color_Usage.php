@@ -88,7 +88,7 @@ final class Color_Usage {
 	 *
 	 * @return array<int, int>
 	 */
-	private static function posts( int $home ): array {
+	public static function posts( int $home ): array {
 		$ids   = array( $home );
 		$pages = get_posts(
 			array(
