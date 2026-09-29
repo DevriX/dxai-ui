@@ -705,13 +705,35 @@ final class Source_Compiler {
 			$wrapper_style = trim( (string) $nodes[0]->getAttribute( 'style' ) );
 			$nodes         = $content( $children( $nodes[0] ) );
 		}
-		$groups = array();
+		$groups  = array();
+		$content_seen = false;
 		foreach ( $nodes as $node ) {
 			// A plain <main>'s bands are top-level (Design_Html::is_plain_main()).
-			$bands = Design_Html::is_plain_main( $node ) ? $content( Design_Html::unwrap_main( $node ) ) : array( $node );
+			$in_main = Design_Html::is_plain_main( $node );
+			$bands   = $in_main ? $content( Design_Html::unwrap_main( $node ) ) : array( $node );
 			foreach ( $bands as $band ) {
+				$type = $this->html_zip_type( $band );
+				/*
+				 * Site chrome is at the edges of the page, outside its <main>. A header inside <main> is the page's
+				 * own heading band; a <nav> or <header> after the content has begun is an in-page table of
+				 * contents or a section header. Typed as chrome, either replaced the site header or rebuilt the
+				 * site menu from its anchors.
+				 */
+				if ( ( $in_main && $type !== 'section' ) || ( $content_seen && in_array( $type, array( 'header', 'navigation' ), true ) ) ) {
+					$type = 'section';
+				}
+				if ( $type === 'section' ) {
+					$content_seen = true;
+				}
+				// Consecutive headers (a desktop and a mobile one) or footers are one template part, as in
+				// compile_dc(). Merged here, before the loop below: that loop reads a copy of the list.
+				$last = count( $groups ) - 1;
+				if ( $last >= 0 && in_array( $type, array( 'header', 'footer' ), true ) && $groups[ $last ]['type'] === $type ) {
+					$groups[ $last ]['nodes'][] = $band;
+					continue;
+				}
 				$groups[] = array(
-					'type'  => $this->html_zip_type( $band ),
+					'type'  => $type,
 					'nodes' => array( $band ),
 				);
 			}
@@ -720,14 +742,7 @@ final class Source_Compiler {
 		$structures = array();
 		$raw_parts  = array();
 		$converter  = new Html_To_Blocks();
-		foreach ( $groups as $g => $group ) {
-			// Consecutive headers (a desktop and a mobile one) or footers are
-			// one template part, as in compile_dc().
-			$next = $groups[ $g + 1 ] ?? null;
-			if ( null !== $next && in_array( $group['type'], array( 'header', 'footer' ), true ) && $next['type'] === $group['type'] ) {
-				$groups[ $g + 1 ]['nodes'] = array_merge( $group['nodes'], $next['nodes'] );
-				continue;
-			}
+		foreach ( $groups as $group ) {
 			$part = '';
 			foreach ( $group['nodes'] as $member ) {
 				$part .= (string) $dom->saveHTML( $member );
