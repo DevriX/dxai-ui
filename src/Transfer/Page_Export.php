@@ -181,7 +181,8 @@ final class Page_Export {
 		$this->uploads = self::uploads();
 		$scope         = (int) get_post_meta( $page_id, Page_Scope::META, true );
 		$scope         = $scope > 0 ? $scope : $page_id;
-		$content       = (string) $post->post_content;
+		// With the header and footer a body-only page renders around it (Page_Chrome), so the package carries them.
+		$content       = \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) $post->post_content );
 		$meta          = self::own_meta( $page_id );
 
 		// A page crawled into its home's scope keeps its tokens and palette

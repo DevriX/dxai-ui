@@ -57,7 +57,8 @@ final class Part_Shortcuts {
 	 */
 	public static function edit_links( int $page_id ): array {
 		$out     = array();
-		$content = (string) get_post_field( 'post_content', $page_id );
+		// The header and footer the page renders, stored in it or added around a body-only page (Page_Chrome).
+		$content = \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) );
 		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Header_Block::NAME ) ) {
 			$out['header'] = array(
 				'url'   => admin_url( 'nav-menus.php' ),
@@ -102,7 +103,7 @@ final class Part_Shortcuts {
 	 */
 	public static function parts_of( int $page_id ): array {
 		$out = array();
-		foreach ( parse_blocks( (string) get_post_field( 'post_content', $page_id ) ) as $block ) {
+		foreach ( parse_blocks( \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) ) ) as $block ) {
 			self::collect( $block, $out );
 		}
 

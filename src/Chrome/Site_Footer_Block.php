@@ -234,7 +234,7 @@ final class Site_Footer_Block {
 	 *
 	 * @param array<string, mixed> $footer
 	 */
-	private static function scope( array $footer ): int {
+	public static function scope( array $footer ): int {
 		return (int) ( $footer['scope'] ?? 0 );
 	}
 
