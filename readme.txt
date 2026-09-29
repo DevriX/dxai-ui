@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.11
+Stable tag: 0.4.0-beta.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.12 =
+* The blocks the plugin adds are named "DX Text", "DX Box", "DX Link", "DX Image" … and sit in one inserter group, "DX Blocks". Only the names change; no page is touched.
+* Native blocks in place of the plugin's own, wherever a native block says the same thing: a link around content → the theme's Link box (american-restoration), a container → Group, a span of words → the theme's Span, a picture → Image. A picture becomes the media-library image it points to, so WordPress serves it with its own srcset, sizes, width, height, lazy loading and priority hint.
+* Only where the page stays the same: a block the native one cannot carry in full (a control's state, an explicit size or srcset, a design that addresses a picture by its position) keeps the DX block. Pages look the same and open valid in the editor.
+* New imports get it. Designs imported earlier: Library > Native blocks, or `wp dxai-ui native-blocks status|apply|revert` per site of a network. Each changed page keeps its content from before; putting the DX blocks back restores it, except for a page edited since, which stays as its editor left it.
 
 = 0.4.0-beta.11 =
 * Theme classes in the content: where a design's text colour follows a theme colour directly, its blocks carry the theme's own name for it — american-restoration's text-white, or core's text colour setting ("Primary" in the block's Colour panel). Only classes change; blocks stay valid and pages look the same. New imports get it; earlier imports from Library > Theme colours, where it can be undone.
