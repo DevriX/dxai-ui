@@ -1257,6 +1257,32 @@
 		return settings;
 	} );
 
+	/*
+	 * Pages built from the Home's sections (Site_Pages) had their header's
+	 * `href="#services"` pointed at the Home in the stored markup while the
+	 * block's `url` kept `#services`, so every such link opened as an invalid
+	 * block — and "Attempt recovery" put the bare anchor back, which leads
+	 * nowhere on any page but the Home. This older shape reads `url` from the
+	 * stored element's own href: the block opens valid, with the link it
+	 * shows on the page, and the next save stores it in `url` too.
+	 */
+	addFilter( 'blocks.registerBlockType', 'dxai-ui/stored-href', function ( settings, name ) {
+		if ( [ 'dxai-ui/link', 'dxai-ui/text', 'dxai-ui/box' ].indexOf( name ) === -1 || ! settings.attributes || ! settings.attributes.url || ! settings.save ) {
+			return settings;
+		}
+		return Object.assign( {}, settings, {
+			deprecated: ( settings.deprecated || [] ).concat( [ {
+				apiVersion: settings.apiVersion,
+				supports: settings.supports,
+				save: settings.save,
+				// `*` is the block's own element: hpq takes the first match.
+				attributes: Object.assign( {}, settings.attributes, {
+					url: { type: 'string', source: 'attribute', selector: '*', attribute: 'href', default: '' },
+				} ),
+			} ] ),
+		} );
+	} );
+
 	addFilter( 'blocks.getSaveContent.extraProps', 'dxai-ui/inline-style', function ( extra, blockType, attributes ) {
 		if ( ! blockType || DXAI_STYLED.indexOf( blockType.name ) === -1 ) {
 			return extra;

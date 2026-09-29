@@ -564,7 +564,7 @@ final class Site_Pages {
 		}
 
 		// The new pages count for the design's colour use (Theme_Binding).
-		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id );
+		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id, false );
 
 		return array(
 			'mode'          => self::MODE,
@@ -590,11 +590,35 @@ final class Site_Pages {
 			return $markup;
 		}
 
-		return (string) preg_replace_callback(
+		$html = static fn( string $s ): string => (string) preg_replace_callback(
 			'/href="#([A-Za-z][\w-]*)"/',
 			static fn( $m ) => self::home_has_anchor( $home_id, $m[1] ) ? 'href="' . esc_url( $home_url . '#' . $m[1] ) . '"' : $m[0],
-			$markup
+			$s
 		);
+		if ( ! str_contains( $markup, '<!-- wp:' ) ) {
+			return $html( $markup );
+		}
+		// Blocks: their `url` has to say the same as their markup, or the editor opens them as invalid (save() writes
+		// href from `url`).
+		$walk = static function ( array $block ) use ( &$walk, $html, $home_id, $home_url ): array {
+			$block['innerHTML'] = $html( (string) ( $block['innerHTML'] ?? '' ) );
+			foreach ( (array) ( $block['innerContent'] ?? array() ) as $i => $chunk ) {
+				if ( is_string( $chunk ) ) {
+					$block['innerContent'][ $i ] = $html( $chunk );
+				}
+			}
+			$url = $block['attrs']['url'] ?? null;
+			if ( is_string( $url ) && preg_match( '/^#([A-Za-z][\w-]*)$/', $url, $m ) && self::home_has_anchor( $home_id, $m[1] ) ) {
+				$block['attrs']['url'] = esc_url_raw( $home_url . $url );
+			}
+			foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
+				$block['innerBlocks'][ $i ] = $walk( (array) $child );
+			}
+
+			return $block;
+		};
+
+		return serialize_blocks( array_map( $walk, parse_blocks( $markup ) ) );
 	}
 
 	private static function match( string $url, string $origin, array $rows ): int {
