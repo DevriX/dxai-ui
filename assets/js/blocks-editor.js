@@ -11,7 +11,7 @@
 	// attribute is a theme.json object and cannot hold `font-size: clamp(...)`,
 	// which is where these designs keep their type scale.
 	// The theme's own Link box and Span take the same (Native_Blocks): the design's CSS rides their dxs- class too.
-	const DXAI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'amr/link-box', 'amr/span' ];
+	const DXAI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'core/image', 'amr/link-box', 'amr/span' ];
 
 	// Core blocks whose design data attributes save() writes (see the
 	// getSaveContent filters below), so the canvas carries them too.

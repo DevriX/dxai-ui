@@ -62,12 +62,14 @@ body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(.is-layout-flo
    the one that should win. Unwrapped, `figure.wp-block-image > img` scores
    (0,3,2) and beat a design's `.rv-footer-brand img { height: 20px }` at
    (0,3,1) — the footer logo rendered 174px too tall. */
-body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image) {
+/* A figure marked dxai-part-img is a native image the plugin converted (Native_Blocks): it takes no box, and the
+   design's classes and CSS are written for the image (Style_Rules::PARTS), so none of this applies to it. */
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img)) {
 	display: block;
 	line-height: 0;
 }
 
-body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image > img) {
+body.dxai-ui-blank .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img) > img) {
 	display: block;
 	width: 100%;
 	height: 100%;

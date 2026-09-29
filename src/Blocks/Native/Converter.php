@@ -52,10 +52,25 @@ abstract class Converter {
 	/**
 	 * The converted block, or null to leave it as it is.
 	 *
-	 * @param array<string, mixed> $block A parse_blocks() block, its inner blocks already converted.
+	 * @param array<string, mixed>      $block  A parse_blocks() block, its inner blocks already converted.
+	 * @param array<string, mixed>|null $parent The attributes of the block it sits in, when it sits in one.
 	 * @return array<string, mixed>|null
 	 */
-	abstract public function convert( array $block ): ?array;
+	abstract public function convert( array $block, ?array $parent = null ): ?array;
+
+	/**
+	 * What the converters may need to know about the content they are working on: [ 'home' => the design's Home, 'post' => the post ].
+	 *
+	 * @var array<string, int>
+	 */
+	protected static array $context = array();
+
+	/**
+	 * @param array<string, int> $context
+	 */
+	public static function set_context( array $context ): void {
+		self::$context = $context;
+	}
 
 	/**
 	 * A block's attributes must all be ones the converter knows how to carry.

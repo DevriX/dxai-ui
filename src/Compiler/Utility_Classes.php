@@ -159,6 +159,15 @@ final class Utility_Classes {
 	private const SCOPE = ':where(.dxai-ui,.dxai-ui *,.dxai-utilities,.editor-styles-wrapper *)';
 
 	/**
+	 * While css_for_classes() writes rules for a part (a block whose wrapper is not the element the design styled —
+	 * core/image's figure around the `img`): [ 'wrap' => the marker class on the wrapper, 'inner' => the selector
+	 * of the element inside it ]. A rule then applies to that element when the wrapper carries the marker and the class.
+	 *
+	 * @var array{wrap:string, inner:string}|null
+	 */
+	private static ?array $part = null;
+
+	/**
 	 * The editor form's lift: (2,0,0), matched by the class alone (no element
 	 * carries the id). Combined with the class itself, (2,1,0).
 	 */
@@ -662,7 +671,21 @@ final class Utility_Classes {
 	 *
 	 * @param array<int, string> $classes
 	 */
-	public static function css_for_classes( array $classes, bool $editor = false ): string {
+	public static function css_for_classes( array $classes, bool $editor = false, ?array $part = null ): string {
+		self::$part = $part;
+		try {
+			return self::build_css( $classes, $editor );
+		} finally {
+			self::$part = null;
+		}
+	}
+
+	/**
+	 * css_for_classes() body.
+	 *
+	 * @param array<int, string> $classes
+	 */
+	private static function build_css( array $classes, bool $editor ): string {
 		$data   = self::data();
 		$picked = array();
 		$own    = array();
@@ -719,7 +742,9 @@ final class Utility_Classes {
 			if ( $selector === '' ) {
 				continue;
 			}
-			if ( $editor ) {
+			// The editor form leaves the cascade to specificity — except for a part, whose image the block editor
+			// writes inline styles on (core/image sets `height:auto`), which only !important outranks.
+			if ( $editor && self::$part === null ) {
 				$decls = (string) preg_replace( '/\s*!\s*important/i', '', $decls );
 			}
 			if ( $media !== $open ) {
@@ -1189,6 +1214,10 @@ final class Utility_Classes {
 	 * @param array<string, bool> $want
 	 */
 	private static function selector_for( string $selector, int $form, array $want, bool $editor ): string {
+		if ( self::$part !== null && $form === 2 ) {
+			// The theme's compound selectors (`.a:hover img`, `.x > .y`) name their own elements.
+			return '';
+		}
 		if ( $form !== 2 ) {
 			$keep = array();
 			foreach ( explode( ' ', $selector ) as $class ) {
@@ -1200,7 +1229,7 @@ final class Utility_Classes {
 				return '';
 			}
 			$list = array_map( static fn( $c ) => self::scoped( '.' . $c, $c, $editor ), $keep );
-			if ( $form === 1 ) {
+			if ( $form === 1 && self::$part === null ) {
 				foreach ( $keep as $class ) {
 					$list[] = self::scoped( '.wp-block-button.' . $class, $class, $editor ) . '>a';
 				}
@@ -1247,6 +1276,12 @@ final class Utility_Classes {
 	 * editor form (see the class comment).
 	 */
 	private static function lead( string $class, bool $editor ): string {
+		if ( self::$part !== null ) {
+			$wrapped = self::$part['wrap'] . '.' . $class;
+
+			return ( $editor ? '.' . $wrapped . sprintf( self::LIFT, $class ) : ':where(.' . $wrapped . ')' ) . self::SCOPE . self::$part['inner'];
+		}
+
 		return ( $editor ? '.' . $class . sprintf( self::LIFT, $class ) : ':where(.' . $class . ')' ) . self::SCOPE;
 	}
 

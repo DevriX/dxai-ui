@@ -44,6 +44,7 @@ final class Native_Blocks {
 		$all = array(
 			new Link_Box(),
 			new Group(),
+			new Image(),
 			new Span(),
 		);
 		/**
@@ -59,9 +60,10 @@ final class Native_Blocks {
 	/**
 	 * Converted content and what changed: converter id => number of blocks.
 	 *
+	 * @param array<string, int> $context What the converters may need (Converter::set_context()): home, post.
 	 * @return array{content:string, counts:array<string, int>}
 	 */
-	public static function convert_content( string $content ): array {
+	public static function convert_content( string $content, array $context = array() ): array {
 		$converters = self::converters();
 		if ( $converters === array() || ! str_contains( $content, '<!-- wp:dxai-ui/' ) ) {
 			return array(
@@ -69,6 +71,7 @@ final class Native_Blocks {
 				'counts'  => array(),
 			);
 		}
+		Converter::set_context( $context );
 		$counts = array();
 		$blocks = parse_blocks( $content );
 		foreach ( $blocks as $i => $block ) {
@@ -87,15 +90,15 @@ final class Native_Blocks {
 	 * @param array<string, int>     $counts
 	 * @return array<string, mixed>
 	 */
-	private static function convert_block( array $block, array $converters, array &$counts ): array {
+	private static function convert_block( array $block, array $converters, array &$counts, ?array $parent = null ): array {
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
-			$block['innerBlocks'][ $i ] = self::convert_block( (array) $child, $converters, $counts );
+			$block['innerBlocks'][ $i ] = self::convert_block( (array) $child, $converters, $counts, is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array() );
 		}
 		foreach ( $converters as $converter ) {
 			if ( ! in_array( $block['blockName'] ?? '', $converter->sources(), true ) ) {
 				continue;
 			}
-			$converted = $converter->convert( $block );
+			$converted = $converter->convert( $block, $parent );
 			if ( $converted !== null ) {
 				$counts[ $converter->id() ] = ( $counts[ $converter->id() ] ?? 0 ) + 1;
 
@@ -122,7 +125,7 @@ final class Native_Blocks {
 		$counts = array();
 		$posts  = 0;
 		foreach ( Color_Usage::posts( $home ) as $post_id ) {
-			$result = self::convert_content( (string) get_post_field( 'post_content', $post_id ) );
+			$result = self::convert_content( (string) get_post_field( 'post_content', $post_id ), array( 'home' => $home, 'post' => (int) $post_id ) );
 			if ( $result['counts'] !== array() ) {
 				++$posts;
 				foreach ( $result['counts'] as $id => $n ) {
@@ -151,7 +154,7 @@ final class Native_Blocks {
 		);
 		foreach ( Color_Usage::posts( $home ) as $post_id ) {
 			$before = (string) get_post_field( 'post_content', $post_id );
-			$result = self::convert_content( $before );
+			$result = self::convert_content( $before, array( 'home' => $home, 'post' => (int) $post_id ) );
 			if ( $result['counts'] === array() || $result['content'] === $before ) {
 				continue;
 			}

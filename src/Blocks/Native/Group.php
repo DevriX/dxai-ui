@@ -44,13 +44,15 @@ final class Group extends Converter {
 		return 'core/group';
 	}
 
-	public function convert( array $block ): ?array {
+	public function convert( array $block, ?array $parent = null ): ?array {
 		if ( ( $block['blockName'] ?? '' ) !== $this->source() ) {
 			return null;
 		}
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$tag   = (string) ( $attrs['tagName'] ?? 'div' );
-		if ( ! in_array( $tag, self::TAGS, true ) || ! self::only( $attrs, self::KNOWN ) ) {
+		// An empty group opens in the editor as a layout picker ("Group blocks together. Select a layout"), so an empty
+		// box — the design's decorative overlay, its dots and rules — stays a DX Box, which shows nothing to choose.
+		if ( ( $block['innerBlocks'] ?? array() ) === array() || ! in_array( $tag, self::TAGS, true ) || ! self::only( $attrs, self::KNOWN ) ) {
 			return null;
 		}
 		$data = is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array();
@@ -66,25 +68,17 @@ final class Group extends Converter {
 			}
 		}
 		$content = is_array( $block['innerContent'] ?? null ) ? $block['innerContent'] : array();
-		$inner   = $block['innerBlocks'] ?? array();
-		// One string (an empty box) or an opening tag, the blocks, and a closing tag with only whitespace between.
-		if ( $inner === array() ) {
-			if ( count( $content ) !== 1 || ! is_string( $content[0] ) || preg_match( '/^(\s*)(<' . $tag . '\b[^>]*>)<\/' . $tag . '>(\s*)$/s', $content[0], $m ) !== 1 ) {
-				return null;
-			}
-			$open_tag = $m[2];
-		} else {
-			$last = count( $content ) - 1;
-			if ( $last < 1 || ! is_string( $content[0] ) || ! is_string( $content[ $last ] ) || trim( $content[ $last ] ) !== '</' . $tag . '>' ) {
-				return null;
-			}
-			foreach ( array_slice( $content, 1, $last - 1 ) as $between ) {
-				if ( is_string( $between ) && trim( $between ) !== '' ) {
-					return null;
-				}
-			}
-			$open_tag = trim( $content[0] );
+		// An opening tag, the blocks, and a closing tag with only whitespace between.
+		$last = count( $content ) - 1;
+		if ( $last < 1 || ! is_string( $content[0] ) || ! is_string( $content[ $last ] ) || trim( $content[ $last ] ) !== '</' . $tag . '>' ) {
+			return null;
 		}
+		foreach ( array_slice( $content, 1, $last - 1 ) as $between ) {
+			if ( is_string( $between ) && trim( $between ) !== '' ) {
+				return null;
+			}
+		}
+		$open_tag = trim( $content[0] );
 		// The stored tag must carry exactly what the block's attributes say, and nothing else.
 		$open = self::tag_attributes( $open_tag, $tag );
 		if ( $open === null ) {
@@ -149,11 +143,7 @@ final class Group extends Converter {
 		}
 		$tag_html .= '>';
 
-		if ( $inner === array() ) {
-			$content = array( ( $m[1] ?? '' ) . $tag_html . '</' . $tag . '>' . ( $m[3] ?? '' ) );
-		} else {
-			$content[0] = $tag_html;
-		}
+		$content[0] = $tag_html;
 		$block['blockName']    = $this->target();
 		$block['attrs']        = $new;
 		$block['innerContent'] = $content;

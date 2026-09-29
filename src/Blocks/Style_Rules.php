@@ -98,7 +98,15 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 6;
+	private const CACHE_SCHEMA = 9;
+
+	/**
+	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
+	 * carries => the element inside it that holds the design's classes and CSS. A core/image converted from the
+	 * plugin's own image is a `<figure>` around the `<img>` the design's classes were written for, so its rules are
+	 * written for the image, and the figure takes no part in the layout (assets/css/dynamic.css).
+	 */
+	public const PARTS = array( 'dxai-part-img' => ' img' );
 
 	/** How long a computed stylesheet may sit unread. Validated on every read. */
 	private const CACHE_TTL = WEEK_IN_SECONDS;
@@ -461,7 +469,7 @@ final class Style_Rules {
 			return $parts['utility_css'] . $parts['rules'];
 		}
 
-		return self::editor_utilities( $parts['utilities'], array( $post_id ) ) . $parts['rules'];
+		return self::editor_utilities( $parts['utilities'], array( $post_id ), $parts['part_utilities'] ) . $parts['rules'];
 	}
 
 	/**
@@ -478,7 +486,7 @@ final class Style_Rules {
 			return $parts['utility_css'] . $parts['rules'];
 		}
 
-		return self::editor_utilities( $parts['utilities'], $scope_id > 0 ? array( $scope_id ) : array() ) . $parts['rules'];
+		return self::editor_utilities( $parts['utilities'], $scope_id > 0 ? array( $scope_id ) : array(), $parts['part_utilities'] ) . $parts['rules'];
 	}
 
 	/**
@@ -488,10 +496,10 @@ final class Style_Rules {
 	 * @param array<int, string> $utilities
 	 * @param array<int, int>    $posts
 	 */
-	private static function editor_utilities( array $utilities, array $posts ): string {
+	private static function editor_utilities( array $utilities, array $posts, array $part_utilities = array() ): string {
 		$site = self::live_utilities( array_fill_keys( self::site_utilities(), true ), $posts, array() );
 
-		return Utility_Classes::css_for_classes( array_values( array_unique( array_merge( $utilities, $site ) ) ), true );
+		return Utility_Classes::css_for_classes( array_values( array_unique( array_merge( $utilities, $site ) ) ), true ) . self::part_utility_css( $part_utilities, true );
 	}
 
 	/**
@@ -637,6 +645,7 @@ final class Style_Rules {
 			'rules'       => '',
 			'utilities'   => array(),
 			'utility_css' => '',
+			'part_utilities' => array(),
 		);
 		if ( trim( $markup ) === '' ) {
 			return $empty;
@@ -662,14 +671,16 @@ final class Style_Rules {
 		self::collect_markup( $markup, $acc, 0 );
 		$posts     = array_values( array_unique( array_filter( array_merge( array( $scope_id ), array_map( 'intval', array_keys( $acc['seen'] ) ) ) ) ) );
 		$utilities = self::live_utilities( $acc['tokens'], $posts, $acc['toggles'] );
+		$part_util = self::part_utilities( $acc['part_tokens'], $posts, $acc['toggles'] );
 		$out       = '';
 		foreach ( $acc['rules'] as $class => $css ) {
 			$out .= self::rule( $class, $css );
 		}
 		$data = array(
-			'rules'       => $out . self::overrides( $acc['own'], $utilities ),
-			'utilities'   => $utilities,
-			'utility_css' => Utility_Classes::css_for_classes( $utilities ),
+			'rules'          => self::part_base_css( $acc['parts'] ) . $out . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
+			'utilities'      => $utilities,
+			'part_utilities' => $part_util,
+			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
 		set_transient(
 			$name,
@@ -696,6 +707,7 @@ final class Style_Rules {
 			'rules'       => '',
 			'utilities'   => array(),
 			'utility_css' => '',
+			'part_utilities' => array(),
 		);
 		if ( $post_id < 1 ) {
 			return $empty;
@@ -720,10 +732,12 @@ final class Style_Rules {
 			self::collect_markup( $markup, $acc, 1 );
 		}
 		$utilities = self::live_utilities( $acc['tokens'], array_keys( $acc['seen'] ), $acc['toggles'] );
+		$part_util = self::part_utilities( $acc['part_tokens'], array_keys( $acc['seen'] ), $acc['toggles'] );
 		$data      = array(
-			'rules'       => self::rules_css( $post_id, $acc['rules'], $acc['presets'] ) . self::overrides( $acc['own'], $utilities ),
-			'utilities'   => $utilities,
-			'utility_css' => Utility_Classes::css_for_classes( $utilities ),
+			'rules'          => self::part_base_css( $acc['parts'] ) . self::rules_css( $post_id, $acc['rules'], $acc['presets'] ) . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
+			'utilities'      => $utilities,
+			'part_utilities' => $part_util,
+			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
 		$deps      = array_map( 'intval', array_keys( $acc['seen'] ) );
 		set_transient(
@@ -877,7 +891,7 @@ final class Style_Rules {
 				continue;
 			}
 			sort( $with );
-			$rule         = 'html :where(.' . $block['dxs'] . '):where(' . implode( ',', array_map( static fn( $c ) => '.' . $c, $with ) ) . '){' . $css . '}';
+			$rule         = 'html :where(.' . $block['dxs'] . '):where(' . implode( ',', array_map( static fn( $c ) => '.' . $c, $with ) ) . ')' . (string) ( $block['inner'] ?? '' ) . '{' . $css . '}';
 			$out[ $rule ] = true;
 		}
 
@@ -927,7 +941,7 @@ final class Style_Rules {
 	/**
 	 * One class's rule, with inline-style precedence (see the class comment).
 	 */
-	public static function rule( string $class, string $css ): string {
+	public static function rule( string $class, string $css, string $inner = '' ): string {
 		// Text colours on their own channel (Token_Styles::fg_channel(), Theme_Binding): the stored attribute and
 		// its hash are untouched, only the rule written from it.
 		$css = self::safe( Token_Styles::fg_channel( $css ) );
@@ -935,8 +949,96 @@ final class Style_Rules {
 			return '';
 		}
 		$one = ':is(.' . $class . ',#dxai-h)';
+		if ( $inner !== '' ) {
+			// The element inside a part is one the block editor writes inline styles on (core/image: `height:auto`);
+			// only !important keeps the design's declarations above them.
+			$css = implode(
+				';',
+				array_map(
+					static fn( $d ) => $d['important'] || $d['prop'] === '' ? $d['raw'] : $d['raw'] . ' !important',
+					Utility_Classes::declarations( $css )
+				)
+			);
+		}
 
-		return $one . $one . $one . '{' . $css . '}';
+		// $inner: the element inside the block that the CSS was written for (PARTS).
+		return $one . $one . $one . $inner . '{' . $css . '}';
+	}
+
+	/**
+	 * What makes the wrapper of a part (PARTS) stand aside for the element inside it. On the page the wrapper takes
+	 * no box (`display:contents`), so the image is laid out exactly where the design put it: as the flex or grid item,
+	 * the positioned layer, the child of its container. In the block editor the wrapper is the block the person
+	 * selects, so it keeps a box, and the design's classes on it (which are written for the image) are neutralised.
+	 *
+	 * @param array<string, bool> $parts Markers on the page.
+	 */
+	private static function part_base_css( array $parts ): string {
+		if ( ! isset( $parts['dxai-part-img'] ) ) {
+			return '';
+		}
+
+		// The image core's own rule (`.wp-block-image img`) sets is bottom-aligned; the design's was on the baseline.
+		return '.wp-block-image.dxai-part-img{display:contents !important}'
+			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img{vertical-align:baseline}'
+			. '.editor-styles-wrapper .wp-block-image.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
+	}
+
+	/**
+	 * The dxs- rules of the blocks of a part, each written for the element inside the block.
+	 *
+	 * @param array<string, array{0:string, 1:string}> $part_rules
+	 */
+	private static function part_rules_css( array $part_rules ): string {
+		$out = '';
+		foreach ( $part_rules as $class => $pair ) {
+			$out .= self::rule( (string) $class, $pair[0], $pair[1] );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The utility classes the blocks of each part carry, that this page writes a rule for.
+	 *
+	 * @param array<string, array<string, bool>> $part_tokens
+	 * @param array<int, int|string>             $posts
+	 * @param array<string, bool>                $toggles
+	 * @return array<string, array<int, string>> marker => classes
+	 */
+	private static function part_utilities( array $part_tokens, array $posts, array $toggles ): array {
+		$out = array();
+		foreach ( $part_tokens as $marker => $tokens ) {
+			$live = self::live_utilities( $tokens, $posts, $toggles );
+			if ( $live !== array() ) {
+				$out[ (string) $marker ] = $live;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The rules for those classes, written for the element inside the block (Utility_Classes::css_for_classes()).
+	 *
+	 * @param array<string, array<int, string>> $part_utilities
+	 */
+	private static function part_utility_css( array $part_utilities, bool $editor ): string {
+		$out = '';
+		foreach ( $part_utilities as $marker => $classes ) {
+			if ( isset( self::PARTS[ $marker ] ) ) {
+				$out .= Utility_Classes::css_for_classes(
+					$classes,
+					$editor,
+					array(
+						'wrap'  => $marker,
+						'inner' => self::PARTS[ $marker ],
+					)
+				);
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -1036,7 +1138,27 @@ final class Style_Rules {
 			'tokens'  => array(),
 			'toggles' => array(),
 			'own'     => array(),
+			// dxs- class => [ CSS, inner selector ] for the blocks of a part (PARTS), and their utility classes.
+			'part_rules'  => array(),
+			'part_tokens' => array(),
+			'parts'       => array(),
 		);
+	}
+
+	/**
+	 * The marker (PARTS) a block's classes carry, or ''.
+	 *
+	 * @param array<string, mixed> $attrs
+	 */
+	private static function part_of( array $attrs ): string {
+		$names = is_string( $attrs['className'] ?? null ) ? preg_split( '/\s+/', $attrs['className'], -1, PREG_SPLIT_NO_EMPTY ) : array();
+		foreach ( is_array( $names ) ? $names : array() as $name ) {
+			if ( isset( self::PARTS[ $name ] ) ) {
+				return $name;
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -1092,16 +1214,29 @@ final class Style_Rules {
 	private static function collect_block( array $block, array &$acc, array &$refs ): void {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$css   = $attrs[ Style_Hoister::ATTR ] ?? '';
+		$part  = self::part_of( $attrs );
+		if ( $part !== '' ) {
+			$acc['parts'][ $part ] = true;
+			$names = is_string( $attrs['className'] ?? null ) ? preg_split( '/\s+/', $attrs['className'], -1, PREG_SPLIT_NO_EMPTY ) : array();
+			foreach ( array_filter( $names ?: array(), array( Utility_Classes::class, 'is_utility' ) ) as $name ) {
+				$acc['part_tokens'][ $part ][ $name ] = true;
+			}
+		}
 		if ( is_string( $css ) && trim( $css ) !== '' ) {
-			$class                  = Style_Hoister::css_class( $css );
-			$acc['rules'][ $class ] = $css;
-			$names                  = is_string( $attrs['className'] ?? null ) ? preg_split( '/\s+/', $attrs['className'], -1, PREG_SPLIT_NO_EMPTY ) : array();
-			$names                  = array_values( array_filter( $names ?: array(), array( Utility_Classes::class, 'is_utility' ) ) );
+			$class = Style_Hoister::css_class( $css );
+			if ( $part !== '' ) {
+				$acc['part_rules'][ $class ] = array( $css, self::PARTS[ $part ] );
+			} else {
+				$acc['rules'][ $class ] = $css;
+			}
+			$names = is_string( $attrs['className'] ?? null ) ? preg_split( '/\s+/', $attrs['className'], -1, PREG_SPLIT_NO_EMPTY ) : array();
+			$names = array_values( array_filter( $names ?: array(), array( Utility_Classes::class, 'is_utility' ) ) );
 			if ( $names !== array() ) {
 				$acc['own'][] = array(
 					'dxs'     => $class,
 					'css'     => $css,
 					'classes' => $names,
+					'inner'   => $part !== '' ? self::PARTS[ $part ] : '',
 				);
 			}
 		}

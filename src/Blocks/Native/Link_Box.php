@@ -47,7 +47,7 @@ final class Link_Box extends Converter {
 		return 'amr/link-box';
 	}
 
-	public function convert( array $block ): ?array {
+	public function convert( array $block, ?array $parent = null ): ?array {
 		$name  = (string) ( $block['blockName'] ?? '' );
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$url   = (string) ( $attrs['url'] ?? '' );

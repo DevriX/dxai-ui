@@ -40,7 +40,7 @@ final class Span extends Converter {
 		return 'amr/span';
 	}
 
-	public function convert( array $block ): ?array {
+	public function convert( array $block, ?array $parent = null ): ?array {
 		if ( ( $block['blockName'] ?? '' ) !== $this->source() || ( $block['innerBlocks'] ?? array() ) !== array() ) {
 			return null;
 		}
