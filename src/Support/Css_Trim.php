@@ -28,6 +28,16 @@ namespace DXAI_UI\Support;
  */
 final class Css_Trim {
 
+	/** Bumped whenever what trim() keeps for the same tokens changes: cached results carry it in their key. */
+	public const VERSION = 2;
+
+	/**
+	 * Names that belong to widgets other people's scripts put on a page after it has loaded (maps, reCAPTCHA, review
+	 * widgets, sliders, lightboxes, consent banners, chat, embedded forms and players): neither the markup nor a
+	 * script of the site holds them, and a theme may style them. Rules for them always stay.
+	 */
+	private const WIDGETS = '/^(?:grecaptcha|g-recaptcha|trustindex|ti-|gmnoprint|gm-style|pac-container|mapboxgl|leaflet-|swiper|slick-|flickity|splide|glide__|tns-|owl-|fancybox|mfp-|lity-|pswp|photoswipe|lightgallery|cmplz|cky-|onetrust|osano|iubenda|calendly|hbspt|hs-form|intercom|drift-|crisp-|tawk|mejs-|vjs-|video-js|plyr|ytp-|wistia|iti__)/i';
+
 	/** The class, id and element tokens of a page, and the words of its scripts. */
 	public static function tokens( string $html, array $scripts = array() ): array {
 		$tok = array(
@@ -296,7 +306,7 @@ final class Css_Trim {
 			foreach ( $m as $found ) {
 				$word = self::unescape( $found[2] );
 				$in   = $found[1] === '.' ? isset( $tok['classes'][ $word ] ) : isset( $tok['ids'][ $word ] );
-				if ( ! $in && ! isset( $tok['words'][ $word ] ) && ! self::built_from_prefix( $word, $tok ) ) {
+				if ( ! $in && ! isset( $tok['words'][ $word ] ) && ! self::built_from_prefix( $word, $tok ) && preg_match( self::WIDGETS, $word ) !== 1 ) {
 					return false;
 				}
 			}

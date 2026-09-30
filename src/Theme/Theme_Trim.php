@@ -179,7 +179,7 @@ final class Theme_Trim {
 		// What the page says that the sheet has a name for: the key of the result.
 		$words = self::script_words( $inline, $files, $vocab, $dir );
 		$named = self::named( $page, $words, $vocab );
-		$key   = sha1( implode( "\n", $named ) );
+		$key   = sha1( Css_Trim::VERSION . "\n" . implode( "\n", $named ) );
 		$file  = $dir . '/' . $key . '.css';
 		if ( is_readable( $file ) ) {
 			$cached = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents

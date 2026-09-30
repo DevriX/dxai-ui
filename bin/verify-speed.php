@@ -56,6 +56,8 @@ $expect( 'a brace in a comment or a string does not break the walk', $has( '.a::
 $expect( 'attribute selectors need no state of the page', $has( '[data-x] .a{' ) && $has( '.a[class*="z"]{' ) );
 $prefixed = (string) Css_Trim::trim( '.on-a{x:1}.on-b{x:2}.off-a{x:3}', Css_Trim::tokens( '<i class="x"></i>', array( 'el.className = "on-" + n;' ) ) );
 $expect( 'a prefix a script builds classes from keeps the classes that start with it', str_contains( $prefixed, '.on-a{' ) && str_contains( $prefixed, '.on-b{' ) && ! str_contains( $prefixed, '.off-a' ), $prefixed );
+$widgets = (string) Css_Trim::trim( '.grecaptcha-badge{visibility:hidden}.swiper-pagination{bottom:0}.ti-widget .ti-name{color:1}.nothing-here{x:1}', Css_Trim::tokens( '<i class="x"></i>' ) );
+$expect( 'the rules for widgets that arrive after load stay (reCAPTCHA, sliders, review widgets)', str_contains( $widgets, '.grecaptcha-badge{' ) && str_contains( $widgets, '.swiper-pagination{' ) && str_contains( $widgets, '.ti-widget .ti-name{' ) && ! str_contains( $widgets, '.nothing-here' ), $widgets );
 $expect( 'CSS that never closes gives null (the caller keeps the original)', Css_Trim::trim( '.a{color:red', $tok ) === null );
 $vocab = Css_Trim::vocabulary( $css );
 $expect( 'the vocabulary holds the names the sheet spells, unescaped', isset( $vocab['v']['md:flex'], $vocab['v']['10'], $vocab['v']['is-open'], $vocab['v']['ul'] ) && ! isset( $vocab['v']['a1b2c3d4nonce'] ) );
