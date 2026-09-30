@@ -32,6 +32,7 @@ final class Transfer_Admin {
 			Transfer_Cli::register();
 			\DXAI_UI\Blocks\Native\Native_Cli::register();
 			\DXAI_UI\Support\Speed_Cli::register();
+			\DXAI_UI\Pages\Order_Cli::register();
 		}
 	}
 

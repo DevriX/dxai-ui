@@ -122,6 +122,13 @@ final class Page_Composer {
 			}
 		}
 
+		// The tail in the team's order (related services, questions, the call to action last), whatever order the old page had.
+		$composed = $sections;
+		$sections = Page_Order::arrange( $sections );
+		if ( $sections !== $composed ) {
+			$this->log[] = 'sections: tail put in the team\'s order';
+		}
+
 		return array(
 			'sections' => $sections,
 			'units'    => $units,
