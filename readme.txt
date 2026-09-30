@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.18
+Stable tag: 0.4.0-beta.20
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,20 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.20 =
+* Fixed, on a block theme (Twenty Twenty-Five and the like): a group's layout was lost. WordPress writes a group's gap, wrapping and alignment as a `wp-container-…` rule and prints it in <head> for a block theme, because it renders a block theme's template first; the plugin's blank template is a PHP file whose content comes after the head, and WordPress does not print those rules in the footer for a block theme. The rules are now printed at the end of a converted page on a block theme. A classic theme gets them from core, as before. Measured on four designs at 1440, 768 and 412px: the pages are what the design was.
+
+= 0.4.0-beta.19 =
+* Checked against 28 designs (20 Lovable and Claude Design exports, a plain HTML+CSS site, a Tailwind-CDN page, a Tailwind v3 project, a Claude Design export) at 1440, 768 and 412px, before and after the native conversion. Everything but the buttons is pixel for pixel what the design was; the buttons are the theme's by design. What that turned up is fixed:
+* Fixed: a picture with only a height from the design (`h-74px`, a logo) came out stretched. WordPress writes the file's own width and height on a media-library image; the design's image had none, so it kept its proportions. The image now takes its width from its proportions again, and any width the design sets still wins.
+* Fixed: a picture inside a card got the card's border. The rule written for a picture (`.dxs-x img`) shares its class with any block that has the same declarations, and reached every image inside them. It now needs the picture's own marker on the same element.
+* Fixed: a design that never ran under Tailwind (Claude Design exports) sized a bordered picture 2px narrower, because core sets `border-box` on the image inside a figure. It is named in the design's content-box rule.
+* Fixed: a button the design sizes along its row (`flex: 1 1 200px`) came out 200px tall on a small screen, where the theme's rows stack in a column. A row like that no longer stacks.
+* Fixed: a strip of chips or tabs (a row that scrolls sideways, or four or more links side by side) was turned into theme buttons stacked in a column. They stay the design's own links.
+* Fixed: the theme's button styles were not loaded on a page whose only button is in the header or the footer, so it showed as plain text. The header and footer a design page carries are now counted for what the page needs loaded.
+* Fixed: a converted button could shrink to its padding and break a word a letter at a time in a crowded row (core's `word-break: break-word`). It keeps its longest word whole, as the design's link did.
+* Fixed: the gap between converted buttons read the design's container classes wrongly (a pattern split on the letter s), so it was always the theme's 12px.
 
 = 0.4.0-beta.18 =
 * The tail of an inner page in the order the team's sites have it. Measured on the eleven live sites (283 pages): every service, location and about page opens with its hero and closes with the related services, then the questions, then the call to action, whatever the sites differ in between. A page composed from an old page's content followed that page's reading order, so the related services could come after the call to action. `wp dxai-ui page-order status|apply|revert` puts the tail of an existing design's pages in that order (nothing else moves, no section changes; the Home, the header and the footer are never touched; a page without questions, one that ends in a form, and one with a section that leans on its neighbour stay as they are), and a page composed from now on comes out that way. Each page keeps its content from before; reverting puts it back byte for byte.
