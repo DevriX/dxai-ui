@@ -148,6 +148,38 @@ final class DeepSeek_Engine extends Abstract_Engine {
 		return $parsed;
 	}
 
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
+		if ( $this->api_key === '' ) {
+			return new \WP_Error( 'dxai_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+		}
+		$max      = isset( $args['max_tokens'] ) ? (int) $args['max_tokens'] : 16384;
+		$response = Remote_Client::post_json(
+			'https://api.deepseek.com/chat/completions',
+			$this->headers(),
+			array(
+				'model'      => $this->model,
+				'messages'   => array(
+					array( 'role' => 'system', 'content' => $system ),
+					array( 'role' => 'user', 'content' => $user ),
+				),
+				'max_tokens' => $max > 0 ? $max : 16384,
+				'thinking'   => array( 'type' => 'disabled' ),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
+			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek did not answer.', 'dxai-ui' ) );
+		}
+		$decoded = Remote_Client::decode_body( $response['body'] );
+		if ( is_wp_error( $decoded ) ) {
+			return $decoded;
+		}
+
+		return $this->message_text( $decoded );
+	}
+
 	/**
 	 * @param array<string, mixed> $decoded
 	 */

@@ -1,0 +1,129 @@
+/* "Words for the pages" — in the admin app's own colours (#dxai-ui-app sets the --dxai-* variables). */
+
+#dxai-ui-app .dxai-copy > .components-base-control,
+#dxai-ui-app .dxai-copy > .components-toggle-control {
+	margin: 12px 0;
+	max-width: 520px;
+}
+
+#dxai-ui-app .dxai-copy__list {
+	list-style: none;
+	margin: 16px 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+#dxai-ui-app .dxai-copy__page {
+	border: 1px solid var(--dxai-line);
+	border-radius: var(--dxai-radius, 10px);
+	padding: 14px 16px;
+	background: var(--dxai-panel);
+	color: var(--dxai-text);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+#dxai-ui-app .dxai-copy__head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px 12px;
+}
+
+#dxai-ui-app .dxai-copy__head strong {
+	color: var(--dxai-text);
+	font-size: 14px;
+}
+
+#dxai-ui-app .dxai-copy__kind {
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	background: rgba(138, 176, 208, 0.14);
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-copy__kind--location {
+	background: rgba(79, 193, 240, 0.16);
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-copy__kind--service {
+	background: rgba(95, 211, 155, 0.16);
+	color: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-copy__fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 12px 16px;
+}
+
+#dxai-ui-app .dxai-copy__proposal {
+	border-top: 1px solid var(--dxai-line);
+	padding-top: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+#dxai-ui-app .dxai-copy__blocks {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-height: 420px;
+	overflow: auto;
+	border: 1px solid var(--dxai-line);
+	border-radius: 6px;
+}
+
+#dxai-ui-app .dxai-copy__blocks li {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--dxai-line);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+#dxai-ui-app .dxai-copy__blocks li:last-child {
+	border-bottom: 0;
+}
+
+#dxai-ui-app .dxai-copy__blocks label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+#dxai-ui-app .dxai-copy__blocks input[type="checkbox"] {
+	flex: none;
+	width: 16px;
+	min-width: 16px;
+	height: 16px;
+	margin: 0;
+	padding: 0;
+	border-radius: 3px;
+}
+
+#dxai-ui-app .dxai-copy__where {
+	font-size: 12px;
+	color: var(--dxai-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+#dxai-ui-app .dxai-copy__blocks del {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-copy__blocks ins {
+	text-decoration: none;
+	background: rgba(95, 211, 155, 0.14);
+	color: var(--dxai-text);
+	padding: 1px 4px;
+	border-radius: 3px;
+}

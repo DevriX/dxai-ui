@@ -27,6 +27,16 @@ abstract class Abstract_Engine implements LLM_Provider_Interface {
 		return Generation_Parser::parse( $text );
 	}
 
+	/**
+	 * The provider's plain reply to a prompt: text, not the block structure generate() asks for. An engine that cannot
+	 * give one says so.
+	 *
+	 * @param array<string, mixed> $args max_tokens.
+	 */
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
+		return new \WP_Error( 'dxai_ui_engine_complete', __( 'This AI engine cannot answer in plain text.', 'dxai-ui' ), array( 'status' => 501 ) );
+	}
+
 	protected function http_error( int $code, string $body, string $fallback ): \WP_Error {
 		$message = $fallback;
 		$decoded = json_decode( $body, true );

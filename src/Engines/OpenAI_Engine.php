@@ -150,6 +150,35 @@ final class OpenAI_Engine extends Abstract_Engine {
 		return $this->parse_generation( $text );
 	}
 
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
+		if ( $this->api_key === '' ) {
+			return new \WP_Error( 'dxai_ui_missing_key', __( 'OpenAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+		}
+		$response = Remote_Client::post_json(
+			'https://api.openai.com/v1/chat/completions',
+			$this->headers(),
+			array(
+				'model'    => $this->resolve_chat_model(),
+				'messages' => array(
+					array( 'role' => 'system', 'content' => $system ),
+					array( 'role' => 'user', 'content' => $user ),
+				),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
+			return $this->http_error( $response['code'], $response['body'], __( 'OpenAI did not answer.', 'dxai-ui' ) );
+		}
+		$decoded = Remote_Client::decode_body( $response['body'] );
+		if ( is_wp_error( $decoded ) ) {
+			return $decoded;
+		}
+
+		return (string) ( $decoded['choices'][0]['message']['content'] ?? '' );
+	}
+
 	private function resolve_chat_model(): string {
 		$map = array(
 			'gpt-4o'      => 'gpt-4o',

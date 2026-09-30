@@ -8,6 +8,7 @@ import SitePages from '../components/SitePages';
 import ThemeColors from '../components/ThemeColors';
 import NativeBlocks from '../components/NativeBlocks';
 import Speed from '../components/Speed';
+import CopyPrompt from '../components/CopyPrompt';
 
 function Group( { title, items, empty, onRestore, exportUrl } ) {
 	return (
@@ -186,6 +187,7 @@ export default function LibraryScreen() {
 						<SitePages />
 						<ThemeColors />
 						<NativeBlocks />
+						<CopyPrompt />
 						<Speed />
 						<Group
 							title={ __( 'Generated pages', 'dxai-ui' ) }
