@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.16
+Stable tag: 0.4.0-beta.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.17 =
+* Rows and containers are the Group's own layout. The theme's pages arrange a group in the Layout panel (Flex, Constrained), not in classes; a design's rows were classes and CSS (`d-flex items-center justify-between gap-6`), so its groups had no layout at all. A row becomes a Flex layout (direction, justification, wrapping, gap), a centred container (`mx-auto max-w-1280px px-7`) a Constrained one, and the classes and declarations the layout says are removed. Only where WordPress writes the same page: a group whose children carry margins, a width or a position, one that changes at a breakpoint, or one that paints stays as it is. On the Semper Dry, Clean Joe, H2O Away and DevriX Elevate designs about a third of the groups per page get a Flex layout, with identical screenshots at 412, 768 and 1440 px and every page valid in the editor. It is applied to new imports and to existing designs from the Library (Native blocks) or `wp dxai-ui native-blocks apply`, and reverted the same way.
+* Sections are named through a wrapper: a page written as one group around its header, main and sections names the sections ("Hero Section", "Header", the heading of the rest), not the wrapper. The never-rendered `<template id="__bundler_thumbnail">` a Claude Design export leaves at the top of a page is removed.
+* Fixed: an image the plugin turned into core/image lost the size its utility class gave it when the same class was used for another block on the page (a header logo with `h-74px` stretched to the width of the page). The rules for the image inside are printed in that case too.
+* Fixed: the rule that makes a Group's Flex layout flex has no weight, so the block's own container rule (nowrap, alignment) is the last word. The same for the Buttons block's row.
 
 = 0.4.0-beta.16 =
 * A copy of a design's sections looks like the page it was copied from. Sections copied onto another page of the theme were always kept off the theme's CSS, which matches a design page of the blank canvas. Where the design's own Home is a page of the theme (printed with the theme's whole stylesheet), that is another environment: the native blocks the team builds among the sections (the theme's FAQ, groups with a flex or constrained layout) were made with the theme's CSS on them, and the copy showed every FAQ answer open, headings with browser margins, another font and line height. The fence is now decided by the template of the design's source page: kept for the blank canvas, left off for a page of the theme, so the copy has the same CSS as the Home. The custom field `_dxai_ui_fence_theme` (1 or 0) on a page overrides it.
