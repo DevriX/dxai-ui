@@ -45,9 +45,11 @@ final class Native_Blocks {
 			new Button(),
 			new Link_Box(),
 			new Group(),
+			new Layout(),
 			new Image(),
 			new Span(),
 			new Section_Names(),
+			new Tidy(),
 		);
 		/**
 		 * Converters, in the order they run.
@@ -67,7 +69,8 @@ final class Native_Blocks {
 	 */
 	public static function convert_content( string $content, array $context = array() ): array {
 		$converters = self::converters();
-		if ( $converters === array() || ! str_contains( $content, '<!-- wp:dxai-ui/' ) ) {
+		// Nothing to do to a page without a custom block or a group (a group of an earlier pass may still get its layout).
+		if ( $converters === array() || ( ! str_contains( $content, '<!-- wp:dxai-ui/' ) && ! str_contains( $content, '<!-- wp:group' ) ) ) {
 			return array(
 				'content' => $content,
 				'counts'  => array(),
@@ -98,6 +101,7 @@ final class Native_Blocks {
 			$block['innerBlocks'][ $i ] = self::convert_block( (array) $child, $converters, $counts, is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array() );
 		}
 		$block = self::runs_in( $block, $converters, $counts );
+		// One after the other, each on what the one before made: a box becomes a group, the group gets its layout.
 		foreach ( $converters as $converter ) {
 			if ( ! in_array( $block['blockName'] ?? '', $converter->sources(), true ) ) {
 				continue;
@@ -105,8 +109,7 @@ final class Native_Blocks {
 			$converted = $converter->convert( $block, $parent );
 			if ( $converted !== null ) {
 				$counts[ $converter->id() ] = ( $counts[ $converter->id() ] ?? 0 ) + 1;
-
-				return $converted;
+				$block                      = $converted;
 			}
 		}
 

@@ -44,6 +44,73 @@ final class Group extends Converter {
 		return 'core/group';
 	}
 
+	/**
+	 * save(): the id, then the generated class with the block's own, then role, aria-*, and the data attributes.
+	 *
+	 * @param array<string, mixed> $attrs The group's attributes.
+	 */
+	public static function open_tag( string $tag, array $attrs ): string {
+		$html = '<' . $tag;
+		if ( isset( $attrs['anchor'] ) ) {
+			$html .= ' id="' . esc_attr( (string) $attrs['anchor'] ) . '"';
+		}
+		$html .= ' class="' . esc_attr( trim( 'wp-block-group ' . self::class_tail( $attrs ) ) ) . '"';
+		foreach ( array(
+			'role'            => 'role',
+			'aria-hidden'     => 'ariaHidden',
+			'aria-labelledby' => 'labelledBy',
+			'aria-label'      => 'ariaLabel',
+		) as $name => $key ) {
+			if ( isset( $attrs[ $key ] ) ) {
+				$html .= ' ' . $name . '="' . esc_attr( (string) $attrs[ $key ] ) . '"';
+			}
+		}
+		foreach ( is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array() as $name => $value ) {
+			$html .= ' ' . $name . '="' . esc_attr( (string) $value ) . '"';
+		}
+
+		return $html . '>';
+	}
+
+	/**
+	 * A stored core/group with new attributes: its opening tag written again from them. Null when the stored tag
+	 * is not what $old says it should be (a group someone edited: its markup is theirs).
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<string, mixed> $old   The attributes it has.
+	 * @param array<string, mixed> $new   The attributes it gets.
+	 * @return array<string, mixed>|null
+	 */
+	public static function rewrite( array $block, array $old, array $new ): ?array {
+		$tag     = (string) ( $old['tagName'] ?? 'div' );
+		$content = is_array( $block['innerContent'] ?? null ) ? $block['innerContent'] : array();
+		$last    = count( $content ) - 1;
+		if ( $last < 1 || ! is_string( $content[0] ) || ! is_string( $content[ $last ] ) || trim( $content[ $last ] ) !== '</' . $tag . '>' ) {
+			return null;
+		}
+		foreach ( array_slice( $content, 1, $last - 1 ) as $between ) {
+			if ( is_string( $between ) && trim( $between ) !== '' ) {
+				return null;
+			}
+		}
+		$have = self::tag_attributes( trim( $content[0] ), $tag );
+		$want = self::tag_attributes( self::open_tag( $tag, $old ), $tag );
+		if ( $have === null || $want === null ) {
+			return null;
+		}
+		ksort( $have );
+		ksort( $want );
+		if ( $have !== $want ) {
+			return null;
+		}
+		$content[0]            = self::open_tag( $tag, $new );
+		$block['attrs']        = $new;
+		$block['innerContent'] = $content;
+		$block['innerHTML']    = implode( '', array_filter( $content, 'is_string' ) );
+
+		return $block;
+	}
+
 	public function convert( array $block, ?array $parent = null ): ?array {
 		if ( ( $block['blockName'] ?? '' ) !== $this->source() ) {
 			return null;
@@ -122,28 +189,7 @@ final class Group extends Converter {
 			$new['dxaiData'] = $data;
 		}
 
-		// save(): the id, then the generated class with the block's own, then role, aria-*, and the data attributes.
-		$tag_html = '<' . $tag;
-		if ( isset( $new['anchor'] ) ) {
-			$tag_html .= ' id="' . esc_attr( $new['anchor'] ) . '"';
-		}
-		$tag_html .= ' class="' . esc_attr( trim( 'wp-block-group ' . self::class_tail( $attrs ) ) ) . '"';
-		foreach ( array(
-			'role'            => 'role',
-			'aria-hidden'     => 'ariaHidden',
-			'aria-labelledby' => 'labelledBy',
-			'aria-label'      => 'ariaLabel',
-		) as $html => $key ) {
-			if ( isset( $new[ $key ] ) ) {
-				$tag_html .= ' ' . $html . '="' . esc_attr( (string) $new[ $key ] ) . '"';
-			}
-		}
-		foreach ( $data as $name => $value ) {
-			$tag_html .= ' ' . $name . '="' . esc_attr( (string) $value ) . '"';
-		}
-		$tag_html .= '>';
-
-		$content[0] = $tag_html;
+		$content[0] = self::open_tag( $tag, $new );
 		$block['blockName']    = $this->target();
 		$block['attrs']        = $new;
 		$block['innerContent'] = $content;

@@ -88,8 +88,10 @@
 }
 
 /* A Buttons block's row (see blank-canvas.css). */
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(.wp-block-buttons.is-layout-flex),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(.wp-block-buttons.is-layout-flex) {
+:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-buttons.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-group.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-buttons.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-group.is-layout-flex) {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;

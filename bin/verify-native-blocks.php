@@ -92,8 +92,53 @@ if ( isset( $have['button'] ) ) {
 	echo "  skip  the theme has no button styles here\n";
 }
 
+echo "\nLayout\n";
+$para  = static fn( string $cls = 'm-0' ): string => '<!-- wp:paragraph {"className":"' . $cls . '"} --><p class="' . $cls . '">A</p><!-- /wp:paragraph -->';
+$group = static fn( string $cls, string $inner, string $css = '' ): string => '<!-- wp:group {"className":"' . $cls . '"' . ( $css !== '' ? ',"dxaiCss":"' . $css . '"' : '' ) . '} -->'
+	. '<div class="wp-block-group ' . $cls . ( $css !== '' ? ' ' . \DXAI_UI\Compiler\Style_Hoister::css_class( $css ) : '' ) . '">' . $inner . '</div><!-- /wp:group -->';
+$attrs_of = static function ( string $markup ): array {
+	$b = array_values( array_filter( parse_blocks( $markup ), static fn( $x ) => ! empty( $x['blockName'] ) ) );
+
+	return $b === array() ? array() : (array) $b[0]['attrs'];
+};
+$row = $group( 'd-flex items-center justify-between gap-6 mb-4', $para() . $para() );
+$r   = $convert( $row )['content'];
+$a   = $attrs_of( $r );
+$expect( 'a row (flex, centred, spaced, gap) becomes a Flex layout', ( $a['layout']['type'] ?? '' ) === 'flex' && ( $a['layout']['justifyContent'] ?? '' ) === 'space-between' && ( $a['layout']['verticalAlignment'] ?? '' ) === 'center' && ( $a['layout']['flexWrap'] ?? '' ) === 'nowrap', json_encode( $a ) );
+$expect( 'its gap is written as the block gap, the rest of its classes stay', isset( $a['style']['spacing']['blockGap'] ) && $a['style']['spacing']['blockGap'] !== '' && ( $a['className'] ?? '' ) === 'mb-4', json_encode( $a ) );
+$expect( 'and its markup is a plain group', str_contains( $r, '<div class="wp-block-group mb-4">' ), $r );
+$col = $convert( $group( 'd-flex flex-col items-start gap-2', $para() . $para() ) )['content'];
+$ca  = $attrs_of( $col );
+$expect( 'a column becomes a vertical Flex layout', ( $ca['layout']['orientation'] ?? '' ) === 'vertical' && ( $ca['layout']['justifyContent'] ?? '' ) === 'left', json_encode( $ca ) );
+$wrap = $attrs_of( $convert( $group( 'd-flex flex-wrap', $para() ) )['content'] );
+$expect( 'wrapping and no gap are written out, not left to the theme\'s defaults', ( $wrap['layout']['flexWrap'] ?? '' ) === 'wrap' && ( $wrap['style']['spacing']['blockGap'] ?? '' ) === '0px', json_encode( $wrap ) );
+$expect( 'a row whose child has a margin stays as it is', $attrs_of( $convert( $group( 'd-flex gap-4', $para( 'mb-4' ) . $para() ) )['content'] ) === array( 'className' => 'd-flex gap-4' ) );
+$expect( 'a row that changes at a breakpoint stays as it is', ! isset( $attrs_of( $convert( $group( 'd-flex sm-flex-column', $para() ) )['content'] )['layout'] ) );
+$expect( 'a row with a display set in its own CSS is read from there too', ( $attrs_of( $convert( $group( 'items-center', $para(), 'display:flex;gap:12px' ) )['content'] )['layout']['type'] ?? '' ) === 'flex' );
+$wrapper = $group( 'mx-auto my-0 px-7 max-w-1280px', $para() . $para() );
+$ba  = $attrs_of( $convert( $wrapper )['content'] );
+$expect( 'a centred container becomes a Constrained layout of the width its children had', ( $ba['layout']['type'] ?? '' ) === 'constrained' && ( $ba['layout']['contentSize'] ?? '' ) === '1224px' && ( $ba['style']['spacing']['blockGap'] ?? '' ) === '0px', json_encode( $ba ) );
+$expect( 'and keeps its padding and its other classes', ( $ba['className'] ?? '' ) === 'my-0 px-7', json_encode( $ba ) );
+$expect( 'a container with a narrower child stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'max-w-720px m-0' ) ) )['content'] )['layout'] ) );
+$expect( 'a container with a child that has a vertical margin stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'mb-3' ) ) )['content'] )['layout'] ) );
+$expect( 'a container with a background stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7 bg-dxai-brand', $para() ) )['content'] )['layout'] ) );
+$once = $convert( $row . "\n\n" . $box )['content'];
+$expect( 'a second pass changes nothing', $convert( $once )['counts'] === array() && $convert( $once )['content'] === $once );
+$expect( 'parse and serialize give the same bytes', serialize_blocks( parse_blocks( $once ) ) === $once );
+
+echo "\nSections and leftovers\n";
+$tpl   = '<!-- wp:group {"tagName":"template","anchor":"__bundler_thumbnail"} --><template id="__bundler_thumbnail" class="wp-block-group"><!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group --></template><!-- /wp:group -->';
+$shell = '<!-- wp:group --><div class="wp-block-group">'
+	. '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">About us</h2><!-- /wp:heading --></section><!-- /wp:group -->'
+	. '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Our work</h2><!-- /wp:heading --></section><!-- /wp:group --></div><!-- /wp:group -->';
+$r = $convert( $tpl . "\n\n" . $shell );
+$top = array_values( array_filter( parse_blocks( $r['content'] ), static fn( $x ) => ! empty( $x['blockName'] ) ) );
+$expect( 'the export\'s never-rendered template is taken out', count( $top ) === 1 && ( $top[0]['attrs']['tagName'] ?? '' ) !== 'template', json_encode( array_map( static fn( $x ) => $x['blockName'], $top ) ) );
+$expect( 'a wrapper around the page\'s parts is not named; its sections are', empty( $top[0]['attrs']['metadata']['name'] ) && ( $top[0]['innerBlocks'][0]['attrs']['metadata']['name'] ?? '' ) === 'About us' && ( $top[0]['innerBlocks'][1]['attrs']['metadata']['name'] ?? '' ) === 'Our work', json_encode( $top[0]['attrs'] ) );
+$expect( 'a template with text in it is left alone', str_contains( $convert( '<!-- wp:group {"tagName":"template"} --><template class="wp-block-group"><!-- wp:paragraph --><p>Keep</p><!-- /wp:paragraph --></template><!-- /wp:group -->' )['content'], '<p>Keep</p>' ) );
+
 echo "\nTwo passes, and a stable round trip\n";
-foreach ( array( 'card' => $card, 'span' => $span, 'box' => $box, 'filled' => $filled, 'filled+ghost' => $filled . "\n\n" . $ghost ) as $label => $markup ) {
+foreach ( array( 'card' => $card, 'span' => $span, 'box' => $box, 'filled' => $filled, 'filled+ghost' => $filled . "\n\n" . $ghost, 'row' => $row ) as $label => $markup ) {
 	$once  = $convert( $markup )['content'];
 	$twice = $convert( $once );
 	$expect( "$label: a second pass changes nothing", $twice['counts'] === array() && $twice['content'] === $once );

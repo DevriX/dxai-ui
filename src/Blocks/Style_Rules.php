@@ -129,6 +129,9 @@ final class Style_Rules {
 	/** @var array<string, bool> Utility classes whose rules this request has already written. */
 	private static array $emitted = array();
 
+	/** @var array<string, true> marker|class => the rules of that utility class written for the element inside a part (PARTS) have been printed. */
+	private static array $emitted_part = array();
+
 	/** Whether this request printed utility rules: blocks outside a scope get MARK (late()). */
 	private static bool $marking = false;
 
@@ -449,6 +452,26 @@ final class Style_Rules {
 		$css = count( $new ) === count( $parts['utilities'] ) ? $parts['utility_css'] : Utility_Classes::css_for_classes( $new );
 		foreach ( $new as $class ) {
 			self::$emitted[ $class ] = true;
+		}
+		// The rules of a utility class written for the element inside a part (an image the plugin turned into core/image) are
+		// a different rule from the class's own: the class being printed already for another block does not print them.
+		if ( count( $new ) !== count( $parts['utilities'] ) ) {
+			foreach ( (array) ( $parts['part_utilities'] ?? array() ) as $marker => $classes ) {
+				$fresh = array_values( array_filter( (array) $classes, static fn( $c ) => ! isset( self::$emitted_part[ $marker . '|' . $c ] ) ) );
+				if ( $fresh === array() || ! isset( self::PARTS[ $marker ] ) ) {
+					continue;
+				}
+				$css .= Utility_Classes::css_for_classes( $fresh, false, array( 'wrap' => (string) $marker, 'inner' => self::PARTS[ $marker ] ) );
+				foreach ( $fresh as $class ) {
+					self::$emitted_part[ $marker . '|' . $class ] = true;
+				}
+			}
+		} else {
+			foreach ( (array) ( $parts['part_utilities'] ?? array() ) as $marker => $classes ) {
+				foreach ( (array) $classes as $class ) {
+					self::$emitted_part[ $marker . '|' . $class ] = true;
+				}
+			}
 		}
 		if ( $parts['utilities'] !== array() ) {
 			self::$marking = true;

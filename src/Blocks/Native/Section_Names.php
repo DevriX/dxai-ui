@@ -46,6 +46,12 @@ final class Section_Names extends Converter {
 			return null;
 		}
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+		// A page written as one wrapper around its header, main and sections: the sections are named, not the wrapper.
+		if ( self::shell( $block ) ) {
+			$inside = self::inside( $block );
+
+			return $inside === $block ? null : $inside;
+		}
 		if ( ! empty( $attrs['metadata']['name'] ) ) {
 			return null;
 		}
@@ -70,6 +76,9 @@ final class Section_Names extends Converter {
 		}
 		$anchor = (string) ( $attrs['anchor'] ?? '' );
 		$found  = self::scan( $block );
+		if ( $found['header'] && ! $found['h1'] && $found['heading'] === '' ) {
+			return __( 'Header', 'dxai-ui' );
+		}
 		if ( $found['h1'] ) {
 			return __( 'Hero Section', 'dxai-ui' );
 		}
@@ -93,10 +102,11 @@ final class Section_Names extends Converter {
 	 * What a section holds: whether a level-1 heading, a form or buttons, and its first heading's text.
 	 *
 	 * @param array<string, mixed> $block
-	 * @return array{h1:bool, form:bool, buttons:bool, heading:string}
+	 * @return array{h1:bool, form:bool, buttons:bool, heading:string, header:bool}
 	 */
 	private static function scan( array $block ): array {
 		$out  = array(
+			'header'  => false,
 			'h1'      => false,
 			'form'    => false,
 			'buttons' => false,
@@ -104,6 +114,9 @@ final class Section_Names extends Converter {
 		);
 		$walk = static function ( array $b ) use ( &$walk, &$out ): void {
 			$name = (string) ( $b['blockName'] ?? '' );
+			if ( $name === 'core/group' && in_array( (string) ( $b['attrs']['tagName'] ?? '' ), array( 'header', 'nav' ), true ) ) {
+				$out['header'] = true;
+			}
 			if ( $name === 'core/heading' ) {
 				if ( (int) ( $b['attrs']['level'] ?? 2 ) === 1 ) {
 					$out['h1'] = true;
@@ -129,6 +142,60 @@ final class Section_Names extends Converter {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Whether a group only holds the page's parts: two or more groups (its header, main, sections) and nothing that
+	 * says anything itself — no heading, text, list, picture or buttons.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function shell( array $block ): bool {
+		if ( ! in_array( (string) ( $block['attrs']['tagName'] ?? 'div' ), array( 'div', 'main' ), true ) || ! empty( $block['attrs']['metadata']['name'] ) ) {
+			return false;
+		}
+		$groups = 0;
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $child ) {
+			$name = is_array( $child ) ? (string) ( $child['blockName'] ?? '' ) : '';
+			if ( $name === 'core/group' ) {
+				++$groups;
+			} elseif ( ! in_array( $name, array( '', 'dxai-ui/link', 'dxai-ui/svg', 'dxai-ui/html', 'dxai-ui/box' ), true ) ) {
+				return false;
+			}
+		}
+
+		return $groups >= 2;
+	}
+
+	/**
+	 * The shell with its parts named (a part that is itself a shell — the page's main — is named through).
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array<string, mixed>
+	 */
+	private static function inside( array $block ): array {
+		foreach ( (array) $block['innerBlocks'] as $i => $child ) {
+			if ( ! is_array( $child ) || ( $child['blockName'] ?? '' ) !== 'core/group' || ( $child['innerBlocks'] ?? array() ) === array() ) {
+				continue;
+			}
+			if ( self::shell( $child ) ) {
+				$block['innerBlocks'][ $i ] = self::inside( $child );
+				continue;
+			}
+			$attrs = is_array( $child['attrs'] ?? null ) ? $child['attrs'] : array();
+			if ( ! empty( $attrs['metadata']['name'] ) || (string) ( $attrs['tagName'] ?? 'div' ) === 'template' ) {
+				continue;
+			}
+			$name = self::name( $child );
+			if ( $name === '' ) {
+				continue;
+			}
+			$attrs['metadata']          = array_merge( is_array( $attrs['metadata'] ?? null ) ? $attrs['metadata'] : array(), array( 'name' => $name ) );
+			$child['attrs']             = $attrs;
+			$block['innerBlocks'][ $i ] = $child;
+		}
+
+		return $block;
 	}
 
 	/** `where-we-work` → `Where we work`. */
