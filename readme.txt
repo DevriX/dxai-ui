@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.15
+Stable tag: 0.4.0-beta.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,9 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.16 =
+* A copy of a design's sections looks like the page it was copied from. Sections copied onto another page of the theme were always kept off the theme's CSS, which matches a design page of the blank canvas. Where the design's own Home is a page of the theme (printed with the theme's whole stylesheet), that is another environment: the native blocks the team builds among the sections (the theme's FAQ, groups with a flex or constrained layout) were made with the theme's CSS on them, and the copy showed every FAQ answer open, headings with browser margins, another font and line height. The fence is now decided by the template of the design's source page: kept for the blank canvas, left off for a page of the theme, so the copy has the same CSS as the Home. The custom field `_dxai_ui_fence_theme` (1 or 0) on a page overrides it.
 
 = 0.4.0-beta.15 =
 * The theme-stylesheet trim also keeps the rules for widgets that other people's scripts put on a page after it has loaded (the reCAPTCHA badge, a map's controls, review widgets, sliders, lightboxes, consent banners, chat buttons, video players): neither the markup nor the site's own scripts name those classes, so a rule for them could have been cut. Results kept by an earlier version are made again.
