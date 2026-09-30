@@ -130,6 +130,31 @@ $rm( $dir );
 $rm( Upload_Paths::path( Upload_Paths::DIR . '/trim/' . substr( md5( str_replace( '.vtx-c7:hover{color:red}', '.vtx-c7:hover{color:red', $sheet ) ), 0, 12 ) ) );
 delete_transient( 'dxai_ui_trim_seen_0' );
 
+// --- Theme_Fence::fences -------------------------------------------------------------------------------------------
+echo "\nThe fence follows the design's source page\n";
+$src  = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'vtx fence source' ) );
+$copy = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'vtx fence copy', 'post_content' => '<!-- wp:dxai-ui/box --><div class="x"></div><!-- /wp:dxai-ui/box -->' ) );
+update_post_meta( $src, '_dxai_ui_css_url', 'dxai-ui/vtx-none.css' );
+update_post_meta( $src, DXAI_UI\Structures\Page_Scope::META, $src );
+update_post_meta( $copy, DXAI_UI\Structures\Design_Attach::META, $src );
+$fences = static function () use ( $copy ): bool {
+	DXAI_UI\Structures\Design_Attach::forget( $copy );
+
+	return DXAI_UI\Theme\Theme_Fence::fences( $copy );
+};
+update_post_meta( $src, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
+$expect( 'a copy of a design whose page shows without the theme\'s CSS is fenced', $fences() === true );
+update_post_meta( $src, '_wp_page_template', 'default' );
+$expect( 'a copy of a design whose page is a page of the theme is not (it matches that page)', $fences() === false );
+update_post_meta( $copy, '_dxai_ui_fence_theme', '1' );
+$expect( 'the page\'s own custom field decides over the source', $fences() === true );
+update_post_meta( $copy, '_dxai_ui_fence_theme', '0' );
+update_post_meta( $src, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
+$expect( '… both ways', $fences() === false );
+$expect( 'a page that shows no design is never fenced', DXAI_UI\Theme\Theme_Fence::fences( 0 ) === false );
+wp_trash_post( $copy );
+wp_trash_post( $src );
+
 // --- Font_Host -----------------------------------------------------------------------------------------------------
 echo "\nFont_Host\n";
 $google  = 'https://fonts.googleapis.com/css2?family=Vtx+Sans:wght@400;700&display=swap';

@@ -424,8 +424,8 @@ final class Assets {
 			 * on it changes every padded width.
 			 */
 			$deps = array( 'dxai-ui-dynamic' );
-			// Sections copied into a page of the theme: first what their design page gives them (Attached_Styles).
-			if ( $attached ) {
+			// Sections copied into a page of the theme from a design page that shows without it: first what their design page gives them (Attached_Styles).
+			if ( $attached && \DXAI_UI\Theme\Theme_Fence::applies() ) {
 				array_unshift( $deps, Attached_Styles::base( $src ) );
 			}
 			if ( ! get_post_meta( $src, '_dxai_ui_static_html', true ) ) {

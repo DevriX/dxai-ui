@@ -34,7 +34,14 @@ use DXAI_UI\Support\Upload_Paths;
  * inline block is fenced once and read back. Anything that cannot be fenced is
  * left as it was, so the page is never worse than without this.
  *
- * `dxai_ui_fence_theme` (bool, post id) turns it off for a page.
+ * A copy looks like the page it was copied from. On a design page of the blank canvas the theme's CSS is not there
+ * at all, so the copies keep it off (as above). When the design's own pages are pages of the theme — its Home
+ * is on the theme's template, printed with the theme's stylesheet as any page of it — its sections were built
+ * and checked with that stylesheet on them, the native blocks the team adds among them (the theme's FAQ, blocks
+ * with a flex or constrained layout) depend on it, and a copy is left unfenced: the same CSS, the same result,
+ * pixel for pixel (fences() decides by the template of the design's source page).
+ *
+ * The custom field `_dxai_ui_fence_theme` (1 or 0) of a page, or the filter `dxai_ui_fence_theme` (bool, post id), sets it for a page.
  */
 final class Theme_Fence {
 
@@ -69,14 +76,33 @@ final class Theme_Fence {
 		add_action( 'wp_print_footer_scripts', array( self::class, 'apply' ), 9 );
 	}
 
-	/** Whether this request is an ordinary page showing a design it does not carry itself. */
+	/** Whether this request is an ordinary page showing a design it does not carry itself, from a design page of the blank canvas. */
 	public static function applies(): bool {
 		if ( ! is_singular() || Theme_Compat::is_converted_page() ) {
 			return false;
 		}
-		$id = (int) get_queried_object_id();
 
-		return $id > 0 && Design_Attach::attached( $id ) && (bool) apply_filters( 'dxai_ui_fence_theme', true, $id );
+		return self::fences( (int) get_queried_object_id() );
+	}
+
+	/**
+	 * Whether a page's copied sections are fenced off the theme's CSS: they are when the design they come from is
+	 * shown without it (its source page is on the blank canvas), and are not when its source page is a page of the
+	 * theme, which the copies then match.
+	 */
+	public static function fences( int $post_id ): bool {
+		if ( $post_id < 1 || ! Design_Attach::attached( $post_id ) ) {
+			return false;
+		}
+		// A page can say so itself (custom field _dxai_ui_fence_theme: 1 fences, 0 does not).
+		$own = (string) get_post_meta( $post_id, '_dxai_ui_fence_theme', true );
+		if ( $own === '1' || $own === '0' ) {
+			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
+		}
+		$source  = Design_Attach::source_for( $post_id );
+		$default = get_page_template_slug( $source ) === Blank_Template::SLUG;
+
+		return (bool) apply_filters( 'dxai_ui_fence_theme', $default, $post_id );
 	}
 
 	/** Wrap each of the theme's callbacks on the style hooks, to record what it registers and adds. */
