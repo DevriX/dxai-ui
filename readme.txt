@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.12
+Stable tag: 0.4.0-beta.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.13 =
+* Calls to action are the theme's buttons: a link of the design with padding and a fill or a border becomes a Buttons block with a Button in the theme's own style (primary for a filled one, secondary for an outlined or white one, small primary for a small one), the way the theme's pages are built. Adjacent calls to action in one container become one Buttons block, spaced as the container spaced them. The look is the theme's (fill, padding, radius, type follow the theme and its colours); only the design's placement (margin, width) stays. The text colour is the palette colour that reads on the theme's accent.
+* The theme's button rules load where its stylesheet does not reach: on a design page, and on a page holding a design's sections. Anywhere else the theme's own sheet is there and no copy is added.
+* Sections are named in the List View ("Hero Section", "FAQ Section", "Where we work Section"), as the theme's pages name theirs. Only the block's name is stored; the page does not change, and a name a person gave is kept.
+* Menu items, social icons, the skip link, controls with ARIA state and links without a fill or border stay DX Links. `bin/verify-native-blocks.php` checks the converters against fixtures.
 
 = 0.4.0-beta.12 =
 * The blocks the plugin adds are named "DX Text", "DX Box", "DX Link", "DX Image" … and sit in one inserter group, "DX Blocks". Only the names change; no page is touched.
