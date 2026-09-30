@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.13
+Stable tag: 0.4.0-beta.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.14 =
+* Page speed. A design's pages waited for their fonts through a chain of requests (the page, its stylesheet, Google's stylesheet, the font files) and for the whole of the theme's stylesheet, which a DevriX theme prints inline in every page (1.1 MB, about 2% of it used). The fonts are now copied into the site's uploads and their rules put in the design's own stylesheet, and the theme's stylesheet is printed cut down to what the page can use. On the Semper Dry pages: mobile 81 → 91 in the lab, with the page unchanged (identical screenshots, identical computed styles in the open-menu, hover and form states).
+* The fonts are copied when a design is imported, by cron the first time a page that still asks Google is viewed, from the Library (Page speed), or with `wp dxai-ui speed apply`. Only Google Fonts, only what Google's stylesheet names; a file that cannot be fetched keeps its address. What was replaced is kept in the sheet, so `Use Google again` (or `speed revert`) gives the imported sheet back byte for byte, and an export carries the sheet as it was imported.
+* The theme's stylesheet is cut down per page for visitors who are not logged in, on pages that show a design: a rule stays when the page can match it (its classes and ids, its element names, the words of the scripts it loads; nothing that needs a hover, focus or an open menu counts against it). It is cached by the page's tokens and falls back to the whole stylesheet at any doubt. `wp dxai-ui speed trim-off` or the Library switch turns it off.
+* Copied theme components. A page of the theme that holds sections copied from a design page keeps the theme's CSS off them, and that also took the theme's own components with it: the FAQ (`faq-question`, `faq-answer`, `faq-arrow`) showed every answer open, running into the next question. A class the page's blocks carry and only the theme defines now gets the theme's rules back inside the sections, at the same weight, and the states a script adds to it come with it.
+* `bin/verify-speed.php` checks the trim, the fonts and the components against fixtures, offline.
 
 = 0.4.0-beta.13 =
 * Calls to action are the theme's buttons: a link of the design with padding and a fill or a border becomes a Buttons block with a Button in the theme's own style (primary for a filled one, secondary for an outlined or white one, small primary for a small one), the way the theme's pages are built. Adjacent calls to action in one container become one Buttons block, spaced as the container spaced them. The look is the theme's (fill, padding, radius, type follow the theme and its colours); only the design's placement (margin, width) stays. The text colour is the palette colour that reads on the theme's accent.
