@@ -97,6 +97,12 @@
 	align-items: center;
 }
 
+/* A button made from the design's link keeps its longest word whole (see blank-canvas.css). */
+:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-button__link,
+:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-button__link {
+	word-break: normal;
+}
+
 /* Not the root block list's children: on the front end the page's top-level
    blocks are children of the scope <div> itself, which this rule never
    reaches. */

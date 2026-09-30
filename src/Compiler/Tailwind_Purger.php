@@ -73,9 +73,12 @@ final class Tailwind_Purger {
 		 * rendered 60×50, and a `min-height:48px` submit button 78px tall
 		 * instead of 52px. Leaving them out restores whatever the browser gives
 		 * each control type, which is what the design had.
+		 *
+		 * The picture inside a core Image is left without a `wp-block-` class of its own, and core says `.wp-block-image
+		 * img { box-sizing: border-box }` for it: a 620px picture with a 1px border came out 618px. It is named here too.
 		 */
 		if ( ! $this->preflight ) {
-			$css .= $scope . ' :where([class*="wp-block-"]:not(button, input, select, textarea)) { box-sizing: content-box; }' . "\n";
+			$css .= $scope . ' :where([class*="wp-block-"]:not(button, input, select, textarea), .wp-block-image img) { box-sizing: content-box; }' . "\n";
 		}
 
 		if ( ! self::engine_available() ) {

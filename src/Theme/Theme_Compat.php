@@ -46,6 +46,27 @@ final class Theme_Compat {
 		add_action( 'wp_head', array( $this, 'print_title' ), 1 );
 		add_filter( 'dx_delay_scripts_should_delay', array( $this, 'no_delay' ), 10, 1 );
 		add_filter( 'dx_lazy_load_skip_image', array( $this, 'skip_lazy' ), 10, 1 );
+		add_action( 'wp_footer', array( $this, 'print_block_supports' ), 2 );
+	}
+
+	/**
+	 * The styles the blocks on a converted page asked for: a group's layout (its gap, wrapping and alignment are a
+	 * `wp-container-…` rule), an element's colour. WordPress prints them in <head> for a block theme, because it renders a
+	 * block theme's template before the head; the blank template is a PHP file, its content is rendered after the head,
+	 * and WordPress does not print them in the footer for a block theme — so the layout the blocks were saved with was
+	 * lost. A classic theme gets them in the footer from core, so nothing is added there.
+	 */
+	public function print_block_supports(): void {
+		if ( ! self::is_converted_page() || ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() || ! function_exists( 'wp_style_engine_get_stylesheet_from_context' ) ) {
+			return;
+		}
+		$css = wp_style_engine_get_stylesheet_from_context( 'block-supports', array( 'prettify' => false ) );
+		if ( ! is_string( $css ) || $css === '' ) {
+			return;
+		}
+		wp_register_style( 'dxai-ui-block-supports', false );
+		wp_add_inline_style( 'dxai-ui-block-supports', $css );
+		wp_print_styles( 'dxai-ui-block-supports' );
 	}
 
 	/**

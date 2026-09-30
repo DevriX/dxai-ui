@@ -65,11 +65,13 @@ final class Button extends Converter {
 		$run = array();
 		$flush = function () use ( &$run, &$out, $parent ): void {
 			if ( $run !== array() ) {
-				$out[] = array(
-					'start' => $run[0]['index'],
-					'end'   => $run[ count( $run ) - 1 ]['index'],
-					'block' => $this->buttons_block( $run, $parent ),
-				);
+				if ( ! self::chips( $run, $parent ) ) {
+					$out[] = array(
+						'start' => $run[0]['index'],
+						'end'   => $run[ count( $run ) - 1 ]['index'],
+						'block' => $this->buttons_block( $run, $parent ),
+					);
+				}
 				$run = array();
 			}
 		};
@@ -227,7 +229,8 @@ final class Button extends Converter {
 	private function buttons_block( array $run, ?array $parent ): array {
 		$slug   = Theme_Buttons::text_slug();
 		$inner  = array();
-		$chunks = array( '<div class="wp-block-buttons sm-flex-column">' );
+		$stack  = self::stacks( $run );
+		$chunks = array( '<div class="' . ( $stack ? 'wp-block-buttons sm-flex-column' : 'wp-block-buttons' ) . '">' );
 		foreach ( $run as $i => $cta ) {
 			$colored = $slug !== '' && in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true );
 			$attrs   = array();
@@ -268,24 +271,61 @@ final class Button extends Converter {
 		if ( $justify !== '' ) {
 			$layout['justifyContent'] = $justify;
 		}
-		$attrs = array(
-			'className' => 'sm-flex-column',
-			'style'     => array( 'spacing' => array( 'blockGap' => array( 'top' => self::gap( $parent ), 'left' => self::gap( $parent ) ) ) ),
-			'layout'    => $layout,
-		);
+		$attrs = array();
+		if ( $stack ) {
+			$attrs['className'] = 'sm-flex-column';
+		}
+		$attrs['style']  = array( 'spacing' => array( 'blockGap' => array( 'top' => self::gap( $parent ), 'left' => self::gap( $parent ) ) ) );
+		$attrs['layout'] = $layout;
 
 		return array(
 			'blockName'    => 'core/buttons',
 			'attrs'        => $attrs,
 			'innerBlocks'  => $inner,
-			'innerHTML'    => '<div class="wp-block-buttons sm-flex-column"></div>',
+			'innerHTML'    => '<div class="' . ( $stack ? 'wp-block-buttons sm-flex-column' : 'wp-block-buttons' ) . '"></div>',
 			'innerContent' => $chunks,
 		);
 	}
 
+	/**
+	 * Whether a run of links is a strip of chips or tabs rather than calls to action: they sit in a row that scrolls
+	 * sideways (`overflow-x-auto`, `snap-x`), or there are four or more side by side. The theme's buttons stack on a
+	 * small screen, which would turn a row that scrolls into a column, so these stay the design's own links.
+	 *
+	 * @param array<int, array<string, mixed>> $run
+	 * @param array<string, mixed>|null        $parent
+	 */
+	private static function chips( array $run, ?array $parent ): bool {
+		if ( count( $run ) >= 4 ) {
+			return true;
+		}
+		$class = ' ' . trim( (string) ( $parent['className'] ?? '' ) ) . ' ';
+		$css   = (string) ( $parent['dxaiCss'] ?? '' );
+
+		return preg_match( '/\s(?:(?:xs|sm|md|lg|xl)-)?(?:overflow-(?:x-)?(?:auto|scroll)|snap-x|no-scrollbar|scrollbar-(?:none|hide))\s/', $class ) === 1
+			|| preg_match( '/(?:^|;)\s*overflow(?:-x)?\s*:\s*(?:auto|scroll)/', $css ) === 1;
+	}
+
+	/**
+	 * Whether the row stacks its buttons on a small screen, as the theme's pages have it (`sm-flex-column`). A design
+	 * that sizes its buttons along the row itself (`flex: 1 1 200px`, `flex-1`, `grow`) keeps its own way: in a column
+	 * the same basis is the button's height, and a 200px-wide button came out 200px tall.
+	 *
+	 * @param array<int, array<string, mixed>> $run
+	 */
+	private static function stacks( array $run ): bool {
+		foreach ( $run as $cta ) {
+			if ( preg_match( '/(?:^|;)\s*flex(?:-[a-z]+)?\s*:/', (string) $cta['css'] ) === 1 || preg_match( '/(?:^|\s)(?:(?:xs|sm|md|lg|xl)-)?(?:flex-1|flex-none|grow|shrink)(?:\s|$)/', (string) $cta['classes'] ) === 1 ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	/** The space between the buttons: the container's own gap when the design set one, else the theme pages' 12px. */
 	private static function gap( ?array $parent ): string {
-		foreach ( preg_split( '/s+/', trim( (string) ( $parent['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
+		foreach ( preg_split( '/\s+/', trim( (string) ( $parent['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
 			if ( preg_match( '/^gap-[\w.-]+$/', $token ) === 1 && preg_match( '/gap:\s*(\d+(?:\.\d+)?)px/', \DXAI_UI\Compiler\Utility_Classes::base_declarations( $token ), $m ) === 1 ) {
 				return $m[1] . 'px';
 			}

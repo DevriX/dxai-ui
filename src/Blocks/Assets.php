@@ -368,6 +368,9 @@ final class Assets {
 			return;
 		}
 		$content = (string) get_post_field( 'post_content', $id );
+		// A design page's header and footer are added around its content as it renders (Page_Chrome), so what they hold —
+		// a button in the theme's style, an icon — is part of the page for what it needs loaded.
+		$content = \DXAI_UI\Chrome\Page_Chrome::with_chrome( (int) $id, $content );
 		// Template-part refs expand at render — scan linked dxai parts for icons.
 		$content .= $this->template_part_markup( $content );
 		// Buttons in the theme's button style: its rules, on the pages where the theme's stylesheet does not reach them

@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 9;
+	private const CACHE_SCHEMA = 11;
 
 	/**
 	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
@@ -984,8 +984,12 @@ final class Style_Rules {
 			);
 		}
 
-		// $inner: the element inside the block that the CSS was written for (PARTS).
-		return $one . $one . $one . $inner . '{' . $css . '}';
+		// $inner: the element inside the block that the CSS was written for (PARTS). The class is a hash of the CSS, so a
+		// card and a picture that share their declarations share the class: without the marker on the same element the
+		// picture's rule (`.dxs-x img`) would reach every image inside the card.
+		$marker = $inner !== '' ? array_search( $inner, self::PARTS, true ) : false;
+
+		return ( is_string( $marker ) ? '.' . $marker : '' ) . $one . $one . $one . $inner . '{' . $css . '}';
 	}
 
 	/**
@@ -1002,7 +1006,12 @@ final class Style_Rules {
 		}
 
 		// The image core's own rule (`.wp-block-image img`) sets is bottom-aligned; the design's was on the baseline.
+		// WordPress writes the file's own width and height on the image (against layout shift). The design's `<img>` had
+		// none, so one that sets only its height (`h-10`) kept its proportions; with the attribute it takes the file's
+		// width, is cut back to its container and comes out stretched. `width:auto` puts the design's rule back, and with
+		// no weight at all it gives way to every width the design does set.
 		return '.wp-block-image.dxai-part-img{display:contents !important}'
+			. ':where(.wp-block-image.dxai-part-img img){width:auto}'
 			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img{vertical-align:baseline}'
 			. '.editor-styles-wrapper .wp-block-image.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
 	}

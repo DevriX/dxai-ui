@@ -88,6 +88,13 @@ if ( isset( $have['button'] ) ) {
 	$expect( 'the skip link stays a DX Link', $names( $convert( $skip )['content'] ) === array( 'dxai-ui/link' ) );
 	$r = $convert( $filled . "\n\n" . $navlink . "\n\n" . $ghost );
 	$expect( 'a menu item between two CTAs keeps them apart', count( array_filter( $names( $r['content'] ), static fn( $n ) => $n === 'core/buttons' ) ) === 2 );
+	$expect( 'the row stacks on a small screen, as the theme\'s pages do', str_contains( $convert( $filled )['content'], 'sm-flex-column' ) );
+	$grow = $cta( 'rounded-5px px-6 text-white', 'flex:1 1 200px;background:transparent;border:2px solid var(--dxai-neutral-100-a55)', 'Request a callback' );
+	$expect( 'a button the design sizes along the row (flex: 1 1 200px) does not stack: in a column that basis is a height', ! str_contains( $convert( $grow )['content'], 'sm-flex-column' ) );
+	$scroller = static fn( string $inner ): string => '<!-- wp:group {"className":"flex gap-2 overflow-x-auto"} --><div class="wp-block-group flex gap-2 overflow-x-auto">' . $inner . '</div><!-- /wp:group -->';
+	$expect( 'links in a row that scrolls sideways stay as the design wrote them', ! str_contains( $convert( $scroller( $filled . "\n\n" . $ghost ) )['content'], 'wp:buttons' ) );
+	$expect( 'four links side by side are a strip of chips, not calls to action', ! str_contains( $convert( $filled . "\n\n" . $ghost . "\n\n" . $filled . "\n\n" . $ghost )['content'], 'wp:buttons' ) );
+	$expect( 'two links side by side are still one Buttons block', str_contains( $convert( $filled . "\n\n" . $ghost )['content'], 'wp:buttons' ) );
 } else {
 	echo "  skip  the theme has no button styles here\n";
 }

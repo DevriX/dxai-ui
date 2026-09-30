@@ -52,6 +52,13 @@ body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(
 	align-items: center;
 }
 
+/* A button the plugin made from the design's link (Native_Blocks). Core says `word-break: break-word` for a button, so in a
+   row that is short of room it shrinks to its padding and breaks a word a letter at a time; the design's link never went
+   narrower than its longest word. */
+body.dxai-ui-blank .dxai-ui .wp-block-button__link {
+	word-break: normal;
+}
+
 body.dxai-ui-blank .dxai-ui:where(:not(.dxai-ui-static *)) :where(.is-layout-flow) > * {
 	margin-block-start: 0;
 	margin-block-end: 0;
