@@ -378,8 +378,12 @@ final class Site_Footer_Block {
 		}
 		$page  = (int) ( $footer['page_id'] ?? 0 );
 		$scope = self::scope( $footer );
+		$carried = \DXAI_UI\Media\Font_Host::covered( Upload_Paths::for_meta( $page, '_dxai_ui_css_url' )['path'] );
 		foreach ( self::font_urls( $footer ) as $i => $url ) {
-			wp_enqueue_style( 'dxai-ui-font-' . $page . '-' . $i, $url, array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- a font CSS URL is versioned by its query.
+			if ( isset( $carried[ \DXAI_UI\Media\Font_Host::key( $url ) ] ) ) {
+				continue;
+			}
+			wp_enqueue_style( 'dxai-ui-font-' . $page . '-' . $i, \DXAI_UI\Media\Font_Host::link_url( $url ), array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- a font CSS URL is versioned by its query.
 		}
 		if ( ! wp_style_is( self::DESIGN_STYLE, 'registered' ) ) {
 			// dynamic.css: what every converted page loads under its sheet (Assets).

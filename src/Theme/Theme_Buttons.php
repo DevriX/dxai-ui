@@ -168,7 +168,7 @@ final class Theme_Buttons {
 	 *
 	 * @return array<int, string>
 	 */
-	private static function sheets(): array {
+	public static function sheets(): array {
 		$out = array();
 		foreach ( array_unique( array( get_stylesheet_directory(), get_template_directory() ) ) as $dir ) {
 			foreach ( array( '/assets/dist/css/*.css', '/assets/css/*.css', '/dist/css/*.css', '/css/*.css', '/build/*.css', '/style.css' ) as $pattern ) {

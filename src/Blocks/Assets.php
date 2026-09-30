@@ -393,10 +393,19 @@ final class Assets {
 		$js       = Upload_Paths::for_meta( $src, '_dxai_ui_js_url' );
 		$fonts    = get_post_meta( $src, '_dxai_ui_font_urls', true );
 		$attached = $src !== (int) $id && ! \DXAI_UI\Theme\Theme_Compat::is_converted_page();
+		// The theme's own components among the copied blocks (its FAQ) keep their rules inside the design's sections, as on the page they came from.
+		if ( \DXAI_UI\Theme\Theme_Fence::applies() ) {
+			\DXAI_UI\Theme\Theme_Components::enqueue( $content, $css['path'] );
+		}
+		// The fonts the design's sheet carries itself (Font_Host) need no link to Google; a sheet that still asks Google for them is copied by cron.
+		$carried = \DXAI_UI\Media\Font_Host::covered( $css['path'] );
+		if ( $css['path'] !== '' && \DXAI_UI\Media\Font_Host::needs_work( $css['path'], is_array( $fonts ) ? $fonts : array() ) ) {
+			\DXAI_UI\Media\Font_Host::queue_design( $src );
+		}
 		if ( is_array( $fonts ) ) {
 			foreach ( array_values( $fonts ) as $i => $font_url ) {
 				$font_url = $this->safe_font_url( (string) $font_url );
-				if ( $font_url === '' ) {
+				if ( $font_url === '' || isset( $carried[ \DXAI_UI\Media\Font_Host::key( $font_url ) ] ) ) {
 					continue;
 				}
 				// On a page of the theme, the copy from uploads: a theme's font stripper would take Google's link.

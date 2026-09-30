@@ -7,6 +7,7 @@ import TransferImport from '../components/TransferImport';
 import SitePages from '../components/SitePages';
 import ThemeColors from '../components/ThemeColors';
 import NativeBlocks from '../components/NativeBlocks';
+import Speed from '../components/Speed';
 
 function Group( { title, items, empty, onRestore, exportUrl } ) {
 	return (
@@ -185,6 +186,7 @@ export default function LibraryScreen() {
 						<SitePages />
 						<ThemeColors />
 						<NativeBlocks />
+						<Speed />
 						<Group
 							title={ __( 'Generated pages', 'dxai-ui' ) }
 							items={ filtered.pages }

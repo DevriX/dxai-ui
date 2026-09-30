@@ -31,6 +31,7 @@ final class Transfer_Admin {
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
 			Transfer_Cli::register();
 			\DXAI_UI\Blocks\Native\Native_Cli::register();
+			\DXAI_UI\Support\Speed_Cli::register();
 		}
 	}
 

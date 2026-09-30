@@ -688,6 +688,7 @@ final class Structure_Repository {
 		\DXAI_UI\Theme\Theme_Binding::after_import( (int) $page_id );
 		// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
 		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
+		\DXAI_UI\Media\Font_Host::after_import( (int) $page_id );
 
 		/*
 		 * Audit every page this import wrote, here rather than in the REST
@@ -1792,6 +1793,7 @@ final class Structure_Repository {
 		// The pages built from the old site count for the design's colour use too.
 		\DXAI_UI\Theme\Theme_Binding::after_import( $page_id );
 		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $page_id );
+		\DXAI_UI\Media\Font_Host::after_import( $page_id );
 
 		$auditor = new Import_Audit();
 		foreach ( $crawled as $audit_id ) {

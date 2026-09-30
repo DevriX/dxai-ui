@@ -28,6 +28,7 @@ final class Rest_Registrar {
 				( new Site_Pages_Controller() )->register_routes();
 				( new Theme_Colors_Controller() )->register_routes();
 				( new Native_Blocks_Controller() )->register_routes();
+				( new Speed_Controller() )->register_routes();
 			}
 		);
 	}

@@ -328,7 +328,7 @@ final class Page_Export {
 		foreach ( array_unique( array( $page_id, $scope ) ) as $id ) {
 			$file = Upload_Paths::for_meta( (int) $id, $key );
 			if ( $file['path'] !== '' && is_readable( $file['path'] ) && is_file( $file['path'] ) ) {
-				$this->files[ $as ] = $file['path'];
+				$this->files[ $as ] = \DXAI_UI\Media\Font_Host::portable( $file['path'] );
 
 				return $as;
 			}
@@ -644,7 +644,7 @@ final class Page_Export {
 		$file = '';
 		if ( $css['path'] !== '' && is_file( $css['path'] ) && is_readable( $css['path'] ) ) {
 			$file                 = 'files/patterns/pattern-' . $id . '.css';
-			$this->files[ $file ] = $css['path'];
+			$this->files[ $file ] = \DXAI_UI\Media\Font_Host::portable( $css['path'] );
 		}
 		$this->patterns[ $id ] = array(
 			'source_id' => $id,

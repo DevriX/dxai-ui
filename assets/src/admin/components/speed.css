@@ -1,0 +1,55 @@
+.dxai-speed h4 {
+	margin: 20px 0 8px;
+}
+
+.dxai-speed__list {
+	list-style: none;
+	margin: 8px 0 12px;
+	padding: 0;
+	max-width: 720px;
+}
+
+.dxai-speed__list li {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	padding: 10px 0;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.dxai-speed__list li > div {
+	flex: 1 1 220px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.dxai-speed__list--sizes li {
+	justify-content: space-between;
+	padding: 8px 0;
+}
+
+.dxai-speed__list--sizes strong {
+	font-variant-numeric: tabular-nums;
+}
+
+.dxai-speed__state {
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.dxai-speed__state--local {
+	background: #e6f4ea;
+	color: #1a5d2b;
+}
+
+.dxai-speed__state--remote,
+.dxai-speed__state--partial {
+	background: #fcf0e3;
+	color: #7a4a00;
+}

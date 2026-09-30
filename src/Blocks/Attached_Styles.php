@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks;
 
+use DXAI_UI\Media\Font_Host;
 use DXAI_UI\Structures\Design_Attach;
 use DXAI_UI\Structures\Page_Scope;
 use DXAI_UI\Support\Upload_Paths;
@@ -103,19 +104,7 @@ final class Attached_Styles {
 	 * original, with the copy scheduled.
 	 */
 	public static function local_font_url( string $url ): string {
-		if ( ! str_contains( $url, 'fonts.googleapis.com' ) ) {
-			return $url;
-		}
-		$name = self::font_file( $url );
-		$path = Upload_Paths::path( $name );
-		if ( $path !== '' && is_readable( $path ) && filesize( $path ) > 0 ) {
-			return Upload_Paths::url( $name );
-		}
-		if ( ! wp_next_scheduled( 'dxai_ui_copy_font_css', array( $url ) ) ) {
-			wp_schedule_single_event( time(), 'dxai_ui_copy_font_css', array( $url ) );
-		}
-
-		return $url;
+		return Font_Host::link_url( $url );
 	}
 
 	/** On save: the fonts of the design an ordinary page shows, copied now, so its first view already has them. */
@@ -128,42 +117,17 @@ final class Attached_Styles {
 		if ( ! Design_Attach::attached( $post_id ) ) {
 			return;
 		}
-		$fonts = get_post_meta( Design_Attach::source_for( $post_id ), '_dxai_ui_font_urls', true );
+		$source = Design_Attach::source_for( $post_id );
+		$fonts  = get_post_meta( $source, '_dxai_ui_font_urls', true );
 		foreach ( is_array( $fonts ) ? $fonts : array() as $url ) {
 			self::copy_font_css( (string) $url );
 		}
+		// The design's own sheet carries them too, so the page asks for its fonts once.
+		Font_Host::localize_design( $source, 8 );
 	}
 
-	/** Google's stylesheet for a current browser, copied into uploads (cron, or right away from a save). */
+	/** Google's stylesheet for these fonts, and the files it names, copied into uploads (cron, or right away from a save). */
 	public static function copy_font_css( $url ): void {
-		$url = (string) $url;
-		if ( ! preg_match( '#^https://fonts\.googleapis\.com/#', $url ) ) {
-			return;
-		}
-		$path = Upload_Paths::path( self::font_file( $url ) );
-		if ( $path === '' || ( is_readable( $path ) && filesize( $path ) > 0 ) ) {
-			return;
-		}
-		$response = wp_safe_remote_get(
-			$url,
-			array(
-				'timeout' => 8,
-				// Google answers woff2 @font-face rules only to a browser it knows.
-				'headers' => array( 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' ),
-			)
-		);
-		$css = is_wp_error( $response ) || (int) wp_remote_retrieve_response_code( $response ) !== 200 ? '' : (string) wp_remote_retrieve_body( $response );
-		// Only font faces pointing at Google's font CDN are kept: nothing else may ride along into a local file.
-		if ( ! str_contains( $css, '@font-face' ) || preg_match( '#url\((?!\s*[\x22\x27]?https://fonts\.gstatic\.com/)#i', $css ) === 1 || preg_match( '/@import|<|expression\(/i', $css ) === 1 ) {
-			return;
-		}
-		if ( wp_mkdir_p( dirname( $path ) ) ) {
-			@file_put_contents( $path, $css ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		}
-	}
-
-	/** Where the copy of one font stylesheet lives, relative to uploads. */
-	private static function font_file( string $url ): string {
-		return Upload_Paths::DIR . '/fonts/' . md5( $url ) . '.css';
+		Font_Host::copy_now( $url );
 	}
 }
