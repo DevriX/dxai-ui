@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: DXAI-UI Runtime
+ * Plugin Name: DX UI Runtime
  * Description: Keeps pages converted with DXAI-UI styled and working (styles, fonts, header, footer, interactions, forms) while DXAI-UI is deactivated or after it was deleted. Importing and the DXAI-UI screens stay off. Installed by DXAI-UI; "Remove runtime" on the Plugins screen removes it for good.
  * Version: {{DXAI_UI_VERSION}}
  * Author: DevriX
@@ -120,7 +120,7 @@ add_action(
 		}
 		printf(
 			'<div class="notice notice-error"><p><strong>%1$s</strong> %2$s</p><p><code>%3$s</code></p><form method="post" action="%4$s"><input type="hidden" name="action" value="dxai_ui_retry_runtime" />%5$s<p><button type="submit" class="button">%6$s</button></p></form></div>',
-			esc_html__( 'The DXAI-UI Runtime stopped after a PHP error in its code.', 'dxai-ui' ),
+			esc_html__( 'The DX UI Runtime stopped after a PHP error in its code.', 'dxai-ui' ),
 			esc_html(
 				sprintf(
 					/* translators: %s: date and time of the error. */
@@ -198,16 +198,16 @@ add_action(
 			esc_html(
 				sprintf(
 					/* translators: %s: the DXAI-UI version the runtime was copied from. */
-					__( 'Pages converted with DXAI-UI keep their styles, header, footer and forms through the DXAI-UI Runtime (Must-Use plugins), a copy of DXAI-UI %s that gets no updates. Reinstalling DXAI-UI takes over from it automatically. Removing the runtime takes the design’s styles off every converted page at once; their content stays.', 'dxai-ui' ),
+					__( 'Pages converted with DX UI keep their styles, header, footer and forms through the DX UI Runtime (Must-Use plugins), a copy of DX UI %s that gets no updates. Reinstalling DX UI takes over from it automatically. Removing the runtime takes the design’s styles off every converted page at once; their content stays.', 'dxai-ui' ),
 					(string) get_file_data( $copy, array( 'Version' => 'Version' ) )['Version']
 				)
 			),
 			esc_url( admin_url( 'admin-post.php' ) ),
 			wp_nonce_field( 'dxai_ui_remove_runtime', '_wpnonce', true, false ),
-			esc_attr( wp_json_encode( __( 'Every page converted with DXAI-UI loses its styles, header and footer now. Their content stays. Remove the DXAI-UI Runtime?', 'dxai-ui' ) ) ),
+			esc_attr( wp_json_encode( __( 'Every page converted with DX UI loses its styles, header and footer now. Their content stays. Remove the DX UI Runtime?', 'dxai-ui' ) ) ),
 			esc_html__( 'Remove runtime', 'dxai-ui' ),
 			esc_attr( wp_create_nonce( 'dxai_ui_close_runtime_notice' ) ),
-			esc_html__( 'DXAI-UI was deleted.', 'dxai-ui' ),
+			esc_html__( 'DX UI was deleted.', 'dxai-ui' ),
 			wp_json_encode( admin_url( 'admin-ajax.php' ) )
 		);
 	}

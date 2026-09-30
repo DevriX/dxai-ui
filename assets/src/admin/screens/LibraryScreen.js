@@ -33,7 +33,7 @@ function Group( { title, items, empty, onRestore, exportUrl } ) {
 								<span className="dxai-card-id">ID { item.id }</span>
 							</div>
 							<strong>{ item.title }</strong>
-							<p className="dxai-muted">{ __( 'Saved in your DXAI workspace and ready to open, edit, or restore.', 'dxai-ui' ) }</p>
+							<p className="dxai-muted">{ __( 'Saved in your DX workspace and ready to open, edit, or restore.', 'dxai-ui' ) }</p>
 							<div className="dxai-actions">
 								{ item.view && <Button variant="link" href={ item.view }>{ __( 'View', 'dxai-ui' ) }</Button> }
 								{ item.edit && <Button variant="link" href={ item.edit }>{ __( 'Edit', 'dxai-ui' ) }</Button> }

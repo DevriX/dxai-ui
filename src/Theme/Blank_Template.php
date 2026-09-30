@@ -24,7 +24,7 @@ final class Blank_Template {
 	 * @return array<string, string>
 	 */
 	public function register_template( array $templates ): array {
-		$templates[ self::SLUG ] = __( 'DXAI Blank (pixel-perfect)', 'dxai-ui' );
+		$templates[ self::SLUG ] = __( 'DX Blank (pixel-perfect)', 'dxai-ui' );
 
 		return $templates;
 	}

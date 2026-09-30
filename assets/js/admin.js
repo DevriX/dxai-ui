@@ -9,7 +9,7 @@
 		el(
 			'div',
 			{ className: 'dxai-panel' },
-			el( 'p', null, 'DXAI Convert needs a built admin bundle. Run npm run build in the plugin directory.' )
+			el( 'p', null, 'DX Convert needs a built admin bundle. Run npm run build in the plugin directory.' )
 		)
 	);
 }( window.wp, window.dxaiUI ) );

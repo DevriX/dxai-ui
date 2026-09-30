@@ -82,11 +82,11 @@ export default function Chrome( { screen, version, meta, children } ) {
 				<a className="dxai-brand" href="admin.php?page=dxai-ui">
 					<Mark />
 					<span>
-						<strong>DXAI Convert</strong>
+						<strong>DX Convert</strong>
 						<em>{ __( 'Design to Gutenberg', 'dxai-ui' ) }</em>
 					</span>
 				</a>
-				<nav className="dxai-nav" aria-label={ __( 'DXAI Convert', 'dxai-ui' ) }>
+				<nav className="dxai-nav" aria-label={ __( 'DX Convert', 'dxai-ui' ) }>
 					{ LINKS.map( ( item ) => (
 						<a
 							key={ item.id }
@@ -112,8 +112,8 @@ export default function Chrome( { screen, version, meta, children } ) {
 			<div className="dxai-main">
 				<header className="dxai-shell-head">
 					<div className="dxai-shell-copy">
-						<p className="dxai-kicker">{ meta?.kicker || __( 'DXAI Studio', 'dxai-ui' ) }</p>
-						<h1>{ meta?.title || __( 'DXAI Convert', 'dxai-ui' ) }</h1>
+						<p className="dxai-kicker">{ meta?.kicker || __( 'DX Studio', 'dxai-ui' ) }</p>
+						<h1>{ meta?.title || __( 'DX Convert', 'dxai-ui' ) }</h1>
 						<p>{ meta?.description || __( 'A premium control layer for design-to-Gutenberg workflows inside WordPress.', 'dxai-ui' ) }</p>
 					</div>
 					<div className="dxai-shell-actions">
@@ -125,7 +125,7 @@ export default function Chrome( { screen, version, meta, children } ) {
 						</a>
 					</div>
 				</header>
-				<section className="dxai-shell-stats" aria-label={ __( 'DXAI status', 'dxai-ui' ) }>
+				<section className="dxai-shell-stats" aria-label={ __( 'DX status', 'dxai-ui' ) }>
 					{ stats.map( ( item ) => (
 						<div className="dxai-stat-card" key={ item.label }>
 							<span>{ item.label }</span>

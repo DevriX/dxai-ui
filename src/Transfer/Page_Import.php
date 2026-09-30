@@ -390,7 +390,7 @@ final class Page_Import {
 		$not  = static fn( string $why ): \WP_Error => new \WP_Error(
 			'dxai_ui_transfer_manifest',
 			/* translators: %s: what is wrong. */
-			sprintf( __( 'This is not a DXAI-UI page package: %s', 'dxai-ui' ), $why ),
+			sprintf( __( 'This is not a DX UI page package: %s', 'dxai-ui' ), $why ),
 			array( 'status' => 400 )
 		);
 		if ( ! isset( $have[ Package::MANIFEST ] ) ) {
@@ -417,7 +417,7 @@ final class Page_Import {
 			return new \WP_Error(
 				'dxai_ui_transfer_version',
 				/* translators: 1: package format version, 2: plugin version, 3: newest readable format version. */
-				sprintf( __( 'This package was made by a newer DXAI-UI (package format %1$d, plugin %2$s); this site reads format %3$d. Update the plugin here first.', 'dxai-ui' ), $version, is_scalar( $manifest['plugin_version'] ?? null ) ? (string) $manifest['plugin_version'] : '?', Package::VERSION ),
+				sprintf( __( 'This package was made by a newer DX UI (package format %1$d, plugin %2$s); this site reads format %3$d. Update the plugin here first.', 'dxai-ui' ), $version, is_scalar( $manifest['plugin_version'] ?? null ) ? (string) $manifest['plugin_version'] : '?', Package::VERSION ),
 				array( 'status' => 400 )
 			);
 		}
@@ -2282,7 +2282,7 @@ final class Page_Import {
 			update_post_meta( $page_id, '_wp_page_template', $template );
 		} elseif ( $template !== '' && $template !== 'default' ) {
 			/* translators: %s: template file. */
-			$this->warnings[] = sprintf( __( 'The page used the template %s on the source site, which is not part of DXAI-UI; it uses the default template here.', 'dxai-ui' ), $template );
+			$this->warnings[] = sprintf( __( 'The page used the template %s on the source site, which is not part of DX UI; it uses the default template here.', 'dxai-ui' ), $template );
 			delete_post_meta( $page_id, '_wp_page_template' );
 		}
 

@@ -91,7 +91,7 @@ final class Blog_Hydrator {
 			}
 		}
 
-		$category = $this->ensure_category( $title_hint !== '' ? $title_hint : 'DXAI Imported' );
+		$category = $this->ensure_category( $title_hint !== '' ? $title_hint : 'DX Imported' );
 		$seeded   = array();
 		foreach ( $cards as $card ) {
 			$post_id = $this->seed_post( $card, (int) $category['term_id'] );
@@ -246,10 +246,10 @@ final class Blog_Hydrator {
 	private function ensure_category( string $title_hint ): array {
 		$name = trim( $title_hint );
 		if ( $name === '' ) {
-			$name = 'DXAI Imported';
+			$name = 'DX Imported';
 		}
 		// Prefer a stable category for related-article seeds.
-		$name = 'DXAI Articles';
+		$name = 'DX Articles';
 		$slug = 'dxai-articles';
 		$existing = get_term_by( 'slug', $slug, 'category' );
 		if ( $existing instanceof \WP_Term ) {
@@ -264,7 +264,7 @@ final class Blog_Hydrator {
 			'category',
 			array(
 				'slug'        => $slug,
-				'description' => 'Seeded from DXAI-UI ZIP imports so Query Loops stay dynamic.',
+				'description' => 'Seeded from DX UI ZIP imports so Query Loops stay dynamic.',
 			)
 		);
 		if ( is_wp_error( $created ) ) {

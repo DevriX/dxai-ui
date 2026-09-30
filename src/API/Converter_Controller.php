@@ -1066,7 +1066,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		$compiled = (string) $request->get_param( 'compiled_css' );
 
 		if ( $title === '' ) {
-			$title = __( 'DXAI-UI Pattern', 'dxai-ui' );
+			$title = __( 'DX UI Pattern', 'dxai-ui' );
 		}
 
 		$payload = array();

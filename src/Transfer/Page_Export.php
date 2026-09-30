@@ -102,7 +102,7 @@ final class Page_Export {
 			return new \WP_Error( 'dxai_ui_transfer_not_found', __( 'There is no such page to export.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
 		if ( ! get_post_meta( $page_id, '_dxai_ui_generated_page', true ) ) {
-			return new \WP_Error( 'dxai_ui_transfer_not_converted', __( 'Only pages converted by DXAI-UI can be exported with their styles.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxai_ui_transfer_not_converted', __( 'Only pages converted by DX UI can be exported with their styles.', 'dxai-ui' ), array( 'status' => 400 ) );
 		}
 
 		return true;

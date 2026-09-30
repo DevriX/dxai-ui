@@ -246,13 +246,13 @@
 			: el( Placeholder, {
 				icon: 'menu',
 				label: __( 'Site Header', 'dxai-ui' ),
-				instructions: __( 'No header is installed yet. Importing a design with DXAI-UI installs its header, with its links in Appearance > Menus.', 'dxai-ui' ),
+				instructions: __( 'No header is installed yet. Importing a design with DX UI installs its header, with its links in Appearance > Menus.', 'dxai-ui' ),
 			} );
 		// Outside a converted page no design stylesheet styles the header
 		// (both its desktop and its mobile rows show). Said above the
 		// preview, not inside it, so the preview stays the front end's.
 		const notice = cfg.installed && ! cfg.scoped
-			? el( Notice, { status: 'warning', isDismissible: false }, __( 'This page is not a converted design, so the header shows here without the design’s styles. It belongs at the top of a page DXAI-UI imported.', 'dxai-ui' ) )
+			? el( Notice, { status: 'warning', isDismissible: false }, __( 'This page is not a converted design, so the header shows here without the design’s styles. It belongs at the top of a page DX UI imported.', 'dxai-ui' ) )
 			: null;
 
 		return el( Fragment, null, toolbar, inspector, el( 'div', blockProps, notice, body ) );

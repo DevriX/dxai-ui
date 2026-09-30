@@ -25,8 +25,8 @@ final class Dashboard {
 
 	public function menu(): void {
 		add_menu_page(
-			__( 'DXAI Convert', 'dxai-ui' ),
-			__( 'DXAI Convert', 'dxai-ui' ),
+			__( 'DX Convert', 'dxai-ui' ),
+			__( 'DX Convert', 'dxai-ui' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' ),
@@ -71,8 +71,8 @@ final class Dashboard {
 		);
 
 		add_options_page(
-			__( 'DXAI-UI', 'dxai-ui' ),
-			__( 'DXAI-UI', 'dxai-ui' ),
+			__( 'DX UI', 'dxai-ui' ),
+			__( 'DX UI', 'dxai-ui' ),
 			'manage_options',
 			self::SLUG_SETTINGS,
 			array( $this, 'render' )
@@ -103,7 +103,7 @@ final class Dashboard {
 		echo '<h1 class="screen-reader-text">' . esc_html( $title ) . '</h1>';
 		echo '<div id="dxai-ui-app" class="dxai-ui-admin">';
 		echo '<div class="dxai-ui-php-fallback notice notice-info"><p>';
-		echo esc_html__( 'DXAI Convert is loading. If this message stays, JavaScript failed to start. Use the links below.', 'dxai-ui' );
+		echo esc_html__( 'DX Convert is loading. If this message stays, JavaScript failed to start. Use the links below.', 'dxai-ui' );
 		echo '</p><p>';
 		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Convert', 'dxai-ui' ) . '</a> · ';
 		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG_LIBRARY ) ) . '">' . esc_html__( 'Library', 'dxai-ui' ) . '</a> · ';
@@ -224,8 +224,8 @@ final class Dashboard {
 		return match ( $screen ) {
 			'library'  => __( 'Library', 'dxai-ui' ),
 			'forms'    => __( 'Form entries', 'dxai-ui' ),
-			'settings' => __( 'DXAI-UI Settings', 'dxai-ui' ),
-			default    => __( 'DXAI Convert', 'dxai-ui' ),
+			'settings' => __( 'DX UI Settings', 'dxai-ui' ),
+			default    => __( 'DX Convert', 'dxai-ui' ),
 		};
 	}
 }

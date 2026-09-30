@@ -75,7 +75,7 @@ final class Transfer_Admin {
 			'<a href="%1$s" aria-label="%2$s">%3$s</a>',
 			esc_url( self::export_url( (int) $post->ID ) ),
 			/* translators: %s: page title. */
-			esc_attr( sprintf( __( 'Export “%s” with its styles as a DXAI-UI package', 'dxai-ui' ), get_the_title( $post ) ) ),
+			esc_attr( sprintf( __( 'Export “%s” with its styles as a DX UI package', 'dxai-ui' ), get_the_title( $post ) ) ),
 			esc_html__( 'Export with styles', 'dxai-ui' )
 		);
 

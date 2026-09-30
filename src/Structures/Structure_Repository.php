@@ -60,7 +60,7 @@ final class Structure_Repository {
 				array( 'status' => 403 )
 			);
 		}
-		$raw_title  = (string) ( $result['block_title'] ?? 'DXAI-UI' );
+		$raw_title  = (string) ( $result['block_title'] ?? 'DX UI' );
 		$seo_title  = trim( (string) ( $result['seo_title'] ?? '' ) );
 		if ( $seo_title === '' && ( str_contains( $raw_title, '|' ) || strlen( $raw_title ) > 60 ) ) {
 			$seo_title = $raw_title;

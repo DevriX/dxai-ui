@@ -79,7 +79,7 @@ final class Generation_Merger {
 		$js  = array_values( array_unique( array_filter( $js ) ) );
 
 		return array(
-			'block_title'      => $first_title !== '' ? $first_title : __( 'DXAI-UI Pattern', 'dxai-ui' ),
+			'block_title'      => $first_title !== '' ? $first_title : __( 'DX UI Pattern', 'dxai-ui' ),
 			'gutenberg_markup' => implode( "\n\n", $body ),
 			'structures'       => $structures,
 			'custom_css'       => implode( "\n\n", $css ),

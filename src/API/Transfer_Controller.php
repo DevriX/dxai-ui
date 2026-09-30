@@ -285,7 +285,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 			return self::upload_refusal( $error );
 		}
 		if ( null === $file || empty( $file['tmp_name'] ) ) {
-			return new \WP_Error( 'dxai_ui_transfer', __( 'No package was uploaded. Choose a .dxai.zip file exported by DXAI-UI.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxai_ui_transfer', __( 'No package was uploaded. Choose a .dxai.zip file exported by DX UI.', 'dxai-ui' ), array( 'status' => 400 ) );
 		}
 		$raised = Page_Import::unlimited();
 		$result = ( new Page_Import() )->run(

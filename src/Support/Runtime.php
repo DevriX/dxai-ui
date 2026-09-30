@@ -26,7 +26,10 @@ final class Runtime {
 	public const FILE = 'dxai-ui-runtime.php';
 
 	/** A header line only this loader carries; the file is never removed without it. */
-	public const SIGNATURE = 'Plugin Name: DXAI-UI Runtime';
+	public const SIGNATURE = 'Plugin Name: DX UI Runtime';
+
+	/** The same header before the rename: a loader written by an earlier version still counts as this plugin's own. */
+	public const LEGACY_SIGNATURE = 'Plugin Name: DXAI-UI Runtime';
 
 	public static function render_only(): bool {
 		return defined( 'DXAI_UI_RENDER_ONLY' ) && DXAI_UI_RENDER_ONLY;
@@ -85,7 +88,7 @@ final class Runtime {
 	private static function drop_bundle(): void {
 		$bundle = wp_normalize_path( WPMU_PLUGIN_DIR ) . '/dxai-ui-runtime';
 		$main   = $bundle . '/dxai-ui.php';
-		if ( ! is_dir( $bundle ) || is_link( $bundle ) || ! is_readable( $main ) || ! str_contains( (string) file_get_contents( $main, false, null, 0, 1024 ), 'Plugin Name:       DXAI-UI' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_dir( $bundle ) || is_link( $bundle ) || ! is_readable( $main ) || ! preg_match( '/Plugin Name:\s+(?:DX UI|DXAI-UI)\b/', (string) file_get_contents( $main, false, null, 0, 1024 ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			return;
 		}
 		if ( is_multisite() ) {
@@ -139,7 +142,7 @@ final class Runtime {
 			return '';
 		}
 		$head = (string) file_get_contents( $file, false, null, 0, 2048 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		if ( ! str_contains( $head, self::SIGNATURE ) || preg_match( '/^\s*\*\s*Version:\s*(\S+)/m', $head, $m ) !== 1 ) {
+		if ( ( ! str_contains( $head, self::SIGNATURE ) && ! str_contains( $head, self::LEGACY_SIGNATURE ) ) || preg_match( '/^\s*\*\s*Version:\s*(\S+)/m', $head, $m ) !== 1 ) {
 			return '';
 		}
 
@@ -194,7 +197,7 @@ final class Runtime {
 			esc_html(
 				sprintf(
 					/* translators: %s: the folder path. */
-					__( 'DXAI-UI could not write its runtime into %s, so converted pages would lose their styles while DXAI-UI is deactivated. Make that folder writable, or keep DXAI-UI active.', 'dxai-ui' ),
+					__( 'DX UI could not write its runtime into %s, so converted pages would lose their styles while DX UI is deactivated. Make that folder writable, or keep DX UI active.', 'dxai-ui' ),
 					wp_normalize_path( WPMU_PLUGIN_DIR )
 				)
 			)

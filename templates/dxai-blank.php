@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: DXAI Blank (pixel-perfect)
+ * Template Name: DX Blank (pixel-perfect)
  *
  * Blank canvas: theme chrome is skipped. Converted pages store body sections
  * only. The header and footer are injected around the content by Page_Chrome

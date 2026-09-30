@@ -49,7 +49,7 @@ export default function LibraryTab() {
 		<div>
 			{ error && <div className="dxai-notice is-error">{ error }</div> }
 			<Group title="Generated pages" items={ library.pages } empty="No generated pages yet." />
-			<Group title="Synced patterns" items={ library.patterns } empty="No DXAI-UI patterns saved yet." />
+			<Group title="Synced patterns" items={ library.patterns } empty="No DX UI patterns saved yet." />
 			<Group title="Headers / footers" items={ library.template_parts } empty="No template parts yet." />
 			<Group title="Menus" items={ library.navigations } empty="No navigation menus yet." />
 			<Group title="Conversions (revisions)" items={ library.conversions } empty="No conversion snapshots yet." />

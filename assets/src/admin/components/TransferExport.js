@@ -33,7 +33,7 @@ export default function TransferExport( { url, title } ) {
 			href={ url }
 			aria-label={ sprintf(
 				/* translators: %s: page title */
-				__( 'Export “%s” with its styles as a DXAI-UI package', 'dxai-ui' ),
+				__( 'Export “%s” with its styles as a DX UI package', 'dxai-ui' ),
 				title || ''
 			) }
 		>

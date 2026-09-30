@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: DXAI-UI 0.3.1\n"
+"Project-Id-Version: DX UI 0.3.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/dxai-ui\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 #: dxai-ui.php
 #: src/Admin/Dashboard.php:74
 #: src/Admin/Dashboard.php:75
-msgid "DXAI-UI"
+msgid "DX UI"
 msgstr ""
 
 #. Plugin URI of the plugin
@@ -47,7 +47,7 @@ msgstr ""
 #: src/Admin/Dashboard.php:208
 #: assets/src/admin/Chrome.js:89
 #: assets/src/admin/Chrome.js:116
-msgid "DXAI Convert"
+msgid "DX Convert"
 msgstr ""
 
 #: src/Admin/Dashboard.php:39
@@ -88,11 +88,11 @@ msgid "You do not have permission to access this page."
 msgstr ""
 
 #: src/Admin/Dashboard.php:106
-msgid "DXAI Convert is loading. If this message stays, JavaScript failed to start. Use the links below."
+msgid "DX Convert is loading. If this message stays, JavaScript failed to start. Use the links below."
 msgstr ""
 
 #: src/Admin/Dashboard.php:207
-msgid "DXAI-UI Settings"
+msgid "DX UI Settings"
 msgstr ""
 
 #: src/Admin/Part_Shortcuts.php:41
@@ -126,7 +126,7 @@ msgstr ""
 #: src/Compiler/Generation_Merger.php:82
 #: src/Compiler/Generation_Parser.php:94
 #: src/Compiler/Source_Compiler.php:76
-msgid "DXAI-UI Pattern"
+msgid "DX UI Pattern"
 msgstr ""
 
 #: src/API/Converter_Controller.php:549
@@ -181,35 +181,35 @@ msgid "Lovable has no public source API. Use ZIP or paste instead."
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:34
-msgid "DXAI Design HTML"
+msgid "DX Design HTML"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:74
-msgid "DXAI Text"
+msgid "DX Text"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:204
-msgid "DXAI Box"
+msgid "DX Box"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:416
-msgid "DXAI Icon"
+msgid "DX Icon"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:460
-msgid "DXAI Link"
+msgid "DX Link"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:604
-msgid "DXAI Image"
+msgid "DX Image"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:678
-msgid "DXAI Details"
+msgid "DX Details"
 msgstr ""
 
 #: src/Blocks/Design_Blocks.php:706
-msgid "DXAI Count Up"
+msgid "DX Count Up"
 msgstr ""
 
 #: src/Blocks/Form_Block.php:55
@@ -539,11 +539,11 @@ msgid "Generated design (HTML, Vue, Next.js)"
 msgstr ""
 
 #: src/Content/Content_Types.php:46
-msgid "DXAI Conversions"
+msgid "DX Conversions"
 msgstr ""
 
 #: src/Content/Content_Types.php:47
-msgid "DXAI Conversion"
+msgid "DX Conversion"
 msgstr ""
 
 #: src/Content/Content_Types.php:74
@@ -551,11 +551,11 @@ msgid "Form entry"
 msgstr ""
 
 #: src/Content/Content_Types.php:91
-msgid "DXAI Primary"
+msgid "DX Primary"
 msgstr ""
 
 #: src/Content/Content_Types.php:92
-msgid "DXAI Footer"
+msgid "DX Footer"
 msgstr ""
 
 #. translators: 1: HTTP status, 2: error message
@@ -677,21 +677,21 @@ msgid "Unable to store design asset."
 msgstr ""
 
 #: src/Plugin.php:85
-msgid "DXAI-UI requires PHP 8.2 or higher."
+msgid "DX UI requires PHP 8.2 or higher."
 msgstr ""
 
 #: src/Plugin.php:91
-msgid "DXAI-UI requires WordPress 6.4 or higher."
+msgid "DX UI requires WordPress 6.4 or higher."
 msgstr ""
 
 #. translators: %s: comma-separated PHP extension names.
 #: src/Plugin.php:101
 #, php-format
-msgid "DXAI-UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again."
+msgid "DX UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again."
 msgstr ""
 
 #: src/Plugin.php:219
-msgid "DXAI-UI could not be activated"
+msgid "DX UI could not be activated"
 msgstr ""
 
 #: src/Structures/Live_Content_Shell.php:54
@@ -761,7 +761,7 @@ msgid "Conversion snapshot is not valid JSON."
 msgstr ""
 
 #: src/Theme/Blank_Template.php:27
-msgid "DXAI Blank (pixel-perfect)"
+msgid "DX Blank (pixel-perfect)"
 msgstr ""
 
 #: src/Verification/Import_Audit.php:89
@@ -846,7 +846,7 @@ msgstr ""
 
 #: assets/src/admin/App.js:10
 #: assets/src/admin/Chrome.js:115
-msgid "DXAI Studio"
+msgid "DX Studio"
 msgstr ""
 
 #: assets/src/admin/App.js:11
@@ -858,7 +858,7 @@ msgid "Figma, Lovable, or a generated ZIP compiled into native Gutenberg with st
 msgstr ""
 
 #: assets/src/admin/App.js:15
-msgid "DXAI Library"
+msgid "DX Library"
 msgstr ""
 
 #: assets/src/admin/App.js:16
@@ -870,7 +870,7 @@ msgid "Pages, patterns, template parts, menus, and revisions in one product-styl
 msgstr ""
 
 #: assets/src/admin/App.js:20
-msgid "DXAI Entries"
+msgid "DX Entries"
 msgstr ""
 
 #: assets/src/admin/App.js:21
@@ -882,7 +882,7 @@ msgid "Inspect captured leads, export them quickly, and keep delivery quality vi
 msgstr ""
 
 #: assets/src/admin/App.js:25
-msgid "DXAI Engine Room"
+msgid "DX Engine Room"
 msgstr ""
 
 #: assets/src/admin/App.js:26
@@ -952,7 +952,7 @@ msgid "Open settings"
 msgstr ""
 
 #: assets/src/admin/Chrome.js:128
-msgid "DXAI status"
+msgid "DX status"
 msgstr ""
 
 #: assets/src/admin/components/FidelityReport.js:20
@@ -1729,7 +1729,7 @@ msgid "Nothing here yet"
 msgstr ""
 
 #: assets/src/admin/screens/LibraryScreen.js:30
-msgid "Saved in your DXAI workspace and ready to open, edit, or restore."
+msgid "Saved in your DX workspace and ready to open, edit, or restore."
 msgstr ""
 
 #: assets/src/admin/screens/LibraryScreen.js:32

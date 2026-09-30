@@ -40,8 +40,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 $dxai_ui_folder = WP_PLUGIN_DIR . '/' . dirname( (string) WP_UNINSTALL_PLUGIN );
 if ( is_link( $dxai_ui_folder ) || is_dir( __DIR__ . '/node_modules' ) || is_dir( __DIR__ . '/.verify' ) || file_exists( __DIR__ . '/bin/verify-import.cjs' ) ) {
 	wp_die(
-		esc_html__( 'This DXAI-UI folder is a development checkout (a link to, or a copy of, the source tree), so it was not deleted. Remove it from disk yourself if you really mean to.', 'dxai-ui' ),
-		esc_html__( 'DXAI-UI was not deleted', 'dxai-ui' ),
+		esc_html__( 'This DX UI folder is a development checkout (a link to, or a copy of, the source tree), so it was not deleted. Remove it from disk yourself if you really mean to.', 'dxai-ui' ),
+		esc_html__( 'DX UI was not deleted', 'dxai-ui' ),
 		array( 'back_link' => true )
 	);
 }
@@ -88,7 +88,7 @@ dxai_ui_keep_runtime( $dxai_ui_pages );
 function dxai_ui_keep_runtime( bool $has_pages ): void {
 	$loader = wp_normalize_path( WPMU_PLUGIN_DIR ) . '/dxai-ui-runtime.php';
 	$bundle = wp_normalize_path( WPMU_PLUGIN_DIR ) . '/dxai-ui-runtime';
-	$ours   = static fn( string $file ): bool => is_readable( $file ) && str_contains( (string) file_get_contents( $file, false, null, 0, 2048 ), 'Plugin Name: DXAI-UI' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	$ours   = static fn( string $file ): bool => is_readable( $file ) && preg_match( '/Plugin Name:\s+(?:DX UI|DXAI-UI)\b/', (string) file_get_contents( $file, false, null, 0, 2048 ) ) === 1; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 
 	if ( ! $has_pages ) {
 		if ( $ours( $loader ) ) {

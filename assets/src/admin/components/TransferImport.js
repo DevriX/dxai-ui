@@ -85,7 +85,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 		keep( '' );
 		setPkg( null );
 		if ( picked && ! /\.zip$/i.test( picked.name ) ) {
-			setError( __( 'Choose a .dxai.zip package exported by DXAI-UI.', 'dxai-ui' ) );
+			setError( __( 'Choose a .dxai.zip package exported by DX UI.', 'dxai-ui' ) );
 			return;
 		}
 		setFile( picked || null );
@@ -230,7 +230,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 					>
 						<span className="dxai-drop-mark" aria-hidden="true" />
 						<p>{ __( 'Drop a .dxai.zip package here', 'dxai-ui' ) }</p>
-						<em className="dxai-drop-hint">{ __( 'Exported by DXAI-UI on another site', 'dxai-ui' ) }</em>
+						<em className="dxai-drop-hint">{ __( 'Exported by DX UI on another site', 'dxai-ui' ) }</em>
 						<label className="dxai-file">
 							<input
 								ref={ input }
@@ -256,7 +256,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 					) }
 					{ pkg && pkg.invalid && (
 						<Notice status="warning" isDismissible={ false }>
-							{ __( 'This ZIP is not a page package exported by DXAI-UI (its manifest.json is of another kind), so the import will refuse it. To import a Lovable or Claude Design export, use Convert instead.', 'dxai-ui' ) }
+							{ __( 'This ZIP is not a page package exported by DX UI (its manifest.json is of another kind), so the import will refuse it. To import a Lovable or Claude Design export, use Convert instead.', 'dxai-ui' ) }
 						</Notice>
 					) }
 

@@ -153,7 +153,7 @@ final class Form_Controller extends \WP_REST_Controller {
 		if ( is_string( $admin ) && is_email( $admin ) ) {
 			wp_mail(
 				$admin,
-				sprintf( '[DXAI-UI] %s', $title ),
+				sprintf( '[DX UI] %s', $title ),
 				wp_json_encode( $safe, JSON_PRETTY_PRINT ) ?: ''
 			);
 		}

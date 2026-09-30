@@ -120,7 +120,7 @@ final class Plugin {
 	 */
 	public static function activate( bool $network_wide = false ): void {
 		if ( version_compare( PHP_VERSION, '8.2.0', '<' ) ) {
-			self::refuse_activation( esc_html__( 'DXAI-UI requires PHP 8.2 or higher.', 'dxai-ui' ), $network_wide );
+			self::refuse_activation( esc_html__( 'DX UI requires PHP 8.2 or higher.', 'dxai-ui' ), $network_wide );
 			return;
 		}
 
@@ -128,7 +128,7 @@ final class Plugin {
 		// The oldest WordPress the plugin supports, as its header and readme say: 6.6 registers the
 		// react-jsx-runtime script the admin screens are built against.
 		if ( version_compare( (string) $wp_version, '6.6', '<' ) ) {
-			self::refuse_activation( esc_html__( 'DXAI-UI requires WordPress 6.6 or higher.', 'dxai-ui' ), $network_wide );
+			self::refuse_activation( esc_html__( 'DX UI requires WordPress 6.6 or higher.', 'dxai-ui' ), $network_wide );
 			return;
 		}
 
@@ -138,7 +138,7 @@ final class Plugin {
 				esc_html(
 					sprintf(
 						/* translators: %s: comma-separated PHP extension names. */
-						__( 'DXAI-UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again.', 'dxai-ui' ),
+						__( 'DX UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again.', 'dxai-ui' ),
 						implode( ', ', $missing )
 					)
 				),
@@ -258,7 +258,7 @@ final class Plugin {
 		deactivate_plugins( plugin_basename( DXAI_UI_FILE ), false, $network_wide ? true : null );
 		wp_die(
 			$message, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the caller.
-			esc_html__( 'DXAI-UI could not be activated', 'dxai-ui' ),
+			esc_html__( 'DX UI could not be activated', 'dxai-ui' ),
 			array( 'back_link' => true )
 		);
 	}

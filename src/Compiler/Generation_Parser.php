@@ -91,7 +91,7 @@ final class Generation_Parser {
 		}
 
 		return array(
-			'block_title'      => $title !== '' ? $title : __( 'DXAI-UI Pattern', 'dxai-ui' ),
+			'block_title'      => $title !== '' ? $title : __( 'DX UI Pattern', 'dxai-ui' ),
 			'gutenberg_markup' => is_string( $valid ) ? $valid : $markup,
 			'structures'       => $structures,
 			'custom_css'       => $css,

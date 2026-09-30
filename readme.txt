@@ -1,4 +1,4 @@
-=== DXAI-UI ===
+=== DX UI ===
 Contributors: devrix
 Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
@@ -12,7 +12,7 @@ Convert Figma, Lovable, and generated frontend ZIPs into native Gutenberg struct
 
 == Description ==
 
-DXAI-UI is a WordPress plugin that routes Figma JSON, Lovable React+Tailwind, or a generated frontend ZIP (HTML/CSS/JS, Vue, React, Next.js) through a selectable LLM. Output is split into native WordPress structures: header/footer template parts, navigation menus, Query Loops, working forms, and editable sliders — not a single static HTML page.
+DX UI is a WordPress plugin that routes Figma JSON, Lovable React+Tailwind, or a generated frontend ZIP (HTML/CSS/JS, Vue, React, Next.js) through a selectable LLM. Output is split into native WordPress structures: header/footer template parts, navigation menus, Query Loops, working forms, and editable sliders — not a single static HTML page.
 
 = Sources =
 
@@ -28,7 +28,7 @@ Anthropic Claude, OpenAI, xAI Grok, and DeepSeek. API keys are encrypted at rest
 = Requirements =
 
 * PHP 8.2 or newer with the dom, libxml, mbstring and zip extensions. Without zip, archives are read through the PclZip bundled with WordPress, which needs zlib and a filesystem WordPress writes to directly. Activation stops and names any extension that is missing.
-* WordPress 6.6 or newer. A block theme is not required: converted pages render through the plugin's own "DXAI Blank" page template, which works under classic themes too. Each import asks what to do with the site's header and footer: install the design's (the header is built in Appearance > Menus, the footer in Appearance > Widgets) or keep the site's (the design's header and footer stay template parts on its pages, and Menus and Widgets are not touched). The automatic choice keeps them on a classic theme, which draws its own header and footer from those menus and widget areas, for a one-page import, and when another imported design's header and footer are the site's.
+* WordPress 6.6 or newer. A block theme is not required: converted pages render through the plugin's own "DX Blank" page template, which works under classic themes too. Each import asks what to do with the site's header and footer: install the design's (the header is built in Appearance > Menus, the footer in Appearance > Widgets) or keep the site's (the design's header and footer stay template parts on its pages, and Menus and Widgets are not touched). The automatic choice keeps them on a classic theme, which draws its own header and footer from those menus and widget areas, for a one-page import, and when another imported design's header and footer are the site's.
 * A writable wp-content/uploads folder. Archives are unpacked in the system temp directory when PHP can write there (the `dxai_ui_zip_work_root` filter moves it), otherwise in uploads/dxai-ui behind an access-deny rule, and the work folder is removed when the request ends.
 * Uploads are limited by PHP's upload_max_filesize and post_max_size; an archive over upload_max_filesize is reported together with the limit. Archive ceilings (entries, size per file, total size) can be changed with the `dxai_ui_zip_limits` filter.
 * Outbound HTTPS from the server, to fetch the remote images and fonts a design references and to reach the AI engine you choose.
@@ -37,15 +37,15 @@ Anthropic Claude, OpenAI, xAI Grok, and DeepSeek. API keys are encrypted at rest
 == Installation ==
 
 1. Copy this plugin to `wp-content/plugins/dxai-ui` (or junction it from the git repo).
-2. Activate DXAI-UI.
-3. Open **DXAI Convert** in wp-admin (or Settings → DXAI-UI) and add provider keys.
+2. Activate DX UI.
+3. Open **DX Convert** in wp-admin (or Settings → DX UI) and add provider keys.
 
 == Export and import ==
 
-A converted page's look is not in its blocks: the blocks carry `dxs-` classes and design data, while the design stylesheet, tokens, fonts, runtime script, images and header/footer live in uploads, post meta, attachments, template parts or Appearance > Menus and Widgets. Copying blocks from one editor into another site therefore loses every style. To move a page to another site (for example from a local build to production), export it as a package and import it there; DXAI-UI must be active on both sites.
+A converted page's look is not in its blocks: the blocks carry `dxs-` classes and design data, while the design stylesheet, tokens, fonts, runtime script, images and header/footer live in uploads, post meta, attachments, template parts or Appearance > Menus and Widgets. Copying blocks from one editor into another site therefore loses every style. To move a page to another site (for example from a local build to production), export it as a package and import it there; DX UI must be active on both sites.
 
-* **Export**: Pages > All Pages > "Export with styles" on a converted page, the Export button on the page in DXAI Convert > Library, `GET /wp-json/dxai-ui/v1/transfer/export/<id>`, or `wp dxai-ui export <page-id> [--file=<path>]`. The `.dxai.zip` holds the page (content, template, all `_dxai_ui_*` meta), its design CSS and JS, every image it and its parts, patterns, header and footer use (originals, with alt text, caption and title), its template parts and synced patterns, and its header and footer (the menus' items, the footer's widgets). No secrets and no user data.
-* **Import**: DXAI Convert > Library > Import package, `POST /wp-json/dxai-ui/v1/transfer/import` (multipart `package`, `chrome`), or `wp dxai-ui import <file> [--chrome=keep|install] [--dry-run] --user=<admin>`. Choose **keep** to leave the site's menus and widgets alone (the page keeps its header and footer as template parts) or **install** to build them in Appearance > Menus and Widgets. On a classic theme, which draws the whole site's header and footer from those menus and widget areas, install changes them on every page, so keep is offered first there.
+* **Export**: Pages > All Pages > "Export with styles" on a converted page, the Export button on the page in DX Convert > Library, `GET /wp-json/dxai-ui/v1/transfer/export/<id>`, or `wp dxai-ui export <page-id> [--file=<path>]`. The `.dxai.zip` holds the page (content, template, all `_dxai_ui_*` meta), its design CSS and JS, every image it and its parts, patterns, header and footer use (originals, with alt text, caption and title), its template parts and synced patterns, and its header and footer (the menus' items, the footer's widgets). No secrets and no user data.
+* **Import**: DX Convert > Library > Import package, `POST /wp-json/dxai-ui/v1/transfer/import` (multipart `package`, `chrome`), or `wp dxai-ui import <file> [--chrome=keep|install] [--dry-run] --user=<admin>`. Choose **keep** to leave the site's menus and widgets alone (the page keeps its header and footer as template parts) or **install** to build them in Appearance > Menus and Widgets. On a classic theme, which draws the whole site's header and footer from those menus and widget areas, install changes them on every page, so keep is offered first there.
 * Importing the same package again updates the same page, parts, patterns, menus and widgets in place. Images already in the media library are reused. Nothing on the site is deleted: a part the page stops using goes to the trash, displaced widgets to Inactive Widgets. The design becomes the site's brand only when the site has none (and never on a classic theme).
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 

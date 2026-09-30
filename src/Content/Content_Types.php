@@ -43,8 +43,8 @@ final class Content_Types {
 			self::CONVERSION,
 			array(
 				'labels'              => array(
-					'name'          => __( 'DXAI Conversions', 'dxai-ui' ),
-					'singular_name' => __( 'DXAI Conversion', 'dxai-ui' ),
+					'name'          => __( 'DX Conversions', 'dxai-ui' ),
+					'singular_name' => __( 'DX Conversion', 'dxai-ui' ),
 				),
 				'public'              => false,
 				'show_ui'             => true,

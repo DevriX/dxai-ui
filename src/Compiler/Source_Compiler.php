@@ -75,7 +75,7 @@ final class Source_Compiler {
 		 * own answer; and the compiled oracle mirrors whatever the page loads,
 		 * which is why it could not see this either.
 		 */
-		$title   = $source->title !== '' ? $source->title : __( 'DXAI-UI Pattern', 'dxai-ui' );
+		$title   = $source->title !== '' ? $source->title : __( 'DX UI Pattern', 'dxai-ui' );
 
 		$pages = is_array( $payload['pages'] ?? null ) ? $payload['pages'] : array();
 		if ( $pages === array() ) {

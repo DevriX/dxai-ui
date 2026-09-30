@@ -520,7 +520,7 @@
 			if ( ! dxaiMode.told && notices && notices.createInfoNotice ) {
 				dxaiMode.told = true;
 				notices.createInfoNotice(
-					wp.i18n.__( 'This page renders on the DXAI-UI blank template, which has no theme header or footer, so the editor shows the page alone.', 'dxai-ui' ),
+					wp.i18n.__( 'This page renders on the DX UI blank template, which has no theme header or footer, so the editor shows the page alone.', 'dxai-ui' ),
 					{ id: 'dxai-ui-post-only', type: 'snackbar' }
 				);
 			}
