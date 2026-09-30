@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.14
+Stable tag: 0.4.0-beta.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,9 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.15 =
+* The theme-stylesheet trim also keeps the rules for widgets that other people's scripts put on a page after it has loaded (the reCAPTCHA badge, a map's controls, review widgets, sliders, lightboxes, consent banners, chat buttons, video players): neither the markup nor the site's own scripts name those classes, so a rule for them could have been cut. Results kept by an earlier version are made again.
 
 = 0.4.0-beta.14 =
 * Page speed. A design's pages waited for their fonts through a chain of requests (the page, its stylesheet, Google's stylesheet, the font files) and for the whole of the theme's stylesheet, which a DevriX theme prints inline in every page (1.1 MB, about 2% of it used). The fonts are now copied into the site's uploads and their rules put in the design's own stylesheet, and the theme's stylesheet is printed cut down to what the page can use. On the Semper Dry pages: mobile 81 → 91 in the lab, with the page unchanged (identical screenshots, identical computed styles in the open-menu, hover and form states).
