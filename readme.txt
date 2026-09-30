@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.17
+Stable tag: 0.4.0-beta.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,9 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.18 =
+* The tail of an inner page in the order the team's sites have it. Measured on the eleven live sites (283 pages): every service, location and about page opens with its hero and closes with the related services, then the questions, then the call to action, whatever the sites differ in between. A page composed from an old page's content followed that page's reading order, so the related services could come after the call to action. `wp dxai-ui page-order status|apply|revert` puts the tail of an existing design's pages in that order (nothing else moves, no section changes; the Home, the header and the footer are never touched; a page without questions, one that ends in a form, and one with a section that leans on its neighbour stay as they are), and a page composed from now on comes out that way. Each page keeps its content from before; reverting puts it back byte for byte.
 
 = 0.4.0-beta.17 =
 * Rows and containers are the Group's own layout. The theme's pages arrange a group in the Layout panel (Flex, Constrained), not in classes; a design's rows were classes and CSS (`d-flex items-center justify-between gap-6`), so its groups had no layout at all. A row becomes a Flex layout (direction, justification, wrapping, gap), a centred container (`mx-auto max-w-1280px px-7`) a Constrained one, and the classes and declarations the layout says are removed. Only where WordPress writes the same page: a group whose children carry margins, a width or a position, one that changes at a breakpoint, or one that paints stays as it is. On the Semper Dry, Clean Joe, H2O Away and DevriX Elevate designs about a third of the groups per page get a Flex layout, with identical screenshots at 412, 768 and 1440 px and every page valid in the editor. It is applied to new imports and to existing designs from the Library (Native blocks) or `wp dxai-ui native-blocks apply`, and reverted the same way.
