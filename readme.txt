@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.20
+Stable tag: 0.4.0-beta.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,14 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.21 =
+* The name is DX. Everything people read says DX instead of DXAI: the plugin, the menus and screens, the block and template names, the notices, the readme. Slugs, classes, options, routes and block names are as they were, so nothing already built changes. A runtime loader written under the old name is still recognised and is rewritten under the new one.
+* Words for the pages (Library). The team's prompt for the copy of a page, filled in from the page: the staging address, what the page is about (from its title) and the page of the old site it came from. It can be copied into any assistant, or the AI engine chosen in Settings writes the words: they are listed block by block, with the mismatches it noticed, and applied on request. Only the words change, the page can be put back, and the words of the header and footer are never rewritten. Nothing is asked of a provider until Write with AI is pressed.
+* Pages in the team's style (Library). The pages of a site (a service, a place, About, Contact, the questions, the reviews, the lists of services and places) made without the old site: the order of each page's sections is learned from 283 pages of the team's eleven live sites (a design gets the way one of them orders pages, changed a little, never a copy of a real page), and each section is the Home's own section of that kind, so the page is in the Home's look. The title is the hero's heading, the cards that list other pages list the site's services, the Home's header and footer are on the page, services sit under the Services page. The services and places are read from the Home. The plan can be seen first; a page made again is updated in place unless it was edited.
+* A page written as one group around its header, main and sections (a Claude Design export, Clean Joe) is read as those sections: its library of sections was one section before.
+* Fixed: content written straight to the page (the order of sections, the words) left the cached rules for the old content; they are cleared now.
+* `bin/verify-copy.php`, `bin/verify-page-recipes.php` and `bin/verify-team-pages.php` check the prompt, the writer, the recipes and the pages against fixtures, offline.
 
 = 0.4.0-beta.20 =
 * Fixed, on a block theme (Twenty Twenty-Five and the like): a group's layout was lost. WordPress writes a group's gap, wrapping and alignment as a `wp-container-…` rule and prints it in <head> for a block theme, because it renders a block theme's template first; the plugin's blank template is a PHP file whose content comes after the head, and WordPress does not print those rules in the footer for a block theme. The rules are now printed at the end of a converted page on a block theme. A classic theme gets them from core, as before. Measured on four designs at 1440, 768 and 412px: the pages are what the design was.
