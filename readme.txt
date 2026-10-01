@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.23
+Stable tag: 0.4.0-beta.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.24 =
+* Found by writing the words of a whole site (Clean Joe, 13 pages) with the plugin's own writer. What it turned up is fixed:
+* Fixed: the words of a step (a number, a heading and a line in one list item) and a tick in front of a line lost their structure when new words were written: the paragraph and heading were stripped, and the tick lost that it is hidden from screen readers. The writer now keeps `p`, `h1`–`h4` and `aria-hidden`; scripts, handlers and styles are still taken out.
+* Fixed: the FAQ page of a Home that has questions had none (the team's own FAQ pages are a hero and a call to action, and the questions are in the hero). It now has the Home's questions before the closing call to action. The contact page has the Home's form right after the hero, when the Home has one.
+* Fixed: the page that lists the service areas was a list of services. It opens with the Home's own areas (its offices and the towns they serve) when it has them.
+* `bin/verify-copy.php` and `bin/verify-team-pages.php` check all four.
 
 = 0.4.0-beta.23 =
 * Pages made without an address of the old site, tried on 15 designs through the Library (139 pages: services, places, About, Contact, questions, reviews, the lists): every page opens, none has a notice or an error, none has an address in it that the Home did not have, every one is valid in the block editor, and the prompt for its words leaves out the line about a page to take inspiration from. What that turned up is fixed:
