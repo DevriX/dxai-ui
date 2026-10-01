@@ -55,6 +55,7 @@ export default function Speed() {
 		local: __( 'From this site', 'dxai-ui' ),
 		partial: __( 'Partly from this site', 'dxai-ui' ),
 		remote: __( 'From Google', 'dxai-ui' ),
+		theme: __( 'From the theme', 'dxai-ui' ),
 		none: __( 'No web fonts', 'dxai-ui' ),
 	};
 
@@ -81,7 +82,13 @@ export default function Speed() {
 						<div>
 							<strong>{ d.title }</strong>
 							<span className="dxai-muted">
-								{ d.fonts.families.length ? d.fonts.families.join( ', ' ) : '' }
+								{ d.fonts.follows && d.fonts.theme.body && sprintf(
+									/* translators: 1: the theme's headline font, 2: its body font. */
+									__( 'Drawn in the theme’s fonts: %1$s for headings, %2$s for the rest', 'dxai-ui' ),
+									d.fonts.theme.heading,
+									d.fonts.theme.body
+								) }
+								{ ! d.fonts.follows && ( d.fonts.families.length ? d.fonts.families.join( ', ' ) : '' ) }
 								{ d.fonts.files > 0 && ' · ' + sprintf(
 									/* translators: 1: number of files, 2: size in KB. */
 									_n( '%1$d file, %2$d KB', '%1$d files, %2$d KB', d.fonts.files, 'dxai-ui' ),
@@ -91,12 +98,22 @@ export default function Speed() {
 							</span>
 						</div>
 						<span className={ 'dxai-speed__state dxai-speed__state--' + d.fonts.state }>{ label[ d.fonts.state ] }</span>
-						{ ( d.fonts.state === 'remote' || d.fonts.state === 'partial' ) && (
+						{ ( d.fonts.state === 'remote' || d.fonts.state === 'partial' ) && ! d.fonts.follows && (
 							<Button variant="primary" onClick={ () => run( 'fonts-apply', d.id ) } isBusy={ busy === 'fonts-apply' + d.id } disabled={ !! busy }>
 								{ __( 'Copy the fonts here', 'dxai-ui' ) }
 							</Button>
 						) }
-						{ ( d.fonts.state === 'local' || d.fonts.state === 'partial' ) && (
+						{ d.fonts.follows && (
+							<Button variant="tertiary" onClick={ () => run( 'fonts-own', d.id ) } disabled={ !! busy }>
+								{ __( 'Use the design’s own fonts', 'dxai-ui' ) }
+							</Button>
+						) }
+						{ d.fonts.managed && ! d.fonts.follows && (
+							<Button variant="secondary" onClick={ () => run( 'fonts-theme', d.id ) } disabled={ !! busy }>
+								{ __( 'Use the theme’s fonts', 'dxai-ui' ) }
+							</Button>
+						) }
+						{ ( d.fonts.state === 'local' || d.fonts.state === 'partial' ) && ! d.fonts.follows && (
 							<Button variant="tertiary" onClick={ () => run( 'fonts-revert', d.id ) } disabled={ !! busy }>
 								{ __( 'Use Google again', 'dxai-ui' ) }
 							</Button>

@@ -50,7 +50,7 @@ final class Widgets_Screen {
 		$deps  = array();
 
 		if ( $page > 0 ) {
-			$fonts = get_post_meta( $page, '_dxai_ui_font_urls', true );
+			$fonts = \DXAI_UI\Theme\Theme_Fonts::adopts( $page ) ? array() : get_post_meta( $page, '_dxai_ui_font_urls', true );
 			foreach ( is_array( $fonts ) ? array_values( $fonts ) : array() as $i => $url ) {
 				$url = esc_url_raw( (string) $url );
 				if ( $url !== '' && preg_match( '#^https?://#i', $url ) === 1 ) {

@@ -947,7 +947,8 @@ final class Design_Blocks {
 		}
 
 		$fonts = get_post_meta( $source, '_dxai_ui_font_urls', true );
-		if ( ! is_array( $fonts ) ) {
+		// The theme's fonts (Theme_Fonts) are in the canvas with the brand rule above; the design's own are not loaded.
+		if ( ! is_array( $fonts ) || \DXAI_UI\Theme\Theme_Fonts::adopts( $source ) ) {
 			return;
 		}
 		foreach ( array_values( $fonts ) as $i => $font_url ) {

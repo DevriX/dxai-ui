@@ -14,7 +14,8 @@ use DXAI_UI\Support\Speed;
 
 /**
  * GET  /speed  per design: where its fonts come from (Speed::fonts()), and whether the theme's stylesheet is trimmed.
- * POST /speed  copy a design's fonts here (fonts-apply) or put them back (fonts-revert); turn the trimming on or off
+ * POST /speed  copy a design's fonts here (fonts-apply) or put them back (fonts-revert); keep its own fonts (fonts-own) or draw it
+ *              in the theme's (fonts-theme); turn the trimming on or off
  *              (trim-on, trim-off).
  */
 final class Speed_Controller {
@@ -36,7 +37,7 @@ final class Speed_Controller {
 					'args'                => array(
 						'action' => array(
 							'type'     => 'string',
-							'enum'     => array( 'fonts-apply', 'fonts-revert', 'trim-on', 'trim-off' ),
+							'enum'     => array( 'fonts-apply', 'fonts-revert', 'fonts-own', 'fonts-theme', 'trim-on', 'trim-off' ),
 							'required' => true,
 						),
 						'design' => array(
@@ -68,7 +69,15 @@ final class Speed_Controller {
 		if ( ! Design_Attach::is_design( $home ) || ! current_user_can( 'edit_post', $home ) ) {
 			return new \WP_Error( 'dxai_ui_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
-		$done = $action === 'fonts-revert' ? array( 'changed' => Speed::revert_fonts( $home ), 'complete' => true, 'note' => '' ) : Speed::apply_fonts( $home );
+		if ( $action === 'fonts-revert' ) {
+			$done = array( 'changed' => Speed::revert_fonts( $home ), 'complete' => true, 'note' => '' );
+		} elseif ( $action === 'fonts-own' ) {
+			$done = Speed::own_fonts( $home );
+		} elseif ( $action === 'fonts-theme' ) {
+			$done = Speed::theme_fonts( $home );
+		} else {
+			$done = Speed::apply_fonts( $home );
+		}
 
 		return new \WP_REST_Response( $this->report() + array( 'done' => $done ) );
 	}

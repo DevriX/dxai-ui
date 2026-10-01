@@ -254,7 +254,10 @@ final class Token_Styles {
 		$css    = $follow !== '' ? $follow : self::adopt_css( $post_id );
 
 		// Theme classes swapped into the design's content, anchored to their tokens (Theme_Class_Swap).
-		return $css . \DXAI_UI\Theme\Theme_Class_Swap::css( $post_id );
+		$css .= \DXAI_UI\Theme\Theme_Class_Swap::css( $post_id );
+
+		// A theme that lets the site choose its fonts draws the design in them (Theme_Fonts).
+		return $css . \DXAI_UI\Theme\Theme_Fonts::css( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) );
 	}
 
 	/** The brand design's tokens pointed at the presets it registered (Design_Theme_Json). */

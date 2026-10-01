@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Media;
 
 use DXAI_UI\Support\Upload_Paths;
+use DXAI_UI\Theme\Theme_Fonts;
 
 /**
  * A design that loads Google Fonts asks for them in a chain: the page, then its stylesheet, whose first line is an
@@ -35,6 +36,9 @@ final class Font_Host {
 
 	public const HOOK = 'dxai_ui_localize_fonts';
 
+	/** Cron: the files no sheet names any more go (after a design took the theme's fonts). */
+	public const CLEAN_HOOK = 'dxai_ui_clean_fonts';
+
 	/** Where the sheet's record of the copy begins and ends. */
 	private const OPEN  = '/*! dxai-ui local fonts ';
 	private const CLOSE = '/*! dxai-ui local fonts end */';
@@ -50,6 +54,7 @@ final class Font_Host {
 
 	public function register(): void {
 		add_action( self::HOOK, array( self::class, 'localize_design' ) );
+		add_action( self::CLEAN_HOOK, array( self::class, 'clean_now' ) );
 	}
 
 	/** Whether this is a Google Fonts stylesheet address. */
@@ -281,6 +286,10 @@ final class Font_Host {
 	/** A design's sheet, from its post: cron and import. */
 	public static function localize_design( $post_id, int $budget = self::BUDGET ): array {
 		$post_id = (int) $post_id;
+		// A theme that lets the site choose its fonts has them already: the design's own are not copied (Theme_Fonts).
+		if ( Theme_Fonts::adopts( $post_id ) ) {
+			return self::adopt_design( $post_id );
+		}
 		$sheet   = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
 		if ( $sheet['path'] === '' ) {
 			return array( 'changed' => false, 'complete' => true, 'urls' => array(), 'note' => 'no sheet' );
@@ -298,13 +307,14 @@ final class Font_Host {
 
 	/** The sheet as it was before localize_sheet(): what the rules replaced back, the rules gone. */
 	public static function unlocalize( string $css ): string {
-		$start = strpos( $css, self::OPEN );
+		$span  = self::record_span( $css );
+		$start = $span === null ? false : $span['start'];
 		$close = $start === false ? false : strpos( $css, self::CLOSE, $start );
-		$json  = $start === false ? false : strpos( $css, ' */', $start + strlen( self::OPEN ) );
+		$json  = $span === null ? false : $span['end'] - 3;
 		if ( $start === false || $close === false || $json === false || $json > $close ) {
 			return $css;
 		}
-		$record = json_decode( substr( $css, $start + strlen( self::OPEN ), $json - $start - strlen( self::OPEN ) ), true );
+		$record = $span['data'];
 		$stop   = $close + strlen( self::CLOSE );
 		if ( substr( $css, $stop, 1 ) === "\n" ) {
 			++$stop;
@@ -333,13 +343,11 @@ final class Font_Host {
 		if ( $path === '' || ! is_readable( $path ) ) {
 			return array();
 		}
-		$head = (string) file_get_contents( $path, false, null, 0, 8192 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$at   = strpos( $head, self::OPEN );
-		$end  = $at === false ? false : strpos( $head, ' */', $at );
-		if ( $at === false || $end === false ) {
+		$span = self::record_of( $path );
+		if ( $span === null ) {
 			return array();
 		}
-		$record = json_decode( substr( $head, $at + strlen( self::OPEN ), $end - $at - strlen( self::OPEN ) ), true );
+		$record = $span['data'];
 		$out    = array();
 		foreach ( is_array( $record ) ? (array) ( $record['u'] ?? array() ) : array() as $url ) {
 			$out[ self::key( (string) $url ) ] = (string) $url;
@@ -358,14 +366,23 @@ final class Font_Host {
 		}
 		$head    = (string) file_get_contents( $path, false, null, 0, 8192 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$covered = self::covered( $path );
+		$span    = self::record_of( $path );
 		// Not the record of what was replaced, which quotes the statements it took out.
-		$open    = strpos( $head, self::OPEN );
-		$rest    = $open === false ? $head : substr( $head, 0, $open ) . substr( $head, (int) strpos( $head . ' */', ' */', $open ) + 3 );
+		if ( $span !== null ) {
+			$rest = substr( $head, 0, $span['start'] ) . substr( (string) file_get_contents( $path, false, null, 0, $span['end'] + 8192 ), $span['end'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		} else {
+			$open = strpos( $head, self::OPEN );
+			$rest = $open === false ? $head : substr( $head, 0, $open ) . substr( $head, (int) strpos( $head . ' */', ' */', $open ) + 3 );
+		}
 		$asks    = preg_match( '#@import[^;]*fonts\.googleapis\.com#i', $rest ) === 1;
 		foreach ( $listed as $url ) {
 			if ( self::is_google( (string) $url ) && ! isset( $covered[ self::key( (string) $url ) ] ) ) {
 				$asks = true;
 			}
+		}
+		// The design uses the theme's fonts: nothing of its own is left in the sheet (adopt()).
+		if ( $span !== null && is_array( $span['data'] ) && ! empty( $span['data']['t'] ) ) {
+			return $asks ? 'partial' : 'theme';
 		}
 		if ( $covered === array() ) {
 			return $asks ? 'remote' : 'none';
@@ -376,6 +393,260 @@ final class Font_Host {
 		$at = strpos( $head, self::OPEN );
 
 		return $at !== false && preg_match( '/"c":0/', substr( $head, $at, 4096 ) ) === 1 ? 'partial' : 'local';
+	}
+
+	/**
+	 * Where a record sits in a sheet: from its OPEN to just after its closing ` * /`, and what it says. The JSON may hold
+	 * ` * /` of the CSS it quotes, so the end is the first one after which the text is whole JSON.
+	 *
+	 * @return array{start:int, end:int, data:array<string, mixed>|null}|null
+	 */
+	private static function record_span( string $css ): ?array {
+		$start = strpos( $css, self::OPEN );
+		if ( $start === false ) {
+			return null;
+		}
+		$from  = $start + strlen( self::OPEN );
+		$pos   = $from;
+		$first = null;
+		for ( $tries = 0; $tries < 64 && ( $at = strpos( $css, ' */', $pos ) ) !== false; $tries++ ) {
+			$data = json_decode( substr( $css, $from, $at - $from ), true );
+			if ( is_array( $data ) ) {
+				return array( 'start' => $start, 'end' => $at + 3, 'data' => $data );
+			}
+			$first = $first ?? $at;
+			$pos   = $at + 3;
+		}
+
+		return $first === null ? null : array( 'start' => $start, 'end' => $first + 3, 'data' => null );
+	}
+
+	/** The record at the head of a sheet on disk: the first 8 KB, more when the record is longer than that. */
+	private static function record_of( string $path ): ?array {
+		foreach ( array( 8192, 262144 ) as $length ) {
+			$head = (string) file_get_contents( $path, false, null, 0, $length ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			if ( ! str_contains( $head, self::OPEN ) ) {
+				return null;
+			}
+			$span = self::record_span( $head );
+			if ( $span !== null && is_array( $span['data'] ) ) {
+				return $span;
+			}
+		}
+
+		return null;
+	}
+
+	/** The state of a design's sheet (state()). */
+	public static function design_state( int $post_id ): string {
+		$sheet  = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
+		$listed = get_post_meta( $post_id, '_dxai_ui_font_urls', true );
+
+		return self::state( (string) $sheet['path'], is_array( $listed ) ? array_map( 'strval', $listed ) : array() );
+	}
+
+	/**
+	 * Take a sheet's own web fonts out: the `@import`s of Google's stylesheet, or the `@font-face` rules a copy of
+	 * them put there (or a person did, by hand), because the theme draws the page in its own fonts (Theme_Fonts). What
+	 * leaves is kept in the record at the head, as localize_sheet() keeps what it replaces, so unlocalize() gives the
+	 * sheet back byte for byte and an export gets it as it was imported. The font files stay until nothing names them
+	 * (clean_files()).
+	 *
+	 * @param array<int, string> $extra Google stylesheet addresses the design lists.
+	 * @return array{changed:bool, complete:bool, urls:array<int, string>, note:string}
+	 */
+	public static function adopt( string $path, array $extra = array() ): array {
+		$out = array( 'changed' => false, 'complete' => true, 'urls' => array(), 'note' => '' );
+		if ( $path === '' || ! is_file( $path ) || ! is_readable( $path ) ) {
+			$out['note'] = 'no sheet';
+
+			return $out;
+		}
+		$original = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$css      = self::unlocalize( $original );
+		$imports  = self::google_imports( $css );
+		$urls     = array();
+		foreach ( array_merge( array_column( $imports, 'url' ), array_values( self::covered( $path ) ), $extra ) as $url ) {
+			if ( self::is_google( (string) $url ) ) {
+				$urls[ self::key( (string) $url ) ] = self::normal( (string) $url );
+			}
+		}
+		$start = 0;
+		$end   = 0;
+		$old   = '';
+		if ( $imports !== array() ) {
+			$start = strlen( $css );
+			foreach ( $imports as $i ) {
+				$start = min( $start, $i['offset'] );
+				$end   = max( $end, $i['offset'] + strlen( $i['statement'] ) );
+			}
+			$old  = substr( $css, $start, $end - $start );
+			$rest = $old;
+			foreach ( $imports as $i ) {
+				$rest = str_replace( $i['statement'], '', $rest );
+			}
+			if ( trim( $rest ) !== '' || str_contains( $old, '*/' ) ) {
+				$out['note']     = 'imports are not one run';
+				$out['complete'] = false;
+
+				return $out;
+			}
+		} elseif ( preg_match( '~/\*\s*' . preg_quote( self::HAND_MADE, '~' ) . '\s*\*/(?:\s*(?:/\*(?:(?!\*/).)*\*/\s*)?@font-face\s*\{[^{}]*\})+~s', $css, $m, PREG_OFFSET_CAPTURE ) === 1 ) {
+			// The rules a person (or the interim fix of 2026-09-29) wrote into the sheet by hand.
+			$start = (int) $m[0][1];
+			$old   = (string) $m[0][0];
+			$end   = $start + strlen( $old );
+		} elseif ( $urls !== array() ) {
+			// Fonts the design lists, or a copy that had nothing to replace: no statement to take out, the rules (if any) went with
+			// unlocalize(); the record goes where the copy's did.
+			$start = self::head_length( $css );
+			$end   = $start;
+		} else {
+			$out['note'] = 'no Google fonts';
+
+			return $out;
+		}
+		// Slashes are escaped: what the record quotes may hold a comment's end, which would cut the record short.
+		$record      = self::OPEN . wp_json_encode( array( 'u' => array_values( $urls ), 'o' => $old, 'c' => 1, 't' => 1 ) ) . ' */';
+		$new         = substr( $css, 0, $start ) . $record . "\n" . self::CLOSE . "\n" . substr( $css, $end );
+		$out['urls'] = array_values( $urls );
+		if ( $new === $original ) {
+			return $out;
+		}
+		if ( ! self::write( $path, $new ) ) {
+			$out['note']     = 'not writable';
+			$out['complete'] = false;
+
+			return $out;
+		}
+		$out['changed'] = true;
+
+		return $out;
+	}
+
+	/**
+	 * A design's sheet, from its post: its web fonts leave it for the theme's. When that cannot be done (imports that are
+	 * not one run) the fonts are copied here as before, so the design still shows its fonts.
+	 *
+	 * @return array{changed:bool, complete:bool, urls:array<int, string>, note:string}
+	 */
+	public static function adopt_design( int $post_id ): array {
+		$sheet  = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
+		$listed = get_post_meta( $post_id, '_dxai_ui_font_urls', true );
+		$listed = is_array( $listed ) ? array_map( 'strval', $listed ) : array();
+		$result = self::adopt( (string) $sheet['path'], $listed );
+		if ( ! $result['complete'] ) {
+			return self::localize_sheet( (string) $sheet['path'], $listed );
+		}
+		delete_transient( 'dxai_ui_fonts_wait_' . $post_id );
+		if ( $result['changed'] && ! wp_next_scheduled( self::CLEAN_HOOK ) ) {
+			// Some minutes later: a file fetched a moment ago is not looked at (clean_files()).
+			wp_schedule_single_event( time() + 11 * MINUTE_IN_SECONDS, self::CLEAN_HOOK );
+		}
+
+		return $result;
+	}
+
+	/** Cron: remove the font files no sheet names, on a site whose theme draws the designs in its own fonts. */
+	public static function clean_now(): void {
+		if ( Theme_Fonts::managed() ) {
+			self::clean_files();
+		}
+	}
+
+	/**
+	 * Remove the font files in uploads that no stylesheet names any more, and the copies of Google's stylesheets whose
+	 * files went. Nothing is removed that a sheet names (outside its record), that was written in the last ten minutes
+	 * (a copy in progress), or when no sheet could be read at all.
+	 *
+	 * @return array{removed:int, bytes:int, kept:int, names:array<int, string>, note:string}
+	 */
+	public static function clean_files( bool $dry = false ): array {
+		$out   = array( 'removed' => 0, 'bytes' => 0, 'kept' => 0, 'names' => array(), 'note' => '' );
+		$fonts = Upload_Paths::path( Upload_Paths::DIR . '/fonts' );
+		if ( $fonts === '' || ! is_dir( $fonts ) ) {
+			return $out;
+		}
+		$base   = dirname( $fonts );
+		$sheets = array();
+		foreach ( array( '/*.css', '/*/*.css' ) as $pattern ) {
+			foreach ( (array) glob( $base . $pattern ) as $file ) {
+				if ( is_string( $file ) && is_file( $file ) && ! str_starts_with( wp_normalize_path( $file ), wp_normalize_path( $fonts ) . '/' ) ) {
+					$sheets[ wp_normalize_path( $file ) ] = true;
+				}
+			}
+		}
+		global $wpdb;
+		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s", '_dxai_ui_css_url' ) ) as $stored ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$path = Upload_Paths::path( Upload_Paths::relative( (string) $stored ) );
+			if ( $path !== '' && is_file( $path ) ) {
+				$sheets[ wp_normalize_path( $path ) ] = true;
+			}
+		}
+		if ( $sheets === array() ) {
+			$out['note'] = 'no stylesheet could be read';
+
+			return $out;
+		}
+		$named = array();
+		foreach ( array_keys( $sheets ) as $file ) {
+			$css = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			// The record quotes the rules it replaced: those are not a use.
+			$span = self::record_span( $css );
+			if ( $span !== null ) {
+				$css = substr( $css, 0, $span['start'] ) . substr( $css, $span['end'] );
+			}
+			if ( preg_match_all( '#fonts/([A-Za-z0-9._-]+\.(?:woff2?|ttf|otf))#i', $css, $m ) ) {
+				foreach ( $m[1] as $name ) {
+					$named[ $name ] = true;
+				}
+			}
+		}
+		$fresh = time() - 10 * MINUTE_IN_SECONDS;
+		$gone  = array();
+		foreach ( (array) glob( $fonts . '/*' ) as $file ) {
+			$name = basename( (string) $file );
+			if ( ! is_file( $file ) || preg_match( '/\.(?:woff2?|ttf|otf)$/i', $name ) !== 1 ) {
+				continue;
+			}
+			if ( isset( $named[ $name ] ) || (int) @filemtime( $file ) > $fresh ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				++$out['kept'];
+				continue;
+			}
+			$out['bytes']   += (int) filesize( $file );
+			$out['names'][]  = $name;
+			$gone[ $name ]   = true;
+			if ( ! $dry ) {
+				wp_delete_file( $file );
+			}
+			++$out['removed'];
+		}
+		// A copy of Google's stylesheet that names a file which is gone would give a sheet rules for nothing.
+		foreach ( (array) glob( $fonts . '/*.css' ) as $file ) {
+			if ( ! is_file( $file ) || (int) @filemtime( $file ) > $fresh ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				continue;
+			}
+			$copy = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$lost = false;
+			if ( preg_match_all( '#url\(\s*[\'"]?([0-9a-f]{20}\.(?:woff2?|ttf|otf))#i', $copy, $m ) ) {
+				foreach ( $m[1] as $name ) {
+					if ( isset( $gone[ $name ] ) || ( ! $dry && ! is_file( $fonts . '/' . $name ) ) ) {
+						$lost = true;
+						break;
+					}
+				}
+			}
+			if ( $lost ) {
+				$out['bytes']   += (int) filesize( $file );
+				$out['names'][]  = basename( (string) $file );
+				if ( ! $dry ) {
+					wp_delete_file( $file );
+				}
+				++$out['removed'];
+			}
+		}
+
+		return $out;
 	}
 
 	/** The path to package for a sheet: a copy without the local rules when it has them, else the sheet itself. */

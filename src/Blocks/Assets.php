@@ -402,10 +402,23 @@ final class Assets {
 		}
 		// The fonts the design's sheet carries itself (Font_Host) need no link to Google; a sheet that still asks Google for them is copied by cron.
 		$carried = \DXAI_UI\Media\Font_Host::covered( $css['path'] );
-		if ( $css['path'] !== '' && \DXAI_UI\Media\Font_Host::needs_work( $css['path'], is_array( $fonts ) ? $fonts : array() ) ) {
+		// A theme that lets the site choose its fonts draws the design in them (Theme_Fonts): its own are not loaded, and a
+		// sheet that still has them is put in the theme's by cron.
+		$theme_fonts = \DXAI_UI\Theme\Theme_Fonts::adopts( $src );
+		if ( $theme_fonts && in_array( \DXAI_UI\Media\Font_Host::design_state( $src ), array( 'local', 'partial', 'remote' ), true ) ) {
 			\DXAI_UI\Media\Font_Host::queue_design( $src );
 		}
-		if ( is_array( $fonts ) ) {
+		// Its fonts left the sheet for the theme's, and the theme no longer draws it (the fonts were changed, or the design keeps its own):
+		// until they are copied back, Google's stylesheets are linked as they were before the copy.
+		$restoring = ! $theme_fonts && $css['path'] !== '' && \DXAI_UI\Media\Font_Host::design_state( $src ) === 'theme';
+		if ( $restoring ) {
+			$fonts   = array_values( array_unique( array_merge( is_array( $fonts ) ? array_map( 'strval', $fonts ) : array(), array_values( $carried ) ) ) );
+			$carried = array();
+		}
+		if ( ! $theme_fonts && $css['path'] !== '' && ( $restoring || \DXAI_UI\Media\Font_Host::needs_work( $css['path'], is_array( $fonts ) ? $fonts : array() ) ) ) {
+			\DXAI_UI\Media\Font_Host::queue_design( $src );
+		}
+		if ( ! $theme_fonts && is_array( $fonts ) ) {
 			foreach ( array_values( $fonts ) as $i => $font_url ) {
 				$font_url = $this->safe_font_url( (string) $font_url );
 				if ( $font_url === '' || isset( $carried[ \DXAI_UI\Media\Font_Host::key( $font_url ) ] ) ) {

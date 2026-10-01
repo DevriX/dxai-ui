@@ -18,6 +18,9 @@ use DXAI_UI\Structures\Design_Attach;
  *   wp dxai-ui speed status
  *   wp dxai-ui speed apply  [--design=<home-id>]   copy the design's fonts here
  *   wp dxai-ui speed revert [--design=<home-id>]   put its stylesheet back the way it was imported
+ *   wp dxai-ui speed own    [--design=<home-id>]   the design keeps its own fonts, where the theme would draw it in its own
+ *   wp dxai-ui speed theme  [--design=<home-id>]   the design is drawn in the theme's fonts; its own leave the stylesheet
+ *   wp dxai-ui speed clean  [--dry-run]            remove the font files no stylesheet names (a theme that sets the fonts)
  *   wp dxai-ui speed trim-on | trim-off            print the theme's stylesheet trimmed to each page, or whole
  *
  * Without --design it works on every imported design of the site.
@@ -32,9 +35,15 @@ final class Speed_Cli {
 				'shortdesc' => 'The fonts of the designs from this site, and the theme\'s stylesheet trimmed to the page (status, apply, revert, trim-on, trim-off).',
 				'synopsis'  => array(
 					array(
+						'type'        => 'flag',
+						'name'        => 'dry-run',
+						'optional'    => true,
+						'description' => 'With clean: list the files, remove nothing.',
+					),
+					array(
 						'type'     => 'positional',
 						'name'     => 'action',
-						'options'  => array( 'status', 'apply', 'revert', 'trim-on', 'trim-off' ),
+						'options'  => array( 'status', 'apply', 'revert', 'own', 'theme', 'clean', 'trim-on', 'trim-off' ),
 						'optional' => false,
 					),
 					array(
@@ -60,6 +69,18 @@ final class Speed_Cli {
 
 			return;
 		}
+		if ( $action === 'clean' ) {
+			$dry  = ! empty( $assoc['dry-run'] );
+			$done = \DXAI_UI\Media\Font_Host::clean_files( $dry );
+			\WP_CLI::success( sprintf( '%s %d font files (%d KB); %d kept.%s', $dry ? 'Would remove' : 'Removed', $done['removed'], (int) round( $done['bytes'] / 1024 ), $done['kept'], $done['note'] !== '' ? ' ' . $done['note'] . '.' : '' ) );
+			if ( $dry ) {
+				foreach ( $done['names'] as $name ) {
+					\WP_CLI::line( '  ' . $name );
+				}
+			}
+
+			return;
+		}
 		$homes = isset( $assoc['design'] ) ? array( (int) $assoc['design'] ) : array_map( static fn( $page ) => (int) $page->ID, Design_Attach::designs() );
 		foreach ( $homes as $home ) {
 			if ( ! Design_Attach::is_design( $home ) ) {
@@ -70,6 +91,9 @@ final class Speed_Cli {
 			if ( $action === 'apply' ) {
 				$done = Speed::apply_fonts( $home );
 				\WP_CLI::line( sprintf( '%d "%s": %s%s.', $home, $title, $done['changed'] ? 'fonts copied here' : 'nothing to change', $done['note'] !== '' ? ' (' . $done['note'] . ')' : ( $done['complete'] ? '' : ', some files still from Google' ) ) );
+			} elseif ( $action === 'own' || $action === 'theme' ) {
+				$done = $action === 'own' ? Speed::own_fonts( $home ) : Speed::theme_fonts( $home );
+				\WP_CLI::line( sprintf( '%d "%s": %s.', $home, $title, $action === 'own' ? 'keeps its own fonts' : 'is drawn in the theme\'s fonts' ) . ( $done['note'] !== '' ? ' (' . $done['note'] . ')' : '' ) );
 			} elseif ( $action === 'revert' ) {
 				\WP_CLI::line( sprintf( '%d "%s": %s.', $home, $title, Speed::revert_fonts( $home ) ? 'stylesheet put back' : 'nothing to put back' ) );
 			}

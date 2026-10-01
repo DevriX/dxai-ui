@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 13;
+	private const CACHE_SCHEMA = 14;
 
 	/**
 	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
@@ -690,7 +690,8 @@ final class Style_Rules {
 			return $memo[ $sig ];
 		}
 
-		$acc = self::accumulator();
+		$acc  = self::accumulator();
+		$font = \DXAI_UI\Theme\Theme_Fonts::use_design( \DXAI_UI\Theme\Theme_Binding::home_of( $scope_id ) );
 		self::collect_markup( $markup, $acc, 0 );
 		$posts     = array_values( array_unique( array_filter( array_merge( array( $scope_id ), array_map( 'intval', array_keys( $acc['seen'] ) ) ) ) ) );
 		$utilities = self::live_utilities( $acc['tokens'], $posts, $acc['toggles'] );
@@ -705,6 +706,7 @@ final class Style_Rules {
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
+		\DXAI_UI\Theme\Theme_Fonts::use_design( $font );
 		set_transient(
 			$name,
 			array(
@@ -749,7 +751,8 @@ final class Style_Rules {
 			return array_merge( $empty, $cached['data'] );
 		}
 
-		$acc = self::accumulator();
+		$acc  = self::accumulator();
+		$font = \DXAI_UI\Theme\Theme_Fonts::use_design( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) );
 		self::collect_post( $post_id, $acc, 0 );
 		foreach ( $extra as $markup ) {
 			self::collect_markup( $markup, $acc, 1 );
@@ -762,6 +765,7 @@ final class Style_Rules {
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
+		\DXAI_UI\Theme\Theme_Fonts::use_design( $font );
 		$deps      = array_map( 'intval', array_keys( $acc['seen'] ) );
 		set_transient(
 			self::CACHE . $post_id,
@@ -792,6 +796,8 @@ final class Style_Rules {
 			Token_Styles::is_brand( $post_id ) ? 1 : 0,
 			$scope,
 			$scope > 0 ? md5( (string) wp_json_encode( get_post_meta( $scope, Style_Hoister::DESIGN_NAMES_META, true ) ) ) : '',
+			// The fonts the design's blocks are bound to (Theme_Fonts), empty for a design that keeps its own.
+			\DXAI_UI\Theme\Theme_Fonts::signature( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) ),
 		);
 		foreach ( $deps as $dep ) {
 			$dep     = (int) $dep;
@@ -968,6 +974,8 @@ final class Style_Rules {
 		// Text colours on their own channel (Token_Styles::fg_channel(), Theme_Binding): the stored attribute and
 		// its hash are untouched, only the rule written from it.
 		$css = self::safe( Token_Styles::fg_channel( $css ) );
+		// A theme that lets the site choose its fonts gives the design its two (Theme_Fonts): a block's font-family is bound to them.
+		$css = \DXAI_UI\Theme\Theme_Fonts::bind_css( $css );
 		if ( $css === '' || preg_match( '/^dxs-[a-z0-9]+$/', $class ) !== 1 ) {
 			return '';
 		}

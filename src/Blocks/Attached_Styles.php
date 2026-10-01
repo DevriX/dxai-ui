@@ -119,7 +119,7 @@ final class Attached_Styles {
 		}
 		$source = Design_Attach::source_for( $post_id );
 		$fonts  = get_post_meta( $source, '_dxai_ui_font_urls', true );
-		foreach ( is_array( $fonts ) ? $fonts : array() as $url ) {
+		foreach ( is_array( $fonts ) && ! \DXAI_UI\Theme\Theme_Fonts::adopts( $source ) ? $fonts : array() as $url ) {
 			self::copy_font_css( (string) $url );
 		}
 		// The design's own sheet carries them too, so the page asks for its fonts once.

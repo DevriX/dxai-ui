@@ -81,6 +81,8 @@ final class Plugin {
 		if ( ! $render_only ) {
 			( new \DXAI_UI\Theme\Theme_Binding() )->register();
 		}
+		// A theme that lets the site choose its fonts: the design is drawn in them, and its own are put away (Theme_Fonts).
+		( new \DXAI_UI\Theme\Theme_Fonts() )->register();
 		( new \DXAI_UI\Blocks\Attached_Styles() )->register();
 		// The design's web fonts from this site's uploads: the copy, and the cron that finishes it.
 		( new \DXAI_UI\Media\Font_Host() )->register();

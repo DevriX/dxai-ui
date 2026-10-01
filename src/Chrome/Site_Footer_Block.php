@@ -404,7 +404,8 @@ final class Site_Footer_Block {
 	 */
 	private static function font_urls( array $footer ): array {
 		$page  = (int) ( $footer['page_id'] ?? 0 );
-		$fonts = $page > 0 ? get_post_meta( $page, '_dxai_ui_font_urls', true ) : array();
+		// The theme's fonts draw the design (Theme_Fonts): its own stylesheets are not asked for.
+		$fonts = $page > 0 && ! \DXAI_UI\Theme\Theme_Fonts::adopts( $page ) ? get_post_meta( $page, '_dxai_ui_font_urls', true ) : array();
 		$out   = array();
 		foreach ( is_array( $fonts ) ? array_values( $fonts ) : array() as $i => $url ) {
 			$url = esc_url_raw( (string) $url );

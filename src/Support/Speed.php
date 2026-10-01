@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Support;
 
 use DXAI_UI\Media\Font_Host;
+use DXAI_UI\Theme\Theme_Fonts;
 use DXAI_UI\Theme\Theme_Trim;
 
 /**
@@ -58,11 +59,20 @@ final class Speed {
 			}
 		}
 
+		$theme = Theme_Fonts::current();
+
 		return array(
 			'state'    => $state,
 			'families' => array_values( array_unique( $names ) ),
 			'files'    => count( $files ),
 			'bytes'    => $bytes,
+			// The theme lets the site choose its fonts: whether this design is drawn in them, and which they are.
+			'managed'  => $theme !== null,
+			'follows'  => $theme !== null && Theme_Fonts::follows( $home ),
+			'theme'    => $theme === null ? array() : array(
+				'heading' => ucwords( Theme_Fonts::first_named( $theme['heading'] ) ),
+				'body'    => ucwords( Theme_Fonts::first_named( $theme['body'] ) ),
+			),
 		);
 	}
 
@@ -79,8 +89,38 @@ final class Speed {
 		}
 		// Kept off for a day, so the page does not copy them again the moment it is viewed.
 		set_transient( 'dxai_ui_fonts_wait_' . $home, 1, DAY_IN_SECONDS );
+		// Put back as imported means its own fonts, even where the theme would draw it in its own (Theme_Fonts).
+		if ( Theme_Fonts::managed() ) {
+			update_post_meta( $home, Theme_Fonts::MODE_META, 'keep' );
+			Theme_Fonts::reset();
+		}
 
 		return Font_Host::revert( $sheet['path'] );
+	}
+
+	/**
+	 * The design keeps its own fonts (copied here from Google, as before) where the theme would draw it in its own.
+	 *
+	 * @return array{changed:bool, complete:bool, urls:array<int, string>, note:string}
+	 */
+	public static function own_fonts( int $home ): array {
+		update_post_meta( $home, Theme_Fonts::MODE_META, 'keep' );
+		Theme_Fonts::reset();
+		delete_transient( 'dxai_ui_fonts_wait_' . $home );
+
+		return Font_Host::localize_design( $home, 20 );
+	}
+
+	/**
+	 * The design is drawn in the theme's fonts: its own leave the stylesheet, and the files nothing names go.
+	 *
+	 * @return array{changed:bool, complete:bool, urls:array<int, string>, note:string}
+	 */
+	public static function theme_fonts( int $home ): array {
+		delete_post_meta( $home, Theme_Fonts::MODE_META );
+		Theme_Fonts::reset();
+
+		return Font_Host::localize_design( $home, 20 );
 	}
 
 	/**
