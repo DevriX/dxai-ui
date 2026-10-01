@@ -130,7 +130,7 @@ final class Team_Pages {
 	 * and named in `kept`).
 	 *
 	 * @param array<int, array{type:string, title:string}> $wanted
-	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>}|\WP_Error
+	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false ) {
 		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
@@ -208,10 +208,14 @@ final class Team_Pages {
 			);
 		}
 
+		// The pages are in the design's menu: its header and footer links lead to them.
+		$menu = Team_Menu::link( $home );
+
 		return array(
 			'pages' => $done,
 			'kept'  => $kept,
 			'log'   => $log,
+			'menu'  => $menu,
 		);
 	}
 

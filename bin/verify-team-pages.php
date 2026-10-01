@@ -228,6 +228,79 @@ $made[] = $arid;
 $arc   = (string) get_post_field( 'post_content', $arid );
 $expect( 'the page that lists the service areas opens with the Home\'s areas, not a list of services', str_contains( $arc, 'loc-x' ) && ! str_contains( $arc, 'svc-x' ), implode( ',', $ar['pages'][0]['roles'] ?? array() ) );
 
+echo "\nThe menu: the header and footer links lead to the pages\n";
+$mlink = static fn( string $t, string $u ): string => '<!-- wp:dxai-ui/link {"url":"' . $u . '","text":"' . $t . '"} --><a class="wp-block-dxai-ui-link" href="' . $u . '">' . $t . '</a><!-- /wp:dxai-ui/link -->';
+$header5 = '<!-- wp:group {"tagName":"header","className":"site-bar"} --><header class="wp-block-group site-bar"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group">'
+	. $mlink( 'Water Damage', 'https://old.example.com/services/water' )
+	. $mlink( 'About', '#about' )
+	. $mlink( 'Contact', 'https://old.example.com/contact' )
+	. $mlink( 'Careers', 'https://old.example.com/careers' )
+	. $mlink( 'Call (555) 010-0101', 'tel:5550100101' )
+	. '</nav><!-- /wp:group --></header><!-- /wp:group -->';
+$footer5 = '<!-- wp:group {"tagName":"footer","className":"site-foot"} --><footer class="wp-block-group site-foot"><!-- wp:list --><ul class="wp-block-list"><!-- wp:list-item --><li><a href="https://old.example.com/faq">FAQ</a></li><!-- /wp:list-item --><!-- wp:list-item --><li><a href="https://old.example.com/privacy">Privacy Policy</a></li><!-- /wp:list-item --></ul><!-- /wp:list --></footer><!-- /wp:group -->';
+$home5 = serialize_blocks( parse_blocks( str_replace( array( $header, $footer ), array( $header5, $footer5 ), $home ) ) );
+$home5_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With A Menu', 'post_content' => wp_slash( $home5 ) ) );
+$made[]   = (int) $home5_id;
+update_post_meta( $home5_id, Page_Scope::META, $home5_id );
+update_post_meta( $home5_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home5_id, '_dxai_ui_css_url', 'dxai-ui/fixture-menu.css' );
+$mb = Team_Pages::build(
+	$home5_id,
+	array(
+		array( 'type' => 'service', 'title' => 'Water Damage Restoration' ),
+		array( 'type' => 'about', 'title' => '' ),
+		array( 'type' => 'contact', 'title' => '' ),
+		array( 'type' => 'faq', 'title' => '' ),
+	)
+);
+$mp = array();
+foreach ( ! is_wp_error( $mb ) ? $mb['pages'] : array() as $p ) {
+	$made[]                  = (int) $p['id'];
+	$mp[ $p['type'] ] = (int) $p['id'];
+}
+$hrefs = static function ( int $id ): array {
+	$out = array();
+	$walk = static function ( array $bs ) use ( &$walk, &$out ): void {
+		foreach ( $bs as $b ) {
+			if ( empty( $b['blockName'] ) ) {
+				continue;
+			}
+			if ( preg_match( '/<a\b[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/s', (string) $b['innerHTML'], $m ) === 1 ) {
+				$out[ trim( wp_strip_all_tags( $m[2] ) ) ] = array( html_entity_decode( $m[1] ), (string) ( $b['attrs']['url'] ?? '' ) );
+			}
+			$walk( (array) $b['innerBlocks'] );
+		}
+	};
+	$walk( parse_blocks( (string) get_post_field( 'post_content', $id ) ) );
+
+	return $out;
+};
+$on_home = $hrefs( $home5_id );
+$expect( 'the build says how many links it pointed', ! is_wp_error( $mb ) && ( $mb['menu']['links'] ?? 0 ) >= 4, json_encode( $mb['menu'] ?? null ) );
+$expect( 'a link named like a service leads to its page', ( $on_home['Water Damage'][0] ?? '' ) === get_permalink( $mp['service'] ?? 0 ), json_encode( $on_home['Water Damage'] ?? null ) );
+$expect( 'a section of the Home ("About") leads to the About page', ( $on_home['About'][0] ?? '' ) === get_permalink( $mp['about'] ?? 0 ) );
+$expect( 'a contact link to the Contact page, a footer list item to the FAQ page', ( $on_home['Contact'][0] ?? '' ) === get_permalink( $mp['contact'] ?? 0 ) && ( $on_home['FAQ'][0] ?? '' ) === get_permalink( $mp['faq'] ?? 0 ) );
+$expect( 'a link to a page that was not made, a phone number and the privacy link stay', ( $on_home['Careers'][0] ?? '' ) === 'https://old.example.com/careers' && ( $on_home['Call (555) 010-0101'][0] ?? '' ) === 'tel:5550100101' && ( $on_home['Privacy Policy'][0] ?? '' ) === 'https://old.example.com/privacy' );
+$expect( 'a link block says the same in its markup and in its url (or the editor opens it as invalid)', ( $on_home['Water Damage'][0] ?? 'a' ) === ( $on_home['Water Damage'][1] ?? 'b' ) );
+$on_page = $hrefs( $mp['service'] ?? 0 );
+$expect( 'the pages made carry the same menu', ( $on_page['About'][0] ?? '' ) === get_permalink( $mp['about'] ?? 0 ) && ( $on_page['FAQ'][0] ?? '' ) === get_permalink( $mp['faq'] ?? 0 ) );
+$expect( 'links in the body of a page are not the menu', ( $hrefs( $mp['service'] ?? 0 )['Learn more'][0] ?? '#' ) === '#' );
+$again = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
+$expect( 'pointing them again changes nothing', $again === array( 'pages' => 0, 'links' => 0 ), json_encode( $again ) );
+// The words of a page written by the copy writer can still be put back after the menu was pointed again.
+$svc5   = $mp['service'] ?? 0;
+$inv5   = Copy_Writer::inventory( $svc5 );
+$w5     = Copy_Writer::apply( $svc5, array( $inv5[0]['id'] => 'New words' ), Copy_Writer::fingerprint( $inv5 ) );
+$cur5   = (string) get_post_field( 'post_content', $svc5 );
+$reset5 = str_replace( 'href="' . get_permalink( $mp['about'] ?? 0 ) . '"', 'href="https://old.example.com/about"', $cur5 );
+global $wpdb;
+$wpdb->update( $wpdb->posts, array( 'post_content' => $reset5 ), array( 'ID' => $svc5 ) );
+clean_post_cache( $svc5 );
+update_post_meta( $svc5, Copy_Writer::HASH, md5( $reset5 ) );
+$fix5 = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
+$expect( 'a link put back to the old site is pointed again', $fix5['links'] >= 1, json_encode( $fix5 ) );
+$expect( 'and the page\'s earlier words can still be put back', Copy_Writer::can_revert( $svc5 ) && Copy_Writer::revert( $svc5 ) === true );
+
 $fin();
 
 echo "\n$pass passed, $fail failed\n";
