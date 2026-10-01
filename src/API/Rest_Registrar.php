@@ -30,6 +30,7 @@ final class Rest_Registrar {
 				( new Native_Blocks_Controller() )->register_routes();
 				( new Speed_Controller() )->register_routes();
 				( new Copy_Controller() )->register_routes();
+				( new Team_Pages_Controller() )->register_routes();
 			}
 		);
 	}

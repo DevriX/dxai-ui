@@ -29,7 +29,7 @@ final class Section_Library {
 	 */
 	public static function for_page( int $page_id ): array {
 		$out    = array();
-		$blocks = parse_blocks( (string) get_post_field( 'post_content', $page_id ) );
+		$blocks = self::flatten( parse_blocks( (string) get_post_field( 'post_content', $page_id ) ) );
 		$chrome = self::chrome_blocks( $blocks );
 		$skip   = array_merge( $chrome['header'], $chrome['footer'] );
 		foreach ( $blocks as $i => $block ) {
@@ -78,6 +78,56 @@ final class Section_Library {
 
 		// Fields without a form element: a form only with two or more named fields, not a lone switch or select.
 		return preg_match_all( '#<(input|select|textarea)\b[^>]*\bname=#i', $html ) >= 2;
+	}
+
+	/**
+	 * A page written as one group around everything (its header, a `main`, its sections) holds its sections one or two
+	 * levels down — a Claude Design export is written that way. They are read as the top-level blocks they are: the
+	 * wrapper and a `main` around sections are opened, nothing else. A hero is not opened, nor a card: a container is
+	 * opened only when at least three of its children are containers with something in them.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks parse_blocks().
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function flatten( array $blocks ): array {
+		for ( $round = 0; $round < 3; $round++ ) {
+			$real = array_values( array_filter( $blocks, static fn( $b ) => ! empty( $b['blockName'] ) ) );
+			$out  = array();
+			$open = false;
+			foreach ( $real as $b ) {
+				if ( ( count( $real ) === 1 || strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'main' ) && self::wraps_sections( $b ) ) {
+					foreach ( $b['innerBlocks'] as $child ) {
+						if ( ! empty( $child['blockName'] ) ) {
+							$out[] = $child;
+						}
+					}
+					$open = true;
+					continue;
+				}
+				$out[] = $b;
+			}
+			if ( ! $open ) {
+				break;
+			}
+			$blocks = $out;
+		}
+
+		return $blocks;
+	}
+
+	/** @param array<string, mixed> $b A container with at least three containers in it: a wrapper around sections. */
+	private static function wraps_sections( array $b ): bool {
+		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) ) {
+			return false;
+		}
+		$n = 0;
+		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {
+			if ( in_array( (string) ( $child['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) && ! empty( $child['innerBlocks'] ) ) {
+				++$n;
+			}
+		}
+
+		return $n >= 3;
 	}
 
 	/**
@@ -138,7 +188,7 @@ final class Section_Library {
 	 * @return array{header: string, footer: string}
 	 */
 	public static function chrome_markup( int $home_id ): array {
-		$blocks = parse_blocks( (string) get_post_field( 'post_content', $home_id ) );
+		$blocks = self::flatten( parse_blocks( (string) get_post_field( 'post_content', $home_id ) ) );
 		$chrome = self::chrome_blocks( $blocks );
 		$out    = array();
 		foreach ( array( 'header', 'footer' ) as $area ) {

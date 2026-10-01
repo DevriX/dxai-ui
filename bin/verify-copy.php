@@ -33,6 +33,7 @@ $expect( 'the words are the team\'s', str_starts_with( $t, 'Please inspect this 
 echo "\nWhat a page is\n";
 $kinds = array(
 	array( 'Water Damage Restoration in Forest, VA', 'water-damage-restoration-in-forest-va', 'location' ),
+	array( 'Water Damage Chesapeake, VA', 'page-245', 'location' ),
 	array( 'Mold Remediation', 'mold-remediation', 'service' ),
 	array( 'About Us', 'about-us', 'about' ),
 	array( 'Contact Semper Dry for Water & Mold Damage Help', 'contact', 'contact' ),

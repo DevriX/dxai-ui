@@ -97,6 +97,8 @@ final class Page_Order {
 		global $wpdb;
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $new ), array( 'ID' => $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $post_id );
+		// Written straight to the row: the rules cached for the page are for the content it had.
+		\DXAI_UI\Blocks\Style_Rules::forget( $post_id );
 		update_post_meta( $post_id, self::HASH, md5( $new ) );
 
 		return true;
@@ -117,6 +119,8 @@ final class Page_Order {
 		global $wpdb;
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $before ), array( 'ID' => $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $post_id );
+		// Written straight to the row: the rules cached for the page are for the content it had.
+		\DXAI_UI\Blocks\Style_Rules::forget( $post_id );
 		delete_post_meta( $post_id, self::BEFORE );
 		delete_post_meta( $post_id, self::HASH );
 

@@ -82,7 +82,7 @@ PROMPT;
 		}
 		// "Water Damage in Forest, VA" or "water-damage-forest-va": a place with a state after it.
 		$states = 'al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy';
-		if ( preg_match( '/,s*[A-Z]{2}/', $title ) === 1 || preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)+-(?:' . $states . ')$/', $slug ) === 1 ) {
+		if ( preg_match( '/,\s*[A-Z]{2}\b/', $title ) === 1 || preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)+-(?:' . $states . ')$/', $slug ) === 1 ) {
 			return 'location';
 		}
 		return 'service';

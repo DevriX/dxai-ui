@@ -217,6 +217,8 @@ final class Copy_Writer {
 		global $wpdb;
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $new_content ), array( 'ID' => $page_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $page_id );
+		// Written straight to the row: the rules cached for the page are for the content it had.
+		\DXAI_UI\Blocks\Style_Rules::forget( $page_id );
 		update_post_meta( $page_id, self::HASH, md5( $new_content ) );
 
 		return array( 'applied' => $applied );
@@ -242,6 +244,8 @@ final class Copy_Writer {
 		global $wpdb;
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $before ), array( 'ID' => $page_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $page_id );
+		// Written straight to the row: the rules cached for the page are for the content it had.
+		\DXAI_UI\Blocks\Style_Rules::forget( $page_id );
 		delete_post_meta( $page_id, self::BEFORE );
 		delete_post_meta( $page_id, self::HASH );
 
@@ -360,8 +364,10 @@ final class Copy_Writer {
 			$at      = $wrapped ? 1 : 0;
 		}
 		$first = true;
-		foreach ( $blocks as &$b ) {
-			if ( empty( $b['blockName'] ) ) {
+		// The page's header and footer are the site's; their words are not the page's copy.
+		$chrome = $depth === 0 ? array_merge( ...array_values( Section_Library::chrome_blocks( $blocks ) ) ) : array();
+		foreach ( $blocks as $idx => &$b ) {
+			if ( empty( $b['blockName'] ) || ( $depth === 0 && in_array( $idx, $chrome, true ) ) ) {
 				continue;
 			}
 			$sec = $section;

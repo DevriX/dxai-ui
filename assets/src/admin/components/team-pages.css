@@ -1,0 +1,112 @@
+/* "Pages in the team's style" — in the admin app's own colours (#dxai-ui-app sets the --dxai-* variables). */
+
+#dxai-ui-app .dxai-team > .components-base-control {
+	margin: 12px 0;
+	max-width: 520px;
+}
+
+#dxai-ui-app .dxai-team__fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 12px 24px;
+	margin: 12px 0;
+}
+
+#dxai-ui-app .dxai-team__general {
+	border: 0;
+	margin: 12px 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 22px;
+}
+
+#dxai-ui-app .dxai-team__general legend {
+	width: 100%;
+	padding: 0;
+	margin-bottom: 8px;
+	color: var(--dxai-text);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-team__plan,
+#dxai-ui-app .dxai-team__links {
+	list-style: none;
+	margin: 16px 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+#dxai-ui-app .dxai-team__plan > li {
+	border: 1px solid var(--dxai-line);
+	border-radius: var(--dxai-radius, 10px);
+	padding: 12px 14px;
+	background: var(--dxai-panel);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-team__head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px 12px;
+	margin-bottom: 8px;
+}
+
+#dxai-ui-app .dxai-team__roles {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+#dxai-ui-app .dxai-team__role {
+	padding: 3px 9px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	background: rgba(138, 176, 208, 0.14);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-team__role--hero {
+	background: rgba(79, 193, 240, 0.22);
+	color: var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-team__role--faq,
+#dxai-ui-app .dxai-team__role--related {
+	background: rgba(255, 176, 58, 0.16);
+	color: var(--dxai-warn);
+}
+
+#dxai-ui-app .dxai-team__role--cta {
+	background: rgba(95, 211, 155, 0.16);
+	color: var(--dxai-ok);
+}
+
+#dxai-ui-app .dxai-team__role.is-missing {
+	opacity: 0.45;
+	text-decoration: line-through;
+}
+
+#dxai-ui-app .dxai-team__built {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 16px;
+}
+
+#dxai-ui-app .dxai-team__links li {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px 14px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--dxai-line);
+	color: var(--dxai-text);
+}
