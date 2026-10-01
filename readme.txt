@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.21
+Stable tag: 0.4.0-beta.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,14 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.22 =
+* The second pass of native blocks: icons. An icon that is a plain drawing (its own colours, a size) becomes a core Image block pointing at an SVG file in the media library, the way the team's sites hold theirs: swapped from the library, sized in the block's panel. The file is made when the design is converted; the same drawing is one file (Clean Joe: 16 files, 4.5 KB, for 145 icons). The design's rules for its svgs (`[data-stats] svg { width: 32px }`, a hover, a media query, an `!important`) are written again for the picture, and a design with a rule that cannot be carried (one that colours an svg or styles what is inside it) keeps all its icons inline. Putting the plugin's own blocks back brings the DX Icon blocks back; the files stay in the library.
+* What stays the design's own icon: one drawn in the colour of the text around it (`currentColor`) or in a variable of the design, because a file cannot take a colour from the page; a shape with a class or a style of its own, a gradient, a clip, a reference to a symbol, an animation; an icon nothing gives a size; one whose own rule says `!important`; and a drawing stretched to its box (the wave between two sections), because as a picture its curve is drawn on whole pixels and the edge moves by a fraction of one.
+* Measured on the two designs that have such icons (Arcus, Clean Joe) and the twelve pages of them, at 1440, 768 and 412px: pixel for pixel what the page was without the conversion; in the block editor every block is valid.
+* Looked at and left alone: the questions (the summary holds a number, the question and the plus sign, three parts where core's Details has one line of text) and the thin lines (they are hidden from screen readers: dashes, bars, the strokes of a menu button; a core Separator is an `hr` that is announced and cannot be hidden).
+* Fixed: looking at what would be converted (the count in the Library, `wp dxai-ui native-blocks status`, `--dry-run`) made the icon files. Planning makes nothing now.
+* `bin/verify-native-blocks.php` checks the icons: what converts, each reason one stays, the rules carried over, and that planning makes no file.
 
 = 0.4.0-beta.21 =
 * The name is DX. Everything people read says DX instead of DXAI: the plugin, the menus and screens, the block and template names, the notices, the readme. Slugs, classes, options, routes and block names are as they were, so nothing already built changes. A runtime loader written under the old name is still recognised and is rewritten under the new one.
