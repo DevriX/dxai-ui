@@ -90,30 +90,13 @@ final class Site_Pages_Controller {
 	 */
 	public function designs(): WP_REST_Response {
 		$out = array();
-		foreach (
-			get_posts(
-				array(
-					'post_type'      => 'page',
-					'post_status'    => array( 'publish', 'draft', 'private' ),
-					'posts_per_page' => 100,
-					'orderby'        => 'modified',
-					'order'          => 'DESC',
-					// Homes only: the pages built from an old site are generated too, and with enough of them the
-					// Home fell outside the first results and the panel disappeared.
-					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					'meta_query'     => array(
-						array(
-							'key'   => '_dxai_ui_generated_page',
-							'value' => '1',
-						),
-						array(
-							'key'     => '_dxai_ui_from_live_menu',
-							'compare' => 'NOT EXISTS',
-						),
-					),
-				)
-			) as $page
-		) {
+		// Homes only, asked of the database as such: the pages made for a design are generated too, and with enough of them
+		// the Home fell outside the first results and the panel disappeared.
+		foreach ( \DXAI_UI\Structures\Design_Attach::home_ids() as $home_id ) {
+			$page = get_post( $home_id );
+			if ( ! $page instanceof \WP_Post ) {
+				continue;
+			}
 			$scope = (int) get_post_meta( $page->ID, \DXAI_UI\Structures\Page_Scope::META, true );
 			if ( $scope !== (int) $page->ID || get_post_meta( $page->ID, '_dxai_ui_from_live_menu', true ) ) {
 				continue;

@@ -105,7 +105,7 @@ final class Team_Pages {
 			foreach ( $recipe['roles'] as $role ) {
 				$parts[] = array(
 					'role'   => $role,
-					'source' => self::candidates( $roles, $role ) === array() ? '' : 'home',
+					'source' => self::pool( $library, $roles, $role ) === array() ? '' : 'home',
 				);
 			}
 			$existing = self::existing( $home, $item['type'], $item['slug'] );
@@ -350,6 +350,39 @@ final class Team_Pages {
 	}
 
 	/**
+	 * The Home's sections a role may be taken from (candidates()). For the hero, when the Home has none, its first section
+	 * if that has a heading to carry the title: a page without a hero shows its title nowhere (a job page's Home is a
+	 * route whose heading is the job's, and its header band is in the chrome).
+	 *
+	 * @param array<int, array<string, mixed>> $library
+	 * @param array<string, array<int, int>>   $roles
+	 * @return array<int, int> Indexes into the library => rank.
+	 */
+	private static function pool( array $library, array $roles, string $role ): array {
+		$found = self::candidates( $roles, $role );
+		if ( $found !== array() || $role !== 'hero' ) {
+			return $found;
+		}
+		$library = array_values( $library );
+
+		return isset( $library[0]['block'] ) && is_array( $library[0]['block'] ) && self::has_title_slot( $library[0]['block'] ) ? array( 0 => 1 ) : array();
+	}
+
+	/** Whether a block holds the heading title_hero() writes the title in. */
+	private static function has_title_slot( array $block ): bool {
+		if ( ( $block['blockName'] ?? '' ) === 'core/heading' && (int) ( $block['attrs']['level'] ?? 2 ) <= 2 ) {
+			return true;
+		}
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $child ) {
+			if ( is_array( $child ) && self::has_title_slot( $child ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * The sections of one page.
 	 *
 	 * @param array<int, array<string, mixed>>             $library
@@ -365,7 +398,7 @@ final class Team_Pages {
 		$sections = array();
 		$log      = array();
 		foreach ( $recipe as $place => $role ) {
-			$cand = self::candidates( $roles, (string) $role );
+			$cand = self::pool( $library, $roles, (string) $role );
 			if ( $cand === array() ) {
 				$log[] = sprintf( '%s: the Home has none — left out', $role );
 				continue;

@@ -146,6 +146,55 @@ $expect( 'nothing asked for is an error', is_wp_error( $none ) && $none->get_err
 $bad = Team_Pages::build( 999999, $wanted );
 $expect( 'so is a design that is not one', is_wp_error( $bad ) && $bad->get_error_code() === 'dxai_ui_team_design' );
 
+echo "\nA Home without a hero (a job page's Home is a route: its header band is in the chrome)\n";
+$home2_html = $header
+	. $section( 'Role', 'role-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'What You Will Own' ) . $para( 'The work.' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Requirements', 'req-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Role Requirements' ) . $para( 'The skills.' ) . '</div><!-- /wp:group -->' )
+	. $footer;
+$home2_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Jobs', 'post_content' => $home2_html ) );
+$made[]   = (int) $home2_id;
+update_post_meta( $home2_id, Page_Scope::META, $home2_id );
+update_post_meta( $home2_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home2_id, '_dxai_ui_css_url', 'dxai-ui/fixture-jobs.css' );
+$plan2 = Team_Pages::plan( $home2_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
+$expect( 'the hero is not left out: the first section lends its heading', ! in_array( 'hero', $plan2[0]['left_out'] ?? array( 'hero' ), true ), json_encode( $plan2[0]['left_out'] ?? null ) );
+$out2 = Team_Pages::build( $home2_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
+$p2   = ! is_wp_error( $out2 ) ? (int) ( $out2['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $p2;
+$c2   = (string) get_post_field( 'post_content', $p2 );
+$expect( 'so the page shows its title', preg_match( '/<h2[^>]*>Service One<\/h2>/', $c2 ) === 1, substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $c2 ) ), 0, 80 ) );
+$expect( 'the section keeps its look and its other words', str_contains( $c2, 'role-x' ) && str_contains( $c2, 'Role Requirements' ) );
+$home3_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture No Headings', 'post_content' => $header . $section( 'Plain', 'plain-x', $para( 'Only a line of text.' ) ) . $footer ) );
+$made[]   = (int) $home3_id;
+update_post_meta( $home3_id, Page_Scope::META, $home3_id );
+update_post_meta( $home3_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home3_id, '_dxai_ui_css_url', 'dxai-ui/fixture-plain.css' );
+$plan3 = Team_Pages::plan( $home3_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
+$expect( 'a first section with no heading to carry the title is not used', in_array( 'hero', $plan3[0]['left_out'] ?? array(), true ), json_encode( $plan3[0]['left_out'] ?? null ) );
+
+echo "\nThe designs are found among many pages made for them\n";
+// The pages made for a design are generated pages too; the Home used to be looked for among the newest hundred of them.
+for ( $i = 0; $i < 105; $i++ ) {
+	$extra = wp_insert_post(
+		array(
+			'post_type'   => 'page',
+			'post_status' => 'draft',
+			'post_title'  => 'Fixture made page ' . $i,
+			'meta_input'  => array(
+				'_dxai_ui_generated_page' => '1',
+				Page_Scope::META          => (string) $home_id,
+			),
+		)
+	);
+	$made[] = (int) $extra;
+}
+$homes = \DXAI_UI\Structures\Design_Attach::home_ids( 100 );
+$expect( 'the Home is listed although 105 newer pages were made for it', in_array( $home_id, $homes, true ) );
+$expect( 'and a page made for a design is not', count( array_intersect( $homes, array_slice( $made, -105 ) ) ) === 0 );
+if ( \DXAI_UI\Structures\Design_Attach::is_design( $home_id ) ) {
+	$expect( 'designs() lists it too', in_array( $home_id, array_map( static fn( $p ) => (int) $p->ID, \DXAI_UI\Structures\Design_Attach::designs() ), true ) );
+}
+
 $fin();
 
 echo "\n$pass passed, $fail failed\n";

@@ -133,34 +133,41 @@ final class Design_Attach {
 	 */
 	public static function designs(): array {
 		$out = array();
-		foreach (
-			get_posts(
-				array(
-					'post_type'      => 'page',
-					'post_status'    => array( 'publish', 'draft', 'private' ),
-					'posts_per_page' => 100,
-					'orderby'        => 'modified',
-					'order'          => 'DESC',
-					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					'meta_query'     => array(
-						array(
-							'key'   => '_dxai_ui_generated_page',
-							'value' => '1',
-						),
-						array(
-							'key'     => '_dxai_ui_from_live_menu',
-							'compare' => 'NOT EXISTS',
-						),
-					),
-				)
-			) as $page
-		) {
-			if ( self::is_design( (int) $page->ID ) ) {
+		foreach ( self::home_ids() as $id ) {
+			$page = get_post( $id );
+			if ( $page instanceof \WP_Post && self::is_design( $id ) ) {
 				$out[] = $page;
 			}
 		}
 
 		return $out;
+	}
+
+	/**
+	 * The ids of the pages that are their own scope (a design's Home, not a page made for it), newest first. Asked of
+	 * the database as that: the pages made for a design are generated pages too, and among the newest hundred of them
+	 * the Homes fell out of the list once a site had enough, so the panels that choose a design came up empty.
+	 *
+	 * @return array<int, int>
+	 */
+	public static function home_ids( int $limit = 100 ): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT p.ID FROM {$wpdb->posts} p
+				 INNER JOIN {$wpdb->postmeta} s ON s.post_id = p.ID AND s.meta_key = %s AND CAST( s.meta_value AS UNSIGNED ) = p.ID
+				 INNER JOIN {$wpdb->postmeta} g ON g.post_id = p.ID AND g.meta_key = '_dxai_ui_generated_page' AND g.meta_value = '1'
+				 WHERE p.post_type = 'page' AND p.post_status IN ( 'publish', 'draft', 'private' )
+				 AND NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} l WHERE l.post_id = p.ID AND l.meta_key = '_dxai_ui_from_live_menu' )
+				 ORDER BY p.post_modified DESC, p.ID DESC LIMIT %d",
+				Page_Scope::META,
+				max( 1, $limit )
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+
+		return array_map( 'intval', is_array( $ids ) ? $ids : array() );
 	}
 
 	/** The site's brand design (Design_Theme_Json), else the only design there is, else 0. */
