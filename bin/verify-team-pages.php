@@ -238,7 +238,11 @@ $header5 = '<!-- wp:group {"tagName":"header","className":"site-bar"} --><header
 	. $mlink( 'Call (555) 010-0101', 'tel:5550100101' )
 	. '</nav><!-- /wp:group --></header><!-- /wp:group -->';
 $footer5 = '<!-- wp:group {"tagName":"footer","className":"site-foot"} --><footer class="wp-block-group site-foot"><!-- wp:list --><ul class="wp-block-list"><!-- wp:list-item --><li><a href="https://old.example.com/faq">FAQ</a></li><!-- /wp:list-item --><!-- wp:list-item --><li><a href="https://old.example.com/privacy">Privacy Policy</a></li><!-- /wp:list-item --></ul><!-- /wp:list --></footer><!-- /wp:group -->';
-$home5 = serialize_blocks( parse_blocks( str_replace( array( $header, $footer ), array( $header5, $footer5 ), $home ) ) );
+$card5   = static fn( string $t, string $u ): string => '<!-- wp:dxai-ui/link {"url":"' . $u . '","className":"card","hasInner":true} --><a class="wp-block-dxai-ui-link card" href="' . $u . '"><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . $t . '</h3><!-- /wp:heading --></a><!-- /wp:dxai-ui/link -->';
+$list5   = static fn( array $cards ): string => '<!-- wp:group {"className":"cards5-x"} --><div class="wp-block-group cards5-x">' . implode( '', $cards ) . '</div><!-- /wp:group -->';
+$cards5  = $list5( array( $card5( 'Water Damage', 'https://old.example.com/w' ), $card5( 'Fire Damage', 'https://old.example.com/f' ), $card5( 'Roof Repair', 'https://old.example.com/r' ) ) )
+	. $list5( array( $card5( 'Gutter Help', 'https://old.example.com/g' ), $card5( 'Tree Help', 'https://old.example.com/t' ) ) );
+$home5 = serialize_blocks( parse_blocks( str_replace( array( $header, $footer ), array( $header5, $cards5 . $footer5 ), $home ) ) );
 $home5_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With A Menu', 'post_content' => wp_slash( $home5 ) ) );
 $made[]   = (int) $home5_id;
 update_post_meta( $home5_id, Page_Scope::META, $home5_id );
@@ -251,6 +255,7 @@ $mb = Team_Pages::build(
 		array( 'type' => 'about', 'title' => '' ),
 		array( 'type' => 'contact', 'title' => '' ),
 		array( 'type' => 'faq', 'title' => '' ),
+		array( 'type' => 'services', 'title' => '' ),
 	)
 );
 $mp = array();
@@ -285,6 +290,26 @@ $expect( 'a link block says the same in its markup and in its url (or the editor
 $on_page = $hrefs( $mp['service'] ?? 0 );
 $expect( 'the pages made carry the same menu', ( $on_page['About'][0] ?? '' ) === get_permalink( $mp['about'] ?? 0 ) && ( $on_page['FAQ'][0] ?? '' ) === get_permalink( $mp['faq'] ?? 0 ) );
 $expect( 'links in the body of a page are not the menu', ( $hrefs( $mp['service'] ?? 0 )['Learn more'][0] ?? '#' ) === '#' );
+$cards_of = static function ( int $id ): array {
+	$out  = array();
+	$walk = static function ( array $bs ) use ( &$walk, &$out ): void {
+		foreach ( $bs as $b ) {
+			if ( ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && ! empty( $b['innerBlocks'] ) ) {
+				$h = (array) $b['innerBlocks'][0];
+				$out[ trim( wp_strip_all_tags( (string) ( $h['innerHTML'] ?? '' ) ) ) ] = (string) ( $b['attrs']['url'] ?? '' );
+			}
+			$walk( (array) ( $b['innerBlocks'] ?? array() ) );
+		}
+	};
+	$walk( parse_blocks( (string) get_post_field( 'post_content', $id ) ) );
+
+	return $out;
+};
+$ch5 = $cards_of( $home5_id );
+$expect( 'a card whose heading is a page\'s opens that page', ( $ch5['Water Damage'] ?? '' ) === get_permalink( $mp['service'] ?? 0 ), json_encode( $ch5 ) );
+$expect( 'cards of the same list that have no page open the page that lists the services', ( $ch5['Fire Damage'] ?? '' ) === get_permalink( $mp['services'] ?? 0 ) && ( $ch5['Roof Repair'] ?? '' ) === get_permalink( $mp['services'] ?? 0 ), json_encode( $ch5 ) );
+$expect( 'a list of cards none of which has a page is left as it is', ( $ch5['Gutter Help'] ?? '' ) === 'https://old.example.com/g' && ( $ch5['Tree Help'] ?? '' ) === 'https://old.example.com/t', json_encode( $ch5 ) );
+$expect( 'a card block says the same in its markup and its url', (bool) preg_match( '/href="' . preg_quote( get_permalink( $mp['service'] ?? 0 ), '/' ) . '"/', (string) get_post_field( 'post_content', $home5_id ) ) );
 $again = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
 $expect( 'pointing them again changes nothing', $again === array( 'pages' => 0, 'links' => 0 ), json_encode( $again ) );
 // The words of a page written by the copy writer can still be put back after the menu was pointed again.

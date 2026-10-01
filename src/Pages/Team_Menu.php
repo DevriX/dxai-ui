@@ -18,8 +18,9 @@ use DXAI_UI\Structures\Page_Scope;
  * or at a section of the Home (`#services`); once the pages exist the menu should open them. A link is pointed at a page
  * when its words are that page's — its title ("Mold Remediation"), the start of it ("Water Damage"), a place ("Revere,
  * MA"), or what a menu calls a general page ("About", "FAQ", "Reviews", "Free Estimate") — and it now leads away from the
- * design (another site, or a section of the Home). Nothing else is touched: phone numbers, social links, a link to a page
- * the person chose, links in the body of a page.
+ * design (another site, or a section of the Home). The cards of a list of services are links too, and open the page
+ * of the service whose heading they carry. Nothing else is touched: phone numbers, social links, a link to a page
+ * the person chose, any other link in the body of a page.
  *
  * Only the links change. A page's words and layout stay, and the records that tell a person's edit from the plugin's
  * (the Copy_Writer hash, the native conversion record, the Team_Pages hash) follow the new content when they matched the
@@ -149,6 +150,9 @@ final class Team_Menu {
 	 * @param array<string, mixed>             $ctx
 	 */
 	private static function walk( array &$blocks, array $ctx, bool $in_chrome, int &$changed ): void {
+		if ( ! $in_chrome ) {
+			self::cards( $blocks, $ctx, $changed );
+		}
 		foreach ( $blocks as &$b ) {
 			if ( empty( $b['blockName'] ) ) {
 				continue;
@@ -192,6 +196,16 @@ final class Team_Menu {
 		if ( $new === '' || $new === $old ) {
 			return false;
 		}
+
+		return self::point( $b, $html, $raw, $new );
+	}
+
+	/**
+	 * Write a link block's new address: in its markup (the href as it was written) and in its `url`.
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	private static function point( array &$b, string $html, string $raw, string $new ): bool {
 		$swap = static function ( string $s ) use ( $raw, $new ): string {
 			$from = 'href="' . $raw . '"';
 			$at   = strpos( $s, $from );
@@ -211,6 +225,78 @@ final class Team_Menu {
 		}
 
 		return true;
+	}
+
+	/**
+	 * The cards of a list: links that are blocks around a heading ("Water Damage", a line, "Learn more"). A card whose heading
+	 * is a page's opens that page. A list that has a service with a page of its own and cards without one ("Storm & Flood
+	 * Damage") sends those to the page that lists the services, when there is one.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks The blocks that sit side by side.
+	 * @param array<string, mixed>             $ctx
+	 */
+	private static function cards( array &$blocks, array $ctx, int &$changed ): void {
+		$found = array();
+		$known = false;
+		foreach ( $blocks as $i => $b ) {
+			$html = (string) ( $b['innerHTML'] ?? '' );
+			if ( empty( $b['blockName'] ) || empty( $b['innerBlocks'] ) || substr_count( $html, '<a ' ) !== 1 || preg_match( '/<a\b[^>]*\bhref="([^"]*)"/', $html, $m ) !== 1 ) {
+				continue;
+			}
+			$heading = self::first_heading( $b );
+			if ( $heading === '' ) {
+				continue;
+			}
+			$page  = self::page_for( $heading, $ctx['targets'], false );
+			$known = $known || ( $page !== '' && self::is_service_url( $page, $ctx['targets'] ) );
+			$found[ $i ] = array(
+				'raw'  => $m[1],
+				'page' => $page,
+			);
+		}
+		$list = '';
+		foreach ( $ctx['targets'] as $t ) {
+			if ( $t['type'] === 'services' ) {
+				$list = $t['url'];
+				break;
+			}
+		}
+		foreach ( $found as $i => $card ) {
+			$old = html_entity_decode( $card['raw'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			$new = $card['page'] !== '' ? $card['page'] : ( $known ? $list : '' );
+			if ( $new === '' || $new === $old || ! self::leads_away( $old, $ctx ) ) {
+				continue;
+			}
+			if ( self::point( $blocks[ $i ], (string) $blocks[ $i ]['innerHTML'], $card['raw'], $new ) ) {
+				++$changed;
+			}
+		}
+	}
+
+	/** Whether this address is that of a service page. */
+	private static function is_service_url( string $url, array $targets ): bool {
+		foreach ( $targets as $t ) {
+			if ( $t['url'] === $url ) {
+				return $t['type'] === 'service';
+			}
+		}
+
+		return false;
+	}
+
+	/** The words of the first heading inside a block, as a menu would compare them. */
+	private static function first_heading( array $b ): string {
+		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
+			if ( ( $c['blockName'] ?? '' ) === 'core/heading' ) {
+				return self::norm( (string) $c['innerHTML'] );
+			}
+			$inner = self::first_heading( (array) $c );
+			if ( $inner !== '' ) {
+				return $inner;
+			}
+		}
+
+		return '';
 	}
 
 	/** Whether a link leaves the design: another site, or a section of the Home. A link to another page of the site stays. */
@@ -239,7 +325,7 @@ final class Team_Menu {
 	 *
 	 * @param array<int, array{type:string, title:string, norm:string, url:string, place:string}> $targets
 	 */
-	private static function page_for( string $text, array $targets ): string {
+	private static function page_for( string $text, array $targets, bool $labels = true ): string {
 		// Its title, or what comes of it in a footer: the start of a service's ("Water Damage" for "Water Damage Restoration").
 		foreach ( $targets as $t ) {
 			if ( $t['norm'] === $text ) {
@@ -257,8 +343,8 @@ final class Team_Menu {
 				return $t['url'];
 			}
 		}
-		foreach ( self::LABELS as $type => $labels ) {
-			if ( ! in_array( $text, $labels, true ) ) {
+		foreach ( $labels ? self::LABELS : array() as $type => $names ) {
+			if ( ! in_array( $text, $names, true ) ) {
 				continue;
 			}
 			foreach ( $targets as $t ) {
