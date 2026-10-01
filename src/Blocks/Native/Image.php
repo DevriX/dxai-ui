@@ -125,7 +125,7 @@ final class Image extends Converter {
 	}
 
 	/** Whether the parent spaces or divides its children by position (Tailwind's `space-*` and `divide-*`). */
-	private static function spaces_children( ?array $parent ): bool {
+	public static function spaces_children( ?array $parent ): bool {
 		$class = (string) ( $parent['className'] ?? '' );
 
 		return preg_match( '/(?:^|\s)(?:[a-z0-9]+:)?(?:space-[xy]-|divide-[xy])/', $class ) === 1;
@@ -135,7 +135,7 @@ final class Image extends Converter {
 	 * Whether the design's stylesheet leaves pictures alone by position: no selector that ends in an image (`img`, `*`)
 	 * behind a combinator or a structural pseudo-class. Read once per stylesheet version.
 	 */
-	private static function sheet_allows(): bool {
+	public static function sheet_allows(): bool {
 		$home = (int) ( self::$context['home'] ?? 0 );
 		if ( $home < 1 ) {
 			return false;

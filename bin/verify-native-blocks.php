@@ -133,6 +133,106 @@ $once = $convert( $row . "\n\n" . $box )['content'];
 $expect( 'a second pass changes nothing', $convert( $once )['counts'] === array() && $convert( $once )['content'] === $once );
 $expect( 'parse and serialize give the same bytes', serialize_blocks( parse_blocks( $once ) ) === $once );
 
+echo "\nIcons\n";
+if ( isset( $have['svg'] ) ) {
+	// An icon is converted for a design, and a design whose stylesheet is read; a throwaway page stands for one that has none.
+	$icon_home    = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dxai-ui icon test' ) );
+	$convert_icon = static fn( string $markup ): array => Native_Blocks::convert_content( $markup, array( 'home' => $icon_home, 'post' => $icon_home ) );
+	$known_files  = get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) );
+	$svg = static function ( array $pairs, string $inner, array $hoisted = array() ): string {
+		$attrs = array( 'svgAttrs' => $pairs, 'svgInner' => $inner );
+		if ( $hoisted !== array() ) {
+			$attrs['dxaiInner'] = $hoisted;
+		}
+		$tag = '<svg';
+		foreach ( $pairs as $p ) {
+			$tag .= ' ' . $p[0] . '="' . esc_attr( $p[1] ) . '"';
+		}
+
+		return '<!-- wp:dxai-ui/svg ' . wp_json_encode( $attrs ) . ' -->' . $tag . '>' . $inner . '</svg><!-- /wp:dxai-ui/svg -->';
+	};
+	$icon_pairs = array( array( 'viewBox', '0 0 24 24' ), array( 'width', '24' ), array( 'height', '24' ), array( 'fill', 'none' ), array( 'stroke', '#0a7c4a' ), array( 'stroke-width', '2' ), array( 'aria-hidden', 'true' ) );
+	$icon_path  = '<path d="M5 12h14M12 5l7 7-7 7"/>';
+	$plain      = $svg( $icon_pairs, $icon_path );
+	$r          = $convert_icon( $plain );
+	$ia         = $attrs_of( $r['content'] );
+	$expect( 'a drawing with its own colours and size becomes core/image', $names( $r['content'] ) === array( 'core/image' ), implode( ',', $names( $r['content'] ) ) );
+	$expect( 'pointing at a file in the media library, with the icon marker', ! empty( $ia['id'] ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxai-icon' ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxai-part-img' ), json_encode( $ia ) );
+	$file = ! empty( $ia['id'] ) ? (string) get_attached_file( (int) $ia['id'] ) : '';
+	$body = $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
+	$expect( 'the file is a standalone SVG with the drawing and its colours', str_contains( $body, 'xmlns="http://www.w3.org/2000/svg"' ) && str_contains( $body, 'stroke="#0a7c4a"' ) && str_contains( $body, '<path' ) && ! str_contains( $body, 'aria-hidden' ), $body );
+	$expect( 'the picture says nothing to a screen reader, as the icon did', str_contains( $r['content'], 'alt=""' ) );
+	$expect( 'the same drawing twice is one file', ( $attrs_of( $convert_icon( $plain . "\n\n" . $plain )['content'] )['id'] ?? 0 ) === ( $ia['id'] ?? -1 ) );
+	$expect( 'a label on the icon becomes the alt text', str_contains( $convert_icon( $svg( array_merge( $icon_pairs, array( array( 'aria-label', 'Next step' ) ) ), $icon_path ) )['content'], 'alt="Next step"' ) );
+	$expect( 'without a design to read the stylesheet of, an icon stays as it is', $names( $convert( $plain )['content'] ) === array( 'dxai-ui/svg' ) );
+	$expect( 'a second pass changes nothing', $convert_icon( $r['content'] )['counts'] === array() );
+	$expect( 'parse and serialize give the same bytes', serialize_blocks( parse_blocks( $r['content'] ) ) === $r['content'] );
+
+	$sized_by_css = $svg( array( array( 'viewBox', '0 0 24 24' ), array( 'fill', '#111' ), array( 'class', 'dxs-ab12cd' ) ), $icon_path, array( 'dxs-ab12cd' => 'width:2rem;height:2rem' ) );
+	$sa           = $attrs_of( $convert_icon( $sized_by_css )['content'] );
+	$expect( 'an icon sized by a rule of its own keeps that rule on the picture', ( $sa['dxaiCss'] ?? '' ) !== '' && str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'width:2rem' ), json_encode( $sa ) );
+	$expect( 'and the picture keeps the display the svg had, and no width limit it never had', str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'display:inline' ) && str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'max-width:none' ), json_encode( $sa ) );
+	$utility      = $svg( array( array( 'viewBox', '0 0 24 24' ), array( 'fill', '#111' ), array( 'class', 'w-20px h-20px mr-2' ) ), $icon_path );
+	$expect( 'an icon sized by utilities converts and keeps them', str_contains( (string) ( $attrs_of( $convert_icon( $utility )['content'] )['className'] ?? '' ), 'w-20px h-20px mr-2' ) );
+
+	$stays = array(
+		'a colour taken from the text around it (currentColor)' => $svg( array_merge( array_slice( $icon_pairs, 0, 4 ), array( array( 'stroke', 'currentColor' ) ) ), $icon_path ),
+		'a colour on a shape that is currentColor'              => $svg( $icon_pairs, '<path stroke="currentColor" d="M1 1h5"/>' ),
+		'a colour from a variable of the design'                => $svg( $icon_pairs, '<path stroke="var(--brand)" d="M1 1h5"/>' ),
+		'a shape with a class of its own'                       => $svg( $icon_pairs, '<path class="p1" d="M1 1h5"/>' ),
+		'a shape with a style'                                  => $svg( $icon_pairs, '<path style="opacity:.5" d="M1 1h5"/>' ),
+		'a reference to a symbol (use)'                         => $svg( $icon_pairs, '<use href="#i-arrow"/>' ),
+		'an animation'                                          => $svg( $icon_pairs, '<path d="M1 1h5"><animate attributeName="opacity" from="0" to="1" dur="1s"/></path>' ),
+		'a gradient'                                            => $svg( $icon_pairs, '<defs><linearGradient id="g"><stop offset="0" stop-color="#000"/></linearGradient></defs><path fill="url(#g)" d="M1 1h5"/>' ),
+		'a script'                                              => $svg( $icon_pairs, '<script>alert(1)</script>' ),
+		'an event handler'                                      => $svg( $icon_pairs, '<path onload="x()" d="M1 1h5"/>' ),
+		'a size nothing says'                                   => $svg( array( array( 'viewBox', '0 0 24 24' ), array( 'fill', '#111' ) ), $icon_path ),
+		'a data attribute on the root'                          => $svg( array_merge( $icon_pairs, array( array( 'data-icon', 'arrow' ) ) ), $icon_path ),
+		'a class of the design on the root'                     => $svg( array_merge( $icon_pairs, array( array( 'class', 'card-icon' ) ) ), $icon_path ),
+		'a style on the root'                                   => $svg( array_merge( $icon_pairs, array( array( 'style', 'color:red' ) ) ), $icon_path ),
+		'a drawing stretched to its box (the wave between sections)' => $svg( array( array( 'viewBox', '0 0 1440 80' ), array( 'preserveAspectRatio', 'none' ), array( 'fill', '#0a56b8' ), array( 'class', 'dxs-wave01' ) ), '<path d="M0 80C360 0 1080 0 1440 80z"/>', array( 'dxs-wave01' => 'width:100%;height:80px' ) ),
+		'a class the theme does not have (w-6)'               => $svg( array_merge( $icon_pairs, array( array( 'class', 'w-6 h-6' ) ) ), $icon_path ),
+		'a label that is a script'                              => $svg( array_merge( $icon_pairs, array( array( 'aria-label', 'x" onerror="y' ) ) ), $icon_path ),
+	);
+	foreach ( $stays as $label => $markup ) {
+		$expect( "$label stays a DX Icon", $names( $convert_icon( $markup )['content'] ) === array( 'dxai-ui/svg' ), implode( ',', $names( $convert_icon( $markup )['content'] ) ) );
+	}
+
+	$fresh  = $svg( $icon_pairs, '<path d="M3 3h18M3 9h18M3 15h12"/>' );
+	$before = count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) );
+	$plan   = Native_Blocks::convert_content( $fresh, array( 'home' => $icon_home, 'post' => $icon_home, 'dry' => 1 ) );
+	$expect( 'planning counts the icon', ( $plan['counts']['svg'] ?? 0 ) === 1, json_encode( $plan['counts'] ) );
+	$expect( 'and makes no file and no attachment', count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) ) === $before );
+
+	echo "\nIcons: what the design's stylesheet says about svgs\n";
+	$read = static fn( string $css ): array => \DXAI_UI\Blocks\Native\Svg_Image::read( $css );
+	$m    = $read( '[data-stats] svg{width:32px;height:32px}' );
+	$expect( 'a rule for svgs in a place is written again for the picture', $m['safe'] && str_contains( $m['mirror'], '[data-stats] .dxai-icon img{width:32px;height:32px}' ), json_encode( $m ) );
+	$m = $read( '.a svg,.b svg{width:1px}' );
+	$expect( 'a list of selectors is written for each', $m['safe'] && str_contains( $m['mirror'], '.a .dxai-icon img,.b .dxai-icon img{width:1px}' ), json_encode( $m ) );
+	$m = $read( '@media (max-width:600px){.card svg{width:10px}}' );
+	$expect( 'inside a media query it stays inside', $m['safe'] && str_contains( $m['mirror'], '@media (max-width:600px){.card .dxai-icon img{width:10px}}' ), json_encode( $m ) );
+	$m = $read( '.card svg:hover{opacity:.5}' );
+	$expect( 'a hover state is kept', $m['safe'] && str_contains( $m['mirror'], '.card .dxai-icon img:hover{opacity:.5}' ), json_encode( $m ) );
+	$m = $read( 'svg{display:block}' );
+	$expect( 'the display a rule gives svgs is the picture\'s', $m['safe'] && $m['display'] === 'block', json_encode( $m ) );
+	$expect( 'without a rule an svg is inline', $read( '.x{color:red}' ) === array( 'safe' => true, 'display' => 'inline', 'mirror' => '' ) );
+	$expect( 'a rule that styles what is inside an svg is a reason to leave every icon inline', ! $read( '.a svg path{fill:red}' )['safe'] );
+	$expect( 'so is a colour given to an svg', ! $read( '.a svg{color:red}' )['safe'] && ! $read( '.a svg{fill:red}' )['safe'] && ! $read( '.a svg{stroke:#000}' )['safe'] );
+	$expect( 'so is a child selector or a pseudo-element', ! $read( '.a svg>path{x:y}' )['safe'] && ! $read( '.a svg::after{content:"x"}' )['safe'] );
+	$expect( 'a rule that names an image as well reaches the picture already and adds nothing', $read( '.a svg,.a img{width:20px}' ) === array( 'safe' => true, 'display' => 'inline', 'mirror' => '' ) );
+	$expect( 'comments are not rules', $read( '/* .a svg path{fill:red} */.b{color:red}' )['safe'] );
+
+	// The files this run made are taken away again; the ones that were there are not touched.
+	$made = array_diff( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ), $known_files );
+	foreach ( $made as $id ) {
+		wp_delete_attachment( (int) $id, true );
+	}
+	wp_delete_post( $icon_home, true );
+} else {
+	echo "  skip  the icon converter is not available here (no SVG support)\n";
+}
+
 echo "\nSections and leftovers\n";
 $tpl   = '<!-- wp:group {"tagName":"template","anchor":"__bundler_thumbnail"} --><template id="__bundler_thumbnail" class="wp-block-group"><!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group --></template><!-- /wp:group -->';
 $shell = '<!-- wp:group --><div class="wp-block-group">'

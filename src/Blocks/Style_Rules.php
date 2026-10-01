@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 11;
+	private const CACHE_SCHEMA = 13;
 
 	/**
 	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
@@ -700,7 +700,7 @@ final class Style_Rules {
 			$out .= self::rule( $class, $css );
 		}
 		$data = array(
-			'rules'          => self::part_base_css( $acc['parts'] ) . $out . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
+			'rules'          => self::part_base_css( $acc['parts'] ) . self::icon_css( $acc, $scope_id ) . $out . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
 			'utilities'      => $utilities,
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
@@ -757,7 +757,7 @@ final class Style_Rules {
 		$utilities = self::live_utilities( $acc['tokens'], array_keys( $acc['seen'] ), $acc['toggles'] );
 		$part_util = self::part_utilities( $acc['part_tokens'], array_keys( $acc['seen'] ), $acc['toggles'] );
 		$data      = array(
-			'rules'          => self::part_base_css( $acc['parts'] ) . self::rules_css( $post_id, $acc['rules'], $acc['presets'] ) . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
+			'rules'          => self::part_base_css( $acc['parts'] ) . self::icon_css( $acc, $post_id ) . self::rules_css( $post_id, $acc['rules'], $acc['presets'] ) . self::part_rules_css( $acc['part_rules'] ) . self::overrides( $acc['own'], $utilities ),
 			'utilities'      => $utilities,
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
@@ -1017,6 +1017,21 @@ final class Style_Rules {
 	}
 
 	/**
+	 * The rules the design wrote for its svgs, written for the pictures that replaced some of them (Svg_Image), when the
+	 * page holds one.
+	 *
+	 * @param array<string, mixed> $acc
+	 */
+	private static function icon_css( array $acc, int $post_id ): string {
+		if ( empty( $acc['icons'] ) ) {
+			return '';
+		}
+		$design = \DXAI_UI\Structures\Design_Attach::source_for( $post_id );
+
+		return \DXAI_UI\Blocks\Native\Svg_Image::mirrored_css( $design > 0 ? $design : $post_id );
+	}
+
+	/**
 	 * The dxs- rules of the blocks of a part, each written for the element inside the block.
 	 *
 	 * @param array<string, array{0:string, 1:string}> $part_rules
@@ -1174,6 +1189,8 @@ final class Style_Rules {
 			'part_rules'  => array(),
 			'part_tokens' => array(),
 			'parts'       => array(),
+			// Whether a block is an icon the plugin made from an svg (Svg_Image): the design's rules for its svgs are printed.
+			'icons'       => false,
 		);
 	}
 
@@ -1247,6 +1264,9 @@ final class Style_Rules {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$css   = $attrs[ Style_Hoister::ATTR ] ?? '';
 		$part  = self::part_of( $attrs );
+		if ( is_string( $attrs['className'] ?? null ) && preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', $attrs['className'] ) === 1 ) {
+			$acc['icons'] = true;
+		}
 		if ( $part !== '' ) {
 			$acc['parts'][ $part ] = true;
 			$names = is_string( $attrs['className'] ?? null ) ? preg_split( '/\s+/', $attrs['className'], -1, PREG_SPLIT_NO_EMPTY ) : array();

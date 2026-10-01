@@ -47,6 +47,7 @@ final class Native_Blocks {
 			new Group(),
 			new Layout(),
 			new Image(),
+			new Svg_Image(),
 			new Span(),
 			new Section_Names(),
 			new Tidy(),
@@ -233,7 +234,7 @@ final class Native_Blocks {
 		$counts = array();
 		$posts  = 0;
 		foreach ( Color_Usage::posts( $home ) as $post_id ) {
-			$result = self::convert_content( (string) get_post_field( 'post_content', $post_id ), array( 'home' => $home, 'post' => (int) $post_id ) );
+			$result = self::convert_content( (string) get_post_field( 'post_content', $post_id ), array( 'home' => $home, 'post' => (int) $post_id, 'dry' => 1 ) );
 			if ( $result['counts'] !== array() ) {
 				++$posts;
 				foreach ( $result['counts'] as $id => $n ) {
