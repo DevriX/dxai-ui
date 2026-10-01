@@ -91,7 +91,7 @@ final class Speed_Controller {
 			'designs' => array_map(
 				static fn( $page ) => array(
 					'id'    => (int) $page->ID,
-					'title' => get_the_title( $page ),
+					'title' => html_entity_decode( get_the_title( $page ), ENT_QUOTES, 'UTF-8' ),
 					'fonts' => Speed::fonts( (int) $page->ID ),
 				),
 				Design_Attach::designs()

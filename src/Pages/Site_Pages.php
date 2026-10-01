@@ -275,7 +275,7 @@ final class Site_Pages {
 			'origin' => $origin,
 			'home'   => array(
 				'id'    => $home_id,
-				'title' => get_the_title( $home_id ),
+				'title' => html_entity_decode( get_the_title( $home_id ), ENT_QUOTES, 'UTF-8' ),
 				'view'  => (string) get_permalink( $home_id ),
 			),
 			'pages'  => $pages,

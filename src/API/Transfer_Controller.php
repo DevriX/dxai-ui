@@ -145,7 +145,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 			}
 			$out[] = array(
 				'id'         => (int) $post->ID,
-				'title'      => get_the_title( $post ),
+				'title'      => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
 				'status'     => (string) $post->post_status,
 				'modified'   => get_date_from_gmt( $post->post_modified_gmt, 'c' ),
 				'view'       => (string) get_permalink( $post ),

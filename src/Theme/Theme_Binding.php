@@ -301,7 +301,7 @@ final class Theme_Binding {
 
 		return array(
 			'id'      => $home,
-			'title'   => get_the_title( $home ),
+			'title'   => html_entity_decode( get_the_title( $home ), ENT_QUOTES, 'UTF-8' ),
 			'classes' => Theme_Class_Swap::summary( $home ),
 			'mode'    => (string) ( $binding['mode'] ?? '' ),
 			'default' => self::default_mode( $home ),

@@ -103,7 +103,7 @@ final class Site_Pages_Controller {
 			}
 			$out[] = array(
 				'id'      => (int) $page->ID,
-				'title'   => get_the_title( $page ),
+				'title'   => html_entity_decode( get_the_title( $page ), ENT_QUOTES, 'UTF-8' ),
 				'view'    => (string) get_permalink( $page ),
 				'archive' => (string) get_post_meta( $page->ID, '_dxai_ui_source_zip', true ),
 			);

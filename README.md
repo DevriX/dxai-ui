@@ -140,7 +140,7 @@ bash bin/wp-php.sh bin/verify-team-pages.php
 | `verify-native-blocks.php` | The native-block converters. |
 | `verify-team-pages.php`, `verify-page-order.php`, `verify-page-recipes.php`, `verify-copy.php` | Pages in the team's style, section order, recipes, the copy writer. |
 | `verify-converter.php`, `verify-lovable-compile.php`, `verify-lovable-zip.php`, `verify-generated-zip.php` | The compilers and the archive routes. |
-| `verify-structures.php`, `verify-assets.php`, `verify-coverage.php`, `verify-audit.php`, `verify-islands.php`, `verify-cleanup.php`, `verify-bootstrap.php`, `verify-admin-ui.php` | Saving, assets, coverage and audit of a conversion, islands, clean-up, boot, the admin screens. |
+| `verify-admin-titles.php`, `verify-structures.php`, `verify-assets.php`, `verify-coverage.php`, `verify-audit.php`, `verify-islands.php`, `verify-cleanup.php`, `verify-bootstrap.php`, `verify-admin-ui.php` | Design titles in the admin lists, saving, assets, coverage and audit of a conversion, islands, clean-up, boot, the admin screens. |
 | `verify-import.cjs` | Imports a set of real design ZIPs and measures the result (geometry against the design, block validity in the real editor, behaviour). Needs the paths of PHP, its ini, `wp-cli` and the ZIPs — see its header. |
 
 Run the suites a change can touch before you commit. For a conversion change, also run `verify-import.cjs` on the designs in `Documents/Lovable`.
