@@ -3,7 +3,7 @@
  * Plugin Name:       DX UI
  * Plugin URI:        https://devrix.com/dxai-ui
  * Description:       Convert Figma, Lovable, and generated frontend ZIPs into native Gutenberg structures using Claude, ChatGPT, Grok, or DeepSeek.
- * Version:           0.4.0-beta.22
+ * Version:           0.4.0-beta.23
  * Requires at least: 6.6
  * Requires PHP:      8.2
  * Author:            DevriX
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DXAI_UI_VERSION', '0.4.0-beta.22' );
+define( 'DXAI_UI_VERSION', '0.4.0-beta.23' );
 define( 'DXAI_UI_FILE', __FILE__ );
 define( 'DXAI_UI_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DXAI_UI_URL', plugin_dir_url( __FILE__ ) );

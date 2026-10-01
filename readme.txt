@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.22
+Stable tag: 0.4.0-beta.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.23 =
+* Pages made without an address of the old site, tried on 15 designs through the Library (139 pages: services, places, About, Contact, questions, reviews, the lists): every page opens, none has a notice or an error, none has an address in it that the Home did not have, every one is valid in the block editor, and the prompt for its words leaves out the line about a page to take inspiration from. What that turned up is fixed:
+* Fixed: the pickers that choose a design (Words for the pages, Pages in the team's style, the pages from an old site) came up empty once a site had about a hundred pages made for its designs. The Homes were looked for among the newest hundred generated pages, and the pages made for a design are generated pages too. A design's Home is now asked for as what it is: a page that is its own scope.
+* Fixed: a design whose Home has no hero (a job page's Home is a route, its header band is in the header) made pages that showed their title nowhere. Its first section, when it has a heading, now carries the title.
+* `bin/verify-team-pages.php` checks both: a Home without a hero, and the Homes among more than a hundred pages made for them.
 
 = 0.4.0-beta.22 =
 * The second pass of native blocks: icons. An icon that is a plain drawing (its own colours, a size) becomes a core Image block pointing at an SVG file in the media library, the way the team's sites hold theirs: swapped from the library, sized in the block's panel. The file is made when the design is converted; the same drawing is one file (Clean Joe: 16 files, 4.5 KB, for 145 icons). The design's rules for its svgs (`[data-stats] svg { width: 32px }`, a hover, a media query, an `!important`) are written again for the picture, and a design with a rule that cannot be carried (one that colours an svg or styles what is inside it) keeps all its icons inline. Putting the plugin's own blocks back brings the DX Icon blocks back; the files stay in the library.
