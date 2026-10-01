@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.26
+Stable tag: 0.4.0-beta.27
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,14 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.27 =
+* The fonts of the theme. On a theme that lets the site choose its fonts (the DevriX themes: Theme Global Settings > Fonts, a headline font and a body font) a converted page is drawn in them: headings in the headline font, everything else — paragraphs, spans, links, buttons, labels, and the monospace labels of a design too — in the body font, as on the rest of the site. The design's own fonts (Inter, JetBrains Mono, Instrument Serif…) are not used. Code (`pre`, `code`) stays monospace and an icon font keeps its glyphs. Nothing in a page's content is rewritten: the rule is printed with the page, so a change of the fonts in Theme Global Settings reaches every design at once, and the design's own fonts come back if the theme stops managing them.
+* The theme's fonts are not copied again. A design on such a theme no longer has Google's fonts copied into `uploads/dxai-ui/fonts`; the page uses the theme's font files and asks for no others. A theme with no such settings is as before.
+* The copies that were already made are put away with this version, without changing a design: the font rules leave a design's stylesheet (kept in its record at the head, so it can be put back and an export still carries the sheet as it was imported), then the font files no stylesheet names are removed. A file written in the last ten minutes, or named by any stylesheet, is kept. A design with more font rules than can be written again, or that loads an icon font, keeps its own.
+* Library > Speed shows which fonts a design is drawn in and has two buttons: "Use the design's own fonts" (it copies them back and the design looks as it was imported) and "Use the theme's fonts". `wp dxai-ui speed own|theme|clean [--dry-run]` does the same from the command line.
+* Fixed: a design set to the theme's fonts, whose theme later stopped managing them, asked for nothing until its fonts were copied back; Google's stylesheet is linked in the meantime.
+* `bin/verify-theme-fonts.php` checks it (the roles of a design's fonts, the rule printed with the page, a block's font-family bound to the theme's, the fonts leaving a sheet and coming back, the migration, and the files nothing names).
 
 = 0.4.0-beta.26 =
 * The cards of a list of services open the service's page. A card (a link around a heading, a line and "Learn more") whose heading is a page's — "Water Damage Restoration", "Mold Remediation" — opens that page, on the Home and on every page made for it. A card without a page of its own in a list that has services with pages ("Storm & Flood Damage") opens the page that lists the services; a list of cards none of which has a page is left as it is. Only the address changes.
