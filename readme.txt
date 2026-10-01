@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.24
+Stable tag: 0.4.0-beta.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.25 =
+* The pages made for a design are in its menu. A design keeps its menu in its own header and footer (links in blocks), and its links led to the old site (`cleanjoe.com/services/water-damage`) or to a section of the Home (`#services`). When pages are made, a link whose words are a page's — its title ("Mold Remediation"), the start of it ("Water Damage"), a place ("Revere, MA"), or what a menu calls a general page ("About", "FAQ", "Reviews", "Free Estimate", "Service Areas") — and that leads away from the design now opens that page, on the Home and on every page made for it: the menu, the dropdowns, the mobile menu, the footer lists, the logo. Phone numbers, social links, links to pages that were not made and links in the body of a page stay. Only links change: a page's words and layout do not, and putting the earlier words back or making the pages again still works.
+* `bin/verify-team-pages.php` checks it: what is pointed, what is left, that a link block says the same in its markup and its url, that doing it again changes nothing, and that earlier words can still be put back.
 
 = 0.4.0-beta.24 =
 * Found by writing the words of a whole site (Clean Joe, 13 pages) with the plugin's own writer. What it turned up is fixed:
