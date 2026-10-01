@@ -100,7 +100,7 @@ final class Team_Pages {
 		$roles   = self::home_roles( $library );
 		$out     = array();
 		foreach ( self::clean_wanted( $wanted ) as $item ) {
-			$recipe = self::recipe( $item['type'], $seed );
+			$recipe = self::recipe( $item['type'], $seed, $roles );
 			$parts  = array();
 			foreach ( $recipe['roles'] as $role ) {
 				$parts[] = array(
@@ -187,7 +187,7 @@ final class Team_Pages {
 		foreach ( $pend as $item ) {
 			$key    = $item['type'] . '|' . $item['slug'];
 			$id     = $ids[ $key ];
-			$recipe = self::recipe( $item['type'], $seed );
+			$recipe = self::recipe( $item['type'], $seed, $roles );
 			$siblings = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
 			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key );
 			$markup = Block_Tree::serialize_checked( $built['sections'] );
@@ -284,12 +284,14 @@ final class Team_Pages {
 	/**
 	 * @return array{roles:array<int, string>, edits:array<int, string>, nearest:int}
 	 */
-	private static function recipe( string $type, string $seed ): array {
+	private static function recipe( string $type, string $seed, array $home_roles = array() ): array {
 		$model = self::KINDS[ $type ]['model'] ?? '';
 		if ( $model === '' ) {
-			// A list of the pages under it: what the page opens with, the list, what people say, the call to action.
+			// A list of the pages under it: what the page opens with, the list, what people say, the call to action. The list of
+			// service areas is the Home's own areas (its offices and the towns they serve) when it has them: cards of services are
+			// not what that page is about.
 			return array(
-				'roles'   => array( 'hero', 'related', 'reviews', 'cta' ),
+				'roles'   => $type === 'areas' && ! empty( $home_roles['areas'] ) ? array( 'hero', 'areas', 'reviews', 'cta' ) : array( 'hero', 'related', 'reviews', 'cta' ),
 				'edits'   => array(),
 				'nearest' => 0,
 			);
@@ -297,10 +299,37 @@ final class Team_Pages {
 		$r = Page_Recipes::pick( $model, $seed );
 
 		return array(
-			'roles'   => $r['roles'],
+			'roles'   => self::must_have( $type, $r['roles'], $home_roles ),
 			'edits'   => $r['edits'],
 			'nearest' => $r['nearest'],
 		);
+	}
+
+	/**
+	 * A page that is not what its name says without one section has it, when the Home has one: the questions of the FAQ
+	 * page (the team's own FAQ pages often hold them in the hero, which a Home's hero does not), the form of the contact
+	 * page. The questions go before the closing call to action, the form right after the hero.
+	 *
+	 * @param array<int, string>             $roles
+	 * @param array<string, array<int, int>> $home_roles
+	 * @return array<int, string>
+	 */
+	private static function must_have( string $type, array $roles, array $home_roles ): array {
+		$need = array( 'faq' => 'faq', 'contact' => 'form' )[ $type ] ?? '';
+		if ( $need === '' || in_array( $need, $roles, true ) || empty( $home_roles[ $need ] ) ) {
+			return $roles;
+		}
+		$roles = array_values( $roles );
+		if ( $need === 'faq' ) {
+			$at = array_search( 'cta', array_reverse( $roles, true ), true );
+			array_splice( $roles, $at === false ? count( $roles ) : (int) $at, 0, array( 'faq' ) );
+
+			return $roles;
+		}
+		$at = array_search( 'hero', $roles, true );
+		array_splice( $roles, $at === false ? 0 : (int) $at + 1, 0, array( 'form' ) );
+
+		return $roles;
 	}
 
 	/** What decides a design's recipes: the name of its Home, the same on every host. */

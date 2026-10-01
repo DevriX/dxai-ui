@@ -301,7 +301,10 @@ final class Copy_Writer {
 		);
 	}
 
-	/** Only the tags a line of copy has: emphasis, a break, a link. */
+	/**
+	 * Only the tags a line of copy has: emphasis, a break, a link, a span (a mark in front of a line, hidden from readers
+	 * of the page), and the paragraph and heading a list item can be made of (a step: its number, its title, its line).
+	 */
 	public static function clean( string $html ): string {
 		$html = trim( $html );
 		$html = wp_kses(
@@ -313,7 +316,15 @@ final class Copy_Writer {
 				'i'      => array(),
 				'u'      => array(),
 				'br'     => array(),
-				'span'   => array( 'class' => true ),
+				'span'   => array(
+					'class'       => true,
+					'aria-hidden' => true,
+				),
+				'p'      => array( 'class' => true ),
+				'h1'     => array( 'class' => true ),
+				'h2'     => array( 'class' => true ),
+				'h3'     => array( 'class' => true ),
+				'h4'     => array( 'class' => true ),
 				'a'      => array(
 					'href'   => true,
 					'target' => true,

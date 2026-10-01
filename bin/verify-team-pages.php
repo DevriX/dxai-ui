@@ -195,6 +195,39 @@ if ( \DXAI_UI\Structures\Design_Attach::is_design( $home_id ) ) {
 	$expect( 'designs() lists it too', in_array( $home_id, array_map( static fn( $p ) => (int) $p->ID, \DXAI_UI\Structures\Design_Attach::designs() ), true ) );
 }
 
+echo "\nA page that is not what its name says without one section\n";
+$qa    = Team_Pages::build( $home_id, array( array( 'type' => 'faq', 'title' => '' ) ) );
+$qid   = ! is_wp_error( $qa ) ? (int) ( $qa['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $qid;
+$qc    = (string) get_post_field( 'post_content', $qid );
+$expect( 'the FAQ page has the Home\'s questions', str_contains( $qc, 'faq-x' ) && str_contains( $qc, 'How fast can you come?' ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $qc ) ), 0, 100 ) );
+$expect( 'before the closing call to action', ! str_contains( $qc, 'cta-x' ) || strpos( $qc, 'faq-x' ) < strpos( $qc, 'cta-x' ) );
+$qb    = Team_Pages::build( $home2_id, array( array( 'type' => 'faq', 'title' => '' ) ) );
+$qbid  = ! is_wp_error( $qb ) ? (int) ( $qb['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $qbid;
+$expect( 'a Home with no questions gets no section for them: the page is what the Home can make', $qbid > 0 && (int) ( $qb['pages'][0]['sections'] ?? 9 ) <= 2, json_encode( $qb['pages'][0]['sections'] ?? null ) );
+$home4_html = $header
+	. $section( 'Hero Section', 'hero4-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Restoration in Tyler', 1 ) . $para( 'Family run.' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Contact form', 'form4-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Request an estimate' ) . '<!-- wp:html --><form action="#"><input name="name"><input name="phone"></form><!-- /wp:html --></div><!-- /wp:group -->' )
+	. $footer;
+$home4_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With A Form', 'post_content' => $home4_html ) );
+$made[]   = (int) $home4_id;
+update_post_meta( $home4_id, Page_Scope::META, $home4_id );
+update_post_meta( $home4_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home4_id, '_dxai_ui_css_url', 'dxai-ui/fixture-form.css' );
+$qd    = Team_Pages::build( $home4_id, array( array( 'type' => 'contact', 'title' => '' ) ) );
+$qdid  = ! is_wp_error( $qd ) ? (int) ( $qd['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $qdid;
+$dc    = (string) get_post_field( 'post_content', $qdid );
+$expect( 'the contact page has the Home\'s form', str_contains( $dc, 'form4-x' ) && str_contains( $dc, '<form' ), (string) ( is_wp_error( $qd ) ? $qd->get_error_message() : implode( ',', $qd['pages'][0]['roles'] ?? array() ) ) );
+$expect( 'right after the hero', strpos( $dc, 'hero4-x' ) < strpos( $dc, 'form4-x' ) );
+
+$ar    = Team_Pages::build( $home_id, array( array( 'type' => 'areas', 'title' => '' ) ) );
+$arid  = ! is_wp_error( $ar ) ? (int) ( $ar['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $arid;
+$arc   = (string) get_post_field( 'post_content', $arid );
+$expect( 'the page that lists the service areas opens with the Home\'s areas, not a list of services', str_contains( $arc, 'loc-x' ) && ! str_contains( $arc, 'svc-x' ), implode( ',', $ar['pages'][0]['roles'] ?? array() ) );
+
 $fin();
 
 echo "\n$pass passed, $fail failed\n";

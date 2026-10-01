@@ -173,6 +173,12 @@ $empty = Copy_Writer::propose( $id );
 $expect( 'an empty line is not a change', ! is_wp_error( $empty ) && $empty['changed'] === 0 );
 $expect( 'the words can be read from an answer fenced in a code block', ! is_wp_error( Copy_Writer::parse( "```json\n{\"blocks\":[{\"id\":\"t1\",\"text\":\"A\"}],\"flags\":[]}\n```" ) ) );
 
+$step = '<p class="n">01</p><h3 class="t">You call, we answer</h3><p class="d">Day, night or holiday.</p>';
+$tick = '<span aria-hidden="true" class="tick">✔</span> Live answer';
+$expect( 'the words of a step keep the paragraph and heading they sit in', Copy_Writer::clean( $step ) === $step, Copy_Writer::clean( $step ) );
+$expect( 'and a mark in front of a line keeps its class and that it is hidden from readers', Copy_Writer::clean( $tick ) === $tick, Copy_Writer::clean( $tick ) );
+$expect( 'a script, an event handler and a style are still taken out', Copy_Writer::clean( '<p onclick="x()" style="color:red">A<script>alert(1)</script></p>' ) === '<p>Aalert(1)</p>', Copy_Writer::clean( '<p onclick="x()" style="color:red">A<script>alert(1)</script></p>' ) );
+
 wp_delete_post( $id, true );
 
 echo "\n$pass passed, $fail failed\n";
