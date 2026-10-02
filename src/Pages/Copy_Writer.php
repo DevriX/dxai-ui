@@ -59,9 +59,9 @@ final class Copy_Writer {
 		$n      = 0;
 		self::walk(
 			$blocks,
-			static function ( array &$b, string $section ) use ( &$items, &$n ): void {
+			static function ( array &$b, string $section, ?\stdClass $lock = null ) use ( &$items, &$n ): void {
 				$leaf = self::leaf( $b );
-				if ( $leaf === null ) {
+				if ( $leaf === null || self::locked( $leaf['kind'], $lock ) ) {
 					return;
 				}
 				++$n;
@@ -103,6 +103,7 @@ final class Copy_Writer {
 		$user = Copy_Prompt::prompt( $page_id, $override, $facts )
 			. "\n\n---\n"
 			. "You cannot open the page from here, so its visible text is listed below as numbered blocks: an id, the section it sits in, what kind of block it is, and its current text (the inline tags <strong>, <em> and <br> may appear in it).\n"
+			. "The cards that list this site's other pages, and the ways to reach the company, are facts of the site and are not listed here.\n"
 			. "Rewrite every block that does not fit the topic; return it unchanged when it already fits. Keep headings, labels and buttons about as long as they are. Do not add, remove or reorder blocks, and do not change the ids.\n"
 			. "Answer with one JSON object and nothing else: {\"blocks\":[{\"id\":\"t1\",\"text\":\"...\"}],\"flags\":[\"one short note for each mismatch you noticed\"]}\n"
 			. ( $parts > 1 ? sprintf( "This is part %d of %d of the page; the other parts are sent separately.\n", $part, $parts ) : '' )
@@ -188,8 +189,9 @@ final class Copy_Writer {
 		$applied = 0;
 		self::walk(
 			$blocks,
-			static function ( array &$b, string $section ) use ( &$n, &$applied, $changes ): void {
-				if ( self::leaf( $b ) === null ) {
+			static function ( array &$b, string $section, ?\stdClass $lock = null ) use ( &$n, &$applied, $changes ): void {
+				$leaf = self::leaf( $b );
+				if ( $leaf === null || self::locked( $leaf['kind'], $lock ) ) {
 					return;
 				}
 				++$n;
@@ -368,7 +370,7 @@ final class Copy_Writer {
 	 *
 	 * @param array<int, array<string, mixed>> $blocks
 	 */
-	private static function walk( array &$blocks, callable $fn, int $depth = 0, string $section = '', int $at = -1, ?bool $wrapped = null ): void {
+	private static function walk( array &$blocks, callable $fn, int $depth = 0, string $section = '', int $at = -1, ?bool $wrapped = null, ?\stdClass $lock = null ): void {
 		if ( $wrapped === null ) {
 			$real    = array_values( array_filter( $blocks, static fn( $b ) => ! empty( $b['blockName'] ) ) );
 			$wrapped = count( $real ) === 1 && count( array_filter( (array) ( $real[0]['innerBlocks'] ?? array() ), static fn( $c ) => ! empty( $c['blockName'] ) ) ) >= 3 && empty( $real[0]['attrs']['metadata']['name'] );
@@ -387,12 +389,55 @@ final class Copy_Writer {
 				$sec   = $name !== '' ? $name : ucfirst( Section_Roles::of( $b, $first ) );
 				$first = false;
 			}
-			$fn( $b, $sec );
+			// What a section the site made from its own facts (the pages it links, the ways to reach it) says is not for the copy to
+			// change but its title: a card's title is the page it links to, and a phone number is the company's.
+			$in = $lock;
+			if ( $in === null && self::lock_name( $b ) ) {
+				$in         = new \stdClass();
+				$in->titled = false;
+			}
+			$fn( $b, $sec, $in );
 			if ( ! empty( $b['innerBlocks'] ) ) {
-				self::walk( $b['innerBlocks'], $fn, $depth + 1, $sec, $at, $wrapped );
+				self::walk( $b['innerBlocks'], $fn, $depth + 1, $sec, $at, $wrapped, $in );
 			}
 		}
 		unset( $b );
+	}
+
+	/**
+	 * Whether a block is the section a blueprint made from the site's own facts (Section_Blueprints): its name says so.
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	private static function lock_name( array $b ): bool {
+		$name = (string) ( $b['attrs']['metadata']['name'] ?? '' );
+
+		return $name !== '' && in_array( $name, self::locked_names(), true );
+	}
+
+	/**
+	 * The names the made sections carry in the editor (in the language of the site and in English).
+	 *
+	 * @return array<int, string>
+	 */
+	public static function locked_names(): array {
+		return array_values( array_unique( array( __( 'Related pages', 'dxai-ui' ), __( 'List of pages', 'dxai-ui' ), __( 'Contact details', 'dxai-ui' ), 'Related pages', 'List of pages', 'Contact details' ) ) );
+	}
+
+	/**
+	 * Whether a block's words are left alone: in a made section only its first heading (the title of the section) is for the copy.
+	 */
+	private static function locked( string $kind, ?\stdClass $lock ): bool {
+		if ( $lock === null ) {
+			return false;
+		}
+		if ( $kind === 'heading' && ! $lock->titled ) {
+			$lock->titled = true;
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

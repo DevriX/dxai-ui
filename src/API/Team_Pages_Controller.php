@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace DXAI_UI\API;
 
+use DXAI_UI\Pages\Ai_Budget;
 use DXAI_UI\Pages\Team_Pages;
 use DXAI_UI\Structures\Design_Attach;
 use DXAI_UI\Structures\Page_Scope;
@@ -16,7 +17,8 @@ use DXAI_UI\Structures\Page_Scope;
 /**
  * GET  /team-pages            the designs, and for one (`design`) what it could be asked for (the services and places its Home
  *                             names, the general pages) and the pages already made.
- * POST /team-pages            `plan` what would be made (the order of the sections of each page), or `build` the pages.
+ * POST /team-pages            `plan` what would be made (the order of the sections of each page), `estimate` what an AI plan would cost (nothing is
+ *                             asked; the price a person types is kept), or `build` the pages (with `ai` an AI plans each page: one request).
  */
 final class Team_Pages_Controller {
 
@@ -43,7 +45,7 @@ final class Team_Pages_Controller {
 					'args'                => array(
 						'action' => array(
 							'type'     => 'string',
-							'enum'     => array( 'plan', 'build' ),
+							'enum'     => array( 'plan', 'build', 'estimate' ),
 							'required' => true,
 						),
 						'design' => array(
@@ -58,6 +60,12 @@ final class Team_Pages_Controller {
 							'type'    => 'boolean',
 							'default' => false,
 						),
+						'ai'     => array(
+							'type'    => 'boolean',
+							'default' => false,
+						),
+						'price_in'  => array( 'type' => 'number' ),
+						'price_out' => array( 'type' => 'number' ),
 					),
 				),
 			)
@@ -95,6 +103,10 @@ final class Team_Pages_Controller {
 				'suggestions' => $ok ? Team_Pages::suggestions( $design ) : null,
 				'existing'    => $ok ? $this->existing( $design ) : array(),
 				'kinds'       => array_map( static fn( $k ) => $k['label'], Team_Pages::KINDS ),
+				'ai'          => array(
+					'prices' => Ai_Budget::prices(),
+					'cap'    => Ai_Budget::cap(),
+				),
 			)
 		);
 	}
@@ -116,7 +128,23 @@ final class Team_Pages_Controller {
 		if ( (string) $request->get_param( 'action' ) === 'plan' ) {
 			return new \WP_REST_Response( array( 'plan' => Team_Pages::plan( $design, $wanted ) ) );
 		}
-		$out = Team_Pages::build( $design, $wanted, (bool) $request->get_param( 'force' ) );
+		if ( (string) $request->get_param( 'action' ) === 'estimate' ) {
+			if ( $request->get_param( 'price_in' ) !== null || $request->get_param( 'price_out' ) !== null ) {
+				Ai_Budget::save_prices( (float) $request->get_param( 'price_in' ), (float) $request->get_param( 'price_out' ) );
+			}
+			$est = Team_Pages::estimate( $design, $wanted );
+			if ( is_wp_error( $est ) ) {
+				return $est;
+			}
+
+			return new \WP_REST_Response(
+				array(
+					'estimate' => $est,
+					'prices'   => Ai_Budget::prices(),
+				)
+			);
+		}
+		$out = Team_Pages::build( $design, $wanted, (bool) $request->get_param( 'force' ), array( 'ai' => (bool) $request->get_param( 'ai' ) ) );
 		if ( is_wp_error( $out ) ) {
 			return $out;
 		}

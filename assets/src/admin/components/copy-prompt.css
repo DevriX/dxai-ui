@@ -127,3 +127,9 @@
 	padding: 1px 4px;
 	border-radius: 3px;
 }
+
+#dxai-ui-app .dxai-copy__review {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}

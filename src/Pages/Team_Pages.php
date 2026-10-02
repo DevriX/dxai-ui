@@ -41,6 +41,9 @@ final class Team_Pages {
 	/** On each page: how each of its sections was varied (Section_Variants), one list of names per section, in page order. */
 	public const OPS_META = '_dxai_ui_team_ops';
 
+	/** On a page: how its plan was made (the usual one, or an AI's), and why an AI's was not used. */
+	public const AI_META = '_dxai_ui_team_ai';
+
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
 
@@ -157,9 +160,10 @@ final class Team_Pages {
 	 * and named in `kept`).
 	 *
 	 * @param array<int, array{type:string, title:string}> $wanted
-	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int}|\WP_Error
+	 * @param array{ai?:bool, cap?:int}                    $options ai: an AI plans the sections of each page (one request a page, within the ceiling), the usual plan when it cannot.
+	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>}|\WP_Error
 	 */
-	public static function build( int $home, array $wanted, bool $force = false ) {
+	public static function build( int $home, array $wanted, bool $force = false, array $options = array() ) {
 		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
 			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
@@ -217,13 +221,51 @@ final class Team_Pages {
 			);
 		}
 
+		// An AI plans the sections only when it was asked to, and only if there is an engine to ask.
+		$ai = array(
+			'asked'    => ! empty( $options['ai'] ),
+			'engine'   => null,
+			'budget'   => null,
+			'accepted' => 0,
+			'rejected' => 0,
+			'skipped'  => 0,
+		);
+		if ( $ai['asked'] ) {
+			$engine = Copy_Writer::engine();
+			if ( is_wp_error( $engine ) ) {
+				$log[] = 'AI plan: ' . $engine->get_error_message() . ' — the usual plans are used';
+			} else {
+				$ai['engine'] = $engine;
+				$ai['budget'] = new Ai_Budget( isset( $options['cap'] ) ? (int) $options['cap'] : null );
+			}
+		}
+
 		$done = array();
 		foreach ( $pend as $item ) {
 			$key    = $item['type'] . '|' . $item['slug'];
 			$id     = $ids[ $key ];
 			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
 			$siblings = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
-			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, array_merge( $vary, self::related_rows( $key, $links, (array) $vary['kit']['texts'] ) ) );
+			$page_vary = array_merge( $vary, self::related_rows( $key, $links, (array) $vary['kit']['texts'] ) );
+			$plan      = null;
+			if ( $ai['engine'] !== null ) {
+				$res = Page_Planner::run( $ai['engine'], self::planning_context( $library, $roles, $item, (array) $recipe['roles'], $page_vary ), $ai['budget'] );
+				if ( $res['plan'] !== null ) {
+					$plan = $res['plan'];
+					++$ai['accepted'];
+					$log[] = sprintf( '%s: the AI planned the sections%s', $item['title'], $plan['why'] !== '' ? ' (' . $plan['why'] . ')' : '' );
+				} else {
+					++$ai[ $res['requested'] ? 'rejected' : 'skipped' ];
+					$log[] = sprintf( '%s: the AI plan was not used (%s) — the usual plan', $item['title'], $res['reason'] );
+				}
+				update_post_meta( $id, self::AI_META, wp_json_encode( array( 'plan' => $plan !== null ? 'ai' : 'usual', 'why' => $plan['why'] ?? '', 'reason' => $res['reason'] ) ) );
+			} else {
+				delete_post_meta( $id, self::AI_META );
+			}
+			if ( $plan !== null ) {
+				$page_vary['plan'] = $plan;
+			}
+			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, $page_vary );
 			$wrote = self::write( $id, $home, $built['sections'] );
 			if ( is_wp_error( $wrote ) ) {
 				$log[] = sprintf( '%s: the page did not round-trip (%s) — not written', $item['title'], $wrote->get_error_message() );
@@ -235,7 +277,8 @@ final class Team_Pages {
 				'id'      => $id,
 				'title'   => $item['title'],
 				'type'    => $item['type'],
-				'roles'   => $recipe['roles'],
+				'roles'   => $plan['roles'] ?? $recipe['roles'],
+				'planned' => $plan !== null ? 'ai' : 'usual',
 				'sections' => count( $built['sections'] ),
 				'edit'    => (string) get_edit_post_link( $id, 'raw' ),
 				'view'    => (string) get_permalink( $id ),
@@ -253,6 +296,84 @@ final class Team_Pages {
 			'log'    => $log,
 			'menu'   => $menu,
 			'chrome' => $chrome['pages'],
+			'ai'     => array(
+				'asked'    => $ai['asked'],
+				'accepted' => $ai['accepted'],
+				'rejected' => $ai['rejected'],
+				'skipped'  => $ai['skipped'],
+				'spent'    => $ai['budget'] !== null ? $ai['budget']->spent() : null,
+			),
+		);
+	}
+
+	/**
+	 * What an AI plan of these pages would cost, worked out from the requests that would be made and nothing sent.
+	 *
+	 * @param array<int, array{type:string, title:string}> $wanted
+	 * @return array{requests:int, input:int, output:int, tokens:int, cost:float|null, cap:int, within:bool, pages:int, engine:string}|\WP_Error
+	 */
+	public static function estimate( int $home, array $wanted ) {
+		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
+			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+		}
+		$items   = self::clean_wanted( $wanted );
+		$library = Section_Library::for_page( $home );
+		if ( $items === array() || $library === array() ) {
+			return new \WP_Error( 'dxai_ui_team_none', __( 'Nothing was asked for.', 'dxai-ui' ), array( 'status' => 400 ) );
+		}
+		$seed  = self::seed( $home );
+		$roles = self::home_roles( $library );
+		$kit   = Home_Kit::of( $library );
+		$vary  = array(
+			'kit'   => $kit,
+			'facts' => Home_Kit::facts( $home ),
+		);
+		$links = array();
+		foreach ( $items as $item ) {
+			$links[ $item['type'] . '|' . $item['slug'] ] = array(
+				'title' => $item['title'],
+				'url'   => '',
+				'type'  => $item['type'],
+			);
+		}
+		$calls = array();
+		foreach ( $items as $item ) {
+			$key    = $item['type'] . '|' . $item['slug'];
+			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
+			$req    = Page_Planner::request( self::planning_context( $library, $roles, $item, (array) $recipe['roles'], array_merge( $vary, self::related_rows( $key, $links, (array) $kit['texts'] ) ) ) );
+			$calls[] = array(
+				'in'  => Ai_Budget::tokens( $req['system'] . $req['user'] ),
+				'out' => Ai_Budget::PLAN_OUT,
+			);
+		}
+		$engine = Copy_Writer::engine();
+
+		return Ai_Budget::estimate( $calls ) + array(
+			'pages'  => count( $items ),
+			'engine' => is_wp_error( $engine ) ? '' : $engine->get_label(),
+		);
+	}
+
+	/**
+	 * What a plan of one page is made and checked against: the Home's sections, the usual roles, and which of the sections the
+	 * code makes there are the means to make for it.
+	 *
+	 * @param array<string, mixed> $vary What a page is made with (kit, facts, rows).
+	 * @return array<string, mixed>
+	 */
+	private static function planning_context( array $library, array $roles, array $item, array $usual, array $vary ): array {
+		$kit = (array) ( $vary['kit'] ?? array() );
+		$can = ( $kit['exemplars'] ?? array() ) !== array();
+
+		return Page_Planner::context(
+			$library,
+			$roles,
+			$item,
+			$usual,
+			array(
+				'related' => $can && count( (array) ( $vary['rows'] ?? array() ) ) >= 2,
+				'contact' => $can && count( Section_Blueprints::contact_rows( (array) ( $vary['facts'] ?? array() ) ) ) >= 2,
+			)
 		);
 	}
 
@@ -386,7 +507,7 @@ final class Team_Pages {
 	 * @param array<int, array<string, mixed>> $library
 	 * @return array<string, array<int, int>> role => indexes into $library
 	 */
-	private static function home_roles( array $library ): array {
+	public static function home_roles( array $library ): array {
 		$by = array();
 		foreach ( array_values( $library ) as $i => $component ) {
 			$by[ Section_Roles::of( $component['block'], $i === 0 ) ][] = $i;
@@ -428,7 +549,7 @@ final class Team_Pages {
 	 * @param array<string, array<int, int>>   $roles
 	 * @return array<int, int> Indexes into the library => rank.
 	 */
-	private static function pool( array $library, array $roles, string $role ): array {
+	public static function pool( array $library, array $roles, string $role ): array {
 		$found = self::candidates( $roles, $role );
 		if ( $found !== array() ) {
 			return $found;
@@ -485,6 +606,12 @@ final class Team_Pages {
 		$pictures = array();
 		$topic    = self::topic( $item['title'] );
 		$prev     = -1; // the Home section the page showed last
+		// An AI's plan (Page_Planner, checked): the roles it chose, and for each place the Home's section that fills it.
+		$plan  = is_array( $vary['plan'] ?? null ) ? $vary['plan'] : null;
+		$picks = $plan !== null ? (array) $plan['picks'] : array();
+		if ( $plan !== null ) {
+			$recipe = (array) $plan['roles'];
+		}
 		// The other pages of the site as cards: the Home's cards with a card for each of them. Made before the other sections are
 		// chosen, so the section it is poured into is not also shown as itself: the page lists the site's pages once.
 		$recipe  = array_values( $recipe );
@@ -495,7 +622,11 @@ final class Team_Pages {
 			$wanted = array_merge( $wanted, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
 		}
 		$wanted = array_values( array_unique( $wanted ) );
-		if ( in_array( $item['type'], array( 'contact', 'about' ), true ) && isset( $vary['kit'], $vary['facts'] ) ) {
+		if ( $plan !== null ) {
+			// A plan names the Home's sections it shows; a made section is poured into another one when there is another.
+			$wanted = array_values( array_filter( $picks, 'is_int' ) );
+		}
+		if ( ( $plan !== null ? in_array( 'contact', $recipe, true ) : in_array( $item['type'], array( 'contact', 'about' ), true ) ) && isset( $vary['kit'], $vary['facts'] ) ) {
 			$rows = Section_Blueprints::contact_rows( (array) $vary['facts'] );
 			if ( count( $rows ) >= 2 ) {
 				$refused = array();
@@ -503,10 +634,13 @@ final class Team_Pages {
 				foreach ( $refused as $why ) {
 					$log[] = 'contact: not made from ' . $why;
 				}
-				if ( $contact !== null ) {
+				if ( $contact !== null && $plan === null ) {
 					$form = array_search( 'form', $recipe, true );
 					$hero = array_search( 'hero', $recipe, true );
 					array_splice( $recipe, $item['type'] === 'about' ? self::before_tail( $recipe ) : ( $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ) ), 0, array( 'contact' ) );
+				}
+				// (A made section does not use up the Home's section it was poured into when a plan chose that section to be shown as itself.)
+				if ( $contact !== null && $plan === null ) {
 					$used[ $contact['index'] ] = ( $used[ $contact['index'] ] ?? 0 ) + 1;
 				}
 			}
@@ -514,7 +648,7 @@ final class Team_Pages {
 		$related = null;
 		$at      = array_search( 'related', $recipe, true );
 		$added   = false;
-		if ( $at === false && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
+		if ( $at === false && $plan === null && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
 			// The team's pages end with the site's other pages, then the questions, then the call to action: this page does not
 			// have them, and the Home does not need a section of its own for it (the other pages are the Home's cards).
 			$at    = self::before_tail( $recipe );
@@ -530,12 +664,17 @@ final class Team_Pages {
 					$others = array_merge( $others, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
 				}
 			}
+			if ( $plan !== null ) {
+				$others = array_values( array_filter( $picks, 'is_int' ) );
+			}
 			$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], $seed . '|related', $refused, array_values( array_unique( array_merge( $others, $contact !== null ? array( $contact['index'] ) : array() ) ) ), ! empty( $vary['list'] ) );
 			foreach ( $refused as $why ) {
 				$log[] = 'related: not made from ' . $why;
 			}
 			if ( $related !== null ) {
-				$used[ $related['index'] ] = ( $used[ $related['index'] ] ?? 0 ) + 1;
+				if ( $plan === null ) {
+					$used[ $related['index'] ] = ( $used[ $related['index'] ] ?? 0 ) + 1;
+				}
 			} elseif ( $added ) {
 				// It was not asked for, and cannot be made: the page is as its recipe says.
 				array_splice( $recipe, (int) $at, 1 );
@@ -556,7 +695,7 @@ final class Team_Pages {
 				$prev       = -1;
 				continue;
 			}
-			$cand = self::pool( $library, $roles, (string) $role );
+			$cand = isset( $picks[ $place ] ) ? array( (int) $picks[ $place ] => 0 ) : self::pool( $library, $roles, (string) $role );
 			// A section with a control (a "show more" button) or a widget is not used twice: its script finds it by its id, which a second
 			// copy does not have, so the copy would show less than the Home's does.
 			foreach ( array_keys( $cand ) as $i ) {

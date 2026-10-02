@@ -42,6 +42,8 @@ function Row( { page, facts, engine, onChange } ) {
 	const [ note, setNote ] = useState( '' );
 	const [ proposal, setProposal ] = useState( null );
 	const [ picked, setPicked ] = useState( {} );
+	// Notes on the page: the checks are free; the AI's notes are one request, and what it costs is told first.
+	const [ review, setReview ] = useState( null );
 
 	const fields = { topic, reference, facts };
 
@@ -102,6 +104,15 @@ function Row( { page, facts, engine, onChange } ) {
 				} );
 				setPicked( on );
 			} )
+			.catch( ( e ) => setError( e.message ) )
+			.finally( () => setBusy( '' ) );
+	}
+
+	function check( withAi ) {
+		setBusy( withAi ? 'notes' : 'check' );
+		setError( '' );
+		call( 'critique', { ai: withAi } )
+			.then( setReview )
 			.catch( ( e ) => setError( e.message ) )
 			.finally( () => setBusy( '' ) );
 	}
@@ -179,6 +190,9 @@ function Row( { page, facts, engine, onChange } ) {
 				>
 					{ busy === 'generate' ? __( 'Writing…', 'dxai-ui' ) : __( 'Write with AI', 'dxai-ui' ) }
 				</Button>
+				<Button variant="tertiary" onClick={ () => check( false ) } isBusy={ busy === 'check' } disabled={ !! busy }>
+					{ __( 'Check the page', 'dxai-ui' ) }
+				</Button>
 				{ page.revert && (
 					<Button variant="link" isDestructive onClick={ revert } disabled={ !! busy }>
 						{ __( 'Put the old words back', 'dxai-ui' ) }
@@ -198,6 +212,51 @@ function Row( { page, facts, engine, onChange } ) {
 					onChange={ () => {} }
 					__nextHasNoMarginBottom
 				/>
+			) }
+
+			{ review && (
+				<div className="dxai-copy__review">
+					{ review.checks.length === 0 ? (
+						<p className="dxai-muted">{ __( 'The checks found nothing to say about this page.', 'dxai-ui' ) }</p>
+					) : (
+						<Notice status="warning" isDismissible={ false }>
+							<strong>{ __( 'What the checks found', 'dxai-ui' ) }</strong>
+							<ul>
+								{ review.checks.map( ( n, i ) => <li key={ i }>{ n }</li> ) }
+							</ul>
+						</Notice>
+					) }
+					{ review.notes && (
+						<Notice status="info" isDismissible={ false }>
+							<strong>{ __( 'Notes from the AI (nothing was changed)', 'dxai-ui' ) }</strong>
+							<ul>
+								{ review.notes.map( ( n, i ) => <li key={ i }>{ n }</li> ) }
+							</ul>
+						</Notice>
+					) }
+					{ ! review.notes && (
+						<div className="dxai-actions">
+							<Button
+								variant="secondary"
+								onClick={ () => check( true ) }
+								isBusy={ busy === 'notes' }
+								disabled={ !! busy || ! engine.ready }
+								title={ engine.ready ? undefined : engine.message }
+							>
+								{ sprintf(
+									/* translators: %s: number of tokens. */
+									__( 'Ask the AI for notes (one request, about %s tokens)', 'dxai-ui' ),
+									( review.estimate.tokens || 0 ).toLocaleString()
+								) }
+							</Button>
+							<span className="dxai-muted">
+								{ review.estimate.cost !== null && review.estimate.cost !== undefined
+									? sprintf( /* translators: %s: dollars. */ __( 'About US$%s.', 'dxai-ui' ), Number( review.estimate.cost ).toFixed( 3 ) )
+									: __( 'Set the price of a million tokens under "AI" in Pages in the team\'s style to see the cost in dollars.', 'dxai-ui' ) }
+							</span>
+						</div>
+					) }
+				</div>
 			) }
 
 			{ proposal && (

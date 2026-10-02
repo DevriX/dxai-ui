@@ -9,15 +9,18 @@ declare(strict_types=1);
 
 namespace DXAI_UI\API;
 
+use DXAI_UI\Pages\Ai_Budget;
 use DXAI_UI\Pages\Copy_Prompt;
 use DXAI_UI\Pages\Copy_Writer;
+use DXAI_UI\Pages\Page_Critic;
 use DXAI_UI\Structures\Design_Attach;
 
 /**
  * GET  /copy                  the designs, and the pages of one (`design`) with what their prompts would say.
  * GET  /copy/<page>           one page: its fields, the prompt, and whether words can be put back.
  * POST /copy/<page>           `save` the topic and the reference address, `generate` words with the engine chosen in
- *                             Settings (nothing is saved), `apply` some of them, `revert` the page's words.
+ *                             Settings (nothing is saved), `apply` some of them, `revert` the page's words, `critique` it: free checks, and
+ *                             with `ai` notes from the engine (one request, what it costs said before: ask without `ai` to read it).
  */
 final class Copy_Controller {
 
@@ -59,8 +62,12 @@ final class Copy_Controller {
 					'args'                => array(
 						'action' => array(
 							'type'     => 'string',
-							'enum'     => array( 'save', 'generate', 'apply', 'revert' ),
+							'enum'     => array( 'save', 'generate', 'apply', 'revert', 'critique' ),
 							'required' => true,
+						),
+						'ai'     => array(
+							'type'    => 'boolean',
+							'default' => false,
 						),
 					),
 				),
@@ -130,6 +137,28 @@ final class Copy_Controller {
 			Copy_Prompt::save( $id, $override );
 
 			return new \WP_REST_Response( $this->page_report( $id, $facts ) );
+		}
+		if ( $action === 'critique' ) {
+			$checks = Page_Critic::checks( $id );
+			$out    = array(
+				'checks'   => $checks,
+				'estimate' => Page_Critic::estimate( $id, $checks ),
+				'notes'    => null,
+				'prices'   => Ai_Budget::prices(),
+			);
+			if ( (bool) $request->get_param( 'ai' ) ) {
+				$engine = Copy_Writer::engine();
+				if ( is_wp_error( $engine ) ) {
+					return $engine;
+				}
+				$notes = Page_Critic::ask( $engine, $id, $checks, new Ai_Budget() );
+				if ( is_wp_error( $notes ) ) {
+					return $notes;
+				}
+				$out['notes'] = $notes;
+			}
+
+			return new \WP_REST_Response( $out );
 		}
 		if ( $action === 'generate' ) {
 			$out = Copy_Writer::propose( $id, $override, $facts );
