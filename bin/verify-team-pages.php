@@ -295,7 +295,8 @@ $expect( 'a link to a page that was not made, a phone number and the privacy lin
 $expect( 'a link block says the same in its markup and in its url (or the editor opens it as invalid)', ( $on_home['Water Damage'][0] ?? 'a' ) === ( $on_home['Water Damage'][1] ?? 'b' ) );
 $on_page = $hrefs( $mp['service'] ?? 0 );
 $expect( 'the pages made carry the same menu', ( $on_page['About'][0] ?? '' ) === get_permalink( $mp['about'] ?? 0 ) && ( $on_page['FAQ'][0] ?? '' ) === get_permalink( $mp['faq'] ?? 0 ) );
-$expect( 'links in the body of a page are not the menu', ( $hrefs( $mp['service'] ?? 0 )['Learn more'][0] ?? '#' ) === '#' );
+$learn = (string) ( $hrefs( $mp['service'] ?? 0 )['Learn more'][0] ?? '#' );
+$expect( 'links in the body of a page are not the menu: a card\'s button is the Home\'s own (#) or leads to a page made here, never to the old site', $learn === '#' || $learn === (string) get_permalink( $mp['services'] ?? 0 ) || in_array( $learn, array_map( 'get_permalink', array_values( $mp ) ), true ), $learn );
 $cards_of = static function ( int $id ): array {
 	$out  = array();
 	$walk = static function ( array $bs ) use ( &$walk, &$out ): void {
@@ -478,6 +479,54 @@ $expect( 'and takes the team marker off the page an import took', $claimed['rele
 $expect( 'its key (the import\'s) stays', get_post_meta( $about, Team_Pages::KEY_META, true ) === 'Other Design.zip#about-us' );
 $again2 = Team_Pages::claim();
 $expect( 'doing it again changes nothing', $again2 === array( 'keyed' => 0, 'released' => 0 ), json_encode( $again2 ) );
+
+echo "\nSections the Home does not have, made from what it has (Section_Blueprints)\n";
+$pg = (array) $out['pages'];
+$repeated = array();
+$jammed   = array();
+foreach ( $pg as $p ) {
+	$seen = array();
+	$last = '';
+	foreach ( array_values( Section_Library::for_page( (int) $p['id'] ) ) as $i => $c ) {
+		$h = md5( serialize_block( $c['block'] ) );
+		if ( $h === $last ) {
+			$jammed[] = $p['title'];
+		}
+		if ( isset( $seen[ $h ] ) && \DXAI_UI\Pages\Section_Roles::of( $c['block'], $i === 0 ) !== 'cta' ) {
+			$repeated[] = $p['title'];
+		}
+		$seen[ $h ] = true;
+		$last       = $h;
+	}
+}
+$expect( 'no section is on a page twice in a row', $jammed === array(), implode( ', ', array_unique( $jammed ) ) );
+$expect( 'and a section of the Home is not repeated on a page (a call to action may be: it closes more than one stretch)', $repeated === array(), implode( ', ', array_unique( $repeated ) ) );
+
+$about_c = (string) get_post_field( 'post_content', $by['about|about-us'] ?? 0 );
+$expect( 'the About page ends with the site\'s services, in the Home\'s cards', str_contains( $about_c, (string) get_permalink( $by['service|water-damage'] ?? 0 ) ) && str_contains( $about_c, 'svc-card' ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $about_c ) ), 0, 120 ) );
+$plan_r = Team_Pages::plan( $home_id, array( array( 'type' => 'about', 'title' => '' ) ) );
+$expect( 'the plan says so before anything is made: a list of the site\'s pages, from the Home\'s cards', in_array( 'related', array_column( $plan_r[0]['roles'], 'role' ), true ), json_encode( array_column( $plan_r[0]['roles'], 'role' ) ) );
+$expect( 'the section of a page that lists the pages wears nothing but the Home\'s classes', str_contains( $about_c, 'svc-card' ) && ! preg_match( '/class="[^"]*\b(?:bg-red|text-red)/', $about_c ) );
+
+$home6_html = str_replace( '© Fixture Co. All rights reserved.', '© Fixture Co. 12 Elm St, Tyler, TX. All rights reserved.', $home );
+$home6_id   = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With Contacts', 'post_content' => wp_slash( $home6_html ) ) );
+$made[]     = (int) $home6_id;
+update_post_meta( $home6_id, Page_Scope::META, $home6_id );
+update_post_meta( $home6_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home6_id, '_dxai_ui_css_url', 'dxai-ui/fixture-contacts.css' );
+$cb   = Team_Pages::build( $home6_id, array( array( 'type' => 'contact', 'title' => '' ) ) );
+$cbid = ! is_wp_error( $cb ) ? (int) ( $cb['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $cbid;
+$cc   = (string) get_post_field( 'post_content', $cbid );
+$expect( 'a Home that states a phone number and an address gets the ways to reach it on its contact page', str_contains( $cc, 'Get in touch' ) && str_contains( $cc, '(555) 010-0101' ) && str_contains( $cc, '12 Elm St, Tyler, TX' ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $cc ) ), 0, 200 ) );
+$expect( 'the phone leads to a call, the address leads nowhere', str_contains( $cc, 'href="tel:5550100101"' ) && ! preg_match( '/<a[^>]*>[^<]*12 Elm St/', $cc ) );
+$expect( 'in the Home\'s cards, after the hero', str_contains( $cc, 'svc-card' ) && strpos( $cc, 'hero-x' ) < strpos( $cc, 'Get in touch' ) );
+$expect( 'what the Home says nothing of is not made up: no e-mail', ! str_contains( $cc, 'Email us' ) && ! str_contains( $cc, 'mailto:' ) );
+$cq = Team_Quality::measure( $home6_id );
+$expect( 'the page is measured clean (the Home\'s header and footer, valid blocks, nothing foreign)', ( $cq['gates']['G1'][ $cbid ] ?? array() ) === array() && ( $cq['gates']['G7'][ $cbid ] ?? array() ) === array() && ( $cq['gates']['G9'][ $cbid ] ?? array() ) === array(), json_encode( array( $cq['gates']['G1'][ $cbid ] ?? null, $cq['gates']['G7'][ $cbid ] ?? null, $cq['gates']['G9'][ $cbid ] ?? null ) ) );
+$cb2 = Team_Pages::build( $home_id, array( array( 'type' => 'contact', 'title' => '' ) ), true );
+$cb2id = ! is_wp_error( $cb2 ) ? (int) ( $cb2['pages'][0]['id'] ?? 0 ) : 0;
+$expect( 'a Home that states only a phone number gets no such section (one way to reach it is not a set of cards)', $cb2id > 0 && ! str_contains( (string) get_post_field( 'post_content', $cb2id ), 'Get in touch' ) );
 
 $fin();
 

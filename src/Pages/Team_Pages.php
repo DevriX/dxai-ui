@@ -110,14 +110,29 @@ final class Team_Pages {
 		$seed    = self::seed( $home );
 		$library = Section_Library::for_page( $home );
 		$roles   = self::home_roles( $library );
+		$kit     = Home_Kit::of( $library );
+		$reach   = count( Section_Blueprints::contact_rows( Home_Kit::facts( $home ) ) ) >= 2;
 		$out     = array();
 		foreach ( self::clean_wanted( $wanted ) as $item ) {
 			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
 			$parts  = array();
-			foreach ( $recipe['roles'] as $role ) {
+			$list   = $recipe['roles'];
+			// A page without a list of the site's other pages gets one (compose()), as long as the Home has cards to make it in.
+			if ( $kit['exemplars'] !== array() && ! in_array( 'related', $list, true ) ) {
+				array_splice( $list, self::before_tail( $list ), 0, array( 'related' ) );
+			}
+			// …and the contact page the ways to reach the company, when the Home states two or more, after its form (or its hero).
+			if ( $item['type'] === 'contact' && $reach && $kit['exemplars'] !== array() ) {
+				$form = array_search( 'form', $list, true );
+				$hero = array_search( 'hero', $list, true );
+				array_splice( $list, $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ), 0, array( 'contact' ) );
+			}
+			foreach ( $list as $role ) {
+				// The pages of the site as cards are made in the Home's cards (Section_Blueprints), whether it has such a section or not.
+				$source = $role === 'contact' || self::pool( $library, $roles, $role ) === array() ? ( in_array( $role, array( 'related', 'contact' ), true ) && $kit['exemplars'] !== array() ? 'new' : '' ) : 'home';
 				$parts[] = array(
 					'role'   => $role,
-					'source' => self::pool( $library, $roles, $role ) === array() ? '' : 'home',
+					'source' => $source,
 				);
 			}
 			$existing = self::existing( $home, $item['type'], $item['slug'] );
@@ -165,6 +180,8 @@ final class Team_Pages {
 		$vary  = array(
 			'pool'       => Section_Variants::pool( $library ),
 			'positional' => Section_Variants::positional_classes( $home ),
+			'kit'        => Home_Kit::of( $library ),
+			'facts'      => Home_Kit::facts( $home ),
 		);
 
 		// First every page exists, so the pages can link to each other.
@@ -206,7 +223,7 @@ final class Team_Pages {
 			$id     = $ids[ $key ];
 			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
 			$siblings = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
-			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, $vary );
+			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, array_merge( $vary, self::related_rows( $key, $links, (array) $vary['kit']['texts'] ) ) );
 			$wrote = self::write( $id, $home, $built['sections'] );
 			if ( is_wp_error( $wrote ) ) {
 				$log[] = sprintf( '%s: the page did not round-trip (%s) — not written', $item['title'], $wrote->get_error_message() );
@@ -413,10 +430,23 @@ final class Team_Pages {
 	 */
 	private static function pool( array $library, array $roles, string $role ): array {
 		$found = self::candidates( $roles, $role );
-		if ( $found !== array() || $role !== 'hero' ) {
+		if ( $found !== array() ) {
 			return $found;
 		}
 		$library = array_values( $library );
+		// A Home with no reviews of its own that says it is rated (a bar of badges with "4.9 from 1,240 reviews") has that to show.
+		if ( $role === 'reviews' ) {
+			foreach ( $roles['trust'] ?? array() as $i ) {
+				if ( isset( $library[ $i ]['block'] ) && preg_match( '/\breviews?\b|\brated\b|\bratings?\b|\x{2605}|\bstars?\b/iu', wp_strip_all_tags( serialize_block( (array) $library[ $i ]['block'] ) ) ) === 1 ) {
+					$found[ $i ] = 1;
+				}
+			}
+
+			return $found;
+		}
+		if ( $role !== 'hero' ) {
+			return $found;
+		}
 
 		return isset( $library[0]['block'] ) && is_array( $library[0]['block'] ) && self::has_title_slot( $library[0]['block'] ) ? array( 0 => 1 ) : array();
 	}
@@ -443,7 +473,7 @@ final class Team_Pages {
 	 * @param array<int, string>                           $recipe
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
-	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null} $vary What a section can be varied with (Section_Variants).
+	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
 	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>}
 	 */
 	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
@@ -454,7 +484,78 @@ final class Team_Pages {
 		$ops      = array();
 		$pictures = array();
 		$topic    = self::topic( $item['title'] );
+		$prev     = -1; // the Home section the page showed last
+		// The other pages of the site as cards: the Home's cards with a card for each of them. Made before the other sections are
+		// chosen, so the section it is poured into is not also shown as itself: the page lists the site's pages once.
+		$recipe  = array_values( $recipe );
+		// The ways to reach the company, as the Home states them, in the Home's cards: on the contact page, after its form (or its hero).
+		$contact = null;
+		$wanted  = array();
+		foreach ( $recipe as $other ) {
+			$wanted = array_merge( $wanted, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
+		}
+		$wanted = array_values( array_unique( $wanted ) );
+		if ( $item['type'] === 'contact' && isset( $vary['kit'], $vary['facts'] ) ) {
+			$rows = Section_Blueprints::contact_rows( (array) $vary['facts'] );
+			if ( count( $rows ) >= 2 ) {
+				$refused = array();
+				$contact = Section_Blueprints::contact( (array) $vary['kit'], $library, $rows, __( 'Get in touch', 'dxai-ui' ), $seed . '|contact', $refused, $wanted );
+				foreach ( $refused as $why ) {
+					$log[] = 'contact: not made from ' . $why;
+				}
+				if ( $contact !== null ) {
+					$form = array_search( 'form', $recipe, true );
+					$hero = array_search( 'hero', $recipe, true );
+					array_splice( $recipe, $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ), 0, array( 'contact' ) );
+					$used[ $contact['index'] ] = ( $used[ $contact['index'] ] ?? 0 ) + 1;
+				}
+			}
+		}
+		$related = null;
+		$at      = array_search( 'related', $recipe, true );
+		$added   = false;
+		if ( $at === false && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
+			// The team's pages end with the site's other pages, then the questions, then the call to action: this page does not
+			// have them, and the Home does not need a section of its own for it (the other pages are the Home's cards).
+			$at    = self::before_tail( $recipe );
+			$added = true;
+			array_splice( $recipe, $at, 0, array( 'related' ) );
+		}
+		if ( $at !== false && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
+			$refused = array();
+			// The Home's sections the page's other sections are taken from are left alone while another one will do.
+			$others = array();
+			foreach ( $recipe as $other ) {
+				if ( ! in_array( $other, array( 'related', 'contact' ), true ) ) {
+					$others = array_merge( $others, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
+				}
+			}
+			$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], $seed . '|related', $refused, array_values( array_unique( array_merge( $others, $contact !== null ? array( $contact['index'] ) : array() ) ) ) );
+			foreach ( $refused as $why ) {
+				$log[] = 'related: not made from ' . $why;
+			}
+			if ( $related !== null ) {
+				$used[ $related['index'] ] = ( $used[ $related['index'] ] ?? 0 ) + 1;
+			} elseif ( $added ) {
+				// It was not asked for, and cannot be made: the page is as its recipe says.
+				array_splice( $recipe, (int) $at, 1 );
+			}
+		}
 		foreach ( $recipe as $place => $role ) {
+			if ( $contact !== null && $role === 'contact' ) {
+				$ops[]      = array( $contact['op'] );
+				$sections[] = $contact['block'];
+				$log[]      = sprintf( 'contact ← the cards of Home section %d, with what the Home says about reaching it', $contact['index'] + 1 );
+				$prev       = -1;
+				continue;
+			}
+			if ( $related !== null && $place === $at ) {
+				$ops[]      = array( $related['op'] );
+				$sections[] = $related['block'];
+				$log[]      = sprintf( 'related ← the cards of Home section %d, with the pages of the site', $related['index'] + 1 );
+				$prev       = -1;
+				continue;
+			}
 			$cand = self::pool( $library, $roles, (string) $role );
 			// A section with a control (a "show more" button) or a widget is not used twice: its script finds it by its id, which a second
 			// copy does not have, so the copy would show less than the Home's does.
@@ -465,6 +566,13 @@ final class Team_Pages {
 			}
 			if ( $cand === array() ) {
 				$log[] = sprintf( '%s: the Home has none — left out', $role );
+				continue;
+			}
+			// A section the page has is not shown again (a call to action may be: it closes more than one stretch of a page).
+			// …and never twice in a row.
+			$cand = array_filter( $cand, static fn( $i ) => ( $used[ $i ] ?? 0 ) < ( $role === 'cta' ? 2 : 1 ) && $i !== $prev, ARRAY_FILTER_USE_KEY );
+			if ( $cand === array() ) {
+				$log[] = sprintf( '%s: the Home has no other section for it — left out', $role );
 				continue;
 			}
 			// The one used least so far, a section of the role itself before a stand-in; among equals, a turn the seed decides.
@@ -480,6 +588,7 @@ final class Team_Pages {
 				}
 			}
 			$pick  = $least[ (int) ( sprintf( '%u', crc32( $seed . '|' . $role . '|' . $place ) ) % count( $least ) ) ];
+			$prev  = $pick;
 			$component = $library[ $pick ];
 			$block     = $component['block'];
 			if ( ( $used[ $pick ] ?? 0 ) > 0 ) {
@@ -510,7 +619,7 @@ final class Team_Pages {
 				self::title_hero( $block, $item['title'] );
 			}
 			if ( $role === 'related' && $siblings !== array() ) {
-				$block = self::fill_related( $block, $component, $siblings, $item['title'] );
+				$block = self::fill_related( $block, $component, $siblings, $item['title'], (array) ( $vary['kit']['texts'] ?? array() ) );
 			}
 			$sections[] = $block;
 			$log[]      = sprintf( '%s ← Home section %d (%s)%s', $role, $pick + 1, $component['kind'], $done === array() ? '' : ' — ' . implode( ', ', $done ) );
@@ -520,6 +629,61 @@ final class Team_Pages {
 			'sections' => $sections,
 			'log'      => $log,
 			'ops'      => $ops,
+		);
+	}
+
+	/**
+	 * Where the closing questions and call to action of a recipe begin: the place for the list of the site's other pages.
+	 *
+	 * @param array<int, string> $recipe
+	 */
+	private static function before_tail( array $recipe ): int {
+		$at = count( $recipe );
+		while ( $at > 1 && in_array( $recipe[ $at - 1 ], array( 'faq', 'cta' ), true ) ) {
+			--$at;
+		}
+
+		return $at;
+	}
+
+	/**
+	 * The pages a page links to as "related", and what the list is called: the other services (a short list is made up to a row with
+	 * the page that lists the rest and the About page), the places for the page that lists them; each with the words the Home has
+	 * for a card of that title.
+	 *
+	 * @param array<string, array{title:string, url:string, type:string}> $links All the pages made together, by key.
+	 * @param array<string, string>                                       $texts The Home's card texts by title (Home_Kit).
+	 * @return array{rows:array<int, array{title:string, text:string, url:string}>, heading:string}
+	 */
+	private static function related_rows( string $key, array $links, array $texts ): array {
+		$type = (string) ( $links[ $key ]['type'] ?? '' );
+		$of   = static fn( string $t ): array => array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === $t, ARRAY_FILTER_USE_BOTH ) );
+		if ( $type === 'areas' ) {
+			$pages   = $of( 'location' );
+			$heading = __( 'Where we work', 'dxai-ui' );
+		} else {
+			$pages = $of( 'service' );
+			if ( $type !== 'services' ) {
+				foreach ( array( 'services', 'about' ) as $t ) {
+					if ( count( $pages ) < 3 ) {
+						$pages = array_merge( $pages, $of( $t ) );
+					}
+				}
+			}
+			$heading = $type === 'service' ? __( 'Our other services', 'dxai-ui' ) : __( 'Our services', 'dxai-ui' );
+		}
+		$rows = array();
+		foreach ( $pages as $p ) {
+			$rows[] = array(
+				'title' => $p['title'],
+				'text'  => (string) ( $texts[ mb_strtolower( $p['title'] ) ] ?? '' ),
+				'url'   => $p['url'],
+			);
+		}
+
+		return array(
+			'rows'    => $rows,
+			'heading' => $heading,
 		);
 	}
 
@@ -585,7 +749,7 @@ final class Team_Pages {
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
 	 * @return array<string, mixed>
 	 */
-	private static function fill_related( array $block, array $component, array $siblings, string $this_title ): array {
+	private static function fill_related( array $block, array $component, array $siblings, string $this_title, array $texts = array() ): array {
 		$rep = null;
 		foreach ( (array) $component['repeats'] as $r ) {
 			if ( count( (array) $r['items'] ) >= 3 && ( $r['kind'] ?? '' ) === 'card' ) {
@@ -604,6 +768,13 @@ final class Team_Pages {
 		$keep  = min( count( $items ), count( $siblings ) );
 		$slots = (array) ( $rep['shape']['slots'] ?? array() );
 		$root_type = (string) ( $rep['shape']['root'] ?? '' );
+		// A card with a picture of its own cannot be given another page's title and keep the picture: it is left as the Home has it
+		// (the menu points a card at the page of its heading).
+		foreach ( $slots as $slot ) {
+			if ( $slot['type'] === 'image' && empty( $slot['decor'] ) ) {
+				return $block;
+			}
+		}
 
 		// Fill first, then take out the cards left over (the later ones, so the paths stay right).
 		for ( $k = 0; $k < $keep; $k++ ) {
@@ -613,6 +784,8 @@ final class Team_Pages {
 				Block_Tree::set_link( $item, $siblings[ $k ]['url'] );
 			}
 			$titled = false;
+			$texted = false;
+			$gone   = array();
 			foreach ( $slots as $slot ) {
 				$target = &Block_Tree::at( $item, (array) $slot['path'] );
 				if ( $slot['type'] === 'link' && ! in_array( $root_type, array( 'card' ), true ) ) {
@@ -622,7 +795,21 @@ final class Team_Pages {
 					Block_Tree::set_content( $target, esc_html( $siblings[ $k ]['title'] ) );
 					$titled = true;
 				}
+				// The words under the title are the Home's for a card of that title; another card's words are not left under it.
+				if ( $slot['type'] === 'text' && empty( $slot['decor'] ) && ! $texted ) {
+					$words  = (string) ( $texts[ mb_strtolower( $siblings[ $k ]['title'] ) ] ?? '' );
+					$texted = true;
+					if ( $words !== '' ) {
+						Block_Tree::set_content( $target, esc_html( $words ) );
+					} else {
+						$gone[] = array_map( 'intval', (array) $slot['path'] );
+					}
+				}
 				unset( $target );
+			}
+			rsort( $gone );
+			foreach ( $gone as $p ) {
+				Block_Tree::remove( $item, $p );
 			}
 			unset( $item );
 		}

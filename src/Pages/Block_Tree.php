@@ -246,7 +246,19 @@ final class Block_Tree {
 			$block['attrs']['url'] = $url;
 		}
 		if ( $text !== null && empty( $block['innerBlocks'] ) ) {
-			self::set_content( $block, esc_html( $text ) );
+			if ( $name === 'core/button' ) {
+				// The words of a button are in the link inside its wrapper: the wrapper keeps the link.
+				$put = static fn( string $s ): string => (string) preg_replace_callback( '#(<a\b[^>]*>)(.*?)(</a>)#s', static fn( $m ) => $m[1] . esc_html( $text ) . $m[3], $s, 1 );
+				$block['innerHTML'] = $put( (string) $block['innerHTML'] );
+				foreach ( $block['innerContent'] as $k => $part ) {
+					if ( is_string( $part ) ) {
+						$block['innerContent'][ $k ] = $put( $part );
+						break;
+					}
+				}
+			} else {
+				self::set_content( $block, esc_html( $text ) );
+			}
 		}
 	}
 
@@ -397,6 +409,25 @@ final class Block_Tree {
 			if ( $part === null && ++$seen === $idx ) {
 				array_splice( $parent['innerContent'], $k, 1 );
 				break;
+			}
+		}
+	}
+
+	/**
+	 * Remove the block at $path, and the containers it leaves with nothing in them.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, int>      $path
+	 */
+	public static function remove( array &$block, array $path ): void {
+		while ( $path !== array() ) {
+			$idx    = (int) array_pop( $path );
+			$parent = &self::at( $block, $path );
+			self::drop( $parent, $idx );
+			$left = ! empty( $parent['innerBlocks'] );
+			unset( $parent );
+			if ( $left ) {
+				return;
 			}
 		}
 	}

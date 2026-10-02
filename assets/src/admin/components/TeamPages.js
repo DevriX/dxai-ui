@@ -20,6 +20,7 @@ const ROLE = {
 	cards: __( 'Cards', 'dxai-ui' ),
 	reviews: __( 'Reviews', 'dxai-ui' ),
 	related: __( 'Related', 'dxai-ui' ),
+	contact: __( 'Contact details', 'dxai-ui' ),
 	areas: __( 'Areas', 'dxai-ui' ),
 	form: __( 'Form', 'dxai-ui' ),
 	faq: __( 'FAQ', 'dxai-ui' ),
@@ -201,7 +202,7 @@ export default function TeamPages() {
 							</div>
 							<ol className="dxai-team__roles">
 								{ p.roles.map( ( r, i ) => (
-									<li key={ i } className={ 'dxai-team__role dxai-team__role--' + r.role + ( r.source === '' ? ' is-missing' : '' ) } title={ r.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : '' }>
+									<li key={ i } className={ 'dxai-team__role dxai-team__role--' + r.role + ( r.source === '' ? ' is-missing' : '' ) } title={ r.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : r.source === 'new' ? __( 'Made in the Home\'s own cards, from what the site and the Home say.', 'dxai-ui' ) : '' }>
 										{ ROLE[ r.role ] || r.role }
 									</li>
 								) ) }

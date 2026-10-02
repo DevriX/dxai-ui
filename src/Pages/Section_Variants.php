@@ -497,16 +497,7 @@ final class Section_Variants {
 	 * @param array<int, int>      $path
 	 */
 	private static function remove( array &$block, array $path ): void {
-		while ( $path !== array() ) {
-			$idx    = (int) array_pop( $path );
-			$parent = &Block_Tree::at( $block, $path );
-			Block_Tree::drop( $parent, $idx );
-			$left = ! empty( $parent['innerBlocks'] );
-			unset( $parent );
-			if ( $left ) {
-				return;
-			}
-		}
+		Block_Tree::remove( $block, $path );
 	}
 
 	/** Whether a path is inside one of the repeated groups of the section. @param array<string, mixed> $now @param array<int, int> $path */

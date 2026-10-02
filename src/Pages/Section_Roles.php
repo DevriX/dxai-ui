@@ -73,6 +73,10 @@ final class Section_Roles {
 		if ( ( $len < 260 && $s['images'] >= 2 && $s['buttons'] === 0 ) || preg_match( '/\bstats?\b|numbers|trust|badge|certif|\blogos?\b|partner|insurance/', $name ) === 1 ) {
 			return 'trust';
 		}
+		// A bar of short claims with nothing else in it (no heading, no link): what a design that does not name it still has to show it is trusted.
+		if ( $len < 260 && $s['headings'] === array() && $s['buttons'] === 0 && $s['links'] === 0 && Section_Library::analyze( $block, 0 )['kind'] === 'badges' ) {
+			return 'trust';
+		}
 		if ( $s['buttons'] > 0 && $len < 520 && count( $s['headings'] ) <= 2 ) {
 			return 'cta';
 		}
@@ -82,15 +86,58 @@ final class Section_Roles {
 		if ( $s['columns'] === 2 || ( $s['images'] >= 1 && $len > 200 ) ) {
 			return 'two-col';
 		}
+		// Cards written as plain groups (a heading and a few words in each), beside no picture of the section's own.
+		if ( $s['cards'] >= 3 ) {
+			return 'cards';
+		}
 
 		return $len > 600 ? 'content' : 'text';
+	}
+
+	/**
+	 * The most blocks of one structure in a row inside a block, each with a heading of its own: a set of cards written as groups
+	 * (not as columns or links), which a design made of plain groups has.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function cards_in( array $block ): int {
+		$kids = array_values( array_filter( (array) ( $block['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+		if ( count( $kids ) < 3 ) {
+			return 0;
+		}
+		$best = 0;
+		$runs = array();
+		foreach ( $kids as $c ) {
+			if ( ! in_array( (string) $c['blockName'], array( 'core/group', 'dxai-ui/box', 'dxai-ui/link', 'amr/link-box' ), true ) || ! self::has_heading( $c ) ) {
+				continue;
+			}
+			$sig          = Section_Library::signature( $c );
+			$runs[ $sig ] = ( $runs[ $sig ] ?? 0 ) + 1;
+			$best         = max( $best, $runs[ $sig ] );
+		}
+
+		return $best;
+	}
+
+	/** @param array<string, mixed> $block Whether a heading is anywhere in it. */
+	private static function has_heading( array $block ): bool {
+		if ( ( $block['blockName'] ?? '' ) === 'core/heading' || preg_match( '/^h[1-6]$/', strtolower( (string) ( $block['attrs']['tagName'] ?? '' ) ) ) === 1 ) {
+			return true;
+		}
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $c ) {
+			if ( is_array( $c ) && self::has_heading( $c ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
 	 * What a section holds.
 	 *
 	 * @param array<string, mixed> $block
-	 * @return array{names:array<string, int>, classes:string, text:string, headings:array<int, string>, h1:bool, buttons:int, faq:int, columns:int, images:int, links:int, iframe:bool, trust:bool, form:bool}
+	 * @return array{names:array<string, int>, classes:string, text:string, headings:array<int, string>, h1:bool, buttons:int, faq:int, columns:int, cards:int, images:int, links:int, iframe:bool, trust:bool, form:bool}
 	 */
 	private static function scan( array $block ): array {
 		$out  = array(
@@ -102,6 +149,7 @@ final class Section_Roles {
 			'buttons'  => 0,
 			'faq'      => 0,
 			'columns'  => 0,
+			'cards'    => 0,
 			'images'   => 0,
 			'links'    => 0,
 			'iframe'   => false,
@@ -136,6 +184,7 @@ final class Section_Roles {
 			if ( $n === 'core/columns' ) {
 				$out['columns'] = max( $out['columns'], count( (array) ( $b['innerBlocks'] ?? array() ) ) );
 			}
+			$out['cards'] = max( $out['cards'], self::cards_in( $b ) );
 			if ( in_array( $n, array( 'core/image', 'dx/picture', 'dxai-ui/image' ), true ) ) {
 				++$out['images'];
 			}

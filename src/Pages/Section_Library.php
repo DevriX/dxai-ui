@@ -680,7 +680,11 @@ final class Section_Library {
 			return 'form';
 		}
 		if ( $panels === array() ) {
-			return array_filter( $own, static fn( $s ) => $s['type'] === 'link' ) ? 'cta' : 'skip';
+			if ( array_filter( $own, static fn( $s ) => $s['type'] === 'link' ) ) {
+				return 'cta';
+			}
+
+			return self::is_badges( $own ) ? 'badges' : 'skip';
 		}
 		$texts = array_sum( array_map( static fn( $p ) => count( $p['texts'] ), $panels ) );
 		$links = array_sum( array_map( static fn( $p ) => count( $p['links'] ), $panels ) );
@@ -693,6 +697,29 @@ final class Section_Library {
 		}
 
 		return 'text';
+	}
+
+	/**
+	 * A row of short claims with no heading and no link (a bar of badges: "Licensed", "Same-day service", "4.9 from 1,240 reviews"):
+	 * a run of at least three spans in one text, or at least three short texts of their own.
+	 *
+	 * @param array<int, array<string, mixed>> $own
+	 */
+	private static function is_badges( array $own ): bool {
+		$texts = array_values( array_filter( $own, static fn( $s ) => $s['type'] === 'text' && empty( $s['decor'] ) && trim( (string) $s['text'] ) !== '' ) );
+		if ( $texts === array() || array_filter( $own, static fn( $s ) => in_array( $s['type'], array( 'heading', 'image', 'list', 'widget', 'control' ), true ) && empty( $s['decor'] ) ) ) {
+			return false;
+		}
+		if ( array_sum( array_map( static fn( $s ) => mb_strlen( (string) $s['text'] ), $texts ) ) > 260 ) {
+			return false;
+		}
+		foreach ( $texts as $s ) {
+			if ( count( array_filter( (array) $s['parts'], static fn( $p ) => $p === 'span' ) ) >= 3 ) {
+				return true;
+			}
+		}
+
+		return count( array_filter( $texts, static fn( $s ) => mb_strlen( (string) $s['text'] ) <= 48 ) ) >= 3 && count( array_filter( $texts, static fn( $s ) => mb_strlen( (string) $s['text'] ) > 48 ) ) === 0;
 	}
 
 	/**
