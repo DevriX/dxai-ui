@@ -75,7 +75,9 @@ final class Page_Chrome {
 		if ( $post_id < 1 || ! self::applies_to( $post_id ) ) {
 			return $content;
 		}
-		$have   = Section_Library::chrome_blocks( parse_blocks( $content ) );
+		// As the page is read everywhere else: the group around a design's header, main and footer is opened (a page in the Home's
+		// frame, Page_Frame, has its header and footer inside it).
+		$have   = Section_Library::chrome_blocks( Section_Library::flatten( parse_blocks( $content ) ) );
 		$header = $have['header'] === array() ? self::header_markup( $post_id ) : '';
 		$footer = $have['footer'] === array() ? self::footer_markup( $post_id ) : '';
 		if ( $header === '' && $footer === '' ) {
@@ -99,7 +101,7 @@ final class Page_Chrome {
 
 	/** Whether content carries a header or a footer of its own, in any form (see the class comment). */
 	public static function already_has_chrome( string $content ): bool {
-		$have = Section_Library::chrome_blocks( parse_blocks( $content ) );
+		$have = Section_Library::chrome_blocks( Section_Library::flatten( parse_blocks( $content ) ) );
 
 		return $have['header'] !== array() || $have['footer'] !== array();
 	}

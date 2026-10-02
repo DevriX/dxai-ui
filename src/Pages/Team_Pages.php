@@ -456,6 +456,13 @@ final class Team_Pages {
 		$topic    = self::topic( $item['title'] );
 		foreach ( $recipe as $place => $role ) {
 			$cand = self::pool( $library, $roles, (string) $role );
+			// A section with a control (a "show more" button) or a widget is not used twice: its script finds it by its id, which a second
+			// copy does not have, so the copy would show less than the Home's does.
+			foreach ( array_keys( $cand ) as $i ) {
+				if ( ( $used[ $i ] ?? 0 ) > 0 && ( (array) $library[ $i ]['controls'] !== array() || (array) $library[ $i ]['widgets'] !== array() ) ) {
+					unset( $cand[ $i ] );
+				}
+			}
 			if ( $cand === array() ) {
 				$log[] = sprintf( '%s: the Home has none — left out', $role );
 				continue;

@@ -382,6 +382,7 @@ $wc = (string) get_post_field( 'post_content', $wp['service'] ?? 0 );
 $wtop = array_values( array_filter( parse_blocks( $wc ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
 $expect( 'the pages are made in the Home\'s frame: one group around everything, as the Home has it', count( $wtop ) === 1 && ( $wtop[0]['attrs']['dxaiCss'] ?? '' ) === 'overflow-x:clip' && str_contains( $wc, 'dxs-vtxwrap' ), (string) count( $wtop ) );
 $expect( 'the header, the main with the sections, and the footer are inside it, once each', substr_count( $wc, '<header' ) === 1 && substr_count( $wc, '<footer' ) === 1 && substr_count( $wc, '<main' ) === 1 && str_contains( $wc, 'svc-x' ) && str_contains( $wc, 'cta-x' ) );
+$expect( 'a page in the Home\'s frame is not given a second header and footer when it is shown (Page_Chrome reads it as a design is read)', \DXAI_UI\Chrome\Page_Chrome::with_chrome( $wp['service'] ?? 0, $wc ) === $wc && \DXAI_UI\Chrome\Page_Chrome::already_has_chrome( $wc ) );
 $expect( 'the page still reads as sections', count( Section_Library::for_page( $wp['service'] ?? 0 ) ) >= 4, (string) count( Section_Library::for_page( $wp['service'] ?? 0 ) ) );
 $wq = Team_Quality::measure( $wh );
 $expect( 'the quality measure finds the header, the footer and the frame the Home\'s', $wq['gates']['G1'] === array() && count( $wq['pages'] ) === 2, json_encode( $wq['gates']['G1'] ) );

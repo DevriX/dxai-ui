@@ -55,10 +55,15 @@ function collect(chromeCounts) {
 	let list = [...scope.children];
 	if (list.length === 1 && list[0].children.length >= 3) list = [...list[0].children];
 	list = list.slice(chromeCounts.header, list.length - chromeCounts.footer);
+	// A header and a footer that are not in the page's content (template parts) are rendered around it: not sections.
+	if (chromeCounts.header === 0) while (list.length && (['HEADER', 'NAV'].includes(list[0].tagName) || (list[0].tagName === 'A' && list[0].children.length === 0))) list.shift();
+	if (chromeCounts.footer === 0) while (list.length && list[list.length - 1].tagName === 'FOOTER') list.pop();
 	const sections = [];
 	for (const el of list) {
 		if (el.tagName === 'MAIN') sections.push(...el.children); else sections.push(el);
 	}
+	// What has no height (an anchor span, a mobile menu that is shown on a phone) is not a section.
+	for (let i = sections.length - 1; i >= 0; i--) if (sections[i].getBoundingClientRect().height < 1) sections.splice(i, 1);
 	const props = ['display', 'position', 'flexDirection', 'flexWrap', 'justifyContent', 'alignItems', 'gap', 'gridTemplateColumns', 'textAlign', 'color', 'backgroundColor', 'backgroundImage', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'textTransform', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginBottom', 'borderTopWidth', 'borderTopColor', 'borderTopLeftRadius'];
 	const hash = (str) => { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
 	const out = { colors: { fg: [], bg: [], border: [] }, fonts: [], headingLefts: [], sections: [], overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, height: document.documentElement.scrollHeight };
@@ -69,6 +74,7 @@ function collect(chromeCounts) {
 		const cs = getComputedStyle(sec);
 		let fp = '', l = 1e9, r = -1e9, ownText = 0;
 		const styles = new Set();
+		const hl = [];
 		const tiny = [], taps = [], body = [], narrow = [], wide = [];
 		const els = [sec, ...sec.querySelectorAll('*')];
 		for (const e of els) {
@@ -82,7 +88,7 @@ function collect(chromeCounts) {
 			if (own) {
 				fg.add(c.color); fonts.add(c.fontFamily.split(',')[0].replace(/["']/g, '').trim()); ownText++;
 				l = Math.min(l, rr.left); r = Math.max(r, rr.right);
-				if (/^H[1-3]$/.test(e.tagName)) lefts.add(Math.round(rr.left));
+				if (/^H[1-3]$/.test(e.tagName)) { lefts.add(Math.round(rr.left)); hl.push(Math.round(rr.left)); }
 				if (['P', 'LI'].includes(e.tagName) && own.length >= 40 && parseFloat(c.fontSize) < 16) body.push(e.tagName + ' ' + c.fontSize + ' "' + own.slice(0, 20) + '"');
 			}
 			if (e.tagName === 'IMG') { l = Math.min(l, rr.left); r = Math.max(r, rr.right); }
@@ -97,7 +103,7 @@ function collect(chromeCounts) {
 		out.sections.push({
 			top: Math.round(sr.top + window.scrollY), height: Math.round(sr.height), left: Math.round(sr.left), width: Math.round(sr.width),
 			pt: px(cs.paddingTop), pb: px(cs.paddingBottom), l: l > 1e8 ? null : Math.round(l), r: r < -1e8 ? null : Math.round(r),
-			fp: hash(fp), styles: [...styles], texts: ownText, tiny: body, taps, narrow, wide,
+			fp: hash(fp), styles: [...styles], hl, texts: ownText, tiny: body, taps, narrow, wide,
 		});
 	}
 	out.colors = { fg: [...fg], bg: [...bg], border: [...bd] };
@@ -156,6 +162,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 	const tokenColors = Object.values(data.tokens || {}).map(hexToRgb).filter(Boolean);
 	const gates = { G2: {}, G3: {}, G4: {}, G5: {}, G6: {} };
 	const add = (g, id, msg) => { (gates[g][id] = gates[g][id] || []).push(msg); };
+	const notes = {};
 	for (const p of pages) {
 		for (const width of WIDTHS) {
 			const H = seen[width + ':' + data.home.id], P = seen[width + ':' + p.id];
@@ -174,7 +181,9 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 				if (bad.length) add('G3', p.id, `fonts the Home does not have: ${bad.join(', ')}`);
 			}
 			// G4 · the frame
-			const badLeft = P.headingLefts.filter((x) => !near(x, H.headingLefts, 2));
+			// Headings of a row whose sides were swapped on purpose (the flip variant) are on the other side.
+			const flipped = new Set(p.sections.map((x, i) => ((x.ops || []).includes('flip') ? i : -1)).filter((i) => i >= 0));
+			const badLeft = P.sections.flatMap((q, i) => (flipped.has(i) ? [] : q.hl)).filter((x) => !near(x, H.headingLefts, 2));
 			if (badLeft.length) add('G4', p.id, `${tag}: headings start at ${badLeft.slice(0, 3).join(', ')}px, the Home's start at ${H.headingLefts.slice(0, 4).join(', ')}px`);
 			const hpt = H.sections.map((s) => s.pt), hpb = H.sections.map((s) => s.pb);
 			const badPad = P.sections.filter((s) => !near(s.pt, hpt, 1) || !near(s.pb, hpb, 1));
@@ -185,7 +194,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 			// G5 · what was reused
 			const info = p.sections;
 			if (info.length !== P.sections.length) {
-				add('G5', p.id, `${tag}: the page has ${P.sections.length} sections on screen and ${info.length} in its blocks — not compared`);
+				(notes[p.id] = notes[p.id] || new Set()).add(`${tag}: ${P.sections.length} sections on screen, ${info.length} in its blocks`);
 			} else {
 				info.forEach((s, i) => {
 					if (!['home', 'derived'].includes(s.origin) || s.home_index == null || !H.sections[s.home_index]) return;
@@ -234,6 +243,8 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 		if (badIds.length > 40) console.log(`      … and ${badIds.length - 40} more`);
 		if (!ok && !allow.has(g)) failed.push(g);
 	}
+	const unmapped = Object.keys(notes).filter((id) => !only || only.has(Number(id)));
+	if (unmapped.length) console.log(`\nG5 could not tell the sections of ${unmapped.length} pages from the other elements of their page (a Home whose header or footer is not marked as such); their styles were not compared: ${unmapped.slice(0, 8).join(', ')}`);
 	console.log('\nG10  speed — not measured yet');
 	if (opt.report) fs.writeFileSync(opt.report, JSON.stringify({ rows, gates: all, measured: seen }, null, 1));
 	process.exit(failed.length ? 1 : 0);
