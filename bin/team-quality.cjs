@@ -74,6 +74,7 @@ function collect(chromeCounts) {
 		const cs = getComputedStyle(sec);
 		let fp = '', l = 1e9, r = -1e9, ownText = 0;
 		const styles = new Set();
+		const loose = new Set(); // the same, without the size of the tracks of a grid (a set of cards with fewer cards has wider ones) and the margins (a link pushed to the foot of a card with less to say sits lower)
 		const hl = [];
 		const tiny = [], taps = [], body = [], narrow = [], wide = [];
 		const els = [sec, ...sec.querySelectorAll('*')];
@@ -82,16 +83,26 @@ function collect(chromeCounts) {
 			const c = getComputedStyle(e);
 			const one = e.tagName + ':' + props.map((p) => c[p]).join('|');
 			fp += one + ';';
-			styles.add(hash(one));
+			// A link a card's heading was given (the menu points a card at its page) is the heading's own look: its colour is G2's, not a new style.
+			if (!(e.tagName === 'A' && e.parentElement && /^H[1-6]$/.test(e.parentElement.tagName))) { styles.add(hash(one)); loose.add(hash(e.tagName + ':' + props.map((p) => (['gridTemplateColumns', 'marginTop', 'marginBottom'].includes(p) ? '' : c[p])).join('|'))); }
 			const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join(' ').trim();
 			const rr = e.getBoundingClientRect();
 			if (own) {
 				fg.add(c.color); fonts.add(c.fontFamily.split(',')[0].replace(/["']/g, '').trim()); ownText++;
 				l = Math.min(l, rr.left); r = Math.max(r, rr.right);
-				if (/^H[1-3]$/.test(e.tagName)) { lefts.add(Math.round(rr.left)); hl.push(Math.round(rr.left)); }
+				// A heading centred on the page is on the frame by being centred: its left edge is its width's, not the Home's.
+				const centred = c.textAlign === 'center' && Math.abs(rr.left + rr.width / 2 - vw / 2) <= 2;
+				if (/^H[1-3]$/.test(e.tagName) && !centred) { lefts.add(Math.round(rr.left)); hl.push(Math.round(rr.left)); }
 				if (['P', 'LI'].includes(e.tagName) && own.length >= 40 && parseFloat(c.fontSize) < 16) body.push(e.tagName + ' ' + c.fontSize + ' "' + own.slice(0, 20) + '"');
 			}
-			if (e.tagName === 'IMG') { l = Math.min(l, rr.left); r = Math.max(r, rr.right); }
+			if (e.tagName === 'IMG') {
+				// The part of a picture that shows: a background picture wider than its section is clipped by it.
+				let il = rr.left, ir = rr.right;
+				for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+					if (getComputedStyle(a).overflowX !== 'visible') { const ar = a.getBoundingClientRect(); il = Math.max(il, ar.left); ir = Math.min(ir, ar.right); }
+				}
+				if (ir > il) { l = Math.min(l, il); r = Math.max(r, ir); }
+			}
 			const b = c.backgroundColor; if (b && !/rgba?\(0, 0, 0, 0\)|transparent/.test(b)) bg.add(b);
 			if (parseFloat(c.borderTopWidth) > 0 && c.borderTopStyle !== 'none') bd.add(c.borderTopColor);
 			if (rr.right > vw + 1 && !e.closest('[aria-hidden=true], .overflow-hidden, [style*="overflow"]')) wide.push(e.tagName + '.' + [...e.classList].slice(0, 2).join('.'));
@@ -103,7 +114,7 @@ function collect(chromeCounts) {
 		out.sections.push({
 			top: Math.round(sr.top + window.scrollY), height: Math.round(sr.height), left: Math.round(sr.left), width: Math.round(sr.width),
 			pt: px(cs.paddingTop), pb: px(cs.paddingBottom), l: l > 1e8 ? null : Math.round(l), r: r < -1e8 ? null : Math.round(r),
-			fp: hash(fp), styles: [...styles], hl, texts: ownText, tiny: body, taps, narrow, wide,
+			fp: hash(fp), styles: [...styles], loose: [...loose], hl, texts: ownText, tiny: body, taps, narrow, wide,
 		});
 	}
 	out.colors = { fg: [...fg], bg: [...bg], border: [...bd] };
@@ -137,7 +148,16 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 	};
 	const measure = async (page, t) => {
 		await page.goto(t.url, { waitUntil: 'networkidle2', timeout: 90000 });
-		await page.evaluate(async () => { await document.fonts.ready; const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } window.scrollTo(0, 0); await new Promise((r) => setTimeout(r, 300)); });
+		// Every picture is loaded before anything is measured: a lazy one far down a long page (the Home) is not, and one near the top of a short page (a made page) is, which is a difference of the measure and not of the pages.
+		await page.evaluate(async () => {
+			await document.fonts.ready;
+			for (const i of document.images) i.loading = 'eager';
+			const h = document.documentElement.scrollHeight;
+			for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); }
+			await Promise.all([...document.images].map((i) => (i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; setTimeout(r, 6000); }))));
+			window.scrollTo(0, 0);
+			await new Promise((r) => setTimeout(r, 300));
+		});
 		return page.evaluate(collect, data.home.chrome);
 	};
 	for (const width of [...WIDTHS, ...OVERFLOW_WIDTHS]) {
@@ -183,7 +203,15 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 			// G4 · the frame
 			// Headings of a row whose sides were swapped on purpose (the flip variant) are on the other side.
 			const flipped = new Set(p.sections.map((x, i) => ((x.ops || []).includes('flip') ? i : -1)).filter((i) => i >= 0));
-			const badLeft = P.sections.flatMap((q, i) => (flipped.has(i) ? [] : q.hl)).filter((x) => !near(x, H.headingLefts, 2));
+			// A new section of cards (the site's pages, the ways to reach it) has as many cards as the site has things to say: its columns are the
+			// Home's grid with fewer cards, so a title stands anywhere between the Home's titles (the content's left and right edges are G4's other rules).
+			const isNew = (i) => (p.sections[i].ops || []).some((o) => /^(related|contact):/.test(o));
+			const lo = Math.min(...H.headingLefts), hi = Math.max(...H.headingLefts);
+			const badLeft = P.sections.flatMap((q, i) => {
+				if (flipped.has(i)) return [];
+				if (!isNew(i)) return q.hl.filter((x) => !near(x, H.headingLefts, 2));
+				return q.hl.filter((x) => x < lo - 2 || x > hi + 2);
+			});
 			if (badLeft.length) add('G4', p.id, `${tag}: headings start at ${badLeft.slice(0, 3).join(', ')}px, the Home's start at ${H.headingLefts.slice(0, 4).join(', ')}px`);
 			const hpt = H.sections.map((s) => s.pt), hpb = H.sections.map((s) => s.pb);
 			const badPad = P.sections.filter((s) => !near(s.pt, hpt, 1) || !near(s.pb, hpb, 1));
@@ -199,8 +227,9 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 				info.forEach((s, i) => {
 					if (!['home', 'derived'].includes(s.origin) || s.home_index == null || !H.sections[s.home_index]) return;
 					const h = H.sections[s.home_index], q = P.sections[i];
-					const known = new Set(h.styles);
-					const extra = q.styles.filter((x) => !known.has(x));
+					const poured = (s.ops || []).some((o) => /^(related|contact):/.test(o));
+					const known = new Set(poured ? h.loose : h.styles);
+					const extra = (poured ? q.loose : q.styles).filter((x) => !known.has(x));
 					if (extra.length) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) uses ${extra.length} styles that the Home's section ${s.home_index + 1} does not`);
 					else if (q.left !== h.left || q.width !== h.width) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) sits at ${q.left}/${q.width}px, the Home's at ${h.left}/${h.width}px`);
 					else if (s.identical && q.fp !== h.fp) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) is the Home's word for word and is not styled as it is`);
