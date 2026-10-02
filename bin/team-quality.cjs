@@ -205,7 +205,10 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 			const flipped = new Set(p.sections.map((x, i) => ((x.ops || []).includes('flip') ? i : -1)).filter((i) => i >= 0));
 			// A new section of cards (the site's pages, the ways to reach it) has as many cards as the site has things to say: its columns are the
 			// Home's grid with fewer cards, so a title stands anywhere between the Home's titles (the content's left and right edges are G4's other rules).
-			const isNew = (i) => (p.sections[i].ops || []).some((o) => /^(related|contact):/.test(o));
+			// (A page whose sections the browser cannot tell from the Home's chrome is read as a whole: one new section anywhere makes them all lenient.)
+			const hasNew = (s) => (s.ops || []).some((o) => /^(related|contact|list):/.test(o));
+			const mapped = p.sections.length === P.sections.length;
+			const isNew = (i) => (mapped ? hasNew(p.sections[i]) : p.sections.some(hasNew));
 			const lo = Math.min(...H.headingLefts), hi = Math.max(...H.headingLefts);
 			const badLeft = P.sections.flatMap((q, i) => {
 				if (flipped.has(i)) return [];
@@ -227,7 +230,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 				info.forEach((s, i) => {
 					if (!['home', 'derived'].includes(s.origin) || s.home_index == null || !H.sections[s.home_index]) return;
 					const h = H.sections[s.home_index], q = P.sections[i];
-					const poured = (s.ops || []).some((o) => /^(related|contact):/.test(o));
+					const poured = (s.ops || []).some((o) => /^(related|contact|list):/.test(o));
 					const known = new Set(poured ? h.loose : h.styles);
 					const extra = (poured ? q.loose : q.styles).filter((x) => !known.has(x));
 					if (extra.length) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) uses ${extra.length} styles that the Home's section ${s.home_index + 1} does not`);
