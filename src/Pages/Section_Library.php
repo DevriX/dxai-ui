@@ -307,6 +307,8 @@ final class Section_Library {
 			'slots'    => $own,
 			'panels'   => $panels,
 			'repeats'  => array_values( array_filter( $repeats, static fn( $r ) => ! $r['disclosure'] ) ),
+			// What a "show more" button reveals: the items that continue a list shown above it.
+			'hidden'   => array_values( array_filter( $repeats, static fn( $r ) => $r['disclosure'] ) ),
 			'controls' => array_values( array_map( static fn( $s ) => $s['path'], array_filter( $own, static fn( $s ) => $s['type'] === 'control' ) ) ),
 			'images'   => array_values( array_filter( $own, static fn( $s ) => $s['type'] === 'image' ) ),
 			'widgets'  => array_values( array_filter( $own, static fn( $s ) => $s['type'] === 'widget' ) ),

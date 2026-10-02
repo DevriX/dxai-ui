@@ -136,6 +136,10 @@ final class Team_Quality {
 			if ( $mine[1] > $base[1] ) {
 				$bad[] = 'more HTML blocks than the Home';
 			}
+			$nested = self::links_in_links( $markup ) - self::links_in_links( $home_markup );
+			if ( $nested > 0 ) {
+				$bad[] = sprintf( '%d links inside links (the browser breaks them apart)', $nested );
+			}
 			$unknown = self::unregistered( $blocks );
 			if ( $unknown !== array() ) {
 				$bad[] = 'unregistered blocks: ' . implode( ', ', $unknown );
@@ -463,6 +467,30 @@ final class Team_Quality {
 	 * @param array<int, array<string, mixed>> $blocks
 	 * @return array<int, string>
 	 */
+	/**
+	 * How many links are opened inside a link, read from the page's markup as it is written (the browser, reading the same, closes the
+	 * outer link at the inner one and the page falls apart).
+	 */
+	private static function links_in_links( string $markup ): int {
+		$plain = (string) preg_replace( '/<!--.*?-->/s', '', $markup );
+		$depth = 0;
+		$found = 0;
+		if ( preg_match_all( '#<(/?)a\b[^>]*>#i', $plain, $m ) ) {
+			foreach ( $m[1] as $close ) {
+				if ( $close === '/' ) {
+					$depth = max( 0, $depth - 1 );
+					continue;
+				}
+				if ( $depth > 0 ) {
+					++$found;
+				}
+				++$depth;
+			}
+		}
+
+		return $found;
+	}
+
 	private static function unregistered( array $blocks ): array {
 		$found = array();
 		$walk  = static function ( array $bs ) use ( &$walk, &$found ): void {

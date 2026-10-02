@@ -21,32 +21,87 @@ final class Section_Refill {
 	 *
 	 * @param array<string, mixed>                                      $component Section_Library::analyze() of the Home's section.
 	 * @param array<string, mixed>                                      $rep       Its set of cards (one of its repeats).
-	 * @param array<int, array{title:string, text:string, url:string, label?:string}> $rows What each card says; the section shows as many as it has cards, no more. A row with no
-	 *        address has a card that leads nowhere (an address to visit), which a card that is a link as a whole cannot be; "label" is what a link inside the card says.
+	 * @param array<int, array{title:string, text:string, url:string, label?:string}> $rows What each card says. A row with no address has a card that leads nowhere (an address
+	 *        to visit), which a card that is a link as a whole cannot be; "label" is what a link inside the card says. A row whose title is a card of the Home's gets that card
+	 *        (its icon, its look) and the others take the cards that are left, in turn.
+	 * @param int                                                       $grow      How many cards a list of pages may have: 0 shows as many as the Home's section has cards, a number
+	 *        shows as many as there are rows up to it (the Home's cards are copied, in turn, for the rest).
 	 * @return array<string, mixed>|null The section as a block, or null when it cannot hold them (fewer than two rows, a shape this does not know).
 	 */
-	public static function cards( array $component, array $rep, string $heading, array $rows, string $name = '' ): ?array {
-		$items = array_values( (array) $rep['items'] );
-		$count = count( $items );
-		$n     = min( $count, count( $rows ) );
-		if ( $n < 2 || trim( $heading ) === '' ) {
+	public static function cards( array $component, array $rep, string $heading, array $rows, string $name = '', int $grow = 0 ): ?array {
+		if ( count( $rows ) < 2 || trim( $heading ) === '' ) {
 			return null;
 		}
-		$rows  = array_slice( array_values( $rows ), 0, $n );
 		$block = (array) $component['block'];
-		$path  = array_values( array_map( 'intval', (array) $rep['path'] ) );
 
 		try {
-			// Fewer cards than the Home has: the later ones go, last first, so the others keep their places.
-			if ( $n < $count ) {
-				$parent = &Block_Tree::at( $block, $path );
-				for ( $k = $count - 1; $k >= $n; $k-- ) {
-					Block_Tree::drop( $parent, (int) $items[ $k ] );
-				}
-				unset( $parent );
+			// The Home's cards as they are, to take a card from: by the title, a card for a page that is a card of the Home's.
+			$orig_titles = array();
+			$orig_blocks = array();
+			$orig_rows   = Home_Kit::rows( $component, $rep );
+			foreach ( array_values( (array) $rep['items'] ) as $k => $index ) {
+				$orig_titles[] = mb_strtolower( (string) ( $orig_rows[ $k ]['title'] ?? '' ) );
+				$orig_blocks[] = Block_Tree::at( $block, array_merge( array_map( 'intval', (array) $rep['path'] ), array( (int) $index ) ) );
 			}
 
+			// A "show more" button and what it reveals go: the section shows all of its cards. Any other control is the Home's own.
+			$more    = Home_Kit::show_more( $block );
+			$control = array_map( static fn( $p ) => array_map( 'intval', (array) $p ), (array) $component['controls'] );
+			if ( $control !== array() && $more === array() ) {
+				return null;
+			}
+			self::remove_all( $block, array_merge( $more, $control ) );
+
 			// The section as it is now: its cards, and where each says what.
+			$now = Section_Library::analyze( $block, (int) $component['index'] );
+			$set = null;
+			foreach ( (array) $now['repeats'] as $r ) {
+				if ( ( $r['kind'] ?? '' ) === 'card' && count( (array) $r['items'] ) >= 2 && ( $set === null || count( (array) $r['items'] ) > count( (array) $set['items'] ) ) ) {
+					$set = $r;
+				}
+			}
+			if ( $set === null || (array) $now['panels'] === array() ) {
+				return null;
+			}
+			$path  = array_map( 'intval', (array) $set['path'] );
+			$items = array_values( array_map( 'intval', (array) $set['items'] ) );
+			$count = count( $items );
+			$n     = min( $grow > 0 ? $grow : $count, count( $rows ) );
+			if ( $n < 2 ) {
+				return null;
+			}
+			$rows = array_slice( array_values( $rows ), 0, $n );
+			$root = (string) ( $set['shape']['root'] ?? '' );
+			// A card that is a link box of the design's (amr/link-box) is a link as a whole, as a link with blocks in it is: a link inside it
+			// would be a link inside a link, which the browser breaks apart.
+			$first = Block_Tree::at( $block, array_merge( $path, array( $items[0] ) ) );
+			if ( (string) ( $first['blockName'] ?? '' ) === 'amr/link-box' ) {
+				$root = 'card';
+			}
+			if ( in_array( $root, array( 'card', 'link' ), true ) && array_filter( $rows, static fn( $r ) => (string) $r['url'] === '' ) ) {
+				return null;
+			}
+
+			// Which of the Home's cards each row takes; the cards are put in their places, the later ones go, and more are copied for a list.
+			$take   = $count === count( $orig_blocks ) ? self::templates( $orig_titles, $rows, $count ) : array();
+			$parent = &Block_Tree::at( $block, $path );
+			for ( $k = 0; $k < min( $n, $count ); $k++ ) {
+				if ( isset( $take[ $k ] ) ) {
+					$parent['innerBlocks'][ $items[ $k ] ] = $orig_blocks[ $take[ $k ] ];
+				}
+			}
+			for ( $k = $count - 1; $k >= $n; $k-- ) {
+				Block_Tree::drop( $parent, $items[ $k ] );
+			}
+			for ( $k = $count; $k < $n; $k++ ) {
+				$copy = $orig_blocks[ $take[ $k ] ?? ( $k % $count ) ] ?? $parent['innerBlocks'][ $items[ $k % $count ] ];
+				Block_Tree::insert( $parent, $items[ $count - 1 ] + 1 + ( $k - $count ), $copy );
+			}
+			unset( $parent );
+
+			// Read again, and the cards filled. The heading is this section's; the words the Home had around the cards were about something else.
+			// Where they are is read before the filling, while the cards are alike: a card without words has another shape, and would
+			// no longer be taken for a card.
 			$now = Section_Library::analyze( $block, (int) $component['index'] );
 			$set = null;
 			foreach ( (array) $now['repeats'] as $r ) {
@@ -58,16 +113,10 @@ final class Section_Refill {
 				return null;
 			}
 			$slots = (array) $set['shape']['slots'];
-			$root  = (string) ( $set['shape']['root'] ?? '' );
-			if ( in_array( $root, array( 'card', 'link' ), true ) && array_filter( $rows, static fn( $r ) => (string) $r['url'] === '' ) ) {
-				return null;
-			}
-			// The heading is this section's; the words the Home had around the cards were about something else. Where they are is
-			// read now, while the cards are alike: a card without words has another shape, and would no longer be taken for a card.
-			$head = array_map( 'intval', (array) $now['panels'][0]['heading'] );
-			$gone = array();
+			$head  = array_map( 'intval', (array) $now['panels'][0]['heading'] );
+			$gone  = array();
 			foreach ( (array) $now['slots'] as $slot ) {
-				if ( array_map( 'intval', (array) $slot['path'] ) === $head || ! empty( $slot['decor'] ) || ! in_array( $slot['type'], array( 'text', 'list', 'link', 'heading' ), true ) ) {
+				if ( array_map( 'intval', (array) $slot['path'] ) === $head || ! empty( $slot['decor'] ) || ! in_array( $slot['type'], array( 'text', 'list', 'link', 'heading', 'card' ), true ) ) {
 					continue;
 				}
 				$gone[] = array_map( 'intval', (array) $slot['path'] );
@@ -89,6 +138,36 @@ final class Section_Refill {
 		}
 
 		return $block;
+	}
+
+	/**
+	 * Which of the Home's cards each row takes: the card with the row's own title if the Home has one (its icon goes with it), and the
+	 * cards that are left, in order, for the others; a list longer than the Home's cards goes round again.
+	 *
+	 * @param array<int, string>                $titles The Home's cards' titles, lower case.
+	 * @param array<int, array<string, string>> $rows
+	 * @return array<int, int> Row => the index of a card of the Home's.
+	 */
+	private static function templates( array $titles, array $rows, int $count ): array {
+		$use   = array();
+		$taken = array();
+		foreach ( $rows as $k => $row ) {
+			$j = array_search( mb_strtolower( (string) $row['title'] ), $titles, true );
+			if ( $j !== false && ! isset( $taken[ $j ] ) ) {
+				$use[ $k ]   = (int) $j;
+				$taken[ $j ] = true;
+			}
+		}
+		$free = array_values( array_diff( array_keys( $titles ), array_keys( $taken ) ) );
+		$next = 0;
+		foreach ( array_keys( $rows ) as $k ) {
+			if ( ! isset( $use[ $k ] ) ) {
+				$use[ $k ] = $next < count( $free ) ? (int) $free[ $next++ ] : (int) ( $k % max( 1, $count ) );
+			}
+		}
+		ksort( $use );
+
+		return $use;
 	}
 
 	/**

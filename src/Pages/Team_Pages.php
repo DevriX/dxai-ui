@@ -122,10 +122,10 @@ final class Team_Pages {
 				array_splice( $list, self::before_tail( $list ), 0, array( 'related' ) );
 			}
 			// …and the contact page the ways to reach the company, when the Home states two or more, after its form (or its hero).
-			if ( $item['type'] === 'contact' && $reach && $kit['exemplars'] !== array() ) {
+			if ( in_array( $item['type'], array( 'contact', 'about' ), true ) && $reach && $kit['exemplars'] !== array() ) {
 				$form = array_search( 'form', $list, true );
 				$hero = array_search( 'hero', $list, true );
-				array_splice( $list, $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ), 0, array( 'contact' ) );
+				array_splice( $list, $item['type'] === 'about' ? self::before_tail( $list ) : ( $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ) ), 0, array( 'contact' ) );
 			}
 			foreach ( $list as $role ) {
 				// The pages of the site as cards are made in the Home's cards (Section_Blueprints), whether it has such a section or not.
@@ -473,7 +473,7 @@ final class Team_Pages {
 	 * @param array<int, string>                           $recipe
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
-	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
+	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
 	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>}
 	 */
 	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
@@ -495,7 +495,7 @@ final class Team_Pages {
 			$wanted = array_merge( $wanted, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
 		}
 		$wanted = array_values( array_unique( $wanted ) );
-		if ( $item['type'] === 'contact' && isset( $vary['kit'], $vary['facts'] ) ) {
+		if ( in_array( $item['type'], array( 'contact', 'about' ), true ) && isset( $vary['kit'], $vary['facts'] ) ) {
 			$rows = Section_Blueprints::contact_rows( (array) $vary['facts'] );
 			if ( count( $rows ) >= 2 ) {
 				$refused = array();
@@ -506,7 +506,7 @@ final class Team_Pages {
 				if ( $contact !== null ) {
 					$form = array_search( 'form', $recipe, true );
 					$hero = array_search( 'hero', $recipe, true );
-					array_splice( $recipe, $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ), 0, array( 'contact' ) );
+					array_splice( $recipe, $item['type'] === 'about' ? self::before_tail( $recipe ) : ( $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ) ), 0, array( 'contact' ) );
 					$used[ $contact['index'] ] = ( $used[ $contact['index'] ] ?? 0 ) + 1;
 				}
 			}
@@ -530,7 +530,7 @@ final class Team_Pages {
 					$others = array_merge( $others, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
 				}
 			}
-			$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], $seed . '|related', $refused, array_values( array_unique( array_merge( $others, $contact !== null ? array( $contact['index'] ) : array() ) ) ) );
+			$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], $seed . '|related', $refused, array_values( array_unique( array_merge( $others, $contact !== null ? array( $contact['index'] ) : array() ) ) ), ! empty( $vary['list'] ) );
 			foreach ( $refused as $why ) {
 				$log[] = 'related: not made from ' . $why;
 			}
@@ -614,10 +614,14 @@ final class Team_Pages {
 				$done     = $v['ops'];
 				$pictures = array_merge( $pictures, $v['images'] );
 			}
-			$ops[] = $done;
 			if ( $role === 'hero' ) {
 				self::title_hero( $block, $item['title'] );
+				// A service page opens with what the Home says about that service (the words of its card), not with the Home's line about everything.
+				if ( $item['type'] === 'service' && self::lead_hero( $block, (string) ( $vary['kit']['texts'][ mb_strtolower( $item['title'] ) ] ?? '' ) ) ) {
+					$done[] = 'lead:service';
+				}
 			}
+			$ops[] = $done;
 			if ( $role === 'related' && $siblings !== array() ) {
 				$block = self::fill_related( $block, $component, $siblings, $item['title'], (array) ( $vary['kit']['texts'] ?? array() ) );
 			}
@@ -684,6 +688,8 @@ final class Team_Pages {
 		return array(
 			'rows'    => $rows,
 			'heading' => $heading,
+			// The page that lists the services, or the places, lists all of them.
+			'list'    => in_array( $type, array( 'services', 'areas' ), true ),
 		);
 	}
 
@@ -718,6 +724,35 @@ final class Team_Pages {
 		}
 
 		return $n;
+	}
+
+	/**
+	 * The words under the hero's heading (its lead) said by what the Home says about the service the page is for. Only a lead that is
+	 * a sentence or more is replaced, and only by words of the Home's.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function lead_hero( array &$block, string $words ): bool {
+		if ( mb_strlen( $words ) < 24 ) {
+			return false;
+		}
+		try {
+			$now   = Section_Library::analyze( $block, 0 );
+			$panel = $now['panels'][0] ?? null;
+			if ( $panel === null || empty( $panel['texts'] ) ) {
+				return false;
+			}
+			$path = array_map( 'intval', (array) $panel['texts'][0] );
+			$lead = &Block_Tree::at( $block, $path );
+			if ( mb_strlen( Block_Tree::own_text( $lead ) ) < 40 ) {
+				return false;
+			}
+			Block_Tree::set_content( $lead, esc_html( $words ) );
+		} catch ( \Throwable $e ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/** The page's own title in the hero's heading. */

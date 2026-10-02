@@ -215,6 +215,47 @@ $expect( 'a section with a picture and long text beside them stays text and pict
 $plain = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'A line' ) . $para( 'Words' ) ), 'section' ) )[0];
 $expect( 'a section with no set of cards is not cards', Section_Roles::of( $plain, false ) !== 'cards' );
 
+echo "\nA card that is a link box of the design's\n";
+$lbox  = static fn( string $t ): string => '<!-- wp:amr/link-box {"url":"#x","className":"tile"} --><a class="wp-block-amr-link-box amr-link-box tile" href="#x">' . $heading( $t, 3 ) . $para( 'Words of ' . $t ) . '</a><!-- /wp:amr/link-box -->';
+$lb_s  = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Services' ) . $group( 'tiles', $lbox( 'A' ) . $lbox( 'B' ) . $lbox( 'C' ) ) ), 'section' ) )[0];
+$lbc   = $lib( array( $lb_s ) )[0];
+$mlb   = Section_Refill::cards( $lbc, $lbc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+$olb   = $markup( (array) $mlb );
+$expect( 'a link box is the link as a whole: its title is not a link inside it (a link in a link is broken apart by the browser)', $mlb !== null && substr_count( $olb, '<a ' ) === 3 && ! preg_match( '/<h3[^>]*><a /', $olb ) && str_contains( $olb, 'href="http://site.test/beta/"' ), $olb );
+
+echo "\nA list of pages (more cards than the Home's section has)\n";
+$ex_l = $lib( $home )[0];
+$ml   = Section_Refill::cards( $ex_l, $ex_l['repeats'][0], 'All', $rows( array( 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7' ) ), '', 12 );
+$ol   = $markup( (array) $ml );
+$expect( 'a list shows all its pages: seven cards from a section of three, the Home\'s cards copied in turn', $ml !== null && count( array_filter( $titles( $ml ), static fn( $t ) => preg_match( '/^A\d$/', $t ) === 1 ) ) === 7 && str_contains( $ol, 'Words about A7' ) && ! str_contains( $ol, 'means to the Home' ), json_encode( $ml ? $titles( $ml ) : null ) );
+$ml2  = Section_Refill::cards( $ex_l, $ex_l['repeats'][0], 'All', $rows( array( 'B1', 'B2', 'B3', 'B4', 'B5' ) ), '', 4 );
+$expect( 'and no more than it is told (4 of 5)', $ml2 !== null && count( array_filter( $titles( $ml2 ), static fn( $t ) => preg_match( '/^B\d$/', $t ) === 1 ) ) === 4 );
+$ml3  = Section_Refill::cards( $ex_l, $ex_l['repeats'][0], 'Some', $rows( array( 'C1', 'C2' ) ), '', 12 );
+$expect( 'a list of two pages has two cards (the third goes)', $ml3 !== null && count( array_filter( $titles( $ml3 ), static fn( $t ) => preg_match( '/^C\d$/', $t ) === 1 ) ) === 2 );
+
+echo "\nA card of the Home's for a page that is one\n";
+$hm = $lib( array( $cards_section( array( 'Leaks', 'Heaters', 'Drains' ) ) ) )[0];
+$mh = Section_Refill::cards( $hm, $hm['repeats'][0], 'Pages', array( array( 'title' => 'Drains', 'text' => 'The drains words.', 'url' => 'http://s.test/d/' ), array( 'title' => 'Other', 'text' => '', 'url' => 'http://s.test/o/' ), array( 'title' => 'Leaks', 'text' => 'The leaks words.', 'url' => 'http://s.test/l/' ) ) );
+$oh = $markup( (array) $mh );
+$expect( 'a row whose title is a card of the Home\'s takes that card (the others take the cards that are left, in turn)', $mh !== null && $titles( $mh ) === array( 'Pages', 'Drains', 'Other', 'Leaks' ) && str_contains( $oh, 'The drains words.' ) && ! str_contains( $oh, 'means to the Home' ), json_encode( $mh ? $titles( $mh ) : null ) );
+
+echo "\nA section with a \"show more\" button\n";
+$hid   = '<!-- wp:group {"className":"dxai-on-more hidden"} --><div class="wp-block-group dxai-on-more hidden">' . $group( 'card', $heading( 'Extra One', 3 ) . $para( 'extra words one' ) ) . $group( 'card', $heading( 'Extra Two', 3 ) . $para( 'extra words two' ) ) . '</div><!-- /wp:group -->';
+$tog   = '<!-- wp:group {"className":"mt-4"} --><div class="wp-block-group mt-4"><!-- wp:dxai-ui/box {"tagName":"button","className":"dxai-toggle-more"} --><button class="dxai-toggle-more"><!-- wp:dxai-ui/html --><span>Show more</span><!-- /wp:dxai-ui/html --></button><!-- /wp:dxai-ui/box --></div><!-- /wp:group -->';
+$sm_s  = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'What we do' ) . $group( 'cards', $group( 'card', $heading( 'S1', 3 ) . $para( 'words s1' ) ) . $group( 'card', $heading( 'S2', 3 ) . $para( 'words s2' ) ) . $group( 'card', $heading( 'S3', 3 ) . $para( 'words s3' ) ) ) . $hid . $tog ), 'section' ) )[0];
+$smc   = $lib( array( $sm_s ) )[0];
+$expect( 'a section whose "show more" button reveals more cards is one to pour into (the button and what it reveals are the section\'s machinery, not words)', $smc['controls'] !== array() && Home_Kit::of( array( $smc ) )['exemplars'] !== array(), json_encode( Home_Kit::of( array( $smc ) )['exemplars'] ) );
+$msm   = Section_Refill::cards( $smc, $smc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+$osm   = $markup( (array) $msm );
+$expect( 'the poured section has no button and nothing hidden, and shows its three cards', $msm !== null && ! str_contains( $osm, 'dxai-on-' ) && ! str_contains( $osm, 'dxai-toggle-' ) && ! str_contains( $osm, 'Extra One' ) && ! str_contains( $osm, 'Show more' ) && str_contains( $osm, 'Words about Gamma' ), $osm );
+$ml_sm = Section_Refill::cards( $smc, $smc['repeats'][0], 'All', $rows( array( 'P1', 'P2', 'P3', 'P4', 'P5' ) ), '', 12 );
+$expect( 'and as a list it shows all five', $ml_sm !== null && count( array_filter( $titles( $ml_sm ), static fn( $t ) => preg_match( '/^P\d$/', $t ) === 1 ) ) === 5 );
+$play = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Video' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'V', 3 ) . $para( 'words' ) ), 3 ) ) . '<!-- wp:dxai-ui/html --><button class="play">Play</button><!-- /wp:dxai-ui/html -->' ), 'section' ) )[0];
+$expect( 'any other control (a play button) stays the Home\'s: that section is not poured into', Home_Kit::of( $lib( array( $play ) ) )['exemplars'] === array() );
+$icon_card = static fn( string $t ): string => $group( 'card', '<!-- wp:image {"id":9999998,"className":"dxai-part-img dxai-icon"} --><figure class="wp-block-image dxai-part-img dxai-icon"><img src="http://example.test/i.svg" alt="" class="wp-image-9999998"/></figure><!-- /wp:image -->' . $heading( $t, 3 ) . $para( 'Words of ' . $t ) );
+$ic_s = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Services' ) . $group( 'cards', $icon_card( 'Leaks' ) . $icon_card( 'Heaters' ) . $icon_card( 'Drains' ) ) ), 'section' ) )[0];
+$expect( 'cards with an icon of the design\'s (a small file of its own) are cards to pour into: the icon is not a picture about the card', Home_Kit::of( $lib( array( $ic_s ) ) )['exemplars'] !== array() );
+
 echo "\nA label before the title\n";
 $labelled = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Plans' ) . $group( 'cards', str_repeat( $group( 'card', $para( '01', 'num' ) . $heading( 'P', 3 ) . $para( 'The Home\'s words.' ) ), 3 ) ) ), 'section' ) )[0];
 $lc = $lib( array( $labelled ) )[0];

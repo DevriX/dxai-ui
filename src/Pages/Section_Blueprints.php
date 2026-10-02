@@ -22,6 +22,9 @@ namespace DXAI_UI\Pages;
  */
 final class Section_Blueprints {
 
+	/** The most cards of a list of pages (the services, the places): twelve, four rows of three. */
+	public const LIST_MAX = 12;
+
 	/**
 	 * A set of cards linking the other pages of the site, in the Home's cards: its list of pages if it has one, else its cards.
 	 *
@@ -30,10 +33,11 @@ final class Section_Blueprints {
 	 * @param array<int, array{title:string, text:string, url:string}> $rows    The pages, in the order to show them.
 	 * @param array<int, string>                                       $refused What was wrong with each exemplar that was not used.
 	 * @param array<int, int>                                          $avoid   Home sections (indexes) the page needs for something else: used only when no other will do.
+	 * @param bool                                                     $list    The page is the list of the pages (of the services, of the places): it shows all of them, not as many as the Home's section has cards.
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
-	public static function related( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array() ): ?array {
-		return self::pour( $kit, $library, $rows, $heading, $seed, __( 'Related pages', 'dxai-ui' ), 'related', array_column( $rows, 'url' ), $refused, $avoid );
+	public static function related( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), bool $list = false ): ?array {
+		return self::pour( $kit, $library, $rows, $heading, $seed, $list ? __( 'List of pages', 'dxai-ui' ) : __( 'Related pages', 'dxai-ui' ), $list ? 'list' : 'related', array_column( $rows, 'url' ), $refused, $avoid, $list ? self::LIST_MAX : 0 );
 	}
 
 	/**
@@ -97,9 +101,10 @@ final class Section_Blueprints {
 	 * @param array<int, string>                  $identity What makes the section this page's (it is in the name).
 	 * @param array<int, string>                  $refused
 	 * @param array<int, int>                     $avoid
+	 * @param int                                 $grow     How many cards a list may have (0: as many as the Home's section has).
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
-	private static function pour( array $kit, array $library, array $rows, string $heading, string $seed, string $name, string $op, array $identity, array &$refused, array $avoid ): ?array {
+	private static function pour( array $kit, array $library, array $rows, string $heading, string $seed, string $name, string $op, array $identity, array &$refused, array $avoid, int $grow = 0 ): ?array {
 		$library = array_values( $library );
 		if ( count( $rows ) < 2 ) {
 			return null;
@@ -111,12 +116,12 @@ final class Section_Blueprints {
 		$order = array_values( (array) $kit['exemplars'] );
 		usort(
 			$order,
-			static function ( array $a, array $b ) use ( $rank, $rows, $seed, $avoid ): int {
+			static function ( array $a, array $b ) use ( $rank, $rows, $seed, $avoid, $grow ): int {
 				// What the page does not need for something else first; its own kind; then the set that the rows fill (a row of three is not left with a gap); then the seed.
 				$by = array(
 					(int) in_array( $a['index'], $avoid, true ) <=> (int) in_array( $b['index'], $avoid, true ),
 					( $rank[ $a['role'] ] ?? 2 ) <=> ( $rank[ $b['role'] ] ?? 2 ),
-					max( 0, $a['count'] - count( $rows ) ) <=> max( 0, $b['count'] - count( $rows ) ),
+					$grow > 0 ? 0 : max( 0, $a['count'] - count( $rows ) ) <=> max( 0, $b['count'] - count( $rows ) ),
 					sprintf( '%u', crc32( $seed . '|' . $a['index'] . '|' . $a['rep'] ) ) <=> sprintf( '%u', crc32( $seed . '|' . $b['index'] . '|' . $b['rep'] ) ),
 				);
 				foreach ( $by as $c ) {
@@ -134,7 +139,7 @@ final class Section_Blueprints {
 				continue;
 			}
 			$reps  = array_values( (array) $component['repeats'] );
-			$block = Section_Refill::cards( $component, (array) $reps[ $ex['rep'] ], $heading, $rows, $name );
+			$block = Section_Refill::cards( $component, (array) $reps[ $ex['rep'] ], $heading, $rows, $name, $grow );
 			if ( $block === null ) {
 				continue;
 			}
@@ -150,7 +155,7 @@ final class Section_Blueprints {
 
 			return array(
 				'block' => $block,
-				'op'    => $op . ':' . substr( md5( implode( '|', array_slice( $identity, 0, $ex['count'] ) ) ), 0, 6 ),
+				'op'    => $op . ':' . substr( md5( implode( '|', array_slice( $identity, 0, $grow > 0 ? $grow : $ex['count'] ) ) ), 0, 6 ),
 				'index' => (int) $ex['index'],
 			);
 		}

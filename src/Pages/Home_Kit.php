@@ -162,7 +162,7 @@ final class Home_Kit {
 	private static function texts( array $library ): array {
 		$out = array();
 		foreach ( $library as $component ) {
-			foreach ( (array) $component['repeats'] as $rep ) {
+			foreach ( array_merge( (array) $component['repeats'], (array) ( $component['hidden'] ?? array() ) ) as $rep ) {
 				if ( ( $rep['kind'] ?? '' ) !== 'card' ) {
 					continue;
 				}
@@ -214,7 +214,8 @@ final class Home_Kit {
 		if ( ( $rep['kind'] ?? '' ) !== 'card' || count( (array) $rep['items'] ) < 2 ) {
 			return false;
 		}
-		if ( (array) $component['controls'] !== array() || (array) $component['widgets'] !== array() || (array) $component['panels'] === array() ) {
+		// A "show more" button and what it reveals go when the section is poured into (Section_Refill); any other control stays the Home's.
+		if ( ( (array) $component['controls'] !== array() && self::show_more( (array) $component['block'] ) === array() ) || (array) $component['widgets'] !== array() || (array) $component['panels'] === array() ) {
 			return false;
 		}
 		// One heading for the section; any other heading outside the cards is a smaller one (a note under them), which goes with its words.
@@ -229,14 +230,18 @@ final class Home_Kit {
 			return false;
 		}
 		foreach ( (array) $component['slots'] as $slot ) {
-			if ( $slot['type'] === 'image' && empty( $slot['decor'] ) ) {
+			if ( $slot['type'] === 'image' && empty( $slot['decor'] ) && ! self::is_icon( Block_Tree::at( $component['block'], (array) $slot['path'] ) ) ) {
 				return false;
 			}
 		}
 		$has_title = false;
+		$template  = Block_Tree::at( $component['block'], array_merge( (array) $rep['path'], array( (int) ( $rep['shape']['template'] ?? $rep['items'][0] ) ) ) );
 		foreach ( (array) ( $rep['shape']['slots'] ?? array() ) as $slot ) {
 			if ( $slot['type'] === 'heading' ) {
 				$has_title = true;
+			}
+			if ( $slot['type'] === 'image' && empty( $slot['decor'] ) && self::is_icon( Block_Tree::at( $template, (array) $slot['path'] ) ) ) {
+				continue;
 			}
 			if ( ( $slot['type'] === 'image' && empty( $slot['decor'] ) ) || in_array( $slot['type'], array( 'widget', 'control' ), true ) || ! empty( $slot['flags'] ) ) {
 				return false;
@@ -255,6 +260,45 @@ final class Home_Kit {
 		}
 
 		return true;
+	}
+
+	/**
+	 * The paths of what a "show more" button reveals in a block: the blocks the design's script shows and hides by a state
+	 * (the class dxai-on-<state>). Empty when the block has no such button.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array<int, array<int, int>>
+	 */
+	public static function show_more( array $block ): array {
+		$out  = array();
+		$walk = static function ( array $b, array $path ) use ( &$walk, &$out ): void {
+			if ( preg_match( '/(?:^|\s)dxai-on-/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1 ) {
+				$out[] = $path;
+
+				return;
+			}
+			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $i => $child ) {
+				if ( is_array( $child ) ) {
+					$walk( $child, array_merge( $path, array( (int) $i ) ) );
+				}
+			}
+		};
+		$walk( $block, array() );
+
+		return $out;
+	}
+
+	/**
+	 * Whether a picture is an icon (the design's own small mark, drawn as a file of its own): not a picture that says something about
+	 * the card it is in, so another card may keep it.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	public static function is_icon( array $block ): bool {
+		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+
+		return preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', (string) ( $attrs['className'] ?? '' ) ) === 1
+			|| preg_match( '/\.svg(?:\?|$)/i', (string) ( $attrs['url'] ?? $attrs['src'] ?? '' ) ) === 1;
 	}
 
 	/**

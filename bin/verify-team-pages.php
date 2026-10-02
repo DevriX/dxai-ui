@@ -430,6 +430,8 @@ $tamper( $added( '<p>As seen at Fixture With A Menu</p>' ) );
 $expect( 'G9: the name of another design on the site is found', str_contains( $find( 'G9' ), 'another design' ), $find( 'G9' ) );
 $tamper( $added( '<p style="color:red">Red</p>' ) );
 $expect( 'G7: an inline style the Home does not have is found', str_contains( $find( 'G7' ), 'inline style' ), $find( 'G7' ) );
+$tamper( $added( '<p><a href="#a">One <a href="#b">two</a></a></p>' ) );
+$expect( 'G7: a link inside a link is found', str_contains( $find( 'G7' ), 'links inside links' ), $find( 'G7' ) );
 $tamper( $original . "\n<!-- wp:vtx/not-a-block /-->" );
 $expect( 'G7: a block that is not registered is found', str_contains( $find( 'G7' ), 'unregistered' ), $find( 'G7' ) );
 $tamper( $original );
@@ -526,7 +528,68 @@ $cq = Team_Quality::measure( $home6_id );
 $expect( 'the page is measured clean (the Home\'s header and footer, valid blocks, nothing foreign)', ( $cq['gates']['G1'][ $cbid ] ?? array() ) === array() && ( $cq['gates']['G7'][ $cbid ] ?? array() ) === array() && ( $cq['gates']['G9'][ $cbid ] ?? array() ) === array(), json_encode( array( $cq['gates']['G1'][ $cbid ] ?? null, $cq['gates']['G7'][ $cbid ] ?? null, $cq['gates']['G9'][ $cbid ] ?? null ) ) );
 $cb2 = Team_Pages::build( $home_id, array( array( 'type' => 'contact', 'title' => '' ) ), true );
 $cb2id = ! is_wp_error( $cb2 ) ? (int) ( $cb2['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $cb2id;
 $expect( 'a Home that states only a phone number gets no such section (one way to reach it is not a set of cards)', $cb2id > 0 && ! str_contains( (string) get_post_field( 'post_content', $cb2id ), 'Get in touch' ) );
+
+echo "\nRicher pages: the lists, the lead of a service, the ways to reach on About\n";
+$many = Team_Pages::build(
+	$home_id,
+	array(
+		array( 'type' => 'service', 'title' => 'Water Damage' ),
+		array( 'type' => 'service', 'title' => 'Fire Damage' ),
+		array( 'type' => 'service', 'title' => 'Mold Removal' ),
+		array( 'type' => 'service', 'title' => 'Roof Repair' ),
+		array( 'type' => 'service', 'title' => 'Gutter Help' ),
+		array( 'type' => 'service', 'title' => 'Tree Care' ),
+		array( 'type' => 'services', 'title' => '' ),
+	),
+	true
+);
+$mm = array();
+foreach ( ! is_wp_error( $many ) ? $many['pages'] : array() as $p ) {
+	$mm[ $p['type'] . '|' . $p['title'] ] = (int) $p['id'];
+	$made[]                               = (int) $p['id'];
+}
+$list_c = (string) get_post_field( 'post_content', $mm['services|Services'] ?? 0 );
+$missing = array();
+foreach ( array( 'Water Damage', 'Fire Damage', 'Mold Removal', 'Roof Repair', 'Gutter Help', 'Tree Care' ) as $t ) {
+	if ( ! str_contains( $list_c, (string) get_permalink( $mm[ 'service|' . $t ] ?? 0 ) ) ) {
+		$missing[] = $t;
+	}
+}
+$expect( 'the page that lists the services lists all of them, six cards from a section of three (not as many as the Home\'s section has)', $missing === array() && substr_count( $list_c, 'svc-card' ) >= 6, 'missing: ' . implode( ', ', $missing ) . '; cards ' . substr_count( $list_c, 'svc-card' ) );
+$list_t = wp_strip_all_tags( $list_c );
+$expect( 'each with the Home\'s words for it where it has them, and none where it has not (no other card\'s words)', str_contains( $list_t, 'Extraction and drying.' ) && str_contains( $list_t, 'Soot and smoke.' ) && substr_count( $list_t, 'Extraction and drying.' ) === 1, substr( preg_replace( '/\s+/', ' ', $list_t ), 0, 200 ) );
+$wm = (string) get_post_field( 'post_content', $mm['service|Water Damage'] ?? 0 );
+
+$home7_html = str_replace( array( 'Family run since 1983.', 'Extraction and drying.' ), array( 'Family run since 1983. One team from the emergency call to the final repair.', 'Extraction, structural drying and mold-safe cleanup of your home.' ), $home );
+$home7_id   = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With Leads', 'post_content' => wp_slash( $home7_html ) ) );
+$made[]     = (int) $home7_id;
+update_post_meta( $home7_id, Page_Scope::META, $home7_id );
+update_post_meta( $home7_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home7_id, '_dxai_ui_css_url', 'dxai-ui/fixture-leads.css' );
+$lb = Team_Pages::build( $home7_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Roof Repair' ) ) );
+$lw = $lr = 0;
+foreach ( ! is_wp_error( $lb ) ? $lb['pages'] : array() as $p ) {
+	$made[] = (int) $p['id'];
+	if ( $p['title'] === 'Water Damage' ) {
+		$lw = (int) $p['id'];
+	} else {
+		$lr = (int) $p['id'];
+	}
+}
+$lwc = (string) get_post_field( 'post_content', $lw );
+$lrc = (string) get_post_field( 'post_content', $lr );
+$expect( 'a page for a service the Home lists opens with what the Home says about it, not with its line about everything', str_contains( $lwc, 'Extraction, structural drying and mold-safe cleanup of your home.' ) && ! str_contains( $lwc, 'One team from the emergency call' ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $lwc ) ), 0, 160 ) );
+$expect( 'and says so with the page ("lead:service")', str_contains( (string) get_post_meta( $lw, Team_Pages::OPS_META, true ), 'lead:service' ) );
+$expect( 'a page for a service the Home does not list keeps the Home\'s line (nothing is made up)', str_contains( $lrc, 'One team from the emergency call to the final repair.' ) && ! str_contains( (string) get_post_meta( $lr, Team_Pages::OPS_META, true ), 'lead:service' ) );
+$expect( 'a lead that is only a tag (a short line) is not replaced', ! str_contains( (string) get_post_meta( $mm['service|Water Damage'] ?? 0, Team_Pages::OPS_META, true ), 'lead:service' ) && str_contains( $wm, 'Family run since 1983.' ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $wm ) ), 0, 120 ) );
+
+$ab = Team_Pages::build( $home6_id, array( array( 'type' => 'about', 'title' => '' ) ) );
+$abid = ! is_wp_error( $ab ) ? (int) ( $ab['pages'][0]['id'] ?? 0 ) : 0;
+$made[] = $abid;
+$abc = (string) get_post_field( 'post_content', $abid );
+$expect( 'the About page of a Home that states its phone and address has the ways to reach it, before the questions and the call to action', str_contains( $abc, 'Get in touch' ) && str_contains( $abc, '12 Elm St, Tyler, TX' ) && ( ! str_contains( $abc, 'cta-x' ) || strpos( $abc, 'Get in touch' ) < strpos( $abc, 'cta-x' ) ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $abc ) ), 0, 200 ) );
 
 $fin();
 
