@@ -371,7 +371,7 @@ final class Team_Menu {
 	/**
 	 * Write the page's new content, and keep the records of what the plugin wrote in step with it.
 	 */
-	private static function save( int $id, int $home, string $before, string $after ): void {
+	public static function save( int $id, int $home, string $before, string $after ): void {
 		global $wpdb;
 		$was = md5( $before );
 		$now = md5( $after );

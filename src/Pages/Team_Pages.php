@@ -33,6 +33,15 @@ final class Team_Pages {
 	public const HASH = '_dxai_ui_team_hash';
 
 	/**
+	 * The key every page of an import has (archive#slug). A page made here has one too, "team#<home>#<kind>|<slug>", so that
+	 * an import of another design with the same address (/contact-us) is told it is not free to take.
+	 */
+	public const KEY_META = '_dxai_ui_page_key';
+
+	/** Option: the version of the key stamping (upgrade()). */
+	public const KEYS_DONE = 'dxai_ui_team_keys_done';
+
+	/**
 	 * The kinds of page that can be made, with the model they follow and the title a general page gets.
 	 *
 	 * @var array<string, array{label:string, model:string, title:string}>
@@ -130,7 +139,7 @@ final class Team_Pages {
 	 * and named in `kept`).
 	 *
 	 * @param array<int, array{type:string, title:string}> $wanted
-	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}}|\WP_Error
+	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false ) {
 		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
@@ -210,12 +219,15 @@ final class Team_Pages {
 
 		// The pages are in the design's menu: its header and footer links lead to them.
 		$menu = Team_Menu::link( $home );
+		// … and every page wears the Home's header and footer as the Home has them now, the menu included.
+		$chrome = Team_Chrome::sync( $home );
 
 		return array(
-			'pages' => $done,
-			'kept'  => $kept,
-			'log'   => $log,
-			'menu'  => $menu,
+			'pages'  => $done,
+			'kept'   => $kept,
+			'log'    => $log,
+			'menu'   => $menu,
+			'chrome' => $chrome['pages'],
 		);
 	}
 
@@ -622,12 +634,76 @@ final class Team_Pages {
 					),
 				),
 				'fields'         => 'ids',
-				'posts_per_page' => 1,
+				'posts_per_page' => 5,
 				'no_found_rows'  => true,
 			)
 		);
+		foreach ( $found as $id ) {
+			// A page an import has taken since (its key is not ours) is that design's now: not to be written over.
+			if ( ! self::taken( (int) $id ) ) {
+				return (int) $id;
+			}
+		}
 
-		return $found !== array() ? (int) $found[0] : 0;
+		return 0;
+	}
+
+	/** The key of a page made here. */
+	public static function page_key( int $home, string $type, string $slug ): string {
+		return 'team#' . $home . '#' . $type . '|' . $slug;
+	}
+
+	/** Whether a page carries the key of an import (an archive's), not of a page made here. */
+	public static function taken( int $id ): bool {
+		$key = (string) get_post_meta( $id, self::KEY_META, true );
+
+		return $key !== '' && ! str_starts_with( $key, 'team#' );
+	}
+
+	/**
+	 * Put the key on the pages made before it existed, and take the team marker off a page an import took (it is that
+	 * design's page, and its marker would let this write over it). Once per version; a few hundred pages at most.
+	 */
+	public static function upgrade(): void {
+		if ( (string) get_option( self::KEYS_DONE, '' ) === '1' || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		self::claim();
+		update_option( self::KEYS_DONE, '1', false );
+	}
+
+	/**
+	 * @return array{keyed:int, released:int}
+	 */
+	public static function claim(): array {
+		$out = array( 'keyed' => 0, 'released' => 0 );
+		$ids = get_posts(
+			array(
+				'post_type'      => 'page',
+				'post_status'    => array( 'publish', 'draft', 'private', 'pending' ),
+				'meta_key'       => self::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'fields'         => 'ids',
+				'posts_per_page' => 2000,
+				'no_found_rows'  => true,
+			)
+		);
+		foreach ( $ids as $id ) {
+			$id = (int) $id;
+			if ( self::taken( $id ) ) {
+				delete_post_meta( $id, self::META );
+				delete_post_meta( $id, self::HASH );
+				++$out['released'];
+				continue;
+			}
+			$home = (int) get_post_meta( $id, Page_Scope::META, true );
+			if ( (string) get_post_meta( $id, self::KEY_META, true ) === '' && $home > 0 ) {
+				[ $type, $slug ] = array_pad( explode( '|', (string) get_post_meta( $id, self::META, true ), 2 ), 2, '' );
+				update_post_meta( $id, self::KEY_META, self::page_key( $home, $type, $slug ) );
+				++$out['keyed'];
+			}
+		}
+
+		return $out;
 	}
 
 	/** Whether a person edited the page after this wrote it. */
@@ -674,6 +750,7 @@ final class Team_Pages {
 			return $id;
 		}
 		update_post_meta( (int) $id, self::META, $item['type'] . '|' . $item['slug'] );
+		update_post_meta( (int) $id, self::KEY_META, self::page_key( $home, $item['type'], $item['slug'] ) );
 		update_post_meta( (int) $id, Page_Scope::META, $home );
 
 		return (int) $id;

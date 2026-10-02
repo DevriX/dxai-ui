@@ -77,6 +77,12 @@ final class Plugin {
 		( new \DXAI_UI\Theme\Theme_Fence() )->register();
 		// A page of the design on a theme that prints its whole stylesheet inline: only the part the page can use.
 		( new \DXAI_UI\Theme\Theme_Trim() )->register();
+		// The pages made for a design carry a key, so an import of another design never takes them.
+		if ( ! $render_only ) {
+			add_action( 'admin_init', array( \DXAI_UI\Pages\Team_Pages::class, 'upgrade' ), 42 );
+			// … and wear the Home's header and footer as the Home has them: when the Home changes them, they change.
+			( new \DXAI_UI\Pages\Team_Chrome() )->register();
+		}
 		// A design's colours following the active theme's (the rule itself is applied in both modes, by Token_Styles).
 		if ( ! $render_only ) {
 			( new \DXAI_UI\Theme\Theme_Binding() )->register();

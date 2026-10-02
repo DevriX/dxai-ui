@@ -12,8 +12,11 @@
  */
 
 use DXAI_UI\Pages\Copy_Writer;
+use DXAI_UI\Pages\Team_Chrome;
 use DXAI_UI\Pages\Team_Pages;
+use DXAI_UI\Pages\Team_Quality;
 use DXAI_UI\Structures\Page_Scope;
+use DXAI_UI\Structures\Structure_Repository;
 
 $fail   = 0;
 $pass   = 0;
@@ -325,6 +328,103 @@ update_post_meta( $svc5, Copy_Writer::HASH, md5( $reset5 ) );
 $fix5 = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
 $expect( 'a link put back to the old site is pointed again', $fix5['links'] >= 1, json_encode( $fix5 ) );
 $expect( 'and the page\'s earlier words can still be put back', Copy_Writer::can_revert( $svc5 ) && Copy_Writer::revert( $svc5 ) === true );
+
+echo "\nThe Home's header and footer, on every page\n";
+global $wpdb;
+$expect( 'the build says it put the Home\'s header and footer on the pages (none had to change: they were just copied)', isset( $out['chrome'] ) && $out['chrome'] === 0, json_encode( $out['chrome'] ?? null ) );
+$expect( 'a saved Home is followed by its pages (the hook)', has_action( 'save_post_page', array( Team_Chrome::class, 'on_save' ) ) !== false );
+$home_now = (string) get_post_field( 'post_content', $home_id );
+$wpdb->update( $wpdb->posts, array( 'post_content' => str_replace( 'Menu Home', 'Menu Away', $home_now ) ), array( 'ID' => $home_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+clean_post_cache( $home_id );
+$before_q = Team_Quality::measure( $home_id );
+$expect( 'the Home\'s header changed and the pages still have the old one (found by G1)', count( $before_q['gates']['G1'] ) >= 7, (string) count( $before_q['gates']['G1'] ) );
+Team_Chrome::on_save( $home_id );
+$after_q = Team_Quality::measure( $home_id );
+$expect( 'once the Home is saved, every page has the new header', $after_q['gates']['G1'] === array() && str_contains( (string) get_post_field( 'post_content', $svc ), 'Menu Away' ) && ! str_contains( (string) get_post_field( 'post_content', $svc ), 'Menu Home' ) );
+$expect( 'the middle of the page is as it was', str_contains( (string) get_post_field( 'post_content', $svc ), 'svc-x' ) && preg_match( '/<h1[^>]*>Water Damage<\/h1>/', (string) get_post_field( 'post_content', $svc ) ) === 1 );
+$expect( 'a page nobody edited is not an edited page after it', ! (bool) Team_Pages::plan( $home_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ) ) )[0]['edited'] );
+$again = Team_Chrome::sync( $home_id );
+$expect( 'doing it again changes nothing', $again['pages'] === 0 && $again['skipped'] === array(), json_encode( $again ) );
+$kept = (string) get_post_field( 'post_content', $by['about|about-us'] );
+$no_header = implode( "\n\n", array_map( 'serialize_block', array_slice( array_values( array_filter( parse_blocks( $kept ), static fn( $b ) => ! empty( $b['blockName'] ) ) ), 2 ) ) );
+$wpdb->update( $wpdb->posts, array( 'post_content' => $no_header ), array( 'ID' => $by['about|about-us'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+clean_post_cache( $by['about|about-us'] );
+$skip = Team_Chrome::sync( $home_id );
+$expect( 'a page whose beginning is not a header (somebody took it out) is left alone, and named', in_array( $by['about|about-us'], $skip['skipped'], true ) && (string) get_post_field( 'post_content', $by['about|about-us'] ) === $no_header );
+$wpdb->update( $wpdb->posts, array( 'post_content' => $kept ), array( 'ID' => $by['about|about-us'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+clean_post_cache( $by['about|about-us'] );
+Team_Chrome::sync( $home_id );
+
+echo "\nThe measure of the pages (Team_Quality)\n";
+$q = Team_Quality::measure( $home_id );
+$expect( 'the pages made for the design are the ones measured', count( $q['pages'] ) >= 7 && in_array( $svc, array_column( $q['pages'], 'id' ), true ), (string) count( $q['pages'] ) );
+$expect( 'pages made here keep the Home\'s header and footer, have valid blocks and nothing foreign', $q['gates']['G1'] === array() && $q['gates']['G7'] === array() && $q['gates']['G9'] === array(), json_encode( array( $q['gates']['G1'], $q['gates']['G7'], $q['gates']['G9'] ) ) );
+$sec = array_values( array_filter( $q['pages'], static fn( $p ) => (int) $p['id'] === $svc ) )[0]['sections'] ?? array();
+$expect( 'each section says what it is and whether the Home has one of its structure', $sec !== array() && count( array_filter( $sec, static fn( $x ) => $x['role'] !== '' && $x['origin'] === 'home' ) ) === count( $sec ) );
+$expect( 'pages that are the Home\'s sections and little else are told so (G8)', isset( $q['gates']['G8'][ $svc ] ) );
+$original = (string) get_post_field( 'post_content', $svc );
+$tamper   = static function ( string $content ) use ( $svc ): void {
+	global $wpdb;
+	$wpdb->update( $wpdb->posts, array( 'post_content' => $content ), array( 'ID' => $svc ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	clean_post_cache( $svc );
+};
+$find = static function ( string $gate ) use ( $home_id, $svc ): string {
+	return implode( '; ', Team_Quality::measure( $home_id )['gates'][ $gate ][ $svc ] ?? array() );
+};
+$added = static fn( string $html ): string => $original . "\n<!-- wp:paragraph -->" . $html . "<!-- /wp:paragraph -->";
+$tamper( str_replace( 'Menu Away', 'Menu Elsewhere', $original ) );
+$expect( 'G1: a header that is not the Home\'s is found', str_contains( $find( 'G1' ), 'header differs' ), $find( 'G1' ) );
+$tamper( $original . "\n<!-- wp:paragraph --><p>The end</p><!-- /wp:paragraph -->" );
+$expect( 'G1: a footer that is not the last thing on the page is found', str_contains( $find( 'G1' ), 'footer differs' ), $find( 'G1' ) );
+$tamper( $added( '<p>Call (214) 555-0199 today</p>' ) );
+$expect( 'G9: a phone number the Home does not have is found', str_contains( $find( 'G9' ), 'phones' ), $find( 'G9' ) );
+$tamper( $added( '<p>Write to info@elsewhere.example</p>' ) );
+$expect( 'G9: an e-mail address the Home does not have is found', str_contains( $find( 'G9' ), 'mails' ), $find( 'G9' ) );
+$tamper( $added( '<p><a href="https://other-company.example/page">more</a></p>' ) );
+$expect( 'G9: an address of another site is found', str_contains( $find( 'G9' ), 'addresses of other sites' ), $find( 'G9' ) );
+$tamper( $added( '<p>Lorem ipsum dolor sit amet</p>' ) );
+$expect( 'G9: placeholder text is found', str_contains( $find( 'G9' ), 'placeholder' ), $find( 'G9' ) );
+$tamper( $added( '<p>As seen at Fixture With A Menu</p>' ) );
+$expect( 'G9: the name of another design on the site is found', str_contains( $find( 'G9' ), 'another design' ), $find( 'G9' ) );
+$tamper( $added( '<p style="color:red">Red</p>' ) );
+$expect( 'G7: an inline style the Home does not have is found', str_contains( $find( 'G7' ), 'inline style' ), $find( 'G7' ) );
+$tamper( $original . "\n<!-- wp:vtx/not-a-block /-->" );
+$expect( 'G7: a block that is not registered is found', str_contains( $find( 'G7' ), 'unregistered' ), $find( 'G7' ) );
+$tamper( $original );
+$expect( 'put back, the page is clean again', Team_Quality::measure( $home_id )['gates']['G1'] === array() && ( Team_Quality::measure( $home_id )['gates']['G9'][ $svc ] ?? array() ) === array() );
+
+echo "\nWhose page it is\n";
+$slug_svc = (string) get_post_field( 'post_name', $svc );
+$expect( 'a page made here has a key of its own', get_post_meta( $svc, Team_Pages::KEY_META, true ) === Team_Pages::page_key( $home_id, 'service', 'water-damage' ), (string) get_post_meta( $svc, Team_Pages::KEY_META, true ) );
+$repo = new Structure_Repository();
+$ref  = new ReflectionMethod( $repo, 'existing_page' );
+$ref->setAccessible( true );
+$expect( 'an import of another design with the same address (and a key of its own) does not take it', $ref->invoke( $repo, $slug_svc, 'Other Design.zip#' . $slug_svc ) === null );
+$expect( '… nor an import that has no key to give', $ref->invoke( $repo, $slug_svc, '' ) === null );
+$plain = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Vtx plain page', 'post_name' => 'vtx-plain-page', 'post_content' => '' ) );
+$made[] = (int) $plain;
+$taken_by = $ref->invoke( $repo, 'vtx-plain-page', 'Other Design.zip#vtx-plain-page' );
+$expect( 'an ordinary page without a key is still adopted, as before', $taken_by instanceof WP_Post && (int) $taken_by->ID === (int) $plain );
+
+// The page an import did take (an earlier version let it): its team marker no longer lets the build write over it.
+$about = $by['about|about-us'] ?? 0;
+$was   = (string) get_post_field( 'post_content', $about );
+update_post_meta( $about, Team_Pages::KEY_META, 'Other Design.zip#about-us' );
+$rebuilt = Team_Pages::build( $home_id, array( array( 'type' => 'about', 'title' => '' ) ), true );
+$new_id  = ! is_wp_error( $rebuilt ) ? (int) ( $rebuilt['pages'][0]['id'] ?? 0 ) : 0;
+$made[]  = $new_id;
+$expect( 'a page an import took is not written over: the design gets a page of its own', $new_id > 0 && $new_id !== (int) $about, (string) $new_id );
+$expect( '… and the page the import took is as it was', (string) get_post_field( 'post_content', $about ) === $was );
+$expect( '… and the new one is the design\'s', get_post_meta( $new_id, Team_Pages::KEY_META, true ) === Team_Pages::page_key( $home_id, 'about', 'about-us' ) && (int) get_post_meta( $new_id, Page_Scope::META, true ) === $home_id );
+
+// The upgrade: the pages made before the key existed get one, and the marker leaves the page an import took.
+delete_post_meta( $svc, Team_Pages::KEY_META );
+$claimed = Team_Pages::claim();
+$expect( 'the upgrade gives a page made before the key existed its key', get_post_meta( $svc, Team_Pages::KEY_META, true ) === Team_Pages::page_key( $home_id, 'service', 'water-damage' ) && $claimed['keyed'] >= 1, json_encode( $claimed ) );
+$expect( 'and takes the team marker off the page an import took', $claimed['released'] >= 1 && get_post_meta( $about, Team_Pages::META, true ) === '' && get_post_meta( $about, Team_Pages::HASH, true ) === '' );
+$expect( 'its key (the import\'s) stays', get_post_meta( $about, Team_Pages::KEY_META, true ) === 'Other Design.zip#about-us' );
+$again2 = Team_Pages::claim();
+$expect( 'doing it again changes nothing', $again2 === array( 'keyed' => 0, 'released' => 0 ), json_encode( $again2 ) );
 
 $fin();
 

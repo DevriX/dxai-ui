@@ -2143,6 +2143,12 @@ final class Structure_Repository {
 			return null;
 		}
 
+		// A page made for a design's Home (the Library's "Pages in the team's style") is that design's, whatever its key says
+		// or lacks: an import of another design with the same address (/contact-us) must not take it.
+		if ( (string) get_post_meta( $at_slug[0]->ID, \DXAI_UI\Pages\Team_Pages::META, true ) !== '' ) {
+			return null;
+		}
+
 		/*
 		 * The slug is free to take only if nobody else has claimed it. A page
 		 * already keyed to a different archive is another design's, and taking

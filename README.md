@@ -138,7 +138,8 @@ bash bin/wp-php.sh bin/verify-team-pages.php
 | `verify-theme-fonts.php` | The theme's fonts: roles, the rule printed with a page, blocks bound to it, fonts leaving a sheet and coming back, the migration, the clean-up. |
 | `verify-speed.php` | The stylesheet trim, the theme-sheet trim, the fonts copied into a design's sheet. |
 | `verify-native-blocks.php` | The native-block converters. |
-| `verify-team-pages.php`, `verify-page-order.php`, `verify-page-recipes.php`, `verify-copy.php` | Pages in the team's style, section order, recipes, the copy writer. |
+| `verify-team-pages.php`, `verify-page-order.php`, `verify-page-recipes.php`, `verify-copy.php` | Pages in the team's style (and whose page it is, the Home's header and footer on every page, the quality measure), section order, recipes, the copy writer. |
+| `verify-team-quality.php` + `team-quality.cjs` | Not a suite but a measure: the pages made for a design against its Home, gate by gate (header and footer, colours, fonts, frame, reused sections, mobile, valid blocks, variety, nothing foreign). Needs a Home id and a browser: `bash bin/wp-php.sh bin/verify-team-quality.php <home-id> out=q.json`, then `node bin/team-quality.cjs q.json`. See [`docs/PLAN-TEAM-PAGES.md`](docs/PLAN-TEAM-PAGES.md). |
 | `verify-converter.php`, `verify-lovable-compile.php`, `verify-lovable-zip.php`, `verify-generated-zip.php` | The compilers and the archive routes. |
 | `verify-admin-titles.php`, `verify-structures.php`, `verify-assets.php`, `verify-coverage.php`, `verify-audit.php`, `verify-islands.php`, `verify-cleanup.php`, `verify-bootstrap.php`, `verify-admin-ui.php` | Design titles in the admin lists, saving, assets, coverage and audit of a conversion, islands, clean-up, boot, the admin screens. |
 | `verify-import.cjs` | Imports a set of real design ZIPs and measures the result (geometry against the design, block validity in the real editor, behaviour). Needs the paths of PHP, its ini, `wp-cli` and the ZIPs — see its header. |
@@ -167,4 +168,5 @@ Run the suites a change can touch before you commit. For a conversion change, al
 - [`readme.txt`](readme.txt) — the WordPress.org-style readme: description, requirements, export and import, and the changelog.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/PIPELINE-ARCHITECTURE.md`](docs/PIPELINE-ARCHITECTURE.md), [`docs/PIXEL-PERFECT-BLOCKS.md`](docs/PIXEL-PERFECT-BLOCKS.md) — how the compiler and the blocks work.
 - [`docs/LOCAL-WP.md`](docs/LOCAL-WP.md) — the Local site and the junction.
+- [`docs/PLAN-TEAM-PAGES.md`](docs/PLAN-TEAM-PAGES.md) — the plan for the pages made from a Home page: the rules, the gates, the phases.
 - [`docs/PLAN.md`](docs/PLAN.md), [`docs/RESEARCH.md`](docs/RESEARCH.md) — plan and research.
