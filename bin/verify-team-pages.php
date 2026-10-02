@@ -12,6 +12,9 @@
  */
 
 use DXAI_UI\Pages\Copy_Writer;
+use DXAI_UI\Pages\Page_Frame;
+use DXAI_UI\Pages\Section_Library;
+use DXAI_UI\Pages\Section_Variants;
 use DXAI_UI\Pages\Team_Chrome;
 use DXAI_UI\Pages\Team_Pages;
 use DXAI_UI\Pages\Team_Quality;
@@ -355,12 +358,49 @@ $wpdb->update( $wpdb->posts, array( 'post_content' => $kept ), array( 'ID' => $b
 clean_post_cache( $by['about|about-us'] );
 Team_Chrome::sync( $home_id );
 
+echo "\nThe Home's frame (the group around its header, main and footer)\n";
+$expect( 'a Home that has no wrapper has pages that have none', Page_Frame::frame_key( parse_blocks( (string) get_post_field( 'post_content', $svc ) ) ) === '' );
+$wrapped_home = '<!-- wp:group {"className":"max-w-full","dxaiCss":"overflow-x:clip"} --><div class="wp-block-group max-w-full dxs-vtxwrap">'
+	. $header
+	. '<!-- wp:group {"tagName":"main","anchor":"main"} --><main id="main" class="wp-block-group">' . str_replace( array( $header, $footer ), '', $home ) . '</main><!-- /wp:group -->'
+	. $footer
+	. '</div><!-- /wp:group -->';
+$wh = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Wrapped', 'post_content' => wp_slash( $wrapped_home ) ) );
+$made[] = (int) $wh;
+update_post_meta( $wh, Page_Scope::META, $wh );
+update_post_meta( $wh, '_dxai_ui_generated_page', '1' );
+update_post_meta( $wh, '_dxai_ui_css_url', 'dxai-ui/fixture-wrapped.css' );
+$shells = Page_Frame::shells( $wh );
+$expect( 'the Home\'s wrapper and main are found, empty', $shells['wrapper'] !== null && $shells['main'] !== null && $shells['wrapper']['innerBlocks'] === array() && ( $shells['wrapper']['attrs']['dxaiCss'] ?? '' ) === 'overflow-x:clip' );
+$wb = Team_Pages::build( $wh, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'about', 'title' => '' ) ) );
+$wp = array();
+foreach ( ! is_wp_error( $wb ) ? $wb['pages'] : array() as $p ) {
+	$made[]            = (int) $p['id'];
+	$wp[ $p['type'] ] = (int) $p['id'];
+}
+$wc = (string) get_post_field( 'post_content', $wp['service'] ?? 0 );
+$wtop = array_values( array_filter( parse_blocks( $wc ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
+$expect( 'the pages are made in the Home\'s frame: one group around everything, as the Home has it', count( $wtop ) === 1 && ( $wtop[0]['attrs']['dxaiCss'] ?? '' ) === 'overflow-x:clip' && str_contains( $wc, 'dxs-vtxwrap' ), (string) count( $wtop ) );
+$expect( 'the header, the main with the sections, and the footer are inside it, once each', substr_count( $wc, '<header' ) === 1 && substr_count( $wc, '<footer' ) === 1 && substr_count( $wc, '<main' ) === 1 && str_contains( $wc, 'svc-x' ) && str_contains( $wc, 'cta-x' ) );
+$expect( 'the page still reads as sections', count( Section_Library::for_page( $wp['service'] ?? 0 ) ) >= 4, (string) count( Section_Library::for_page( $wp['service'] ?? 0 ) ) );
+$wq = Team_Quality::measure( $wh );
+$expect( 'the quality measure finds the header, the footer and the frame the Home\'s', $wq['gates']['G1'] === array() && count( $wq['pages'] ) === 2, json_encode( $wq['gates']['G1'] ) );
+// A page made before the frame existed: flat. It is found, and given the frame.
+$legacy = Page_Frame::split( parse_blocks( $wc ), 2, 1 );
+$flat   = implode( "\n\n", array_map( 'serialize_block', array_merge( $legacy['head'], $legacy['middle'], $legacy['tail'] ) ) );
+$wpdb->update( $wpdb->posts, array( 'post_content' => $flat ), array( 'ID' => $wp['service'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+clean_post_cache( $wp['service'] );
+$expect( 'a flat page of a wrapped Home is found by G1', str_contains( implode( ';', Team_Quality::measure( $wh )['gates']['G1'][ $wp['service'] ] ?? array() ), 'frame' ) );
+$sync = Team_Chrome::sync( $wh );
+$expect( 'and the sync gives it the frame', $sync['pages'] === 1 && Team_Quality::measure( $wh )['gates']['G1'] === array() && Page_Frame::frame_key( parse_blocks( (string) get_post_field( 'post_content', $wp['service'] ) ) ) !== '', json_encode( $sync ) );
+$expect( 'once more changes nothing', Team_Chrome::sync( $wh ) === array( 'pages' => 0, 'skipped' => array() ) );
+
 echo "\nThe measure of the pages (Team_Quality)\n";
 $q = Team_Quality::measure( $home_id );
 $expect( 'the pages made for the design are the ones measured', count( $q['pages'] ) >= 7 && in_array( $svc, array_column( $q['pages'], 'id' ), true ), (string) count( $q['pages'] ) );
 $expect( 'pages made here keep the Home\'s header and footer, have valid blocks and nothing foreign', $q['gates']['G1'] === array() && $q['gates']['G7'] === array() && $q['gates']['G9'] === array(), json_encode( array( $q['gates']['G1'], $q['gates']['G7'], $q['gates']['G9'] ) ) );
 $sec = array_values( array_filter( $q['pages'], static fn( $p ) => (int) $p['id'] === $svc ) )[0]['sections'] ?? array();
-$expect( 'each section says what it is and whether the Home has one of its structure', $sec !== array() && count( array_filter( $sec, static fn( $x ) => $x['role'] !== '' && $x['origin'] === 'home' ) ) === count( $sec ) );
+$expect( 'each section says what it is, where it comes from in the Home, and what was done to it', $sec !== array() && count( array_filter( $sec, static fn( $x ) => $x['role'] !== '' && in_array( $x['origin'], array( 'home', 'derived' ), true ) ) ) === count( $sec ) );
 $expect( 'pages that are the Home\'s sections and little else are told so (G8)', isset( $q['gates']['G8'][ $svc ] ) );
 $original = (string) get_post_field( 'post_content', $svc );
 $tamper   = static function ( string $content ) use ( $svc ): void {
@@ -392,6 +432,18 @@ $tamper( $original . "\n<!-- wp:vtx/not-a-block /-->" );
 $expect( 'G7: a block that is not registered is found', str_contains( $find( 'G7' ), 'unregistered' ), $find( 'G7' ) );
 $tamper( $original );
 $expect( 'put back, the page is clean again', Team_Quality::measure( $home_id )['gates']['G1'] === array() && ( Team_Quality::measure( $home_id )['gates']['G9'][ $svc ] ?? array() ) === array() );
+
+echo "\nThe sections are varied (Section_Variants)\n";
+$ops_now = json_decode( (string) get_post_meta( $svc, Team_Pages::OPS_META, true ), true );
+$sec_now = Section_Library::for_page( $svc );
+$expect( 'what was done to each section is kept with the page: one list for each', is_array( $ops_now ) && count( $ops_now ) === count( $sec_now ), json_encode( $ops_now ) . ' / ' . count( $sec_now ) );
+$sv_before = (string) get_post_field( 'post_content', $svc );
+Team_Pages::build( $home_id, $wanted, true );
+$expect( 'making a page again makes the same page (the variants are the seed\'s)', (string) get_post_field( 'post_content', $svc ) === $sv_before );
+$ops_a = json_decode( (string) get_post_meta( $by['service|water-damage'], Team_Pages::OPS_META, true ), true );
+$ops_b = json_decode( (string) get_post_meta( $by['service|fire-damage'] ?? 0, Team_Pages::OPS_META, true ), true );
+$expect( 'two pages of a kind are made differently', is_array( $ops_b ) && ( $ops_a !== $ops_b || (string) get_post_field( 'post_content', $by['service|water-damage'] ) !== (string) get_post_field( 'post_content', $by['service|fire-damage'] ) ) );
+$expect( 'a design that cannot be asked about its places (no stylesheet) moves nothing but is still varied by what is safe', Section_Variants::positional_classes( $home_id ) === null );
 
 echo "\nWhose page it is\n";
 $slug_svc = (string) get_post_field( 'post_name', $svc );

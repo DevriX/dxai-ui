@@ -109,24 +109,47 @@ function collect(chromeCounts) {
 const hexToRgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h).trim()); if (!m) return null; const n = parseInt(m[1], 16); return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`; };
 const near = (a, set, tol) => set.some((b) => Math.abs(a - b) <= tol);
 
+// A browser that dies takes its connection's errors with it: they are not the measure's.
+process.on('unhandledRejection', (e) => console.error('browser:', String((e && e.message) || e).slice(0, 80)));
+
 (async () => {
-	const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'shell', args: ['--no-sandbox'] });
+	let browser = await puppeteer.launch({ executablePath: CHROME, headless: 'shell', args: ['--no-sandbox'] });
 	const pages = data.pages.filter((p) => !only || only.has(p.id));
 	const targets = [{ id: data.home.id, url: data.home.url, home: true }, ...pages.map((p) => ({ id: p.id, url: p.url }))];
 	const seen = {};
-	for (const width of [...WIDTHS, ...OVERFLOW_WIDTHS]) {
+	let opened = 0;
+	const open = async (width) => {
+		// A new browser now and then (a long run of pages is a lot for one) and whenever the old one is gone.
+		if (!browser.connected || ++opened > 8) {
+			try { await browser.close(); } catch (_) { /* gone already */ }
+			browser = await puppeteer.launch({ executablePath: CHROME, headless: 'shell', args: ['--no-sandbox'] });
+			opened = 1;
+		}
 		const page = await browser.newPage();
 		await page.setViewport({ width, height: 900 });
+		return page;
+	};
+	const measure = async (page, t) => {
+		await page.goto(t.url, { waitUntil: 'networkidle2', timeout: 90000 });
+		await page.evaluate(async () => { await document.fonts.ready; const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } window.scrollTo(0, 0); await new Promise((r) => setTimeout(r, 300)); });
+		return page.evaluate(collect, data.home.chrome);
+	};
+	for (const width of [...WIDTHS, ...OVERFLOW_WIDTHS]) {
+		let page = await open(width);
 		for (const t of targets) {
-			try {
-				await page.goto(t.url, { waitUntil: 'networkidle2', timeout: 90000 });
-				await page.evaluate(async () => { await document.fonts.ready; const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } window.scrollTo(0, 0); await new Promise((r) => setTimeout(r, 300)); });
-				seen[width + ':' + t.id] = await page.evaluate(collect, data.home.chrome);
-			} catch (e) {
-				seen[width + ':' + t.id] = { error: String(e).slice(0, 120) };
+			for (let attempt = 1; attempt <= 3; attempt++) {
+				try {
+					seen[width + ':' + t.id] = await measure(page, t);
+					break;
+				} catch (e) {
+					seen[width + ':' + t.id] = { error: String(e).slice(0, 120) };
+					// a page or a browser that is gone: a new one, and the same page again
+					try { await page.close(); } catch (_) { /* gone already */ }
+					page = await open(width);
+				}
 			}
 		}
-		await page.close();
+		try { await page.close(); } catch (_) { /* gone already */ }
 	}
 	await browser.close();
 
@@ -194,13 +217,13 @@ const near = (a, set, tol) => set.some((b) => Math.abs(a - b) <= tol);
 	}
 
 	// The report
-	const names = { G1: "header and footer are the Home's", G2: 'colours are the Home\'s', G3: 'fonts are the Home\'s', G4: "the Home's frame", G5: 'reused sections are the Home\'s', G6: 'mobile', G7: 'blocks are valid', G8: 'pages are not copies', G9: 'nothing foreign' };
+	const names = { G1: "header and footer are the Home's", G2: 'colours are the Home\'s', G3: 'fonts are the Home\'s', G4: "the Home's frame", G5: 'reused sections are the Home\'s', G6: 'mobile', G7: 'blocks are valid', G8: 'pages are not copies (sections)', G8W: 'pages are not copies (words)', G9: 'nothing foreign' };
 	const all = { ...(data.gates || {}), ...gates };
 	const title = Object.fromEntries(data.pages.map((p) => [p.id, p.title]));
 	console.log(`Home ${data.home.id} "${data.home.title}": ${data.home.sections.length} sections, ${pages.length} pages, measured at ${WIDTHS.join(', ')} px (overflow also at ${OVERFLOW_WIDTHS.join(', ')})\n`);
 	const failed = [];
 	const rows = [];
-	for (const g of ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9']) {
+	for (const g of ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G8W', 'G9']) {
 		const bad = all[g] || {};
 		const badIds = Object.keys(bad).filter((id) => !only || only.has(Number(id)));
 		const ok = badIds.length === 0;

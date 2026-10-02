@@ -38,6 +38,9 @@ final class Team_Pages {
 	 */
 	public const KEY_META = '_dxai_ui_page_key';
 
+	/** On each page: how each of its sections was varied (Section_Variants), one list of names per section, in page order. */
+	public const OPS_META = '_dxai_ui_team_ops';
+
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
 
@@ -109,7 +112,7 @@ final class Team_Pages {
 		$roles   = self::home_roles( $library );
 		$out     = array();
 		foreach ( self::clean_wanted( $wanted ) as $item ) {
-			$recipe = self::recipe( $item['type'], $seed, $roles );
+			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
 			$parts  = array();
 			foreach ( $recipe['roles'] as $role ) {
 				$parts[] = array(
@@ -158,6 +161,11 @@ final class Team_Pages {
 		$seed  = self::seed( $home );
 		$roles = self::home_roles( $library );
 		$log   = array();
+		// What a section can be varied with: the Home's other pictures, and the classes the design styles by place.
+		$vary  = array(
+			'pool'       => Section_Variants::pool( $library ),
+			'positional' => Section_Variants::positional_classes( $home ),
+		);
 
 		// First every page exists, so the pages can link to each other.
 		$ids  = array();
@@ -196,15 +204,15 @@ final class Team_Pages {
 		foreach ( $pend as $item ) {
 			$key    = $item['type'] . '|' . $item['slug'];
 			$id     = $ids[ $key ];
-			$recipe = self::recipe( $item['type'], $seed, $roles );
+			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
 			$siblings = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
-			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key );
-			$markup = Block_Tree::serialize_checked( $built['sections'] );
-			if ( is_wp_error( $markup ) ) {
-				$log[] = sprintf( '%s: the sections did not round-trip (%s) — not written', $item['title'], $markup->get_error_message() );
+			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, $vary );
+			$wrote = self::write( $id, $home, $built['sections'] );
+			if ( is_wp_error( $wrote ) ) {
+				$log[] = sprintf( '%s: the page did not round-trip (%s) — not written', $item['title'], $wrote->get_error_message() );
 				continue;
 			}
-			self::write( $id, $home, trim( $markup ) );
+			update_post_meta( $id, self::OPS_META, wp_json_encode( $built['ops'] ) );
 			$log   = array_merge( $log, array_map( static fn( $l ) => $item['title'] . ': ' . $l, $built['log'] ) );
 			$done[] = array(
 				'id'      => $id,
@@ -300,7 +308,7 @@ final class Team_Pages {
 	/**
 	 * @return array{roles:array<int, string>, edits:array<int, string>, nearest:int}
 	 */
-	private static function recipe( string $type, string $seed, array $home_roles = array() ): array {
+	private static function recipe( string $type, string $seed, array $home_roles = array(), string $variant = '' ): array {
 		$model = self::KINDS[ $type ]['model'] ?? '';
 		if ( $model === '' ) {
 			// A list of the pages under it: what the page opens with, the list, what people say, the call to action. The list of
@@ -312,7 +320,7 @@ final class Team_Pages {
 				'nearest' => 0,
 			);
 		}
-		$r = Page_Recipes::pick( $model, $seed );
+		$r = Page_Recipes::pick( $model, $seed, $variant );
 
 		return array(
 			'roles'   => self::must_have( $type, $r['roles'], $home_roles ),
@@ -435,13 +443,17 @@ final class Team_Pages {
 	 * @param array<int, string>                           $recipe
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
-	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>}
+	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null} $vary What a section can be varied with (Section_Variants).
+	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>}
 	 */
-	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed ): array {
+	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
 		$library  = array_values( $library );
 		$used     = array();
 		$sections = array();
 		$log      = array();
+		$ops      = array();
+		$pictures = array();
+		$topic    = self::topic( $item['title'] );
 		foreach ( $recipe as $place => $role ) {
 			$cand = self::pool( $library, $roles, (string) $role );
 			if ( $cand === array() ) {
@@ -452,6 +464,14 @@ final class Team_Pages {
 			$cost = static fn( $i ) => ( $used[ $i ] ?? 0 ) * 10 + $cand[ $i ];
 			$low  = min( array_map( $cost, array_keys( $cand ) ) );
 			$least = array_values( array_filter( array_keys( $cand ), static fn( $i ) => $cost( $i ) === $low ) );
+			// Of equals, the one that talks about what the page is about (a page for water damage takes the section that says water).
+			if ( count( $least ) > 1 && $topic !== array() ) {
+				$near = array_map( static fn( $i ) => self::affinity( $library[ $i ]['block'], $topic ), $least );
+				$best = max( $near );
+				if ( $best > 0 ) {
+					$least = array_values( array_intersect_key( $least, array_filter( $near, static fn( $n ) => $n === $best ) ) );
+				}
+			}
 			$pick  = $least[ (int) ( sprintf( '%u', crc32( $seed . '|' . $role . '|' . $place ) ) % count( $least ) ) ];
 			$component = $library[ $pick ];
 			$block     = $component['block'];
@@ -460,6 +480,25 @@ final class Team_Pages {
 				Block_Tree::strip_anchors( $block );
 			}
 			$used[ $pick ] = ( $used[ $pick ] ?? 0 ) + 1;
+			// The section, shown another way from what the Home's other pages have (the cards that list pages are filled below).
+			$done = array();
+			if ( $role !== 'related' && isset( $vary['pool'] ) ) {
+				$v        = Section_Variants::apply(
+					array_merge( $component, array( 'block' => $block ) ),
+					array(
+						'seed'       => $seed . '|' . $place . '|' . $pick,
+						'positional' => $vary['positional'] ?? null,
+						'pool'       => $vary['pool'],
+						'used'       => $pictures,
+						'index'      => $pick,
+						'role'       => (string) $role,
+					)
+				);
+				$block    = $v['block'];
+				$done     = $v['ops'];
+				$pictures = array_merge( $pictures, $v['images'] );
+			}
+			$ops[] = $done;
 			if ( $role === 'hero' ) {
 				self::title_hero( $block, $item['title'] );
 			}
@@ -467,13 +506,47 @@ final class Team_Pages {
 				$block = self::fill_related( $block, $component, $siblings, $item['title'] );
 			}
 			$sections[] = $block;
-			$log[]      = sprintf( '%s ← Home section %d (%s)', $role, $pick + 1, $component['kind'] );
+			$log[]      = sprintf( '%s ← Home section %d (%s)%s', $role, $pick + 1, $component['kind'], $done === array() ? '' : ' — ' . implode( ', ', $done ) );
 		}
 
 		return array(
 			'sections' => $sections,
 			'log'      => $log,
+			'ops'      => $ops,
 		);
+	}
+
+	/**
+	 * The words a page is about: the words of its title that name something (not "restoration", "services").
+	 *
+	 * @return array<int, string>
+	 */
+	private static function topic( string $title ): array {
+		$skip = array( 'restoration', 'service', 'services', 'about', 'contact', 'frequently', 'asked', 'questions', 'testimonials', 'with', 'from', 'your', 'the', 'and' );
+		$out  = array();
+		foreach ( (array) preg_split( '/[^\p{L}]+/u', mb_strtolower( $title ), -1, PREG_SPLIT_NO_EMPTY ) as $w ) {
+			if ( mb_strlen( (string) $w ) >= 4 && ! in_array( $w, $skip, true ) ) {
+				$out[] = (string) $w;
+			}
+		}
+
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * How much a section says about the topic: how many times its words are the topic's.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, string>   $topic
+	 */
+	private static function affinity( array $block, array $topic ): int {
+		$text = mb_strtolower( wp_strip_all_tags( serialize_block( $block ) ) );
+		$n    = 0;
+		foreach ( $topic as $w ) {
+			$n += substr_count( $text, $w );
+		}
+
+		return $n;
 	}
 
 	/** The page's own title in the hero's heading. */
@@ -757,15 +830,24 @@ final class Team_Pages {
 	}
 
 	/**
-	 * Put the sections on the page, with the Home's scope, styles, scripts and fonts, the way a page the importer makes has them.
+	 * Put the sections on the page, in the Home's frame (Page_Frame), with the Home's scope, styles, scripts and fonts, the way a
+	 * page the importer makes has them.
+	 *
+	 * @param array<int, array<string, mixed>> $sections
+	 * @return true|\WP_Error
 	 */
-	private static function write( int $id, int $home, string $markup ): void {
+	private static function write( int $id, int $home, array $sections ) {
 		// The Home's header and footer when it keeps them in its own content (a page written as one group, a classic theme):
 		// the page carries its own copy, as a page the importer makes does, so the rules for their blocks are written for it.
 		// A template part or the site's header block is added around the page when it is shown.
 		$chrome = Section_Library::chrome_markup( $home );
 		$embed  = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dxai-ui/site-' );
-		$markup = trim( ( $embed( $chrome['header'] ) ? $chrome['header'] . "\n\n" : '' ) . $markup . ( $embed( $chrome['footer'] ) ? "\n\n" . $chrome['footer'] : '' ) );
+		$blocks = static fn( string $m ): array => array_values( array_filter( parse_blocks( $m ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
+		$markup = Block_Tree::serialize_checked( Page_Frame::build( $home, $embed( $chrome['header'] ) ? $blocks( $chrome['header'] ) : array(), $sections, $embed( $chrome['footer'] ) ? $blocks( $chrome['footer'] ) : array() ) );
+		if ( is_wp_error( $markup ) ) {
+			return $markup;
+		}
+		$markup = trim( $markup );
 		global $wpdb;
 		// The design's own markup is written as it is: wp_update_post() would run KSES for someone without unfiltered HTML.
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $markup ), array( 'ID' => $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -793,5 +875,7 @@ final class Team_Pages {
 				update_post_meta( $id, $key, $value );
 			}
 		}
+
+		return true;
 	}
 }

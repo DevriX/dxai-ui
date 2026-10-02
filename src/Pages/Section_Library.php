@@ -116,7 +116,7 @@ final class Section_Library {
 	}
 
 	/** @param array<string, mixed> $b A container with at least three containers in it: a wrapper around sections. */
-	private static function wraps_sections( array $b ): bool {
+	public static function wraps_sections( array $b ): bool {
 		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) ) {
 			return false;
 		}

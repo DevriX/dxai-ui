@@ -32,7 +32,8 @@ final class Team_Quality {
 	public const GATES = array(
 		'G1' => "header and footer are the Home's",
 		'G7' => 'blocks are valid',
-		'G8' => 'pages are not copies',
+		'G8'  => 'pages are not copies (sections)',
+		'G8W' => 'pages are not copies (words)',
 		'G9' => 'nothing foreign',
 	);
 
@@ -42,7 +43,7 @@ final class Team_Quality {
 	/** Sections of one structure a page and the Home may share. */
 	public const MAX_SHARED_WITH_HOME = 0.6;
 
-	/** Long texts a page may have word for word from the Home. */
+	/** Long texts a page may have word for word from the Home (G8W: the words are written by the Words panel, or by hand). */
 	public const MAX_TEXT_FROM_HOME = 0.6;
 
 	private const PLACEHOLDERS = '/lorem ipsum|dolor sit amet|goes here|placeholder|your (?:company|business) name|coming soon|\btodo\b/i';
@@ -79,7 +80,7 @@ final class Team_Quality {
 		}
 		$home_pool = array();
 		foreach ( $home_sigs as $sig => $n ) {
-			$home_pool[ md5( (string) $sig ) ] = $n;
+			$home_pool[ md5( $sig . '|' ) ] = $n;
 		}
 		$home_text  = array_flip( self::long_texts( $home_markup ) );
 		$home_facts = self::facts( $home_markup );
@@ -87,7 +88,8 @@ final class Team_Quality {
 		$home_title = trim( html_entity_decode( wp_strip_all_tags( get_the_title( $home ) ), ENT_QUOTES, 'UTF-8' ) );
 		$others     = self::other_designs( $home, $home_title );
 
-		$gates   = array( 'G1' => array(), 'G7' => array(), 'G8' => array(), 'G9' => array() );
+		$home_frame = Page_Frame::frame_key( self::top( $home_markup ) );
+		$gates   = array( 'G1' => array(), 'G7' => array(), 'G8' => array(), 'G8W' => array(), 'G9' => array() );
 		$pages   = array();
 		$by_kind = array();
 		foreach ( self::page_ids( $home ) as $id ) {
@@ -96,18 +98,23 @@ final class Team_Quality {
 			$blocks = self::top( $markup );
 
 			// G1 · the header and the footer.
-			$bad = array();
+			$bad   = array();
+			$parts = Page_Frame::split( $blocks, $header_in ? count( $hb ) : 0, $footer_in ? count( $fb ) : 0 );
 			if ( $header_in || $footer_in ) {
-				if ( count( $blocks ) < count( $hb ) + count( $fb ) ) {
+				if ( count( $parts['head'] ) < ( $header_in ? count( $hb ) : 0 ) || count( $parts['tail'] ) < ( $footer_in ? count( $fb ) : 0 ) ) {
 					$bad[] = "the page is shorter than the Home's header and footer";
 				} else {
-					if ( $header_in && self::join( array_slice( $blocks, 0, count( $hb ) ) ) !== self::join( $hb ) ) {
+					if ( $header_in && self::join( $parts['head'] ) !== self::join( $hb ) ) {
 						$bad[] = 'header differs';
 					}
-					if ( $footer_in && self::join( array_slice( $blocks, -count( $fb ) ) ) !== self::join( $fb ) ) {
+					if ( $footer_in && self::join( $parts['tail'] ) !== self::join( $fb ) ) {
 						$bad[] = 'footer differs';
 					}
 				}
+			}
+			// The frame: the Home's wrapper (what it clips, how it lays out) is the page's.
+			if ( $home_frame !== '' && Page_Frame::frame_key( $blocks ) !== $home_frame ) {
+				$bad[] = "the page is not in the Home's frame (the group around its header, main and footer)";
 			}
 			foreach ( array( Page_Chrome::PART_KEY_META, Page_Chrome::MODE_META ) as $k ) {
 				if ( (string) get_post_meta( $id, $k, true ) !== (string) get_post_meta( $home, $k, true ) ) {
@@ -138,6 +145,8 @@ final class Team_Quality {
 			// The sections: what each is, and whether the Home has one of that structure.
 			$sections = array();
 			$sigs     = array();
+			$varied   = json_decode( (string) get_post_meta( $id, Team_Pages::OPS_META, true ), true );
+			$varied   = is_array( $varied ) ? $varied : array();
 			foreach ( array_values( Section_Library::for_page( $id ) ) as $i => $c ) {
 				$sig    = Section_Library::signature( $c['block'] );
 				$hash   = self::hash( $c['block'] );
@@ -156,7 +165,9 @@ final class Team_Quality {
 						}
 					}
 				}
-				$sigs[] = md5( $sig );
+				$did    = array_values( array_map( 'strval', (array) ( $varied[ $i ] ?? array() ) ) );
+				// A section is the same as another when its structure is, and so is what was done to it.
+				$sigs[] = md5( $sig . '|' . implode( ',', $did ) );
 				$sections[] = array(
 					'index'      => $i,
 					'role'       => Section_Roles::of( $c['block'], $i === 0 ),
@@ -165,6 +176,7 @@ final class Team_Quality {
 					'identical'  => array_filter( $home_secs, static fn( $h ) => $h['hash'] === $hash ) !== array(),
 					'home_index' => self::closest( $struct !== array() ? $struct : $kin, $hash, $mine, $home_secs, $home_classes ),
 					'sig'        => md5( $sig ),
+					'ops'        => $did,
 				);
 			}
 			$long   = self::long_texts( $markup );
@@ -232,7 +244,7 @@ final class Team_Quality {
 			}
 			$from_home = $p['texts'] > 0 ? $p['copied'] / $p['texts'] : 0.0;
 			if ( $from_home > self::MAX_TEXT_FROM_HOME ) {
-				$bad[] = sprintf( "%d%% of its long texts are the Home's word for word (at most %d%%)", round( 100 * $from_home ), 100 * self::MAX_TEXT_FROM_HOME );
+				$gates['G8W'][ $id ] = array( sprintf( "%d%% of its long texts are the Home's word for word (at most %d%%)", round( 100 * $from_home ), 100 * self::MAX_TEXT_FROM_HOME ) );
 			}
 			$pages[ $id ]['shared_with_home'] = round( $with_home, 2 );
 			$pages[ $id ]['shared_with_page'] = round( $worst, 2 );

@@ -64,7 +64,7 @@ final class Page_Recipes {
 	 *
 	 * @return array{roles:array<int, string>, family:int, edits:array<int, string>, nearest:int}
 	 */
-	public static function pick( string $type, string $seed ): array {
+	public static function pick( string $type, string $seed, string $variant = '' ): array {
 		$types = (array) self::model()['types'];
 		$t     = $types[ $type ] ?? ( $types['service'] ?? null );
 		if ( ! is_array( $t ) || ! is_array( $t['families'] ?? null ) || $t['families'] === array() ) {
@@ -95,6 +95,11 @@ final class Page_Recipes {
 		$roles = $base;
 		$edits = array();
 		$real  = self::real_orders( $t );
+		// The order and the family are the site's (the seed); the small changes are the page's too (the variant), so two pages of a
+		// kind on one site are not the same page. With no variant the page is the site's alone.
+		if ( $variant !== '' ) {
+			$next = self::rng( (int) sprintf( '%u', crc32( $seed . '|' . $type . '|' . $variant ) ) );
+		}
 		// One or two small changes, then more until the recipe is not any real page.
 		$want = 1 + (int) floor( $next() * 2 );
 		for ( $n = 0; $n < $want; $n++ ) {

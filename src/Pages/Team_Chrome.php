@@ -35,6 +35,9 @@ final class Team_Chrome {
 	/** Option: the version of the one-off sync (upgrade()). */
 	public const DONE = 'dxai_ui_team_chrome_done';
 
+	/** 1: the header and footer; 2: and the Home's frame (Page_Frame). */
+	public const VERSION = '2';
+
 	public function register(): void {
 		add_action( 'save_post_page', array( self::class, 'on_save' ), 30, 2 );
 		add_action( 'admin_init', array( self::class, 'upgrade' ), 43 );
@@ -58,7 +61,7 @@ final class Team_Chrome {
 
 	/** Once per version, every design that has pages made for it. */
 	public static function upgrade(): void {
-		if ( (string) get_option( self::DONE, '' ) === '1' || ! current_user_can( 'manage_options' ) ) {
+		if ( (string) get_option( self::DONE, '' ) === self::VERSION || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 		foreach ( Design_Attach::home_ids( 1000 ) as $home ) {
@@ -66,7 +69,7 @@ final class Team_Chrome {
 				self::sync( (int) $home );
 			}
 		}
-		update_option( self::DONE, '1', false );
+		update_option( self::DONE, self::VERSION, false );
 	}
 
 	/**
@@ -85,20 +88,19 @@ final class Team_Chrome {
 		foreach ( Team_Quality::page_ids( $home ) as $id ) {
 			$content = (string) get_post_field( 'post_content', $id );
 			$blocks  = array_values( array_filter( parse_blocks( $content ), static fn( $b ) => trim( (string) ( $b['blockName'] ?? '' ) ) !== '' ) );
-			if ( count( $blocks ) < count( $hb ) + count( $fb ) ) {
+			$parts   = Page_Frame::split( $blocks, count( $hb ), count( $fb ) );
+			if ( count( $parts['head'] ) < count( $hb ) || count( $parts['tail'] ) < count( $fb ) ) {
 				$out['skipped'][] = $id;
 				continue;
 			}
-			$head = array_slice( $blocks, 0, count( $hb ) );
-			$tail = $fb === array() ? array() : array_slice( $blocks, -count( $fb ) );
 			// The same kind of thing: a header's structure for a header's, a footer's for a footer's.
-			if ( self::structure( $head ) !== self::structure( $hb ) || self::structure( $tail ) !== self::structure( $fb ) ) {
+			if ( self::structure( $parts['head'] ) !== self::structure( $hb ) || self::structure( $parts['tail'] ) !== self::structure( $fb ) ) {
 				$out['skipped'][] = $id;
 				continue;
 			}
-			$middle = array_slice( $blocks, count( $hb ), count( $blocks ) - count( $hb ) - count( $fb ) );
-			$new    = trim( implode( "\n\n", array_map( 'serialize_block', array_merge( $hb, $middle, $fb ) ) ) );
-			$old    = trim( implode( "\n\n", array_map( 'serialize_block', $blocks ) ) );
+			// The page in the Home's frame (a page made before the frame existed gets it here), with the Home's header and footer.
+			$new = trim( implode( "\n\n", array_map( 'serialize_block', Page_Frame::build( $home, $hb, $parts['middle'], $fb ) ) ) );
+			$old = trim( implode( "\n\n", array_map( 'serialize_block', $blocks ) ) );
 			if ( $new === $old ) {
 				continue;
 			}
