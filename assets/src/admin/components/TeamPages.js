@@ -1,14 +1,16 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { Button, CheckboxControl, Notice, SelectControl, Spinner, TextControl, TextareaControl, ToggleControl } from '@wordpress/components';
+import { Button, CheckboxControl, Notice, RangeControl, SelectControl, Spinner, TextControl, TextareaControl } from '@wordpress/components';
 import './team-pages.css';
 
 /*
  * "Pages in the team's style": the pages of a site (a service, a place, About, Contact, the questions, the reviews),
  * made the way the team makes theirs, in the look of the design's Home. The order of each page's sections is worked
- * out from what the team's eleven live sites do, and each section is the Home's own of that kind. The words are the
- * Home's until they are written for the page (Words for the pages).
+ * out from what the team's eleven live sites do, and each section is the Home's own of that kind (or the Home's cards
+ * with the pages of the site poured in). The plan is shown as a strip of sections before anything is made — what is
+ * shown is what is made — and a page can be shuffled (another page of the same site) with the sections you like locked.
+ * The words are the Home's until they are written for the page (Words for the pages).
  */
 const base = '/dxai-ui/v1/team-pages';
 
@@ -29,7 +31,53 @@ const ROLE = {
 	text: __( 'Text', 'dxai-ui' ),
 };
 
+// How the sections are chosen: the three stops of the slider.
+const MODES = [ 'home', 'new', 'ai' ];
+const MODE_LABEL = {
+	home: __( 'Only the Home', 'dxai-ui' ),
+	new: __( 'Home + new', 'dxai-ui' ),
+	ai: __( 'With AI', 'dxai-ui' ),
+};
+const MODE_HELP = {
+	home: __( 'Every section is one of the Home\'s, as it is. Nothing is made: a page that lists other pages shows the Home\'s own cards.', 'dxai-ui' ),
+	new: __( 'The Home\'s sections, and the sections the site makes in the Home\'s own cards: the list of the site\'s pages, the ways to reach the company.', 'dxai-ui' ),
+	ai: __( 'An AI chooses the sections of each page, among the Home\'s own and the ones the site makes. One request for each page, when you press "Make"; the plan shown is the usual one it starts from. It writes no words.', 'dxai-ui' ),
+};
+
+// What was done to a section, in words (the plan says it in short names).
+const VARIANT = [
+	[ /^image:/, __( 'another picture', 'dxai-ui' ) ],
+	[ /^order:/, __( 'cards in another order', 'dxai-ui' ) ],
+	[ /^flip$/, __( 'sides swapped', 'dxai-ui' ) ],
+	[ /^drop:/, __( 'one thing less', 'dxai-ui' ) ],
+	[ /^faq:/, __( 'fewer questions', 'dxai-ui' ) ],
+	[ /^lead:/, __( 'opens with the Home\'s words for it', 'dxai-ui' ) ],
+];
+const variants = ( ops ) => {
+	const out = [];
+	ops.forEach( ( op ) => {
+		op.split( '+' ).forEach( ( part ) => {
+			const hit = VARIANT.find( ( v ) => v[ 0 ].test( part ) );
+			if ( hit && ! out.includes( hit[ 1 ] ) ) {
+				out.push( hit[ 1 ] );
+			}
+		} );
+	} );
+
+	return out.join( ', ' );
+};
+
+// What the report says about each gate.
+const GATE = {
+	G1: __( 'Header and footer are the Home\'s', 'dxai-ui' ),
+	G7: __( 'Blocks are valid', 'dxai-ui' ),
+	G8: __( 'Not a copy of another page (sections)', 'dxai-ui' ),
+	G8W: __( 'Not a copy of the Home (words)', 'dxai-ui' ),
+	G9: __( 'Nothing foreign (phones, e-mails, other sites)', 'dxai-ui' ),
+};
+
 const lines = ( text ) => text.split( '\n' ).map( ( l ) => l.trim() ).filter( Boolean );
+const keyOf = ( type, title ) => type + '|' + title;
 
 export default function TeamPages() {
 	const [ data, setData ] = useState( null );
@@ -41,15 +89,18 @@ export default function TeamPages() {
 	const [ plan, setPlan ] = useState( null );
 	const [ built, setBuilt ] = useState( null );
 	const [ busy, setBusy ] = useState( '' );
-	// The AI plan of the sections: off until asked for; its cost is told before anything is sent.
-	const [ ai, setAi ] = useState( false );
+	// How the sections are chosen; the AI's cost is told before anything is sent.
+	const [ mode, setMode ] = useState( 'new' );
 	const [ estimate, setEstimate ] = useState( null );
 	const [ priceIn, setPriceIn ] = useState( '' );
 	const [ priceOut, setPriceOut ] = useState( '' );
+	const [ gave, setGave ] = useState( null );
+	const [ confirm, setConfirm ] = useState( false );
 
 	function load( design = 0 ) {
 		setPlan( null );
 		setBuilt( null );
+		setGave( null );
 		apiFetch( { path: base + ( design ? '?design=' + design : '' ) } )
 			.then( ( res ) => {
 				setData( res );
@@ -87,48 +138,120 @@ export default function TeamPages() {
 		return null;
 	}
 
-	function wanted() {
+	// What was shuffled and locked on each page is in the plan, as the server returned it (the locks that held, the shuffle):
+	// that is what is sent back. A page that is not in a plan is arranged as it was last made.
+	function wanted( override = {} ) {
+		const kept = {};
+		( plan || [] ).forEach( ( p ) => {
+			kept[ keyOf( p.type, p.title ) ] = p.arrangement;
+		} );
+		const arrangement = { ...kept, ...override };
 		const out = [];
-		lines( services ).forEach( ( title ) => out.push( { type: 'service', title } ) );
-		lines( places ).forEach( ( place ) => out.push( { type: 'location', title: ( phrase.trim() ? phrase.trim() + ' in ' : '' ) + place } ) );
+		const add = ( type, title ) => out.push( { type, title, ...( arrangement[ keyOf( type, title ) ] || {} ) } );
+		lines( services ).forEach( ( title ) => add( 'service', title ) );
+		lines( places ).forEach( ( place ) => add( 'location', ( phrase.trim() ? phrase.trim() + ' in ' : '' ) + place ) );
 		data.suggestions.general.forEach( ( g ) => {
 			if ( general[ g.type ] ) {
-				out.push( { type: g.type, title: g.title } );
+				add( g.type, g.title );
 			}
 		} );
 
 		return out;
 	}
 
-	function send( action ) {
+	function takePlan( rows ) {
+		setPlan( rows );
+	}
+
+	function send( action, extra = {} ) {
 		setBusy( action );
 		setError( '' );
-		const body = { action, design: data.design, wanted: wanted() };
-		if ( action === 'build' ) {
-			body.ai = ai;
-		}
+		const body = { action, design: data.design, wanted: wanted( extra.arr ), mode };
 		if ( action === 'estimate' ) {
 			body.price_in = parseFloat( priceIn ) || 0;
 			body.price_out = parseFloat( priceOut ) || 0;
 		}
-		apiFetch( { path: base, method: 'POST', data: body } )
+		if ( extra.page ) {
+			body.page = extra.page;
+		}
+		if ( action === 'put_back' ) {
+			delete body.wanted;
+		}
+		return apiFetch( { path: base, method: 'POST', data: body } )
 			.then( ( res ) => {
 				if ( action === 'estimate' ) {
 					setEstimate( res.estimate );
 				} else if ( action === 'plan' ) {
-					setPlan( res.plan );
+					takePlan( res.plan );
 					setBuilt( null );
-				} else {
+				} else if ( action === 'build' ) {
 					setBuilt( res );
-					setData( ( d ) => ( { ...d, existing: res.existing } ) );
-					setPlan( null );
+					setGave( null );
+					setConfirm( false );
+					setData( ( d ) => ( { ...d, existing: res.existing, run: res.run } ) );
+				} else {
+					// Giving a run, or a page of it, back.
+					setGave( { ...res, all: action === 'undo' } );
+					setBuilt( null );
+					setConfirm( false );
+					setData( ( d ) => ( { ...d, existing: res.existing, run: res.run } ) );
 				}
 			} )
 			.catch( ( e ) => setError( e.message ) )
 			.finally( () => setBusy( '' ) );
 	}
 
+	// A page made, then shown again as it is arranged now (so it can be shuffled again).
+	function build() {
+		send( 'build' ).then( () => {
+			apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode } } )
+				.then( ( res ) => takePlan( res.plan ) )
+				.catch( () => {} );
+		} );
+	}
+
+	function pickMode( index ) {
+		const next = MODES[ index ];
+		setMode( next );
+		setEstimate( null );
+		if ( plan ) {
+			setBusy( 'plan' );
+			apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode: next } } )
+				.then( ( res ) => takePlan( res.plan ) )
+				.catch( ( e ) => setError( e.message ) )
+				.finally( () => setBusy( '' ) );
+		}
+	}
+
+	// Another page of the same site: a new shuffle. With a section locked the order of the page is held and the others change.
+	function shuffle( p, reset = false ) {
+		const a = p.arrangement;
+		const next = reset
+			? { shuffle: 0, recipe: 0, locks: [] }
+			: { shuffle: a.shuffle + 1, recipe: a.locks.length ? a.recipe : a.shuffle + 1, locks: a.locks };
+		send( 'plan', { arr: { [ keyOf( p.type, p.title ) ]: next } } );
+	}
+
+	function toggleLock( p, x ) {
+		// The page does not change by locking what it shows: only the mark does.
+		setPlan( ( rows ) =>
+			rows.map( ( q ) => {
+				if ( q.type !== p.type || q.slug !== p.slug ) {
+					return q;
+				}
+				const held = q.arrangement.locks.some( ( l ) => l.place === x.place );
+				const locks = held
+					? q.arrangement.locks.filter( ( l ) => l.place !== x.place )
+					: [ ...q.arrangement.locks, { place: x.place, role: x.role, source: x.source, home: x.home, n: x.n, ops: x.ops } ].sort( ( l, m ) => l.place - m.place );
+
+				return { ...q, arrangement: { ...q.arrangement, locks }, strip: q.strip.map( ( s ) => ( s.place === x.place ? { ...s, locked: ! held } : s ) ) };
+			} )
+		);
+	}
+
 	const total = wanted().length;
+	const run = data.run && data.run.pages && data.run.pages.length ? data.run : null;
+	const arranged = ( p ) => p.arrangement && ( p.arrangement.shuffle > 0 || p.arrangement.locks.length > 0 );
 
 	return (
 		<section className="dxai-section dxai-team" aria-labelledby="dxai-team-title">
@@ -203,18 +326,23 @@ export default function TeamPages() {
 			) }
 
 			<fieldset className="dxai-team__ai">
-				<legend>{ __( 'AI (optional)', 'dxai-ui' ) }</legend>
-				<ToggleControl
-					label={ __( 'Let an AI choose the sections of each page', 'dxai-ui' ) }
-					help={ __( 'Off by default. It is one request for each page, to the engine chosen in Settings, and only when you press "Make". The AI picks among the Home\'s own sections and the sections the site makes; it writes no words, and a plan that breaks a rule is dropped and the usual plan is used. The words stay the Home\'s until you write them (Words for the pages).', 'dxai-ui' ) }
-					checked={ ai }
-					onChange={ ( on ) => {
-						setAi( on );
-						setEstimate( null );
-					} }
+				<legend>{ __( 'Where the sections come from', 'dxai-ui' ) }</legend>
+				<RangeControl
+					className="dxai-team__mode"
+					label={ __( 'How much is the Home\'s alone', 'dxai-ui' ) }
+					hideLabelFromVision
+					value={ MODES.indexOf( mode ) }
+					onChange={ ( v ) => pickMode( Number( v ) ) }
+					min={ 0 }
+					max={ 2 }
+					step={ 1 }
+					marks={ MODES.map( ( m, i ) => ( { value: i, label: MODE_LABEL[ m ] } ) ) }
+					withInputField={ false }
+					showTooltip={ false }
 					__nextHasNoMarginBottom
 				/>
-				{ ai && (
+				<p className="dxai-muted">{ MODE_HELP[ mode ] }</p>
+				{ mode === 'ai' && (
 					<div className="dxai-team__cost">
 						<div className="dxai-team__prices">
 							<TextControl
@@ -236,7 +364,7 @@ export default function TeamPages() {
 								__nextHasNoMarginBottom
 							/>
 						</div>
-						<p className="dxai-muted">{ __( 'Type the prices as your provider lists them to see the cost in dollars; without them it is told in tokens. Nothing is sent to find this out.', 'dxai-ui' ) }</p>
+						<p className="dxai-muted">{ __( 'Type the prices as your provider lists them to see the cost in dollars; without them it is told in tokens. Nothing is sent to find this out. The engine is the one chosen in Settings; a plan that breaks a rule is dropped and the usual plan is used.', 'dxai-ui' ) }</p>
 						<Button variant="secondary" onClick={ () => send( 'estimate' ) } isBusy={ busy === 'estimate' } disabled={ !! busy || total === 0 }>
 							{ __( 'Show what it would cost', 'dxai-ui' ) }
 						</Button>
@@ -262,39 +390,78 @@ export default function TeamPages() {
 				<Button variant="secondary" onClick={ () => send( 'plan' ) } isBusy={ busy === 'plan' } disabled={ !! busy || total === 0 }>
 					{ __( 'Show the plan', 'dxai-ui' ) }
 				</Button>
-				<Button variant="primary" onClick={ () => send( 'build' ) } isBusy={ busy === 'build' } disabled={ !! busy || total === 0 }>
+				<Button variant="primary" onClick={ build } isBusy={ busy === 'build' } disabled={ !! busy || total === 0 }>
 					{ busy === 'build' ? __( 'Making the pages…', 'dxai-ui' ) : sprintf( /* translators: %d: number of pages. */ _n( 'Make %d page', 'Make %d pages', total, 'dxai-ui' ), total ) }
 				</Button>
 			</div>
 
 			{ plan && (
-				<ul className="dxai-team__plan">
-					{ plan.map( ( p ) => (
-						<li key={ p.type + p.slug }>
-							<div className="dxai-team__head">
-								<strong>{ p.title }</strong>
-								<span className="dxai-copy__kind">{ data.kinds[ p.type ] }</span>
-								{ p.exists > 0 && <span className="dxai-muted">{ p.edited ? __( 'made before, edited since: kept', 'dxai-ui' ) : __( 'made before: updated in place', 'dxai-ui' ) }</span> }
-							</div>
-							<ol className="dxai-team__roles">
-								{ p.roles.map( ( r, i ) => (
-									<li key={ i } className={ 'dxai-team__role dxai-team__role--' + r.role + ( r.source === '' ? ' is-missing' : '' ) } title={ r.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : r.source === 'new' ? __( 'Made in the Home\'s own cards, from what the site and the Home say.', 'dxai-ui' ) : '' }>
-										{ ROLE[ r.role ] || r.role }
-									</li>
-								) ) }
-							</ol>
-							{ p.nearest > 0 && (
-								<p className="dxai-muted">
-									{ sprintf(
-										/* translators: %d: number of sections. */
-										_n( 'Differs from the nearest of the team\'s real pages by %d section.', 'Differs from the nearest of the team\'s real pages by %d sections.', p.nearest, 'dxai-ui' ),
-										p.nearest
+				<>
+					<p className="dxai-muted dxai-team__legend">
+						{ mode === 'ai'
+							? __( 'This is the usual plan the AI starts from; it chooses the sections when you press "Make".', 'dxai-ui' )
+							: __( 'What is shown is what is made. Shuffle a page to see another page of the same site; lock a section you like and it stays through the next shuffles.', 'dxai-ui' ) }
+					</p>
+					<ul className="dxai-team__plan">
+						{ plan.map( ( p ) => (
+							<li key={ p.type + p.slug }>
+								<div className="dxai-team__head">
+									<strong>{ p.title }</strong>
+									<span className="dxai-copy__kind">{ data.kinds[ p.type ] }</span>
+									{ p.exists > 0 && <span className="dxai-muted">{ p.edited ? __( 'made before, edited since: kept', 'dxai-ui' ) : __( 'made before: updated in place', 'dxai-ui' ) }</span> }
+									{ mode !== 'ai' && (
+										<span className="dxai-team__tools">
+											<Button variant="secondary" size="small" onClick={ () => shuffle( p ) } disabled={ !! busy }>
+												{ __( 'Shuffle', 'dxai-ui' ) }
+											</Button>
+											{ arranged( p ) && (
+												<Button variant="tertiary" size="small" onClick={ () => shuffle( p, true ) } disabled={ !! busy }>
+													{ __( 'Back to the usual', 'dxai-ui' ) }
+												</Button>
+											) }
+										</span>
 									) }
-								</p>
-							) }
-						</li>
-					) ) }
-				</ul>
+								</div>
+								<ol className="dxai-team__strip">
+									{ p.strip.map( ( x ) => (
+										<li
+											key={ x.place }
+											className={ 'dxai-team__sec dxai-team__role--' + x.role + ( x.source === '' ? ' is-missing' : '' ) + ( x.locked ? ' is-locked' : '' ) }
+											title={ x.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : '' }
+										>
+											<span className="dxai-team__sec-role">{ ROLE[ x.role ] || x.role }</span>
+											<span className="dxai-team__sec-from">
+												{ x.source === 'home' && sprintf( /* translators: %d: the number of the Home's section. */ __( 'Home, section %d', 'dxai-ui' ), x.home ) }
+												{ x.source === 'new' && sprintf( /* translators: %d: the number of the Home's section whose cards are used. */ __( 'New, in the cards of section %d', 'dxai-ui' ), x.home ) }
+												{ x.source === '' && __( 'left out', 'dxai-ui' ) }
+											</span>
+											{ x.ops.length > 0 && <span className="dxai-team__sec-var">{ variants( x.ops ) }</span> }
+											{ x.source !== '' && mode !== 'ai' && (
+												<button
+													type="button"
+													className="dxai-team__lock"
+													aria-pressed={ !! x.locked }
+													onClick={ () => toggleLock( p, x ) }
+												>
+													{ x.locked ? __( 'Locked', 'dxai-ui' ) : __( 'Lock', 'dxai-ui' ) }
+												</button>
+											) }
+										</li>
+									) ) }
+								</ol>
+								{ p.nearest > 0 && (
+									<p className="dxai-muted">
+										{ sprintf(
+											/* translators: %d: number of sections. */
+											_n( 'Differs from the nearest of the team\'s real pages by %d section.', 'Differs from the nearest of the team\'s real pages by %d sections.', p.nearest, 'dxai-ui' ),
+											p.nearest
+										) }
+									</p>
+								) }
+							</li>
+						) ) }
+					</ul>
+				</>
 			) }
 
 			{ built && (
@@ -337,6 +504,99 @@ export default function TeamPages() {
 							</li>
 						) ) }
 					</ul>
+
+					{ built.report && built.report.length > 0 && (
+						<div className="dxai-team__report">
+							<h4>{ __( 'How the pages measure up', 'dxai-ui' ) }</h4>
+							<ul className="dxai-team__reports">
+								{ built.report.map( ( r ) => (
+									<li key={ r.id } className={ r.ok ? 'is-ok' : 'is-bad' }>
+										<strong>{ r.title }</strong>
+										<ul className="dxai-team__gates">
+											{ r.gates.map( ( g ) => (
+												<li key={ g.gate } className={ g.ok ? 'is-ok' : 'is-bad' } title={ g.problems.join( '\n' ) }>
+													<span className="dxai-team__gate-mark" aria-hidden="true">{ g.ok ? '✓' : '✕' }</span>
+													<span className="screen-reader-text">{ g.ok ? __( 'Passes:', 'dxai-ui' ) : __( 'Fails:', 'dxai-ui' ) }</span>
+													{ GATE[ g.gate ] || g.label }
+													{ ! g.ok && (
+														<span className="dxai-team__gate-why">
+															{ g.gate === 'G8W' ? __( 'The words are still the Home\'s: write them in "Words for the pages".', 'dxai-ui' ) : g.problems[ 0 ] }
+														</span>
+													) }
+												</li>
+											) ) }
+										</ul>
+									</li>
+								) ) }
+							</ul>
+							<p className="dxai-muted">
+								{ __( 'Colours, fonts, spacing, how the sections look next to the Home\'s, mobile and speed need a browser to be measured, so they are not shown here: the sections are the Home\'s own, and the plugin\'s quality tool (bin/team-quality.cjs) measures them on a copy of the site.', 'dxai-ui' ) }
+							</p>
+						</div>
+					) }
+				</div>
+			) }
+
+			{ gave && (
+				<Notice status={ gave.skipped.length ? 'warning' : 'success' } isDismissible={ false }>
+					{ gave.all
+						? sprintf(
+							/* translators: 1: pages put back, 2: pages moved to the trash. */
+							__( 'The run is given back: %1$d pages put back as they were, %2$d moved to the trash (nothing is deleted).', 'dxai-ui' ),
+							gave.restored.length,
+							gave.removed.length
+						)
+						: __( 'The page is put back as it was.', 'dxai-ui' ) }
+					{ gave.skipped.length > 0 && ' ' + sprintf(
+						/* translators: %s: page titles. */
+						__( 'Left as they are, because they were changed since: %s.', 'dxai-ui' ),
+						gave.skipped.map( ( s ) => s.title ).join( ', ' )
+					) }
+				</Notice>
+			) }
+
+			{ run && (
+				<div className="dxai-team__run">
+					<h4>{ __( 'The last run', 'dxai-ui' ) }</h4>
+					<p className="dxai-muted">
+						{ sprintf(
+							/* translators: 1: date and time, 2: pages made, 3: pages changed. */
+							__( '%1$s — %2$d pages made, %3$d changed. Giving it back puts the pages that were there back as they were, moves the pages it made to the trash, and returns the Home\'s menu links.', 'dxai-ui' ),
+							new Date( run.at * 1000 ).toLocaleString(),
+							run.pages.filter( ( p ) => p.created ).length,
+							run.pages.filter( ( p ) => ! p.created ).length
+						) }
+					</p>
+					<ul className="dxai-team__links">
+						{ run.pages.map( ( p ) => (
+							<li key={ p.id }>
+								<strong>{ p.title }</strong>
+								<span className="dxai-copy__kind">{ p.created ? __( 'made new', 'dxai-ui' ) : __( 'changed', 'dxai-ui' ) }</span>
+								{ p.changed && <span className="dxai-muted">{ __( 'changed since: it stays as it is', 'dxai-ui' ) }</span> }
+								{ ! p.created && ! p.changed && (
+									<Button variant="link" onClick={ () => send( 'put_back', { page: p.id } ) } disabled={ !! busy }>
+										{ __( 'Put this page back', 'dxai-ui' ) }
+									</Button>
+								) }
+							</li>
+						) ) }
+					</ul>
+					<div className="dxai-actions">
+						{ confirm ? (
+							<>
+								<Button variant="primary" isDestructive onClick={ () => send( 'undo' ) } isBusy={ busy === 'undo' } disabled={ !! busy }>
+									{ __( 'Yes, give the run back', 'dxai-ui' ) }
+								</Button>
+								<Button variant="tertiary" onClick={ () => setConfirm( false ) }>
+									{ __( 'No', 'dxai-ui' ) }
+								</Button>
+							</>
+						) : (
+							<Button variant="secondary" isDestructive onClick={ () => setConfirm( true ) } disabled={ !! busy }>
+								{ __( 'Give the whole run back', 'dxai-ui' ) }
+							</Button>
+						) }
+					</div>
 				</div>
 			) }
 		</section>

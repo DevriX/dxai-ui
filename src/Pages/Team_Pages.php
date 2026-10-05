@@ -395,6 +395,9 @@ final class Team_Pages {
 			if ( $id < 1 ) {
 				$id = self::shell( $home, $item, $items );
 				if ( is_wp_error( $id ) ) {
+					// The pages made so far stay: they are kept so the run can be given back.
+					Team_Run::finish( $home, $before, $created );
+
 					return $id;
 				}
 				$created[] = (int) $id;
