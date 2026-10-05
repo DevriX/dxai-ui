@@ -360,7 +360,7 @@ final class Team_Menu {
 	/** @param array<string, mixed> $b */
 	private static function has_image( array $b ): bool {
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
-			if ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image' ), true ) || self::has_image( (array) $c ) ) {
+			if ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image', 'dx/picture' ), true ) || self::has_image( (array) $c ) ) {
 				return true;
 			}
 		}

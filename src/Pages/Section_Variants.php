@@ -77,7 +77,7 @@ final class Section_Variants {
 			}
 			foreach ( (array) $component['images'] as $slot ) {
 				$block = Block_Tree::at( $component['block'], (array) $slot['path'] );
-				$id    = (int) ( $block['attrs']['id'] ?? 0 );
+				$id    = Block_Tree::image_id( $block );
 				if ( $id < 1 || isset( $out[ $id ] ) || self::decorative( $block ) ) {
 					continue;
 				}
@@ -191,7 +191,7 @@ final class Section_Variants {
 		$slot = (array) $now['images'][0];
 		$path = (array) $slot['path'];
 		$img  = Block_Tree::at( $block, $path );
-		$id   = (int) ( $img['attrs']['id'] ?? 0 );
+		$id   = Block_Tree::image_id( $img );
 		if ( $id < 1 || self::decorative( $img ) || self::in_repeat( $now, $path ) ) {
 			return null;
 		}
@@ -476,7 +476,7 @@ final class Section_Variants {
 
 	/** @param array<string, mixed> $b */
 	private static function has_image( array $b ): bool {
-		if ( in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image' ), true ) ) {
+		if ( in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image', 'dx/picture' ), true ) ) {
 			return true;
 		}
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {

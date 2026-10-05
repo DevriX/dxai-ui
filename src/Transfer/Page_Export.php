@@ -49,6 +49,7 @@ final class Page_Export {
 	/** Media blocks and the attributes that hold an attachment id. */
 	public const MEDIA_ID_ATTRS = array(
 		'core/image'      => array( 'id' ),
+		'dx/picture'      => array( 'imageId', 'mobileImageId' ),
 		'core/cover'      => array( 'id' ),
 		'core/media-text' => array( 'mediaId' ),
 		'core/video'      => array( 'id' ),

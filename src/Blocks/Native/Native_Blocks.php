@@ -48,6 +48,8 @@ final class Native_Blocks {
 			new Layout(),
 			new Image(),
 			new Svg_Image(),
+			// After Image: a picture the plugin made becomes the team's DX Picture where the site has the block, and stays core's Image where not.
+			new Picture(),
 			new Span(),
 			new Section_Names(),
 			new Tidy(),

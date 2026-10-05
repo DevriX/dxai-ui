@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 14;
+	private const CACHE_SCHEMA = 15;
 
 	/**
 	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
@@ -1018,10 +1018,15 @@ final class Style_Rules {
 		// none, so one that sets only its height (`h-10`) kept its proportions; with the attribute it takes the file's
 		// width, is cut back to its container and comes out stretched. `width:auto` puts the design's rule back, and with
 		// no weight at all it gives way to every width the design does set.
-		return '.wp-block-image.dxai-part-img{display:contents !important}'
-			. ':where(.wp-block-image.dxai-part-img img){width:auto}'
-			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img{vertical-align:baseline}'
-			. '.editor-styles-wrapper .wp-block-image.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
+		// The same for the theme's DX Picture (Native\Picture): a figure around a picture around the image, and the block's own rules make the
+		// picture and the image blocks: here the figure and the picture take no box and the image is the
+		// design's again.
+		return '.wp-block-image.dxai-part-img,.wp-block-dx-picture.dxai-part-img{display:contents !important}'
+			. '.wp-block-dx-picture.dxai-part-img .dx-picture__picture{display:contents}'
+			. '.wp-block-dx-picture.dxai-part-img .dx-picture__img{display:inline}'
+			. ':where(.wp-block-image.dxai-part-img img,.wp-block-dx-picture.dxai-part-img img){width:auto}'
+			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img,:where(.dxai-ui) .wp-block-dx-picture.dxai-part-img img{vertical-align:baseline}'
+			. '.editor-styles-wrapper .wp-block-image.dxai-part-img,.editor-styles-wrapper .wp-block-dx-picture.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
 	}
 
 	/**

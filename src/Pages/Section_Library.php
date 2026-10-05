@@ -381,6 +381,7 @@ final class Section_Library {
 				return 'link';
 			case 'core/image':
 			case 'dxai-ui/image':
+			case 'dx/picture':
 				return 'image';
 			case 'dxai-ui/svg':
 				return 'icon';

@@ -61,7 +61,7 @@ final class Page_Critic {
 				if ( $name === 'core/button' || ( $name === 'dxai-ui/link' && empty( $b['innerBlocks'] ) ) ) {
 					++$buttons;
 				}
-				if ( in_array( $name, array( 'core/image', 'dxai-ui/image' ), true ) ) {
+				if ( in_array( $name, array( 'core/image', 'dxai-ui/image', 'dx/picture' ), true ) ) {
 					++$images;
 				}
 				foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {

@@ -262,12 +262,38 @@ final class Block_Tree {
 		}
 	}
 
+	/** The attachment an image block shows: core's `id`, DX Picture's `imageId`, or 0. @param array<string, mixed> $block */
+	public static function image_id( array $block ): int {
+		return (int) ( $block['attrs']['id'] ?? $block['attrs']['imageId'] ?? 0 );
+	}
+
 	/**
 	 * Show another image in an image block: its url/src and alt, in the attributes and the markup.
 	 *
-	 * @param array<string, mixed> $block dxai-ui/image, core/image or a dxai-ui/box rendering an <img>.
+	 * @param array<string, mixed> $block dxai-ui/image, core/image, the theme's dx/picture or a dxai-ui/box rendering an <img>.
 	 */
 	public static function set_image( array &$block, string $url, string $alt, int $id = 0 ): void {
+		// DX Picture is printed by the server from its attachment: the picture is another attachment, with its own size.
+		if ( ( $block['blockName'] ?? '' ) === 'dx/picture' ) {
+			if ( $id > 0 ) {
+				$block['attrs']['imageId']  = $id;
+				$block['attrs']['imageUrl'] = $url;
+				$meta                       = wp_get_attachment_metadata( $id );
+				if ( is_array( $meta ) && ! empty( $meta['width'] ) && ! empty( $meta['height'] ) ) {
+					$block['attrs']['imageWidth']  = (int) $meta['width'];
+					$block['attrs']['imageHeight'] = (int) $meta['height'];
+				}
+				// A phone's own picture was for the old one.
+				unset( $block['attrs']['mobileImageId'], $block['attrs']['mobileImageUrl'], $block['attrs']['mobileImageWidth'], $block['attrs']['mobileImageHeight'] );
+			}
+			if ( $alt !== '' ) {
+				$block['attrs']['imageAlt'] = $alt;
+			} else {
+				unset( $block['attrs']['imageAlt'] );
+			}
+
+			return;
+		}
 		$attrs   = (array) $block['attrs'];
 		$old_src = (string) ( $attrs['url'] ?? $attrs['src'] ?? '' );
 		if ( $old_src === '' && preg_match( '#<img\b[^>]*\bsrc="([^"]*)"#', (string) $block['innerHTML'], $m ) === 1 ) {
