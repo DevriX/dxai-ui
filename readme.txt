@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.28
+Stable tag: 0.4.0-beta.29
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,15 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.29 =
+* Sliders, accordions and tabs work on every page they are on, not on the Home only. A page of the theme that holds sections copied from a design has one scope element around each run of them (a block of the page's own between two runs makes two), and the page script armed the first one only: a slider, an accordion or a tab in the second run did nothing. It is armed for every scope now (a scope inside another is part of it). The scripts stored before this version bring themselves up to date; `wp dxai-ui refresh-runtime` does it at once. Found by scanning the 282 pages of the test site: every page that needs a script had it, so the fault was where the script ran.
+* A slider that scrolls its cards sideways and is moved by two buttons (the reviews slider of Clean Joe) works. The design's own script moved the row and the page script did not carry that. A small script (`assets/js/rail.js`) moves the row by a card, stops at its ends and disables the button the design drew as disabled there. It finds the row and the buttons by what they are, not by the name of a design, and it is sent only to a page that has both.
+* A list a design shows through a window — the testimonials of DevriX Elevate: nine quotes, two at a time, with arrows that slide the window — keeps all its cards. Only the first two were on the page before, and the arrow that goes back was disabled for good. The arrows now step the window by its size and stop at the ends, disabled there as the design had them. This takes effect when the design is imported again.
+* Sizes within the site's design system. The classes the plugin makes for a max-width or a padding do not go beyond what the site already uses: a width above the widest the theme has (1200px on american-restoration) or off its 5px steps is the theme's own `max-w-…px`, a padding above the largest it has (98px) is that one, and the content width of a centred container follows. A design imported before is brought in by Native blocks ("Widths and paddings within the site's design system", `wp dxai-ui native-blocks apply`). Only classes and numbers the plugin made are moved: the theme's stylesheet is not touched, and a class of an earlier import keeps its rule until then. A site can set its own bounds or switch it off (`dxai_ui_design_system`); a theme without such classes is left as it is.
+* The text colours of a design are set in the block's Colour panel, not by a class: the colour as the class had it, or the site's preset when it has one. The page is drawn as before; the colour shows in the panel and can be changed there.
+* The block editor draws a page the way the site does, on every page and not on the Home only. A page that holds sections copied from a design is drawn with the design's own scope, the theme's block styles (links, spans, pictures) are kept, and what the editor writes for a block's own CSS while it is edited no longer overrides the rules the page already has.
+* For developers: `bin/compile-tsx.php` compiles a Lovable project with no WordPress. New checks: `verify-design-system.php`, `verify-text-color.php`, and in Chrome `verify-rail.cjs`, `verify-windowed-list.cjs` and `verify-editor-canvas.cjs`.
 
 = 0.4.0-beta.28 =
 * Pages in the team's style are in the Home's look all through. Every page made for a design is made in the Home's own frame (the group around its header, main and footer: a page no longer scrolls sideways where the Home does not) and wears the Home's header and footer exactly; they follow when the Home is saved. A page made here carries a key, so an import of a live site never adopts or overwrites it.
