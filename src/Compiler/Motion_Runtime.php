@@ -227,7 +227,15 @@ final class Motion_Runtime {
 	private static function body(): string {
 		return <<<'JS'
 (function () {
-	var root = document.querySelector(".dxai-ui") || document;
+	/*
+	 * One runtime per design scope on the page. A converted page has one: the element around the whole design. A page of the theme that
+	 * holds sections copied from a design has one around each run of them — a block of the page's own between two runs makes two — and
+	 * the first is not the page: a slider or an accordion in the second never got its script. A scope inside another is part of it.
+	 */
+	var scopes = [].slice.call(document.querySelectorAll(".dxai-ui")).filter(function (el) {
+		return !(el.parentElement && el.parentElement.closest(".dxai-ui"));
+	});
+	(scopes.length ? scopes : [document]).forEach(function (root) {
 	var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 	if (root && root.classList) { root.classList.add("dxai-motion"); }
 	function reveal(el) {
@@ -837,12 +845,26 @@ final class Motion_Runtime {
 			 * re-opened what they were written to close.
 			 */
 			panels.forEach(function (el) {
-				marks(el, "on").forEach(function (mark) {
-					if (mark.state === state) { applyPanel(el, holds(state, mark.value)); }
-				});
-				marks(el, "off").forEach(function (mark) {
-					if (mark.state === state) { applyPanel(el, !holds(state, mark.value)); }
-				});
+				// A panel can be shown for several values of one state (a card in a window of a list): any of them shows it.
+				var on = marks(el, "on").filter(function (mark) { return mark.state === state; });
+				if (on.length) {
+					applyPanel(el, on.some(function (mark) { return holds(state, mark.value); }));
+				}
+				var off = marks(el, "off").filter(function (mark) { return mark.state === state; });
+				if (off.length) {
+					applyPanel(el, !off.some(function (mark) { return holds(state, mark.value); }));
+				}
+			});
+			/*
+			 * A button that is off for some values of the state — the arrow that goes back, with the list at its first window:
+			 * data-dxai-disabled="start:0", the values listed. The page is compiled at the starting one.
+			 */
+			root.querySelectorAll("[data-dxai-disabled]").forEach(function (el) {
+				var spec = String(el.getAttribute("data-dxai-disabled") || "");
+				var cut = spec.indexOf(":");
+				if (cut < 1 || spec.slice(0, cut) !== state) { return; }
+				var current = machine[state];
+				el.disabled = current !== null && current !== undefined && spec.slice(cut + 1).split(",").indexOf(String(current)) > -1;
 			});
 			root.querySelectorAll("[class*='dxai-toggle-']").forEach(function (el) {
 				if (el.hasAttribute("data-dxai-step") || el.hasAttribute("data-dxai-set")) { return; }
@@ -1724,6 +1746,7 @@ final class Motion_Runtime {
 		event.preventDefault();
 		rxTabs(tabs[next]);
 		if (tabs[next].focus) { tabs[next].focus(); }
+	});
 	});
 })();
 JS;

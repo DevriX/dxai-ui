@@ -332,6 +332,17 @@ final class Jsx_Compiler {
 	private array $state_init = array();
 
 	/**
+	 * Lists the component shows through a window that a state slides along: name => the list it is cut from, the state (the index of the
+	 * window's first item) and the window's size. 'const visible = quotes.slice(start, start + PER_VIEW)' is one.
+	 *
+	 * @var array<string, array{source:string, state:string, size:int}>
+	 */
+	private array $windows = array();
+
+	/** The window of the list the .map() being read renders: every item is kept, with the values of the state that show it. */
+	private ?array $window_map = null;
+
+	/**
 	 * States some handler prop actually assigns, for this component render.
 	 *
 	 * A projection with no transition is not a control, and marking one costs
@@ -520,6 +531,8 @@ final class Jsx_Compiler {
 		$this->design_css    = is_string( $harvest['css'] ?? null ) ? (string) $harvest['css'] : '';
 		$this->toggle_meta   = array();
 		$this->state_init    = array();
+		$this->windows       = array();
+		$this->window_map    = null;
 		$this->unresolved    = array();
 		$this->load_file( $source );
 		$this->load_imports( $source, $files );
@@ -1566,6 +1579,7 @@ final class Jsx_Compiler {
 		// child inside a sticky header reset them, and the header never turned solid on scroll.
 		$prev_scroll  = $this->scroll_states;
 		$prev_derived = $this->derived;
+		$prev_windows = $this->windows;
 
 		$scope   = array_merge( $this->globals, $props );
 		// `$props` as well as the merged scope: the rest element must collect the
@@ -1599,6 +1613,7 @@ final class Jsx_Compiler {
 		$this->driven     = $prev_driven;
 		$this->scroll_states = $prev_scroll;
 		$this->derived       = $prev_derived;
+		$this->windows       = $prev_windows;
 		--$this->depth;
 		return $html;
 	}
@@ -1766,6 +1781,36 @@ final class Jsx_Compiler {
 		}
 
 		return rtrim( substr( $rhs, 0, strcspn( $rhs, "\n" ) ), "; \t" );
+	}
+
+	/**
+	 * A statement's text up to its closing semicolon: the first one that is not inside brackets or a string.
+	 */
+	private static function expression_extent( string $text ): string {
+		$depth = 0;
+		$quote = '';
+		for ( $at = 0, $n = min( strlen( $text ), 2000 ); $at < $n; ++$at ) {
+			$ch = $text[ $at ];
+			if ( $quote !== '' ) {
+				if ( $ch === '\\' ) {
+					++$at;
+				} elseif ( $ch === $quote ) {
+					$quote = '';
+				}
+			} elseif ( $ch === '"' || $ch === "'" || $ch === '`' ) {
+				$quote = $ch;
+			} elseif ( $ch === '(' || $ch === '[' || $ch === '{' ) {
+				++$depth;
+			} elseif ( $ch === ')' || $ch === ']' || $ch === '}' ) {
+				if ( --$depth < 0 ) {
+					return trim( substr( $text, 0, $at ) );
+				}
+			} elseif ( $ch === ';' && $depth === 0 ) {
+				return trim( substr( $text, 0, $at ) );
+			}
+		}
+
+		return '';
 	}
 
 	private function load_file( string $source ): void {
@@ -1947,6 +1992,7 @@ final class Jsx_Compiler {
 		$this->setters    = array();
 		$this->toggles    = array();
 		$this->driven     = array();
+		$this->windows    = array();
 
 		$prelude = $code;
 		if ( preg_match( '/\breturn\s*\(\s*</', $code, $hit, PREG_OFFSET_CAPTURE ) ) {
@@ -2101,6 +2147,31 @@ final class Jsx_Compiler {
 			$bound[ $name ] = true;
 		}
 
+		/*
+		 * A helper whose body is an expression that starts after the arrow, on this line or the next:
+		 *
+		 *     const move = (dir: number) =>
+		 *       setStart((s) => Math.min(maxStart, Math.max(0, s + dir)));
+		 *
+		 * The pass above reads a body that opens with a bracket, and the single-line pass below needs the whole declaration on one line, so
+		 * this helper was never bound and the buttons that call it (onClick={() => move(-2)}) had nothing to resolve to.
+		 */
+		$offset = 0;
+		while ( preg_match( '/const\s+([A-Za-z_]\w*)\s*(?::[^=;\n]+)?=\s*((?:\([^()]*\)|[A-Za-z_]\w*)\s*(?::\s*[^=>;{\n]+)?=>)\s*(?=[^\s({\[])/', $prelude, $m, PREG_OFFSET_CAPTURE, $offset ) ) {
+			$name   = (string) $m[1][0];
+			$start  = (int) $m[2][1];
+			$offset = $start + 1;
+			if ( isset( $bound[ $name ] ) || array_key_exists( $name, $scope ) ) {
+				continue;
+			}
+			$extent = self::expression_extent( substr( $prelude, $start ) );
+			if ( trim( $extent ) === '' || self::heads_jsx( $extent ) ) {
+				continue;
+			}
+			$scope[ $name ] = $this->make_fn( $extent, $scope );
+			$bound[ $name ] = true;
+		}
+
 		// Section data is normally a multi-line array local to the component, so
 		// bind those with balanced brackets before the single-line pass.
 		foreach ( Tsx_Section_Splitter::scoped_const_blocks( $prelude ) as $name => $block ) {
@@ -2220,7 +2291,174 @@ final class Jsx_Compiler {
 			}
 		}
 
+		$this->windows = $this->window_lists( $prelude, $scope );
+
 		return $scope;
+	}
+
+	/**
+	 * The lists a component shows through a window: 'const visible = quotes.slice(start, start + PER_VIEW)', where start is a useState that
+	 * starts at a number and the list is data the compiler has. Rendering such a list at its starting window loses every other card and
+	 * leaves the buttons that slide the window with nothing to do, so the whole list is kept (map_children()) and the state decides which
+	 * cards show.
+	 *
+	 * @param array<string, mixed> $scope
+	 * @return array<string, array{source:string, state:string, size:int}>
+	 */
+	private function window_lists( string $prelude, array $scope ): array {
+		$out = array();
+		if ( ! preg_match_all( '/const\s+([A-Za-z_]\w*)\s*(?::[^=;\n]+)?=\s*([A-Za-z_]\w*)\s*\.\s*slice\(\s*([A-Za-z_]\w*)\s*,\s*\3\s*\+\s*([^;\n)]+?)\s*\)\s*;/', $prelude, $rows, PREG_SET_ORDER ) ) {
+			return $out;
+		}
+		foreach ( $rows as $row ) {
+			[ , $name, $source, $state, $size_src ] = $row;
+			$list = $scope[ $source ] ?? null;
+			$size = self::whole_number( $this->eval_source( trim( $size_src ), $scope ) );
+			if ( ! isset( $this->toggles[ $state ], $this->driven[ $state ] ) || ! is_int( $this->state_init[ $state ] ?? null ) || ! is_array( $list ) || ! array_is_list( $list ) || $size === null || $size < 1 || count( $list ) <= $size || count( $list ) > 120 ) {
+				continue;
+			}
+			$out[ $name ] = array(
+				'source' => $source,
+				'state'  => $state,
+				'size'   => $size,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * One item of a windowed list: shown for the values of the state that put it in the window (a window of 2 over 9 cards shows card 4
+	 * for 3 and for 4), and hidden when the state starts at another.
+	 *
+	 * @param array{source:string, state:string, size:int} $window
+	 */
+	private function window_item( string $html, array $window, int $index, int $total ): string {
+		$state  = sanitize_html_class( $window['state'] );
+		$last   = max( 0, $total - $window['size'] );
+		$starts = range( max( 0, $index - $window['size'] + 1 ), min( $index, $last ) );
+		foreach ( $starts as $start ) {
+			$html = self::add_class( $html, 'dxai-on-' . $state . '--' . $start );
+		}
+		if ( ! in_array( (int) ( $this->state_init[ $window['state'] ] ?? 0 ), $starts, true ) ) {
+			$html = self::add_class( $html, 'hidden' );
+		}
+
+		return $html;
+	}
+
+	/**
+	 * What a condition on a windowed list's state says for every value the state can have, as the runtime reads it: 'start:0' for
+	 * disabled={start === 0}, 'start:7' for disabled={start >= maxStart}. Null when the condition is not about such a state or cannot be
+	 * evaluated for every value, and when it holds for none of them or for all of them.
+	 *
+	 * @param array<string, mixed> $scope
+	 */
+	private function window_gate( string $expr, array $scope ): ?string {
+		foreach ( $this->windows as $window ) {
+			$state = $window['state'];
+			if ( preg_match( '/\b' . preg_quote( $state, '/' ) . '\b/', $expr ) !== 1 ) {
+				continue;
+			}
+			$last = max( 0, count( (array) ( $scope[ $window['source'] ] ?? array() ) ) - $window['size'] );
+			$on   = array();
+			for ( $value = 0; $value <= $last; ++$value ) {
+				$local           = $scope;
+				$local[ $state ] = $value;
+				$hit             = $this->eval_source( $expr, $local );
+				if ( $hit === null ) {
+					return null;
+				}
+				if ( $this->truthy( $hit ) ) {
+					$on[] = $value;
+				}
+			}
+
+			return $on === array() || count( $on ) === $last + 1 ? null : $state . ':' . implode( ',', $on );
+		}
+
+		return null;
+	}
+
+	/**
+	 * A relative move written as an updater: setStart((s) => Math.min(max, Math.max(0, s + dir))). The step it makes in $scope and
+	 * whether it stops at the ends of the list; null when the body holds no such call.
+	 *
+	 * @param array<string, mixed> $scope
+	 * @return array{step:int, clamp:bool}|null
+	 */
+	private function updater_step( string $body, string $setter, array $scope ): ?array {
+		$arg = $this->call_argument( $body, $setter );
+		if ( $arg === '' || preg_match( '/^\(?\s*([A-Za-z_]\w*)\s*\)?\s*=>\s*(.+)$/s', $arg, $m ) !== 1 ) {
+			return null;
+		}
+		$param = preg_quote( $m[1], '/' );
+		$expr  = trim( $m[2] );
+		$clamp = false;
+		// Math.min(a, b) / Math.max(a, b): the argument that moves with the state is the one to follow.
+		for ( $hops = 0; $hops < 3 && preg_match( '/^Math\s*\.\s*(?:min|max)\s*\((.*)\)$/s', $expr, $c ) === 1; ++$hops ) {
+			$parts = self::split_commas( $c[1] );
+			if ( count( $parts ) !== 2 ) {
+				return null;
+			}
+			$moving = array_values( array_filter( $parts, static fn( string $part ): bool => preg_match( '/\b' . $param . '\b/', $part ) === 1 ) );
+			if ( count( $moving ) !== 1 ) {
+				return null;
+			}
+			$clamp = true;
+			$expr  = trim( $moving[0] );
+		}
+		if ( preg_match( '/^' . $param . '\s*([+-])\s*(.+)$/s', $expr, $s ) !== 1 || preg_match( '/\b' . $param . '\b/', $s[2] ) === 1 ) {
+			return null;
+		}
+		$by = self::whole_number( $this->eval_source( $s[2], $scope ) );
+		if ( $by === null || $by === 0 ) {
+			return null;
+		}
+
+		return array(
+			'step'  => $s[1] === '-' ? -$by : $by,
+			'clamp' => $clamp,
+		);
+	}
+
+	/** A value that is a whole number (the evaluator answers a negated one as a float: -2 is -2.0), or null. */
+	private static function whole_number( mixed $value ): ?int {
+		return is_numeric( $value ) && (float) $value === floor( (float) $value ) ? (int) $value : null;
+	}
+
+	/**
+	 * A list's top-level items: split at the commas that are not inside brackets, braces or a string.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function split_commas( string $list ): array {
+		$parts = array();
+		$depth = 0;
+		$quote = '';
+		$from  = 0;
+		for ( $at = 0, $n = strlen( $list ); $at < $n; ++$at ) {
+			$ch = $list[ $at ];
+			if ( $quote !== '' ) {
+				if ( $ch === '\\' ) {
+					++$at;
+				} elseif ( $ch === $quote ) {
+					$quote = '';
+				}
+			} elseif ( $ch === '"' || $ch === "'" || $ch === '`' ) {
+				$quote = $ch;
+			} elseif ( $ch === '(' || $ch === '[' || $ch === '{' ) {
+				++$depth;
+			} elseif ( $ch === ')' || $ch === ']' || $ch === '}' ) {
+				--$depth;
+			} elseif ( $ch === ',' && $depth === 0 ) {
+				$parts[] = trim( substr( $list, $from, $at - $from ) );
+				$from    = $at + 1;
+			}
+		}
+		$parts[] = trim( substr( $list, $from ) );
+
+		return $parts;
 	}
 
 	/**
@@ -2250,6 +2488,7 @@ final class Jsx_Compiler {
 		$init    = $this->state_init;
 		$scroll  = $this->scroll_states;
 		$derived = $this->derived;
+		$windows = $this->windows;
 
 		$scope = $this->bind_prelude( $code, $scope );
 
@@ -2259,6 +2498,7 @@ final class Jsx_Compiler {
 		$this->state_init    = $init;
 		$this->scroll_states = $scroll;
 		$this->derived       = $derived;
+		$this->windows       = $windows;
 
 		return $scope;
 	}
@@ -3089,6 +3329,7 @@ final class Jsx_Compiler {
 			'toggles'        => $this->toggles,
 			'driven'         => $this->driven,
 			'state_init'     => $this->state_init,
+			'windows'        => $this->windows,
 		);
 		try {
 			$html = $this->parse_jsx( $scope );
@@ -3822,7 +4063,10 @@ final class Jsx_Compiler {
 
 		$slice = substr( $this->src, $this->i, 400 );
 		if ( preg_match( '/^(?:\[[^\]]*\]|[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\s*\.\s*map\s*\(/', $slice ) ) {
-			$html = $this->parse_map( $scope );
+			// 'visible.map(...)' over a window of a list: the list itself is rendered, each item for the states that show it.
+			$this->window_map = preg_match( '/^([A-Za-z_]\w*)\s*\.\s*map\s*\(/', $slice, $root ) === 1 ? ( $this->windows[ $root[1] ] ?? null ) : null;
+			$html             = $this->parse_map( $scope );
+			$this->window_map = null;
 			$this->ws();
 			// Swallow stray ", )" if map closed early, then the outer `}`.
 			while ( $this->peek() === ',' || $this->peek() === ')' ) {
@@ -3901,7 +4145,12 @@ final class Jsx_Compiler {
 	 * @param array<string, mixed> $scope
 	 */
 	private function parse_map( array $scope ): string {
-		return $this->map_children( $this->parse_member_root( $scope ), $scope );
+		$target = $this->parse_member_root( $scope );
+		if ( $this->window_map !== null && is_array( $scope[ $this->window_map['source'] ] ?? null ) ) {
+			$target = $scope[ $this->window_map['source'] ];
+		}
+
+		return $this->map_children( $target, $scope );
 	}
 
 	/**
@@ -3913,6 +4162,9 @@ final class Jsx_Compiler {
 	 * @param array<string, mixed> $scope
 	 */
 	private function map_children( mixed $target, array $scope ): string {
+		// Read once, for this map only: a map inside an item is not a window.
+		$window           = $this->window_map;
+		$this->window_map = null;
 		$this->ws();
 		if ( $this->peek() !== '.' ) {
 			/*
@@ -3949,7 +4201,8 @@ final class Jsx_Compiler {
 			$local = $scope;
 			$this->bind_params( $local, $params, $item, $index );
 			$saved_i = $this->i;
-			$html   .= $this->parse_arrow_body( $local );
+			$part    = $this->parse_arrow_body( $local );
+			$html   .= $window !== null ? $this->window_item( $part, $window, $index, count( $list ) ) : $part;
 			if ( $index < count( $list ) - 1 ) {
 				$this->i = $saved_i;
 			}
@@ -4566,6 +4819,13 @@ final class Jsx_Compiler {
 								$this->i = $close;
 							} else {
 								$value = $this->parse_expression( $scope );
+								// disabled={start === 0}: the runtime keeps it true for the values of the state it is true for.
+								if ( $name === 'disabled' && $this->windows !== array() ) {
+									$gate = $this->window_gate( $raw, $scope );
+									if ( $gate !== null ) {
+										$attrs['__disabled'] = $gate;
+									}
+								}
 							}
 						}
 						$this->ws();
@@ -5135,7 +5395,8 @@ final class Jsx_Compiler {
 			$state = $attrs['__toggle'];
 			$class = trim( $class . ' dxai-toggle-' . sanitize_html_class( $state ) );
 			$attrs['className'] = $class;
-			if ( ! isset( $attrs['aria-expanded'] ) && ! isset( $attrs['ariaExpanded'] ) ) {
+			// An arrow that steps a list to its next window does not open anything: it has no expanded state to announce.
+			if ( ! isset( $attrs['aria-expanded'] ) && ! isset( $attrs['ariaExpanded'] ) && ! isset( $attrs['__meta']['clamp'] ) ) {
 				$attrs['aria-expanded'] = $this->toggle_is_expanded( $state, $scope ) ? 'true' : 'false';
 			}
 			if ( isset( $attrs['__hover'] ) ) {
@@ -5151,6 +5412,10 @@ final class Jsx_Compiler {
 			unset( $attrs['__toggle'] );
 		}
 		unset( $attrs['__meta'] );
+		if ( isset( $attrs['__disabled'] ) ) {
+			$attrs['data-dxai-disabled'] = (string) $attrs['__disabled'];
+		}
+		unset( $attrs['__disabled'] );
 		[ $class, $attrs ] = $this->attach_class_projection( $class, $attrs );
 		// Accordion panels gated by `open ? "1fr" : "0fr"` need dxai-on-* hooks.
 		$attrs = $this->attach_accordion_panel( $attrs, $scope );
@@ -5577,6 +5842,12 @@ final class Jsx_Compiler {
 				}
 			}
 
+			// setStart((s) => Math.min(max, s + 2)): a move by a step, held to the ends of the list or not.
+			$move = $this->updater_step( $body, $setter, $scope );
+			if ( $move !== null ) {
+				return $this->step_flag( $state, $move );
+			}
+
 			/*
 			 * Last resort for a direct setter: evaluate whatever it is passed.
 			 * DevriX Elevate's nav writes
@@ -5656,11 +5927,36 @@ final class Jsx_Compiler {
 					return sanitize_html_class( $state );
 				}
 
+				// move(-PER_VIEW) over const move = (dir) => setStart((s) => Math.min(max, Math.max(0, s + dir))).
+				$setter_name = array_search( $state, $this->setters, true );
+				$move        = is_string( $setter_name ) ? $this->updater_step( (string) ( $fn['body'] ?? '' ), $setter_name, $local ) : null;
+				if ( $move !== null ) {
+					return $this->step_flag( $state, $move );
+				}
+
 				return $flag;
 			}
 		}
 
 		return '';
+	}
+
+	/**
+	 * The trigger of a state that a handler moves by a step: the step, the state's starting value, and whether it stops at the ends.
+	 *
+	 * @param array{step:int, clamp:bool} $move
+	 */
+	private function step_flag( string $state, array $move ): string {
+		$this->toggle_meta['step'] = (string) $move['step'];
+		$init                      = $this->state_init[ $state ] ?? null;
+		if ( is_int( $init ) || ( is_string( $init ) && $init !== '' ) ) {
+			$this->toggle_meta['init'] = (string) $init;
+		}
+		if ( $move['clamp'] ) {
+			$this->toggle_meta['clamp'] = '1';
+		}
+
+		return sanitize_html_class( $state );
 	}
 
 	/**
