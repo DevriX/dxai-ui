@@ -37,6 +37,16 @@ final class Team_Quality {
 		'G9' => 'nothing foreign',
 	);
 
+	/** The rules that need a browser (bin/team-quality.cjs), by what they say; the data half cannot read them. */
+	public const BROWSER_GATES = array(
+		'G2'  => 'colours are the Home\'s',
+		'G3'  => 'fonts are the Home\'s',
+		'G4'  => 'the frame and the spacing are the Home\'s',
+		'G5'  => 'sections the Home has look the same as on the Home',
+		'G6'  => 'mobile: no sideways scroll, readable, easy to tap',
+		'G10' => 'speed: nothing the Home does not load',
+	);
+
 	/** Sections of one structure two pages of a kind may share. */
 	public const MAX_SHARED_WITH_PAGE = 0.5;
 
@@ -269,6 +279,40 @@ final class Team_Quality {
 			'pages'  => array_values( $pages ),
 			'gates'  => array_map( static fn( $g ) => array_filter( $g ), $gates ),
 		);
+	}
+
+	/**
+	 * What the gates the database answers say about some of the pages, ready to show: for each page, each gate with what it found.
+	 *
+	 * @param array<int, int> $ids
+	 * @return array<int, array{id:int, title:string, ok:bool, gates:array<int, array{gate:string, label:string, ok:bool, problems:array<int, string>}>}>
+	 */
+	public static function report( int $home, array $ids ): array {
+		$all = self::measure( $home );
+		$out = array();
+		foreach ( $ids as $id ) {
+			$id    = (int) $id;
+			$gates = array();
+			$ok    = true;
+			foreach ( self::GATES as $gate => $label ) {
+				$problems = array_values( array_map( 'strval', (array) ( $all['gates'][ $gate ][ $id ] ?? array() ) ) );
+				$ok       = $ok && $problems === array();
+				$gates[]  = array(
+					'gate'     => $gate,
+					'label'    => $label,
+					'ok'       => $problems === array(),
+					'problems' => $problems,
+				);
+			}
+			$out[] = array(
+				'id'    => $id,
+				'title' => trim( html_entity_decode( wp_strip_all_tags( get_the_title( $id ) ), ENT_QUOTES, 'UTF-8' ) ),
+				'ok'    => $ok,
+				'gates' => $gates,
+			);
+		}
+
+		return $out;
 	}
 
 	/**

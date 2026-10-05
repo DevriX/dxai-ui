@@ -11,14 +11,17 @@ namespace DXAI_UI\API;
 
 use DXAI_UI\Pages\Ai_Budget;
 use DXAI_UI\Pages\Team_Pages;
+use DXAI_UI\Pages\Team_Run;
 use DXAI_UI\Structures\Design_Attach;
 use DXAI_UI\Structures\Page_Scope;
 
 /**
  * GET  /team-pages            the designs, and for one (`design`) what it could be asked for (the services and places its Home
  *                             names, the general pages) and the pages already made.
- * POST /team-pages            `plan` what would be made (the order of the sections of each page), `estimate` what an AI plan would cost (nothing is
- *                             asked; the price a person types is kept), or `build` the pages (with `ai` an AI plans each page: one request).
+ * POST /team-pages            `plan` what would be made (the sections of each page, in order, with where each is from), `estimate` what an AI plan would
+ *                             cost (nothing is asked; the price a person types is kept), `build` the pages (`mode`: only the Home's sections, also the
+ *                             sections made in its cards, or an AI plans each page: one request), `undo` the last run, or `put_back` one page of it.
+ *                             Each page of `wanted` may carry the arrangement a person gave it: `shuffle`, `recipe` and `locks`, as `plan` returned them.
  */
 final class Team_Pages_Controller {
 
@@ -45,12 +48,21 @@ final class Team_Pages_Controller {
 					'args'                => array(
 						'action' => array(
 							'type'     => 'string',
-							'enum'     => array( 'plan', 'build', 'estimate' ),
+							'enum'     => array( 'plan', 'build', 'estimate', 'undo', 'put_back' ),
 							'required' => true,
 						),
 						'design' => array(
 							'type'     => 'integer',
 							'required' => true,
+						),
+						'mode'   => array(
+							'type'    => 'string',
+							'enum'    => Team_Pages::MODES,
+							'default' => 'new',
+						),
+						'page'   => array(
+							'type'    => 'integer',
+							'default' => 0,
 						),
 						'wanted' => array(
 							'type'    => 'array',
@@ -102,6 +114,7 @@ final class Team_Pages_Controller {
 				'design'      => $design,
 				'suggestions' => $ok ? Team_Pages::suggestions( $design ) : null,
 				'existing'    => $ok ? $this->existing( $design ) : array(),
+				'run'         => $ok ? Team_Run::summary( $design ) : null,
 				'kinds'       => array_map( static fn( $k ) => $k['label'], Team_Pages::KINDS ),
 				'ai'          => array(
 					'prices' => Ai_Budget::prices(),
@@ -119,14 +132,36 @@ final class Team_Pages_Controller {
 		$wanted = array();
 		foreach ( (array) $request->get_param( 'wanted' ) as $row ) {
 			if ( is_array( $row ) ) {
-				$wanted[] = array(
+				$page = array(
 					'type'  => (string) ( $row['type'] ?? '' ),
 					'title' => (string) ( $row['title'] ?? '' ),
 				);
+				// How a person arranged the page (Team_Pages cleans it): only what the request has.
+				foreach ( array( 'shuffle', 'recipe', 'locks' ) as $key ) {
+					if ( isset( $row[ $key ] ) ) {
+						$page[ $key ] = $row[ $key ];
+					}
+				}
+				$wanted[] = $page;
 			}
 		}
-		if ( (string) $request->get_param( 'action' ) === 'plan' ) {
-			return new \WP_REST_Response( array( 'plan' => Team_Pages::plan( $design, $wanted ) ) );
+		$mode = $request->get_param( 'ai' ) ? 'ai' : (string) $request->get_param( 'mode' );
+		$act  = (string) $request->get_param( 'action' );
+		if ( $act === 'undo' || $act === 'put_back' ) {
+			$res = $act === 'undo' ? Team_Run::undo( $design ) : Team_Run::put_back( $design, (int) $request->get_param( 'page' ) );
+			if ( is_wp_error( $res ) ) {
+				return $res;
+			}
+
+			return new \WP_REST_Response(
+				$res + array(
+					'run'      => Team_Run::summary( $design ),
+					'existing' => $this->existing( $design ),
+				)
+			);
+		}
+		if ( $act === 'plan' ) {
+			return new \WP_REST_Response( array( 'plan' => Team_Pages::plan( $design, $wanted, array( 'mode' => $mode ) ) ) );
 		}
 		if ( (string) $request->get_param( 'action' ) === 'estimate' ) {
 			if ( $request->get_param( 'price_in' ) !== null || $request->get_param( 'price_out' ) !== null ) {
@@ -144,7 +179,7 @@ final class Team_Pages_Controller {
 				)
 			);
 		}
-		$out = Team_Pages::build( $design, $wanted, (bool) $request->get_param( 'force' ), array( 'ai' => (bool) $request->get_param( 'ai' ) ) );
+		$out = Team_Pages::build( $design, $wanted, (bool) $request->get_param( 'force' ), array( 'mode' => $mode ) );
 		if ( is_wp_error( $out ) ) {
 			return $out;
 		}

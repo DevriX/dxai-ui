@@ -34,10 +34,11 @@ final class Section_Blueprints {
 	 * @param array<int, string>                                       $refused What was wrong with each exemplar that was not used.
 	 * @param array<int, int>                                          $avoid   Home sections (indexes) the page needs for something else: used only when no other will do.
 	 * @param bool                                                     $list    The page is the list of the pages (of the services, of the places): it shows all of them, not as many as the Home's section has cards.
+	 * @param int|null                                                 $only    Poured into this Home section and no other (a section a person locked), or none.
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
-	public static function related( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), bool $list = false ): ?array {
-		return self::pour( $kit, $library, $rows, $heading, $seed, $list ? __( 'List of pages', 'dxai-ui' ) : __( 'Related pages', 'dxai-ui' ), $list ? 'list' : 'related', array_column( $rows, 'url' ), $refused, $avoid, $list ? self::LIST_MAX : 0 );
+	public static function related( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), bool $list = false, ?int $only = null ): ?array {
+		return self::pour( $kit, $library, $rows, $heading, $seed, $list ? __( 'List of pages', 'dxai-ui' ) : __( 'Related pages', 'dxai-ui' ), $list ? 'list' : 'related', array_column( $rows, 'url' ), $refused, $avoid, $list ? self::LIST_MAX : 0, $only );
 	}
 
 	/**
@@ -85,10 +86,11 @@ final class Section_Blueprints {
 	 * @param array<int, array{title:string, text:string, url:string, label:string}>     $rows    contact_rows().
 	 * @param array<int, string>                                                         $refused What was wrong with each exemplar that was not used.
 	 * @param array<int, int>                                                            $avoid   Home sections (indexes) the page needs for something else.
+	 * @param int|null                                                                   $only    Poured into this Home section and no other (a section a person locked), or none.
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
-	public static function contact( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array() ): ?array {
-		return self::pour( $kit, $library, $rows, $heading, $seed, __( 'Contact details', 'dxai-ui' ), 'contact', array_column( $rows, 'text' ), $refused, $avoid );
+	public static function contact( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), ?int $only = null ): ?array {
+		return self::pour( $kit, $library, $rows, $heading, $seed, __( 'Contact details', 'dxai-ui' ), 'contact', array_column( $rows, 'text' ), $refused, $avoid, 0, $only );
 	}
 
 	/**
@@ -102,9 +104,10 @@ final class Section_Blueprints {
 	 * @param array<int, string>                  $refused
 	 * @param array<int, int>                     $avoid
 	 * @param int                                 $grow     How many cards a list may have (0: as many as the Home's section has).
+	 * @param int|null                            $only     Only this Home section is tried.
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
-	private static function pour( array $kit, array $library, array $rows, string $heading, string $seed, string $name, string $op, array $identity, array &$refused, array $avoid, int $grow = 0 ): ?array {
+	private static function pour( array $kit, array $library, array $rows, string $heading, string $seed, string $name, string $op, array $identity, array &$refused, array $avoid, int $grow = 0, ?int $only = null ): ?array {
 		$library = array_values( $library );
 		if ( count( $rows ) < 2 ) {
 			return null;
@@ -114,6 +117,9 @@ final class Section_Blueprints {
 			'cards'   => 1,
 		);
 		$order = array_values( (array) $kit['exemplars'] );
+		if ( $only !== null ) {
+			$order = array_values( array_filter( $order, static fn( $e ) => (int) $e['index'] === $only ) );
+		}
 		usort(
 			$order,
 			static function ( array $a, array $b ) use ( $rank, $rows, $seed, $avoid, $grow ): int {

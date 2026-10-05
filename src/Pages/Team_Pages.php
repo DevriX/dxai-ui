@@ -44,6 +44,12 @@ final class Team_Pages {
 	/** On a page: how its plan was made (the usual one, or an AI's), and why an AI's was not used. */
 	public const AI_META = '_dxai_ui_team_ai';
 
+	/** What a person shuffled and locked on a page: {shuffle, recipe, locks}. Kept so the page is made the same way again. */
+	public const ARR_META = '_dxai_ui_team_arr';
+
+	/** How far a page is built from the Home: only its sections as they are; also the sections made in its cards; with an AI choosing the sections. */
+	public const MODES = array( 'home', 'new', 'ai' );
+
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
 
@@ -104,51 +110,236 @@ final class Team_Pages {
 	}
 
 	/**
-	 * The recipe and the sections each wanted page would get, without making anything.
+	 * The sections each wanted page would get, in order, without making anything: each page is laid out the way `build()` would lay it
+	 * out (the same function), so what is shown is what is made. A page that was made before is shown as it was arranged (shuffled, with
+	 * its locked sections), unless the request says otherwise.
 	 *
-	 * @param array<int, array{type:string, title:string}> $wanted
+	 * @param array<int, array<string, mixed>> $wanted  type, title, and per page `shuffle`, `recipe` and `locks` (the arrangement, as this returned it).
+	 * @param array{mode?:string}              $options mode: `home` (only the Home's sections as they are), `new` (the usual: also sections made in its cards) or `ai` (the usual plan is shown: the AI's is made when the pages are).
 	 * @return array<int, array<string, mixed>>
 	 */
-	public static function plan( int $home, array $wanted ): array {
+	public static function plan( int $home, array $wanted, array $options = array() ): array {
+		$mode    = self::mode( $options );
 		$seed    = self::seed( $home );
 		$library = Section_Library::for_page( $home );
 		$roles   = self::home_roles( $library );
-		$kit     = Home_Kit::of( $library );
-		$reach   = count( Section_Blueprints::contact_rows( Home_Kit::facts( $home ) ) ) >= 2;
-		$out     = array();
-		foreach ( self::clean_wanted( $wanted ) as $item ) {
-			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
-			$parts  = array();
-			$list   = $recipe['roles'];
-			// A page without a list of the site's other pages gets one (compose()), as long as the Home has cards to make it in.
-			if ( $kit['exemplars'] !== array() && ! in_array( 'related', $list, true ) ) {
-				array_splice( $list, self::before_tail( $list ), 0, array( 'related' ) );
-			}
-			// …and the contact page the ways to reach the company, when the Home states two or more, after its form (or its hero).
-			if ( in_array( $item['type'], array( 'contact', 'about' ), true ) && $reach && $kit['exemplars'] !== array() ) {
-				$form = array_search( 'form', $list, true );
-				$hero = array_search( 'hero', $list, true );
-				array_splice( $list, $item['type'] === 'about' ? self::before_tail( $list ) : ( $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ) ), 0, array( 'contact' ) );
-			}
-			foreach ( $list as $role ) {
-				// The pages of the site as cards are made in the Home's cards (Section_Blueprints), whether it has such a section or not.
-				$source = $role === 'contact' || self::pool( $library, $roles, $role ) === array() ? ( in_array( $role, array( 'related', 'contact' ), true ) && $kit['exemplars'] !== array() ? 'new' : '' ) : 'home';
-				$parts[] = array(
-					'role'   => $role,
-					'source' => $source,
-				);
-			}
+		$items   = array_map( static fn( $i ) => self::arranged( $home, $i ), self::clean_wanted( $wanted ) );
+		$vary    = self::base_vary( $home, $library, $mode );
+		$links   = array();
+		foreach ( $items as $item ) {
+			$id = self::existing( $home, $item['type'], $item['slug'] );
+			$links[ $item['type'] . '|' . $item['slug'] ] = array(
+				'title' => $item['title'],
+				'url'   => $id > 0 ? (string) get_permalink( $id ) : '',
+				'type'  => $item['type'],
+			);
+		}
+		$out = array();
+		foreach ( $items as $item ) {
+			$key   = $item['type'] . '|' . $item['slug'];
+			$lay   = self::laid_out( $item, $key, $seed, $roles, $vary, $links, $mode );
+			$built = self::compose( $library, $roles, $lay['recipe']['roles'], $item, $lay['siblings'], $lay['seed'], $lay['vary'] );
+			$parts = array_map( static fn( $p ) => array( 'role' => $p['role'], 'source' => $p['source'] ), $built['places'] );
 			$existing = self::existing( $home, $item['type'], $item['slug'] );
 			$out[]    = array(
-				'type'      => $item['type'],
-				'title'     => $item['title'],
-				'slug'      => $item['slug'],
-				'roles'     => $parts,
-				'left_out'  => array_values( array_map( static fn( $p ) => $p['role'], array_filter( $parts, static fn( $p ) => $p['source'] === '' ) ) ),
-				'edits'     => $recipe['edits'],
-				'nearest'   => $recipe['nearest'],
-				'exists'    => $existing > 0 ? $existing : 0,
-				'edited'    => $existing > 0 && self::edited( $existing ),
+				'type'        => $item['type'],
+				'title'       => $item['title'],
+				'slug'        => $item['slug'],
+				'roles'       => $parts,
+				'strip'       => $built['places'],
+				'arrangement' => self::arrangement( $item, $built['places'] ),
+				'left_out'    => array_values( array_map( static fn( $p ) => $p['role'], array_filter( $parts, static fn( $p ) => $p['source'] === '' ) ) ),
+				'edits'       => $lay['recipe']['edits'],
+				'nearest'     => $lay['recipe']['nearest'],
+				'exists'      => $existing > 0 ? $existing : 0,
+				'edited'      => $existing > 0 && self::edited( $existing ),
+			);
+		}
+
+		return $out;
+	}
+
+	/** The mode of a run: `home`, `new` or `ai`; the old `ai` flag means `ai`. */
+	private static function mode( array $options ): string {
+		$mode = (string) ( $options['mode'] ?? '' );
+		if ( ! empty( $options['ai'] ) ) {
+			return 'ai';
+		}
+
+		return in_array( $mode, self::MODES, true ) ? $mode : 'new';
+	}
+
+	/**
+	 * What every section of a page can be varied and filled with: the Home's other pictures, the classes the design styles by place,
+	 * and (unless only the Home's sections are wanted) the cards and facts the sections made in them are taken from.
+	 *
+	 * @param array<int, array<string, mixed>> $library
+	 * @return array<string, mixed>
+	 */
+	private static function base_vary( int $home, array $library, string $mode ): array {
+		$vary = array(
+			'pool'       => Section_Variants::pool( $library ),
+			'positional' => Section_Variants::positional_classes( $home ),
+		);
+		if ( $mode !== 'home' ) {
+			$vary['kit']   = Home_Kit::of( $library );
+			$vary['facts'] = Home_Kit::facts( $home );
+		}
+
+		return $vary;
+	}
+
+	/**
+	 * One page, ready to be composed: its recipe (the site's order, and the page's own small changes, which a shuffle changes), what its
+	 * sections are filled with, and the seed each place takes its changes from.
+	 *
+	 * @param array<string, mixed>                                     $item  arranged().
+	 * @param array<string, array{title:string, url:string, type:string}> $links
+	 * @return array{recipe:array<string, mixed>, vary:array<string, mixed>, siblings:array<int, array<string, string>>, seed:string}
+	 */
+	private static function laid_out( array $item, string $key, string $seed, array $roles, array $vary, array $links, string $mode ): array {
+		$m       = (int) $item['recipe'];
+		$recipe  = self::recipe( $item['type'], $seed, $roles, $item['slug'] . ( $m > 0 ? '~' . $m : '' ) );
+		$base    = $seed . '|' . $key;
+		$seed_of = static fn( int $n ): string => $base . ( $n > 0 ? '~' . $n : '' );
+		$pages   = $vary;
+		$near    = array();
+		if ( $mode !== 'home' ) {
+			$near  = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
+			$pages = array_merge( $vary, self::related_rows( $key, $links, (array) $vary['kit']['texts'] ) );
+		}
+		$pages['n']       = (int) $item['shuffle'];
+		$pages['seed_of'] = $seed_of;
+		$pages['locks']   = self::lock_map( (array) $item['locks'] );
+
+		return array(
+			'recipe'   => $recipe,
+			'vary'     => $pages,
+			'siblings' => $near,
+			'seed'     => $seed_of( (int) $item['shuffle'] ),
+		);
+	}
+
+	/**
+	 * What a page is arranged with, as a request can carry it back: the shuffle, the shuffle its order is from, and the sections that
+	 * held as locked (a lock that no longer fits the page is not in it).
+	 *
+	 * @param array<string, mixed>             $item
+	 * @param array<int, array<string, mixed>> $places compose()'s `places`.
+	 * @return array{shuffle:int, recipe:int, locks:array<int, array<string, mixed>>}
+	 */
+	private static function arrangement( array $item, array $places ): array {
+		$locks = array();
+		foreach ( $places as $p ) {
+			if ( ! empty( $p['locked'] ) ) {
+				$locks[] = array(
+					'place'  => (int) $p['place'],
+					'role'   => (string) $p['role'],
+					'source' => (string) $p['source'],
+					'home'   => (int) $p['home'],
+					'n'      => (int) $p['n'],
+					'ops'    => array_values( array_map( 'strval', (array) $p['ops'] ) ),
+				);
+			}
+		}
+
+		return array(
+			'shuffle' => (int) $item['shuffle'],
+			'recipe'  => (int) $item['recipe'],
+			'locks'   => $locks,
+		);
+	}
+
+	/**
+	 * A wanted page with its arrangement filled in: what the request says, else what the page was last made with, else the usual (no
+	 * shuffle, nothing locked). Locking a section holds the order of the page (the recipe's shuffle stays where it is) so a shuffle changes
+	 * only which Home sections and what variants the other places take.
+	 *
+	 * @param array<string, mixed> $item
+	 * @return array{type:string, title:string, slug:string, shuffle:int, recipe:int, locks:array<int, array<string, mixed>>}
+	 */
+	private static function arranged( int $home, array $item ): array {
+		$stored = array();
+		if ( ! isset( $item['shuffle'], $item['recipe'], $item['locks'] ) ) {
+			$id     = self::existing( $home, $item['type'], $item['slug'] );
+			$raw    = $id > 0 ? json_decode( (string) get_post_meta( $id, self::ARR_META, true ), true ) : null;
+			$stored = is_array( $raw ) ? $raw : array();
+		}
+		$locks   = isset( $item['locks'] ) ? (array) $item['locks'] : self::clean_locks( (array) ( $stored['locks'] ?? array() ) );
+		$shuffle = isset( $item['shuffle'] ) ? (int) $item['shuffle'] : (int) ( $stored['shuffle'] ?? 0 );
+		if ( isset( $item['recipe'] ) ) {
+			$recipe = (int) $item['recipe'];
+		} elseif ( $locks === array() && isset( $item['shuffle'] ) ) {
+			$recipe = $shuffle;
+		} else {
+			$recipe = (int) ( $stored['recipe'] ?? ( $locks === array() ? $shuffle : 0 ) );
+		}
+
+		return array(
+			'type'    => (string) $item['type'],
+			'title'   => (string) $item['title'],
+			'slug'    => (string) $item['slug'],
+			'shuffle' => $shuffle,
+			'recipe'  => $recipe,
+			'locks'   => $locks,
+		);
+	}
+
+	/**
+	 * The locks a request carries, made safe: a place, a role, where the section is from, the Home section's number, the shuffle its
+	 * variant is from, and what was done to it. Nothing else is kept.
+	 *
+	 * @param array<int|string, mixed> $locks
+	 * @return array<int, array{place:int, role:string, source:string, home:int, n:int, ops:array<int, string>}>
+	 */
+	private static function clean_locks( array $locks ): array {
+		$out = array();
+		foreach ( $locks as $l ) {
+			if ( ! is_array( $l ) || ! isset( $l['place'], $l['role'], $l['home'] ) ) {
+				continue;
+			}
+			$role   = (string) $l['role'];
+			$source = (string) ( $l['source'] ?? 'home' );
+			$home   = (int) $l['home'];
+			$place  = (int) $l['place'];
+			if ( preg_match( '/^[a-z][a-z-]{1,24}$/', $role ) !== 1 || ! in_array( $source, array( 'home', 'new' ), true ) || $home < 1 || $place < 0 || $place > 40 ) {
+				continue;
+			}
+			$out[ $place ] = array(
+				'place'  => $place,
+				'role'   => $role,
+				'source' => $source,
+				'home'   => $home,
+				'n'      => max( 0, min( 999, (int) ( $l['n'] ?? 0 ) ) ),
+				'ops'    => array_values( array_filter( array_map( 'strval', (array) ( $l['ops'] ?? array() ) ), static fn( $o ) => preg_match( '/^[a-z][a-z0-9:+\-]{0,60}$/', $o ) === 1 ) ),
+			);
+		}
+		ksort( $out );
+
+		return array_values( $out );
+	}
+
+	/**
+	 * Locks as compose() takes them: by place, with the Home section's index and the picture the section showed (0: none).
+	 *
+	 * @param array<int, array<string, mixed>> $locks clean_locks().
+	 * @return array<int, array{role:string, source:string, index:int, n:int, image:int}>
+	 */
+	private static function lock_map( array $locks ): array {
+		$out = array();
+		foreach ( $locks as $l ) {
+			$image = 0;
+			foreach ( (array) $l['ops'] as $op ) {
+				if ( str_starts_with( (string) $op, 'image:' ) ) {
+					$image = (int) substr( (string) $op, 6 );
+				}
+			}
+			$out[ (int) $l['place'] ] = array(
+				'role'   => (string) $l['role'],
+				'source' => (string) $l['source'],
+				'index'  => (int) $l['home'] - 1,
+				'n'      => (int) $l['n'],
+				'image'  => $image,
 			);
 		}
 
@@ -159,15 +350,16 @@ final class Team_Pages {
 	 * Make the pages. A page that is there already is updated in place, unless a person edited it (then it is kept,
 	 * and named in `kept`).
 	 *
-	 * @param array<int, array{type:string, title:string}> $wanted
-	 * @param array{ai?:bool, cap?:int}                    $options ai: an AI plans the sections of each page (one request a page, within the ceiling), the usual plan when it cannot.
-	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>}|\WP_Error
+	 * @param array<int, array<string, mixed>>               $wanted  As plan() takes them: type, title, and the arrangement (shuffle, recipe, locks) of the pages a person arranged.
+	 * @param array{ai?:bool, mode?:string, cap?:int}        $options mode: `home`, `new`, or `ai` (an AI plans the sections of each page: one request a page, within the ceiling, the usual plan when it cannot; `ai` is the same).
+	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>, report:array<int, array<string, mixed>>, run:array<string, mixed>}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false, array $options = array() ) {
 		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
 			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
-		$items = self::clean_wanted( $wanted );
+		$mode  = self::mode( $options );
+		$items = array_map( static fn( $i ) => self::arranged( $home, $i ), self::clean_wanted( $wanted ) );
 		// The pages that list others first, so the pages they list can sit under them.
 		usort( $items, static fn( $x, $y ) => (int) in_array( $y['type'], array( 'services', 'areas' ), true ) <=> (int) in_array( $x['type'], array( 'services', 'areas' ), true ) );
 		if ( $items === array() ) {
@@ -181,12 +373,10 @@ final class Team_Pages {
 		$roles = self::home_roles( $library );
 		$log   = array();
 		// What a section can be varied with: the Home's other pictures, and the classes the design styles by place.
-		$vary  = array(
-			'pool'       => Section_Variants::pool( $library ),
-			'positional' => Section_Variants::positional_classes( $home ),
-			'kit'        => Home_Kit::of( $library ),
-			'facts'      => Home_Kit::facts( $home ),
-		);
+		$vary = self::base_vary( $home, $library, $mode );
+		// What the posts this run may write were before it, to give them back (Team_Run).
+		$before  = Team_Run::begin( $home );
+		$created = array();
 
 		// First every page exists, so the pages can link to each other.
 		$ids  = array();
@@ -207,6 +397,7 @@ final class Team_Pages {
 				if ( is_wp_error( $id ) ) {
 					return $id;
 				}
+				$created[] = (int) $id;
 			}
 			$ids[ $item['type'] . '|' . $item['slug'] ] = (int) $id;
 			$pend[]                                      = $item;
@@ -223,7 +414,7 @@ final class Team_Pages {
 
 		// An AI plans the sections only when it was asked to, and only if there is an engine to ask.
 		$ai = array(
-			'asked'    => ! empty( $options['ai'] ),
+			'asked'    => $mode === 'ai',
 			'engine'   => null,
 			'budget'   => null,
 			'accepted' => 0,
@@ -244,9 +435,10 @@ final class Team_Pages {
 		foreach ( $pend as $item ) {
 			$key    = $item['type'] . '|' . $item['slug'];
 			$id     = $ids[ $key ];
-			$recipe = self::recipe( $item['type'], $seed, $roles, $item['slug'] );
-			$siblings = array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === 'service', ARRAY_FILTER_USE_BOTH ) );
-			$page_vary = array_merge( $vary, self::related_rows( $key, $links, (array) $vary['kit']['texts'] ) );
+			$lay    = self::laid_out( $item, $key, $seed, $roles, $vary, $links, $mode );
+			$recipe = $lay['recipe'];
+			$siblings  = $lay['siblings'];
+			$page_vary = $lay['vary'];
 			$plan      = null;
 			if ( $ai['engine'] !== null ) {
 				$res = Page_Planner::run( $ai['engine'], self::planning_context( $library, $roles, $item, (array) $recipe['roles'], $page_vary ), $ai['budget'] );
@@ -265,13 +457,20 @@ final class Team_Pages {
 			if ( $plan !== null ) {
 				$page_vary['plan'] = $plan;
 			}
-			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $seed . '|' . $key, $page_vary );
+			$built  = self::compose( $library, $roles, $recipe['roles'], $item, $siblings, $lay['seed'], $page_vary );
 			$wrote = self::write( $id, $home, $built['sections'] );
 			if ( is_wp_error( $wrote ) ) {
 				$log[] = sprintf( '%s: the page did not round-trip (%s) — not written', $item['title'], $wrote->get_error_message() );
 				continue;
 			}
 			update_post_meta( $id, self::OPS_META, wp_json_encode( $built['ops'] ) );
+			// How the page was arranged, so that it is made the same way again; nothing is kept for the usual arrangement or an AI's plan.
+			$arr = self::arrangement( $item, $built['places'] );
+			if ( $plan === null && ( $arr['shuffle'] > 0 || $arr['recipe'] > 0 || $arr['locks'] !== array() ) ) {
+				update_post_meta( $id, self::ARR_META, wp_slash( wp_json_encode( $arr, JSON_UNESCAPED_SLASHES ) ) );
+			} else {
+				delete_post_meta( $id, self::ARR_META );
+			}
 			$log   = array_merge( $log, array_map( static fn( $l ) => $item['title'] . ': ' . $l, $built['log'] ) );
 			$done[] = array(
 				'id'      => $id,
@@ -279,6 +478,7 @@ final class Team_Pages {
 				'type'    => $item['type'],
 				'roles'   => $plan['roles'] ?? $recipe['roles'],
 				'planned' => $plan !== null ? 'ai' : 'usual',
+				'strip'   => $built['places'],
 				'sections' => count( $built['sections'] ),
 				'edit'    => (string) get_edit_post_link( $id, 'raw' ),
 				'view'    => (string) get_permalink( $id ),
@@ -289,6 +489,9 @@ final class Team_Pages {
 		$menu = Team_Menu::link( $home );
 		// … and every page wears the Home's header and footer as the Home has them now, the menu included.
 		$chrome = Team_Chrome::sync( $home );
+		// What the run changed is kept so it can be given back, and what the pages look like against the rules is read.
+		$run    = Team_Run::finish( $home, $before, $created );
+		$report = $done === array() ? array() : Team_Quality::report( $home, array_map( static fn( $d ) => (int) $d['id'], $done ) );
 
 		return array(
 			'pages'  => $done,
@@ -296,6 +499,8 @@ final class Team_Pages {
 			'log'    => $log,
 			'menu'   => $menu,
 			'chrome' => $chrome['pages'],
+			'report' => $report,
+			'run'    => $run,
 			'ai'     => array(
 				'asked'    => $ai['asked'],
 				'accepted' => $ai['accepted'],
@@ -595,7 +800,9 @@ final class Team_Pages {
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
 	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
-	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>}
+	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>, places:array<int, array<string, mixed>>}
+	 *         `places` is the page as laid out, one entry for each place of the recipe: the role, where its section is from (`home`: a Home section as it is; `new`: the Home's cards with
+	 *         the pages of the site poured in; empty: the Home has none, so it is left out), the number of the Home section (from 1), the number of the shuffle its variant is from, and what was done to it.
 	 */
 	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
 		$library  = array_values( $library );
@@ -604,10 +811,25 @@ final class Team_Pages {
 		$log      = array();
 		$ops      = array();
 		$pictures = array();
+		$places   = array();
 		$topic    = self::topic( $item['title'] );
 		$prev     = -1; // the Home section the page showed last
 		// An AI's plan (Page_Planner, checked): the roles it chose, and for each place the Home's section that fills it.
 		$plan  = is_array( $vary['plan'] ?? null ) ? $vary['plan'] : null;
+		// Sections a person locked: they come back as they were (the same Home section, the same changes, the same picture) when the page is shuffled.
+		$locks   = $plan === null ? (array) ( $vary['locks'] ?? array() ) : array();
+		$seed_of = isset( $vary['seed_of'] ) && is_callable( $vary['seed_of'] ) ? $vary['seed_of'] : static fn( int $n ): string => $seed;
+		$shuffle = (int) ( $vary['n'] ?? 0 );
+		$locked  = static function ( string $role, string $source ) use ( $locks ): ?array {
+			foreach ( $locks as $l ) {
+				if ( $l['role'] === $role && $l['source'] === $source ) {
+					return $l;
+				}
+			}
+
+			return null;
+		};
+		$kept_home = array_values( array_map( static fn( $l ) => (int) $l['index'], array_filter( $locks, static fn( $l ) => $l['source'] === 'home' ) ) );
 		$picks = $plan !== null ? (array) $plan['picks'] : array();
 		if ( $plan !== null ) {
 			$recipe = (array) $plan['roles'];
@@ -621,7 +843,7 @@ final class Team_Pages {
 		foreach ( $recipe as $other ) {
 			$wanted = array_merge( $wanted, array_keys( array_filter( self::candidates( $roles, (string) $other ), static fn( $rank ) => $rank === 0 ) ) );
 		}
-		$wanted = array_values( array_unique( $wanted ) );
+		$wanted = array_values( array_unique( array_merge( $wanted, $kept_home ) ) );
 		if ( $plan !== null ) {
 			// A plan names the Home's sections it shows; a made section is poured into another one when there is another.
 			$wanted = array_values( array_filter( $picks, 'is_int' ) );
@@ -630,7 +852,8 @@ final class Team_Pages {
 			$rows = Section_Blueprints::contact_rows( (array) $vary['facts'] );
 			if ( count( $rows ) >= 2 ) {
 				$refused = array();
-				$contact = Section_Blueprints::contact( (array) $vary['kit'], $library, $rows, __( 'Get in touch', 'dxai-ui' ), $seed . '|contact', $refused, $wanted );
+				$again   = $locked( 'contact', 'new' );
+				$contact = Section_Blueprints::contact( (array) $vary['kit'], $library, $rows, __( 'Get in touch', 'dxai-ui' ), ( $again !== null ? $seed_of( (int) $again['n'] ) : $seed ) . '|contact', $refused, $wanted, $again !== null ? (int) $again['index'] : null );
 				foreach ( $refused as $why ) {
 					$log[] = 'contact: not made from ' . $why;
 				}
@@ -667,7 +890,8 @@ final class Team_Pages {
 			if ( $plan !== null ) {
 				$others = array_values( array_filter( $picks, 'is_int' ) );
 			}
-			$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], $seed . '|related', $refused, array_values( array_unique( array_merge( $others, $contact !== null ? array( $contact['index'] ) : array() ) ) ), ! empty( $vary['list'] ) );
+			$again   = $locked( 'related', 'new' );
+				$related = Section_Blueprints::related( (array) $vary['kit'], $library, (array) $vary['rows'], (string) $vary['heading'], ( $again !== null ? $seed_of( (int) $again['n'] ) : $seed ) . '|related', $refused, array_values( array_unique( array_merge( $others, $kept_home, $contact !== null ? array( $contact['index'] ) : array() ) ) ), ! empty( $vary['list'] ), $again !== null ? (int) $again['index'] : null );
 			foreach ( $refused as $why ) {
 				$log[] = 'related: not made from ' . $why;
 			}
@@ -680,38 +904,56 @@ final class Team_Pages {
 				array_splice( $recipe, (int) $at, 1 );
 			}
 		}
+		// The Home sections that locked places show are not taken by the places that are not locked.
+		$reserved = array();
+		foreach ( $locks as $p => $l ) {
+			if ( $l['source'] === 'home' && ( $recipe[ $p ] ?? '' ) === $l['role'] && isset( $library[ $l['index'] ] ) ) {
+				$reserved[ (int) $l['index'] ] = true;
+			}
+		}
 		foreach ( $recipe as $place => $role ) {
+			$lock = $locks[ $place ] ?? null;
 			if ( $contact !== null && $role === 'contact' ) {
+				$again      = $locked( 'contact', 'new' );
 				$ops[]      = array( $contact['op'] );
 				$sections[] = $contact['block'];
+				$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'new', 'home' => $contact['index'] + 1, 'n' => $again !== null ? (int) $again['n'] : $shuffle, 'ops' => array(), 'locked' => $again !== null );
 				$log[]      = sprintf( 'contact ← the cards of Home section %d, with what the Home says about reaching it', $contact['index'] + 1 );
 				$prev       = -1;
 				continue;
 			}
 			if ( $related !== null && $place === $at ) {
+				$again      = $locked( 'related', 'new' );
 				$ops[]      = array( $related['op'] );
 				$sections[] = $related['block'];
+				$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'new', 'home' => $related['index'] + 1, 'n' => $again !== null ? (int) $again['n'] : $shuffle, 'ops' => array(), 'locked' => $again !== null );
 				$log[]      = sprintf( 'related ← the cards of Home section %d, with the pages of the site', $related['index'] + 1 );
 				$prev       = -1;
 				continue;
 			}
-			$cand = isset( $picks[ $place ] ) ? array( (int) $picks[ $place ] => 0 ) : self::pool( $library, $roles, (string) $role );
+			// A locked place shows the Home section it showed, whatever else the page has taken.
+			$forced = $lock !== null && $lock['source'] === 'home' && $lock['role'] === (string) $role && isset( $library[ $lock['index'] ] );
+			$cand   = $forced ? array( (int) $lock['index'] => 0 ) : ( isset( $picks[ $place ] ) ? array( (int) $picks[ $place ] => 0 ) : array_diff_key( self::pool( $library, $roles, (string) $role ), $reserved ) );
 			// A section with a control (a "show more" button) or a widget is not used twice: its script finds it by its id, which a second
 			// copy does not have, so the copy would show less than the Home's does.
-			foreach ( array_keys( $cand ) as $i ) {
+			foreach ( $forced ? array() : array_keys( $cand ) as $i ) {
 				if ( ( $used[ $i ] ?? 0 ) > 0 && ( (array) $library[ $i ]['controls'] !== array() || (array) $library[ $i ]['widgets'] !== array() ) ) {
 					unset( $cand[ $i ] );
 				}
 			}
 			if ( $cand === array() ) {
-				$log[] = sprintf( '%s: the Home has none — left out', $role );
+				$log[]    = sprintf( '%s: the Home has none — left out', $role );
+				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
 				continue;
 			}
 			// A section the page has is not shown again (a call to action may be: it closes more than one stretch of a page).
 			// …and never twice in a row.
-			$cand = array_filter( $cand, static fn( $i ) => ( $used[ $i ] ?? 0 ) < ( $role === 'cta' ? 2 : 1 ) && $i !== $prev, ARRAY_FILTER_USE_KEY );
+			if ( ! $forced ) {
+				$cand = array_filter( $cand, static fn( $i ) => ( $used[ $i ] ?? 0 ) < ( $role === 'cta' ? 2 : 1 ) && $i !== $prev, ARRAY_FILTER_USE_KEY );
+			}
 			if ( $cand === array() ) {
-				$log[] = sprintf( '%s: the Home has no other section for it — left out', $role );
+				$log[]    = sprintf( '%s: the Home has no other section for it — left out', $role );
+				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
 				continue;
 			}
 			// The one used least so far, a section of the role itself before a stand-in; among equals, a turn the seed decides.
@@ -738,17 +980,18 @@ final class Team_Pages {
 			// The section, shown another way from what the Home's other pages have (the cards that list pages are filled below).
 			$done = array();
 			if ( $role !== 'related' && isset( $vary['pool'] ) ) {
-				$v        = Section_Variants::apply(
-					array_merge( $component, array( 'block' => $block ) ),
-					array(
-						'seed'       => $seed . '|' . $place . '|' . $pick,
-						'positional' => $vary['positional'] ?? null,
-						'pool'       => $vary['pool'],
-						'used'       => $pictures,
-						'index'      => $pick,
-						'role'       => (string) $role,
-					)
+				$ctx = array(
+					'seed'       => ( $forced ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place . '|' . $pick,
+					'positional' => $vary['positional'] ?? null,
+					'pool'       => $vary['pool'],
+					'used'       => $pictures,
+					'index'      => $pick,
+					'role'       => (string) $role,
 				);
+				if ( $forced && isset( $lock['image'] ) ) {
+					$ctx['image'] = (int) $lock['image'];
+				}
+				$v        = Section_Variants::apply( array_merge( $component, array( 'block' => $block ) ), $ctx );
 				$block    = $v['block'];
 				$done     = $v['ops'];
 				$pictures = array_merge( $pictures, $v['images'] );
@@ -765,6 +1008,7 @@ final class Team_Pages {
 				$block = self::fill_related( $block, $component, $siblings, $item['title'], (array) ( $vary['kit']['texts'] ?? array() ) );
 			}
 			$sections[] = $block;
+			$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'home', 'home' => $pick + 1, 'n' => $forced ? (int) $lock['n'] : $shuffle, 'ops' => $done, 'locked' => $forced );
 			$log[]      = sprintf( '%s ← Home section %d (%s)%s', $role, $pick + 1, $component['kind'], $done === array() ? '' : ' — ' . implode( ', ', $done ) );
 		}
 
@@ -772,6 +1016,7 @@ final class Team_Pages {
 			'sections' => $sections,
 			'log'      => $log,
 			'ops'      => $ops,
+			'places'   => $places,
 		);
 	}
 
@@ -1047,11 +1292,22 @@ final class Team_Pages {
 				continue;
 			}
 			$seen[ $key ] = true;
-			$out[]        = array(
+			$row          = array(
 				'type'  => $type,
 				'title' => $title,
 				'slug'  => $slug,
 			);
+			// What a person arranged (shuffled, locked) is carried only when the request has it.
+			if ( isset( $w['shuffle'] ) ) {
+				$row['shuffle'] = max( 0, min( 999, (int) $w['shuffle'] ) );
+			}
+			if ( isset( $w['recipe'] ) ) {
+				$row['recipe'] = max( 0, min( 999, (int) $w['recipe'] ) );
+			}
+			if ( isset( $w['locks'] ) && is_array( $w['locks'] ) ) {
+				$row['locks'] = self::clean_locks( $w['locks'] );
+			}
+			$out[] = $row;
 		}
 
 		return $out;

@@ -108,8 +108,9 @@ final class Section_Variants {
 	 * A section, varied.
 	 *
 	 * @param array<string, mixed> $component A Section_Library::analyze() of the Home's section.
-	 * @param array{seed:string, positional:array<string, true>|null, pool:array<int, array<string, mixed>>, used:array<int, int>, index:int, role:string} $ctx
+	 * @param array{seed:string, positional:array<string, true>|null, pool:array<int, array<string, mixed>>, used:array<int, int>, index:int, role:string, image?:int|null} $ctx
 	 *        `used` is the pictures already put on this page (by reference of the caller: returned in `images`).
+	 *        `image` makes the picture the one it was (a section a person locked): its id, or 0 for none; every other change is the seed's alone.
 	 * @return array{block:array<string, mixed>, ops:array<int, string>, images:array<int, int>}
 	 */
 	public static function apply( array $component, array $ctx ): array {
@@ -183,6 +184,10 @@ final class Section_Variants {
 		if ( $now['images'] === array() || (array) $now['controls'] !== array() || (array) $now['widgets'] !== array() || (array) $ctx['pool'] === array() || ! in_array( (string) $ctx['role'], array( 'hero', 'two-col', 'text', 'content', 'cta' ), true ) ) {
 			return null;
 		}
+		// A section that is shown again as it was: its picture is the one it had, or none (whether another fits depends on the page).
+		if ( isset( $ctx['image'] ) && (int) $ctx['image'] < 1 ) {
+			return null;
+		}
 		$slot = (array) $now['images'][0];
 		$path = (array) $slot['path'];
 		$img  = Block_Tree::at( $block, $path );
@@ -203,10 +208,17 @@ final class Section_Variants {
 				static fn( $p ) => (int) $p['id'] !== $id && (int) $p['from'] !== (int) $ctx['index'] && ! in_array( (int) $p['id'], array_merge( (array) $ctx['used'], $images ), true ) && abs( (float) $p['ratio'] / $ratio - 1 ) <= $tolerance
 			)
 		);
+		if ( isset( $ctx['image'] ) ) {
+			$was = array_values( array_filter( (array) $ctx['pool'], static fn( $p ) => (int) $p['id'] === (int) $ctx['image'] ) );
+			if ( $was === array() ) {
+				return null;
+			}
+			$fits = $was;
+		}
 		if ( $fits === array() ) {
 			return null;
 		}
-		$pick = $fits[ $h( 'image' ) % count( $fits ) ];
+		$pick = isset( $ctx['image'] ) ? $fits[0] : $fits[ $h( 'image' ) % count( $fits ) ];
 		$tgt  = &Block_Tree::at( $block, $path );
 		Block_Tree::set_image( $tgt, (string) $pick['url'], (string) $pick['alt'], (int) $pick['id'] );
 		unset( $tgt );
