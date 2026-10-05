@@ -53,6 +53,8 @@ final class Native_Blocks {
 			new Span(),
 			// After Span: the amr/span it makes is one that has a text colour setting.
 			new Text_Color(),
+			// Last of the ones that change a block's classes: it reads the classes the others left.
+			new Sizes(),
 			new Section_Names(),
 			new Tidy(),
 		);

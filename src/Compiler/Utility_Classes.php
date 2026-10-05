@@ -317,6 +317,90 @@ final class Utility_Classes {
 	}
 
 	/**
+	 * The bounds of the site's design system, read from the theme's own classes: the widest `max-w-<n>px` it has (on a grid of 5px,
+	 * 1200 on american-restoration) and the largest padding it has (its spacing scale ends at `24-5`: 98px). Null when the theme
+	 * has no such classes (no catalogue: there is nothing to keep within). `dxai_ui_design_system` (array|null: max_width, padding in
+	 * px) changes them, or returns null to switch the fitting off.
+	 *
+	 * @return array{max_width:int, padding:float}|null
+	 */
+	public static function system(): ?array {
+		static $found = false;
+		if ( $found === false ) {
+			$found = null;
+			$wide  = 0;
+			$pad   = 0.0;
+			foreach ( array_keys( (array) ( self::data()['classes'] ?? array() ) ) as $class ) {
+				if ( preg_match( '/^max-w-(\d+)px$/', (string) $class, $m ) === 1 ) {
+					$wide = max( $wide, (int) $m[1] );
+				} elseif ( preg_match( '/^p-(\d+)(-5)?$/', (string) $class, $m ) === 1 ) {
+					$pad = max( $pad, (float) $m[1] + ( isset( $m[2] ) && $m[2] !== '' ? 0.5 : 0.0 ) );
+				}
+			}
+			if ( $wide > 0 && $pad > 0.0 ) {
+				// A step of the theme's spacing scale is a quarter of a rem.
+				$found = array(
+					'max_width' => $wide,
+					'padding'   => $pad * 4.0,
+				);
+			}
+		}
+		$system = apply_filters( 'dxai_ui_design_system', $found );
+
+		return is_array( $system ) && (int) ( $system['max_width'] ?? 0 ) > 0 && (float) ( $system['padding'] ?? 0 ) > 0 ? array(
+			'max_width' => (int) $system['max_width'],
+			'padding'   => (float) $system['padding'],
+		) : null;
+	}
+
+	/**
+	 * A declaration list with the sizes that a class would be made for kept within the site's design system (system()): a `max-width` in
+	 * px is no wider than the widest the theme has and sits on its 5px grid, a `padding` side in px is no larger than the largest
+	 * padding the theme has. The plugin adds classes where the theme has none (`max-w-1280px` beside the theme's `max-w-1200px`), and a
+	 * class of a size the site does not use anywhere else is a new value in its system. Everything that is not a plain px length
+	 * (`clamp()`, %, rem, ch, a keyword) is left as it is, and so is a list that has nothing to fit.
+	 */
+	public static function fit_system( string $css ): string {
+		if ( stripos( $css, 'max-width' ) === false && stripos( $css, 'padding' ) === false ) {
+			return $css;
+		}
+		$system = self::system();
+		if ( $system === null ) {
+			return $css;
+		}
+		$out     = array();
+		$changed = false;
+		$px      = static fn( float $n ): string => rtrim( rtrim( number_format( $n, 3, '.', '' ), '0' ), '.' ) . 'px';
+		foreach ( self::declarations( $css ) as $d ) {
+			$raw = $d['raw'];
+			if ( $d['prop'] === 'max-width' && preg_match( '/^(\d+(?:\.\d+)?)px$/', $d['value'] ) === 1 ) {
+				$n   = (float) $d['value'];
+				$fit = $n < 5.0 ? $n : min( (float) $system['max_width'], round( $n / 5.0 ) * 5.0 );
+				if ( $fit !== $n ) {
+					$raw     = 'max-width:' . $px( $fit ) . ( $d['important'] ? ' !important' : '' );
+					$changed = true;
+				}
+			} elseif ( preg_match( '/^padding(?:-(?:top|right|bottom|left))?$/', $d['prop'] ) === 1 ) {
+				$parts = preg_split( '/\s+/', $d['value'], -1, PREG_SPLIT_NO_EMPTY ) ?: array();
+				$fit   = array();
+				foreach ( $parts as $part ) {
+					if ( preg_match( '/^(\d+(?:\.\d+)?)px$/', $part, $m ) === 1 && (float) $m[1] > $system['padding'] ) {
+						$part    = $px( $system['padding'] );
+						$changed = true;
+					}
+					$fit[] = $part;
+				}
+				if ( $fit !== $parts ) {
+					$raw = $d['prop'] . ':' . implode( ' ', $fit ) . ( $d['important'] ? ' !important' : '' );
+				}
+			}
+			$out[] = $raw;
+		}
+
+		return $changed ? implode( ';', $out ) : $css;
+	}
+
+	/**
 	 * The utility classes that can stand in for a declaration list, and what
 	 * is left of it.
 	 *
@@ -335,6 +419,8 @@ final class Utility_Classes {
 	 * @return array{classes: array<int, string>, remainder: string}
 	 */
 	public static function match( string $css, array $options = array() ): array {
+		// The sizes a class would be made for stay within the site's design system.
+		$css   = self::fit_system( $css );
 		$none  = array(
 			'classes'   => array(),
 			'remainder' => $css,

@@ -124,7 +124,10 @@ $expect( 'a row that changes at a breakpoint stays as it is', ! isset( $attrs_of
 $expect( 'a row with a display set in its own CSS is read from there too', ( $attrs_of( $convert( $group( 'items-center', $para(), 'display:flex;gap:12px' ) )['content'] )['layout']['type'] ?? '' ) === 'flex' );
 $wrapper = $group( 'mx-auto my-0 px-7 max-w-1280px', $para() . $para() );
 $ba  = $attrs_of( $convert( $wrapper )['content'] );
-$expect( 'a centred container becomes a Constrained layout of the width its children had', ( $ba['layout']['type'] ?? '' ) === 'constrained' && ( $ba['layout']['contentSize'] ?? '' ) === '1224px' && ( $ba['style']['spacing']['blockGap'] ?? '' ) === '0px', json_encode( $ba ) );
+// The design's container is 1280px; the site's design system stops at the widest the theme has (1200px on american-restoration).
+$sys  = \DXAI_UI\Compiler\Utility_Classes::system();
+$want = ( $sys !== null ? min( 1280, $sys['max_width'] ) : 1280 ) - 56;
+$expect( 'a centred container becomes a Constrained layout of the width its children had, within the site\'s design system', ( $ba['layout']['type'] ?? '' ) === 'constrained' && ( $ba['layout']['contentSize'] ?? '' ) === $want . 'px' && ( $ba['style']['spacing']['blockGap'] ?? '' ) === '0px', json_encode( $ba ) . ' want ' . $want );
 $expect( 'and keeps its padding and its other classes', ( $ba['className'] ?? '' ) === 'my-0 px-7', json_encode( $ba ) );
 $expect( 'a container with a narrower child stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'max-w-720px m-0' ) ) )['content'] )['layout'] ) );
 $expect( 'a container with a child that has a vertical margin stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'mb-3' ) ) )['content'] )['layout'] ) );

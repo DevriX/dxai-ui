@@ -197,7 +197,8 @@ final class Layout extends Converter {
 		if ( $pad === null || ! self::children_plain( $children, true ) ) {
 			return null;
 		}
-		$content = (float) $m[1] - $pad;
+		// The width of the site's own containers, not the design's: no wider than the widest the theme has (Utility_Classes::system()).
+		$content = self::fit_width( $m[1] ) - $pad;
 		if ( $content < 200 ) {
 			return null;
 		}
@@ -211,6 +212,13 @@ final class Layout extends Converter {
 			),
 			'gap'     => '0px',
 		);
+	}
+
+	/** A container's width in px kept within the site's design system, as the classes the plugin makes are (Utility_Classes::fit_system()). */
+	private static function fit_width( string $px ): float {
+		$fit = Utility_Classes::fit_system( 'max-width:' . $px . 'px' );
+
+		return preg_match( '/^max-width:([\d.]+)px$/', $fit, $f ) === 1 ? (float) $f[1] : (float) $px;
 	}
 
 	/**
