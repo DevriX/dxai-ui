@@ -69,6 +69,12 @@ final class Theme_Buttons {
 		}
 		$path = Upload_Paths::path( self::state()['file'] );
 		wp_enqueue_style( 'dxai-ui-theme-buttons', $url, array(), $path !== '' && is_readable( $path ) ? Upload_Paths::version( $path ) : DXAI_UI_VERSION );
+		// The radius the site's owner chose in Theme Global Settings (when they did: otherwise the rules' own default holds). The theme prints
+		// it with its stylesheet, which is not on a page like this one; it is not in the file above because that is made once for a theme.
+		$radius = Theme_Options::radius_css();
+		if ( $radius !== '' ) {
+			wp_add_inline_style( 'dxai-ui-theme-buttons', $radius );
+		}
 	}
 
 	/**

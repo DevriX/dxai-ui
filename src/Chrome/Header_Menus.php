@@ -706,6 +706,11 @@ final class Header_Menus {
 	 */
 	public static function logo(): array {
 		$id = (int) get_theme_mod( 'custom_logo' );
+		// The primary logo of Theme Global Settings, when the site has one: the theme draws it before the Site Logo (its site-branding part).
+		$set = \DXAI_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' );
+		if ( $set > 0 ) {
+			$id = $set;
+		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a read-only preview parameter, capability-checked.
 		if ( defined( 'REST_REQUEST' ) && REST_REQUEST && isset( $_GET['dxai_logo'] ) && current_user_can( 'edit_theme_options' ) ) {
 			$id = absint( wp_unslash( $_GET['dxai_logo'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -752,7 +757,8 @@ final class Header_Menus {
 		// Only for the site's header (install()'s take_site): a one-page
 		// import does not give the whole site its logo.
 		$may = ! array_key_exists( 'set_site_logo', $context ) || ! empty( $context['set_site_logo'] );
-		if ( $may && $id > 0 && wp_attachment_is_image( $id ) && ! get_theme_mod( 'custom_logo' ) ) {
+		// A site with a logo already — the Site Logo, or the primary logo of Theme Global Settings — keeps it.
+		if ( $may && $id > 0 && wp_attachment_is_image( $id ) && ! get_theme_mod( 'custom_logo' ) && \DXAI_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' ) < 1 ) {
 			/*
 			 * Both stores: `site_logo` is what block themes and the Site
 			 * Logo block read, the theme mod what a classic theme's
