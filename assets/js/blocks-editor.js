@@ -211,8 +211,24 @@
 		return dxaiClosed( escaped ).replace( /^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, '' );
 	}
 
+	/*
+	 * Token_Styles::fg_channel() in src/Compiler/Token_Styles.php: a colour a design takes from one of its tokens is read through
+	 * the token's text channel (`var(--dxai-ink--fg,var(--dxai-ink))`), which is where a theme's binding keeps the colours it has
+	 * set apart (Theme_Binding). The server writes every rule that way, and a rule written here has to as well, or the canvas shows
+	 * the design's colour where the page shows the theme's.
+	 */
+	function dxaiFgChannel( css ) {
+		if ( String( css ).indexOf( 'var(--dxai-' ) === -1 ) {
+			return css;
+		}
+
+		return String( css ).replace( /(^|[;{\s])((?:-webkit-text-fill-|text-decoration-|text-emphasis-|caret-|column-rule-)?color|fill|stroke)(\s*:\s*)([^;{}]*)/gi, function ( match, before, prop, colon, value ) {
+			return before + prop + colon + value.replace( /(?<!--fg,)var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/gi, 'var(--dxai-$1--fg,var(--dxai-$1))' );
+		} );
+	}
+
 	function dxaiRule( cls, css ) {
-		const safe = dxaiSafeCss( css );
+		const safe = dxaiSafeCss( dxaiFgChannel( css ) );
 		if ( safe === '' || ! /^dxs-[a-z0-9]+$/.test( cls ) ) {
 			return '';
 		}
@@ -547,7 +563,7 @@
 	 * patterns too, whose blocks are in the same store.
 	 */
 	const DXAI_LIVE_ID = 'dxai-ui-live-rules';
-	const dxaiLive = { attrs: new Map(), css: '' };
+	const dxaiLive = { attrs: new Map(), css: '', rules: new Map() };
 
 	/*
 	 * Utility classes the canvas has no rule for yet.
@@ -672,6 +688,43 @@
 		} );
 	}
 
+	/*
+	 * The dxs- classes the server's copy of the rules already writes into the canvas (Style_Rules, attached when the editor loads).
+	 * A class is the hash of its CSS, so a block whose class is there needs no rule from this script — and the server's is the one
+	 * the front end has: the fonts of a theme that sets them (Theme_Fonts), the colours on the channel a theme's binding keeps
+	 * (Theme_Binding). A rule written here for the same class comes later in the canvas and wins, so the canvas showed the
+	 * design's own where the page shows the theme's.
+	 */
+	const DXAI_SERVER_RULES = 'dxai-ui-rules-editor-inline-css';
+	const dxaiServerSeen = new WeakMap();
+
+	function dxaiServerClasses( doc ) {
+		const style = doc.getElementById( DXAI_SERVER_RULES );
+		const text = style ? style.textContent : '';
+		let seen = dxaiServerSeen.get( doc );
+		if ( ! seen || seen.length !== text.length ) {
+			seen = { length: text.length, names: new Set( ( text.match( /\.dxs-[a-z0-9]+/g ) || [] ).map( function ( name ) {
+				return name.slice( 1 );
+			} ) ) };
+			dxaiServerSeen.set( doc, seen );
+		}
+
+		return seen.names;
+	}
+
+	// The rules to write into one canvas: every block's own, but those the server's copy in that canvas has.
+	function dxaiLiveCss( doc ) {
+		const server = dxaiServerClasses( doc );
+		let css = '';
+		dxaiLive.rules.forEach( function ( declarations, cls ) {
+			if ( ! server.has( cls ) ) {
+				css += dxaiRule( cls, declarations );
+			}
+		} );
+
+		return css;
+	}
+
 	function dxaiLiveRules() {
 		const store = wp.data.select( 'core/block-editor' );
 		if ( ! store || ! store.getClientIdsWithDescendants ) {
@@ -726,6 +779,7 @@
 			return false;
 		}
 		dxaiLive.css = css;
+		dxaiLive.rules = rules;
 
 		return true;
 	}
@@ -763,8 +817,9 @@
 			style.id = DXAI_LIVE_ID;
 			doc.head.appendChild( style );
 		}
-		if ( style && style.textContent !== dxaiLive.css ) {
-			style.textContent = dxaiLive.css;
+		const live = dxaiLiveCss( doc );
+		if ( style && style.textContent !== live ) {
+			style.textContent = live;
 		}
 		let utilities = doc.getElementById( DXAI_UTIL_ID );
 		if ( ! utilities && dxaiUtil.css !== '' && style && style.parentNode ) {
@@ -791,10 +846,15 @@
 	 */
 	function dxaiCanvasClasses() {
 		const canvas = dxaiCanvasCfg();
-		if ( ! canvas.converted ) {
+		// An ordinary page with sections copied from a design (attached) takes the scope classes too: the front end wraps those sections in them.
+		if ( ! canvas.converted && ! canvas.attached ) {
 			return [];
 		}
 		const names = [ 'dxai-ui-canvas' ];
+		if ( canvas.attached ) {
+			// editor-design.css lets the copied sections take the width the front end gives them.
+			names.push( 'dxai-ui-attached' );
+		}
 		if ( canvas.static ) {
 			names.push( 'dxai-ui-static' );
 		}
@@ -1103,9 +1163,13 @@
 		if ( ! roots.length ) {
 			return;
 		}
+		// The styles of the theme's own blocks stay, as they do on the front end (the server lists them).
+		const blocks = new Set( ( dxaiCanvasCfg().themeBlocks || [] ).map( function ( handle ) {
+			return handle + '-css';
+		} ) );
 		doc.querySelectorAll( 'link[rel="stylesheet"][href]' ).forEach( function ( link ) {
 			const href = link.getAttribute( 'href' ) || '';
-			if ( link.disabled || ! roots.some( function ( root ) {
+			if ( link.disabled || blocks.has( link.id ) || ! roots.some( function ( root ) {
 				return href.indexOf( root ) === 0;
 			} ) ) {
 				return;
@@ -1149,7 +1213,10 @@
 		}
 		dxaiWriteRules( doc );
 		if ( classes.length ) {
-			dxaiDropThemeSheets( doc );
+			// The theme's CSS is off a converted page, and off the copied sections of an ordinary page where the front end fences it (Theme_Fence).
+			if ( dxaiCanvasCfg().converted || dxaiCanvasCfg().fence ) {
+				dxaiDropThemeSheets( doc );
+			}
 			dxaiTwinDesignIds( doc );
 		}
 		if ( ! doc.dxaiGuarded ) {

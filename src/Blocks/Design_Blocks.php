@@ -857,6 +857,19 @@ final class Design_Blocks {
 	 */
 	private function canvas_config( int $post_id, bool $converted ): array {
 		if ( ! $converted ) {
+			// An ordinary page that holds sections copied from a design (Design_Attach): its canvas gets the design's scope, as the front
+			// end wraps those sections in it (Page_Scope::wrap_runs()) — without it the design's stylesheet, scoped to that element,
+			// matches nothing in the canvas — and, where the front end fences the theme's CSS off them (Theme_Fence), the same.
+			if ( $post_id > 0 && \DXAI_UI\Structures\Design_Attach::attached( $post_id ) ) {
+				return array(
+					'converted'   => false,
+					'attached'    => true,
+					'fence'       => \DXAI_UI\Theme\Theme_Fence::fences( $post_id ),
+					'themeRoots'  => array_values( array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) ) ),
+					'themeBlocks' => self::theme_block_style_handles(),
+				);
+			}
+
 			return array( 'converted' => false );
 		}
 
@@ -871,7 +884,38 @@ final class Design_Blocks {
 			// off any that reach it (a theme's enqueue_block_assets sheet, or
 			// its editor sheet core copies into the iframe).
 			'themeRoots'    => array_values( array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) ) ),
+			// Except the styles of the theme's own blocks: the front end keeps those (WordPress adds a block's style when the block is on the
+			// page, after the drop above), and the canvas has to as well or a link box and a span lose their rules there.
+			'themeBlocks'   => self::theme_block_style_handles(),
 		);
+	}
+
+	/**
+	 * The handles of the styles that the blocks of the theme (and its parent) register — their front-end and editor styles — as their
+	 * ids appear in the canvas (`<handle>-css`).
+	 *
+	 * @return array<int, string>
+	 */
+	private static function theme_block_style_handles(): array {
+		$roots = array_values( array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) ) );
+		if ( $roots === array() ) {
+			return array();
+		}
+		$styles = wp_styles();
+		$out    = array();
+		foreach ( \WP_Block_Type_Registry::get_instance()->get_all_registered() as $type ) {
+			foreach ( array_merge( (array) ( $type->style_handles ?? array() ), (array) ( $type->editor_style_handles ?? array() ) ) as $handle ) {
+				$src = isset( $styles->registered[ $handle ] ) && is_string( $styles->registered[ $handle ]->src ?? null ) ? $styles->registered[ $handle ]->src : '';
+				foreach ( $roots as $root ) {
+					if ( $src !== '' && str_starts_with( $src, $root ) ) {
+						$out[] = (string) $handle;
+						break;
+					}
+				}
+			}
+		}
+
+		return array_values( array_unique( $out ) );
 	}
 
 	/**

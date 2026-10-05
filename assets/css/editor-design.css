@@ -142,6 +142,30 @@
 	object-fit: fill;
 }
 
+/* An ordinary page with sections copied from a design (the canvas has dxai-ui-attached): the front end puts them in a plain element of
+   the design's scope, as wide as the page's content area (Page_Scope::wrap_runs()), and not in the theme's content column. The canvas's
+   root layout would centre each of them at the theme's content width, so a copied section is let out of it; the page's own blocks, the
+   theme's, keep the column. */
+.editor-styles-wrapper.dxai-ui-attached .is-root-container > :is([class*="dxai-"], [class*="dxs-"], [data-type^="dxai-ui/"]) {
+	max-width: none !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+
+/* A DX Picture the plugin made from the design's image (dxai-part-img, Native\Picture): the theme's edit UI draws a preview and
+   chips that say which crop is in use (its own editor stylesheet is not in the canvas: Assets::drop_theme_styles() on the front
+   end, dxaiDropThemeSheets() here). The design's layout has room for the picture only — a header's logo next to its name — and
+   the crop is in the block's settings. The preview wrapper takes no box, so the picture is laid out as the design's image was. */
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) .wp-block-dx-picture.dxai-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image),
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui .wp-block-dx-picture.dxai-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image) {
+	display: none;
+}
+
+:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) .wp-block-dx-picture.dxai-part-img .dx-picture-edit__preview,
+:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui .wp-block-dx-picture.dxai-part-img .dx-picture-edit__preview {
+	display: contents;
+}
+
 :is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) p,
 :is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui p {
 	margin: 0;
