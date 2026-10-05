@@ -51,6 +51,8 @@ final class Native_Blocks {
 			// After Image: a picture the plugin made becomes the team's DX Picture where the site has the block, and stays core's Image where not.
 			new Picture(),
 			new Span(),
+			// After Span: the amr/span it makes is one that has a text colour setting.
+			new Text_Color(),
 			new Section_Names(),
 			new Tidy(),
 		);

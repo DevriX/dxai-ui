@@ -191,6 +191,10 @@ final class Color_Usage {
 		if ( $out['fg'] === '' && is_string( $attrs['textColor'] ?? null ) ) {
 			$out['fg'] = sanitize_key( $attrs['textColor'] );
 		}
+		// The Colour panel's custom colour that names a token (Native\Text_Color writes the class's own declaration there).
+		if ( $out['fg'] === '' && is_string( $attrs['style']['color']['text'] ?? null ) ) {
+			$out['fg'] = self::token_in( $attrs['style']['color']['text'] );
+		}
 		if ( $out['bg'] === '' && is_string( $attrs['backgroundColor'] ?? null ) ) {
 			$out['bg'] = sanitize_key( $attrs['backgroundColor'] );
 		}
