@@ -230,7 +230,8 @@ $m = new ReflectionMethod( \DXAI_UI\Blocks\Style_Rules::class, 'part_base_css' )
 $m->setAccessible( true );
 $base = (string) $m->invoke( null, array( 'dxai-part-img' => true ) );
 $expect( 'the figure and the picture of a marked DX Picture take no box, as a marked Image\'s figure does', str_contains( $base, '.wp-block-dx-picture.dxai-part-img{display:contents !important}' ) || str_contains( $base, '.wp-block-dx-picture.dxai-part-img{display:contents' ) && str_contains( $base, '.dx-picture__picture{display:contents}' ), $base );
-$expect( 'and the image in it is laid out as the design\'s bare image was', str_contains( $base, '.dx-picture__img{display:inline}' ) && str_contains( $base, 'vertical-align:baseline' ) );
+$expect( 'and the image in it keeps the block display the theme gives it (what the design\'s own reset gives its images; an inline image has a gap under it that the design\'s did not: Clean Joe\'s footer logo grew 4px), on the design\'s baseline', ! str_contains( $base, '.dx-picture__img{display:inline}' ) && str_contains( $base, 'vertical-align:baseline' ) );
+$expect( 'the picture\'s <source> takes no box: in a flex row or a grid the figure and the picture take none, so a source would be an empty item of its own and double the gap (found on H2O Away\'s badges)', str_contains( $base, '.dx-picture__picture source{display:none}' ) );
 $expect( 'a page without a marked picture gets none of this', (string) $m->invoke( null, array() ) === '' );
 
 echo "\nExport and import\n";

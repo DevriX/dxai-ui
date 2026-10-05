@@ -98,7 +98,7 @@ final class Style_Rules {
 	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
-	private const CACHE_SCHEMA = 15;
+	private const CACHE_SCHEMA = 17;
 
 	/**
 	 * Native blocks whose wrapper is not the element the design styled (Native_Blocks): the marker class the wrapper
@@ -1023,7 +1023,7 @@ final class Style_Rules {
 		// design's again.
 		return '.wp-block-image.dxai-part-img,.wp-block-dx-picture.dxai-part-img{display:contents !important}'
 			. '.wp-block-dx-picture.dxai-part-img .dx-picture__picture{display:contents}'
-			. '.wp-block-dx-picture.dxai-part-img .dx-picture__img{display:inline}'
+			. '.wp-block-dx-picture.dxai-part-img .dx-picture__picture source{display:none}'
 			. ':where(.wp-block-image.dxai-part-img img,.wp-block-dx-picture.dxai-part-img img){width:auto}'
 			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img,:where(.dxai-ui) .wp-block-dx-picture.dxai-part-img img{vertical-align:baseline}'
 			. '.editor-styles-wrapper .wp-block-image.dxai-part-img,.editor-styles-wrapper .wp-block-dx-picture.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
