@@ -79,6 +79,7 @@ final class Team_Quality {
 			$sig                = Section_Library::signature( $c['block'] );
 			$home_sigs[ $sig ]  = ( $home_sigs[ $sig ] ?? 0 ) + 1;
 			$home_secs[]        = array(
+				'txt'   => self::text_key( $c['block'] ),
 				'index' => $i,
 				'role'  => Section_Roles::of( $c['block'], $i === 0 ),
 				'kind'  => (string) $c['kind'],
@@ -183,6 +184,7 @@ final class Team_Quality {
 				// A section is the same as another when its structure is, and so is what was done to it.
 				$sigs[] = md5( $sig . '|' . implode( ',', $did ) );
 				$sections[] = array(
+					'txt'        => self::text_key( $c['block'] ),
 					'index'      => $i,
 					'role'       => Section_Roles::of( $c['block'], $i === 0 ),
 					// home: a Home section's structure; derived: a Home section with cards taken out or put in; new: neither.
@@ -355,6 +357,18 @@ final class Team_Quality {
 	/** @param array<int, array<string, mixed>> $blocks */
 	private static function join( array $blocks ): string {
 		return implode( '', array_map( 'serialize_block', $blocks ) );
+	}
+
+	/**
+	 * The first words a section says, as letters and digits in lower case: how the browser's section is told from a strip or a bar that
+	 * is not one (bin/team-quality.cjs).
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function text_key( array $block ): string {
+		$text = html_entity_decode( wp_strip_all_tags( serialize_block( $block ) ), ENT_QUOTES, 'UTF-8' );
+
+		return mb_substr( mb_strtolower( (string) preg_replace( '/[^\p{L}\p{N}]+/u', '', $text ) ), 0, 24 );
 	}
 
 	/**

@@ -212,6 +212,12 @@ final class Section_Refill {
 					}
 					break;
 				case 'text':
+					// A label under the title too (a small line set in capitals: "You're dealing with", "Stage 01") is the Home's own and goes:
+					// a sentence in it would be read in the size of a label.
+					if ( self::is_label( (array) $target ) ) {
+						$gone[] = $path;
+						break;
+					}
 					// The words under the title: a line before it (a number, a tag) was the Home's own label and goes.
 					if ( $titled !== null && ! $texted && $row['text'] !== '' ) {
 						Block_Tree::set_content( $target, esc_html( $row['text'] ) );
@@ -243,6 +249,24 @@ final class Section_Refill {
 		}
 		self::remove_all( $item, $gone );
 		unset( $item );
+	}
+
+	/**
+	 * Whether a paragraph is a label, by what the design calls it: a class with "label", "eyebrow", "kicker", "overline", "caption", "badge",
+	 * "chip" or "pill" in it (rv-persona-label, card__eyebrow).
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function is_label( array $block ): bool {
+		foreach ( (array) preg_split( '/\s+/', trim( (string) ( $block['attrs']['className'] ?? '' ) ) ) as $class ) {
+			foreach ( (array) preg_split( '/[-_]+/', strtolower( (string) $class ) ) as $part ) {
+				if ( in_array( $part, array( 'label', 'eyebrow', 'kicker', 'overline', 'caption', 'badge', 'chip', 'pill' ), true ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/** What a link says: what it was given or "Learn more", with the arrow the Home's link has. */

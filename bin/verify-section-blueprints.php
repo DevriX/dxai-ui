@@ -263,6 +263,29 @@ $ml2 = Section_Refill::cards( $lc, $lc['repeats'][0], 'Plans', $rows( array( 'Al
 $ol  = $markup( (array) $ml2 );
 $expect( 'a line before the title (a number, a tag) is the Home\'s label and goes; the words go under the title', $ml2 !== null && ! str_contains( $ol, '>01<' ) && ! str_contains( $ol, 'The Home\'s words' ) && preg_match( '/<h3[^>]*>(?:<a[^>]*>)?Alpha(?:<\/a>)?<\/h3>.*?<p>Words about Alpha\.<\/p>/s', $ol ) === 1, $ol );
 
+echo "\nA label under the title\n";
+// Cards of a design that sets a small label under the title ("You're dealing with") and the real words below it, or only a label and a list.
+$tagged = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Who it is for' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'P', 3 ) . $para( 'You are dealing with', 'persona-label' ) . $para( 'The Home\'s words.' ) ), 3 ) ) ), 'section' ) )[0];
+$tc = $lib( array( $tagged ) )[0];
+$mt = Section_Refill::cards( $tc, $tc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+$ot = $markup( (array) $mt );
+$expect( 'a label under the title goes, and the words go in the paragraph after it, not in the label', $mt !== null && ! str_contains( $ot, 'You are dealing with' ) && ! str_contains( $ot, 'The Home\'s words' ) && preg_match( '/<h3[^>]*>(?:<a[^>]*>)?Alpha(?:<\/a>)?<\/h3>.*?<p>Words about Alpha\.<\/p>/s', $ot ) === 1 && substr_count( $ot, 'persona-label' ) === 0, $ot );
+$only = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Who it is for' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'P', 3 ) . $para( 'You are dealing with', 'persona-label' ) ), 3 ) ) ), 'section' ) )[0];
+$oc = $lib( array( $only ) )[0];
+$mo = Section_Refill::cards( $oc, $oc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+$oo = $markup( (array) $mo );
+$expect( 'a card whose only paragraph is a label has no words: a sentence is not put in a label', $mo !== null && ! str_contains( $oo, 'Words about Alpha' ) && ! str_contains( $oo, 'You are dealing with' ) && str_contains( $oo, '>Alpha<' ), $oo );
+foreach ( array( 'rv-persona-label', 'card__eyebrow', 'kicker', 'section_overline', 'is-caption', 'status-badge', 'PILL' ) as $c ) {
+	$one = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Who' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'P', 3 ) . $para( 'Small', $c ) ), 3 ) ) ), 'section' ) )[0];
+	$cc  = $lib( array( $one ) )[0];
+	$mm  = Section_Refill::cards( $cc, $cc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+	$expect( 'a paragraph of class "' . $c . '" is a label', $mm !== null && ! str_contains( $markup( (array) $mm ), 'Words about Alpha' ) );
+}
+$plain = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Who' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'P', 3 ) . $para( 'Plain', 'card-text labelled-not' ) ), 3 ) ) ), 'section' ) )[0];
+$pc    = $lib( array( $plain ) )[0];
+$mp    = Section_Refill::cards( $pc, $pc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
+$expect( 'a paragraph of an ordinary class ("card-text", "labelled-not") takes the words', $mp !== null && str_contains( $markup( (array) $mp ), 'Words about Alpha' ) );
+
 echo "\nA smaller heading under the cards\n";
 $noted = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'What we fix' ) . $group( 'cards', $group( 'card', $heading( 'A', 3 ) . $para( 'words a' ) ) . $group( 'card', $heading( 'B', 3 ) . $para( 'words b' ) ) . $group( 'card', $heading( 'C', 3 ) . $para( 'words c' ) ) ) . $heading( 'Also available', 4 ) . $para( 'A note about other things.' ) ), 'section' ) )[0];
 $nc    = $lib( array( $noted ) )[0];

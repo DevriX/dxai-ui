@@ -51,8 +51,10 @@ if (!CHROME) {
 }
 
 /** Runs in the page: what the gates need, for the sections that are not the header and footer. */
-function collect(chromeCounts) {
-	const vis = (e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'; };
+function collect(arg) {
+	const chromeCounts = arg.chrome;
+	const expected = Array.isArray(arg.expected) && arg.expected.every((e) => typeof e === 'string') ? arg.expected : null;
+	const vis =(e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'; };
 	const SKIP = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE', 'SVG', 'PATH', 'DEFS', 'CLIPPATH', 'G'];
 	const px = (v) => Math.round(parseFloat(v) || 0);
 	const scope = document.querySelector('[class*="dxai-ui--"]');
@@ -73,6 +75,34 @@ function collect(chromeCounts) {
 	}
 	// What has no height (an anchor span, a mobile menu that is shown on a phone) is not a section.
 	for (let i = sections.length - 1; i >= 0; i--) if (sections[i].getBoundingClientRect().height < 1) sections.splice(i, 1);
+	// A page can hold elements that are not sections of the library (a marquee strip, a bar fixed to the screen): then there are more on the
+	// screen than in the blocks, and every number after the first of them would be paired with another section. The ones that are sections
+	// are found by their words (the first of what each says, from the blocks), in order; when they cannot all be found, nothing is changed.
+	if (expected && expected.length && sections.length !== expected.length) {
+		const norm = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+		const textOf = (el) => {
+			const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement && ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(n.parentElement.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+			let t = '';
+			while (w.nextNode() && t.length < 1200) t += w.currentNode.nodeValue;
+			return norm(t);
+		};
+		const texts = sections.map(textOf);
+		const picked = [];
+		let from = 0;
+		let found = true;
+		for (const e of expected) {
+			let at = -1;
+			for (let k = from; k < sections.length && at < 0; k++) {
+				const t = texts[k];
+				// A count-up shows another number first: the middle of the words is tried too.
+				if (e === '' ? t === '' : t.includes(e.slice(0, 12)) || (e.length > 18 && t.includes(e.slice(6, 18)))) at = k;
+			}
+			if (at < 0) { found = false; break; }
+			picked.push(sections[at]);
+			from = at + 1;
+		}
+		if (found) sections.splice(0, sections.length, ...picked);
+	}
 	window.__dxSections = sections; // the photographs are taken of these
 	const props = ['display', 'position', 'flexDirection', 'flexWrap', 'justifyContent', 'alignItems', 'gap', 'gridTemplateColumns', 'textAlign', 'color', 'backgroundColor', 'backgroundImage', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'textTransform', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginBottom', 'borderTopWidth', 'borderTopColor', 'borderTopLeftRadius'];
 	const hash = (str) => { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
@@ -84,6 +114,7 @@ function collect(chromeCounts) {
 		const cs = getComputedStyle(sec);
 		let fp = '', l = 1e9, r = -1e9, ownText = 0;
 		const styles = new Set();
+		const names = {}; // which element each style is of, to say it when a section has one the Home's does not
 		const loose = new Set(); // the same, without the size of the tracks of a grid (a set of cards with fewer cards has wider ones) and the margins (a link pushed to the foot of a card with less to say sits lower)
 		const hl = [];
 		const tiny = [], taps = [], body = [], narrow = [], wide = [], distorted = [];
@@ -95,9 +126,15 @@ function collect(chromeCounts) {
 			const one = e.tagName + ':' + props.map((p) => c[p]).join('|');
 			fp += one + ';';
 			// A link a card's heading was given (the menu points a card at its page) is the heading's own look: its colour is G2's, not a new style.
-			if (!(e.tagName === 'A' && e.parentElement && /^H[1-6]$/.test(e.parentElement.tagName))) { styles.add(hash(one)); loose.add(hash(e.tagName + ':' + props.map((p) => (['gridTemplateColumns', 'marginTop', 'marginBottom'].includes(p) ? '' : c[p])).join('|'))); }
+			if (!(e.tagName === 'A' && e.parentElement && /^H[1-6]$/.test(e.parentElement.tagName))) { styles.add(hash(one)); names[hash(one)] = e.tagName.toLowerCase() + '.' + [...e.classList].slice(0, 3).join('.'); loose.add(hash(e.tagName + ':' + props.map((p) => (['gridTemplateColumns', 'marginTop', 'marginBottom'].includes(p) ? '' : c[p])).join('|'))); }
 			const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join(' ').trim();
 			const rr = e.getBoundingClientRect();
+			// A heading whose words are in spans of their own (the Home's title in two colours) has none of its own: its edge counts too, or the
+			// page's title (one run of words) would be an edge the Home does not have.
+			if (!own && /^H[1-3]$/.test(e.tagName) && e.textContent.trim()) {
+				const middle = c.textAlign === 'center' && Math.abs(rr.left + rr.width / 2 - vw / 2) <= 2;
+				if (!middle) { lefts.add(Math.round(rr.left)); hl.push(Math.round(rr.left)); }
+			}
 			if (own) {
 				fg.add(c.color); fonts.add(c.fontFamily.split(',')[0].replace(/["']/g, '').trim()); ownText++;
 				l = Math.min(l, rr.left); r = Math.max(r, rr.right);
@@ -130,7 +167,7 @@ function collect(chromeCounts) {
 		out.sections.push({
 			top: Math.round(sr.top + window.scrollY), height: Math.round(sr.height), left: Math.round(sr.left), width: Math.round(sr.width),
 			pt: px(cs.paddingTop), pb: px(cs.paddingBottom), l: l > 1e8 ? null : Math.round(l), r: r < -1e8 ? null : Math.round(r),
-			fp: hash(fp), styles: [...styles], loose: [...loose], hl, texts: ownText, tiny: body, taps, narrow, wide, cols, distorted,
+			fp: hash(fp), styles: [...styles], names, loose: [...loose], hl, texts: ownText, tiny: body, taps, narrow, wide, cols, distorted,
 		});
 	}
 	out.colors = { fg: [...fg], bg: [...bg], border: [...bd] };
@@ -162,7 +199,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 (async () => {
 	let browser = await puppeteer.launch({ executablePath: CHROME, headless: 'shell', args: ['--no-sandbox'] });
 	const pages = data.pages.filter((p) => !only || only.has(p.id));
-	const targets = [{ id: data.home.id, url: data.home.url, home: true }, ...pages.map((p) => ({ id: p.id, url: p.url }))];
+	const targets = [{ id: data.home.id, url: data.home.url, home: true, expected: data.home.sections.map((s) => s.txt) }, ...pages.map((p) => ({ id: p.id, url: p.url, expected: p.sections.map((s) => s.txt) }))];
 	const seen = {};
 	let opened = 0;
 	const open = async (width) => {
@@ -196,7 +233,11 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 			window.scrollTo(0, 0);
 			await new Promise((r) => setTimeout(r, 300));
 		});
-		const m = await page.evaluate(collect, data.home.chrome);
+		// A page that fades or slides its sections in is measured at whatever moment the measure happens to look: the same colour at another
+		// opacity, a transform half done. The Home and the pages are both measured with nothing moving.
+		await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}html{scroll-behavior:auto!important}' });
+		await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+		const m = await page.evaluate(collect, { chrome: data.home.chrome, expected: t.expected });
 		if (m && !m.error) m.speed = await page.evaluate(speed);
 
 		return m;
@@ -393,7 +434,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 					const poured = (s.ops || []).some((o) => /^(related|contact|list):/.test(o));
 					const known = new Set(poured ? h.loose : h.styles);
 					const extra = (poured ? q.loose : q.styles).filter((x) => !known.has(x));
-					if (extra.length) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) uses ${extra.length} styles that the Home's section ${s.home_index + 1} does not`);
+					if (extra.length) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) uses ${extra.length} styles that the Home's section ${s.home_index + 1} does not (${(q.names && q.names[extra[0]]) || String(extra[0])})`);
 					else if (q.left !== h.left || q.width !== h.width) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) sits at ${q.left}/${q.width}px, the Home's at ${h.left}/${h.width}px`);
 					else if (s.identical && q.fp !== h.fp) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) is the Home's word for word and is not styled as it is`);
 					else if (s.identical && Math.abs(q.height - h.height) > 2) add('G5', p.id, `${tag}: section ${i + 1} (${s.role}) is ${q.height}px high, the Home's is ${h.height}px`);
