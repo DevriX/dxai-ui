@@ -243,6 +243,15 @@ final class Assets {
 			true
 		);
 
+		// The previous / next buttons of a row of cards that scrolls sideways (a design's reviews slider).
+		wp_register_script(
+			'dxai-ui-rail',
+			DXAI_UI_URL . 'assets/js/rail.js',
+			array(),
+			(string) filemtime( DXAI_UI_DIR . 'assets/js/rail.js' ),
+			true
+		);
+
 		wp_register_script(
 			'dxai-ui-form-view',
 			DXAI_UI_URL . 'assets/js/form-view.js',
@@ -379,6 +388,10 @@ final class Assets {
 		if ( ( \DXAI_UI\Theme\Theme_Compat::is_converted_page() || \DXAI_UI\Theme\Theme_Fence::applies() ) && \DXAI_UI\Theme\Theme_Buttons::used_in( $content ) ) {
 			\DXAI_UI\Theme\Theme_Buttons::enqueue();
 		}
+		// A slider's buttons move its row of cards: what the design's own script did, which the page script does not carry.
+		if ( self::has_rail( $content ) ) {
+			wp_enqueue_script( 'dxai-ui-rail' );
+		}
 		/*
 		 * Both locations are built from the current upload URL, whichever form
 		 * they were stored in, and versioned by the resolved file's mtime. The
@@ -495,6 +508,15 @@ final class Assets {
 				'after'
 			);
 		}
+	}
+
+	/**
+	 * Whether markup holds a row that scrolls sideways and a previous or next control: the page needs assets/js/rail.js.
+	 * The script finds the row and the buttons by what they are when one is pressed, so this only decides whether to send it.
+	 */
+	public static function has_rail( string $markup ): bool {
+		return preg_match( '/aria-label="(?:next|prev)[^"]*"/i', $markup ) === 1
+			&& preg_match( '/scroll-snap|snap-x|overflow-x\s*:|overflow-x-(?:auto|scroll)|data-track/i', $markup ) === 1;
 	}
 
 	/**
