@@ -92,14 +92,16 @@ function arg(name, fallback) {
     await page.setViewport({ width: 1400, height: 1000 });
 
     const origin = new URL(adminUrl).origin;
-    const cookies = [{ name: cookieName, value: cookieValue, url: origin, path: '/', httpOnly: true }];
+    // A site in a folder (http://host/site/wp-admin/…) has its cookies on that folder's paths, not on the host's root.
+    const base = new URL(adminUrl).pathname.replace(/\/wp-admin\/.*$/, '').replace(/\/$/, '');
+    const cookies = [{ name: cookieName, value: cookieValue, url: origin, path: base + '/', httpOnly: true }];
     // wp-admin checks the auth cookie; the logged_in one alone bounces to
     // wp-login.php with reauth=1.
     const authName = arg('auth-cookie-name');
     const authValue = arg('auth-cookie-value');
     if (authName && authValue) {
-      cookies.push({ name: authName, value: authValue, url: origin, path: '/wp-admin', httpOnly: true });
-      cookies.push({ name: authName, value: authValue, url: origin, path: '/wp-includes', httpOnly: true });
+      cookies.push({ name: authName, value: authValue, url: origin, path: base + '/wp-admin', httpOnly: true });
+      cookies.push({ name: authName, value: authValue, url: origin, path: base + '/wp-includes', httpOnly: true });
     }
     await page.setCookie(...cookies);
 
