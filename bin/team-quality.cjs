@@ -118,6 +118,7 @@ function collect(arg) {
 		const loose = new Set(); // the same, without the size of the tracks of a grid (a set of cards with fewer cards has wider ones) and the margins (a link pushed to the foot of a card with less to say sits lower)
 		const hl = [];
 		const tiny = [], taps = [], body = [], narrow = [], wide = [], distorted = [];
+		const smallSizes = new Set(); // the sizes under 16px that any paragraph or list item of the section has, of any length: what a made section may use
 		let cols = 0; // the most columns a row or a grid of the section has
 		const els = [sec, ...sec.querySelectorAll('*')];
 		for (const e of els) {
@@ -141,6 +142,7 @@ function collect(arg) {
 				// A heading centred on the page is on the frame by being centred: its left edge is its width's, not the Home's.
 				const centred = c.textAlign === 'center' && Math.abs(rr.left + rr.width / 2 - vw / 2) <= 2;
 				if (/^H[1-3]$/.test(e.tagName) && !centred) { lefts.add(Math.round(rr.left)); hl.push(Math.round(rr.left)); }
+				if (['P', 'LI'].includes(e.tagName) && own.length >= 8 && parseFloat(c.fontSize) < 16) smallSizes.add(c.fontSize);
 				if (['P', 'LI'].includes(e.tagName) && own.length >= 40 && parseFloat(c.fontSize) < 16) body.push(e.tagName + ' ' + c.fontSize + ' "' + own.slice(0, 20) + '"');
 			}
 			if (e.tagName === 'IMG') {
@@ -167,7 +169,7 @@ function collect(arg) {
 		out.sections.push({
 			top: Math.round(sr.top + window.scrollY), height: Math.round(sr.height), left: Math.round(sr.left), width: Math.round(sr.width),
 			pt: px(cs.paddingTop), pb: px(cs.paddingBottom), l: l > 1e8 ? null : Math.round(l), r: r < -1e8 ? null : Math.round(r),
-			fp: hash(fp), styles: [...styles], names, loose: [...loose], hl, texts: ownText, tiny: body, taps, narrow, wide, cols, distorted,
+			fp: hash(fp), styles: [...styles], names, loose: [...loose], hl, texts: ownText, tiny: body, small: [...smallSizes], taps, narrow, wide, cols, distorted,
 		});
 	}
 	out.colors = { fg: [...fg], bg: [...bg], border: [...bd] };
@@ -286,7 +288,18 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 
 				return { x: Math.round(r.left + window.scrollX), y: Math.round(r.top + window.scrollY), width: Math.round(r.width), height: Math.round(r.height) };
 			}, i);
-			if (box && box.width > 0 && box.height > 0 && box.height < 15000) out[i] = await page.screenshot({ type: 'png', clip: box, captureBeyondViewport: true });
+			if (box && box.width > 0 && box.height > 0 && box.height < 15000) {
+				// A section whose look follows the scroll (a progress bar, items that slide in as it passes) is drawn for where the page is
+				// scrolled to: both are photographed with the section at the top of the screen, whatever the page has above it.
+				await page.evaluate((y) => window.scrollTo(0, y), box.y);
+				await new Promise((r) => setTimeout(r, 150));
+				const now = await page.evaluate((n) => {
+					const r = (window.__dxSections || [])[n].getBoundingClientRect();
+
+					return { x: Math.round(r.left + window.scrollX), y: Math.round(r.top + window.scrollY), width: Math.round(r.width), height: Math.round(r.height) };
+				}, i);
+				out[i] = await page.screenshot({ type: 'png', clip: Math.abs(now.height - box.height) <= 2 ? now : box, captureBeyondViewport: true });
+			}
 		}
 
 		return out;
@@ -454,7 +467,8 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 					const h = s.home_index != null ? H.sections[s.home_index] : null;
 					const sizeOf = (t) => String(t).split(' ').pop();
 					const fontOf = (t) => String(t).split(' ')[1];
-					const hTaps = new Set((h ? h.taps : []).map(sizeOf)), hTiny = new Set((h ? h.tiny : []).map(fontOf));
+					const hTaps = new Set((h ? h.taps : []).map(sizeOf)), hTiny = new Set([...H.sections.flatMap((x) => x.small || x.tiny.map(fontOf))]);
+					// (a size under 16px that any paragraph of the Home has, of any length, is the Home's own body text: a made section may use it)
 					const taps = q.taps.filter((t) => !hTaps.has(sizeOf(t)));
 					const tiny = q.tiny.filter((t) => !hTiny.has(fontOf(t)));
 					const narrow = q.narrow.filter((w) => !(h && h.narrow.includes(w)));
