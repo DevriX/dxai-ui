@@ -587,6 +587,17 @@ final class Html_To_Blocks {
 			return $this->svg_block( $node ) ?? $this->html_block( $this->outer( $node ) );
 		}
 		/*
+		 * A YouTube player is not put on the page as a player: it loads the player, its scripts and its trackers for every visitor,
+		 * whether anyone watches or not. It is made the team's way (Video_Facade): hidden embeds for the editor and a facade for the
+		 * phone and for the desktop, which the theme swaps for the player when it is pressed. Any other iframe is as below.
+		 */
+		if ( $tag === 'iframe' ) {
+			$video = Video_Facade::iframe_id( $node );
+			if ( $video !== '' ) {
+				return Video_Facade::blocks( $video, Video_Facade::iframe_title( $node ) );
+			}
+		}
+		/*
 		 * An iframe, video, picture or canvas stays as the design wrote it: each
 		 * one's behaviour lives in attributes and children a block would have to
 		 * model one by one, and there are 16 of them across the corpus.

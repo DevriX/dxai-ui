@@ -1,0 +1,80 @@
+/*
+ * The YouTube facade (Compiler\Video_Facade) for the pages where the American Restoration theme's own styles are not loaded: a converted
+ * page and any other theme. Printed only on a page that has a facade (Blocks\Youtube_Facade_View).
+ */
+.youtube-facade {
+	position: relative;
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	cursor: pointer;
+	background-color: #000;
+	border: 0;
+	padding: 0;
+}
+
+.youtube-facade__thumb {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.youtube-facade__play {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 68px;
+	height: 68px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.65);
+	transform: translate(-50%, -50%);
+	transition: background-color 0.2s ease, transform 0.2s ease;
+	pointer-events: none;
+}
+
+.youtube-facade__play::before {
+	content: "";
+	margin-left: 4px;
+	border-style: solid;
+	border-width: 12px 0 12px 20px;
+	border-color: transparent transparent transparent #fff;
+}
+
+.youtube-facade:hover .youtube-facade__play,
+.youtube-facade:focus-visible .youtube-facade__play {
+	background-color: var(--wp--preset--color--accent, rgba(0, 0, 0, 0.85));
+	transform: translate(-50%, -50%) scale(1.08);
+}
+
+.youtube-facade:focus-visible {
+	outline: 2px solid var(--wp--preset--color--accent, currentColor);
+	outline-offset: 2px;
+}
+
+/* One facade for the phone, one for the rest, as the theme's mobile-show / mobile-hide do (768px, its "small" breakpoint). */
+.youtube-embed.mobile-show {
+	display: none;
+}
+
+@media (max-width: 48rem) {
+	.youtube-embed.mobile-show {
+		display: block;
+	}
+
+	.youtube-embed.mobile-hide {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.youtube-facade__play {
+		transition: none;
+	}
+}

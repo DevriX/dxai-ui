@@ -56,6 +56,8 @@ final class Plugin {
 		( new Design_Blocks() )->register();
 		( new Form_Block() )->register();
 		( new Slider_Block() )->register();
+		// The script and styles of a YouTube facade, on the pages whose theme does not bring them (a converted page, another theme).
+		( new \DXAI_UI\Blocks\Youtube_Facade_View() )->register();
 		( new Blank_Template() )->register();
 		// The imported design's tokens as editable global-styles presets.
 		( new Design_Theme_Json() )->register();
