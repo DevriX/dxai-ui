@@ -255,5 +255,56 @@ foreach ( array( 'card' => $card, 'span' => $span, 'box' => $box, 'filled' => $f
 	$expect( "$label: parse and serialize give the same bytes", serialize_blocks( parse_blocks( $once ) ) === $once );
 }
 
+echo "\nWritten as it is: a run with no user, where KSES is on (WP-CLI without --user, cron)\n";
+// wp_update_post() runs KSES for whoever lacks unfiltered_html, and KSES takes the iframes, the forms and their controls out of a
+// design's pages. apply() and revert() write the design's own content, so they must not let it. The page is made by an administrator
+// (who may publish them) and converted by nobody.
+$publisher = 0;
+foreach ( get_users( array( 'role' => 'administrator', 'number' => 10, 'fields' => 'ID' ) ) as $candidate ) {
+	if ( user_can( (int) $candidate, 'unfiltered_html' ) ) {
+		$publisher = (int) $candidate;
+		break;
+	}
+}
+if ( $publisher === 0 ) {
+	echo "  skip  this site has no administrator who may publish unfiltered HTML\n";
+} else {
+	$was_user = get_current_user_id();
+	wp_set_current_user( $publisher );
+	$raw      = '<!-- wp:html --><form action="https://example.org/send"><input type="text" name="q"><button type="submit">Go</button></form><iframe src="https://example.org/map" title="Map"></iframe><!-- /wp:html -->';
+	$kses_home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dxai-ui kses test', 'post_content' => wp_slash( $box . "\n\n" . $raw ) ) );
+	$stored    = (string) get_post_field( 'post_content', $kses_home );
+	$expect( 'the page holds a form, its controls and an iframe, as its publisher wrote them', str_contains( $stored, '<form' ) && str_contains( $stored, '<input' ) && str_contains( $stored, '<button' ) && str_contains( $stored, '<iframe' ) );
+
+	wp_set_current_user( 0 );
+	kses_init();
+	$on        = has_filter( 'content_save_pre', 'wp_filter_post_kses' ) !== false;
+	$filtered  = (string) wp_unslash( apply_filters( 'content_save_pre', wp_slash( $stored ) ) );
+	$expect( 'KSES is on for this run, and would take the form, its controls and the iframe out (so the checks below are able to catch it)', $on && ! str_contains( $filtered, '<input' ) && ! str_contains( $filtered, '<iframe' ) );
+
+	$done  = Native_Blocks::apply( $kses_home );
+	$after = (string) get_post_field( 'post_content', $kses_home );
+	$expect( 'apply converts the box', $done['posts'] === 1 && ! str_contains( $after, 'dxai-ui/box' ) && str_contains( $after, 'wp:group' ), wp_json_encode( $done ) );
+	$expect( 'and leaves the form, its controls and the iframe where they were', str_contains( $after, '<form' ) && str_contains( $after, '<input' ) && str_contains( $after, '<button' ) && str_contains( $after, '<iframe' ), 'the content now: ' . substr( $after, -260 ) );
+	$expect( 'KSES is on again when it is done (the filters it found are put back)', has_filter( 'content_save_pre', 'wp_filter_post_kses' ) !== false );
+
+	$undone = Native_Blocks::revert( $kses_home );
+	$back   = (string) get_post_field( 'post_content', $kses_home );
+	$expect( 'revert puts back exactly what was there, the form, its controls and the iframe included', $undone['posts'] === 1 && $back === $stored, wp_json_encode( $undone ) );
+	$expect( 'and KSES is on again after that too', has_filter( 'content_save_pre', 'wp_filter_post_kses' ) !== false );
+
+	// The user who may publish: no filters to take off, none put back that were not there.
+	wp_set_current_user( $publisher );
+	kses_init();
+	$off = has_filter( 'content_save_pre', 'wp_filter_post_kses' ) === false;
+	Native_Blocks::apply( $kses_home );
+	$expect( 'for someone who may publish HTML there are no filters, and apply does not switch any on', $off && has_filter( 'content_save_pre', 'wp_filter_post_kses' ) === false );
+	Native_Blocks::revert( $kses_home );
+
+	wp_delete_post( $kses_home, true );
+	wp_set_current_user( $was_user );
+	kses_init();
+}
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

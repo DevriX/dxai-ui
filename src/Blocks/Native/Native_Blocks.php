@@ -289,12 +289,7 @@ final class Native_Blocks {
 			if ( get_post_meta( $post_id, self::BEFORE, true ) === '' || md5( $before ) !== ( $meta['posts'][ $post_id ] ?? '' ) ) {
 				update_post_meta( $post_id, self::BEFORE, wp_slash( $before ) );
 			}
-			wp_update_post(
-				array(
-					'ID'           => $post_id,
-					'post_content' => wp_slash( $result['content'] ),
-				)
-			);
+			self::write( (int) $post_id, $result['content'] );
 			$meta['posts'][ $post_id ] = md5( (string) get_post_field( 'post_content', $post_id ) );
 			++$sum['posts'];
 			$sum['blocks'] += array_sum( $result['counts'] );
@@ -330,12 +325,7 @@ final class Native_Blocks {
 				$left[ $post_id ] = $hash;
 				continue;
 			}
-			wp_update_post(
-				array(
-					'ID'           => $post_id,
-					'post_content' => wp_slash( $before ),
-				)
-			);
+			self::write( $post_id, $before );
 			delete_post_meta( $post_id, self::BEFORE );
 			++$sum['posts'];
 		}
@@ -347,6 +337,33 @@ final class Native_Blocks {
 		}
 
 		return $sum;
+	}
+
+	/**
+	 * A post's content, written as it is.
+	 *
+	 * wp_update_post() runs KSES for whoever lacks unfiltered_html: a WP-CLI run with no user (wp dxai-ui native-blocks apply, without
+	 * --user), cron, a site admin on multisite. KSES takes the iframes, the forms and their controls out of a design's pages. What is
+	 * written here is the design's own content, changed only by this class's converters or put back as it was kept, so it is not
+	 * filtered on the way: the same rule Page_Order, Team_Run and Style_Repair follow. Filters that were off stay off.
+	 */
+	private static function write( int $post_id, string $content ): void {
+		$kses = (bool) has_filter( 'content_save_pre', 'wp_filter_post_kses' );
+		if ( $kses ) {
+			kses_remove_filters();
+		}
+		try {
+			wp_update_post(
+				array(
+					'ID'           => $post_id,
+					'post_content' => wp_slash( $content ),
+				)
+			);
+		} finally {
+			if ( $kses ) {
+				kses_init_filters();
+			}
+		}
 	}
 
 	/**
