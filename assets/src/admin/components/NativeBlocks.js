@@ -84,7 +84,7 @@ export default function NativeBlocks() {
 					<p className="dxai-muted">
 						{ sprintf(
 							/* translators: %s: theme name. */
-							__( 'Where WordPress or %s has a block that says the same thing, the page uses it instead of a DX block: you get its own controls, and the page looks the same.', 'dxai-ui' ),
+							__( 'Where WordPress or %s has a block that says the same thing, the page uses it instead of a DX block: you get its own controls, and the page looks the same. The same kind of heading and the sections of a page also get the same style and spacing, the Home’s.', 'dxai-ui' ),
 							data.theme
 						) }
 					</p>

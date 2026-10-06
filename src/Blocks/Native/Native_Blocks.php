@@ -55,6 +55,9 @@ final class Native_Blocks {
 			new Text_Color(),
 			// Last of the ones that change a block's classes: it reads the classes the others left.
 			new Sizes(),
+			// Whole-page passes, after the sizes are fitted: the same kind of heading in the same style, the sections at the same spacing.
+			new Heading_Scale(),
+			new Section_Spacing(),
 			new Section_Names(),
 			new Tidy(),
 		);
@@ -90,6 +93,14 @@ final class Native_Blocks {
 			$blocks[ $i ] = self::convert_block( $block, $converters, $counts );
 		}
 		$blocks = self::top_runs( $blocks, $converters, $counts );
+		// What depends on the page around a block (a heading's kind among the page's headings, a section among its sections).
+		foreach ( $converters as $converter ) {
+			$page = $converter->page( $blocks );
+			if ( $page !== null && $page['count'] > 0 ) {
+				$blocks                     = $page['blocks'];
+				$counts[ $converter->id() ] = ( $counts[ $converter->id() ] ?? 0 ) + $page['count'];
+			}
+		}
 
 		return array(
 			'content' => $counts === array() ? $content : serialize_blocks( $blocks ),

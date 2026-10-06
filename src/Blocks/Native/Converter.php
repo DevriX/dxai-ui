@@ -59,6 +59,18 @@ abstract class Converter {
 	abstract public function convert( array $block, ?array $parent = null ): ?array;
 
 	/**
+	 * A pass over the whole page, once every block has been converted one by one: for what depends on the page around a block and not on
+	 * the block alone (the same style for the same kind of heading across the page, the same spacing for its sections). Null leaves the
+	 * page as it is.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks The page's top-level blocks (parse_blocks()).
+	 * @return array{blocks:array<int, array<string, mixed>>, count:int}|null The blocks, and how many of them changed.
+	 */
+	public function page( array $blocks ): ?array {
+		return null;
+	}
+
+	/**
 	 * Runs of adjacent siblings this converter turns into ONE block (several calls to action into one Buttons block).
 	 * Each: [ 'start' => first index, 'end' => last index, 'block' => the block that replaces them ].
 	 *
