@@ -124,6 +124,35 @@ final class Theme_Fonts {
 		return self::current() !== null;
 	}
 
+	/**
+	 * Whether the theme's heading font has no bold of its own. A display face such as Impact or Archivo Black comes in one weight (400), and
+	 * a design that sets its headings at 700 or 800 would have that weight drawn by the browser: the strokes thickened and smeared, and
+	 * heavier than the theme's own headings, which are 400. Nothing is said for a font the theme's @font-face rules do not describe.
+	 */
+	public static function heading_lacks_bold(): bool {
+		$theme = self::current();
+		if ( $theme === null || $theme['faces'] === '' ) {
+			return false;
+		}
+		$family = self::first_named( $theme['heading'] );
+		$widest = null;
+		if ( $family !== '' && preg_match_all( '/@font-face\s*\{([^}]*)\}/i', $theme['faces'], $blocks ) ) {
+			foreach ( $blocks[1] as $block ) {
+				if ( preg_match( '/font-family\s*:\s*([^;]+)/i', $block, $f ) !== 1 || strtolower( trim( $f[1], " \t\n\r\0\x0B\"'" ) ) !== $family ) {
+					continue;
+				}
+				$weight = 400;
+				if ( preg_match( '/font-weight\s*:\s*([^;]+)/i', $block, $w ) === 1 ) {
+					$value  = strtolower( trim( $w[1] ) );
+					$weight = preg_match_all( '/\d+/', $value, $n ) ? (int) max( array_map( 'intval', $n[0] ) ) : ( in_array( $value, array( 'bold', 'bolder' ), true ) ? 700 : 400 );
+				}
+				$widest = max( $widest ?? 0, $weight );
+			}
+		}
+
+		return $widest !== null && $widest < 600;
+	}
+
 	/** Forget what was read on this request (a theme switch, a change of the fonts, tests). */
 	public static function reset(): void {
 		self::$memo     = null;
@@ -389,6 +418,10 @@ final class Theme_Fonts {
 				$new = self::map_stack( $d['value'], $body );
 				if ( $new !== null ) {
 					$out[]   = 'font-family:' . $new . ( $d['important'] ? ' !important' : '' );
+					// A heading font with no bold is not drawn bold: what the browser would make of it is not what the theme's headings are.
+					if ( $new === 'var(--dxai-theme-heading)' && self::heading_lacks_bold() && stripos( $css, 'font-synthesis' ) === false ) {
+						$out[] = 'font-synthesis-weight:none';
+					}
 					$changed = true;
 					continue;
 				}
@@ -405,7 +438,7 @@ final class Theme_Fonts {
 			return '';
 		}
 
-		return md5( self::SCHEMA . '|' . self::body_of( $design ) );
+		return md5( self::SCHEMA . '|' . self::body_of( $design ) . '|' . ( self::heading_lacks_bold() ? 'nobold' : '' ) );
 	}
 
 	/* ------------------------------------------------------------------------------------------- the sheet */
@@ -683,11 +716,13 @@ final class Theme_Fonts {
 		}
 		$out .= '.dxai-ui.dxai-ui{' . implode( ';', $vars ) . '}';
 		$out .= '.dxai-ui.dxai-ui.dxai-ui{font-family:var(--dxai-theme-body)}';
-		$out .= '.dxai-ui.dxai-ui :is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading)}';
+		// A heading font with no bold (Impact, Archivo Black) is not drawn bold for a design that sets its headings at 800.
+		$plain = self::heading_lacks_bold() ? ';font-synthesis-weight:none' : '';
+		$out  .= '.dxai-ui.dxai-ui :is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading)' . $plain . '}';
 		// Code is the one thing that stays monospace: the design's monospace variable is the body font now.
 		$out .= '.dxai-ui.dxai-ui.dxai-ui :is(pre,code,kbd,samp){font-family:' . self::SYSTEM_MONO . '}';
 		foreach ( $a['rules'] as $r ) {
-			$rule = $r['s'] . '{font-family:' . $r['v'] . '}';
+			$rule = $r['s'] . '{font-family:' . $r['v'] . ( $plain !== '' && str_contains( $r['v'], '--dxai-theme-heading' ) ? $plain : '' ) . '}';
 			foreach ( array_reverse( $r['at'] ) as $prelude ) {
 				$rule = $prelude . '{' . $rule . '}';
 			}

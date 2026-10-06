@@ -173,6 +173,31 @@ $expect( 'with no design named, nothing is bound', Theme_Fonts::bind_css( "font-
 Theme_Fonts::use_design( $prior );
 $sig = Theme_Fonts::signature( $id );
 
+// --- a heading font with no bold -----------------------------------------------------------------------------------
+echo "\nA heading font with no bold\n";
+$face = static fn( string $family, string $weight ): string => '@font-face{font-family:"' . $family . '";font-weight:' . $weight . ';src:url(/themefonts/x.woff2) format("woff2")}';
+$expect( 'a heading font with a bold of its own (700) is drawn as the design says', ! Theme_Fonts::heading_lacks_bold() && ! str_contains( Theme_Fonts::css( $id ), 'font-synthesis' ) );
+$switch( array_merge( $theme, array( 'heading' => '"Vtx Head", Impact, sans-serif', 'faces' => $face( 'Vtx Head', '400' ) . $face( 'Vtx Body', '100 900' ) ) ) );
+$expect( 'a display face that comes in one weight (400, like Impact or Archivo Black) has no bold', Theme_Fonts::heading_lacks_bold() );
+$css = Theme_Fonts::css( $id );
+$expect( '…so its headings are not drawn bold by the browser (smeared strokes, heavier than the theme\'s own)', str_contains( $css, ':is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading);font-synthesis-weight:none}' ), substr( $css, 0, 300 ) );
+$expect( '…and so are the classes of the design that name a heading font', str_contains( $css, ' .hero{font-family:var(--dxai-theme-heading);font-synthesis-weight:none}' ) && str_contains( $css, ' .lead{font-family:var(--dxai-theme-body) !important}' ) );
+$prior = Theme_Fonts::use_design( $id );
+$expect( 'a block set in the heading font says so in its own CSS', Theme_Fonts::bind_css( "font-family:'Vtx Tfserif', serif;font-weight:800" ) === 'font-family:var(--dxai-theme-heading);font-synthesis-weight:none;font-weight:800' );
+$expect( '…a block in the body font does not', Theme_Fonts::bind_css( "font-family:'Vtx Tfsans'" ) === 'font-family:var(--dxai-theme-body)' );
+Theme_Fonts::use_design( $prior );
+$expect( 'what the cached rules depend on changes with it', Theme_Fonts::signature( $id ) !== $sig );
+$switch( array_merge( $theme, array( 'heading' => '"Vtx Head", sans-serif', 'faces' => $face( 'Vtx Head', '100 900' ) ) ) );
+$expect( 'a variable font (100 to 900) has its bold', ! Theme_Fonts::heading_lacks_bold() );
+$switch( array_merge( $theme, array( 'heading' => '"Vtx Head", sans-serif', 'faces' => $face( 'Vtx Head', '400' ) . $face( 'Vtx Head', 'bold' ) ) ) );
+$expect( 'so has one with a bold face beside its regular', ! Theme_Fonts::heading_lacks_bold() );
+$switch( array_merge( $theme, array( 'heading' => '"Vtx Head", sans-serif', 'faces' => $face( 'Vtx Body', '400' ) ) ) );
+$expect( 'a font the theme\'s font rules do not describe is left as it is', ! Theme_Fonts::heading_lacks_bold() );
+$switch( array_merge( $theme, array( 'heading' => '"Vtx Head", sans-serif', 'faces' => '' ) ) );
+$expect( '…and so is a theme that gives no font rules', ! Theme_Fonts::heading_lacks_bold() );
+$switch( $theme );
+$expect( 'back to the first theme: nothing is said', ! Theme_Fonts::heading_lacks_bold() && Theme_Fonts::signature( $id ) === $sig );
+
 // --- a design keeps its own ----------------------------------------------------------------------------------------
 echo "\nA design keeps its own fonts\n";
 update_post_meta( $id, Theme_Fonts::MODE_META, 'keep' );
