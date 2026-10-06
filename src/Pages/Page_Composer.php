@@ -750,7 +750,7 @@ final class Page_Composer {
 
 	/** @param array<string, mixed> $c */
 	private static function image_slots( array $c ): int {
-		$n = count( array_filter( $c['images'], static fn( $s ) => ! $s['decor'] ) );
+		$n = count( array_filter( $c['images'], static fn( $s ) => ! $s['decor'] && ! Home_Kit::is_icon( Block_Tree::at( $c['block'], $s['path'] ) ) ) );
 		foreach ( $c['repeats'] as $r ) {
 			if ( in_array( $r['kind'], array( 'gallery', 'logo' ), true ) ) {
 				$n += count( $r['items'] );
@@ -1767,6 +1767,10 @@ final class Page_Composer {
 		$backdrops = array();
 		$pictures  = array();
 		foreach ( $a['images'] as $s ) {
+			// The design's own mark (an icon file) stays: a photograph of the old page in its place would be drawn at its own size.
+			if ( Home_Kit::is_icon( Block_Tree::at( $block, $s['path'] ) ) ) {
+				continue;
+			}
 			if ( self::is_backdrop( Block_Tree::at( $block, $s['path'] ), (bool) $s['decor'] ) ) {
 				$backdrops[] = $s;
 				continue;
@@ -1943,6 +1947,10 @@ final class Page_Composer {
 	 */
 	private function image( array &$block, array $path, string $ref ): void {
 		$node = &Block_Tree::at( $block, $path );
+		// An icon of the design is not a picture slot: it stays as it is, whatever the page has to show.
+		if ( Home_Kit::is_icon( $node ) ) {
+			return;
+		}
 		if ( $ref === '' || ! isset( $this->pool[ $ref ] ) ) {
 			$node['attrs']['__dxai_drop'] = true;
 			return;
