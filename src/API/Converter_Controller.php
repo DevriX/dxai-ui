@@ -850,7 +850,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			return $markup;
 		}
 		// A YouTube player an engine wrote is made the team's way (a facade, not a live player): Video_Facade.
-		$markup = DXAI_UICompilerVideo_Facade::rewrite( $markup );
+		$markup = \DXAI_UI\Compiler\Video_Facade::rewrite( $markup );
 
 		if ( str_contains( (string) ( $result['gutenberg_markup'] ?? '' ), '<!-- wp:' ) ) {
 			$result['gutenberg_markup'] = $markup;
