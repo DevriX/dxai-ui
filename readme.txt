@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.30
+Stable tag: 0.4.0-beta.31
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,11 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.31 =
+* The import wizard's Convert step works again. In 0.4.0-beta.28, .29 and .30 the step that compiles an archive or a pasted component ended in a PHP error ("There has been a critical error on this website") once the compile was done, for every archive: a class name written on one line of the server's generate-block route had lost its backslashes, so it named a class that does not exist. An import from the command line does not go through that route, which is why it went unseen. The line is right again.
+* `wp dxai-ui native-blocks apply` and `revert` keep a design's forms, form controls and iframes when they are run with no user (WP-CLI without `--user`, cron, a site admin on a multisite). WordPress runs its content filter (KSES) for whoever may not publish unfiltered HTML, and the filter took them out of the pages that were converted or put back: on the test site 271 form controls, 21 forms and 6 iframes over 44 pages. The Library's button was not affected (it asks for the right to publish). The pages are written as they are now, and the filters are put back afterwards.
+* For developers: the new check `verify-rest-routes.php` calls every REST route as the admin screens and the public form do (who may call each, a visitor refused by all of them, bad input on every route that writes, the wizard's chain on a pasted component, no API key in GET settings, every route the admin app calls exists with its method), and `verify-native-blocks.php` has eight more checks.
 
 = 0.4.0-beta.30 =
 * The same kind of heading has the same style on every page, and the sections the same spacing, the Home's, whatever the design did. Every page title (H1) and every section title (H2) has one size, weight, line height, letter spacing, case and font — what most of the Home's have, or the design's own style class when it styles its titles that way — and the padding above and below a section is the Home's most common (or the middle one, when no two are alike). Semper Dry's 22 pages had five sizes of section title and four section paddings; they have one of each. It is written into each block's own CSS and classes, so it can be edited and the editor draws it. Left as they are: a title whose size was chosen in the Typography panel, a small heading used as a label, a card's title written as an H2, a page's first section (its hero), a thin bar, and the header, the footer and the navigation. H3 and smaller headings are not touched. It runs on every import and on the pages made later for a design that has had it, it is in Library > Native blocks ("The same style for the same kind of heading", "The same spacing for the sections"), it can be put back, and `dxai_ui_harmony` switches it off.
