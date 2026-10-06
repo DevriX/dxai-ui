@@ -45,9 +45,38 @@ final class Page_Chrome {
 	/** @var array<string, array{header: string, footer: string}> Home id@modified => its chrome markup. */
 	private static array $home_chrome = array();
 
+	/** @var array<string, array{header: string, footer: string}> post id|content fingerprint => what is added (missing()). */
+	private static array $missing = array();
+
 	public function register(): void {
 		// Before do_blocks (9): inject block comments so they render inside Page_Scope (20).
 		add_filter( 'the_content', array( self::class, 'inject' ), 8 );
+		// What is added is part of the page for its styles: its dxs- and utility rules are written with the page's (Style_Rules).
+		add_filter( 'dxai_ui_style_rules_markup', array( self::class, 'rules_markup' ), 10, 2 );
+	}
+
+	/**
+	 * Style_Rules' extra markup for a page: the header and footer this adds to it at render. They are not in the page's content, so
+	 * without this a page that borrows its Home's header and footer drew them without the rules of their classes (a logo at its own
+	 * size, a menu with no spacing, the skip link in view).
+	 *
+	 * @param array<int, string>|mixed $markups
+	 * @param int|mixed                $post_id
+	 * @return array<int, string>|mixed
+	 */
+	public static function rules_markup( $markups, $post_id = 0 ) {
+		$post_id = (int) $post_id;
+		if ( ! is_array( $markups ) || $post_id < 1 || ! self::applies_to( $post_id ) ) {
+			return $markups;
+		}
+		$added = self::missing( $post_id, (string) get_post_field( 'post_content', $post_id ) );
+		foreach ( array( $added['header'], $added['footer'] ) as $markup ) {
+			if ( $markup !== '' ) {
+				$markups[] = $markup;
+			}
+		}
+
+		return $markups;
 	}
 
 	/**
@@ -75,16 +104,36 @@ final class Page_Chrome {
 		if ( $post_id < 1 || ! self::applies_to( $post_id ) ) {
 			return $content;
 		}
-		// As the page is read everywhere else: the group around a design's header, main and footer is opened (a page in the Home's
-		// frame, Page_Frame, has its header and footer inside it).
-		$have   = Section_Library::chrome_blocks( Section_Library::flatten( parse_blocks( $content ) ) );
-		$header = $have['header'] === array() ? self::header_markup( $post_id ) : '';
-		$footer = $have['footer'] === array() ? self::footer_markup( $post_id ) : '';
+		$added  = self::missing( $post_id, $content );
+		$header = $added['header'];
+		$footer = $added['footer'];
 		if ( $header === '' && $footer === '' ) {
 			return $content;
 		}
 
 		return trim( $header . "\n" . $content . "\n" . $footer );
+	}
+
+	/**
+	 * The header and footer a page lacks and so is given (with_chrome()), once per request for the same content: the page's styles,
+	 * its scripts and its markup all ask.
+	 *
+	 * @return array{header: string, footer: string}
+	 */
+	private static function missing( int $post_id, string $content ): array {
+		$key = $post_id . '|' . strlen( $content ) . '|' . crc32( $content );
+		if ( ! isset( self::$missing[ $key ] ) ) {
+			// As the page is read everywhere else: the group around a design's header, main and footer is opened (a page in the Home's
+			// frame, Page_Frame, has its header and footer inside it).
+			$have = Section_Library::chrome_blocks( Section_Library::flatten( parse_blocks( $content ) ) );
+
+			self::$missing[ $key ] = array(
+				'header' => $have['header'] === array() ? self::header_markup( $post_id ) : '',
+				'footer' => $have['footer'] === array() ? self::footer_markup( $post_id ) : '',
+			);
+		}
+
+		return self::$missing[ $key ];
 	}
 
 	public static function applies_to( int $post_id ): bool {
