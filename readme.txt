@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.29
+Stable tag: 0.4.0-beta.30
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.30 =
+* The same kind of heading has the same style on every page, and the sections the same spacing, the Home's, whatever the design did. Every page title (H1) and every section title (H2) has one size, weight, line height, letter spacing, case and font — what most of the Home's have, or the design's own style class when it styles its titles that way — and the padding above and below a section is the Home's most common (or the middle one, when no two are alike). Semper Dry's 22 pages had five sizes of section title and four section paddings; they have one of each. It is written into each block's own CSS and classes, so it can be edited and the editor draws it. Left as they are: a title whose size was chosen in the Typography panel, a small heading used as a label, a card's title written as an H2, a page's first section (its hero), a thin bar, and the header, the footer and the navigation. H3 and smaller headings are not touched. It runs on every import and on the pages made later for a design that has had it, it is in Library > Native blocks ("The same style for the same kind of heading", "The same spacing for the sections"), it can be put back, and `dxai_ui_harmony` switches it off.
+* Pages that borrow their Home's header and footer look like the Home. A page made from a live site's menu, or made in the Home's frame, is stored without its header and footer; they are put around it as it is shown. The rules of their classes were not written for such a page: the logo came out at its own size, the menu without its spacing, the skip link in view, the footer plain. They are written now.
+* A page made from the old site no longer puts a photograph where the Home has an icon. The icon's own CSS has no maximum width, so the photograph was drawn at its natural size, thousands of pixels wide. The Home's icon stays; a page made before is made again from the Library.
+* A heading font that has no bold is not drawn bold. When the theme's heading font comes in one weight (Impact and Archivo Black, 400), a design that sets its headings at 700 or 800 had that weight drawn by the browser: smeared strokes, heavier than the theme's own headings. For such a font the headings (and the blocks set in it) say that no bold is to be made; a font with a bold of its own is drawn as before.
+* For developers: new checks `verify-harmony.php`, `verify-chrome-rules.php` and `verify-composer-icons.php`; `verify-theme-fonts.php` has twelve more.
 
 = 0.4.0-beta.29 =
 * Sliders, accordions and tabs work on every page they are on, not on the Home only. A page of the theme that holds sections copied from a design has one scope element around each run of them (a block of the page's own between two runs makes two), and the page script armed the first one only: a slider, an accordion or a tab in the second run did nothing. It is armed for every scope now (a scope inside another is part of it). The scripts stored before this version bring themselves up to date; `wp dxai-ui refresh-runtime` does it at once. Found by scanning the 282 pages of the test site: every page that needs a script had it, so the fault was where the script ran.
