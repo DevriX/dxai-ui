@@ -66,7 +66,7 @@ final class Page_Chrome {
 	 */
 	public static function rules_markup( $markups, $post_id = 0 ) {
 		$post_id = (int) $post_id;
-		if ( ! is_array( $markups ) || $post_id < 1 || ! self::applies_to( $post_id ) ) {
+		if ( ! is_array( $markups ) || $post_id < 1 || ! self::composes( $post_id ) ) {
 			return $markups;
 		}
 		$added = self::missing( $post_id, (string) get_post_field( 'post_content', $post_id ) );
@@ -101,7 +101,7 @@ final class Page_Chrome {
 	 * header and footer are edited.
 	 */
 	public static function with_chrome( int $post_id, string $content ): string {
-		if ( $post_id < 1 || ! self::applies_to( $post_id ) ) {
+		if ( $post_id < 1 || ! self::composes( $post_id ) ) {
 			return $content;
 		}
 		$added  = self::missing( $post_id, $content );
@@ -110,8 +110,14 @@ final class Page_Chrome {
 		if ( $header === '' && $footer === '' ) {
 			return $content;
 		}
+		$lead = '';
+		if ( $header !== '' ) {
+			// Where the design had it: after the skip link and the box that holds the place of a fixed header, which a design whose header is a
+			// template part keeps in its pages.
+			list( $lead, $content ) = Section_Library::split_lead( $content );
+		}
 
-		return trim( $header . "\n" . $content . "\n" . $footer );
+		return trim( ( $lead !== '' ? $lead . "\n" : '' ) . $header . "\n" . $content . "\n" . $footer );
 	}
 
 	/**
@@ -125,10 +131,13 @@ final class Page_Chrome {
 		if ( ! isset( self::$missing[ $key ] ) ) {
 			// As the page is read everywhere else: the group around a design's header, main and footer is opened (a page in the Home's
 			// frame, Page_Frame, has its header and footer inside it).
-			$have = Section_Library::chrome_blocks( Section_Library::flatten( parse_blocks( $content ) ) );
+			$blocks = Section_Library::flatten( parse_blocks( $content ) );
+			$have   = Section_Library::chrome_blocks( $blocks );
 
 			self::$missing[ $key ] = array(
-				'header' => $have['header'] === array() ? self::header_markup( $post_id ) : '',
+				// The skip link, the islands and the box that holds the place of a fixed header are not a header: a design whose header is a
+				// template part keeps them in its pages, and the part is still to be added.
+				'header' => Section_Library::holds_header( $blocks, $have['header'] ) ? '' : self::header_markup( $post_id ),
 				'footer' => $have['footer'] === array() ? self::footer_markup( $post_id ) : '',
 			);
 		}
@@ -136,16 +145,37 @@ final class Page_Chrome {
 		return self::$missing[ $key ];
 	}
 
+	/**
+	 * Whether the chrome is put into this page's content as it renders: a design's page on DX Blank. A page on the DX template has it drawn
+	 * by the template instead (Template_Chrome), so the content is left as it is.
+	 */
 	public static function applies_to( int $post_id ): bool {
-		if ( $post_id < 1 ) {
-			return false;
-		}
-		if ( (string) get_page_template_slug( $post_id ) !== Blank_Template::SLUG ) {
+		return $post_id > 0 && (string) get_page_template_slug( $post_id ) === Blank_Template::SLUG && self::composes( $post_id );
+	}
+
+	/**
+	 * Whether the page is a design's page on one of the canvas templates, whichever of them draws its chrome: what the page's styles, its
+	 * assets and its export compose with it.
+	 */
+	public static function composes( int $post_id ): bool {
+		if ( $post_id < 1 || ! Blank_Template::is_canvas( $post_id ) ) {
 			return false;
 		}
 		$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
 
 		return $scope > 0 || (string) get_post_meta( $post_id, '_dxai_ui_generated_page', true ) === '1';
+	}
+
+	/**
+	 * The header and footer a page of the DX template is drawn with: what its content lacks (see the class comment), as block markup.
+	 *
+	 * @return array{header: string, footer: string}
+	 */
+	public static function added( int $post_id, string $content ): array {
+		return self::composes( $post_id ) ? self::missing( $post_id, $content ) : array(
+			'header' => '',
+			'footer' => '',
+		);
 	}
 
 	/** Whether content carries a header or a footer of its own, in any form (see the class comment). */
@@ -157,7 +187,7 @@ final class Page_Chrome {
 
 	public static function header_markup( int $post_id ): string {
 		$home = self::home_chrome( $post_id );
-		if ( $home['header'] !== '' ) {
+		if ( $home['header'] !== '' && self::holds_header( $home['header'] ) ) {
 			return $home['header'];
 		}
 		$scope = self::scope_of( $post_id );
@@ -242,8 +272,15 @@ final class Page_Chrome {
 		return self::$home_chrome[ $key ];
 	}
 
+	/** Whether markup (the Home's blocks at the top of its content) holds a header, and not only a skip link and what travels with it. */
+	private static function holds_header( string $markup ): bool {
+		$blocks = array_values( array_filter( parse_blocks( $markup ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
+
+		return Section_Library::holds_header( $blocks, array_keys( $blocks ) );
+	}
+
 	/** The design scope a page renders in: its own id for a design's Home. */
-	private static function scope_of( int $post_id ): int {
+	public static function scope_of( int $post_id ): int {
 		$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
 
 		return $scope > 0 ? $scope : $post_id;

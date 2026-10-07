@@ -1,0 +1,109 @@
+/*
+ * What DX Base draws itself: a reading layout for a post, an archive, search and the 404 page. The header and the footer are the
+ * design's, with the design's rules; this sheet only keeps the space between them tidy.
+ *
+ * The fonts are the two properties the DX UI plugin prints from the template's fonts (the names American Restoration reads), so the
+ * design's fonts reach what this theme draws; without them the system fonts stand.
+ */
+body.dx-base {
+	margin: 0;
+	font-family: var(--font-primary, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+	line-height: 1.6;
+	color: #1a1a1a;
+	background: #fff;
+}
+
+.dx-base h1,
+.dx-base h2,
+.dx-base h3,
+.dx-base h4 {
+	font-family: var(--font-heading, var(--font-primary, system-ui, sans-serif));
+	line-height: 1.15;
+}
+
+.dx-base-main {
+	display: block;
+}
+
+.dx-base-wrap {
+	box-sizing: border-box;
+	max-width: 1140px;
+	margin: 0 auto;
+	padding: 48px 20px 64px;
+}
+
+.dx-base-title {
+	margin: 0 0 24px;
+	font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.dx-base-entry {
+	margin: 0 0 40px;
+}
+
+.dx-base-entry__title {
+	margin: 0 0 8px;
+	font-size: 1.6rem;
+}
+
+.dx-base-entry__title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.dx-base-entry__meta {
+	margin: 0 0 20px;
+	color: #5a5a5a;
+	font-size: 0.9rem;
+}
+
+.dx-base-entry__content > * + * {
+	margin-top: 1em;
+}
+
+.dx-base-entry__content img {
+	max-width: 100%;
+	height: auto;
+}
+
+/* The plain header and footer, drawn only when the site has no design header or footer installed. */
+.dx-base-header,
+.dx-base-footer {
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 16px 32px;
+	padding: 16px 20px;
+}
+
+.dx-base-header {
+	justify-content: space-between;
+	border-bottom: 1px solid #e3e3e3;
+}
+
+.dx-base-header__brand {
+	color: inherit;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.dx-base-header__menu {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 24px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.dx-base-header__menu a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.dx-base-footer {
+	justify-content: space-between;
+	border-top: 1px solid #e3e3e3;
+	font-size: 0.9rem;
+}

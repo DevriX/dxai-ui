@@ -115,7 +115,7 @@ $c   = (string) get_post_field( 'post_content', $svc );
 $expect( 'a service page is in the Home\'s look: its sections and their classes', str_contains( $c, 'hero-x' ) && str_contains( $c, 'svc-x' ) && str_contains( $c, 'cta-x' ) );
 $expect( 'its hero is headed with its title', preg_match( '/<h1[^>]*>Water Damage<\/h1>/', $c ) === 1, substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $c ) ), 0, 80 ) );
 $expect( 'the Home\'s header and footer are on it once', substr_count( $c, '<header' ) === 1 && substr_count( $c, '<footer' ) === 1 );
-$expect( 'the page belongs to the design: its scope, template and marker', (int) get_post_meta( $svc, Page_Scope::META, true ) === $home_id && get_post_meta( $svc, '_wp_page_template', true ) === \DXAI_UI\Theme\Blank_Template::SLUG && get_post_meta( $svc, Team_Pages::META, true ) === 'service|water-damage' );
+$expect( 'the page belongs to the design: its scope, template and marker', (int) get_post_meta( $svc, Page_Scope::META, true ) === $home_id && get_post_meta( $svc, '_wp_page_template', true ) === \DXAI_UI\Theme\Blank_Template::default_slug() && get_post_meta( $svc, Team_Pages::META, true ) === 'service|water-damage' );
 $expect( 'and is not itself a design', ! \DXAI_UI\Structures\Design_Attach::is_design( $svc ) );
 $expect( 'the page is blocks all the way, nothing loose between them', count( array_filter( parse_blocks( $c ), static fn( $b ) => empty( $b['blockName'] ) && trim( (string) $b['innerHTML'] ) !== '' ) ) === 0 );
 $list = $by['services|services'] ?? 0;

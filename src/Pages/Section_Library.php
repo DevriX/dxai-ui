@@ -152,7 +152,7 @@ final class Section_Library {
 			$header = ( self::is_chrome( $b ) && $b['blockName'] !== 'dxai-ui/site-footer' && ! self::is_footer_part( $b ) )
 				|| self::is_skip_link( $b )
 				|| self::is_header_bar( $b );
-			if ( ! $header && ! self::is_island( $b ) ) {
+			if ( ! $header && ! self::is_island( $b ) && ! self::is_header_spacer( $b ) ) {
 				break;
 			}
 			$found = $found || $header;
@@ -207,6 +207,73 @@ final class Section_Library {
 		return $out;
 	}
 
+	/**
+	 * Whether the blocks chrome_blocks() found for the header include a header: not only the skip link, the markup islands and the box that
+	 * holds the place of a fixed header, which travel with one. A design whose header is a template part keeps those in its pages (the skip
+	 * link is not inside its <header>), and a page that has only those has no header yet.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks The blocks chrome_blocks() was given.
+	 * @param array<int, int>                  $run    Its header indexes.
+	 */
+	public static function holds_header( array $blocks, array $run ): bool {
+		foreach ( $run as $i ) {
+			$b = $blocks[ $i ] ?? null;
+			if ( is_array( $b ) && ! self::is_skip_link( $b ) && ! self::is_island( $b ) && ! self::is_header_spacer( $b ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * A page's content split after the blocks that open it and travel with a header: the skip link, markup islands and the box that holds the
+	 * place of a fixed header. A header added to the page goes between the two halves, where the design had it, so the skip link stays the
+	 * first thing a keyboard reaches. The content comes back whole (the first half empty) when it does not open with any of them.
+	 *
+	 * @return array{0:string, 1:string} The opening blocks as serialized, and the rest.
+	 */
+	public static function split_lead( string $content ): array {
+		$top  = parse_blocks( $content );
+		$lead = 0;
+		foreach ( $top as $i => $b ) {
+			if ( empty( $b['blockName'] ) ) {
+				continue;
+			}
+			if ( ! self::is_skip_link( $b ) && ! self::is_island( $b ) && ! self::is_header_spacer( $b ) ) {
+				break;
+			}
+			$lead = (int) $i + 1;
+		}
+		if ( $lead < 1 ) {
+			return array( '', $content );
+		}
+		$write = static fn( array $blocks ): string => trim( implode( "\n\n", array_map( 'serialize_block', array_values( array_filter( $blocks, static fn( $b ) => ! empty( $b['blockName'] ) ) ) ) ) );
+
+		return array( $write( array_slice( $top, 0, $lead ) ), $write( array_slice( $top, $lead ) ) );
+	}
+
+	/**
+	 * The opening blocks of a page (what split_lead() takes) by kind, each as serialized, in their order: `skip` (the skip link), `spacer`
+	 * (the box that holds the place of a fixed header) and `other` (markup islands).
+	 *
+	 * @return array<int, array{kind:string, markup:string}>
+	 */
+	public static function lead_blocks( string $lead ): array {
+		$out = array();
+		foreach ( parse_blocks( $lead ) as $b ) {
+			if ( empty( $b['blockName'] ) ) {
+				continue;
+			}
+			$out[] = array(
+				'kind'   => self::is_skip_link( $b ) ? 'skip' : ( self::is_header_spacer( $b ) ? 'spacer' : 'other' ),
+				'markup' => serialize_block( $b ),
+			);
+		}
+
+		return $out;
+	}
+
 	/** @param array<string, mixed> $b A template part of the footer area (by its area, or its slug). */
 	private static function is_footer_part( array $b ): bool {
 		if ( ( $b['blockName'] ?? '' ) !== 'core/template-part' ) {
@@ -253,6 +320,14 @@ final class Section_Library {
 		$html = trim( (string) preg_replace( '#<(style|script)\b[\s\S]*?</\1>|<svg\b[^>]*>\s*(<defs\b[\s\S]*?</defs>|<symbol\b[\s\S]*?</symbol>\s*)+\s*</svg>#i', '', (string) $b['innerHTML'] ) );
 
 		return $html === '' || wp_strip_all_tags( $html ) === '' && ! preg_match( '#<(img|video|iframe|a)\b#i', $html );
+	}
+
+	/** @param array<string, mixed> $b An empty box that holds the place of a fixed header (a <div aria-hidden="true" style="height:140px">): hidden from readers, nothing in it. */
+	private static function is_header_spacer( array $b ): bool {
+		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'dxai-ui/box', 'core/group', 'core/spacer' ), true )
+			&& empty( $b['innerBlocks'] )
+			&& preg_match( '#aria-hidden="true"#i', (string) ( $b['innerHTML'] ?? '' ) ) === 1
+			&& trim( wp_strip_all_tags( (string) ( $b['innerHTML'] ?? '' ) ) ) === '';
 	}
 
 	/** @param array<string, mixed> $b A box fixed over the page (a call bar, a back-to-top button) with no page heading. */

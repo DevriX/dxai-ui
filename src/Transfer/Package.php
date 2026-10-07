@@ -78,7 +78,7 @@ final class Package {
 	public const MAX_ITEMS = 200;
 
 	/** Template file names an imported page may be given. */
-	public const TEMPLATES = array( 'dxai-blank.php' );
+	public const TEMPLATES = array( 'dxai-blank.php', 'dxai-template.php' );
 
 	/** Temporary folders made in this request, removed at shutdown if still there. */
 	private static array $temp = array();

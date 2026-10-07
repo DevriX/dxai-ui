@@ -141,6 +141,10 @@ final class Page_Scope {
 		if ( ! $post instanceof \WP_Post ) {
 			return $content;
 		}
+		// The DX template opened the scope element itself, around the header and the footer too (Template_Chrome).
+		if ( \DXAI_UI\Chrome\Template_Chrome::wraps( (int) $post->ID ) ) {
+			return $content;
+		}
 		// Its own scope. An ordinary page showing a design has its copied sections wrapped already (wrap_runs()).
 		$scope = Design_Attach::scope_for( (int) $post->ID );
 		if ( $scope < 1 || Design_Attach::attached( (int) $post->ID ) ) {

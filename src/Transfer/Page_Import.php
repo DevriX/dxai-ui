@@ -708,7 +708,7 @@ final class Page_Import {
 	 * @param array<string, mixed> $chrome_out chrome()'s answer.
 	 */
 	private function classic_warning( array $chrome_out ): string {
-		if ( ! class_exists( \DXAI_UI\Theme\Theme_Compat::class ) || ! method_exists( \DXAI_UI\Theme\Theme_Compat::class, 'may_install_chrome' ) || \DXAI_UI\Theme\Theme_Compat::may_install_chrome() ) {
+		if ( ! class_exists( \DXAI_UI\Theme\Theme_Compat::class ) || ! method_exists( \DXAI_UI\Theme\Theme_Compat::class, 'may_install_chrome' ) || ! \DXAI_UI\Chrome\Chrome_Choice::theme_draws_chrome() ) {
 			return '';
 		}
 		$changed = array();

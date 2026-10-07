@@ -297,7 +297,7 @@ final class Header_Template {
 		}
 		$found = array();
 		foreach ( $navs as $nav ) {
-			$best = $this->best_run( $this->node( $nav ), self::NAV_ITEMS );
+			$best = $this->best_run( $this->node( $nav ), self::NAV_ITEMS, true );
 			if ( null !== $best ) {
 				$found[] = array(
 					'nav'  => $nav,
@@ -358,12 +358,14 @@ final class Header_Template {
 		$logos = array();
 		foreach ( $bar as $region ) {
 			foreach ( $this->find_all( $region, static fn( array $b ): bool => self::kind( $b ) === 'logo' ) as $path ) {
-				$img     = self::first_img( self::html( $this->node( $path ) ) );
+				$node    = $this->node( $path );
+				$img     = self::first_img( self::html( $node ) );
+				$picture = null === $img ? self::picture_in( $node ) : null;
 				$logos[] = array(
 					'path' => $path,
-					'src'  => $img['src'] ?? '',
-					'alt'  => $img['alt'] ?? '',
-				);
+					'src'  => $img['src'] ?? $picture['src'] ?? '',
+					'alt'  => $img['alt'] ?? $picture['alt'] ?? '',
+				) + ( (int) ( $picture['id'] ?? 0 ) > 0 ? array( 'id' => (int) $picture['id'] ) : array() );
 			}
 		}
 
@@ -674,6 +676,9 @@ final class Header_Template {
 						'after' => (int) $group['eyebrow']['child'] > $child,
 						'label' => Header_Html::visible_text( (string) Header_Html::inner( self::chunk( $kids[ (int) $group['eyebrow']['child'] ] ), 'root' ) ),
 					);
+					// The line beside a button is its description already.
+					$position['desc']    = '';
+					$position['desc_at'] = null;
 				}
 				$positions[] = $position;
 			}
@@ -717,6 +722,7 @@ final class Header_Template {
 		$chunk = self::chunk( $block );
 		$link  = null;
 		$label = null;
+		$desc  = null;
 		$attrs = array();
 
 		if ( $kind === 'link' ) {
@@ -727,6 +733,8 @@ final class Header_Template {
 				);
 				$attrs = (array) ( $root['attrs'] ?? array() );
 				$label = self::kids( $block ) === array() ? $link : self::label_block( $block );
+				// A link of blocks keeps its description in the next one with words.
+				$desc = null === $label || self::kids( $block ) === array() ? null : self::desc_block( $block, $label );
 			} else {
 				// A paragraph or list item around the one link that holds its text.
 				$link  = array(
@@ -745,6 +753,7 @@ final class Header_Template {
 		}
 
 		$text   = '';
+		$note   = '';
 		$plain  = true;
 		$glyphs = false;
 		if ( null !== $label ) {
@@ -757,6 +766,37 @@ final class Header_Template {
 			// A caret or an arrow written into the text is the item's own too.
 			$glyphs = null !== $inner && Header_Html::has_glyphs( Header_Html::visible_text( $inner ) );
 			$plain  = $plain && ! $glyphs;
+
+			/*
+			 * A link whose words are a stack of elements — a title and the line that
+			 * describes it, in the link itself or in the one element of it that holds
+			 * the words — is two things: the first is the label, the second the
+			 * item's description (Description in Appearance > Menus). Each is
+			 * written into its own element, so a new label never takes the
+			 * description's words and the other way round.
+			 */
+			$stack = 'link' === $kind && null !== $inner && null === $desc ? Header_Html::stack( $inner ) : null;
+			if ( null !== $stack ) {
+				$parts  = $stack['parts'];
+				$text   = $parts[0]['text'];
+				$note   = $parts[1]['text'];
+				$glyphs = Header_Html::has_glyphs( $parts[0]['visible'] );
+				$plain  = $plain && ! $glyphs;
+				$label  = $label + array(
+					'part' => 0,
+					'via'  => $stack['via'],
+				);
+				$desc   = array(
+					'path' => $label['path'],
+					'el'   => $label['el'],
+					'part' => 1,
+					'via'  => $stack['via'],
+				);
+			} elseif ( null !== $desc ) {
+				$dhost = self::node_in( $block, $desc['path'] );
+				$dtext = Header_Html::inner( self::chunk( $dhost ), $desc['el'] );
+				$note  = null === $dtext ? '' : Header_Html::label_text( $dtext );
+			}
 		}
 		if ( $text === '' && $kind === 'link' ) {
 			// An icon link: its name is its aria-label, and that is what a
@@ -770,6 +810,8 @@ final class Header_Template {
 			'link'     => $link,
 			'label_at' => $label,
 			'label'    => $text,
+			'desc_at'  => $note !== '' ? $desc : null,
+			'desc'     => $note,
 			'url'      => $kind === 'link' ? (string) ( $attrs['href'] ?? '' ) : '#',
 			'target'   => (string) ( $attrs['target'] ?? '' ),
 			'rel'      => (string) ( $attrs['rel'] ?? '' ),
@@ -854,7 +896,8 @@ final class Header_Template {
 				$parts['panel']
 			);
 			foreach ( $panel['positions'] as $i => $p ) {
-				$panel['positions'][ $i ]['design'] = $p['label'];
+				$panel['positions'][ $i ]['design']      = $p['label'];
+				$panel['positions'][ $i ]['design_desc'] = (string) ( $p['desc'] ?? '' );
 			}
 		}
 
@@ -918,7 +961,8 @@ final class Header_Template {
 			$slots[ $i ]['diverged']  = ! $is_primary && count( $slot['positions'] ) > count( $main['positions'] );
 			foreach ( $slot['positions'] as $p => $position ) {
 				$twin = $slots[ $i ]['diverged'] ? null : ( $main['positions'][ $p ] ?? null );
-				$slots[ $i ]['positions'][ $p ]['design'] = (string) ( $twin['label'] ?? $position['label'] );
+				$slots[ $i ]['positions'][ $p ]['design']      = (string) ( $twin['label'] ?? $position['label'] );
+				$slots[ $i ]['positions'][ $p ]['design_desc'] = (string) ( $twin['desc'] ?? $position['desc'] ?? '' );
 				if ( is_array( $position['eyebrow'] ?? null ) ) {
 					// The mobile eyebrow reads as the desktop one's while the
 					// item's description is the design's.
@@ -966,7 +1010,7 @@ final class Header_Template {
 				'target'      => (string) $p['target'],
 				'xfn'         => (string) $p['rel'],
 				'attr_title'  => (string) $p['title'],
-				'description' => $location === self::ACTIONS && is_array( $p['eyebrow'] ?? null ) ? (string) $p['eyebrow']['label'] : '',
+				'description' => $location === self::ACTIONS && is_array( $p['eyebrow'] ?? null ) ? (string) $p['eyebrow']['label'] : (string) ( $p['desc'] ?? '' ),
 				'children'    => is_array( $p['panel'] ?? null ) ? self::tree( (array) $p['panel']['positions'], $location ) : array(),
 			);
 			$out[] = $row;
@@ -1108,14 +1152,15 @@ final class Header_Template {
 	 *
 	 * @param array<string, mixed> $block
 	 * @param array<int, string>   $kinds
+	 * @param bool                 $text_rows Whether a list item that is only words counts as an item (runs()).
 	 * @return array{path:array<int, int>, run:array{items:array<int, int>, seps:array<int, int>}}|null
 	 */
-	private function best_run( array $block, array $kinds ): ?array {
+	private function best_run( array $block, array $kinds, bool $text_rows = false ): ?array {
 		$best  = null;
 		$stack = array( array( $block, array() ) );
 		while ( $stack !== array() ) {
 			list( $node, $path ) = array_shift( $stack );
-			foreach ( self::runs( $node, $kinds ) as $run ) {
+			foreach ( self::runs( $node, $kinds, $text_rows ) as $run ) {
 				if ( null === $best || count( $run['items'] ) > count( $best['run']['items'] ) ) {
 					$best = array(
 						'path' => $path,
@@ -1140,9 +1185,11 @@ final class Header_Template {
 	 *
 	 * @param array<string, mixed> $container
 	 * @param array<int, string>   $kinds
+	 * @param bool                 $text_rows A list item that is only words is an item too: the bar's own
+	 *                                        trigger with no panel, not a dropdown's bullet points.
 	 * @return array<int, array{items:array<int, int>, seps:array<int, int>}>
 	 */
-	private static function runs( array $container, array $kinds ): array {
+	private static function runs( array $container, array $kinds, bool $text_rows = false ): array {
 		$runs    = array();
 		$current = null;
 		$sep     = null;
@@ -1150,6 +1197,16 @@ final class Header_Template {
 			$kind = self::kind( $kid );
 			if ( $kind === 'none' ) {
 				continue;
+			}
+			/*
+			 * A row of the bar that is only words — a trigger whose panel the
+			 * design never drew (ARA Guide's "Locations": a button in a list item) —
+			 * is still one of its items. Left out it ended the run, and the items
+			 * after it were a second run no slot held. Only in the bar: in a
+			 * dropdown's panel a run of words is a promo's bullet points.
+			 */
+			if ( $text_rows && 'text' === $kind && 'li' === ( self::root_tag( $kid )['name'] ?? '' ) ) {
+				$kind = 'link';
 			}
 			if ( in_array( $kind, $kinds, true ) ) {
 				if ( null === $current ) {
@@ -1396,7 +1453,7 @@ final class Header_Template {
 		$tag  = $root['name'];
 
 		if ( $tag === 'a' ) {
-			return self::is_logo( $html, $root['attrs'] ) ? 'logo' : 'link';
+			return self::is_logo( $html, $root['attrs'], $block ) ? 'logo' : 'link';
 		}
 		if ( $kids !== array() && null !== self::dropdown_parts( $block ) ) {
 			return 'dropdown';
@@ -1428,7 +1485,7 @@ final class Header_Template {
 	 *
 	 * @param array<string, string> $attrs
 	 */
-	private static function is_logo( string $html, array $attrs ): bool {
+	private static function is_logo( string $html, array $attrs, array $block = array() ): bool {
 		$inner = (string) Header_Html::inner( $html, 'root' );
 		if ( Header_Html::visible_text( $inner ) !== '' ) {
 			/*
@@ -1450,11 +1507,50 @@ final class Header_Template {
 		if ( preg_match( '/<(img|picture)\b/i', $inner ) ) {
 			return true;
 		}
+		/*
+		 * A picture block draws its image when the page renders (DX Picture), so
+		 * the HTML it saved holds no <img>: a link around one, with no words, is
+		 * the logo all the same. Read as a link it became a menu item — the
+		 * design's name, "home", in Appearance > Menus.
+		 */
+		if ( self::picture_in( $block ) !== null ) {
+			return true;
+		}
 		// An inline-SVG mark that links home.
 		$href = (string) ( $attrs['href'] ?? '' );
 
 		return preg_match( '/<svg\b/i', $inner ) === 1
 			&& ( in_array( $href, array( '/', '#', '' ), true ) || untrailingslashit( $href ) === untrailingslashit( home_url() ) || preg_match( '/\b(home|logo)\b/i', (string) ( $attrs['aria-label'] ?? '' ) ) === 1 );
+	}
+
+	/** Blocks that draw their image at render time: the markup they saved holds no <img>. */
+	private const PICTURE_BLOCKS = array( 'dx/picture' );
+
+	/**
+	 * The first picture block under $block: its image, as the block's attributes
+	 * hold it.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array{src:string, alt:string, id:int}|null
+	 */
+	private static function picture_in( array $block ): ?array {
+		foreach ( self::kids( $block ) as $kid ) {
+			if ( in_array( (string) ( $kid['blockName'] ?? '' ), self::PICTURE_BLOCKS, true ) ) {
+				$attrs = (array) ( $kid['attrs'] ?? array() );
+
+				return array(
+					'src' => (string) ( $attrs['imageUrl'] ?? '' ),
+					'alt' => (string) ( $attrs['imageAlt'] ?? '' ),
+					'id'  => (int) ( $attrs['imageId'] ?? 0 ),
+				);
+			}
+			$found = self::picture_in( $kid );
+			if ( null !== $found ) {
+				return $found;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -1582,6 +1678,57 @@ final class Header_Template {
 			$found = self::label_block( $kid, $here );
 			if ( null !== $found ) {
 				return $found;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Every leaf under $block that holds words, as paths relative to it, in
+	 * document order: the title and the line that describes it, in a link made
+	 * of blocks.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, int>      $path
+	 * @return array<int, array<int, int>>
+	 */
+	private static function word_leaves( array $block, array $path = array() ): array {
+		$out = array();
+		foreach ( self::kids( $block ) as $i => $kid ) {
+			$here = array_merge( $path, array( $i ) );
+			if ( self::kids( $kid ) === array() ) {
+				$inner = Header_Html::inner( self::chunk( $kid ), 'root' );
+				// Letters or digits: an arrow or a bullet is not a description.
+				if ( null !== $inner && preg_match( '/[\p{L}\p{N}]/u', Header_Html::visible_text( $inner ) ) === 1 ) {
+					$out[] = $here;
+				}
+				continue;
+			}
+			$out = array_merge( $out, self::word_leaves( $kid, $here ) );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Where a link of blocks keeps the line that describes it: the leaf with
+	 * words right after its label's.
+	 *
+	 * @param array<string, mixed>                   $block
+	 * @param array{path:array<int, int>, el:string} $label label_block()'s answer.
+	 * @return array{path:array<int, int>, el:string}|null
+	 */
+	private static function desc_block( array $block, array $label ): ?array {
+		$leaves = self::word_leaves( $block );
+		foreach ( $leaves as $n => $path ) {
+			if ( $path === $label['path'] ) {
+				return isset( $leaves[ $n + 1 ] )
+					? array(
+						'path' => $leaves[ $n + 1 ],
+						'el'   => 'root',
+					)
+					: null;
 			}
 		}
 

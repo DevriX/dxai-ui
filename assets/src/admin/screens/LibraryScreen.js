@@ -10,6 +10,7 @@ import NativeBlocks from '../components/NativeBlocks';
 import Speed from '../components/Speed';
 import CopyPrompt from '../components/CopyPrompt';
 import TeamPages from '../components/TeamPages';
+import Template from '../components/Template';
 
 function Group( { title, items, empty, onRestore, exportUrl } ) {
 	return (
@@ -185,6 +186,7 @@ export default function LibraryScreen() {
 								<Button variant="primary" href="admin.php?page=dxai-ui">{ __( 'Go to Convert', 'dxai-ui' ) }</Button>
 							</div>
 						) }
+						<Template />
 						<SitePages />
 						<ThemeColors />
 						<NativeBlocks />

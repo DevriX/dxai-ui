@@ -153,11 +153,18 @@ final class Dc_Renderer {
 		foreach ( $effects['media'] as $key => $query ) {
 			if ( preg_match( '/max-width:\s*(\d+)/', $query, $m ) === 1 ) {
 				$this->media[ $key ] = array( 'query' => $query, 'max' => (int) $m[1] );
-				$this->breakpoint    = (int) $m[1];
+				$at                  = (int) $m[1];
 			} elseif ( preg_match( '/min-width:\s*(\d+)/', $query, $m ) === 1 ) {
 				// `matches` is true on the WIDE side: the key is "isDesktop"-like.
 				$this->media[ $key ] = array( 'query' => $query, 'max' => (int) $m[1] - 1, 'inverted' => true );
-				$this->breakpoint    = (int) $m[1] - 1;
+				$at                  = (int) $m[1] - 1;
+			} else {
+				continue;
+			}
+			// The layout switches at the first query's breakpoint (the mobile one). A second query — Five Star's "wide" one, at
+			// 1120px — is a state of its own, worked out at the width a variant stands for (media_matches()), not a second switch.
+			if ( 0 === $this->breakpoint ) {
+				$this->breakpoint = $at;
 			}
 		}
 
@@ -174,7 +181,8 @@ final class Dc_Renderer {
 		foreach ( $mobile_states as $mobile ) {
 			$s = $state;
 			foreach ( $this->media as $key => $bp ) {
-				$s[ $key ] = ! empty( $bp['inverted'] ) ? ! $mobile : $mobile;
+				// Each key at the width its variant stands for: the mobile twin at the breakpoint, the primary one wider than any.
+				$s[ $key ] = self::media_matches( (string) $bp['query'], $mobile ? $this->breakpoint : self::DESKTOP_WIDTH );
 			}
 			$this->variants[] = array( 'state' => $s, 'mobile' => $mobile, 'key' => null, 'value' => null, 'kind' => $mobile ? 'media' : 'base' );
 			foreach ( $domains as $key => $values ) {
@@ -191,6 +199,22 @@ final class Dc_Renderer {
 		foreach ( $this->variants as $i => $variant ) {
 			$this->vals[ $i ] = $i === 0 ? $base_vals : $this->script->render_vals( $variant['state'] );
 		}
+	}
+
+	/** A width wider than any breakpoint: the viewport the primary variant stands for. */
+	private const DESKTOP_WIDTH = 100000;
+
+	/** Whether a media query's width conditions hold for a viewport this wide. */
+	private static function media_matches( string $query, int $width ): bool {
+		$ok = true;
+		if ( preg_match( '/max-width:\s*(\d+)/', $query, $m ) === 1 ) {
+			$ok = $ok && $width <= (int) $m[1];
+		}
+		if ( preg_match( '/min-width:\s*(\d+)/', $query, $m ) === 1 ) {
+			$ok = $ok && $width >= (int) $m[1];
+		}
+
+		return $ok;
 	}
 
 	/**

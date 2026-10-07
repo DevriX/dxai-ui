@@ -376,7 +376,11 @@
 			template = undefined;
 		}
 
-		return typeof template === 'string' ? template === canvas.blankTemplate : !! canvas.blank;
+		if ( typeof template === 'string' ) {
+			return Array.isArray( canvas.blankTemplates ) ? canvas.blankTemplates.indexOf( template ) !== -1 : template === canvas.blankTemplate;
+		}
+
+		return !! canvas.blank;
 	}
 
 	/*

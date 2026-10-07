@@ -541,7 +541,7 @@ export const CHROME_INFO_KEYS = [ 'chrome_default', 'chrome_default_reason', 'ch
  * From import-info (Converter_Controller::import_info_payload(), answered by
  * Chrome_Choice): `chrome_default` — what an automatic save would do for this
  * archive and scope (/import-info?archive=&scope=) — with
- * `chrome_default_reason` (theme, one_page, owned, free, own), `theme_chrome`
+ * `chrome_default_reason` (theme, one_page, owned, free, own, dx, dx_busy), `theme_chrome`
  * and `theme_name`, and `chrome_owner` { header, footer }. Until the answer
  * for this scope arrives, a one-page import is offered "keep" the way
  * Chrome_Choice::resolve() decides it (the theme first, then the scope), so
@@ -569,8 +569,8 @@ export function chromeFacts( info, design = {} ) {
 		i.classic_theme,
 	] );
 	const offered = serverDefault !== '' || Boolean( built.menus || built.widgets );
-	if ( serverDefault && ! design.scoped && design.scope === 'page' && ! themeDraws ) {
-		// Chrome_Choice::resolve(): a one-page import keeps the site's.
+	if ( serverDefault && ! design.scoped && design.scope === 'page' && ( ! themeDraws || serverDefault === CHROME_INSTALL ) ) {
+		// Chrome_Choice::resolve(): a one-page import keeps the site's (a DX theme that would install a whole site by itself too).
 		serverDefault = CHROME_KEEP;
 		reason = 'one_page';
 	}
@@ -609,6 +609,9 @@ export function chromeFacts( info, design = {} ) {
 		defaultReason: serverDefault ? reason : 'derived',
 		themeName: String( i.theme_name || theme.name || '' ),
 		themeDraws: themeDraws === true,
+		// DX Base: the theme the plugin carries for a site that has no DX theme (import-info `dx_theme`, `base_theme`: '', available, installed).
+		dxTheme: i.dx_theme === true,
+		baseTheme: [ 'available', 'installed' ].includes( String( i.base_theme || '' ) ) ? String( i.base_theme ) : '',
 		header,
 		footer,
 		own: reason === 'own' || Boolean( ( header && sameDesign( header, design ) ) || ( footer && sameDesign( footer, design ) ) ),
@@ -634,7 +637,8 @@ export function chromeFacts( info, design = {} ) {
 export function chromeWarnings( facts ) {
 	const f = facts || {};
 	const out = [];
-	if ( f.themeDraws ) {
+	// A DX theme with nothing of the site's own in Menus and Widgets (reason dx): installing replaces nothing, so there is nothing to warn about.
+	if ( f.themeDraws && f.defaultReason !== 'dx' ) {
 		out.push( {
 			key: 'theme',
 			text: sprintf(

@@ -25,6 +25,7 @@ final class Chrome {
 		Site_Footer_Block::class,
 		Widgets_Screen::class,
 		Page_Chrome::class,
+		Template_Chrome::class,
 	);
 
 	public function register(): void {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Blank canvas page template so generated designs are not wrapped in theme chrome.
+ * The plugin's canvas templates, so generated designs are not wrapped in theme chrome.
  *
  * @package DXAI_UI
  */
@@ -9,9 +9,51 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Theme;
 
+/**
+ * Two page templates, both a blank canvas (the theme draws nothing around the page, `body.dxai-ui-blank`):
+ *
+ *  - `dxai-template.php`, the DX template: the template itself draws the design's header, built from Appearance > Menus, and its footer,
+ *    built from Appearance > Widgets, around the page's content (Template_Chrome). The page stores its body only. This is what a
+ *    design's pages are given at import.
+ *  - `dxai-blank.php`, DX Blank: the header and the footer are put into the page's content as it renders (Page_Chrome). Every site
+ *    imported before the DX template has pages on it, and they render exactly as they did.
+ */
 final class Blank_Template {
 
+	/** DX Blank: the chrome is added to the content as it renders (Page_Chrome). Kept for the pages of every earlier import. */
 	public const SLUG = 'dxai-blank.php';
+
+	/** The DX template: the chrome is drawn by the template (Template_Chrome). */
+	public const TEMPLATE = 'dxai-template.php';
+
+	/**
+	 * The two canvas templates.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function slugs(): array {
+		return array( self::SLUG, self::TEMPLATE );
+	}
+
+	/** Whether a template slug is one of the canvas templates. */
+	public static function is_canvas_slug( string $slug ): bool {
+		return in_array( $slug, self::slugs(), true );
+	}
+
+	/** Whether a page renders on one of the canvas templates. */
+	public static function is_canvas( int $post_id ): bool {
+		return $post_id > 0 && self::is_canvas_slug( (string) get_page_template_slug( $post_id ) );
+	}
+
+	/**
+	 * The template a design's pages are given when they are made: the DX template. `dxai_ui_default_template` can name DX Blank for a
+	 * site that wants its chrome in the content.
+	 */
+	public static function default_slug(): string {
+		$slug = apply_filters( 'dxai_ui_default_template', self::TEMPLATE );
+
+		return is_string( $slug ) && self::is_canvas_slug( $slug ) ? $slug : self::TEMPLATE;
+	}
 
 	public function register(): void {
 		add_filter( 'theme_page_templates', array( $this, 'register_template' ) );
@@ -24,7 +66,8 @@ final class Blank_Template {
 	 * @return array<string, string>
 	 */
 	public function register_template( array $templates ): array {
-		$templates[ self::SLUG ] = __( 'DX Blank (pixel-perfect)', 'dxai-ui' );
+		$templates[ self::TEMPLATE ] = __( 'DX Template (header from Menus, footer from Widgets)', 'dxai-ui' );
+		$templates[ self::SLUG ]     = __( 'DX Blank (earlier imports)', 'dxai-ui' );
 
 		return $templates;
 	}
@@ -34,18 +77,18 @@ final class Blank_Template {
 			return $template;
 		}
 
-		$slug = get_page_template_slug();
-		if ( $slug !== self::SLUG ) {
+		$slug = (string) get_page_template_slug();
+		if ( ! self::is_canvas_slug( $slug ) ) {
 			return $template;
 		}
 
-		$path = DXAI_UI_DIR . 'templates/dxai-blank.php';
+		$path = DXAI_UI_DIR . 'templates/' . $slug;
 
 		return is_readable( $path ) ? $path : $template;
 	}
 
 	public function enqueue_canvas(): void {
-		if ( ! is_singular() || get_page_template_slug() !== self::SLUG ) {
+		if ( ! is_singular() || ! self::is_canvas_slug( (string) get_page_template_slug() ) ) {
 			return;
 		}
 

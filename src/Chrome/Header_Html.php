@@ -225,6 +225,123 @@ final class Header_Html {
 	}
 
 	/**
+	 * The elements with words in an inline fragment that is a stack of them: a
+	 * link holding a title and, beside it, a line that describes it
+	 * (`<span>Water Removal</span><span>Burst pipes</span>`), each as its place among
+	 * nodes() and its words (less the glyphs it starts or ends with).
+	 *
+	 * Null unless there are two or more, and no run of bare text carries words
+	 * among them: a label with a styled word in it is one label, and stays one
+	 * (fill() writes it as it always did).
+	 *
+	 * @return array<int, array{index:int, text:string, visible:string}>|null
+	 */
+	public static function parts( string $fragment ): ?array {
+		$out = array();
+		foreach ( self::nodes( $fragment ) as $i => $node ) {
+			if ( $node['type'] === 'text' ) {
+				if ( trim( $node['text'] ) !== '' ) {
+					return null;
+				}
+				continue;
+			}
+			if ( $node['type'] === 'el' && ! $node['deco'] ) {
+				$out[] = array(
+					'index'   => $i,
+					'text'    => self::label_text( $node['raw'] ),
+					'visible' => self::visible_text( $node['raw'] ),
+				);
+			}
+		}
+
+		return count( $out ) >= 2 ? $out : null;
+	}
+
+	/**
+	 * The parts() of a fragment, looking through the one wrapper element that
+	 * carries all its words: a link with an icon and then a column holding a
+	 * title and a description. Null when there are not two to be found.
+	 *
+	 * @return array{via:array<int, int>, parts:array<int, array{index:int, text:string, visible:string}>}|null
+	 */
+	public static function stack( string $fragment ): ?array {
+		$flat = self::parts( $fragment );
+		if ( null !== $flat ) {
+			return array(
+				'via'   => array(),
+				'parts' => $flat,
+			);
+		}
+		$only = null;
+		foreach ( self::nodes( $fragment ) as $i => $node ) {
+			if ( $node['type'] === 'text' ) {
+				if ( trim( $node['text'] ) !== '' ) {
+					return null;
+				}
+				continue;
+			}
+			if ( $node['type'] === 'el' && ! $node['deco'] ) {
+				if ( null !== $only ) {
+					return null;
+				}
+				$only = $i;
+			}
+		}
+		if ( null === $only ) {
+			return null;
+		}
+		$nodes = self::nodes( $fragment );
+		$inner = self::inner( $nodes[ $only ]['raw'], 'root' );
+		$sub   = null === $inner ? null : self::stack( $inner );
+
+		return null === $sub
+			? null
+			: array(
+				'via'   => array_merge( array( $only ), $sub['via'] ),
+				'parts' => $sub['parts'],
+			);
+	}
+
+	/**
+	 * $fragment with one of its parts() written again: the words between that
+	 * element's tags replaced by $content (markup that is already safe), or the
+	 * element taken out when $content is null. Everything else stays as it was.
+	 * $via: the places among nodes() of the wrapper elements the words are in,
+	 * outermost first (stack()); none when they are in $fragment itself.
+	 *
+	 * @param array<int, int> $via
+	 */
+	public static function replace_part( string $fragment, int $part, ?string $content, array $via = array() ): string {
+		if ( $via !== array() ) {
+			// The words are in a wrapper element: write inside it, leave the rest as it is.
+			$nodes = self::nodes( $fragment );
+			$at    = (int) array_shift( $via );
+			$inner = isset( $nodes[ $at ] ) && $nodes[ $at ]['type'] === 'el' ? self::inner( $nodes[ $at ]['raw'], 'root' ) : null;
+			if ( null === $inner ) {
+				return $fragment;
+			}
+			$nodes[ $at ]['raw'] = $nodes[ $at ]['open'] . self::replace_part( $inner, $part, $content, $via ) . $nodes[ $at ]['close'];
+
+			return implode( '', array_column( $nodes, 'raw' ) );
+		}
+		$parts = self::parts( $fragment );
+		if ( null === $parts || ! isset( $parts[ $part ] ) ) {
+			return $fragment;
+		}
+		$target = $parts[ $part ]['index'];
+		$out    = '';
+		foreach ( self::nodes( $fragment ) as $i => $node ) {
+			if ( $i !== $target ) {
+				$out .= $node['raw'];
+			} elseif ( null !== $content ) {
+				$out .= $node['open'] . $content . $node['close'];
+			}
+		}
+
+		return $out;
+	}
+
+	/**
 	 * The attributes of one start tag, lower-cased names, decoded values.
 	 *
 	 * @return array<string, string>

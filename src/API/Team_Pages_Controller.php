@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace DXAI_UI\API;
 
 use DXAI_UI\Pages\Ai_Budget;
+use DXAI_UI\Pages\Block_Library;
+use DXAI_UI\Pages\Menu_Pages;
 use DXAI_UI\Pages\Team_Pages;
 use DXAI_UI\Pages\Team_Run;
 use DXAI_UI\Structures\Design_Attach;
@@ -20,8 +22,11 @@ use DXAI_UI\Structures\Page_Scope;
  *                             names, the general pages) and the pages already made.
  * POST /team-pages            `plan` what would be made (the sections of each page, in order, with where each is from), `estimate` what an AI plan would
  *                             cost (nothing is asked; the price a person types is kept), `build` the pages (`mode`: only the Home's sections, also the
- *                             sections made in its cards, or an AI plans each page: one request), `undo` the last run, or `put_back` one page of it.
- *                             Each page of `wanted` may carry the arrangement a person gave it: `shuffle`, `recipe` and `locks`, as `plan` returned them.
+ *                             sections made in its cards, or an AI plans each page: one request; `library`: the team's own sections where the Home has none, instead of
+ *                             the Home's, or not used), `undo` the last run, or `put_back` one page of it.
+ *                             Each page of `wanted` may carry the arrangement a person gave it: `shuffle`, `recipe` and `locks`, as `plan` returned them,
+ *                             and the address a menu gave it (`path`, with the menu item it is from, `item`): the page is made there.
+ *                             GET also answers `menu`: the pages the design's header menu names, with their addresses (Menu_Pages).
  */
 final class Team_Pages_Controller {
 
@@ -59,6 +64,11 @@ final class Team_Pages_Controller {
 							'type'    => 'string',
 							'enum'    => Team_Pages::MODES,
 							'default' => 'new',
+						),
+						'library' => array(
+							'type'    => 'string',
+							'enum'    => Team_Pages::LIBRARY,
+							'default' => 'fill',
 						),
 						'page'   => array(
 							'type'    => 'integer',
@@ -106,13 +116,25 @@ final class Team_Pages_Controller {
 				}
 			}
 		}
-		$ok = $design > 0 && Design_Attach::is_design( $design );
+		$ok          = $design > 0 && Design_Attach::is_design( $design );
+		$suggestions = $ok ? Team_Pages::suggestions( $design ) : null;
 
 		return new \WP_REST_Response(
 			array(
 				'designs'     => $designs,
 				'design'      => $design,
-				'suggestions' => $ok ? Team_Pages::suggestions( $design ) : null,
+				'suggestions' => $suggestions,
+				// The pages the header menu names, at the menu's own addresses; what it leaves out, and why. What the Home calls its services and
+				// places helps to tell what an item is: it is read once, for both.
+				'menu'        => $ok ? Menu_Pages::for_design(
+					$design,
+					array(
+						'services' => $suggestions['services'],
+						'places'   => $suggestions['locations'],
+					)
+				) : null,
+				// Whether the team's own sections can be used for this design, and what is missing when they cannot.
+				'library'     => $ok ? Block_Library::availability( $design ) : null,
 				'existing'    => $ok ? $this->existing( $design ) : array(),
 				'run'         => $ok ? Team_Run::summary( $design ) : null,
 				'kinds'       => array_map( static fn( $k ) => $k['label'], Team_Pages::KINDS ),
@@ -142,10 +164,18 @@ final class Team_Pages_Controller {
 						$page[ $key ] = $row[ $key ];
 					}
 				}
+				// The address a menu gave it, and the menu item (Team_Pages cleans both).
+				if ( isset( $row['path'] ) && is_string( $row['path'] ) && $row['path'] !== '' ) {
+					$page['path'] = $row['path'];
+					if ( isset( $row['item'] ) ) {
+						$page['item'] = (int) $row['item'];
+					}
+				}
 				$wanted[] = $page;
 			}
 		}
 		$mode = $request->get_param( 'ai' ) ? 'ai' : (string) $request->get_param( 'mode' );
+		$lib  = (string) $request->get_param( 'library' );
 		$act  = (string) $request->get_param( 'action' );
 		if ( $act === 'undo' || $act === 'put_back' ) {
 			$res = $act === 'undo' ? Team_Run::undo( $design ) : Team_Run::put_back( $design, (int) $request->get_param( 'page' ) );
@@ -161,7 +191,18 @@ final class Team_Pages_Controller {
 			);
 		}
 		if ( $act === 'plan' ) {
-			return new \WP_REST_Response( array( 'plan' => Team_Pages::plan( $design, $wanted, array( 'mode' => $mode ) ) ) );
+			return new \WP_REST_Response(
+				array(
+					'plan' => Team_Pages::plan(
+						$design,
+						$wanted,
+						array(
+							'mode'    => $mode,
+							'library' => $lib,
+						)
+					),
+				)
+			);
 		}
 		if ( (string) $request->get_param( 'action' ) === 'estimate' ) {
 			if ( $request->get_param( 'price_in' ) !== null || $request->get_param( 'price_out' ) !== null ) {
@@ -179,7 +220,15 @@ final class Team_Pages_Controller {
 				)
 			);
 		}
-		$out = Team_Pages::build( $design, $wanted, (bool) $request->get_param( 'force' ), array( 'mode' => $mode ) );
+		$out = Team_Pages::build(
+			$design,
+			$wanted,
+			(bool) $request->get_param( 'force' ),
+			array(
+				'mode'    => $mode,
+				'library' => $lib,
+			)
+		);
 		if ( is_wp_error( $out ) ) {
 			return $out;
 		}

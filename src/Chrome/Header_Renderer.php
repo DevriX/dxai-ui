@@ -667,6 +667,18 @@ final class Header_Renderer {
 	 * @return array<string, mixed>
 	 */
 	private function fill( array $block, array $pos, $item, bool $same, bool $strip = false ): array {
+		return $this->fill_desc( $this->fill_words( $block, $pos, $item, $same, $strip ), $pos, $item, $strip );
+	}
+
+	/**
+	 * The link and the label of an item, written into its prototype (fill()).
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<string, mixed> $pos
+	 * @param object               $item
+	 * @return array<string, mixed>
+	 */
+	private function fill_words( array $block, array $pos, $item, bool $same, bool $strip ): array {
 		$url  = (string) ( $item->url ?? '' );
 		$link = is_array( $pos['link'] ?? null ) ? $pos['link'] : null;
 
@@ -743,8 +755,54 @@ final class Header_Renderer {
 				if ( $strip ) {
 					$inner = Header_Html::strip_decorations( $inner );
 				}
+				if ( isset( $at['part'] ) ) {
+					// A title with its description beside it: only the title's element is written.
+					return self::set_chunk( $b, Header_Html::replace_inner( $chunk, (string) $at['el'], Header_Html::replace_part( $inner, (int) $at['part'], $label_html, (array) ( $at['via'] ?? array() ) ) ) );
+				}
 
 				return self::set_chunk( $b, Header_Html::replace_inner( $chunk, (string) $at['el'], Header_Html::fill( $inner, $label_html, $open, $close ) ) );
+			}
+		);
+	}
+
+	/**
+	 * $block with the line that describes the item written: the menu item's
+	 * description, in the place the design kept one (Header_Template's
+	 * `desc_at`). Written only when it differs from the design's own
+	 * words, so an item that is the design's keeps every byte; an emptied
+	 * description takes its element out, so no gap is left where it was.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<string, mixed> $pos
+	 * @param object               $item
+	 * @return array<string, mixed>
+	 */
+	private function fill_desc( array $block, array $pos, $item, bool $strip ): array {
+		$at = is_array( $pos['desc_at'] ?? null ) ? $pos['desc_at'] : null;
+		if ( null === $at || $strip ) {
+			return $block;
+		}
+		$want = trim( (string) ( $item->description ?? '' ) );
+		$have = (string) ( $pos['design_desc'] ?? $pos['desc'] ?? '' );
+		if ( Header_Html::norm( $want ) === Header_Html::norm( $have ) ) {
+			return $block;
+		}
+
+		return $this->patch(
+			$block,
+			(array) $at['path'],
+			static function ( array $b ) use ( $at, $want ): array {
+				$chunk = Header_Template::chunk( $b );
+				$inner = Header_Html::inner( $chunk, (string) $at['el'] );
+				if ( null === $inner ) {
+					return $b;
+				}
+				$words = $want === '' ? '' : Header_Html::label_html( $want );
+				if ( isset( $at['part'] ) ) {
+					return self::set_chunk( $b, Header_Html::replace_inner( $chunk, (string) $at['el'], Header_Html::replace_part( $inner, (int) $at['part'], $want === '' ? null : $words, (array) ( $at['via'] ?? array() ) ) ) );
+				}
+
+				return self::set_chunk( $b, Header_Html::replace_inner( $chunk, (string) $at['el'], Header_Html::fill( $inner, $words ) ) );
 			}
 		);
 	}
@@ -963,31 +1021,67 @@ final class Header_Renderer {
 			return;
 		}
 		$design_id = (int) ( $this->spec['logo']['attachment_id'] ?? 0 );
+		$site_id   = (int) ( $this->logo['id'] ?? 0 );
 		$alt       = (string) ( $this->logo['alt'] ?? '' );
 		foreach ( (array) ( $this->spec['logos'] ?? array() ) as $logo ) {
 			if ( ( $design_id > 0 && (int) ( $this->logo['id'] ?? 0 ) === $design_id ) || $url === (string) ( $logo['src'] ?? '' ) ) {
 				continue;
 			}
-			$plans[ self::key( (array) $logo['path'] ) ]['patch'][] = static fn( array $b ): array => self::map_chunks(
-				$b,
-				static function ( string $chunk ) use ( $url, $alt ): string {
-					$p = new \WP_HTML_Tag_Processor( $chunk );
-					if ( ! $p->next_tag( array( 'tag_name' => 'img' ) ) ) {
-						return $chunk;
-					}
-					$p->set_attribute( 'src', $url );
-					if ( $alt !== '' ) {
-						$p->set_attribute( 'alt', $alt );
-					}
-					// They described the design's image, not this one.
-					foreach ( array( 'srcset', 'sizes', 'width', 'height' ) as $gone ) {
-						$p->remove_attribute( $gone );
-					}
+			$plans[ self::key( (array) $logo['path'] ) ]['patch'][] = static fn( array $b ): array => self::retarget_pictures(
+				self::map_chunks(
+					$b,
+					static function ( string $chunk ) use ( $url, $alt ): string {
+						$p = new \WP_HTML_Tag_Processor( $chunk );
+						if ( ! $p->next_tag( array( 'tag_name' => 'img' ) ) ) {
+							return $chunk;
+						}
+						$p->set_attribute( 'src', $url );
+						if ( $alt !== '' ) {
+							$p->set_attribute( 'alt', $alt );
+						}
+						// They described the design's image, not this one.
+						foreach ( array( 'srcset', 'sizes', 'width', 'height' ) as $gone ) {
+							$p->remove_attribute( $gone );
+						}
 
-					return $p->get_updated_html();
-				}
+						return $p->get_updated_html();
+					}
+				),
+				$url,
+				$alt,
+				$site_id
 			);
 		}
+	}
+
+	/**
+	 * $block with the picture blocks under it showing the Site Logo: a picture
+	 * block draws its image from its attributes, not from saved markup.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array<string, mixed>
+	 */
+	private static function retarget_pictures( array $block, string $url, string $alt, int $id ): array {
+		foreach ( Header_Template::kids( $block ) as $i => $kid ) {
+			if ( 'dx/picture' === ( $kid['blockName'] ?? '' ) ) {
+				$attrs             = (array) ( $kid['attrs'] ?? array() );
+				$attrs['imageUrl'] = $url;
+				if ( $id > 0 ) {
+					$attrs['imageId'] = $id;
+				}
+				if ( $alt !== '' ) {
+					$attrs['imageAlt'] = $alt;
+				}
+				// They described the design's image, not this one.
+				unset( $attrs['imageWidth'], $attrs['imageHeight'] );
+				$kid['attrs']               = $attrs;
+				$block['innerBlocks'][ $i ] = $kid;
+				continue;
+			}
+			$block['innerBlocks'][ $i ] = self::retarget_pictures( $kid, $url, $alt, $id );
+		}
+
+		return $block;
 	}
 
 	/**

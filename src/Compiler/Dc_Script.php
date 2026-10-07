@@ -217,6 +217,13 @@ final class Dc_Script {
 			}
 		}
 
+		/*
+		 * Which query each name holds: `this.mq = window.matchMedia('(max-width: 860px)')` is `mq`, and the key that follows
+		 * `this.mq.matches` follows THAT query. A component with two (a mobile one and a wide one: Five Star's header) has a key
+		 * for each; every key used to read the first query, so the wide one followed the mobile breakpoint, inverted.
+		 */
+		$names = self::query_names( $body );
+
 		// Locals declared in the mount body, so `const s = window.scrollY > 20;
 		// … setState({ scrolled: s })` can be followed.
 		$locals = array();
@@ -247,7 +254,7 @@ final class Dc_Script {
 					$expr = $locals[ (string) $expr['n'] ];
 				}
 				if ( self::mentions( $expr, 'matches' ) ) {
-					$out['media'][ $key ] = $queries[0] ?? '';
+					$out['media'][ $key ] = self::query_of( $expr, $names ) ?? ( $queries[0] ?? '' );
 					continue;
 				}
 				if ( self::mentions( $expr, 'scrollY' ) || self::mentions( $expr, 'pageYOffset' ) ) {
@@ -432,6 +439,74 @@ final class Dc_Script {
 			// Also `this._onScroll = () => { const s = …; this.setState({ scrolled: s }) }`
 			// keeps its local inside the arrow; walk() reaches it.
 		} );
+	}
+
+	/**
+	 * The media query each name was given: `this.mq = window.matchMedia('…')` and `const wq = matchMedia('…')`.
+	 *
+	 * @param array<int, mixed> $body
+	 * @return array<string, string> Name => query.
+	 */
+	private static function query_names( array $body ): array {
+		$out  = array();
+		$take = static function ( string $name, mixed $init ) use ( &$out ): void {
+			if ( $name === '' || ! is_array( $init ) || ( $init['k'] ?? '' ) !== 'call' ) {
+				return;
+			}
+			$f   = $init['f'];
+			$arg = $init['args'][0] ?? null;
+			if ( ( ( $f['k'] === 'mem' && $f['p'] === 'matchMedia' ) || ( $f['k'] === 'id' && $f['n'] === 'matchMedia' ) ) && is_array( $arg ) && $arg['k'] === 'str' ) {
+				$out[ $name ] = (string) $arg['v'];
+			}
+		};
+		self::walk(
+			$body,
+			static function ( array $node ) use ( $take ): void {
+				$k = $node['k'] ?? '';
+				if ( $k === 'assign' ) {
+					$t = $node['t'];
+					$take( $t['k'] === 'mem' && $t['o']['k'] === 'this' ? (string) $t['p'] : ( $t['k'] === 'id' ? (string) $t['n'] : '' ), $node['v'] );
+				} elseif ( $k === 'var' ) {
+					foreach ( $node['decl'] as $decl ) {
+						if ( $decl['target']['k'] === 'id' ) {
+							$take( (string) $decl['target']['n'], $decl['init'] );
+						}
+					}
+				}
+			}
+		);
+
+		return $out;
+	}
+
+	/**
+	 * The query an expression's `.matches` reads: `this.wq.matches`, `mq.matches` or `matchMedia('…').matches`; null when it
+	 * cannot be told.
+	 *
+	 * @param array<string, mixed>  $expr
+	 * @param array<string, string> $names query_names()
+	 */
+	private static function query_of( array $expr, array $names ): ?string {
+		$found = null;
+		self::walk(
+			array( $expr ),
+			static function ( array $n ) use ( &$found, $names ): void {
+				if ( null !== $found || ( $n['k'] ?? '' ) !== 'mem' || $n['p'] !== 'matches' ) {
+					return;
+				}
+				$o = $n['o'];
+				if ( $o['k'] === 'call' && isset( $o['args'][0] ) && $o['args'][0]['k'] === 'str' ) {
+					$found = (string) $o['args'][0]['v'];
+					return;
+				}
+				$name = $o['k'] === 'mem' && $o['o']['k'] === 'this' ? (string) $o['p'] : ( $o['k'] === 'id' ? (string) $o['n'] : '' );
+				if ( isset( $names[ $name ] ) ) {
+					$found = $names[ $name ];
+				}
+			}
+		);
+
+		return $found;
 	}
 
 	/** Whether an AST mentions a member or identifier of this name. */

@@ -44,6 +44,32 @@ const MODE_HELP = {
 	ai: __( 'An AI chooses the sections of each page, among the Home\'s own and the ones the site makes. One request for each page, when you press "Make"; the plan shown is the usual one it starts from. It writes no words.', 'dxai-ui' ),
 };
 
+// The team's own sections (the library): to fill what the Home has none of, to take the Home's place too, or not used.
+const LIBRARIES = [ 'fill', 'prefer', 'off' ];
+const LIBRARY_LABEL = {
+	fill: __( 'Where the Home has none', 'dxai-ui' ),
+	prefer: __( 'Instead of the Home\'s, where it has one', 'dxai-ui' ),
+	off: __( 'Not used', 'dxai-ui' ),
+};
+
+// Why the library is not used for a design (what the server found it needs and the site does not have).
+const libraryWhy = ( lib ) => {
+	switch ( lib.code ) {
+		case 'theme':
+			return sprintf(
+				/* translators: %s: the name of the active theme. */
+				__( 'This site runs %s. The team\'s own sections are made of the American Restoration theme\'s blocks and styles, so they are used only on that theme: install and activate it to use them. Nothing is lost meanwhile; the pages are made from the Home\'s sections as before.', 'dxai-ui' ),
+				lib.theme
+			);
+		case 'industry':
+			return __( 'This Home does not talk like a restoration company, and the words of the team\'s own sections are a restoration company\'s, so they are not used for it.', 'dxai-ui' );
+		case 'blocks':
+			return __( 'The blocks the team\'s own sections are made of are not registered on this site, so they are not used.', 'dxai-ui' );
+		default:
+			return __( 'The library has no sections to offer.', 'dxai-ui' );
+	}
+};
+
 // What was done to a section, in words (the plan says it in short names).
 const VARIANT = [
 	[ /^image:/, __( 'another picture', 'dxai-ui' ) ],
@@ -79,6 +105,37 @@ const GATE = {
 const lines = ( text ) => text.split( '\n' ).map( ( l ) => l.trim() ).filter( Boolean );
 const keyOf = ( type, title ) => type + '|' + title;
 
+// The kinds a site has one page of (Team_Pages::ONCE): a page of one at an address the menu gave is that page, so the general page of the
+// kind is not asked for beside it.
+const ONCE = [ 'about', 'contact', 'faq', 'testimonials', 'services', 'areas' ];
+
+// Why an item of the menu is not a page, in words (Menu_Pages: left_out[].why).
+const LEFT_OUT = {
+	anchor: __( 'a place on a page, not a page', 'dxai-ui' ),
+	kind: __( 'a page the team has no kind for', 'dxai-ui' ),
+	external: __( 'another site', 'dxai-ui' ),
+	file: __( 'a file', 'dxai-ui' ),
+	parent: __( 'the page above it is not in the menu', 'dxai-ui' ),
+};
+
+// The rows the menu offers, as the panel keeps them: the lists the addresses imply first, then the pages; a page is on unless its address
+// is somebody else's page.
+const menuRowsOf = ( menu ) =>
+	menu
+		? [ ...( menu.lists || [] ), ...( menu.pages || [] ) ].map( ( p ) => ( {
+			key: p.path,
+			on: ! ( p.exists > 0 && ! p.mine ),
+			type: p.type,
+			title: p.title,
+			path: p.path,
+			item: p.item || 0,
+			implied: !! p.implied,
+			exists: p.exists || 0,
+			mine: !! p.mine,
+			trail: p.trail || '',
+		} ) )
+		: [];
+
 export default function TeamPages() {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
@@ -86,11 +143,13 @@ export default function TeamPages() {
 	const [ places, setPlaces ] = useState( '' );
 	const [ phrase, setPhrase ] = useState( '' );
 	const [ general, setGeneral ] = useState( {} );
+	const [ menuRows, setMenuRows ] = useState( [] );
 	const [ plan, setPlan ] = useState( null );
 	const [ built, setBuilt ] = useState( null );
 	const [ busy, setBusy ] = useState( '' );
 	// How the sections are chosen; the AI's cost is told before anything is sent.
 	const [ mode, setMode ] = useState( 'new' );
+	const [ library, setLibrary ] = useState( 'fill' );
 	const [ estimate, setEstimate ] = useState( null );
 	const [ priceIn, setPriceIn ] = useState( '' );
 	const [ priceOut, setPriceOut ] = useState( '' );
@@ -105,6 +164,7 @@ export default function TeamPages() {
 			.then( ( res ) => {
 				setData( res );
 				setEstimate( null );
+				setMenuRows( menuRowsOf( res.menu ) );
 				if ( res.ai && res.ai.prices ) {
 					setPriceIn( String( res.ai.prices.in ) );
 					setPriceOut( String( res.ai.prices.out ) );
@@ -147,11 +207,25 @@ export default function TeamPages() {
 		} );
 		const arrangement = { ...kept, ...override };
 		const out = [];
-		const add = ( type, title ) => out.push( { type, title, ...( arrangement[ keyOf( type, title ) ] || {} ) } );
+		const seen = new Set();
+		const add = ( type, title, more = {} ) => {
+			// A page asked for twice (typed, and named by the menu) is one page; the menu's, with its address, comes first.
+			if ( ! seen.has( keyOf( type, title ) ) ) {
+				seen.add( keyOf( type, title ) );
+				out.push( { type, title, ...more, ...( arrangement[ keyOf( type, title ) ] || {} ) } );
+			}
+		};
+		// The pages the menu names, at its addresses, and the menu item each is from.
+		const fromMenu = menuRows.filter( ( r ) => r.on );
+		fromMenu.forEach( ( r ) => add( r.type, r.title, { path: r.path, item: r.item } ) );
+		// A kind the menu names, ticked or not, is the menu's: unticking it is not asking for a general page of the kind instead, and a page at
+		// an address that is somebody else's is the site's page of that kind.
+		const menuKinds = menuRows.map( ( r ) => r.type );
 		lines( services ).forEach( ( title ) => add( 'service', title ) );
 		lines( places ).forEach( ( place ) => add( 'location', ( phrase.trim() ? phrase.trim() + ' in ' : '' ) + place ) );
 		data.suggestions.general.forEach( ( g ) => {
-			if ( general[ g.type ] ) {
+			// A page of a kind a site has one of that the menu names is that page.
+			if ( general[ g.type ] && ! ( ONCE.includes( g.type ) && menuKinds.includes( g.type ) ) ) {
 				add( g.type, g.title );
 			}
 		} );
@@ -163,10 +237,28 @@ export default function TeamPages() {
 		setPlan( rows );
 	}
 
+	// One row of the menu's pages changed (ticked, another kind of page).
+	function setMenuRow( key, change ) {
+		setMenuRows( ( rows ) => rows.map( ( r ) => ( r.key === key ? { ...r, ...change } : r ) ) );
+	}
+
+	// What is there at the menu's addresses after pages were made (the rows the person set stay as they were set).
+	function refreshMenu() {
+		apiFetch( { path: base + '?design=' + data.design } )
+			.then( ( res ) => {
+				const there = {};
+				[ ...( res.menu ? res.menu.lists : [] ), ...( res.menu ? res.menu.pages : [] ) ].forEach( ( p ) => {
+					there[ p.path ] = p;
+				} );
+				setMenuRows( ( rows ) => rows.map( ( r ) => ( there[ r.path ] ? { ...r, exists: there[ r.path ].exists || 0, mine: !! there[ r.path ].mine } : r ) ) );
+			} )
+			.catch( () => {} );
+	}
+
 	function send( action, extra = {} ) {
 		setBusy( action );
 		setError( '' );
-		const body = { action, design: data.design, wanted: wanted( extra.arr ), mode };
+		const body = { action, design: data.design, wanted: wanted( extra.arr ), mode, library };
 		if ( action === 'estimate' ) {
 			body.price_in = parseFloat( priceIn ) || 0;
 			body.price_out = parseFloat( priceOut ) || 0;
@@ -204,10 +296,27 @@ export default function TeamPages() {
 	// A page made, then shown again as it is arranged now (so it can be shuffled again).
 	function build() {
 		send( 'build' ).then( () => {
-			apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode } } )
+			refreshMenu();
+			apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode, library } } )
 				.then( ( res ) => takePlan( res.plan ) )
 				.catch( () => {} );
 		} );
+	}
+
+	// The plan again with another choice of where the sections come from (the arrangement a person gave the pages stays).
+	function replan( next ) {
+		setBusy( 'plan' );
+		apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode: next.mode ?? mode, library: next.library ?? library } } )
+			.then( ( res ) => takePlan( res.plan ) )
+			.catch( ( e ) => setError( e.message ) )
+			.finally( () => setBusy( '' ) );
+	}
+
+	function pickLibrary( next ) {
+		setLibrary( next );
+		if ( plan ) {
+			replan( { library: next } );
+		}
 	}
 
 	function pickMode( index ) {
@@ -215,11 +324,7 @@ export default function TeamPages() {
 		setMode( next );
 		setEstimate( null );
 		if ( plan ) {
-			setBusy( 'plan' );
-			apiFetch( { path: base, method: 'POST', data: { action: 'plan', design: data.design, wanted: wanted(), mode: next } } )
-				.then( ( res ) => takePlan( res.plan ) )
-				.catch( ( e ) => setError( e.message ) )
-				.finally( () => setBusy( '' ) );
+			replan( { mode: next } );
 		}
 	}
 
@@ -275,6 +380,60 @@ export default function TeamPages() {
 				/>
 			) }
 
+			{ menuRows.length > 0 && (
+				<fieldset className="dxai-team__menu">
+					<legend>{ __( 'From the site’s menu', 'dxai-ui' ) }</legend>
+					<p className="dxai-muted">
+						{ sprintf(
+							/* translators: %s: the names of the menus the header was built into. */
+							__( 'The header menu (%s, in Appearance › Menus) names these pages and where they sit. They are made at the menu’s own addresses, so the menu opens them. Untick what you do not want.', 'dxai-ui' ),
+							( data.menu.menus || [] ).join( ', ' )
+						) }
+					</p>
+					{ ! data.menu.pretty && (
+						<Notice status="warning" isDismissible={ false }>
+							{ __( 'Settings › Permalinks is set to “Plain”, so these addresses will not open until it is set to “Post name”.', 'dxai-ui' ) }
+						</Notice>
+					) }
+					<ul className="dxai-team__menu-rows">
+						{ menuRows.map( ( r ) => (
+							<li key={ r.key } className={ r.on ? 'is-on' : '' }>
+								<CheckboxControl label={ r.title } checked={ r.on } onChange={ ( on ) => setMenuRow( r.key, { on } ) } __nextHasNoMarginBottom />
+								<SelectControl
+									label={ __( 'Kind of page', 'dxai-ui' ) }
+									hideLabelFromVision
+									value={ r.type }
+									options={ Object.keys( data.kinds ).map( ( t ) => ( { value: t, label: data.kinds[ t ] } ) ) }
+									onChange={ ( type ) => setMenuRow( r.key, { type } ) }
+									__nextHasNoMarginBottom
+								/>
+								<code>{ r.path }</code>
+								{ r.implied && <span className="dxai-muted">{ __( 'the page above the addresses under it', 'dxai-ui' ) }</span> }
+								{ r.exists > 0 && <span className="dxai-muted">{ r.mine ? __( 'made before: updated in place', 'dxai-ui' ) : __( 'the address is another page: kept as it is', 'dxai-ui' ) }</span> }
+							</li>
+						) ) }
+					</ul>
+					{ data.menu.left_out.length > 0 && (
+						<details className="dxai-team__left-out">
+							<summary>
+								{ sprintf(
+									/* translators: %d: number of items. */
+									_n( '%d item of the menu is not a page', '%d items of the menu are not pages', data.menu.left_out.length, 'dxai-ui' ),
+									data.menu.left_out.length
+								) }
+							</summary>
+							<ul>
+								{ data.menu.left_out.map( ( l, i ) => (
+									<li key={ i }>
+										<strong>{ l.title }</strong> <code>{ l.url }</code> <span className="dxai-muted">{ LEFT_OUT[ l.why ] || l.why }</span>
+									</li>
+								) ) }
+							</ul>
+						</details>
+					) }
+				</fieldset>
+			) }
+
 			<div className="dxai-team__fields">
 				<TextareaControl
 					label={ __( 'Services (one to a line)', 'dxai-ui' ) }
@@ -304,15 +463,20 @@ export default function TeamPages() {
 
 			<fieldset className="dxai-team__general">
 				<legend>{ __( 'General pages', 'dxai-ui' ) }</legend>
-				{ data.suggestions.general.map( ( g ) => (
-					<CheckboxControl
-						key={ g.type }
-						label={ g.title }
-						checked={ !! general[ g.type ] }
-						onChange={ ( on ) => setGeneral( { ...general, [ g.type ]: on } ) }
-						__nextHasNoMarginBottom
-					/>
-				) ) }
+				{ data.suggestions.general.map( ( g ) => {
+					const named = ONCE.includes( g.type ) && menuRows.some( ( r ) => r.type === g.type );
+					return (
+						<CheckboxControl
+							key={ g.type }
+							label={ g.title }
+							checked={ named || !! general[ g.type ] }
+							disabled={ named }
+							help={ named ? __( 'The menu names it: see above.', 'dxai-ui' ) : undefined }
+							onChange={ ( on ) => setGeneral( { ...general, [ g.type ]: on } ) }
+							__nextHasNoMarginBottom
+						/>
+					);
+				} ) }
 			</fieldset>
 
 			{ data.existing.length > 0 && (
@@ -342,6 +506,34 @@ export default function TeamPages() {
 					__nextHasNoMarginBottom
 				/>
 				<p className="dxai-muted">{ MODE_HELP[ mode ] }</p>
+				{ mode !== 'home' && (
+					<>
+						<SelectControl
+							label={ __( 'The team\'s own sections (the library)', 'dxai-ui' ) }
+							help={ __( 'Sections the team wrote for its own sites: the questions, the steps of the work, the call to action, the places. They are made with what the Home says (its name, its phone) and are only put on the pages made here, never on the Home.', 'dxai-ui' ) }
+							value={ library }
+							options={ LIBRARIES.map( ( l ) => ( { value: l, label: LIBRARY_LABEL[ l ] } ) ) }
+							onChange={ pickLibrary }
+							disabled={ !! data.library && data.library.code !== 'ok' }
+							__nextHasNoMarginBottom
+						/>
+						{ data.library && data.library.code !== 'ok' && (
+							<Notice status="warning" isDismissible={ false }>
+								{ libraryWhy( data.library ) }
+							</Notice>
+						) }
+						{ data.library && data.library.code === 'ok' && (
+							<p className="dxai-muted">
+								{ sprintf(
+									/* translators: 1: how many sections can be made for this Home, 2: how many the library has. */
+									__( '%1$d of the library\'s %2$d sections can be made for this Home. A section that needs a fact the Home does not say (a phone, places) waits for it.', 'dxai-ui' ),
+									data.library.usable,
+									data.library.sections
+								) }
+							</p>
+						) }
+					</>
+				) }
 				{ mode === 'ai' && (
 					<div className="dxai-team__cost">
 						<div className="dxai-team__prices">
@@ -408,6 +600,8 @@ export default function TeamPages() {
 								<div className="dxai-team__head">
 									<strong>{ p.title }</strong>
 									<span className="dxai-copy__kind">{ data.kinds[ p.type ] }</span>
+									{ p.path && <code>{ p.path }</code> }
+									{ p.conflict > 0 && <span className="dxai-muted">{ __( 'the address is another page: kept as it is, this page is not made', 'dxai-ui' ) }</span> }
 									{ p.exists > 0 && <span className="dxai-muted">{ p.edited ? __( 'made before, edited since: kept', 'dxai-ui' ) : __( 'made before: updated in place', 'dxai-ui' ) }</span> }
 									{ mode !== 'ai' && (
 										<span className="dxai-team__tools">
@@ -433,6 +627,7 @@ export default function TeamPages() {
 											<span className="dxai-team__sec-from">
 												{ x.source === 'home' && sprintf( /* translators: %d: the number of the Home's section. */ __( 'Home, section %d', 'dxai-ui' ), x.home ) }
 												{ x.source === 'new' && sprintf( /* translators: %d: the number of the Home's section whose cards are used. */ __( 'New, in the cards of section %d', 'dxai-ui' ), x.home ) }
+												{ x.source === 'library' && sprintf( /* translators: %s: what the library's section is. */ __( 'Library: %s', 'dxai-ui' ), x.label ) }
 												{ x.source === '' && __( 'left out', 'dxai-ui' ) }
 											</span>
 											{ x.ops.length > 0 && <span className="dxai-team__sec-var">{ variants( x.ops ) }</span> }
@@ -484,12 +679,30 @@ export default function TeamPages() {
 							{ built.ai.spent && built.ai.spent.requests > 0 && ' ' + sprintf( /* translators: 1: requests, 2: tokens. */ __( 'It spent %1$d requests and about %2$s tokens.', 'dxai-ui' ), built.ai.spent.requests, built.ai.spent.tokens.toLocaleString() ) }
 						</Notice>
 					) }
-					{ built.kept.length > 0 && (
+					{ built.kept.filter( ( k ) => ! k.why || k.why === 'edited' ).length > 0 && (
 						<Notice status="warning" isDismissible={ false }>
 							{ sprintf(
 								/* translators: %s: page titles. */
 								__( 'Kept as they are, because someone edited them: %s', 'dxai-ui' ),
-								built.kept.map( ( k ) => k.title ).join( ', ' )
+								built.kept.filter( ( k ) => ! k.why || k.why === 'edited' ).map( ( k ) => k.title ).join( ', ' )
+							) }
+						</Notice>
+					) }
+					{ built.kept.filter( ( k ) => k.why === 'address' ).length > 0 && (
+						<Notice status="warning" isDismissible={ false }>
+							{ sprintf(
+								/* translators: %s: page titles. */
+								__( 'Not made, because their address is already another page, which is left as it is: %s', 'dxai-ui' ),
+								built.kept.filter( ( k ) => k.why === 'address' ).map( ( k ) => k.title ).join( ', ' )
+							) }
+						</Notice>
+					) }
+					{ built.kept.filter( ( k ) => k.why === 'parent' ).length > 0 && (
+						<Notice status="warning" isDismissible={ false }>
+							{ sprintf(
+								/* translators: %s: page titles. */
+								__( 'Not made yet, because the page above them in the address is not there (tick the list page they sit under): %s', 'dxai-ui' ),
+								built.kept.filter( ( k ) => k.why === 'parent' ).map( ( k ) => k.title ).join( ', ' )
 							) }
 						</Notice>
 					) }

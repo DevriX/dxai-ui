@@ -42,9 +42,10 @@ final class Team_Menu {
 	private const CHROME_TAGS = array( 'header', 'footer', 'nav' );
 
 	/**
-	 * Point the design's header and footer links at its pages: on the Home and on each page made for it.
+	 * Point the design's header and footer links at its pages: on the Home and on each page made for it, and the items of the menus written
+	 * for its header (the header is Appearance > Menus on a DX site, not blocks in the page).
 	 *
-	 * @return array{pages:int, links:int}
+	 * @return array{pages:int, links:int} The pages whose links were pointed, and the links in all (the menu items of the header included).
 	 */
 	public static function link( int $home ): array {
 		$targets = self::targets( $home );
@@ -55,6 +56,7 @@ final class Team_Menu {
 		if ( $targets === array() ) {
 			return $sum;
 		}
+		$sum['links'] += self::link_menus( $home, $targets );
 		$ctx = array(
 			'targets' => $targets,
 			'home'    => $home,
@@ -84,6 +86,79 @@ final class Team_Menu {
 		}
 
 		return $sum;
+	}
+
+	/**
+	 * The addresses of the items of the menus written for the design's header: item id => address. They are what a run may point at the
+	 * pages it makes, and what giving the run back puts back (Team_Run).
+	 *
+	 * @return array<int, string>
+	 */
+	public static function menu_urls( int $home ): array {
+		$out = array();
+		foreach ( self::menus_of( $home ) as $menu_id ) {
+			foreach ( (array) wp_get_nav_menu_items( $menu_id, array( 'post_status' => 'publish' ) ) as $item ) {
+				$out[ (int) $item->ID ] = (string) $item->url;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The menus the plugin wrote for the design's header (Header_Menus): the ones its spec names, and only those — a menu a person made is
+	 * theirs.
+	 *
+	 * @return array<int, int>
+	 */
+	private static function menus_of( int $home ): array {
+		$spec = \DXAI_UI\Chrome\Header_Template::scoped( $home );
+		$out  = array();
+		foreach ( (array) ( $spec['menus'] ?? array() ) as $id ) {
+			$id = (int) $id;
+			if ( $id > 0 && (string) get_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) !== '' ) {
+				$out[] = $id;
+			}
+		}
+
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
+	 * The items of those menus that lead away from the site — a section of the Home (#faq), another site — and whose words are a page's
+	 * (its title, "About", "FAQ", "Reviews", a place), pointed at that page, as the links of a header that is blocks are (retarget()). A
+	 * dropdown's trigger, an item with no address and an item that already opens a page of the site stay as they are.
+	 *
+	 * @param array<int, array{type:string, title:string, norm:string, url:string, place:string}> $targets
+	 * @return int How many items were pointed at a page.
+	 */
+	private static function link_menus( int $home, array $targets ): int {
+		$ctx     = array(
+			'site'  => strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ),
+			'paths' => array( '/', '/' . trim( (string) get_page_uri( $home ), '/' ) . '/' ),
+		);
+		$changed = 0;
+		foreach ( self::menus_of( $home ) as $menu_id ) {
+			$items   = (array) wp_get_nav_menu_items( $menu_id, array( 'post_status' => 'publish' ) );
+			$trigger = array();
+			foreach ( $items as $item ) {
+				$trigger[ (int) $item->menu_item_parent ] = true;
+			}
+			foreach ( $items as $item ) {
+				$old = (string) $item->url;
+				if ( isset( $trigger[ (int) $item->ID ] ) || $old === '' || $old === '#' || ! self::leads_away( $old, $ctx ) ) {
+					continue;
+				}
+				$new = self::page_for( self::norm( (string) $item->title ), $targets );
+				if ( $new === '' || $new === $old ) {
+					continue;
+				}
+				update_post_meta( (int) $item->ID, '_menu_item_url', esc_url_raw( $new ) );
+				++$changed;
+			}
+		}
+
+		return $changed;
 	}
 
 	/**

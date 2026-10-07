@@ -45,6 +45,10 @@ function suggestedWhy( f ) {
 			return __( 'Suggested: no design’s are the site’s yet', 'dxai-ui' );
 		case 'own':
 			return __( 'Suggested: they are this design’s already', 'dxai-ui' );
+		case 'dx':
+			return __( 'Suggested: this DX theme has no menus or footer widgets of the site’s own yet', 'dxai-ui' );
+		case 'dx_busy':
+			return __( 'Suggested: the site already has its own menus or footer widgets', 'dxai-ui' );
 		case 'derived':
 			return __( 'Suggested for this theme', 'dxai-ui' );
 		default:
@@ -89,6 +93,18 @@ export default function ChromeChoice( { facts, value, onChange, stage } ) {
 				( f.others.find( ( o ) => o.parts.includes( 'header' ) ) || f.others[ 0 ] ).title,
 				( f.others.find( ( o ) => o.parts.includes( 'footer' ) ) || f.others[ 1 ] ).title
 			);
+	} else if ( f.defaultReason === 'dx' ) {
+		now = sprintf(
+			/* translators: %s: theme name */
+			__( '%s is a DX theme and nothing of the site’s own is in Appearance › Menus or Widgets yet, so this design’s header and footer can go there.', 'dxai-ui' ),
+			f.themeName || __( 'This theme', 'dxai-ui' )
+		);
+	} else if ( f.defaultReason === 'dx_busy' ) {
+		now = sprintf(
+			/* translators: %s: theme name */
+			__( '%s draws the site’s header and footer from Appearance › Menus and Appearance › Widgets, and the site already has its own menus or footer widgets there.', 'dxai-ui' ),
+			f.themeName || __( 'This theme', 'dxai-ui' )
+		);
 	} else if ( f.themeDraws ) {
 		now = sprintf(
 			/* translators: %s: theme name */
@@ -121,6 +137,15 @@ export default function ChromeChoice( { facts, value, onChange, stage } ) {
 		<fieldset className="dxai-chrome-choice" aria-describedby={ nowId }>
 			<legend className="dxai-chrome-choice__legend">{ __( 'The header and footer', 'dxai-ui' ) }</legend>
 			<p id={ nowId } className="dxai-chrome-choice__now">{ now }</p>
+			{ ! f.dxTheme && f.baseTheme && (
+				<p className="dxai-chrome-choice__base">
+					{ f.baseTheme === 'installed'
+						? __( 'DX Base is installed. Switch the site to it in Library › Template and this header and footer are drawn on every page of the site, not only on this design’s pages.', 'dxai-ui' )
+						: __( 'The header and footer are drawn on this design’s pages only. DX Base, a small theme this plugin carries, draws them on every page of the site: install it in Library › Template.', 'dxai-ui' ) }
+					{ ' ' }
+					<a href="admin.php?page=dxai-ui-library">{ __( 'Open Library', 'dxai-ui' ) }</a>
+				</p>
+			) }
 			<div className="dxai-chrome-choice__options">
 				{ options.map( ( opt ) => {
 					const inputId = id + '-' + opt.value;

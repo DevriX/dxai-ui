@@ -58,6 +58,10 @@ final class Plugin {
 		( new Slider_Block() )->register();
 		// The script and styles of a YouTube facade, on the pages whose theme does not bring them (a converted page, another theme).
 		( new \DXAI_UI\Blocks\Youtube_Facade_View() )->register();
+		// The styles and script of the team's own sections (the library of the pages made from a Home), on the pages whose theme does not bring them.
+		( new \DXAI_UI\Blocks\Library_View() )->register();
+		// …and the same sections in the editor's inserter, made for the site they are inserted on.
+		( new \DXAI_UI\Pages\Library_Patterns() )->register();
 		( new Blank_Template() )->register();
 		// The imported design's tokens as editable global-styles presets.
 		( new Design_Theme_Json() )->register();
@@ -91,6 +95,10 @@ final class Plugin {
 		}
 		// A theme that lets the site choose its fonts: the design is drawn in them, and its own are put away (Theme_Fonts).
 		( new \DXAI_UI\Theme\Theme_Fonts() )->register();
+		// A design installed as the site's template brings its fonts, hosted here: they stand in for the theme's choice (Template_Fonts).
+		( new \DXAI_UI\Theme\Template_Fonts() )->register();
+		// The DX Base theme the plugin carries, listed from the plugin when the themes folder cannot be written (Base_Theme).
+		( new \DXAI_UI\Theme\Base_Theme() )->register();
 		( new \DXAI_UI\Blocks\Attached_Styles() )->register();
 		// The design's web fonts from this site's uploads: the copy, and the cron that finishes it.
 		( new \DXAI_UI\Media\Font_Host() )->register();

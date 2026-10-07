@@ -18,7 +18,8 @@ use DXAI_UI\Structures\Page_Scope;
  *
  *  G1  the header and the footer of every page are the Home's own (its first and its last blocks, byte for byte)
  *  G7  the blocks are valid: they parse back to the same markup, and there are no more inline styles, HTML blocks or
- *      unregistered blocks than the Home has
+ *      unregistered blocks than the Home has (the team's own library sections, whose block settings are written in them as
+ *      inline styles, are not counted: the rest of the page is held to the Home's)
  *  G8  the pages are not copies: of the Home (sections of one structure, long texts word for word) and of each other
  *  G9  nothing foreign: no phone number, e-mail or address of another site, no name of another design, no placeholder
  *      text that the Home does not have
@@ -70,7 +71,10 @@ final class Team_Quality {
 		$fb          = self::top( (string) $chrome['footer'] );
 		$header_in   = self::embedded( (string) $chrome['header'] );
 		$footer_in   = self::embedded( (string) $chrome['footer'] );
-		$home_plain  = html_entity_decode( wp_strip_all_tags( $home_markup ), ENT_QUOTES, 'UTF-8' );
+		// A Home whose content keeps only the blocks that open it (the skip link, the box that holds the place of the header) and whose header
+		// is the site's (the menus') has that header drawn after them: one more element before the first section on every page of the design.
+		$header_drawn = $header_in && '' !== (string) Page_Chrome::added( $home, $home_markup )['header'];
+		$home_plain   = html_entity_decode( wp_strip_all_tags( $home_markup ), ENT_QUOTES, 'UTF-8' );
 
 		$home_secs    = array();
 		$home_sigs    = array();
@@ -141,8 +145,11 @@ final class Team_Quality {
 			}
 			$mine = array( substr_count( $markup, ' style="' ), substr_count( $markup, '<!-- wp:html' ) + substr_count( $markup, '<!-- wp:freeform' ) );
 			$base = array( substr_count( $home_markup, ' style="' ), substr_count( $home_markup, '<!-- wp:html' ) + substr_count( $home_markup, '<!-- wp:freeform' ) );
-			if ( $mine[0] > $base[0] ) {
-				$bad[] = sprintf( '%d inline styles (the Home has %d)', $mine[0], $base[0] );
+			// The library's sections are the team's own blocks (Pages\Block_Library): their spacing, colours and type are block settings, which core writes
+			// as inline styles. They are not held to the Home's count; every other section is.
+			$outside = $mine[0] - self::library_inline( $blocks );
+			if ( $outside > $base[0] ) {
+				$bad[] = sprintf( '%d inline styles outside the library\'s sections (the Home has %d)', $outside, $base[0] );
 			}
 			if ( $mine[1] > $base[1] ) {
 				$bad[] = 'more HTML blocks than the Home';
@@ -274,8 +281,8 @@ final class Team_Quality {
 				'url'      => (string) get_permalink( $home ),
 				'title'    => $home_title,
 				'sections' => $home_secs,
-				// How many top-level blocks of the page are the Home's header and footer (0 when they are template parts).
-				'chrome'   => array( 'header' => $header_in ? count( $hb ) : 0, 'footer' => $footer_in ? count( $fb ) : 0 ),
+				// How many top-level blocks of the page are the Home's header and footer (0 when they are template parts), and the header the site draws.
+				'chrome'   => array( 'header' => $header_in ? count( $hb ) + ( $header_drawn ? 1 : 0 ) : 0, 'footer' => $footer_in ? count( $fb ) : 0 ),
 			),
 			'tokens' => array_map( 'strval', \DXAI_UI\Compiler\Design_Tokens::for_page( $home ) ),
 			'pages'  => array_values( $pages ),
@@ -352,6 +359,27 @@ final class Team_Quality {
 	 */
 	private static function top( string $markup ): array {
 		return array_values( array_filter( parse_blocks( $markup ), static fn( $b ) => trim( (string) ( $b['blockName'] ?? '' ) ) !== '' ) );
+	}
+
+	/**
+	 * The inline styles in the library's sections of a page: a section with the class every one of them has (Blocks\Library_View::MARK).
+	 *
+	 * @param array<int, array<string, mixed>> $blocks
+	 */
+	private static function library_inline( array $blocks ): int {
+		$n = 0;
+		foreach ( $blocks as $b ) {
+			if ( ! is_array( $b ) ) {
+				continue;
+			}
+			if ( \DXAI_UI\Blocks\Library_View::has_section( (string) ( $b['attrs']['className'] ?? '' ) ) ) {
+				$n += substr_count( serialize_block( $b ), ' style="' );
+				continue;
+			}
+			$n += self::library_inline( (array) ( $b['innerBlocks'] ?? array() ) );
+		}
+
+		return $n;
 	}
 
 	/** @param array<int, array<string, mixed>> $blocks */

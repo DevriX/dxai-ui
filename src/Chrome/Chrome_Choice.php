@@ -22,11 +22,18 @@ namespace DXAI_UI\Chrome;
  * - `keep`: the site's menus, widgets, locations and logo are not touched at
  *   all; the design's pages keep its header and footer as template parts.
  * - `` (automatic): keep when the theme draws its own header and footer
- *   (Theme_Compat::may_install_chrome() false), when the import is not a
- *   whole-site import (scope `page`), or when another design's header or
- *   footer is the site's now; install otherwise — no design's is the site's
- *   (none was installed, or the design it came from is gone), or this
- *   design's already is (a re-import updates it in place).
+ *   (Theme_Compat::may_install_chrome() false) and is not a DX theme, when
+ *   the import is not a whole-site import (scope `page`), or when another
+ *   design's header or footer is the site's now; install otherwise — no
+ *   design's is the site's (none was installed, or the design it came from
+ *   is gone), or this design's already is (a re-import updates it in place).
+ *   A DX theme (Theme_Compat::is_dx_theme()) is built for exactly this: its
+ *   header is a menu and its footer is widgets. There an import installs by
+ *   itself when the site has nothing of its own in those places
+ *   (site_chrome(): no menu of a person's in a header location, no widget
+ *   the plugin did not write in a footer area), and when it has, they stay —
+ *   as on any classic theme, since installing would move its footer widgets
+ *   to Inactive Widgets on every page — until the person chooses to install.
  *
  * Structure_Repository::save() resolves the choice before it writes
  * anything, so it answers for the site as it was before the import; the
@@ -55,10 +62,12 @@ final class Chrome_Choice {
 	/**
 	 * Whether the active theme draws its own header and footer from the menu
 	 * locations and widget areas an install writes (a classic theme), so an
-	 * install changes them on every page of the site.
+	 * install changes them on every page of the site. DX Base does too, though
+	 * it lets a design be its brand (may_install_chrome() is true for it): what
+	 * the site already has in those places is the person's, as on any DX theme.
 	 */
 	public static function theme_draws_chrome(): bool {
-		return ! \DXAI_UI\Theme\Theme_Compat::may_install_chrome();
+		return ! \DXAI_UI\Theme\Theme_Compat::may_install_chrome() || \DXAI_UI\Theme\Theme_Compat::is_base_theme();
 	}
 
 	/**
@@ -174,22 +183,31 @@ final class Chrome_Choice {
 	 * @param array<string, mixed> $design    scope ('site' or 'page'), owner (the design's page
 	 *                                        key, archive#slug), archive (the ZIP's name), page_id
 	 *                                        (its page when it exists already, else 0).
-	 * @return array{mode:string, requested:string, reason:string, message:string, theme_draws:bool, owners:array<string, mixed>, others:array<string, mixed>}
-	 *         mode: install or keep; reason: asked (the person chose), theme, one_page,
-	 *         owned (automatic keep), free, own (automatic install); others: the areas
-	 *         another design holds now (held_by_others()).
+	 * @return array{mode:string, requested:string, reason:string, message:string, theme_draws:bool, owners:array<string, mixed>, others:array<string, mixed>, site_chrome:array{menus:array<string, string>, widgets:array<string, int>}}
+	 *         mode: install or keep; reason: asked (the person chose), theme (a classic theme that
+	 *         is not a DX theme), one_page, owned (automatic keep), dx_busy (a DX theme whose
+	 *         menus or footer widgets the site already has: automatic keep), free, own,
+	 *         dx (a DX theme with nothing of the site's own in them: automatic install);
+	 *         others: the areas another design holds now (held_by_others()); site_chrome: what
+	 *         the site has of its own where an install writes (site_chrome()), looked at only
+	 *         for a DX theme.
 	 */
 	public static function resolve( string $requested, array $design ): array {
 		$requested = self::normalize( $requested );
 		$owners    = self::owners();
 		$others    = self::held_by_others( $design, $owners );
 		$theme     = self::theme_draws_chrome();
+		$dx        = $theme && \DXAI_UI\Theme\Theme_Compat::is_dx_theme();
 		$scope     = (string) ( $design['scope'] ?? 'site' );
+		$site      = array(
+			'menus'   => array(),
+			'widgets' => array(),
+		);
 
 		if ( $requested !== self::AUTO ) {
 			$mode   = $requested;
 			$reason = 'asked';
-		} elseif ( $theme ) {
+		} elseif ( $theme && ! $dx ) {
 			$mode   = self::KEEP;
 			$reason = 'theme';
 		} elseif ( 'site' !== $scope ) {
@@ -199,12 +217,12 @@ final class Chrome_Choice {
 			$mode   = self::KEEP;
 			$reason = 'owned';
 		} else {
-			$mode   = self::INSTALL;
-			$own    = false;
-			foreach ( $owners as $who ) {
-				$own = $own || ( $who !== array() && ! empty( $who['live'] ) && self::is_design( (array) $who, $design ) );
-			}
-			$reason = $own ? 'own' : 'free';
+			$own = self::owns( $owners, $design );
+			// A DX theme: what the site has of its own where an install writes stays, unless the design's already is the site's (a re-import).
+			$site   = $dx && ! $own ? self::site_chrome() : $site;
+			$busy   = $site['menus'] !== array() || $site['widgets'] !== array();
+			$mode   = $busy ? self::KEEP : self::INSTALL;
+			$reason = $busy ? 'dx_busy' : ( $own ? 'own' : ( $dx ? 'dx' : 'free' ) );
 		}
 
 		/**
@@ -226,10 +244,63 @@ final class Chrome_Choice {
 			'mode'        => $mode,
 			'requested'   => $requested,
 			'reason'      => $reason,
-			'message'     => self::message( $mode, $reason, $others, $theme ),
+			'message'     => self::message( $mode, $reason, $others, $theme, $site ),
 			'theme_draws' => $theme,
 			'owners'      => $owners,
 			'others'      => $others,
+			'site_chrome' => $site,
+		);
+	}
+
+	/**
+	 * Whether the design being imported is the one whose header or footer is the site's now (its page is still there).
+	 *
+	 * @param array{header:array<string, mixed>, footer:array<string, mixed>} $owners owners().
+	 * @param array<string, mixed>                                            $design See resolve().
+	 */
+	private static function owns( array $owners, array $design ): bool {
+		foreach ( $owners as $who ) {
+			if ( $who !== array() && ! empty( $who['live'] ) && self::is_design( (array) $who, $design ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * What the site has of its own where an install writes: a menu of a person's in a header location (one no header install wrote:
+	 * Header_Menus::install() leaves it where it is, and the header then draws its items) and the widgets in the footer's areas that
+	 * this plugin did not write (Footer_Widgets::install() moves them to Inactive Widgets). Both empty is a site with nothing there.
+	 *
+	 * @return array{menus:array<string, string>, widgets:array<string, int>} header location => the menu's name; footer area => how many widgets.
+	 */
+	public static function site_chrome(): array {
+		$menus    = array();
+		$assigned = get_nav_menu_locations();
+		foreach ( array_keys( Header_Menus::locations() ) as $location ) {
+			$id   = (int) ( $assigned[ $location ] ?? 0 );
+			$term = $id > 0 ? wp_get_nav_menu_object( $id ) : false;
+			if ( $term instanceof \WP_Term && '' === (string) get_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
+				$menus[ (string) $location ] = wp_specialchars_decode( $term->name, ENT_QUOTES );
+			}
+		}
+		$widgets = array();
+		$written = array_map( 'strval', array_keys( (array) get_option( Footer_Widgets::OWNED, array() ) ) );
+		foreach ( (array) wp_get_sidebars_widgets() as $area => $ids ) {
+			$area = (string) $area;
+			if ( ! is_array( $ids ) || ! ( str_starts_with( $area, Footer_Template::COLUMN_PREFIX ) || Footer_Template::COPYRIGHT === $area ) ) {
+				continue;
+			}
+			$theirs = array_diff( array_map( 'strval', $ids ), $written );
+			if ( $theirs !== array() ) {
+				$widgets[ $area ] = count( $theirs );
+			}
+		}
+
+		return array(
+			'menus'   => $menus,
+			'widgets' => $widgets,
 		);
 	}
 
@@ -264,8 +335,9 @@ final class Chrome_Choice {
 	 * One or two sentences saying what the choice does and why.
 	 *
 	 * @param array<string, array<string, mixed>> $others held_by_others().
+	 * @param array{menus:array<string, string>, widgets:array<string, int>} $site site_chrome() (looked at for a DX theme only).
 	 */
-	private static function message( string $mode, string $reason, array $others, bool $theme ): string {
+	private static function message( string $mode, string $reason, array $others, bool $theme, array $site = array() ): string {
 		$names = array();
 		foreach ( $others as $who ) {
 			$names[] = (string) ( $who['title'] ?? '' );
@@ -280,6 +352,13 @@ final class Chrome_Choice {
 			}
 			if ( 'one_page' === $reason ) {
 				return __( 'A one-page import does not change the site\'s header and footer.', 'dxai-ui' ) . ' ' . $kept;
+			}
+			if ( 'dx_busy' === $reason ) {
+				return sprintf(
+					/* translators: %s: what the site already has in its menu locations and footer widget areas. */
+					__( 'This theme draws the site\'s header and footer from the menus and widget areas an install writes, and the site already has its own there (%s), so they stay as they are.', 'dxai-ui' ),
+					self::describe_site( $site )
+				) . ' ' . $kept . ' ' . __( 'Choose to install to replace them with this design\'s: the footer\'s widgets move to Inactive Widgets, nothing is deleted.', 'dxai-ui' );
 			}
 			if ( 'owned' === $reason ) {
 				return sprintf(
@@ -296,6 +375,9 @@ final class Chrome_Choice {
 		if ( 'own' === $reason ) {
 			$done = __( 'The site\'s header and footer are already this design\'s; Appearance › Menus and Widgets are updated in place.', 'dxai-ui' );
 		}
+		if ( 'dx' === $reason ) {
+			$done = __( 'This is a DX theme and Appearance › Menus and Widgets have nothing of the site\'s own in them yet, so the design\'s header is built in Menus and its footer in Widgets, where you edit them.', 'dxai-ui' );
+		}
 		$more = array();
 		if ( $other !== '' ) {
 			$more[] = sprintf(
@@ -309,5 +391,30 @@ final class Chrome_Choice {
 		}
 
 		return trim( $done . ' ' . implode( ' ', $more ) );
+	}
+
+	/**
+	 * What site_chrome() found, in a few words: “Main” in Primary Navigation, 3 footer widgets.
+	 *
+	 * @param array{menus?:array<string, string>, widgets?:array<string, int>} $site
+	 */
+	private static function describe_site( array $site ): string {
+		$labels = get_registered_nav_menus();
+		$parts  = array();
+		foreach ( (array) ( $site['menus'] ?? array() ) as $location => $name ) {
+			$parts[] = sprintf(
+				/* translators: 1: the name of a menu, 2: the menu location it is in. */
+				__( '“%1$s” in %2$s', 'dxai-ui' ),
+				(string) $name,
+				(string) ( $labels[ $location ] ?? $location )
+			);
+		}
+		$count = array_sum( array_map( 'intval', (array) ( $site['widgets'] ?? array() ) ) );
+		if ( $count > 0 ) {
+			/* translators: %d: number of widgets in the footer areas. */
+			$parts[] = sprintf( _n( '%d footer widget', '%d footer widgets', $count, 'dxai-ui' ), $count );
+		}
+
+		return implode( ', ', $parts );
 	}
 }

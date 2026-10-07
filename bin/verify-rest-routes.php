@@ -334,6 +334,8 @@ $cases = array(
 	'copy (write): a page that is not there'            => array( 'POST', '/copy/' . $not_there, array( 'action' => 'save' ), null, 'error' ),
 	'team-pages (plan): a design that is not there'     => array( 'POST', '/team-pages', array( 'design' => 0, 'action' => 'plan' ), null, 'error' ),
 	'team-pages (make): a design that is not there'     => array( 'POST', '/team-pages', array( 'design' => 0, 'action' => 'make' ), null, 'error' ),
+	'template: an action nobody knows'                  => array( 'POST', '/template', array( 'action' => 'bogus' ), null, 'error' ),
+	'template: no action'                               => array( 'POST', '/template', array(), null, 'error' ),
 );
 $wrong = array();
 foreach ( $cases as $label => $case ) {

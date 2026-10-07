@@ -541,13 +541,24 @@ final class Header_Menus {
 	 * design took the locations — reads only the menus written for it
 	 * ("{its title} Primary" …), which Appearance > Menus lists by name.
 	 *
+	 * A menu the install wrote for ONE location is the design's items for that
+	 * slot of the header. Assigned to another location (the primary menu on
+	 * "Header buttons", a slip in Appearance > Menus > Manage Locations) it is not
+	 * read there: it would draw the navigation's items in the call-to-action
+	 * buttons' look, over the logo. The slot keeps the menu written for it. A menu
+	 * of a person's own (one no install wrote, or a copy of one) is read wherever
+	 * it is assigned.
+	 *
 	 * @param array<string, mixed> $spec
 	 */
 	public static function menu_for( string $location, array $spec ): int {
 		$ids = array( (int) ( $spec['menus'][ $location ] ?? 0 ) );
 		if ( Header_Template::is_site( $spec ) ) {
 			$assigned = get_nav_menu_locations();
-			array_unshift( $ids, (int) ( $assigned[ $location ] ?? 0 ) );
+			$mine     = (int) ( $assigned[ $location ] ?? 0 );
+			if ( $mine > 0 && ! self::written_for_another( $mine, $location ) ) {
+				array_unshift( $ids, $mine );
+			}
 		}
 		foreach ( $ids as $id ) {
 			if ( $id > 0 && get_term( $id, 'nav_menu' ) instanceof \WP_Term ) {
@@ -556,6 +567,15 @@ final class Header_Menus {
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Whether a menu is one a header install wrote for a location other than $location.
+	 */
+	private static function written_for_another( int $id, string $location ): bool {
+		$for = (string) get_term_meta( $id, Navigation_Factory::HEADER_MENU_META, true );
+
+		return '' !== $for && $location !== $for;
 	}
 
 	/**
@@ -742,14 +762,18 @@ final class Header_Menus {
 	 */
 	private static function install_logo( array $spec, array $context ): array {
 		// The first logo that is an image (a wordmark is text).
-		$src = '';
+		$src  = '';
+		$kept = 0;
 		foreach ( (array) ( $spec['logos'] ?? array() ) as $logo ) {
 			if ( '' !== (string) ( $logo['src'] ?? '' ) ) {
-				$src = (string) $logo['src'];
+				$src  = (string) $logo['src'];
+				// A picture block names its attachment itself.
+				$kept = (int) ( $logo['id'] ?? 0 );
 				break;
 			}
 		}
 		$id = (int) ( $context['logo_attachment_id'] ?? 0 );
+		$id = $id > 0 ? $id : $kept;
 		if ( $id < 1 && $src !== '' ) {
 			$id = (int) attachment_url_to_postid( $src );
 		}

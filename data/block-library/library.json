@@ -1,0 +1,387 @@
+{
+    "version": 1,
+    "themes": [
+        "american-restoration"
+    ],
+    "entries": [
+        {
+            "id": "areas-places",
+            "role": "areas",
+            "label": "Where we work: the places as links, and a card to call or ask for an inspection",
+            "from": "archer#8",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [
+                "places",
+                "phone|contact_url"
+            ],
+            "pages": [
+                "service",
+                "areas",
+                "location",
+                "about",
+                "contact"
+            ],
+            "tokens": [
+                "contact_url",
+                "icon_id",
+                "icon_url",
+                "phone",
+                "phone_url",
+                "row"
+            ],
+            "blocks": [
+                "amr/link-box",
+                "amr/span",
+                "core/button",
+                "core/buttons",
+                "core/column",
+                "core/columns",
+                "core/group",
+                "core/heading",
+                "core/image",
+                "core/paragraph"
+            ],
+            "classes": [
+                "border-muted-primary",
+                "d-block",
+                "d-flex",
+                "dxai-lib",
+                "dxai-lib-tight",
+                "font-regular",
+                "gap-1",
+                "gap-2",
+                "grid-2",
+                "has-inverse-hover",
+                "hero-cta-row",
+                "in",
+                "is-style-primary-button",
+                "is-style-secondary-button",
+                "items-center",
+                "justify-center",
+                "lg-grid-3",
+                "m-0",
+                "md-basis-100",
+                "md-flex-column",
+                "md-w-full",
+                "mobile-2-grid",
+                "mobile-grid-2",
+                "overflow-hidden",
+                "p-0",
+                "p-5",
+                "relative",
+                "reveal",
+                "reveal-delay-3",
+                "rounded-xl",
+                "sm-basis-100",
+                "sm-border-none",
+                "sm-flex-column",
+                "sm-p-6",
+                "sm-py-48",
+                "sm-shadow-none",
+                "sm-text-26",
+                "sm-w-full",
+                "small-shadow",
+                "text-14",
+                "text-20",
+                "text-left",
+                "w-full"
+            ],
+            "bytes": 8292
+        },
+        {
+            "id": "cta-banner",
+            "role": "cta",
+            "label": "Call to action: a banner with the phone number",
+            "from": "archer#11",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [
+                "phone"
+            ],
+            "pages": [
+                "service",
+                "location",
+                "about",
+                "testimonials",
+                "contact",
+                "faq",
+                "services",
+                "areas"
+            ],
+            "tokens": [
+                "phone",
+                "phone_url"
+            ],
+            "blocks": [
+                "core/button",
+                "core/buttons",
+                "core/group",
+                "core/heading",
+                "core/paragraph"
+            ],
+            "classes": [
+                "dxai-lib",
+                "flex-none",
+                "is-style-secondary-button",
+                "sm-flex-column",
+                "sm-text-center",
+                "sm-w-full",
+                "w-full"
+            ],
+            "bytes": 3633
+        },
+        {
+            "id": "cta-call",
+            "role": "cta",
+            "label": "Call to action: a line, a sentence and the call button",
+            "from": "arcus#3",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [
+                "phone"
+            ],
+            "pages": [
+                "service",
+                "location",
+                "about",
+                "testimonials",
+                "contact",
+                "faq",
+                "services",
+                "areas"
+            ],
+            "tokens": [
+                "company",
+                "phone",
+                "phone_url"
+            ],
+            "blocks": [
+                "core/button",
+                "core/buttons",
+                "core/column",
+                "core/columns",
+                "core/group",
+                "core/heading",
+                "core/paragraph"
+            ],
+            "classes": [
+                "absolute",
+                "d-flex",
+                "dxai-lib",
+                "dxai-lib-tight",
+                "gap-1",
+                "is-style-primary-button",
+                "items-center",
+                "justify-between",
+                "max-w-full",
+                "md-flex-column",
+                "overflow-hidden",
+                "py-12",
+                "relative",
+                "sm-py-16",
+                "sm-w-full",
+                "text-20",
+                "text-40"
+            ],
+            "bytes": 2873
+        },
+        {
+            "id": "faq-accordion",
+            "role": "faq",
+            "label": "Questions and answers: an accordion of six",
+            "from": "arcus#8",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [],
+            "pages": [
+                "service",
+                "location",
+                "about",
+                "faq",
+                "contact"
+            ],
+            "tokens": [
+                "company",
+                "icon_id",
+                "icon_url",
+                "region"
+            ],
+            "blocks": [
+                "amr/span",
+                "core/group",
+                "core/heading",
+                "core/image",
+                "core/paragraph"
+            ],
+            "classes": [
+                "d-flex",
+                "dxai-lib",
+                "faq-answer",
+                "faq-answer--default-open",
+                "faq-arrow",
+                "faq-question",
+                "gap-2",
+                "items-center",
+                "justify-between",
+                "justify-center",
+                "mr-0",
+                "mx-0",
+                "primary-eyebrow",
+                "py-12",
+                "relative",
+                "sm-py-16",
+                "text-13",
+                "w-full",
+                "xs-shadow"
+            ],
+            "bytes": 17535
+        },
+        {
+            "id": "faq-accordion-intro",
+            "role": "faq",
+            "label": "Questions and answers: an accordion of seven, with a line of introduction",
+            "from": "archer#10",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [],
+            "pages": [
+                "service",
+                "location",
+                "about",
+                "faq",
+                "contact"
+            ],
+            "tokens": [
+                "company",
+                "icon_id",
+                "icon_url",
+                "region"
+            ],
+            "blocks": [
+                "amr/span",
+                "core/group",
+                "core/heading",
+                "core/image",
+                "core/paragraph"
+            ],
+            "classes": [
+                "d-block",
+                "d-flex",
+                "dxai-lib",
+                "faq-answer",
+                "faq-arrow",
+                "faq-question",
+                "has-link-color",
+                "has-text-color",
+                "items-center",
+                "justify-between",
+                "max-w-600",
+                "mr-0",
+                "mx-0",
+                "py-12",
+                "relative",
+                "sm-py-16",
+                "text-center",
+                "w-full",
+                "xs-shadow"
+            ],
+            "bytes": 20494
+        },
+        {
+            "id": "faq-page",
+            "role": "faq",
+            "label": "The questions page: groups of questions about water, fire and storm damage, and about emergencies",
+            "from": "arcus#45",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [],
+            "pages": [
+                "faq"
+            ],
+            "tokens": [
+                "company",
+                "icon_id",
+                "icon_url",
+                "region"
+            ],
+            "blocks": [
+                "amr/span",
+                "core/group",
+                "core/heading",
+                "core/image",
+                "core/paragraph"
+            ],
+            "classes": [
+                "d-flex",
+                "dxai-lib",
+                "faq",
+                "faq-answer",
+                "faq-arrow",
+                "faq-question",
+                "gap-2",
+                "items-center",
+                "justify-between",
+                "justify-center",
+                "mb-8",
+                "md-mb-14",
+                "mr-0",
+                "mx-0",
+                "overflow-hidden",
+                "pr-small-shadow",
+                "primary-eyebrow",
+                "relative",
+                "sm-py-16",
+                "text-13",
+                "w-full",
+                "xl-min-h-80vh",
+                "z-100"
+            ],
+            "bytes": 42543
+        },
+        {
+            "id": "process-steps",
+            "role": "process",
+            "label": "The process: five numbered steps",
+            "from": "arcus#4",
+            "builder": true,
+            "industry": "restoration",
+            "needs": [],
+            "pages": [
+                "service",
+                "location",
+                "about"
+            ],
+            "tokens": [
+                "company_short"
+            ],
+            "blocks": [
+                "amr/span",
+                "core/group",
+                "core/heading",
+                "core/paragraph"
+            ],
+            "classes": [
+                "d-flex",
+                "dxai-lib",
+                "dxai-lib-tight",
+                "gap-2",
+                "items-center",
+                "justify-center",
+                "primary-eyebrow",
+                "px-6",
+                "py-12",
+                "py-7",
+                "sm-py-16",
+                "sm-text-17",
+                "text-13",
+                "text-14",
+                "text-16",
+                "text-17",
+                "text-20",
+                "text-center"
+            ],
+            "bytes": 19863
+        }
+    ]
+}

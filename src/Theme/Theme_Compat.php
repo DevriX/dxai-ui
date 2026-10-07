@@ -36,9 +36,45 @@ namespace DXAI_UI\Theme;
  *
  * The same class decides whether an import may take over the site's header
  * and footer (may_install_chrome()): a theme that renders its own header and
- * footer from these menu locations and widget areas keeps them.
+ * footer from these menu locations and widget areas keeps them. A DX theme
+ * (is_dx_theme()) is the one classic theme this plugin is built for, and
+ * there Chrome_Choice installs by itself when the site has nothing of its
+ * own in those places; may_install_chrome() stays false for it, because it
+ * also says that the design's colours are not adopted and the theme's palette
+ * is followed (Theme_Binding, Theme_Palette, Design_Theme_Json::adopt()).
  */
 final class Theme_Compat {
+
+	/**
+	 * The DX themes: the themes the team builds its sites on — american-restoration, and any child theme of it. They draw the site's header
+	 * and footer from the menu locations and widget areas an install writes (`primary-navigation`, `footer-column-1`…`4`,
+	 * `footer-copyright`): the header is a menu and the footer is widgets, edited in Appearance, never inside a page.
+	 * `dxai_ui_dx_themes` adds a theme to the list or takes one off it. DX Base, the theme this plugin carries for a site that has none
+	 * of its own (Base_Theme), is on the list: it has the same locations and the same areas.
+	 *
+	 * @return array<int, string> Theme slugs.
+	 */
+	public static function dx_themes(): array {
+		$themes = apply_filters( 'dxai_ui_dx_themes', array( 'american-restoration', Base_Theme::SLUG ) );
+
+		return array_values( array_unique( array_filter( array_map( 'strval', is_array( $themes ) ? $themes : array() ) ) ) );
+	}
+
+	/** Whether the active theme, or the theme it is a child of, is a DX theme (dx_themes()). */
+	public static function is_dx_theme(): bool {
+		$themes = self::dx_themes();
+
+		return in_array( (string) get_stylesheet(), $themes, true ) || in_array( (string) get_template(), $themes, true );
+	}
+
+	/**
+	 * Whether the active theme, or the theme it is a child of, is DX Base. It has no colours, fonts, header or footer of its own, so it lets
+	 * a design be its brand (may_install_chrome() is true for it), and it draws the site's header and footer from the same places a DX
+	 * theme does — which is why an import treats it as one (Chrome_Choice::theme_draws_chrome()).
+	 */
+	public static function is_base_theme(): bool {
+		return Base_Theme::SLUG === (string) get_stylesheet() || Base_Theme::SLUG === (string) get_template();
+	}
 
 	public function register(): void {
 		// After the main query, before any theme enqueue runs.
@@ -90,7 +126,7 @@ final class Theme_Compat {
 
 	/** Whether the current request renders a converted page. */
 	public static function is_converted_page(): bool {
-		return is_singular() && get_page_template_slug() === Blank_Template::SLUG;
+		return is_singular() && Blank_Template::is_canvas_slug( (string) get_page_template_slug() );
 	}
 
 	/**

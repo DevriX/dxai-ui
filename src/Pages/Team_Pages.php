@@ -47,8 +47,14 @@ final class Team_Pages {
 	/** What a person shuffled and locked on a page: {shuffle, recipe, locks}. Kept so the page is made the same way again. */
 	public const ARR_META = '_dxai_ui_team_arr';
 
-	/** How far a page is built from the Home: only its sections as they are; also the sections made in its cards; with an AI choosing the sections. */
+	/** How far a page is built from the Home: only its sections as they are; also the sections made in its cards and the team's own (Block_Library) where the Home has none; with an AI choosing the sections. */
 	public const MODES = array( 'home', 'new', 'ai' );
+
+	/**
+	 * What the team's library (Block_Library) is for in a page: its sections only where the Home has none of the kind (or only a section of
+	 * another kind to stand in for it), its sections instead of the Home's where it has one, or not used.
+	 */
+	public const LIBRARY = array( 'fill', 'prefer', 'off' );
 
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
@@ -68,6 +74,12 @@ final class Team_Pages {
 		'services'     => array( 'label' => 'Services list', 'model' => '', 'title' => 'Services' ),
 		'areas'        => array( 'label' => 'Areas list', 'model' => '', 'title' => 'Service Areas' ),
 	);
+
+	/**
+	 * The kinds a site has one page of. A page of one of them that a menu names with its address (Menu_Pages) is that page, and the general
+	 * page of the same kind asked for beside it is not made as a second one.
+	 */
+	public const ONCE = array( 'about', 'contact', 'faq', 'testimonials', 'services', 'areas' );
 
 	/** The Home's section roles a recipe's role may be taken from when the Home has none of its own, in order. */
 	private const FALLBACK = array(
@@ -115,7 +127,7 @@ final class Team_Pages {
 	 * its locked sections), unless the request says otherwise.
 	 *
 	 * @param array<int, array<string, mixed>> $wanted  type, title, and per page `shuffle`, `recipe` and `locks` (the arrangement, as this returned it).
-	 * @param array{mode?:string}              $options mode: `home` (only the Home's sections as they are), `new` (the usual: also sections made in its cards) or `ai` (the usual plan is shown: the AI's is made when the pages are).
+	 * @param array{mode?:string, library?:string} $options mode: `home` (only the Home's sections as they are), `new` (the usual: also sections made in its cards) or `ai` (the usual plan is shown: the AI's is made when the pages are); library: see LIBRARY.
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function plan( int $home, array $wanted, array $options = array() ): array {
@@ -124,13 +136,18 @@ final class Team_Pages {
 		$library = Section_Library::for_page( $home );
 		$roles   = self::home_roles( $library );
 		$items   = array_map( static fn( $i ) => self::arranged( $home, $i ), self::clean_wanted( $wanted ) );
-		$vary    = self::base_vary( $home, $library, $mode );
+		$vary    = self::base_vary( $home, $library, $mode, self::policy( $options ) );
+		if ( isset( $vary['lib'] ) ) {
+			// A plan makes nothing: not the files of the drawings the library's sections have.
+			$vary['lib']['dry'] = true;
+		}
 		$links   = array();
 		foreach ( $items as $item ) {
-			$id = self::existing( $home, $item['type'], $item['slug'] );
+			$id = self::existing( $home, $item['type'], $item['slug'], (string) ( $item['path'] ?? '' ) );
 			$links[ $item['type'] . '|' . $item['slug'] ] = array(
 				'title' => $item['title'],
-				'url'   => $id > 0 ? (string) get_permalink( $id ) : '',
+				// A page that is not made yet is where its address says it will be.
+				'url'   => $id > 0 ? (string) get_permalink( $id ) : ( isset( $item['path'] ) ? untrailingslashit( home_url() ) . $item['path'] : '' ),
 				'type'  => $item['type'],
 			);
 		}
@@ -140,11 +157,15 @@ final class Team_Pages {
 			$lay   = self::laid_out( $item, $key, $seed, $roles, $vary, $links, $mode );
 			$built = self::compose( $library, $roles, $lay['recipe']['roles'], $item, $lay['siblings'], $lay['seed'], $lay['vary'] );
 			$parts = array_map( static fn( $p ) => array( 'role' => $p['role'], 'source' => $p['source'] ), $built['places'] );
-			$existing = self::existing( $home, $item['type'], $item['slug'] );
+			$existing = self::existing( $home, $item['type'], $item['slug'], (string) ( $item['path'] ?? '' ) );
 			$out[]    = array(
 				'type'        => $item['type'],
 				'title'       => $item['title'],
 				'slug'        => $item['slug'],
+				'path'        => (string) ( $item['path'] ?? '' ),
+				// The address is a page this design did not make: it is kept as it is, and this page is not made.
+				'conflict'    => $existing < 1 && isset( $item['path'] ) ? self::page_at( (string) $item['path'] ) : 0,
+				'item'        => (int) ( $item['item'] ?? 0 ),
 				'roles'       => $parts,
 				'strip'       => $built['places'],
 				'arrangement' => self::arrangement( $item, $built['places'] ),
@@ -157,6 +178,13 @@ final class Team_Pages {
 		}
 
 		return $out;
+	}
+
+	/** What the library is for in a run (LIBRARY): the usual is to fill what the Home has none of. */
+	private static function policy( array $options ): string {
+		$policy = (string) ( $options['library'] ?? '' );
+
+		return in_array( $policy, self::LIBRARY, true ) ? $policy : 'fill';
 	}
 
 	/** The mode of a run: `home`, `new` or `ai`; the old `ai` flag means `ai`. */
@@ -176,7 +204,7 @@ final class Team_Pages {
 	 * @param array<int, array<string, mixed>> $library
 	 * @return array<string, mixed>
 	 */
-	private static function base_vary( int $home, array $library, string $mode ): array {
+	private static function base_vary( int $home, array $library, string $mode, string $policy = 'fill' ): array {
 		$vary = array(
 			'pool'       => Section_Variants::pool( $library ),
 			'positional' => Section_Variants::positional_classes( $home ),
@@ -184,6 +212,14 @@ final class Team_Pages {
 		if ( $mode !== 'home' ) {
 			$vary['kit']   = Home_Kit::of( $library );
 			$vary['facts'] = Home_Kit::facts( $home );
+			// The team's own sections, for the places the Home has no section for (or instead of the Home's, as asked), on a site whose theme they are made for.
+			if ( $policy !== 'off' && Block_Library::theme_ok() ) {
+				$vary['lib'] = Block_Library::facts( $home, (array) $vary['facts'] ) + array(
+					'places_home' => self::places_of_home( $home ),
+					'contact_was' => self::page_url_of( $home, 'contact' ),
+					'prefer'      => $policy === 'prefer',
+				);
+			}
 		}
 
 		return $vary;
@@ -198,8 +234,10 @@ final class Team_Pages {
 	 * @return array{recipe:array<string, mixed>, vary:array<string, mixed>, siblings:array<int, array<string, string>>, seed:string}
 	 */
 	private static function laid_out( array $item, string $key, string $seed, array $roles, array $vary, array $links, string $mode ): array {
-		$m       = (int) $item['recipe'];
-		$recipe  = self::recipe( $item['type'], $seed, $roles, $item['slug'] . ( $m > 0 ? '~' . $m : '' ) );
+		$m         = (int) $item['recipe'];
+		// What the team's library can make for this page: a role the Home has no section for may still be a place of the page.
+		$lib_facts = isset( $vary['lib'] ) ? self::library_facts( (array) $vary['lib'], $item, $key, $links ) : null;
+		$recipe    = self::recipe( $item['type'], $seed, $roles, $item['slug'] . ( $m > 0 ? '~' . $m : '' ), $lib_facts !== null ? Block_Library::roles( $lib_facts ) : array() );
 		$base    = $seed . '|' . $key;
 		$seed_of = static fn( int $n ): string => $base . ( $n > 0 ? '~' . $n : '' );
 		$pages   = $vary;
@@ -211,6 +249,9 @@ final class Team_Pages {
 		$pages['n']       = (int) $item['shuffle'];
 		$pages['seed_of'] = $seed_of;
 		$pages['locks']   = self::lock_map( (array) $item['locks'] );
+		if ( $lib_facts !== null ) {
+			$pages['lib'] = $lib_facts;
+		}
 
 		return array(
 			'recipe'   => $recipe,
@@ -261,7 +302,7 @@ final class Team_Pages {
 	private static function arranged( int $home, array $item ): array {
 		$stored = array();
 		if ( ! isset( $item['shuffle'], $item['recipe'], $item['locks'] ) ) {
-			$id     = self::existing( $home, $item['type'], $item['slug'] );
+			$id     = self::existing( $home, $item['type'], $item['slug'], (string) ( $item['path'] ?? '' ) );
 			$raw    = $id > 0 ? json_decode( (string) get_post_meta( $id, self::ARR_META, true ), true ) : null;
 			$stored = is_array( $raw ) ? $raw : array();
 		}
@@ -275,14 +316,26 @@ final class Team_Pages {
 			$recipe = (int) ( $stored['recipe'] ?? ( $locks === array() ? $shuffle : 0 ) );
 		}
 
-		return array(
+		$row = array(
 			'type'    => (string) $item['type'],
 			'title'   => (string) $item['title'],
 			'slug'    => (string) $item['slug'],
+			'name'    => (string) ( $item['name'] ?? $item['slug'] ),
 			'shuffle' => $shuffle,
 			'recipe'  => $recipe,
 			'locks'   => $locks,
 		);
+		// Where the page sits, when the request says (the address a menu gave it), and the menu item it came from.
+		foreach ( array( 'path', 'parent_path' ) as $k ) {
+			if ( isset( $item[ $k ] ) ) {
+				$row[ $k ] = (string) $item[ $k ];
+			}
+		}
+		if ( ! empty( $item['item'] ) ) {
+			$row['item'] = (int) $item['item'];
+		}
+
+		return $row;
 	}
 
 	/**
@@ -302,7 +355,8 @@ final class Team_Pages {
 			$source = (string) ( $l['source'] ?? 'home' );
 			$home   = (int) $l['home'];
 			$place  = (int) $l['place'];
-			if ( preg_match( '/^[a-z][a-z-]{1,24}$/', $role ) !== 1 || ! in_array( $source, array( 'home', 'new' ), true ) || $home < 1 || $place < 0 || $place > 40 ) {
+			// A library section is not one of the Home's: it has no number there (the section it is is in what was done to it, "lib:<id>").
+			if ( preg_match( '/^[a-z][a-z-]{1,24}$/', $role ) !== 1 || ! in_array( $source, array( 'home', 'new', 'library' ), true ) || ( $home < 1 && $source !== 'library' ) || $place < 0 || $place > 40 ) {
 				continue;
 			}
 			$out[ $place ] = array(
@@ -323,15 +377,19 @@ final class Team_Pages {
 	 * Locks as compose() takes them: by place, with the Home section's index and the picture the section showed (0: none).
 	 *
 	 * @param array<int, array<string, mixed>> $locks clean_locks().
-	 * @return array<int, array{role:string, source:string, index:int, n:int, image:int}>
+	 * @return array<int, array{role:string, source:string, index:int, n:int, image:int, lib:string}>
 	 */
 	private static function lock_map( array $locks ): array {
 		$out = array();
 		foreach ( $locks as $l ) {
 			$image = 0;
+			$lib   = '';
 			foreach ( (array) $l['ops'] as $op ) {
 				if ( str_starts_with( (string) $op, 'image:' ) ) {
 					$image = (int) substr( (string) $op, 6 );
+				}
+				if ( str_starts_with( (string) $op, 'lib:' ) ) {
+					$lib = substr( (string) $op, 4 );
 				}
 			}
 			$out[ (int) $l['place'] ] = array(
@@ -340,6 +398,7 @@ final class Team_Pages {
 				'index'  => (int) $l['home'] - 1,
 				'n'      => (int) $l['n'],
 				'image'  => $image,
+				'lib'    => $lib,
 			);
 		}
 
@@ -351,7 +410,7 @@ final class Team_Pages {
 	 * and named in `kept`).
 	 *
 	 * @param array<int, array<string, mixed>>               $wanted  As plan() takes them: type, title, and the arrangement (shuffle, recipe, locks) of the pages a person arranged.
-	 * @param array{ai?:bool, mode?:string, cap?:int}        $options mode: `home`, `new`, or `ai` (an AI plans the sections of each page: one request a page, within the ceiling, the usual plan when it cannot; `ai` is the same).
+	 * @param array{ai?:bool, mode?:string, cap?:int, library?:string} $options library: see LIBRARY. mode: `home`, `new`, or `ai` (an AI plans the sections of each page: one request a page, within the ceiling, the usual plan when it cannot; `ai` is the same).
 	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>, report:array<int, array<string, mixed>>, run:array<string, mixed>}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false, array $options = array() ) {
@@ -360,8 +419,8 @@ final class Team_Pages {
 		}
 		$mode  = self::mode( $options );
 		$items = array_map( static fn( $i ) => self::arranged( $home, $i ), self::clean_wanted( $wanted ) );
-		// The pages that list others first, so the pages they list can sit under them.
-		usort( $items, static fn( $x, $y ) => (int) in_array( $y['type'], array( 'services', 'areas' ), true ) <=> (int) in_array( $x['type'], array( 'services', 'areas' ), true ) );
+		// The pages that list others first, so the pages they list can sit under them; a page at an address after the page above it.
+		usort( $items, static fn( $x, $y ) => self::rank( $x ) <=> self::rank( $y ) );
 		if ( $items === array() ) {
 			return new \WP_Error( 'dxai_ui_team_none', __( 'Nothing was asked for.', 'dxai-ui' ), array( 'status' => 400 ) );
 		}
@@ -373,9 +432,11 @@ final class Team_Pages {
 		$roles = self::home_roles( $library );
 		$log   = array();
 		// What a section can be varied with: the Home's other pictures, and the classes the design styles by place.
-		$vary = self::base_vary( $home, $library, $mode );
+		$vary = self::base_vary( $home, $library, $mode, self::policy( $options ) );
 		// What the posts this run may write were before it, to give them back (Team_Run).
 		$before  = Team_Run::begin( $home );
+		// The menu items the run may point at the pages it makes, as they are before it (Team_Run gives them back too).
+		$menus   = Team_Menu::menu_urls( $home );
 		$created = array();
 
 		// First every page exists, so the pages can link to each other.
@@ -383,18 +444,42 @@ final class Team_Pages {
 		$kept = array();
 		$pend = array();
 		foreach ( $items as $item ) {
-			$id = self::existing( $home, $item['type'], $item['slug'] );
+			$key = $item['type'] . '|' . $item['slug'];
+			$id  = self::existing( $home, $item['type'], $item['slug'], (string) ( $item['path'] ?? '' ) );
 			if ( $id > 0 && ! $force && self::edited( $id ) ) {
-				$kept[]  = array(
+				$kept[]      = array(
 					'id'    => $id,
 					'title' => $item['title'],
+					'why'   => 'edited',
 				);
-				$ids[ $item['type'] . '|' . $item['slug'] ] = $id;
+				$ids[ $key ] = $id;
 				continue;
+			}
+			if ( $id < 1 && isset( $item['path'] ) ) {
+				// The address is a page this design did not make (an import's, a person's): it stays as it is, and the cards that list pages open it.
+				$other = self::page_at( (string) $item['path'] );
+				if ( $other > 0 ) {
+					$kept[]      = array(
+						'id'    => $other,
+						'title' => $item['title'],
+						'why'   => 'address',
+					);
+					$ids[ $key ] = $other;
+					continue;
+				}
 			}
 			if ( $id < 1 ) {
 				$id = self::shell( $home, $item, $items );
 				if ( is_wp_error( $id ) ) {
+					if ( $id->get_error_code() === 'dxai_ui_team_parent' ) {
+						// The page it sits under is not there (not asked for, or not made): this one waits, the others go on.
+						$kept[] = array(
+							'id'    => 0,
+							'title' => $item['title'],
+							'why'   => 'parent',
+						);
+						continue;
+					}
 					// The pages made so far stay: they are kept so the run can be given back.
 					Team_Run::finish( $home, $before, $created );
 
@@ -402,9 +487,11 @@ final class Team_Pages {
 				}
 				$created[] = (int) $id;
 			}
-			$ids[ $item['type'] . '|' . $item['slug'] ] = (int) $id;
-			$pend[]                                      = $item;
+			$ids[ $key ] = (int) $id;
+			$pend[]      = $item;
 		}
+		// A page that was not made has no address to list: it is not in the cards of the others.
+		$items = array_values( array_filter( $items, static fn( $i ) => isset( $ids[ $i['type'] . '|' . $i['slug'] ] ) ) );
 
 		$links = array();
 		foreach ( $items as $item ) {
@@ -493,7 +580,7 @@ final class Team_Pages {
 		// … and every page wears the Home's header and footer as the Home has them now, the menu included.
 		$chrome = Team_Chrome::sync( $home );
 		// What the run changed is kept so it can be given back, and what the pages look like against the rules is read.
-		$run    = Team_Run::finish( $home, $before, $created );
+		$run    = Team_Run::finish( $home, $before, $created, $menus );
 		$report = $done === array() ? array() : Team_Quality::report( $home, array_map( static fn( $d ) => (int) $d['id'], $done ) );
 
 		return array(
@@ -654,14 +741,14 @@ final class Team_Pages {
 	/**
 	 * @return array{roles:array<int, string>, edits:array<int, string>, nearest:int}
 	 */
-	private static function recipe( string $type, string $seed, array $home_roles = array(), string $variant = '' ): array {
+	private static function recipe( string $type, string $seed, array $home_roles = array(), string $variant = '', array $also = array() ): array {
 		$model = self::KINDS[ $type ]['model'] ?? '';
 		if ( $model === '' ) {
 			// A list of the pages under it: what the page opens with, the list, what people say, the call to action. The list of
 			// service areas is the Home's own areas (its offices and the towns they serve) when it has them: cards of services are
 			// not what that page is about.
 			return array(
-				'roles'   => $type === 'areas' && ! empty( $home_roles['areas'] ) ? array( 'hero', 'areas', 'reviews', 'cta' ) : array( 'hero', 'related', 'reviews', 'cta' ),
+				'roles'   => $type === 'areas' && ( ! empty( $home_roles['areas'] ) || in_array( 'areas', $also, true ) ) ? array( 'hero', 'areas', 'reviews', 'cta' ) : array( 'hero', 'related', 'reviews', 'cta' ),
 				'edits'   => array(),
 				'nearest' => 0,
 			);
@@ -669,7 +756,7 @@ final class Team_Pages {
 		$r = Page_Recipes::pick( $model, $seed, $variant );
 
 		return array(
-			'roles'   => self::must_have( $type, $r['roles'], $home_roles ),
+			'roles'   => self::must_have( $type, $r['roles'], $home_roles, $also ),
 			'edits'   => $r['edits'],
 			'nearest' => $r['nearest'],
 		);
@@ -682,11 +769,12 @@ final class Team_Pages {
 	 *
 	 * @param array<int, string>             $roles
 	 * @param array<string, array<int, int>> $home_roles
+	 * @param array<int, string>             $also       The roles the team's library can make a section of, for this page (Block_Library::roles()).
 	 * @return array<int, string>
 	 */
-	private static function must_have( string $type, array $roles, array $home_roles ): array {
+	private static function must_have( string $type, array $roles, array $home_roles, array $also = array() ): array {
 		$need = array( 'faq' => 'faq', 'contact' => 'form' )[ $type ] ?? '';
-		if ( $need === '' || in_array( $need, $roles, true ) || empty( $home_roles[ $need ] ) ) {
+		if ( $need === '' || in_array( $need, $roles, true ) || ( empty( $home_roles[ $need ] ) && ! in_array( $need, $also, true ) ) ) {
 			return $roles;
 		}
 		$roles = array_values( $roles );
@@ -805,7 +893,8 @@ final class Team_Pages {
 	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
 	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>, places:array<int, array<string, mixed>>}
 	 *         `places` is the page as laid out, one entry for each place of the recipe: the role, where its section is from (`home`: a Home section as it is; `new`: the Home's cards with
-	 *         the pages of the site poured in; empty: the Home has none, so it is left out), the number of the Home section (from 1), the number of the shuffle its variant is from, and what was done to it.
+	 *         the pages of the site poured in; `library`: one of the team's own (Block_Library), with its `label`; empty: the Home has none, so it is left out), the number of the Home section (from 1),
+	 *         the number of the shuffle its variant is from, and what was done to it.
 	 */
 	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
 		$library  = array_values( $library );
@@ -816,6 +905,10 @@ final class Team_Pages {
 		$pictures = array();
 		$places   = array();
 		$topic    = self::topic( $item['title'] );
+		// The team's own sections (Block_Library), for the places the Home has none for: made from what the Home says, and not on a site whose
+		// theme they are not made for or in a run that is to use only the Home's sections.
+		$lib      = is_array( $vary['lib'] ?? null ) ? $vary['lib'] : null;
+		$lib_used = array();
 		$prev     = -1; // the Home section the page showed last
 		// An AI's plan (Page_Planner, checked): the roles it chose, and for each place the Home's section that fills it.
 		$plan  = is_array( $vary['plan'] ?? null ) ? $vary['plan'] : null;
@@ -934,8 +1027,10 @@ final class Team_Pages {
 				$prev       = -1;
 				continue;
 			}
-			// A locked place shows the Home section it showed, whatever else the page has taken.
+			// A locked place shows the Home section it showed, whatever else the page has taken…
 			$forced = $lock !== null && $lock['source'] === 'home' && $lock['role'] === (string) $role && isset( $library[ $lock['index'] ] );
+			// …or the library's section it showed.
+			$held   = $lib !== null && $lock !== null && $lock['source'] === 'library' && $lock['role'] === (string) $role;
 			$cand   = $forced ? array( (int) $lock['index'] => 0 ) : ( isset( $picks[ $place ] ) ? array( (int) $picks[ $place ] => 0 ) : array_diff_key( self::pool( $library, $roles, (string) $role ), $reserved ) );
 			// A section with a control (a "show more" button) or a widget is not used twice: its script finds it by its id, which a second
 			// copy does not have, so the copy would show less than the Home's does.
@@ -944,18 +1039,45 @@ final class Team_Pages {
 					unset( $cand[ $i ] );
 				}
 			}
+			$none = '';
 			if ( $cand === array() ) {
-				$log[]    = sprintf( '%s: the Home has none — left out', $role );
-				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
-				continue;
+				$none = 'the Home has none';
+			} else {
+				// A section the page has is not shown again (a call to action may be: it closes more than one stretch of a page).
+				// …and never twice in a row.
+				if ( ! $forced ) {
+					$cand = array_filter( $cand, static fn( $i ) => ( $used[ $i ] ?? 0 ) < ( $role === 'cta' ? 2 : 1 ) && $i !== $prev, ARRAY_FILTER_USE_KEY );
+				}
+				if ( $cand === array() ) {
+					$none = 'the Home has no other section for it';
+				}
 			}
-			// A section the page has is not shown again (a call to action may be: it closes more than one stretch of a page).
-			// …and never twice in a row.
-			if ( ! $forced ) {
-				$cand = array_filter( $cand, static fn( $i ) => ( $used[ $i ] ?? 0 ) < ( $role === 'cta' ? 2 : 1 ) && $i !== $prev, ARRAY_FILTER_USE_KEY );
+			// The team's own section of the kind takes the place when the Home has none, or only a section of another kind to stand in for
+			// it (a Home with no steps would show its cards as the steps), or when it was asked to take the Home's place too; a place locked
+			// to one keeps it. A plan that chose a Home's section keeps it.
+			if ( $lib !== null && ! $forced && ! isset( $picks[ $place ] ) && ( $held || $none !== '' || ! empty( $lib['prefer'] ) || min( $cand ) > 0 ) ) {
+				$why  = '';
+				$made = Block_Library::section( (string) $role, $lib, ( $held ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place, array_keys( $lib_used ), $held ? (string) $lock['lib'] : '', $why );
+				if ( $made !== null ) {
+					$block = $made['block'];
+					if ( isset( $block['attrs']['anchor'] ) && str_contains( implode( '', array_map( 'serialize_block', $sections ) ), 'id="' . esc_attr( (string) $block['attrs']['anchor'] ) . '"' ) ) {
+						// An anchor the page has already is not taken twice.
+						Block_Tree::strip_anchors( $block );
+					}
+					$lib_used[ $made['id'] ] = true;
+					$ops[]                   = array( 'lib:' . $made['id'] );
+					$sections[]              = $block;
+					$places[]                = array( 'place' => $place, 'role' => $role, 'source' => 'library', 'home' => 0, 'n' => $held ? (int) $lock['n'] : $shuffle, 'ops' => array( 'lib:' . $made['id'] ), 'label' => $made['label'], 'locked' => $held );
+					$log[]                   = sprintf( '%s ← the library: %s', $role, $made['id'] );
+					$prev                    = -1;
+					continue;
+				}
+				if ( $why !== '' && ( $held || $none !== '' ) ) {
+					$log[] = sprintf( '%s: the library has nothing for it (%s)', $role, $why );
+				}
 			}
-			if ( $cand === array() ) {
-				$log[]    = sprintf( '%s: the Home has no other section for it — left out', $role );
+			if ( $none !== '' ) {
+				$log[]    = sprintf( '%s: %s — left out', $role, $none );
 				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
 				continue;
 			}
@@ -1035,6 +1157,81 @@ final class Team_Pages {
 		}
 
 		return $at;
+	}
+
+	/**
+	 * What the team's library sections are filled with for one page: the Home's facts, and the pages of the site this page may list or
+	 * link — its places (the pages for them, else the places the Home names), its services, and the page to ask on.
+	 *
+	 * @param array<string, mixed>                                        $facts The run's (Block_Library::facts()).
+	 * @param array<string, string>                                       $item  arranged().
+	 * @param array<string, array{title:string, url:string, type:string}> $links All the pages made together, by key.
+	 * @return array<string, mixed>
+	 */
+	private static function library_facts( array $facts, array $item, string $key, array $links ): array {
+		$of = static function ( string $type ) use ( $links, $key ): array {
+			$rows = array();
+			foreach ( $links as $k => $l ) {
+				if ( $k !== $key && $l['type'] === $type ) {
+					$rows[] = array(
+						'title' => (string) $l['title'],
+						'url'   => (string) $l['url'],
+					);
+				}
+			}
+
+			return $rows;
+		};
+		$places = $of( 'location' );
+		if ( $places === array() ) {
+			// There is no page for a place: the places the Home names are listed, and are not links.
+			$places = array_map( static fn( $t ) => array( 'title' => (string) $t, 'url' => '' ), (array) ( $facts['places_home'] ?? array() ) );
+		}
+		$contact = '';
+		foreach ( $of( 'contact' ) as $row ) {
+			$contact = $contact !== '' ? $contact : $row['url'];
+		}
+
+		return array_merge(
+			$facts,
+			array(
+				'title'       => (string) $item['title'],
+				'kind'        => (string) $item['type'],
+				'places'      => $places,
+				'services'    => $of( 'service' ),
+				// The contact page of this run, else one an earlier run made; the contact page itself has none to ask on.
+				'contact_url' => $item['type'] === 'contact' ? '' : ( $contact !== '' ? $contact : (string) ( $facts['contact_was'] ?? '' ) ),
+			)
+		);
+	}
+
+	/** The address of a page of a kind this made for the design before (the first one), or an empty string. */
+	private static function page_url_of( int $home, string $type ): string {
+		$found = get_posts(
+			array(
+				'post_type'      => 'page',
+				'post_status'    => 'publish',
+				'meta_query'     => array(
+					'relation' => 'AND',
+					array(
+						'key'     => self::META,
+						'value'   => $type . '|',
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'   => Page_Scope::META,
+						'value' => (string) $home,
+					),
+				),
+				'fields'         => 'ids',
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
+			)
+		);
+
+		return $found !== array() ? (string) get_permalink( (int) $found[0] ) : '';
 	}
 
 	/**
@@ -1289,17 +1486,39 @@ final class Team_Pages {
 			if ( $title === '' ) {
 				$title = self::KINDS[ $type ]['title'];
 			}
-			$slug = sanitize_title( $title );
+			// The address a menu gave the page: the page is made there, and its last word is what it is called in the address.
+			$path = self::clean_path( (string) ( $w['path'] ?? '' ) );
+			$name = $path !== '' ? (string) basename( trim( $path, '/' ) ) : sanitize_title( $title );
+			$slug = $name;
 			$key  = $type . '|' . $slug;
-			if ( $title === '' || $slug === '' || isset( $seen[ $key ] ) ) {
+			if ( $title === '' || $slug === '' ) {
 				continue;
 			}
-			$seen[ $key ] = true;
+			if ( isset( $seen[ $key ] ) ) {
+				// The same address twice is one page; two addresses that end the same way are two pages, told apart by the whole address.
+				if ( $path === '' || $seen[ $key ] === $path ) {
+					continue;
+				}
+				$slug = trim( (string) preg_replace( '#/+#', '-', trim( $path, '/' ) ), '-' );
+				$key  = $type . '|' . $slug;
+				if ( isset( $seen[ $key ] ) ) {
+					continue;
+				}
+			}
+			$seen[ $key ] = $path;
 			$row          = array(
 				'type'  => $type,
 				'title' => $title,
 				'slug'  => $slug,
+				'name'  => $name,
 			);
+			if ( $path !== '' ) {
+				$row['path']        = $path;
+				$row['parent_path'] = Menu_Pages::parent_of( $path );
+			}
+			if ( ! empty( $w['item'] ) ) {
+				$row['item'] = (int) $w['item'];
+			}
 			// What a person arranged (shuffled, locked) is carried only when the request has it.
 			if ( isset( $w['shuffle'] ) ) {
 				$row['shuffle'] = max( 0, min( 999, (int) $w['shuffle'] ) );
@@ -1312,12 +1531,65 @@ final class Team_Pages {
 			}
 			$out[] = $row;
 		}
+		// A page of a kind a site has one of, at the address a menu gave it, is the page: the same kind asked for without an address is not a second one.
+		$placed = array();
+		foreach ( $out as $r ) {
+			if ( isset( $r['path'] ) && in_array( $r['type'], self::ONCE, true ) ) {
+				$placed[ $r['type'] ] = true;
+			}
+		}
 
-		return $out;
+		return array_values( array_filter( $out, static fn( $r ) => isset( $r['path'] ) || ! isset( $placed[ $r['type'] ] ) ) );
 	}
 
-	/** The page this design already has for a kind and slug, or 0. */
-	private static function existing( int $home, string $type, string $slug ): int {
+	/**
+	 * The address of a wanted page as it is kept: '/service/water-damage/', one word at a time, or '' when there is none (a page then sits where
+	 * its kind says, and is called after its title).
+	 */
+	public static function clean_path( string $path ): string {
+		$words = array();
+		foreach ( explode( '/', (string) wp_parse_url( trim( $path ), PHP_URL_PATH ) ) as $word ) {
+			$word = sanitize_title( $word );
+			if ( $word !== '' ) {
+				$words[] = $word;
+			}
+		}
+
+		return $words === array() || count( $words ) > 4 ? '' : '/' . implode( '/', $words ) . '/';
+	}
+
+	/** The page at an address like /service/water-damage/ (any status but the trash), or 0. */
+	public static function page_at( string $path ): int {
+		$path = trim( $path, '/' );
+		if ( $path === '' ) {
+			return 0;
+		}
+		$page = get_page_by_path( $path, OBJECT, 'page' );
+
+		return $page instanceof \WP_Post && $page->post_status !== 'trash' ? (int) $page->ID : 0;
+	}
+
+	/** The page at an address, when it is one this design's panel made. */
+	public static function team_page_at( int $home, string $path ): int {
+		$id = self::page_at( $path );
+		if ( $id < 1 || (string) get_post_meta( $id, self::META, true ) === '' || (int) get_post_meta( $id, Page_Scope::META, true ) !== $home || self::taken( $id ) ) {
+			return 0;
+		}
+
+		return $id;
+	}
+
+	/** Where a wanted page goes in the order pages are made in: the pages that list others, then each address after the one above it, then the rest. */
+	private static function rank( array $item ): int {
+		if ( isset( $item['path'] ) ) {
+			return 10 + substr_count( trim( (string) $item['path'], '/' ), '/' );
+		}
+
+		return in_array( $item['type'], array( 'services', 'areas' ), true ) ? 0 : 20;
+	}
+
+	/** The page this design already has for a kind and slug — or, when the request gave an address, one this design made at it — or 0. */
+	private static function existing( int $home, string $type, string $slug, string $path = '' ): int {
 		$found = get_posts(
 			array(
 				'post_type'      => 'page',
@@ -1345,7 +1617,8 @@ final class Team_Pages {
 			}
 		}
 
-		return 0;
+		// Not by the key it was made with: a page this design's panel made sits at the address, so it is that page (the address is what it is).
+		return $path !== '' ? self::team_page_at( $home, $path ) : 0;
 	}
 
 	/** The key of a page made here. */
@@ -1427,10 +1700,25 @@ final class Team_Pages {
 			'service'  => 'services',
 			'location' => 'areas',
 		)[ $item['type'] ] ?? '';
+		if ( isset( $item['path'] ) ) {
+			// An address says where the page sits: under the page at the address above it, or at the top.
+			$list = '';
+			if ( (string) ( $item['parent_path'] ?? '' ) !== '' ) {
+				$parent = self::page_at( (string) $item['parent_path'] );
+				if ( $parent < 1 ) {
+					return new \WP_Error(
+						'dxai_ui_team_parent',
+						/* translators: %s: the address of the page above. */
+						sprintf( __( 'The page at %s, which this one sits under, is not there.', 'dxai-ui' ), (string) $item['parent_path'] ),
+						array( 'status' => 422 )
+					);
+				}
+			}
+		}
 		if ( $list !== '' ) {
 			foreach ( $all as $other ) {
 				if ( $other['type'] === $list ) {
-					$parent = self::existing( $home, $other['type'], $other['slug'] );
+					$parent = self::existing( $home, $other['type'], $other['slug'], (string) ( $other['path'] ?? '' ) );
 					break;
 				}
 			}
@@ -1440,7 +1728,7 @@ final class Team_Pages {
 				'post_type'    => 'page',
 				'post_status'  => 'publish',
 				'post_title'   => wp_slash( $item['title'] ),
-				'post_name'    => $item['slug'],
+				'post_name'    => (string) ( $item['name'] ?? $item['slug'] ),
 				'post_parent'  => $parent,
 				'post_content' => '',
 			),
@@ -1482,7 +1770,7 @@ final class Team_Pages {
 		// Written straight to the row: the rules cached for the page are for the content it had.
 		\DXAI_UI\Blocks\Style_Rules::forget( $id );
 		update_post_meta( $id, self::HASH, md5( $markup ) );
-		update_post_meta( $id, '_wp_page_template', Blank_Template::SLUG );
+		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
 		update_post_meta( $id, '_dxai_ui_generated_page', '1' );
 		update_post_meta( $id, Page_Scope::META, $home );
 		foreach ( array(

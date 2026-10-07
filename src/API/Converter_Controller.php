@@ -234,7 +234,9 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 * footer from the menus and widget areas an install writes (a classic
 	 * theme: installing changes every page of the site), `theme_name` names
 	 * it; `chrome_owner` says whose header and footer the site shows now
-	 * (title, archive, page_id, view and edit links, live), [] for none.
+	 * (title, archive, page_id, view and edit links, live), [] for none;
+	 * `dx_theme` whether the theme is a DX theme and `base_theme` what the
+	 * plugin can offer a theme that is not (DX Base: available or installed).
 	 *
 	 * @param string $archive The archive about to be imported ('' when not known yet).
 	 * @param string $scope   'site' or 'page'.
@@ -268,6 +270,9 @@ final class Converter_Controller extends \WP_REST_Controller {
 			'theme_chrome'           => $choice['theme_chrome'],
 			'theme_name'             => $choice['theme_name'],
 			'chrome_owner'           => self::chrome_owner( $choice['chrome_owner'] ),
+			// A theme that is not a DX theme is offered DX Base (Base_Theme::offer(): '', available, installed).
+			'dx_theme'               => \DXAI_UI\Theme\Theme_Compat::is_dx_theme(),
+			'base_theme'             => \DXAI_UI\Theme\Base_Theme::offer(),
 			// The server's clock, so the screen can say how long ago a save started.
 			'now'            => time(),
 			'links'          => array(

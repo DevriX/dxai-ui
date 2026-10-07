@@ -970,7 +970,7 @@ final class Site_From_Menu {
 		 */
 		update_post_meta( $id, Page_Scope::META, $home_id );
 
-		update_post_meta( $id, '_wp_page_template', Blank_Template::SLUG );
+		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
 		update_post_meta( $id, '_dxai_ui_wrapper_class', $home_wrap );
 		update_post_meta( $id, '_dxai_ui_source_route', trim( $path, '/' ) );
 		update_post_meta( $id, '_dxai_ui_from_live_menu', '1' );

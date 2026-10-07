@@ -12,6 +12,67 @@
 	margin: 12px 0;
 }
 
+#dxai-ui-app .dxai-team__menu {
+	border: 0;
+	margin: 12px 0;
+	padding: 0;
+}
+
+#dxai-ui-app .dxai-team__menu legend {
+	padding: 0;
+	margin-bottom: 8px;
+	color: var(--dxai-text);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-team__menu-rows {
+	list-style: none;
+	margin: 12px 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-height: 420px;
+	overflow-y: auto;
+}
+
+#dxai-ui-app .dxai-team__menu-rows > li {
+	display: grid;
+	grid-template-columns: minmax(180px, 1.3fr) minmax(120px, 0.7fr) minmax(160px, 1fr);
+	align-items: center;
+	gap: 4px 14px;
+	padding: 6px 10px;
+	border: 1px solid var(--dxai-line);
+	border-radius: var(--dxai-radius, 10px);
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-team__menu-rows > li:not(.is-on) {
+	opacity: 0.6;
+}
+
+#dxai-ui-app .dxai-team__menu-rows > li > .dxai-muted {
+	grid-column: 1 / -1;
+	font-size: 12px;
+}
+
+#dxai-ui-app .dxai-team__left-out {
+	margin: 8px 0 0;
+	color: var(--dxai-muted);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-team__left-out ul {
+	margin: 8px 0 0;
+	padding-left: 18px;
+}
+
+@media (max-width: 782px) {
+	#dxai-ui-app .dxai-team__menu-rows > li {
+		grid-template-columns: 1fr;
+	}
+}
+
 #dxai-ui-app .dxai-team__general {
 	border: 0;
 	margin: 12px 0;

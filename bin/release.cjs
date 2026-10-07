@@ -28,7 +28,7 @@ const DST = path.join(WORK, 'dxai-ui');
 const OUT = path.join(ROOT, 'dist', 'dxai-ui-' + VERSION + '.zip');
 
 // What ships. Nothing else: no assets/src, bin, fixtures, node_modules, logs.
-const KEEP = ['dxai-ui.php', 'uninstall.php', 'readme.txt', 'LICENSE', 'src', 'data', 'templates', 'languages', 'runtime', 'assets/build', 'assets/css', 'assets/js', 'assets/vendor', 'assets/index.php'];
+const KEEP = ['dxai-ui.php', 'uninstall.php', 'readme.txt', 'LICENSE', 'src', 'data', 'templates', 'themes', 'languages', 'runtime', 'assets/build', 'assets/css', 'assets/js', 'assets/vendor', 'assets/index.php'];
 const DEV = /[\\/](node_modules|\.git|\.verify|\.cursor|\.DS_Store)([\\/]|$)/;
 const JUNK = /\.(bak|orig|log|map|tmp)$/i;
 
@@ -67,6 +67,8 @@ stamp('readme.txt', /(Stable tag:\s*)[^\r\n]+/, '$1' + VERSION);
 // Promises the plugin makes that a release must keep.
 const read = (rel) => fs.readFileSync(path.join(DST, rel), 'utf8');
 need(fs.existsSync(path.join(DST, 'runtime/dxai-ui-runtime.php')), 'the runtime loader ships');
+need(fs.existsSync(path.join(DST, 'templates/dxai-template.php')) && fs.existsSync(path.join(DST, 'templates/dxai-blank.php')), 'both page templates ship (the DX template, and DX Blank for the pages of earlier imports)');
+need(fs.existsSync(path.join(DST, 'themes/dx-base/style.css')) && fs.existsSync(path.join(DST, 'themes/dx-base/header.php')), 'the DX Base theme ships (the Template card installs it from the plugin)');
 const un = read('uninstall.php');
 need(!/wp_delete_post\s*\(/.test(un), 'uninstall.php never deletes posts');
 need(/dxai_ui_keep_runtime/.test(un), 'uninstall.php keeps the runtime');

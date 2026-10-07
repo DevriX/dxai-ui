@@ -13,6 +13,9 @@ final class Html_To_Blocks {
 
 	private const GROUP_TAGS = array( 'header', 'footer', 'section', 'nav', 'main', 'aside', 'article', 'div' );
 	private const HEADING_TAGS = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
+
+	/** What a list row holds when it is more than rich text (row_holds_structure()). */
+	private const ROW_STRUCTURE_TAGS = array( 'div', 'section', 'article', 'aside', 'nav', 'ul', 'ol', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'figure', 'form', 'table', 'details' );
 	private const PHRASE_TAGS = array( 'span', 'em', 'strong', 'i', 'b', 'br', 'small', 'code', 'mark', 'sub', 'sup', 'abbr', 'time', 'u' );
 
 	/**
@@ -3649,8 +3652,25 @@ final class Html_To_Blocks {
 		}
 
 		$items = array();
+		$menu  = $this->in_menu_area( $el );
 		foreach ( $el->childNodes as $child ) {
 			if ( ! $child instanceof \DOMElement || strtolower( $child->tagName ) !== 'li' ) {
+				continue;
+			}
+			/*
+			 * A row of a header's navigation that holds more than a line — a
+			 * trigger and its panel: a dropdown, a mega menu — is not rich text.
+			 * core/list-item keeps such a row as one blob of HTML, so nothing that
+			 * reads the header (Header_Template) can tell the trigger from the
+			 * panel or one panel link from the next, and a design whose menu is
+			 * written this way (Five Star, ARA Guide) could never have its items
+			 * in Appearance > Menus. The row becomes the element it is with its
+			 * children as blocks, the way every other dropdown of a header is.
+			 * Only in a header's own menu: a list anywhere else, a card grid in
+			 * list items included, is converted as before.
+			 */
+			if ( $menu && $this->row_holds_structure( $child ) ) {
+				$items[] = $this->control_block( $child );
 				continue;
 			}
 			$li_class = $this->class_name( $child );
@@ -3739,6 +3759,41 @@ final class Html_To_Blocks {
 			'innerHTML'    => $open . $close,
 			'innerContent' => $content,
 		);
+	}
+
+	/**
+	 * Whether the element sits in the place a design draws its menu: inside a
+	 * <nav> or a <header>, and not inside a <footer> (a footer's link columns
+	 * are read as Appearance > Widgets, by their own reader).
+	 */
+	private function in_menu_area( \DOMElement $el ): bool {
+		$inside = false;
+		for ( $up = $el->parentNode; $up instanceof \DOMElement; $up = $up->parentNode ) {
+			$tag = strtolower( $up->tagName );
+			if ( $tag === 'footer' ) {
+				return false;
+			}
+			if ( $tag === 'nav' || $tag === 'header' ) {
+				$inside = true;
+			}
+		}
+
+		return $inside;
+	}
+
+	/**
+	 * Whether a list row has a block-level element for a child: a panel, a
+	 * nested list, a heading. A link, a button, an icon and the inline runs are
+	 * what a row of rich text holds; these are not.
+	 */
+	private function row_holds_structure( \DOMElement $li ): bool {
+		foreach ( $li->childNodes as $child ) {
+			if ( $child instanceof \DOMElement && in_array( strtolower( $child->tagName ), self::ROW_STRUCTURE_TAGS, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

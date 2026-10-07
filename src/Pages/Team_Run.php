@@ -55,9 +55,10 @@ final class Team_Run {
 	 *
 	 * @param array<int, array{content:string, meta:array<string, string|null>}> $before begin().
 	 * @param array<int, int>                                                    $made   The pages the run made.
+	 * @param array<int, string>                                                 $menus  The menu items' addresses before the run (Team_Menu::menu_urls()): the ones it pointed at a page are kept too.
 	 * @return array{at:int, posts:array<int, array<string, mixed>>}
 	 */
-	public static function finish( int $home, array $before, array $made ): array {
+	public static function finish( int $home, array $before, array $made, array $menus = array() ): array {
 		$posts = array();
 		foreach ( $before as $id => $was ) {
 			$now = (string) get_post_field( 'post_content', (int) $id );
@@ -77,11 +78,22 @@ final class Team_Run {
 				'after'   => md5( (string) get_post_field( 'post_content', (int) $id ) ),
 			);
 		}
-		if ( $posts === array() ) {
+		// The items of the header's menus the run pointed at a page: the address they had, and the one the run left.
+		$items = array();
+		foreach ( $menus as $id => $url ) {
+			$now = (string) get_post_meta( (int) $id, '_menu_item_url', true );
+			if ( $now !== $url ) {
+				$items[ (int) $id ] = array(
+					'was'   => $url,
+					'after' => $now,
+				);
+			}
+		}
+		if ( $posts === array() && $items === array() ) {
 			// The run changed nothing: what the last one did is still the last thing that was done.
 			return self::summary( $home );
 		}
-		update_post_meta( $home, self::META, wp_slash( (string) wp_json_encode( array( 'at' => time(), 'posts' => $posts ), JSON_UNESCAPED_SLASHES ) ) );
+		update_post_meta( $home, self::META, wp_slash( (string) wp_json_encode( array( 'at' => time(), 'posts' => $posts, 'items' => $items ), JSON_UNESCAPED_SLASHES ) ) );
 
 		return self::summary( $home );
 	}
@@ -112,7 +124,7 @@ final class Team_Run {
 		return array(
 			'at'    => (int) $run['at'],
 			'pages' => $pages,
-			'menu'  => isset( $run['posts'][ $home ] ),
+			'menu'  => isset( $run['posts'][ $home ] ) || $run['items'] !== array(),
 		);
 	}
 
@@ -140,6 +152,12 @@ final class Team_Run {
 					'id'    => $id,
 					'title' => trim( html_entity_decode( wp_strip_all_tags( get_the_title( $id ) ), ENT_QUOTES, 'UTF-8' ) ),
 				);
+			}
+		}
+		// The menu items the run pointed at a page get their address back — unless somebody changed one since.
+		foreach ( $run['items'] as $id => $p ) {
+			if ( (string) get_post_meta( (int) $id, '_menu_item_url', true ) === (string) ( $p['after'] ?? '' ) ) {
+				update_post_meta( (int) $id, '_menu_item_url', (string) ( $p['was'] ?? '' ) );
 			}
 		}
 		delete_post_meta( $home, self::META );
@@ -170,7 +188,7 @@ final class Team_Run {
 			return new \WP_Error( 'dxai_ui_team_run_changed', __( 'The page was changed after it was made (its words were written, or someone edited it), so it is left as it is.', 'dxai-ui' ), array( 'status' => 409 ) );
 		}
 		unset( $run['posts'][ $id ] );
-		if ( $run['posts'] === array() ) {
+		if ( $run['posts'] === array() && $run['items'] === array() ) {
 			delete_post_meta( $home, self::META );
 		} else {
 			update_post_meta( $home, self::META, wp_slash( (string) wp_json_encode( $run, JSON_UNESCAPED_SLASHES ) ) );
@@ -225,10 +243,10 @@ final class Team_Run {
 		return get_post( $id ) === null || md5( (string) get_post_field( 'post_content', $id ) ) !== (string) $p['after'];
 	}
 
-	/** @return array{at:int, posts:array<int, array<string, mixed>>}|null */
+	/** @return array{at:int, posts:array<int, array<string, mixed>>, items:array<int, array<string, mixed>>}|null */
 	private static function load( int $home ): ?array {
 		$raw = json_decode( (string) get_post_meta( $home, self::META, true ), true );
-		if ( ! is_array( $raw ) || ! is_array( $raw['posts'] ?? null ) || $raw['posts'] === array() ) {
+		if ( ! is_array( $raw ) || ! is_array( $raw['posts'] ?? null ) || ( $raw['posts'] === array() && empty( $raw['items'] ) ) ) {
 			return null;
 		}
 		$posts = array();
@@ -237,10 +255,17 @@ final class Team_Run {
 				$posts[ (int) $id ] = $p;
 			}
 		}
+		$items = array();
+		foreach ( (array) ( $raw['items'] ?? array() ) as $id => $p ) {
+			if ( is_array( $p ) ) {
+				$items[ (int) $id ] = $p;
+			}
+		}
 
 		return array(
 			'at'    => (int) ( $raw['at'] ?? 0 ),
 			'posts' => $posts,
+			'items' => $items,
 		);
 	}
 

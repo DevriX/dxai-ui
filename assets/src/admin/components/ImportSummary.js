@@ -239,6 +239,12 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 
 			<ChromeRows report={ report } outcome={ outcome } menusUrl={ menusUrl } widgetsUrl={ widgetsUrl } />
 
+			{ outcome.header.mode === CHROME_INSTALL && links?.library && (
+				<p className="dxai-done__next" role="note">
+					{ __( 'Next: the header menu names the pages of the site. In Library › Pages in the team’s style they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dxai-ui' ) }
+				</p>
+			) }
+
 			<div className="dxai-actions dxai-done__actions">
 				{ saved?.page?.view && <a className="components-button is-primary" href={ saved.page.view }>{ __( 'View page', 'dxai-ui' ) }</a> }
 				{ saved?.page?.edit && <a className="components-button is-secondary" href={ saved.page.edit }>{ __( 'Edit page', 'dxai-ui' ) }</a> }

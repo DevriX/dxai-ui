@@ -100,7 +100,7 @@ final class Theme_Fence {
 			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
 		}
 		$source  = Design_Attach::source_for( $post_id );
-		$default = get_page_template_slug( $source ) === Blank_Template::SLUG;
+		$default = Blank_Template::is_canvas( $source );
 
 		return (bool) apply_filters( 'dxai_ui_fence_theme', $default, $post_id );
 	}

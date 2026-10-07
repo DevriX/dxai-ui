@@ -778,6 +778,13 @@ final class Structure_Repository {
 			)
 			: self::kept_chrome( $created, $chrome_mode );
 
+		// The skip link and the header spacer the Home opens with, kept so the DX template can draw them if the page loses them (Template_Chrome).
+		\DXAI_UI\Chrome\Template_Chrome::remember_lead( (int) $page_id );
+
+		// A design that becomes the site's template brings its fonts, hosted on this site (Template_Fonts). Never a failure of the import:
+		// the answer says what was done, or why not.
+		$created['fonts'] = \DXAI_UI\Theme\Template_Fonts::for_import( (int) $page_id, $chrome_mode );
+
 		/*
 		 * The wp_navigation posts, only for an area that kept its part (see
 		 * $nav_pending): as trees bound to the crawled pages when a crawl ran
@@ -2224,7 +2231,7 @@ final class Structure_Repository {
 		 * root utility classes from it — but it is not what is saved.
 		 */
 		$wrapped = $mapper->wrap_scope( $content, $id, $extra );
-		update_post_meta( $id, '_wp_page_template', Blank_Template::SLUG );
+		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
 		update_post_meta( $id, '_dxai_ui_wrapper_class', $extra );
 		update_post_meta( $id, Page_Scope::META, $id );
 		/*

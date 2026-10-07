@@ -31,6 +31,7 @@ final class Rest_Registrar {
 				( new Speed_Controller() )->register_routes();
 				( new Copy_Controller() )->register_routes();
 				( new Team_Pages_Controller() )->register_routes();
+				( new Template_Controller() )->register_routes();
 			}
 		);
 	}
