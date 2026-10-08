@@ -10,24 +10,180 @@ declare(strict_types=1);
 namespace DXAI_UI\Theme;
 
 use DXAI_UI\Chrome\Chrome_Choice;
+use DXAI_UI\Theme\Adapters\Amr_Adapter;
+use DXAI_UI\Theme\Adapters\Block_Theme_Adapter;
+use DXAI_UI\Theme\Adapters\Classic_Adapter;
+use DXAI_UI\Theme\Adapters\Dx_Base_Adapter;
+use DXAI_UI\Theme\Adapters\Theme_Adapter;
 
 /**
  * One place that answers what the site's theme offers a design (docs/PLAN-ARCHITECTURE.md, section 5): whether it is a DX theme
  * and draws the header and the footer itself, whether it has a theme.json (presets, global styles, a style variation), which
- * picture block it registers, which button styles it has, its palette, its fonts, its layout sizes, its menu locations and
- * widget areas, and whether a style variation can be written into its `styles/` folder.
+ * blocks of its own stand in for a design's pictures, link boxes and labels (and how they are written), what it brings on its own
+ * pages, its button styles, its palette, its fonts, its layout sizes, its menu locations and widget areas, and whether a style
+ * variation can be written into its `styles/` folder.
  *
- * The answers come from the classes that have read the theme all along (Theme_Compat, Theme_Palette, Theme_Fonts, Theme_Buttons,
- * Base_Theme, Chrome_Choice); what is new is that a reader asks here, and nothing that asks here needs the theme's name. The
- * Design IR's style variation is the first reader; the plan moves the others over one by one (phase 2в).
+ * The answers about the kind of theme come from its adapter (Adapters\Theme_Adapter: DX Base, a DX theme, a block theme, a classic
+ * theme) — the one folder that spells a theme's name or its blocks' —, the rest from the classes that have read the theme all along
+ * (Theme_Compat, Theme_Palette, Theme_Fonts, Theme_Buttons, Base_Theme, Chrome_Choice). Nothing that asks here needs the theme's
+ * name; bin/verify-theme-contract.php holds the rest of the plugin to that.
  */
 final class Capabilities {
 
+	/** What a theme may bring on its own pages, and the theme support any theme declares to say it does. */
+	public const FEATURES = array(
+		'video-facade'   => 'dxai-youtube-facade',
+		'library-styles' => 'dxai-block-library',
+	);
+
+	/** Core's block for a role, where the theme has none of its own. */
+	public const CORE_BLOCKS = array(
+		'picture' => 'core/image',
+	);
+
+	/** @var Theme_Adapter|null An adapter assumed in a test, in place of the active theme's. */
+	private static ?Theme_Adapter $assumed = null;
+
+	/**
+	 * The adapters, in the order they are tried: a theme is read through the first that matches.
+	 *
+	 * @return array<int, Theme_Adapter>
+	 */
+	public static function adapters(): array {
+		return array( new Dx_Base_Adapter(), new Amr_Adapter(), new Block_Theme_Adapter(), new Classic_Adapter() );
+	}
+
+	/** The adapter of the active theme. Not memoised: a suite switches themes within one request. */
+	public static function adapter(): Theme_Adapter {
+		if ( self::$assumed !== null ) {
+			return self::$assumed;
+		}
+		foreach ( self::adapters() as $adapter ) {
+			if ( $adapter->matches() ) {
+				return $adapter;
+			}
+		}
+
+		return new Classic_Adapter();
+	}
+
+	/** Tests only: read the theme through this adapter (null: the active theme's again). */
+	public static function assume( ?Theme_Adapter $adapter ): void {
+		self::$assumed = $adapter;
+	}
+
+	public static function has_block( string $name ): bool {
+		return $name !== '' && \WP_Block_Type_Registry::get_instance()->is_registered( $name );
+	}
+
+	/**
+	 * Every block any adapter knows for a role, the active theme's first: for recognising saved content, which may have been made on
+	 * another theme.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function blocks( string $role ): array {
+		$out = array();
+		foreach ( array_merge( array( self::adapter() ), self::adapters() ) as $adapter ) {
+			$name = (string) ( $adapter->blocks()[ $role ] ?? '' );
+			if ( $name !== '' && ! in_array( $name, $out, true ) ) {
+				$out[] = $name;
+			}
+		}
+
+		return $out;
+	}
+
+	/** Whether a block plays this role on any theme (blocks()). */
+	public static function is_block( string $name, string $role ): bool {
+		return $name !== '' && in_array( $name, self::blocks( $role ), true );
+	}
+
+	/** The block a theme names for a role — the active theme's, else the first any adapter names —, '' when none does. Registered or not. */
+	public static function theme_block( string $role ): string {
+		return (string) ( self::blocks( $role )[0] ?? '' );
+	}
+
+	/** The block to make for a role on this site: the first theme block for it that is registered, else core's (CORE_BLOCKS), else ''. */
+	public static function block( string $role ): string {
+		foreach ( self::blocks( $role ) as $name ) {
+			if ( self::has_block( $name ) ) {
+				return $name;
+			}
+		}
+
+		return (string) ( self::CORE_BLOCKS[ $role ] ?? '' );
+	}
+
 	/** The picture block the theme registers, or core's. */
 	public static function picture_block(): string {
-		$registry = \WP_Block_Type_Registry::get_instance();
+		return self::block( 'picture' );
+	}
 
-		return $registry->is_registered( 'dx/picture' ) ? 'dx/picture' : 'core/image';
+	/**
+	 * Every block that is a picture on this site: core's, the plugin's own, and the themes'.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function image_blocks(): array {
+		return array_merge( array( 'core/image', 'dxai-ui/image' ), self::blocks( 'picture' ) );
+	}
+
+	/**
+	 * How a theme's block is written (Theme_Adapter::markup()), or null for a block no adapter knows.
+	 *
+	 * @return array{tag:string, classes:array<int, string>}|null
+	 */
+	public static function markup_of( string $block ): ?array {
+		foreach ( array_merge( array( self::adapter() ), self::adapters() ) as $adapter ) {
+			$markup = $adapter->markup()[ $block ] ?? null;
+			if ( is_array( $markup ) ) {
+				return array(
+					'tag'     => (string) ( $markup['tag'] ?? '' ),
+					'classes' => array_values( array_map( 'strval', (array) ( $markup['classes'] ?? array() ) ) ),
+				);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * The attributes of the themes' blocks that hold an attachment id, every adapter's together.
+	 *
+	 * @return array<string, array<int, string>> block name => attribute names.
+	 */
+	public static function media_id_attrs(): array {
+		$out = array();
+		foreach ( self::adapters() as $adapter ) {
+			foreach ( $adapter->media_id_attrs() as $block => $attrs ) {
+				$out[ (string) $block ] = array_values( array_unique( array_merge( $out[ (string) $block ] ?? array(), array_map( 'strval', (array) $attrs ) ) ) );
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The attributes of a theme's picture block (Theme_Adapter::picture_shape()); empty for a block that is no theme's picture.
+	 *
+	 * @return array{id:string, url:string, alt:string, width:string, height:string, mobile:array<int, string>}|array{}
+	 */
+	public static function picture_shape( string $block ): array {
+		foreach ( array_merge( array( self::adapter() ), self::adapters() ) as $adapter ) {
+			if ( ( $adapter->blocks()['picture'] ?? '' ) === $block && $adapter->picture_shape() !== array() ) {
+				return $adapter->picture_shape();
+			}
+		}
+
+		return array();
+	}
+
+	/** Whether the theme brings a feature on its own pages (FEATURES): it says so with a theme support, or its adapter knows it does. */
+	public static function brings( string $feature ): bool {
+		$support = (string) ( self::FEATURES[ $feature ] ?? '' );
+
+		return ( $support !== '' && current_theme_supports( $support ) ) || in_array( $feature, self::adapter()->brings(), true );
 	}
 
 	public static function is_dx(): bool {
@@ -142,12 +298,14 @@ final class Capabilities {
 	 * @return array<string, mixed>
 	 */
 	public static function report(): array {
-		$theme = wp_get_theme();
+		$theme   = wp_get_theme();
+		$adapter = self::adapter();
 
 		return array(
 			'theme'           => array(
 				'slug'        => get_stylesheet(),
 				'name'        => (string) $theme->get( 'Name' ),
+				'adapter'     => $adapter->id(),
 				'dx'          => self::is_dx(),
 				'base'        => self::is_base(),
 				'block_theme' => self::is_block_theme(),
@@ -155,6 +313,8 @@ final class Capabilities {
 			),
 			'draws_chrome'    => self::draws_chrome(),
 			'picture_block'   => self::picture_block(),
+			'blocks'          => $adapter->blocks(),
+			'brings'          => array_values( array_filter( array_keys( self::FEATURES ), array( self::class, 'brings' ) ) ),
 			'button_styles'   => self::button_styles(),
 			'palette'         => self::palette(),
 			'fonts'           => self::fonts() !== null,

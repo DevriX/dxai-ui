@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Pages;
 
 use DXAI_UI\Support\Upload_Paths;
+use DXAI_UI\Theme\Capabilities;
 
 /**
  * Pages made from the Home's own sections look like each other when each section is the Home's section untouched. A variant
@@ -476,7 +477,7 @@ final class Section_Variants {
 
 	/** @param array<string, mixed> $b */
 	private static function has_image( array $b ): bool {
-		if ( in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image', 'dx/picture' ), true ) ) {
+		if ( in_array( (string) ( $b['blockName'] ?? '' ), Capabilities::image_blocks(), true ) ) {
 			return true;
 		}
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {

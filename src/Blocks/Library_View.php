@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks;
 
+use DXAI_UI\Theme\Capabilities;
 use DXAI_UI\Theme\Theme_Compat;
 
 /**
@@ -35,9 +36,6 @@ final class Library_View {
 	/** The class every section of the library has (bin/build-block-library.php puts it on the section). */
 	public const MARK = 'dxai-lib';
 
-	/** Themes known to bring the FAQ's script and styles, and the global styles, on their own pages. */
-	private const THEMES = array( 'american-restoration' );
-
 	/** @var array<string, true> The custom CSS rules already added to the stylesheet. */
 	private static array $added = array();
 
@@ -55,12 +53,12 @@ final class Library_View {
 	}
 
 	/**
-	 * Whether the theme draws the section on this page: it brings the global styles and its own FAQ. Not on a converted page, whatever the
-	 * theme (it is detached from it).
+	 * Whether the theme draws the section on this page: it brings the global styles and its own FAQ (Capabilities::brings(): the theme says
+	 * so with the `dxai-block-library` support, or its adapter knows it does). Not on a converted page, whatever the theme (it is detached
+	 * from it).
 	 */
 	public static function theme_handles(): bool {
-		$can = ! Theme_Compat::is_converted_page()
-			&& ( current_theme_supports( 'dxai-block-library' ) || in_array( get_template(), self::THEMES, true ) || in_array( get_stylesheet(), self::THEMES, true ) );
+		$can = ! Theme_Compat::is_converted_page() && Capabilities::brings( 'library-styles' );
 
 		/**
 		 * Whether the active theme brings what the library's sections need (global styles, the FAQ's styles and script) on this page. On, the

@@ -1063,17 +1063,18 @@ final class Header_Renderer {
 	 */
 	private static function retarget_pictures( array $block, string $url, string $alt, int $id ): array {
 		foreach ( Header_Template::kids( $block ) as $i => $kid ) {
-			if ( 'dx/picture' === ( $kid['blockName'] ?? '' ) ) {
-				$attrs             = (array) ( $kid['attrs'] ?? array() );
-				$attrs['imageUrl'] = $url;
+			$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
+			if ( $shape !== array() ) {
+				$attrs                   = (array) ( $kid['attrs'] ?? array() );
+				$attrs[ $shape['url'] ] = $url;
 				if ( $id > 0 ) {
-					$attrs['imageId'] = $id;
+					$attrs[ $shape['id'] ] = $id;
 				}
 				if ( $alt !== '' ) {
-					$attrs['imageAlt'] = $alt;
+					$attrs[ $shape['alt'] ] = $alt;
 				}
 				// They described the design's image, not this one.
-				unset( $attrs['imageWidth'], $attrs['imageHeight'] );
+				unset( $attrs[ $shape['width'] ], $attrs[ $shape['height'] ] );
 				$kid['attrs']               = $attrs;
 				$block['innerBlocks'][ $i ] = $kid;
 				continue;

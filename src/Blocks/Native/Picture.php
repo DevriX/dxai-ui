@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks\Native;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * An image of a design is a block of the team's own, DX Picture (`dx/picture`: a server-rendered `<picture>` with the right file for the
  * screen, an LCP switch and a sidebar to replace the image), not one the plugin makes. The plugin's own image block (`dxai-ui/image`) and the
@@ -57,7 +59,7 @@ final class Picture extends Converter {
 	}
 
 	public function target(): string {
-		return 'dx/picture';
+		return Capabilities::theme_block( 'picture' );
 	}
 
 	public function available(): bool {

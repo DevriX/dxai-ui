@@ -11,8 +11,8 @@ namespace DXAI_UI\API;
 
 use DXAI_UI\Chrome\Chrome_Choice;
 use DXAI_UI\Theme\Base_Theme;
+use DXAI_UI\Theme\Capabilities;
 use DXAI_UI\Theme\Template_Fonts;
-use DXAI_UI\Theme\Theme_Compat;
 use DXAI_UI\Theme\Theme_Options;
 
 /**
@@ -123,8 +123,8 @@ final class Template_Controller {
 			'theme'  => array(
 				'name' => html_entity_decode( (string) $theme->get( 'Name' ), ENT_QUOTES, 'UTF-8' ),
 				'slug' => (string) get_stylesheet(),
-				'dx'   => Theme_Compat::is_dx_theme(),
-				'base' => Theme_Compat::is_base_theme(),
+				'dx'   => Capabilities::is_dx(),
+				'base' => Capabilities::is_base(),
 			),
 			'base'   => array(
 				'name'          => 'DX Base',

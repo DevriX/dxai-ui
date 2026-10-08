@@ -444,6 +444,10 @@ final class Section_Library {
 		$attrs = (array) $block['attrs'];
 		$tag   = strtolower( (string) ( $attrs['tagName'] ?? '' ) );
 		$class = (string) ( $attrs['className'] ?? '' );
+		// The theme's own picture block, where a design's images became it.
+		if ( \DXAI_UI\Theme\Capabilities::is_block( $name, 'picture' ) ) {
+			return 'image';
+		}
 		switch ( $name ) {
 			case 'core/heading':
 				return 'heading';
@@ -456,7 +460,6 @@ final class Section_Library {
 				return 'link';
 			case 'core/image':
 			case 'dxai-ui/image':
-			case 'dx/picture':
 				return 'image';
 			case 'dxai-ui/svg':
 				return 'icon';

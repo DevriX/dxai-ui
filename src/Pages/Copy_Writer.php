@@ -12,6 +12,7 @@ namespace DXAI_UI\Pages;
 use DXAI_UI\Compiler\Json_Repair;
 use DXAI_UI\Engines\LLM_Provider_Interface;
 use DXAI_UI\Structures\Live_Page_Restyler;
+use DXAI_UI\Theme\Capabilities;
 
 /**
  * The team's prompt (Copy_Prompt) asks an AI to go through a page's visible text and give back new copy block by
@@ -42,11 +43,19 @@ final class Copy_Writer {
 		'core/heading'   => 'heading',
 		'core/paragraph' => 'paragraph',
 		'core/list-item' => 'list item',
-		'amr/span'       => 'label',
 		'dxai-ui/text'   => 'text',
 		'core/button'    => 'button',
 		'dxai-ui/link'   => 'link',
 	);
+
+	/**
+	 * LEAF, with the theme's own label block (its Span) as a label.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function leaves(): array {
+		return self::LEAF + array_fill_keys( Capabilities::blocks( 'span' ), 'label' );
+	}
 
 	/**
 	 * The words of a page, in reading order.
@@ -448,7 +457,7 @@ final class Copy_Writer {
 	 */
 	private static function leaf( array $b ): ?array {
 		$name = (string) ( $b['blockName'] ?? '' );
-		if ( ! isset( self::LEAF[ $name ] ) || ! empty( $b['innerBlocks'] ) ) {
+		if ( ! isset( self::leaves()[ $name ] ) || ! empty( $b['innerBlocks'] ) ) {
 			return null;
 		}
 		$content = is_array( $b['innerContent'] ?? null ) ? $b['innerContent'] : array();
@@ -475,7 +484,7 @@ final class Copy_Writer {
 		}
 
 		return array(
-			'kind'  => self::LEAF[ $name ],
+			'kind'  => self::leaves()[ $name ],
 			'open'  => $m[1],
 			'inner' => $inner,
 			'close' => $m[3],

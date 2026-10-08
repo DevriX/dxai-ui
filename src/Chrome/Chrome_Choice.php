@@ -197,7 +197,7 @@ final class Chrome_Choice {
 		$owners    = self::owners();
 		$others    = self::held_by_others( $design, $owners );
 		$theme     = self::theme_draws_chrome();
-		$dx        = $theme && \DXAI_UI\Theme\Theme_Compat::is_dx_theme();
+		$dx        = $theme && \DXAI_UI\Theme\Capabilities::is_dx();
 		$scope     = (string) ( $design['scope'] ?? 'site' );
 		$site      = array(
 			'menus'   => array(),

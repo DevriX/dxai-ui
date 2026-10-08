@@ -46,10 +46,9 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Page_Export {
 
-	/** Media blocks and the attributes that hold an attachment id. */
-	public const MEDIA_ID_ATTRS = array(
+	/** Core's media blocks and the attributes that hold an attachment id. */
+	private const CORE_MEDIA_ID_ATTRS = array(
 		'core/image'      => array( 'id' ),
-		'dx/picture'      => array( 'imageId', 'mobileImageId' ),
 		'core/cover'      => array( 'id' ),
 		'core/media-text' => array( 'mediaId' ),
 		'core/video'      => array( 'id' ),
@@ -57,6 +56,15 @@ final class Page_Export {
 		'core/file'       => array( 'id' ),
 		'core/gallery'    => array( 'ids' ),
 	);
+
+	/**
+	 * Media blocks and the attributes that hold an attachment id: core's, and the themes' (a DX Picture's image and its phone's image).
+	 *
+	 * @return array<string, array<int, string>>
+	 */
+	public static function media_id_attrs(): array {
+		return self::CORE_MEDIA_ID_ATTRS + \DXAI_UI\Theme\Capabilities::media_id_attrs();
+	}
 
 	/** Meta the target keeps for itself, never carried from a source. */
 	private const SKIP_META = array( Package::KEY_META, Package::SOURCE_META );
@@ -548,7 +556,7 @@ final class Page_Export {
 			} elseif ( $name === 'core/navigation' ) {
 				$this->add_navigation( (int) ( $attrs['ref'] ?? 0 ) );
 			}
-			foreach ( self::MEDIA_ID_ATTRS[ $name ] ?? array() as $key ) {
+			foreach ( self::media_id_attrs()[ $name ] ?? array() as $key ) {
 				foreach ( (array) ( $attrs[ $key ] ?? array() ) as $id ) {
 					if ( is_numeric( $id ) ) {
 						$this->add_attachment( (int) $id );

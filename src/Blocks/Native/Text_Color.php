@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Blocks\Native;
 
 use DXAI_UI\Compiler\Token_Styles;
+use DXAI_UI\Theme\Capabilities;
 use DXAI_UI\Theme\Theme_Binding;
 use DXAI_UI\Theme\Theme_Class_Swap;
 
@@ -45,8 +46,24 @@ class Text_Color extends Converter {
 		'core/heading'   => array( '', array( 'wp-block-heading' ) ),
 		'core/group'     => array( '', array( 'wp-block-group' ) ),
 		'core/list'      => array( '', array( 'wp-block-list' ) ),
-		'amr/span'       => array( 'span', array( 'wp-block-amr-span', 'amr-span' ) ),
 	);
+
+	/**
+	 * BLOCKS, and the theme's own label block (its Span) as its adapter says it is written — only where the site has the block.
+	 *
+	 * @return array<string, array{0:string, 1:array<int, string>}>
+	 */
+	private static function table(): array {
+		$out = self::BLOCKS;
+		foreach ( Capabilities::blocks( 'span' ) as $name ) {
+			$markup = Capabilities::markup_of( $name );
+			if ( $markup !== null && Capabilities::has_block( $name ) ) {
+				$out[ $name ] = array( $markup['tag'], $markup['classes'] );
+			}
+		}
+
+		return $out;
+	}
 
 	/** The attributes it knows how to carry: nothing here changes the tag but the classes. */
 	protected const KNOWN = array( 'className', 'dxaiCss', 'anchor', 'metadata', 'level', 'tagName', 'ordered', 'style', 'backgroundColor' );
@@ -75,7 +92,7 @@ class Text_Color extends Converter {
 	}
 
 	public function sources(): array {
-		return array_keys( self::BLOCKS );
+		return array_keys( self::table() );
 	}
 
 	public function target(): string {
@@ -87,8 +104,9 @@ class Text_Color extends Converter {
 	}
 
 	public function convert( array $block, ?array $parent = null ): ?array {
-		$name = (string) ( $block['blockName'] ?? '' );
-		if ( ! isset( self::BLOCKS[ $name ] ) || ( $name === 'amr/span' && ! \WP_Block_Type_Registry::get_instance()->is_registered( 'amr/span' ) ) ) {
+		$name  = (string) ( $block['blockName'] ?? '' );
+		$table = self::table();
+		if ( ! isset( $table[ $name ] ) ) {
 			return null;
 		}
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
@@ -139,7 +157,7 @@ class Text_Color extends Converter {
 			$new['style']['color']['text'] = 'var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . '))';
 		}
 
-		return self::rewrite( $block, $tag, self::BLOCKS[ $name ][1], $attrs, $new, $extra, $style );
+		return self::rewrite( $block, $tag, $table[ $name ][1], $attrs, $new, $extra, $style );
 	}
 
 	/**
@@ -203,8 +221,9 @@ class Text_Color extends Converter {
 	 * @param array<string, mixed> $attrs
 	 */
 	protected static function tag( string $name, array $attrs ): string {
-		if ( self::BLOCKS[ $name ][0] !== '' ) {
-			return self::BLOCKS[ $name ][0];
+		$fixed = (string) ( self::table()[ $name ][0] ?? '' );
+		if ( $fixed !== '' ) {
+			return $fixed;
 		}
 		switch ( $name ) {
 			case 'core/heading':

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Pages;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * The team's sites (eleven of them, read from their databases: 283 pages) build every page from the same handful of
  * kinds of section, and what differs from a site to a site is which of them a page has and where. This names a
@@ -48,8 +50,9 @@ final class Section_Roles {
 		$name  = strtolower( (string) ( $attrs['metadata']['name'] ?? '' ) . ' ' . (string) ( $attrs['anchor'] ?? '' ) . ' ' . $s['classes'] );
 		$head  = strtolower( implode( ' | ', array_slice( $s['headings'], 0, 2 ) ) );
 		$len   = strlen( trim( $s['text'] ) );
-		$has   = static fn( string $n ): bool => isset( $s['names'][ $n ] );
-		if ( $first && ( $s['h1'] || $has( 'dx/picture' ) || str_contains( $name, 'hero' ) ) ) {
+		// A picture behind the words: the theme's own picture block (a design's hero image becomes it where the theme has one).
+		$has = static fn( array $names ): bool => array_intersect_key( $s['names'], array_flip( $names ) ) !== array();
+		if ( $first && ( $s['h1'] || $has( Capabilities::blocks( 'picture' ) ) || str_contains( $name, 'hero' ) ) ) {
 			return 'hero';
 		}
 		if ( $s['faq'] > 0 || preg_match( '/\bfaqs?\b|frequently asked/', $name . ' ' . $head ) === 1 ) {
@@ -108,7 +111,7 @@ final class Section_Roles {
 		$best = 0;
 		$runs = array();
 		foreach ( $kids as $c ) {
-			if ( ! in_array( (string) $c['blockName'], array( 'core/group', 'dxai-ui/box', 'dxai-ui/link', 'amr/link-box' ), true ) || ! self::has_heading( $c ) ) {
+			if ( ! in_array( (string) $c['blockName'], array_merge( array( 'core/group', 'dxai-ui/box', 'dxai-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) || ! self::has_heading( $c ) ) {
 				continue;
 			}
 			$sig          = Section_Library::signature( $c );
@@ -185,10 +188,10 @@ final class Section_Roles {
 				$out['columns'] = max( $out['columns'], count( (array) ( $b['innerBlocks'] ?? array() ) ) );
 			}
 			$out['cards'] = max( $out['cards'], self::cards_in( $b ) );
-			if ( in_array( $n, array( 'core/image', 'dx/picture', 'dxai-ui/image' ), true ) ) {
+			if ( in_array( $n, Capabilities::image_blocks(), true ) ) {
 				++$out['images'];
 			}
-			if ( in_array( $n, array( 'amr/link-box', 'dxai-ui/link' ), true ) && ! empty( $b['innerBlocks'] ) ) {
+			if ( in_array( $n, array_merge( array( 'dxai-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) && ! empty( $b['innerBlocks'] ) ) {
 				++$out['links'];
 			}
 			if ( str_contains( $cl, 'faq-question' ) ) {

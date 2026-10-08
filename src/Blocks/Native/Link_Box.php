@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks\Native;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * `dxai-ui/link` holding inner blocks (a card that is one link, a logo with a
  * heading), or `dxai-ui/box` written as an `<a>`, → the theme's own
@@ -44,7 +46,7 @@ final class Link_Box extends Converter {
 	}
 
 	public function target(): string {
-		return 'amr/link-box';
+		return Capabilities::theme_block( 'link_box' );
 	}
 
 	public function convert( array $block, ?array $parent = null ): ?array {

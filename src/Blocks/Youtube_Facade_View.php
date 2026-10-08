@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks;
 
+use DXAI_UI\Theme\Capabilities;
 use DXAI_UI\Theme\Theme_Compat;
 
 /**
@@ -28,9 +29,6 @@ final class Youtube_Facade_View {
 
 	public const HANDLE = 'dxai-ui-youtube-facade';
 
-	/** Themes known to bring the facade's script and styles on their own pages. */
-	private const THEMES = array( 'american-restoration' );
-
 	public function register(): void {
 		add_action( 'init', array( $this, 'register_assets' ) );
 		add_filter( 'render_block_core/html', array( $this, 'on_render' ), 10, 1 );
@@ -42,11 +40,11 @@ final class Youtube_Facade_View {
 	}
 
 	/**
-	 * Whether the theme draws the facade on this page. Not on a converted page, whatever the theme (it is detached from it).
+	 * Whether the theme draws the facade on this page (Capabilities::brings(): the theme says so with the `dxai-youtube-facade` support, or
+	 * its adapter knows it does). Not on a converted page, whatever the theme (it is detached from it).
 	 */
 	public static function theme_handles(): bool {
-		$can = ! Theme_Compat::is_converted_page()
-			&& ( current_theme_supports( 'dxai-youtube-facade' ) || in_array( get_template(), self::THEMES, true ) || in_array( get_stylesheet(), self::THEMES, true ) );
+		$can = ! Theme_Compat::is_converted_page() && Capabilities::brings( 'video-facade' );
 
 		/**
 		 * Whether the active theme brings the facade's script and styles on this page. On, the plugin prints neither.

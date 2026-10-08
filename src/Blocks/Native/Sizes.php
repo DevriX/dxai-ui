@@ -11,6 +11,7 @@ namespace DXAI_UI\Blocks\Native;
 
 use DXAI_UI\Compiler\Style_Hoister;
 use DXAI_UI\Compiler\Utility_Classes;
+use DXAI_UI\Theme\Capabilities;
 
 /**
  * The plugin makes classes where the theme has none (`max-w-1280px` beside the theme's `max-w-1200px`), and a class of a width or a
@@ -45,9 +46,6 @@ final class Sizes extends Converter {
 		'dxai-ui/link',
 		'dxai-ui/image',
 		'dxai-ui/svg',
-		'amr/link-box',
-		'amr/span',
-		'dx/picture',
 	);
 
 	public function id(): string {
@@ -63,7 +61,8 @@ final class Sizes extends Converter {
 	}
 
 	public function sources(): array {
-		return self::BLOCKS;
+		// …and the theme's own blocks a design's elements become (a link box, a label, a picture).
+		return array_merge( self::BLOCKS, Capabilities::blocks( 'link_box' ), Capabilities::blocks( 'span' ), Capabilities::blocks( 'picture' ) );
 	}
 
 	public function target(): string {

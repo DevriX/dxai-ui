@@ -11,6 +11,7 @@ namespace DXAI_UI\Pages;
 
 use DXAI_UI\Blocks\Native\Native_Blocks;
 use DXAI_UI\Structures\Page_Scope;
+use DXAI_UI\Theme\Capabilities;
 
 /**
  * A design keeps its menu in its own header and footer (links in blocks, not a WordPress menu), and every page made for
@@ -435,7 +436,7 @@ final class Team_Menu {
 	/** @param array<string, mixed> $b */
 	private static function has_image( array $b ): bool {
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
-			if ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/image', 'dxai-ui/image', 'dx/picture' ), true ) || self::has_image( (array) $c ) ) {
+			if ( in_array( (string) ( $c['blockName'] ?? '' ), Capabilities::image_blocks(), true ) || self::has_image( (array) $c ) ) {
 				return true;
 			}
 		}

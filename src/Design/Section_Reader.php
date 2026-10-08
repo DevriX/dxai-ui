@@ -61,7 +61,7 @@ final class Section_Reader {
 				'repeats' => self::repeats( $component ),
 				'items'   => self::items( $block, $component ),
 				'has'     => array(
-					'image'  => (bool) preg_match( '#<img\b|wp:image\b|wp:dx/picture\b|wp:dxai-ui/image\b#', $html ),
+					'image'  => (bool) preg_match( self::image_pattern(), $html ),
 					'form'   => Section_Library::is_form_block( $block ) || (bool) preg_match( '#<form\b#i', $html ),
 					'button' => (bool) preg_match( '#wp-block-button\b|wp-element-button\b|<button\b#', $html ),
 					'video'  => (bool) preg_match( '#<video\b|<iframe\b|wp:embed\b|youtube#i', $html ),
@@ -71,6 +71,13 @@ final class Section_Reader {
 		}
 
 		return $out;
+	}
+
+	/** An `<img>`, or an image block of any kind: core's, the plugin's own, a theme's picture (Capabilities::image_blocks()). */
+	private static function image_pattern(): string {
+		$names = array_map( static fn( string $n ): string => preg_quote( (string) preg_replace( '#^core/#', '', $n ), '#' ), \DXAI_UI\Theme\Capabilities::image_blocks() );
+
+		return '#<img\b|wp:(?:' . implode( '|', $names ) . ')\b#';
 	}
 
 	/** The words of a piece of markup, counted after the tags are gone. */

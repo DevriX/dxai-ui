@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks\Native;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * `dxai-ui/text` written as a `<span>` holding words → the theme's `amr/span`
  * (american-restoration): an inline span with colour, typography and spacing
@@ -37,7 +39,7 @@ final class Span extends Converter {
 	}
 
 	public function target(): string {
-		return 'amr/span';
+		return Capabilities::theme_block( 'span' );
 	}
 
 	public function convert( array $block, ?array $parent = null ): ?array {

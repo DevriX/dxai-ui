@@ -1523,25 +1523,23 @@ final class Header_Template {
 			&& ( in_array( $href, array( '/', '#', '' ), true ) || untrailingslashit( $href ) === untrailingslashit( home_url() ) || preg_match( '/\b(home|logo)\b/i', (string) ( $attrs['aria-label'] ?? '' ) ) === 1 );
 	}
 
-	/** Blocks that draw their image at render time: the markup they saved holds no <img>. */
-	private const PICTURE_BLOCKS = array( 'dx/picture' );
-
 	/**
-	 * The first picture block under $block: its image, as the block's attributes
-	 * hold it.
+	 * The first picture block under $block — a theme's block that draws its image at render time, so the markup it saved holds no <img> —:
+	 * its image, as the block's attributes hold it (Capabilities::picture_shape()).
 	 *
 	 * @param array<string, mixed> $block
 	 * @return array{src:string, alt:string, id:int}|null
 	 */
 	private static function picture_in( array $block ): ?array {
 		foreach ( self::kids( $block ) as $kid ) {
-			if ( in_array( (string) ( $kid['blockName'] ?? '' ), self::PICTURE_BLOCKS, true ) ) {
+			$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
+			if ( $shape !== array() ) {
 				$attrs = (array) ( $kid['attrs'] ?? array() );
 
 				return array(
-					'src' => (string) ( $attrs['imageUrl'] ?? '' ),
-					'alt' => (string) ( $attrs['imageAlt'] ?? '' ),
-					'id'  => (int) ( $attrs['imageId'] ?? 0 ),
+					'src' => (string) ( $attrs[ $shape['url'] ] ?? '' ),
+					'alt' => (string) ( $attrs[ $shape['alt'] ] ?? '' ),
+					'id'  => (int) ( $attrs[ $shape['id'] ] ?? 0 ),
 				);
 			}
 			$found = self::picture_in( $kid );

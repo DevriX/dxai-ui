@@ -273,23 +273,27 @@ final class Block_Tree {
 	 * @param array<string, mixed> $block dxai-ui/image, core/image, the theme's dx/picture or a dxai-ui/box rendering an <img>.
 	 */
 	public static function set_image( array &$block, string $url, string $alt, int $id = 0 ): void {
-		// DX Picture is printed by the server from its attachment: the picture is another attachment, with its own size.
-		if ( ( $block['blockName'] ?? '' ) === 'dx/picture' ) {
+		// A theme's picture block (DX Picture) is printed by the server from its attachment: the picture is another attachment, with its
+		// own size, in the attributes its adapter names (Capabilities::picture_shape()).
+		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $block['blockName'] ?? '' ) );
+		if ( $shape !== array() ) {
 			if ( $id > 0 ) {
-				$block['attrs']['imageId']  = $id;
-				$block['attrs']['imageUrl'] = $url;
-				$meta                       = wp_get_attachment_metadata( $id );
+				$block['attrs'][ $shape['id'] ]  = $id;
+				$block['attrs'][ $shape['url'] ] = $url;
+				$meta                            = wp_get_attachment_metadata( $id );
 				if ( is_array( $meta ) && ! empty( $meta['width'] ) && ! empty( $meta['height'] ) ) {
-					$block['attrs']['imageWidth']  = (int) $meta['width'];
-					$block['attrs']['imageHeight'] = (int) $meta['height'];
+					$block['attrs'][ $shape['width'] ]  = (int) $meta['width'];
+					$block['attrs'][ $shape['height'] ] = (int) $meta['height'];
 				}
 				// A phone's own picture was for the old one.
-				unset( $block['attrs']['mobileImageId'], $block['attrs']['mobileImageUrl'], $block['attrs']['mobileImageWidth'], $block['attrs']['mobileImageHeight'] );
+				foreach ( $shape['mobile'] as $key ) {
+					unset( $block['attrs'][ $key ] );
+				}
 			}
 			if ( $alt !== '' ) {
-				$block['attrs']['imageAlt'] = $alt;
+				$block['attrs'][ $shape['alt'] ] = $alt;
 			} else {
-				unset( $block['attrs']['imageAlt'] );
+				unset( $block['attrs'][ $shape['alt'] ] );
 			}
 
 			return;

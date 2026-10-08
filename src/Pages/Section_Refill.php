@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Pages;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * The cards of one of the Home's sections are taken as the pattern (Home_Kit): the section keeps its wrapper, its heading and its
  * cards exactly as the Home wrote them, with their classes, and says something else — a heading of its own, a card for each of
@@ -75,7 +77,7 @@ final class Section_Refill {
 			// A card that is a link box of the design's (amr/link-box) is a link as a whole, as a link with blocks in it is: a link inside it
 			// would be a link inside a link, which the browser breaks apart.
 			$first = Block_Tree::at( $block, array_merge( $path, array( $items[0] ) ) );
-			if ( (string) ( $first['blockName'] ?? '' ) === 'amr/link-box' ) {
+			if ( Capabilities::is_block( (string) ( $first['blockName'] ?? '' ), 'link_box' ) ) {
 				$root = 'card';
 			}
 			if ( in_array( $root, array( 'card', 'link' ), true ) && array_filter( $rows, static fn( $r ) => (string) $r['url'] === '' ) ) {

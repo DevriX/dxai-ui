@@ -1335,7 +1335,7 @@ final class Page_Import {
 				}
 			}
 		}
-		foreach ( Page_Export::MEDIA_ID_ATTRS[ $name ] ?? array() as $key ) {
+		foreach ( Page_Export::media_id_attrs()[ $name ] ?? array() as $key ) {
 			if ( $key === 'ids' && is_array( $attrs['ids'] ?? null ) ) {
 				foreach ( $attrs['ids'] as $i => $id ) {
 					if ( is_numeric( $id ) && isset( $this->attachments[ (int) $id ] ) ) {

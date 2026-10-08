@@ -235,7 +235,7 @@ $expect( 'the picture\'s <source> takes no box: in a flex row or a grid the figu
 $expect( 'a page without a marked picture gets none of this', (string) $m->invoke( null, array() ) === '' );
 
 echo "\nExport and import\n";
-$expect( 'a package carries the attachments of a DX Picture and renumbers them on the other site, like those of core\'s Image', in_array( 'imageId', \DXAI_UI\Transfer\Page_Export::MEDIA_ID_ATTRS['dx/picture'] ?? array(), true ) && in_array( 'mobileImageId', \DXAI_UI\Transfer\Page_Export::MEDIA_ID_ATTRS['dx/picture'] ?? array(), true ) );
+$expect( 'a package carries the attachments of a DX Picture and renumbers them on the other site, like those of core\'s Image', in_array( 'imageId', \DXAI_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) && in_array( 'mobileImageId', \DXAI_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) );
 
 $fin();
 

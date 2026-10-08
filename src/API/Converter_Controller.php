@@ -271,7 +271,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			'theme_name'             => $choice['theme_name'],
 			'chrome_owner'           => self::chrome_owner( $choice['chrome_owner'] ),
 			// A theme that is not a DX theme is offered DX Base (Base_Theme::offer(): '', available, installed).
-			'dx_theme'               => \DXAI_UI\Theme\Theme_Compat::is_dx_theme(),
+			'dx_theme'               => \DXAI_UI\Theme\Capabilities::is_dx(),
 			'base_theme'             => \DXAI_UI\Theme\Base_Theme::offer(),
 			// The server's clock, so the screen can say how long ago a save started.
 			'now'            => time(),

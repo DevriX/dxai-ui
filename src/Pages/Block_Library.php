@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Pages;
 
 use DXAI_UI\Media\Svg_Files;
+use DXAI_UI\Theme\Capabilities;
 
 /**
  * A page made from a design's Home takes the Home's own sections (Team_Pages). Where the Home has none of a kind (the questions, a
@@ -685,7 +686,7 @@ final class Block_Library {
 	 * @param array<string, mixed> $block
 	 */
 	private static function unlink( array &$block ): void {
-		if ( ( $block['blockName'] ?? '' ) === 'amr/link-box' && isset( $block['attrs']['url'] ) ) {
+		if ( Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'link_box' ) && isset( $block['attrs']['url'] ) ) {
 			// What the block saves with no address: a div, with the class a link has taken out.
 			unset( $block['attrs']['url'] );
 			$open = static function ( string $s ): string {

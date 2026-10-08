@@ -55,7 +55,7 @@ final class Theme_Compat {
 	 * @return array<int, string> Theme slugs.
 	 */
 	public static function dx_themes(): array {
-		$themes = apply_filters( 'dxai_ui_dx_themes', array( 'american-restoration', Base_Theme::SLUG ) );
+		$themes = apply_filters( 'dxai_ui_dx_themes', array_merge( Adapters\Amr_Adapter::SLUGS, array( Base_Theme::SLUG ) ) );
 
 		return array_values( array_unique( array_filter( array_map( 'strval', is_array( $themes ) ? $themes : array() ) ) ) );
 	}
