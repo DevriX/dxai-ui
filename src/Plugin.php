@@ -65,6 +65,8 @@ final class Plugin {
 		( new Blank_Template() )->register();
 		// The imported design's tokens as editable global-styles presets.
 		( new Design_Theme_Json() )->register();
+		// A design's tokens as a theme.json style variation, the site's when a person applies it (docs/PLAN-ARCHITECTURE.md, phase 2).
+		( new \DXAI_UI\Design\Style_Variation() )->register();
 		( new Part_Theme_Binding() )->register();
 		( new Kses_Styles() )->register();
 		if ( ! $render_only ) {

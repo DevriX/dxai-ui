@@ -43,7 +43,9 @@ use DXAI_UI\Pages\Section_Roles;
  *   assets       { images, svg, videos, fonts, files, list[] { url, alt } }
  *   behaviours[] { kind, count, compiled: true|false|null, note }
  *   layout       null (version 1; the layout tree is phase 1б of the plan)
- *   report       { unevaluated[] { kind, source, count }, notes[], coverage[] { dimension, source, page, short, informational } }
+ *   report       { unevaluated[] { kind, source, count }, notes[], coverage[] { dimension, source, page, short, informational },
+ *                  css: { bytes, rules, literals } (the design's own stylesheet — what the presets have not taken over yet — and how many
+ *                  colours its blocks still write as literals; the budget the plan's phase 2 measures) }
  *   built        { plugin, compiler, at }
  */
 final class Document {
@@ -120,6 +122,11 @@ final class Document {
 					'unevaluated' => array(),
 					'notes'       => array(),
 					'coverage'    => array(),
+					'css'         => array(
+						'bytes'    => 0,
+						'rules'    => 0,
+						'literals' => 0,
+					),
 				),
 				is_array( $data['report'] ?? null ) ? $data['report'] : array()
 			),

@@ -21,8 +21,12 @@ use DXAI_UI\Structures\Design_Attach;
  *   wp dxai-ui design list                   every design on the site and whether it has a document
  *   wp dxai-ui design rebuild <id>|all       build the document of a design imported before documents were kept, from its
  *                                            conversion snapshot (every save keeps one); `all` does every design that has none
+ *   wp dxai-ui design variation <id>         the design's theme.json style variation, as the file it would be
+ *   wp dxai-ui design variation <id> --apply | --clear | --write
+ *                                            make it the site's style / the theme's own again / write it into the theme's styles folder
  *
- * list and the summary read only; rebuild writes the document on the design's Home and nothing else.
+ * list, the summary and the variation read only; rebuild writes the document on the design's Home, --apply an option, --write a file
+ * in the plugin's own theme, and nothing else.
  */
 final class Design_Cli {
 
@@ -54,6 +58,21 @@ final class Design_Cli {
 						'name'     => 'force',
 						'optional' => true,
 					),
+					array(
+						'type'     => 'flag',
+						'name'     => 'apply',
+						'optional' => true,
+					),
+					array(
+						'type'     => 'flag',
+						'name'     => 'clear',
+						'optional' => true,
+					),
+					array(
+						'type'     => 'flag',
+						'name'     => 'write',
+						'optional' => true,
+					),
 				),
 			)
 		);
@@ -65,6 +84,43 @@ final class Design_Cli {
 	 */
 	public static function run( array $args, array $assoc ): void {
 		$what = (string) ( $args[0] ?? '' );
+		if ( 'variation' === $what ) {
+			$id   = (int) ( $args[1] ?? 0 );
+			$home = Document_Store::home_of( $id );
+			if ( $home < 1 ) {
+				\WP_CLI::error( 'No design has a page with this id.' );
+			}
+			if ( ! empty( $assoc['apply'] ) ) {
+				$done = \DXAI_UI\Design\Style_Variation::apply( $home );
+				if ( is_wp_error( $done ) ) {
+					\WP_CLI::error( $done->get_error_message() );
+				}
+				\WP_CLI::success( sprintf( 'The site\'s style is now the design\'s (#%d).', $home ) );
+
+				return;
+			}
+			if ( ! empty( $assoc['clear'] ) ) {
+				\WP_CLI::success( \DXAI_UI\Design\Style_Variation::clear() ? 'The site\'s style is the theme\'s own again.' : 'No design\'s style was applied.' );
+
+				return;
+			}
+			if ( ! empty( $assoc['write'] ) ) {
+				$done = \DXAI_UI\Design\Style_Variation::write( $home );
+				if ( is_wp_error( $done ) ) {
+					\WP_CLI::error( $done->get_error_message() );
+				}
+				\WP_CLI::success( sprintf( 'Written: %s (%d bytes).', $done['path'], $done['bytes'] ) );
+
+				return;
+			}
+			$json = \DXAI_UI\Design\Style_Variation::json( $home );
+			if ( is_wp_error( $json ) ) {
+				\WP_CLI::error( $json->get_error_message() );
+			}
+			\WP_CLI::line( rtrim( $json ) );
+
+			return;
+		}
 		if ( 'rebuild' === $what ) {
 			$target = (string) ( $args[1] ?? '' );
 			$ids    = 'all' === $target

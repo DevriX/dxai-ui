@@ -76,6 +76,80 @@ final class Design_Controller {
 				),
 			)
 		);
+		// The design's style variation (Style_Variation): read it, apply it as the site's, take it off, write it into the theme.
+		register_rest_route(
+			DXAI_UI_REST_NAMESPACE,
+			'/design/(?P<id>\d+)/variation',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'variation' ),
+					'permission_callback' => array( $this, 'permissions' ),
+					'args'                => array(
+						'id' => array(
+							'type'     => 'integer',
+							'required' => true,
+							'minimum'  => 1,
+						),
+					),
+				),
+				array(
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'variation_run' ),
+					'permission_callback' => array( $this, 'write_permissions' ),
+					'args'                => array(
+						'id'     => array(
+							'type'     => 'integer',
+							'required' => true,
+							'minimum'  => 1,
+						),
+						'action' => array(
+							'type'     => 'string',
+							'enum'     => array( 'apply', 'clear', 'write' ),
+							'required' => true,
+						),
+					),
+				),
+			)
+		);
+	}
+
+	public function variation( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
+		if ( $home < 1 ) {
+			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+		}
+		$json = \DXAI_UI\Design\Style_Variation::json( $home );
+		if ( is_wp_error( $json ) ) {
+			$json->add_data( array( 'status' => 404 ) );
+
+			return $json;
+		}
+
+		return new \WP_REST_Response( \DXAI_UI\Design\Style_Variation::status( $home ) + array( 'json' => $json, 'capabilities' => \DXAI_UI\Theme\Capabilities::report() ) );
+	}
+
+	public function variation_run( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
+		if ( $home < 1 ) {
+			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+		}
+		$action = (string) $request->get_param( 'action' );
+		$done   = array();
+		if ( 'apply' === $action ) {
+			$done = \DXAI_UI\Design\Style_Variation::apply( $home );
+		} elseif ( 'clear' === $action ) {
+			\DXAI_UI\Design\Style_Variation::clear();
+		} elseif ( 'write' === $action ) {
+			$done = \DXAI_UI\Design\Style_Variation::write( $home );
+		}
+		if ( is_wp_error( $done ) ) {
+			$done->add_data( array( 'status' => 'dxai_ui_variation_not_ours' === $done->get_error_code() ? 409 : 422 ) );
+
+			return $done;
+		}
+
+		return new \WP_REST_Response( \DXAI_UI\Design\Style_Variation::status( $home ) + array( 'done' => $action, 'result' => $done ) );
 	}
 
 	public function permissions(): bool|\WP_Error {

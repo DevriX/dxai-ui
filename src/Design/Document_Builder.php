@@ -72,6 +72,7 @@ final class Document_Builder {
 					'unevaluated' => array_values( array_filter( is_array( $result['unevaluated'] ?? null ) ? $result['unevaluated'] : array(), 'is_array' ) ),
 					'notes'       => array_values( array_unique( array_merge( array_map( 'strval', is_array( $result['compiler_notes'] ?? null ) ? $result['compiler_notes'] : array() ), $notes ) ) ),
 					'coverage'    => $coverage,
+					'css'         => self::css_budget( $result, $home, $pages ),
 				),
 				'built'       => array(
 					'plugin'   => defined( 'DXAI_UI_VERSION' ) ? (string) DXAI_UI_VERSION : '',
@@ -274,6 +275,41 @@ final class Document_Builder {
 				'title'       => sanitize_text_field( $seo_title ),
 				'description' => '',
 			),
+		);
+	}
+
+	/**
+	 * The residual CSS: the design's own stylesheet as saved (its bytes and rules — what the presets and the blocks' settings have not
+	 * taken over) and how many colours the pages' blocks still write as literals (Token_Styles::count_literals()). Before a save, the
+	 * compiled sheet.
+	 *
+	 * @param array<string, mixed>             $result
+	 * @param array<int, array<string, mixed>> $pages
+	 * @return array{bytes:int, rules:int, literals:int}
+	 */
+	private static function css_budget( array $result, int $home, array $pages ): array {
+		$css = (string) ( $result['custom_css'] ?? '' );
+		if ( $home > 0 ) {
+			$path = \DXAI_UI\Support\Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] ?? '';
+			if ( is_string( $path ) && $path !== '' && is_readable( $path ) ) {
+				$css = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			}
+		}
+		$literals = 0;
+		foreach ( $pages as $page ) {
+			$id = (int) ( $page['id'] ?? 0 );
+			if ( $id > 0 ) {
+				$literals += \DXAI_UI\Compiler\Token_Styles::count_literals( (string) get_post_field( 'post_content', $id ) );
+			}
+		}
+		if ( $home < 1 ) {
+			$literals = \DXAI_UI\Compiler\Token_Styles::count_literals( (string) ( $result['gutenberg_markup'] ?? '' ) );
+		}
+
+		return array(
+			'bytes'    => strlen( $css ),
+			'rules'    => substr_count( $css, '{' ),
+			'literals' => $literals,
 		);
 	}
 

@@ -158,7 +158,7 @@ echo "\n1. Who may call what\n";
 $tiers = array(
 	'public' => array( 'GET ', 'POST /forms/submit' ),
 	'editor' => array( 'GET /utility-rules' ),
-	'manage' => array( 'GET /settings', 'POST /settings', 'POST /settings/test', 'GET /patterns', 'GET /import-info', 'POST /refine-structure', 'GET /forms/entries', 'GET /forms/export', 'GET /design', 'GET /design/(?P<id>\d+)' ),
+	'manage' => array( 'GET /settings', 'POST /settings', 'POST /settings/test', 'GET /patterns', 'GET /import-info', 'POST /refine-structure', 'GET /forms/entries', 'GET /forms/export', 'GET /design', 'GET /design/(?P<id>\d+)', 'GET /design/(?P<id>\d+)/variation' ),
 );
 $tier_of = static function ( string $key ) use ( $tiers ): string {
 	foreach ( $tiers as $tier => $keys ) {
@@ -338,6 +338,8 @@ $cases = array(
 	'template: no action'                               => array( 'POST', '/template', array(), null, 'error' ),
 	'design: rebuild of a page that is no design\'s'    => array( 'POST', '/design/' . $not_there, array( 'action' => 'rebuild' ), null, 'error' ),
 	'design: an action nobody knows'                    => array( 'POST', '/design/' . $not_there, array( 'action' => 'bogus' ), null, 'error' ),
+	'variation: of a page that is no design\'s'         => array( 'POST', '/design/' . $not_there . '/variation', array( 'action' => 'apply' ), null, 'error' ),
+	'variation: an action nobody knows'                 => array( 'POST', '/design/' . $not_there . '/variation', array( 'action' => 'bogus' ), null, 'error' ),
 );
 $wrong = array();
 foreach ( $cases as $label => $case ) {

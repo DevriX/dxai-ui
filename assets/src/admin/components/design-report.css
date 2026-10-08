@@ -124,3 +124,22 @@
 .dxai-report__none {
 	margin: 10px 0;
 }
+
+.dxai-report__variation {
+	margin-top: 18px;
+	padding: 12px 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	max-width: 860px;
+}
+
+.dxai-report__variation h4 {
+	margin-top: 0;
+}
+
+.dxai-report__variation .dxai-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 8px 0;
+}
