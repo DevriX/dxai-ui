@@ -21,6 +21,7 @@ use DXAI_UI\Compiler\Source_Compiler;
 use DXAI_UI\Connectors\Dc_Connector;
 use DXAI_UI\Connectors\Lovable_Connector;
 use DXAI_UI\Content\Content_Types;
+use DXAI_UI\Design\Behaviour_Reader;
 use DXAI_UI\Design\Document;
 use DXAI_UI\Design\Document_Builder;
 use DXAI_UI\Design\Document_Store;
@@ -140,8 +141,11 @@ $expect( 'the tokens: a brand and an accent as hex colours, where they came from
 $expect( 'the fonts the design loads, by family', count( $tk['fonts'] ) >= 1 && '' !== (string) ( $tk['fonts'][0]['family'] ?? '' ), wp_json_encode( $tk['fonts'] ) );
 $expect( 'a Claude Design export has no Tailwind screens: none are claimed', array() === $tk['screens'] && array() === $tk['screens_declared'] );
 $expect( 'its breakpoint is the width the component switches at', in_array( (int) $native['dc_breakpoint'], $data['breakpoints'], true ), wp_json_encode( $data['breakpoints'] ) );
-$kinds = array_column( $data['behaviours'], 'kind' );
-$expect( 'what the design does: a layout that changes with the width is one of its behaviours, each of a kind the document knows, none yet said to be carried', in_array( 'media-query', $kinds, true ) && array() === array_diff( $kinds, Document::BEHAVIOURS ) && array() === array_filter( $data['behaviours'], static fn( array $b ): bool => null !== $b['compiled'] ), implode( ',', $kinds ) );
+$kinds    = array_column( $data['behaviours'], 'kind' );
+$declared = array_filter( $data['behaviours'], static fn( array $b ): bool => ! array_key_exists( 'interactivity', $b ) );
+$expect( 'what the design does: a layout that changes with the width is one of its behaviours, each of a kind the document knows, none of what its code declares yet said to be carried', in_array( 'media-query', $kinds, true ) && array() === array_diff( $kinds, Document::BEHAVIOURS ) && $declared !== array() && array() === array_filter( $declared, static fn( array $b ): bool => null !== $b['compiled'] ), implode( ',', $kinds ) );
+$touched = array_filter( $data['behaviours'], static fn( array $b ): bool => array_key_exists( 'interactivity', $b ) );
+$expect( 'what the compiled page does when touched is read back from its markup, each row saying what the Interactivity API could do about it (the fixture: sections that reveal, at least)', $touched !== array() && in_array( 'reveal', array_column( $touched, 'kind' ), true ) && array() === array_filter( $touched, static fn( array $b ): bool => ! in_array( $b['interactivity'], Behaviour_Reader::LEVELS, true ) || true !== $b['compiled'] ), wp_json_encode( array_map( static fn( array $b ): string => $b['kind'] . ( isset( $b['name'] ) ? ':' . $b['name'] : '' ) . '=' . $b['interactivity'], $touched ) ) );
 $expect( 'the assets: the fixture\'s pictures are counted and listed', $data['assets']['images'] >= 1 && count( $data['assets']['list'] ) === $data['assets']['images'] && isset( $data['assets']['list'][0]['url'] ), wp_json_encode( $data['assets'] ) );
 $expect( 'the report carries the compiler\'s own list of what it could not evaluate, and no coverage before a save', is_array( $data['report']['unevaluated'] ) && array() === $data['report']['coverage'] );
 // Before a save the colours are still literals (Token_Styles writes the tokens and their classes as it saves): the measure is there, at zero.
@@ -167,6 +171,60 @@ $expect( 'the summary counts it', ( static function () use ( $doc, $data ): bool
 } )() );
 $expect( 'home() is the page at the home address', ( $doc->home()['slug'] ?? '' ) === '/' );
 
+echo "\nWhat the compiled page does when touched (Behaviour_Reader)\n";
+// A header whose menu opens on click and closes on a click elsewhere, turns solid past 24px (a derived flag), a FAQ with three
+// questions (an index with a text map), a carousel moved by steps, a Radix accordion and tabs, a dialog and a popover, a revealing
+// section, a counting number, a facade.
+$markup = '<!-- wp:dxai-ui/box --><header class="sticky dxai-cls-dark" data-dxai-on="bg-paper/95 backdrop-blur-md" data-dxai-off="bg-transparent" data-dxai-any="dark:solid,open" data-dxai-scroll="solid:24" data-dxai-outside="open">'
+	. '<button class="dxai-toggle-open" aria-expanded="false">Menu</button><nav class="hidden dxai-on-open"><a href="#a">A</a></nav>'
+	. '<div class="relative"><button class="dxai-toggle-open--services" data-dxai-hover="enter" data-dxai-mode="toggle" aria-expanded="false">Services</button><div class="hidden dxai-on-open--services">panel</div></div>'
+	. '</header><section class="faq"><button class="dxai-toggle-openFaq--0" data-dxai-mode="toggle" aria-expanded="true"><span data-dxai-text-openFaq="{&quot;0&quot;:&quot;−&quot;,&quot;null&quot;:&quot;+&quot;}">−</span>Q1</button><div class="dxai-on-openFaq--0">A1</div>'
+	. '<button class="dxai-toggle-openFaq--1" data-dxai-mode="toggle" aria-expanded="false">Q2</button><div class="hidden dxai-on-openFaq--1">A2</div>'
+	. '<button class="dxai-toggle-openFaq--2" data-dxai-mode="toggle" aria-expanded="false">Q3</button><div class="hidden dxai-on-openFaq--2">A3</div></section>'
+	. '<section class="rail"><div class="flex overflow-x-auto snap-x"><div class="dxai-cls-slide--0 is-on" data-dxai-on="is-on">1</div><div class="dxai-cls-slide--1" data-dxai-on="is-on">2</div></div>'
+	. '<button class="dxai-toggle-slide" data-dxai-step="-1" data-dxai-init="0" data-dxai-disabled="slide:0" aria-label="Previous" disabled>‹</button><button class="dxai-toggle-slide" data-dxai-step="1" aria-label="Next">›</button></section>'
+	. '<section><button id="dxai-rx-1-trigger-a" aria-expanded="false">Acc</button><div role="region" aria-labelledby="dxai-rx-1-trigger-a" hidden>…</div>'
+	. '<button role="tab" id="dxai-rx-2-trigger-a" aria-selected="true">Tab</button><div role="tabpanel" aria-labelledby="dxai-rx-2-trigger-a">…</div>'
+	. '<button aria-haspopup="dialog" aria-controls="dxai-rx-3-content-1" aria-expanded="false">Open</button><div id="dxai-rx-3-content-1" role="dialog" style="display:none" data-dxai-portal="1">…</div>'
+	. '<button aria-haspopup="dialog" aria-controls="dxai-rx-4-content-1" aria-expanded="false">Pop</button><div id="dxai-rx-4-content-1" role="dialog" data-side="bottom" style="display:none">…</div>'
+	. '<span class="rv-num" data-to="62" data-suffix="%">0%</span><i data-lucide="star"></i><div class="youtube-facade" data-video-id="x"></div></section><!-- /wp:dxai-ui/box -->';
+$read   = Behaviour_Reader::from_markup( $markup );
+$by     = array();
+foreach ( $read['states'] as $row ) {
+	$by[ $row['name'] ] = $row;
+}
+$expect( 'every state the compiler marked is read: the menu, its submenu value, the derived flag and its scroll member, the FAQ index, the slide', array( 'dark', 'open', 'openFaq', 'slide', 'solid' ) === array_keys( array_filter( $by ) ) || array() === array_diff( array( 'dark', 'open', 'openFaq', 'slide', 'solid' ), array_keys( $by ) ), implode( ',', array_keys( $by ) ) );
+$expect( 'the menu: a value state (open or a submenu), driven by click, hover and a click elsewhere, projecting panels and aria', isset( $by['open'] ) && 'value' === $by['open']['type'] && array( 'services' ) === $by['open']['values'] && array( 'click', 'hover', 'outside' ) === $by['open']['drivers'] && 2 === $by['open']['projections']['panels'] && 2 === $by['open']['projections']['aria'] && null === $by['open']['initial'], wp_json_encode( $by['open'] ?? null ) );
+$expect( 'the solid flag is driven by the scroll past 24px; the dark flag is derived from it and the menu, and projects classes', isset( $by['solid'], $by['dark'] ) && array( 'scroll' ) === $by['solid']['drivers'] && 24 === $by['solid']['threshold'] && array( 'derived' ) === $by['dark']['drivers'] && array( 'solid', 'open' ) === $by['dark']['members'] && 1 === $by['dark']['projections']['classes'] && false === $by['dark']['initial'], wp_json_encode( array( $by['solid'] ?? null, $by['dark'] ?? null ) ) );
+$expect( 'the FAQ: an index with three values, starting at the open one, with a text map on its sign', isset( $by['openFaq'] ) && 'index' === $by['openFaq']['type'] && array( '0', '1', '2' ) === $by['openFaq']['values'] && '0' === $by['openFaq']['initial'] && 1 === $by['openFaq']['projections']['text'] && 3 === $by['openFaq']['projections']['panels'], wp_json_encode( $by['openFaq'] ?? null ) );
+$expect( 'the carousel: an index moved by steps from its authored start, a button disabled at the first', isset( $by['slide'] ) && 'index' === $by['slide']['type'] && array( 'step' ) === $by['slide']['drivers'] && '0' === $by['slide']['initial'] && 1 === $by['slide']['projections']['disabled'] && 2 === $by['slide']['projections']['classes'], wp_json_encode( $by['slide'] ?? null ) );
+$expect( 'every state is one the Interactivity API expresses with directives, and says with which', array() === array_filter( $read['states'], static fn( array $s ): bool => 'full' !== $s['interactivity'] || '' === $s['why'] || true !== $s['compiled'] ) );
+$runtime = array_column( $read['runtime'], null, 'kind' );
+$expect( 'the rest the runtime does is counted by kind: the Radix accordion, tabs, a dialog told from a popover by its side, a revealing section, a counting number, an icon, a facade, a rail, a portal', 1 === ( $runtime['radix-accordion']['count'] ?? 0 ) && 1 === ( $runtime['radix-tabs']['count'] ?? 0 ) && 1 === ( $runtime['radix-dialog']['count'] ?? 0 ) && 1 === ( $runtime['radix-popover']['count'] ?? 0 ) && 4 === ( $runtime['reveal']['count'] ?? 0 ) && 1 === ( $runtime['countup']['count'] ?? 0 ) && 1 === ( $runtime['lucide']['count'] ?? 0 ) && 1 === ( $runtime['video-facade']['count'] ?? 0 ) && 1 === ( $runtime['rail']['count'] ?? 0 ) && 1 === ( $runtime['portal']['count'] ?? 0 ), wp_json_encode( array_map( static fn( array $r ): int => $r['count'], $runtime ) ) );
+$expect( 'each says what the Interactivity API could do: tabs with directives, a reveal and an accordion with a callback, a dialog, a popover, a portal, a rail, icons and the facade not without the runtime — and why', 'full' === ( $runtime['radix-tabs']['interactivity'] ?? '' ) && 'partial' === ( $runtime['reveal']['interactivity'] ?? '' ) && 'partial' === ( $runtime['radix-accordion']['interactivity'] ?? '' ) && array() === array_filter( array( 'radix-dialog', 'radix-popover', 'portal', 'rail', 'lucide', 'video-facade' ), static fn( string $k ): bool => 'none' !== ( $runtime[ $k ]['interactivity'] ?? '' ) || '' === ( $runtime[ $k ]['why'] ?? '' ) ) );
+$expect( 'a page with none of it reads as nothing', array( 'states' => array(), 'runtime' => array() ) === Behaviour_Reader::from_markup( '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->' ) );
+// What the fixture's code declares, plus the rows read from the markup above (the fixture's own rows read from its markup set aside).
+$with_states = $doc->with( array( 'behaviours' => array_merge( array_values( $declared ), $read['states'], $read['runtime'] ) ) );
+$expect( 'the summary counts what the Interactivity API could take over, by how much', ( static function () use ( $with_states ): bool {
+	$i = $with_states->summary()['interactivity'] ?? array();
+
+	// Five states and the tabs with directives; the reveal, the number and the accordion with a callback; six that keep the runtime.
+	return array( 'full' => 6, 'partial' => 3, 'none' => 6 ) === $i;
+} )(), wp_json_encode( $with_states->summary()['interactivity'] ?? null ) );
+$expect( 'a state is a fact of the design: its name and its kind are in the fingerprint, a page\'s id is not', ( static function () use ( $with_states ): bool {
+	$renamed = $with_states->to_array();
+	foreach ( $renamed['behaviours'] as $i => $b ) {
+		if ( ( $b['name'] ?? '' ) === 'openFaq' ) {
+			$renamed['behaviours'][ $i ]['name'] = 'openQuestion';
+		}
+	}
+	$moved                   = $with_states->to_array();
+	$moved['pages'][0]['id'] = 4243;
+
+	return Document::from_array( $renamed )->fingerprint() !== $with_states->fingerprint() && Document::from_array( $moved )->fingerprint() === $with_states->fingerprint();
+} )() );
+$expect( 'nothing is wrong with a document that carries them', array() === Document::problems( $with_states->to_array() ), implode( '; ', Document::problems( $with_states->to_array() ) ) );
+
 echo "\nWhat problems() catches\n";
 $broken = $data;
 $broken['pages'][0]['sections'][0]['role'] = 'banana';
@@ -183,6 +241,10 @@ $expect( 'a header placed somewhere the document does not know', count( array_fi
 $broken = $data;
 $broken['behaviours'][] = array( 'kind' => 'teleport', 'count' => 1, 'compiled' => null, 'note' => '' );
 $expect( 'a behaviour of a kind the document does not know', count( array_filter( Document::problems( $broken ), static fn( string $p ): bool => str_contains( $p, 'teleport' ) ) ) === 1 );
+$broken = $data;
+$broken['behaviours'][] = array( 'kind' => 'reveal', 'count' => 1, 'compiled' => true, 'note' => '', 'interactivity' => 'maybe', 'why' => '' );
+$broken['behaviours'][] = array( 'kind' => 'state', 'count' => 1, 'compiled' => true, 'note' => '', 'name' => '', 'interactivity' => 'full', 'why' => '' );
+$expect( 'a behaviour the Interactivity API could "maybe" do, and a state with no name', count( array_filter( Document::problems( $broken ), static fn( string $p ): bool => str_contains( $p, 'maybe' ) ) ) === 1 && in_array( 'a state has no name', Document::problems( $broken ), true ) );
 $broken = $data;
 $broken['breakpoints'] = array( 12 );
 $expect( 'a breakpoint that is no screen', count( array_filter( Document::problems( $broken ), static fn( string $p ): bool => str_contains( $p, 'breakpoint' ) ) ) === 1 );

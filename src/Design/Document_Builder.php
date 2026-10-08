@@ -66,7 +66,7 @@ final class Document_Builder {
 				'tokens'      => self::tokens( $result, $home ),
 				'breakpoints' => self::breakpoints( $result ),
 				'assets'      => self::assets( $result ),
-				'behaviours'  => self::behaviours( $result, $coverage ),
+				'behaviours'  => self::behaviours( $result, $coverage, self::markup_of( $result, $home, $pages ) ),
 				'layout'      => null,
 				'report'      => array(
 					'unevaluated' => array_values( array_filter( is_array( $result['unevaluated'] ?? null ) ? $result['unevaluated'] : array(), 'is_array' ) ),
@@ -324,26 +324,7 @@ final class Document_Builder {
 	 * @return array{text:array{preset:int, custom:int, class:int}, background:array{preset:int, custom:int, class:int}}
 	 */
 	private static function bound( array $result, int $home, array $pages ): array {
-		$markup = '';
-		if ( $home > 0 ) {
-			foreach ( $pages as $page ) {
-				$id = (int) ( $page['id'] ?? 0 );
-				if ( $id > 0 ) {
-					$markup .= "\n" . (string) get_post_field( 'post_content', $id );
-				}
-			}
-		} else {
-			// A Claude Design export keeps the home's markup in its structures alone.
-			$markup = (string) ( $result['gutenberg_markup'] ?? '' );
-			if ( trim( $markup ) === '' ) {
-				foreach ( is_array( $result['structures'] ?? null ) ? $result['structures'] : array() as $s ) {
-					$markup .= "\n" . (string) ( is_array( $s ) ? ( $s['gutenberg_markup'] ?? '' ) : '' );
-				}
-			}
-			foreach ( is_array( $result['pages'] ?? null ) ? $result['pages'] : array() as $page ) {
-				$markup .= "\n" . (string) ( is_array( $page ) ? ( $page['gutenberg_markup'] ?? '' ) : '' );
-			}
-		}
+		$markup = self::markup_of( $result, $home, $pages );
 
 		return array(
 			'text'       => array(
@@ -357,6 +338,38 @@ final class Document_Builder {
 				'class'  => preg_match_all( '/(?<=[\s"])bg-dxai-[a-z0-9-]+(?=[\s"])/', $markup ),
 			),
 		);
+	}
+
+	/**
+	 * The design's pages as block markup: the saved posts once there are some, else what the compiler made (a Claude Design export keeps
+	 * the home's markup in its structures alone).
+	 *
+	 * @param array<string, mixed>             $result
+	 * @param array<int, array<string, mixed>> $pages
+	 */
+	private static function markup_of( array $result, int $home, array $pages ): string {
+		$markup = '';
+		if ( $home > 0 ) {
+			foreach ( $pages as $page ) {
+				$id = (int) ( $page['id'] ?? 0 );
+				if ( $id > 0 ) {
+					$markup .= "\n" . (string) get_post_field( 'post_content', $id );
+				}
+			}
+
+			return $markup;
+		}
+		$markup = (string) ( $result['gutenberg_markup'] ?? '' );
+		if ( trim( $markup ) === '' ) {
+			foreach ( is_array( $result['structures'] ?? null ) ? $result['structures'] : array() as $s ) {
+				$markup .= "\n" . (string) ( is_array( $s ) ? ( $s['gutenberg_markup'] ?? '' ) : '' );
+			}
+		}
+		foreach ( is_array( $result['pages'] ?? null ) ? $result['pages'] : array() as $page ) {
+			$markup .= "\n" . (string) ( is_array( $page ) ? ( $page['gutenberg_markup'] ?? '' ) : '' );
+		}
+
+		return $markup;
 	}
 
 	/**
@@ -690,11 +703,15 @@ final class Document_Builder {
 	 * What the design does, counted where its code declares it (source_signals) and where the compiler made it, and — once the
 	 * pages are saved — whether it reached them (the coverage row that answers for it).
 	 *
+	 * Then what the compiled pages do when touched, read back from their markup (Behaviour_Reader): a row per state, and the rest by
+	 * kind, each saying whether the Interactivity API could express it. A kind the design's code declares too (countup, lucide) keeps
+	 * its declared row and takes the reader's answer on it.
+	 *
 	 * @param array<string, mixed>             $result
 	 * @param array<int, array<string, mixed>> $coverage
-	 * @return array<int, array{kind:string, count:int, compiled:bool|null, note:string}>
+	 * @return array<int, array<string, mixed>>
 	 */
-	private static function behaviours( array $result, array $coverage ): array {
+	private static function behaviours( array $result, array $coverage, string $markup = '' ): array {
 		$signals = is_array( $result['source_signals'] ?? null ) ? $result['source_signals'] : array();
 		$rows    = array();
 		foreach ( array( 'handlers', 'motion', 'radix', 'scroll', 'lucide' ) as $kind ) {
@@ -746,8 +763,25 @@ final class Document_Builder {
 				'note'     => (string) $pair[1],
 			);
 		}
+		if ( trim( $markup ) === '' ) {
+			return $out;
+		}
+		$read = Behaviour_Reader::from_markup( $markup );
+		foreach ( $read['runtime'] as $row ) {
+			$merged = false;
+			foreach ( $out as $i => $declared ) {
+				if ( $declared['kind'] === $row['kind'] ) {
+					$out[ $i ]['interactivity'] = $row['interactivity'];
+					$out[ $i ]['why']           = $row['why'];
+					$merged                     = true;
+				}
+			}
+			if ( ! $merged ) {
+				$out[] = $row;
+			}
+		}
 
-		return $out;
+		return array_merge( $out, $read['states'] );
 	}
 
 	/**

@@ -28,7 +28,39 @@ const KINDS = {
 	'media-query': __( 'layout by width', 'dxai-ui' ),
 	countup: __( 'counting numbers', 'dxai-ui' ),
 	form: __( 'forms', 'dxai-ui' ),
+	state: __( 'a state', 'dxai-ui' ),
+	reveal: __( 'sections that reveal', 'dxai-ui' ),
+	'radix-accordion': __( 'accordion', 'dxai-ui' ),
+	'radix-tabs': __( 'tabs', 'dxai-ui' ),
+	'radix-select': __( 'select', 'dxai-ui' ),
+	'radix-dialog': __( 'dialog', 'dxai-ui' ),
+	'radix-popover': __( 'popover', 'dxai-ui' ),
+	'radix-menu': __( 'menu', 'dxai-ui' ),
+	'radix-tooltip': __( 'tooltip', 'dxai-ui' ),
+	portal: __( 'portals', 'dxai-ui' ),
+	'hero-tabs': __( 'hero tabs', 'dxai-ui' ),
+	'method-rows': __( 'method rows', 'dxai-ui' ),
+	rail: __( 'a rail', 'dxai-ui' ),
+	'video-facade': __( 'video facade', 'dxai-ui' ),
 };
+
+/** What the Interactivity API could do about a behaviour (Behaviour_Reader): directives alone, with a store callback, or nothing without the runtime. */
+const LEVELS = {
+	full: __( 'directives', 'dxai-ui' ),
+	partial: __( 'directives + callback', 'dxai-ui' ),
+	none: __( 'runtime', 'dxai-ui' ),
+};
+
+function Interactivity( { row } ) {
+	if ( ! row.interactivity || ! LEVELS[ row.interactivity ] ) {
+		return null;
+	}
+	return (
+		<span className={ `dxai-report__level dxai-report__level--${ row.interactivity }` } title={ row.why || '' }>
+			{ LEVELS[ row.interactivity ] }
+		</span>
+	);
+}
 
 function Carried( { value } ) {
 	if ( value === true ) {
@@ -270,10 +302,11 @@ export default function DesignReport() {
 					{ doc.behaviours.length > 0 && (
 						<ul className="dxai-report__behaviours">
 							{ doc.behaviours.map( ( b ) => (
-								<li key={ b.kind }>
-									<span>{ KINDS[ b.kind ] || b.kind }</span>
+								<li key={ b.name ? `${ b.kind }:${ b.name }` : b.kind }>
+									<span>{ b.kind === 'state' && b.name ? sprintf( /* translators: 1: the state's name, 2: its kind (boolean, value, index). */ __( 'state %1$s (%2$s)', 'dxai-ui' ), b.name, b.type ) : KINDS[ b.kind ] || b.kind }</span>
 									<strong>{ b.count }</strong>
 									<Carried value={ b.compiled } />
+									<Interactivity row={ b } />
 								</li>
 							) ) }
 						</ul>

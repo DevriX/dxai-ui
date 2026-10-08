@@ -58,7 +58,12 @@ final class Document {
 	public const PLACED = array( 'content', 'part', 'menus', 'widgets', 'none' );
 
 	/** What a design does, as the kinds the compiler and the coverage count. */
-	public const BEHAVIOURS = array( 'handlers', 'motion', 'radix', 'scroll', 'lucide', 'media-query', 'countup', 'form' );
+	/**
+	 * The kinds of behaviour row: what the design's code declares (handlers … form, counted by Document_Builder), and what the compiled
+	 * page does when touched, read back from its markup (Behaviour_Reader: a `state` row per state, and the rest by kind). A row of
+	 * the second group says whether the Interactivity API could express it (`interactivity`: full, partial, none) and why.
+	 */
+	public const BEHAVIOURS = array( 'handlers', 'motion', 'radix', 'scroll', 'lucide', 'media-query', 'countup', 'form', 'state', 'reveal', 'radix-accordion', 'radix-tabs', 'radix-select', 'radix-dialog', 'radix-popover', 'radix-menu', 'radix-tooltip', 'portal', 'hero-tabs', 'method-rows', 'rail', 'video-facade' );
 
 	/** The keys of the design part of the document, in the order they are written. */
 	private const KEYS = array( 'v', 'source', 'title', 'home_slug', 'pages', 'regions', 'nav', 'tokens', 'breakpoints', 'assets', 'behaviours', 'layout', 'report', 'built' );
@@ -236,6 +241,13 @@ final class Document {
 		foreach ( is_array( $data['behaviours'] ?? null ) ? $data['behaviours'] : array() as $b ) {
 			if ( ! is_array( $b ) || ! in_array( (string) ( $b['kind'] ?? '' ), self::BEHAVIOURS, true ) ) {
 				$out[] = 'a behaviour has a kind the document does not know: ' . ( is_array( $b ) ? (string) ( $b['kind'] ?? '' ) : 'not a record' );
+				continue;
+			}
+			if ( array_key_exists( 'interactivity', $b ) && ! in_array( $b['interactivity'], Behaviour_Reader::LEVELS, true ) ) {
+				$out[] = 'a behaviour says the Interactivity API could do something the document does not know: ' . (string) ( is_scalar( $b['interactivity'] ) ? $b['interactivity'] : 'not a word' );
+			}
+			if ( (string) ( $b['kind'] ?? '' ) === 'state' && (string) ( $b['name'] ?? '' ) === '' ) {
+				$out[] = 'a state has no name';
 			}
 		}
 		$roles = is_array( $data['tokens']['roles'] ?? null ) ? $data['tokens']['roles'] : array();
@@ -311,7 +323,13 @@ final class Document {
 		};
 		$behaviours = array();
 		foreach ( $this->data['behaviours'] as $b ) {
-			$behaviours[ (string) ( $b['kind'] ?? '' ) ] = (int) ( $b['count'] ?? 0 );
+			// A state is a fact of the design by its name, its kind and what drives it; the rest by kind and count.
+			$kind = (string) ( $b['kind'] ?? '' );
+			if ( $kind === 'state' ) {
+				$behaviours[ 'state:' . (string) ( $b['name'] ?? '' ) ] = array( (string) ( $b['type'] ?? '' ), array_values( array_map( 'strval', (array) ( $b['drivers'] ?? array() ) ) ), count( (array) ( $b['values'] ?? array() ) ) );
+				continue;
+			}
+			$behaviours[ $kind ] = (int) ( $b['count'] ?? 0 );
 		}
 		ksort( $behaviours );
 		$assets = $this->data['assets'];
@@ -370,10 +388,15 @@ final class Document {
 		foreach ( $this->data['pages'] as $page ) {
 			$sections += count( is_array( $page['sections'] ?? null ) ? $page['sections'] : array() );
 		}
-		$left = 0;
+		$left          = 0;
+		$interactivity = array_fill_keys( Behaviour_Reader::LEVELS, 0 );
 		foreach ( $this->data['behaviours'] as $b ) {
 			if ( ( $b['compiled'] ?? null ) === false ) {
 				++$left;
+			}
+			$level = (string) ( $b['interactivity'] ?? '' );
+			if ( isset( $interactivity[ $level ] ) ) {
+				++$interactivity[ $level ];
 			}
 		}
 
@@ -391,6 +414,8 @@ final class Document {
 			'images'          => (int) $this->data['assets']['images'],
 			'behaviours'      => count( $this->data['behaviours'] ),
 			'behaviours_left' => $left,
+			// What the Interactivity API could take over, by how much (Behaviour_Reader); 'none' is what the runtime keeps.
+			'interactivity'   => $interactivity,
 			'unevaluated'     => count( $this->data['report']['unevaluated'] ),
 			'fingerprint'     => $this->fingerprint(),
 		);
