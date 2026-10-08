@@ -124,6 +124,8 @@ final class Source_Compiler {
 			if ( $row['structures'] === array() ) {
 				continue;
 			}
+			// The source's own split of the page (Lovable: Tsx_Section_Splitter), for the design's document: the sections as the source names them.
+			$row['source_sections'] = array_values( array_filter( array_map( static fn( $s ) => is_array( $s ) ? (string) ( $s['title'] ?? '' ) : '', is_array( $page['sections'] ?? null ) ? $page['sections'] : array() ), 'strlen' ) );
 			if ( $primary === array() || ( ( $primary['slug'] ?? '' ) !== '/' && $slug === '/' ) ) {
 				if ( $primary !== array() && ( $primary['slug'] ?? '/' ) !== '/' ) {
 					$compiled_pages[] = $primary;
@@ -272,7 +274,36 @@ final class Source_Compiler {
 			 * with the design, for the same reason the source HTML does.
 			 */
 			'source_signals'   => Design_Coverage::source_signals( $this->source_files( $payload ) ),
+			/*
+			 * What only the source can say, carried for the design's document (Design\Document_Builder, which reads this result
+			 * after the save, when the archive is gone): which connector read it, its stack, a hash of its files, and the width a
+			 * Claude Design component switches its layout at.
+			 */
+			'source_kind'      => $source->kind,
+			'source_stack'     => (string) ( $payload['stack'] ?? '' ),
+			'source_hash'      => $this->source_hash( $payload ),
+			'dc_breakpoint'    => (int) ( $primary['dc_breakpoint'] ?? 0 ),
+			'source_sections'  => is_array( $primary['source_sections'] ?? null ) ? $primary['source_sections'] : array(),
 		);
+	}
+
+	/**
+	 * One hash for the design's files: the same archive gives the same hash, whatever it is called and whenever it is imported.
+	 *
+	 * @param array<string, mixed> $payload
+	 */
+	private function source_hash( array $payload ): string {
+		$files = $this->source_files( $payload );
+		ksort( $files );
+		$ctx = hash_init( 'sha1' );
+		foreach ( $files as $path => $code ) {
+			hash_update( $ctx, (string) $path . "\0" . (string) $code . "\0" );
+		}
+		if ( $files === array() ) {
+			hash_update( $ctx, (string) wp_json_encode( $payload['dc'] ?? $payload['sources'] ?? array() ) );
+		}
+
+		return hash_final( $ctx );
 	}
 
 	/** @var array<string, int> Raw-HTML fallbacks emitted, by element. */
@@ -432,6 +463,7 @@ final class Source_Compiler {
 			'source_html'      => implode( "\n", $source ),
 			// The renderer's classes: media variants, state projections, pseudo-classes.
 			'hover_css'        => $out['css'],
+			'dc_breakpoint'    => $renderer->breakpoint(),
 			'custom_js'        => '',
 		);
 	}

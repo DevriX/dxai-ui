@@ -112,13 +112,69 @@ final class Team_Pages {
 		}
 
 		$services = self::services_of_home( $home );
-
+		$places   = self::places_of_home( $home );
+		$from     = array(
+			'services' => $services !== array() ? 'home' : '',
+			'places'   => $places !== array() ? 'home' : '',
+		);
+		// A Home whose services are not cards (Five Star lists them as steps) gives the detectors nothing; the design's document
+		// (Design\Document) knows what each section's repeated items are called, and a section whose heading speaks of services or
+		// of places names them.
+		if ( $services === array() || $places === array() ) {
+			$found = self::from_document( $home );
+			if ( $services === array() && $found['services'] !== array() ) {
+				$services         = $found['services'];
+				$from['services'] = 'document';
+			}
+			if ( $places === array() && $found['places'] !== array() ) {
+				$places         = $found['places'];
+				$from['places'] = 'document';
+			}
+		}
 		return array(
 			'services'  => $services,
-			'locations' => self::places_of_home( $home ),
+			'locations' => $places,
 			'phrase'    => $services[0] ?? '',
 			'general'   => $general,
+			'from'      => $from,
 		);
+	}
+
+	/**
+	 * The services and the places a design's document names: the items of a section whose heading speaks of them (or, for
+	 * places, items written as "City, ST" wherever they are).
+	 *
+	 * @return array{services:array<int, string>, places:array<int, string>}
+	 */
+	public static function from_document( int $home ): array {
+		$out = array(
+			'services' => array(),
+			'places'   => array(),
+		);
+		$doc = \DXAI_UI\Design\Document_Store::load( $home );
+		if ( $doc === null ) {
+			return $out;
+		}
+		foreach ( $doc->pages() as $page ) {
+			foreach ( is_array( $page['sections'] ?? null ) ? $page['sections'] : array() as $section ) {
+				$items = array_values( array_filter( array_map( 'strval', is_array( $section['items'] ?? null ) ? $section['items'] : array() ), static fn( string $t ): bool => $t !== '' && mb_strlen( $t ) <= 60 ) );
+				if ( count( $items ) < 2 ) {
+					continue;
+				}
+				$heading = (string) ( $section['heading'] ?? '' );
+				$placed  = array_values( array_filter( $items, array( self::class, 'is_place' ) ) );
+				if ( count( $placed ) >= 2 ) {
+					$out['places'] = array_merge( $out['places'], $placed );
+					continue;
+				}
+				if ( $out['services'] === array() && count( $items ) >= 3 && Menu_Pages::looks_like_services( $heading ) ) {
+					$out['services'] = $items;
+				}
+			}
+		}
+		$out['places'] = array_slice( array_values( array_unique( $out['places'] ) ), 0, 12 );
+
+		return $out;
 	}
 
 	/**
@@ -1450,7 +1506,7 @@ final class Team_Pages {
 	 * @param array<string, mixed> $rep
 	 * @return array<int, string>
 	 */
-	private static function item_titles( array $block, array $rep ): array {
+	public static function item_titles( array $block, array $rep ): array {
 		$out   = array();
 		$slots = (array) ( $rep['shape']['slots'] ?? array() );
 		foreach ( (array) $rep['items'] as $index ) {

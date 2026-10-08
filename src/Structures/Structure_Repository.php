@@ -835,6 +835,10 @@ final class Structure_Repository {
 				)
 			);
 		}
+		// The design's document (the Design IR, docs/PLAN-ARCHITECTURE.md): what this import read and made, as one record on the
+		// Home. Never a failure of the import: a document that cannot be built leaves a note on the Home instead.
+		$document            = \DXAI_UI\Design\Document_Store::record( $result, $created );
+		$created['document'] = $document?->summary();
 
 		return $created;
 	}

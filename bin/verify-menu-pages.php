@@ -440,6 +440,48 @@ $expect( 'a page asked for at an address is planned there, with its item', 200 =
 $none = Menu_Pages::for_design( 999999999 );
 $expect( 'a design that is not one has nothing', array() === $none['pages'] && '' === $none['source'] );
 
+echo "\nA header kept as a template part: the design's document names the pages\n";
+// A second Home of the fixture with no menus written for it, and a document (Design\Document) whose header navigation is the menu above.
+$doc_home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Menu Fixture Document Home', 'post_content' => $body ) );
+$made[]   = $doc_home;
+update_post_meta( $doc_home, Page_Scope::META, $doc_home );
+update_post_meta( $doc_home, '_dxai_ui_generated_page', '1' );
+update_post_meta( $doc_home, '_dxai_ui_css_url', 'dxai-ui/menu-fixture-doc.css' );
+\DXAI_UI\Structures\Design_Attach::forget( $doc_home );
+$nav_of = static function ( array $nodes ) use ( &$nav_of ): array {
+	return array_map(
+		static fn( array $n ): array => array(
+			'label'       => (string) $n['label'],
+			'url'         => (string) $n['url'],
+			'description' => (string) ( $n['description'] ?? '' ),
+			'children'    => $nav_of( (array) $n['children'] ),
+		),
+		$nodes
+	);
+};
+$the_doc = \DXAI_UI\Design\Document::from_array(
+	array(
+		'v'         => \DXAI_UI\Design\Document::VERSION,
+		'source'    => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture' ) ),
+		'title'     => 'Menu Fixture Document Home',
+		'home_slug' => '/',
+		'pages'     => array( array( 'slug' => '/', 'title' => 'Menu Fixture Document Home', 'file' => '', 'id' => $doc_home, 'words' => 10, 'sections' => array(), 'sections_source' => 'compiled', 'source_sections' => array(), 'forms' => 0, 'links' => array(), 'meta' => array( 'title' => '', 'description' => '' ) ) ),
+		'regions'   => array(
+			'header' => array( 'present' => true, 'placed' => 'part', 'nav' => $nav_of( Menu_Pages::tree_of( $home )['tree'] ), 'nav_source' => 'compiled', 'logo' => null, 'actions' => array() ),
+			'footer' => null,
+		),
+	)
+);
+$expect( 'a document with no menus written has no menu to read until the document is kept', '' === Menu_Pages::tree_of( $doc_home )['source'] );
+\DXAI_UI\Design\Document_Store::save( $doc_home, $the_doc );
+$from_doc = Menu_Pages::tree_of( $doc_home );
+$expect( 'the document\'s header navigation is read, as the document\'s, with no menu item behind the nodes', 'document' === $from_doc['source'] && array() === $from_doc['menus'] && $flat( $from_doc['tree'] ) === $flat( Menu_Pages::tree_of( $home )['tree'] ) && 0 === (int) ( $from_doc['tree'][0]['item'] ?? -1 ), wp_json_encode( $from_doc['source'] ) );
+$expect( 'the menus written for a design still come first: the document does not speak for a design that has them', 'menus' === Menu_Pages::tree_of( $home )['source'] );
+$expect( 'the document\'s own builder is never answered by the document', '' === Menu_Pages::tree_of( $doc_home, false )['source'] );
+$doc_report = Menu_Pages::for_design( $doc_home );
+$expect( 'the panel is told the same pages and lists from the document, and where they were read from', 'document' === $doc_report['source'] && count( $doc_report['pages'] ) === count( $report['pages'] ) && array_column( $doc_report['lists'], 'path' ) === array_column( $report['lists'], 'path' ), wp_json_encode( array( $doc_report['source'], count( $doc_report['pages'] ), count( $report['pages'] ) ) ) );
+\DXAI_UI\Design\Document_Store::forget( $doc_home );
+
 $fin();
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

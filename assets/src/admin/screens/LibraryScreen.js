@@ -11,6 +11,7 @@ import Speed from '../components/Speed';
 import CopyPrompt from '../components/CopyPrompt';
 import TeamPages from '../components/TeamPages';
 import Template from '../components/Template';
+import DesignReport from '../components/DesignReport';
 
 function Group( { title, items, empty, onRestore, exportUrl } ) {
 	return (
@@ -187,6 +188,7 @@ export default function LibraryScreen() {
 							</div>
 						) }
 						<Template />
+						<DesignReport />
 						<SitePages />
 						<ThemeColors />
 						<NativeBlocks />

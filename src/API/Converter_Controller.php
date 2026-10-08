@@ -1150,6 +1150,11 @@ final class Converter_Controller extends \WP_REST_Controller {
 					 * the same kind as the four above.
 					 */
 					'source_signals'   => is_array( $request->get_param( 'source_signals' ) ) ? $request->get_param( 'source_signals' ) : array(),
+					// What only the source could say, for the design's document (Design\Document_Builder): see Source_Compiler::compile().
+					'source_kind'      => sanitize_key( (string) $request->get_param( 'source_kind' ) ),
+					'source_stack'     => sanitize_text_field( (string) $request->get_param( 'source_stack' ) ),
+					'source_hash'      => preg_match( '/^[0-9a-f]{40}$/', (string) $request->get_param( 'source_hash' ) ) === 1 ? (string) $request->get_param( 'source_hash' ) : '',
+					'dc_breakpoint'    => (int) $request->get_param( 'dc_breakpoint' ),
 					// Per-request override of the copy/dynamic choice; absent,
 					// the saved setting applies.
 					'structure_mode'   => is_array( $request->get_param( 'structure_mode' ) )
@@ -1208,6 +1213,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 			// Set when the crawl was deferred: the wizard advances it through
 			// /crawl-step until it reports done.
 			$payload['crawl_job']      = (string) ( $created['crawl_job'] ?? '' );
+			// The design's document (Design IR), in numbers: what the import read and made of the design (Library > Design report).
+			$payload['document']       = is_array( $created['document'] ?? null ) ? $created['document'] : null;
 			// What the import did with the header (Appearance > Menus) and the
 			// footer (Appearance > Widgets), for the wizard's two phases —
 			// save() reports the two install() answers as chrome.header and

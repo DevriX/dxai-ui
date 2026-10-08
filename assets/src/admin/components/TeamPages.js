@@ -382,13 +382,15 @@ export default function TeamPages() {
 
 			{ menuRows.length > 0 && (
 				<fieldset className="dxai-team__menu">
-					<legend>{ __( 'From the site’s menu', 'dxai-ui' ) }</legend>
+					<legend>{ data.menu.source === 'document' ? __( 'From the design’s header', 'dxai-ui' ) : __( 'From the site’s menu', 'dxai-ui' ) }</legend>
 					<p className="dxai-muted">
-						{ sprintf(
-							/* translators: %s: the names of the menus the header was built into. */
-							__( 'The header menu (%s, in Appearance › Menus) names these pages and where they sit. They are made at the menu’s own addresses, so the menu opens them. Untick what you do not want.', 'dxai-ui' ),
-							( data.menu.menus || [] ).join( ', ' )
-						) }
+						{ data.menu.source === 'document'
+							? __( 'The header was kept as a template part, so no menu was written; the design’s own header names these pages and where they sit (read from the design’s document). They are made at the design’s own addresses. Untick what you do not want.', 'dxai-ui' )
+							: sprintf(
+								/* translators: %s: the names of the menus the header was built into. */
+								__( 'The header menu (%s, in Appearance › Menus) names these pages and where they sit. They are made at the menu’s own addresses, so the menu opens them. Untick what you do not want.', 'dxai-ui' ),
+								( data.menu.menus || [] ).join( ', ' )
+							) }
 					</p>
 					{ ! data.menu.pretty && (
 						<Notice status="warning" isDismissible={ false }>
@@ -437,7 +439,9 @@ export default function TeamPages() {
 			<div className="dxai-team__fields">
 				<TextareaControl
 					label={ __( 'Services (one to a line)', 'dxai-ui' ) }
-					help={ data.suggestions.services.length ? __( 'Read from the Home; change them as you like.', 'dxai-ui' ) : __( 'The Home does not list services; type them here.', 'dxai-ui' ) }
+					help={ data.suggestions.services.length
+						? ( data.suggestions.from?.services === 'document' ? __( 'Read from the design’s document (the section that names its services); change them as you like.', 'dxai-ui' ) : __( 'Read from the Home; change them as you like.', 'dxai-ui' ) )
+						: __( 'The Home does not list services; type them here.', 'dxai-ui' ) }
 					value={ services }
 					onChange={ setServices }
 					rows={ 6 }

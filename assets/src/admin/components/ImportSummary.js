@@ -225,6 +225,22 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 					<strong>{ counts.errors }</strong>
 					<span>{ _n( 'error', 'errors', counts.errors, 'dxai-ui' ) }</span>
 				</li>
+				{ /* The design's document: what the import read of the design (Library › Design report). An older server says nothing. */ }
+				{ saved?.document && (
+					<li>
+						<strong>{ saved.document.sections }</strong>
+						<span>{ _n( 'section read in the design', 'sections read in the design', saved.document.sections, 'dxai-ui' ) }</span>
+						<em>
+							{ sprintf(
+								/* translators: 1: number of pages, 2: number of navigation items, 3: number of behaviours the page does not carry. */
+								__( '%1$d page(s), %2$d menu items, %3$d behaviour(s) not carried · Library › Design report', 'dxai-ui' ),
+								saved.document.pages,
+								saved.document.nav_items,
+								saved.document.behaviours_left
+							) }
+						</em>
+					</li>
+				) }
 				{ counts.skipped > 0 && (
 					<li>
 						<strong>{ counts.skipped }</strong>

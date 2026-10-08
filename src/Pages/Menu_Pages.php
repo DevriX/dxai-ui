@@ -95,21 +95,22 @@ final class Menu_Pages {
 	}
 
 	/**
-	 * The header menu of a design as a tree of items: from the menus written for it.
+	 * The header menu of a design as a tree of items: from the menus written for it (Appearance > Menus, so a page a person adds
+	 * there is one too), or — when the header was kept as a template part and no menu was written — from the navigation the
+	 * design's document read out of its header (Design\Document, `regions.header.nav`; source `document`, no menu items to
+	 * point anywhere).
 	 *
+	 * @param bool $document Whether the document may answer when there are no menus; the document's own builder asks with false.
 	 * @return array{source:string, menus:array<int, string>, tree:array<int, array<string, mixed>>}
 	 */
-	public static function tree_of( int $home ): array {
+	public static function tree_of( int $home, bool $document = true ): array {
 		$spec = Header_Template::scoped( $home );
 		$out  = array(
 			'source' => '',
 			'menus'  => array(),
 			'tree'   => array(),
 		);
-		if ( $spec === null ) {
-			return $out;
-		}
-		$ids = (array) ( $spec['menus'] ?? array() );
+		$ids  = $spec === null ? array() : (array) ( $spec['menus'] ?? array() );
 		foreach ( array( Header_Template::NAV, Header_Template::TOP, Header_Template::ACTIONS ) as $location ) {
 			$menu = (int) ( $ids[ $location ] ?? 0 );
 			$obj  = $menu > 0 ? wp_get_nav_menu_object( $menu ) : false;
@@ -122,9 +123,55 @@ final class Menu_Pages {
 				$out['menus'][] = html_entity_decode( (string) $obj->name, ENT_QUOTES, 'UTF-8' );
 			}
 		}
-		$out['source'] = $out['tree'] !== array() ? 'menus' : '';
+		if ( $out['tree'] !== array() ) {
+			$out['source'] = 'menus';
+
+			return $out;
+		}
+		if ( $document && $home > 0 ) {
+			$doc = \DXAI_UI\Design\Document_Store::load( $home );
+			$nav = $doc === null ? array() : (array) ( $doc->get( 'regions' )['header']['nav'] ?? array() );
+			if ( $nav !== array() ) {
+				$out['tree']   = self::document_tree( $nav );
+				$out['source'] = 'document';
+			}
+		}
 
 		return $out;
+	}
+
+	/**
+	 * The document's navigation as this reader's tree: the same shape as a menu's, with no menu item behind the nodes.
+	 *
+	 * @param array<int, mixed> $nav
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function document_tree( array $nav ): array {
+		$out = array();
+		foreach ( $nav as $node ) {
+			if ( ! is_array( $node ) ) {
+				continue;
+			}
+			$out[] = array(
+				'item'        => 0,
+				'label'       => (string) ( $node['label'] ?? '' ),
+				'url'         => (string) ( $node['url'] ?? '' ),
+				'description' => (string) ( $node['description'] ?? '' ),
+				'children'    => self::document_tree( is_array( $node['children'] ?? null ) ? $node['children'] : array() ),
+			);
+		}
+
+		return $out;
+	}
+
+	/** Whether a heading or a label speaks of a site's services (the words the menus use for that group). */
+	public static function looks_like_services( string $text ): bool {
+		return preg_match( self::GROUP_SERVICES, $text ) === 1;
+	}
+
+	/** Whether a heading or a label speaks of a site's places. */
+	public static function looks_like_areas( string $text ): bool {
+		return preg_match( self::GROUP_AREAS, $text ) === 1;
 	}
 
 	/**
