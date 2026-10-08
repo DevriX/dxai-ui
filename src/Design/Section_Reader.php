@@ -26,9 +26,11 @@ final class Section_Reader {
 	private const CHROME = array( 'core/template-part', 'dxai-ui/site-header', 'dxai-ui/site-footer', 'core/navigation' );
 
 	/**
-	 * @return array<int, array{index:int, role:string, kind:string, name:string, heading:string, words:int, repeats:int, has:array{image:bool, form:bool, button:bool, video:bool}, sig:string}>
+	 * @param int $offset How many sections of the page come before this markup (a page read structure by structure): the first section
+	 *                    of the page is the only one that can be its hero, and the indexes go on from there.
+	 * @return array<int, array{index:int, role:string, kind:string, name:string, heading:string, words:int, repeats:int, items:array<int, string>, has:array{image:bool, form:bool, button:bool, video:bool}, sig:string}>
 	 */
-	public static function from_markup( string $markup ): array {
+	public static function from_markup( string $markup, int $offset = 0 ): array {
 		if ( trim( $markup ) === '' ) {
 			return array();
 		}
@@ -50,8 +52,8 @@ final class Section_Reader {
 			}
 			$html  = serialize_block( $block );
 			$out[] = array(
-				'index'   => count( $out ),
-				'role'    => Section_Roles::of( $block, $out === array() ),
+				'index'   => $offset + count( $out ),
+				'role'    => Section_Roles::of( $block, $offset + count( $out ) === 0 ),
 				'kind'    => (string) ( $component['kind'] ?? '' ),
 				'name'    => self::name( $block ),
 				'heading' => self::heading( $html ),

@@ -112,6 +112,22 @@ $secs = $data['pages'][0]['sections'];
 $roles = array_map( static fn( array $s ): string => $s['role'], $secs );
 $expect( 'the page\'s sections are read from the compiled blocks: the fixture\'s five, the first a hero, every role one the pages know', count( $secs ) >= 4 && 'hero' === ( $roles[0] ?? '' ) && array() === array_diff( $roles, Section_Roles::ROLES ) && 'compiled' === $data['pages'][0]['sections_source'], implode( ',', $roles ) );
 $expect( 'each section says what it holds: a heading, its words, whether it has a picture, a form, a button', isset( $secs[0]['heading'], $secs[0]['words'], $secs[0]['has']['image'], $secs[0]['has']['form'], $secs[0]['has']['button'], $secs[0]['sig'] ) && '' !== $secs[0]['heading'] && $secs[0]['words'] > 0, wp_json_encode( $secs[0] ?? null ) );
+$expect( 'each section knows the structure the compiler made it from (the Claude Design screen labels), the sections being the structures one to one', true === $data['pages'][0]['sections_match'] && 'Top' === ( $secs[0]['source_name'] ?? '' ) && 'Close' === ( $secs[1]['source_name'] ?? '' ), wp_json_encode( array( $data['pages'][0]['sections_match'], array_column( $secs, 'source_name' ) ) ) );
+$expect( 'each section\'s layout is what its classes say, or nothing: the four facts, or null', array() === array_filter( $secs, static fn( array $s ): bool => ! ( null === $s['layout'] || ( is_array( $s['layout'] ) && isset( $s['layout']['columns'], $s['layout']['direction'], $s['layout']['centered'], $s['layout']['max_width'] ) ) ) ), wp_json_encode( array_column( $secs, 'layout' ) ) );
+$expect( 'the fixture links to no site of its own', '' === $data['source']['origin'] );
+$old_site = Document_Builder::from_result(
+	array(
+		'block_title'    => 'Old site design',
+		'slug'           => '/',
+		'gutenberg_markup' => '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->',
+		'source_html'    => '<nav><a href="https://www.old.example/service/water/">Water</a><a href="https://old.example/about/">About</a><a href="https://old.example/contact/">Contact</a><a href="https://facebook.com/x">FB</a></nav>',
+		'design_css_raw' => '',
+		'structures'     => array( array( 'type' => 'header', 'title' => 'Header', 'gutenberg_markup' => '', 'source_html' => '<nav><a href="https://www.old.example/service/water/">Water</a><a href="https://old.example/about/">About</a><a href="https://old.example/contact/">Contact</a></nav>', 'menu_tree' => array() ) ),
+	)
+)->to_array();
+$expect( 'a design whose header links to its own old site says which host that is, under one name', 'old.example' === $old_site['source']['origin'], wp_json_encode( $old_site['source'] ) );
+$this_site = Document_Builder::from_result( array( 'block_title' => 'This site', 'slug' => '/', 'gutenberg_markup' => '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->', 'source_html' => '<a href="' . home_url( '/a/' ) . '">A</a><a href="' . home_url( '/b/' ) . '">B</a>', 'design_css_raw' => '', 'structures' => array(), 'pages_origin' => home_url() ) )->to_array();
+$expect( '…and a design whose crawl was this site (a re-import of a site onto itself) has no origin of its own', '' === $this_site['source']['origin'], wp_json_encode( $this_site['source'] ) );
 $with_items = array_values( array_filter( $secs, static fn( array $s ): bool => count( $s['items'] ?? array() ) >= 2 ) );
 $expect( 'a section that repeats items says what they are called (the fixture\'s cards and questions)', count( $with_items ) >= 1 && count( $with_items[0]['items'] ) === $with_items[0]['repeats'], wp_json_encode( array_map( static fn( array $s ): array => array( $s['heading'], $s['repeats'], $s['items'] ), $secs ) ) );
 $expect( 'the page counts its words and lists its links', $data['pages'][0]['words'] > 50 && is_array( $data['pages'][0]['links'] ), (string) $data['pages'][0]['words'] );
@@ -194,8 +210,31 @@ if ( $lovable === '' ) {
 		$expect( 'the Tailwind screens are known, and only the ones the design declares count as its breakpoints', isset( $ldoc['tokens']['screens']['md'] ) && $ldoc['tokens']['screens']['md'] === 768 && array() === array_diff( $ldoc['breakpoints'], array_merge( array_values( array_intersect_key( $ldoc['tokens']['screens'], array_flip( $ldoc['tokens']['screens_declared'] ) ) ), $ldoc['breakpoints'] ) ), wp_json_encode( array( $ldoc['tokens']['screens'], $ldoc['tokens']['screens_declared'], $ldoc['breakpoints'] ) ) );
 		$expect( 'its tokens say where they came from, and its behaviours are what its code declares', '' !== $ldoc['tokens']['source'] && array() === array_diff( array_column( $ldoc['behaviours'], 'kind' ), Document::BEHAVIOURS ), wp_json_encode( array( $ldoc['tokens']['source'], array_column( $ldoc['behaviours'], 'kind' ) ) ) );
 		$expect( 'nothing is wrong with it', array() === Document::problems( $ldoc ), implode( '; ', Document::problems( $ldoc ) ) );
+		$laid = array();
+		foreach ( $ldoc['pages'] as $lp ) {
+			foreach ( $lp['sections'] as $ls ) {
+				if ( is_array( $ls['layout'] ?? null ) ) {
+					$laid[] = $ls['layout'];
+				}
+			}
+		}
+		$expect( 'what a Lovable design\'s own classes say of its layout is read: grids with their columns by breakpoint, flex rows, centred text', count( $laid ) >= 1 && count( array_filter( $laid, static fn( array $l ): bool => $l['columns'] !== array() ) ) >= 1, wp_json_encode( array_slice( $laid, 0, 3 ) ) );
+		$expect( 'each of its sections knows the component it came from when they are the structures one to one', ( static function () use ( $ldoc ): bool {
+			foreach ( $ldoc['pages'] as $lp ) {
+				if ( $lp['sections_match'] && array() === array_filter( array_column( $lp['sections'], 'source_name' ), 'strlen' ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		} )(), wp_json_encode( array_map( static fn( array $lp ): array => array( $lp['sections_match'], array_column( $lp['sections'], 'source_name' ) ), $ldoc['pages'] ) ) );
 	}
 }
+$expect( 'the layout reader: columns by breakpoint, a column that becomes a row, centred text, the widest content; nothing from markup that says nothing', ( static function (): bool {
+	$l = Document_Builder::layout_of( '<section class="py-20 text-center"><div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8"><div class="flex flex-col md:flex-row">x</div></div></section>' );
+
+	return is_array( $l ) && array( 'base' => 1, 'md' => 3 ) === $l['columns'] && 'column-then-row' === $l['direction'] && true === $l['centered'] && '6xl' === $l['max_width'] && null === Document_Builder::layout_of( '<section><p>Words</p></section>' );
+} )() );
 
 echo "\nThe store, the route and the command, on a Home made for the purpose\n";
 $page = static function ( string $title, int $scope = 0 ) use ( &$made ): int {

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Design;
 
 use DXAI_UI\Chrome\Header_Template;
+use DXAI_UI\Connectors\Site_Origin;
 use DXAI_UI\Compiler\Design_Tokens;
 use DXAI_UI\Compiler\Menu_Tree;
 use DXAI_UI\Compiler\Tailwind\Theme;
@@ -56,7 +57,7 @@ final class Document_Builder {
 		return Document::from_array(
 			array(
 				'v'           => Document::VERSION,
-				'source'      => self::source( $result ),
+				'source'      => self::source( $result, is_array( $regions['header']['nav'] ?? null ) ? $regions['header']['nav'] : array() ),
 				'title'       => trim( (string) ( $result['block_title'] ?? '' ) ),
 				'home_slug'   => $slug,
 				'pages'       => $pages,
@@ -82,10 +83,11 @@ final class Document_Builder {
 	}
 
 	/**
-	 * @param array<string, mixed> $result
+	 * @param array<string, mixed>             $result
+	 * @param array<int, array<string, mixed>> $nav The header's navigation: where its links lead says which site is the design's own.
 	 * @return array<string, mixed>
 	 */
-	private static function source( array $result ): array {
+	private static function source( array $result, array $nav = array() ): array {
 		$hash = (string) ( $result['source_hash'] ?? '' );
 		if ( preg_match( '/^[0-9a-f]{40}$/', $hash ) !== 1 ) {
 			// An older result, or one saved by a caller that did not carry the hash: the compiled design stands in for the source.
@@ -103,7 +105,30 @@ final class Document_Builder {
 			'stack'       => sanitize_text_field( (string) ( $result['source_stack'] ?? '' ) ),
 			'static_html' => ! empty( $result['static_html'] ),
 			'hash'        => $hash,
+			'origin'      => self::origin( $result, $nav ),
 		);
+	}
+
+	/**
+	 * The host of the design's own site: the one a crawl was told (pages_origin), else the one most of the header's links lead to,
+	 * else the one most of the page's links lead to (Site_Origin); '' when the design links to no site of its own, or to this one.
+	 *
+	 * @param array<string, mixed>             $result
+	 * @param array<int, array<string, mixed>> $nav
+	 */
+	private static function origin( array $result, array $nav ): string {
+		$origin = (string) ( $result['pages_origin'] ?? '' );
+		if ( $origin === '' && $nav !== array() ) {
+			$origin = Site_Origin::from_menu_tree( $nav );
+		}
+		if ( $origin === '' ) {
+			$origin = Site_Origin::from_html( (string) ( $result['source_html'] ?? '' ) );
+		}
+		$host = strtolower( (string) wp_parse_url( $origin, PHP_URL_HOST ) );
+		$host = (string) preg_replace( '/^www\./', '', $host );
+		$own  = (string) preg_replace( '/^www\./', '', strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) );
+
+		return $host === '' || $host === $own ? '' : $host;
 	}
 
 	/**
@@ -169,25 +194,56 @@ final class Document_Builder {
 		// (the import takes those out of the page the same way), so a footer followed by a bar fixed to the screen is not read as a
 		// section the way a markup-only reading would read it. A result with no structures is read from its markup.
 		$parts = array();
+		$own   = array(); // the compiler's structures the page is made of, in order: their names and the design's own markup
 		foreach ( $structures as $s ) {
 			if ( is_array( $s ) && isset( $s['gutenberg_markup'] ) && ! in_array( (string) ( $s['type'] ?? '' ), array( 'header', 'footer', 'navigation' ), true ) ) {
 				$parts[] = (string) $s['gutenberg_markup'];
+				$own[]   = array(
+					'name'   => sanitize_text_field( (string) ( $s['title'] ?? '' ) ),
+					'html'   => (string) ( $s['source_html'] ?? '' ),
+					'markup' => (string) $s['gutenberg_markup'],
+				);
 			}
 		}
 		$body = $parts !== array() ? implode( "\n\n", $parts ) : trim( $markup );
-		$from = 'compiled';
+		// The compiler's structures read one by one: each section knows the structure it came from (the design's own component — Hero,
+		// Problem —, a Claude Design screen label) and what that structure's classes say of its layout.
+		$by_structure = array();
+		foreach ( $own as $s ) {
+			foreach ( Section_Reader::from_markup( $s['markup'], count( $by_structure ) ) as $section ) {
+				$section['source_name'] = $s['name'];
+				$section['layout']      = self::layout_of( $s['html'] );
+				$by_structure[]         = $section;
+			}
+		}
+		if ( $own === array() ) {
+			foreach ( Section_Reader::from_markup( $body ) as $section ) {
+				$section['source_name'] = '';
+				$section['layout']      = null;
+				$by_structure[]         = $section;
+			}
+		}
+		$sections = $by_structure;
+		$from     = 'compiled';
+		$match    = $own !== array();
 		// Once the page is saved, its sections are read from the saved post — the reading the team pages and the quality gates use
 		// (Section_Library::for_page()), after whatever the import did to the blocks (native blocks open the design's wrappers) —
-		// so the document and the pages agree on what a section is. Before a save, from the compiler's structures.
+		// so the document and the pages agree on what a section is. They keep what the structures said of them when they are as many;
+		// a saved page that holds more sections than the compiler had structures claims nothing of where each came from.
 		if ( $id > 0 ) {
 			$saved = (string) get_post_field( 'post_content', $id );
 			if ( trim( $saved ) !== '' ) {
-				$body = $saved;
-				$from = 'saved';
+				$body     = $saved;
+				$from     = 'saved';
+				$sections = Section_Reader::from_markup( $saved );
+				$match    = $own !== array() && count( $sections ) === count( $by_structure );
+				foreach ( $sections as $i => $section ) {
+					$sections[ $i ]['source_name'] = $match ? $by_structure[ $i ]['source_name'] : '';
+					$sections[ $i ]['layout']      = $match ? $by_structure[ $i ]['layout'] : null;
+				}
 			}
 		}
-		$sections = Section_Reader::from_markup( $body );
-		$markup   = $body;
+		$markup = $body;
 		$forms    = 0;
 		foreach ( $structures as $s ) {
 			if ( is_array( $s ) && (string) ( $s['type'] ?? '' ) === 'form' ) {
@@ -210,6 +266,7 @@ final class Document_Builder {
 			'words'           => Section_Reader::words( $markup ),
 			'sections'        => $sections,
 			'sections_source' => $from,
+			'sections_match'  => $match,
 			'source_sections' => $from_source,
 			'forms'           => $forms,
 			'links'           => self::links( $source_html !== '' ? $source_html : $markup ),
@@ -217,6 +274,49 @@ final class Document_Builder {
 				'title'       => sanitize_text_field( $seo_title ),
 				'description' => '',
 			),
+		);
+	}
+
+	/**
+	 * What a section's own classes say of its layout — the columns of its grids by breakpoint (`grid-cols-3`, `md:grid-cols-2`), the
+	 * direction of its flex rows, whether its text is centred, the widest it lets its content be — read off the design's markup as
+	 * the design wrote it (Tailwind's names, which Lovable and the generated designs use); null for a design that says nothing that
+	 * way (a Claude Design export styles inline). The layout tree proper — the box model of every node — is a later phase of the plan.
+	 *
+	 * @return array{columns:array<string, int>, direction:string, centered:bool, max_width:string}|null
+	 */
+	public static function layout_of( string $html ): ?array {
+		if ( trim( $html ) === '' ) {
+			return null;
+		}
+		$columns = array();
+		$found   = preg_match_all( '/(?<![\w:-])(?:(sm|md|lg|xl|2xl):)?grid-cols-(\d{1,2})(?![\w-])/', $html, $m, PREG_SET_ORDER );
+		if ( $found ) {
+			foreach ( $m as $hit ) {
+				$bp = $hit[1] !== '' ? $hit[1] : 'base';
+				$n  = (int) $hit[2];
+				if ( $n > 0 && $n <= 12 && $n > (int) ( $columns[ $bp ] ?? 0 ) ) {
+					$columns[ $bp ] = $n;
+				}
+			}
+		}
+		$direction = '';
+		if ( preg_match( '/(?<![\w:-])flex-col(?![\w-])/', $html ) === 1 ) {
+			$direction = preg_match( '/(?<![\w-])(?:sm|md|lg|xl):flex-row(?![\w-])/', $html ) === 1 ? 'column-then-row' : 'column';
+		} elseif ( preg_match( '/(?<![\w:-])flex(?![\w-])/', $html ) === 1 ) {
+			$direction = 'row';
+		}
+		$centered = preg_match( '/(?<![\w:-])text-center(?![\w-])/', $html ) === 1;
+		$max      = preg_match( '/(?<![\w:-])max-w-([a-z0-9]+)(?![\w-])/', $html, $w ) === 1 ? (string) $w[1] : '';
+		if ( $columns === array() && $direction === '' && ! $centered && $max === '' ) {
+			return null;
+		}
+
+		return array(
+			'columns'   => $columns,
+			'direction' => $direction,
+			'centered'  => $centered,
+			'max_width' => $max,
 		);
 	}
 

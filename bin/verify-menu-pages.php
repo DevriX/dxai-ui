@@ -480,6 +480,32 @@ $expect( 'the menus written for a design still come first: the document does not
 $expect( 'the document\'s own builder is never answered by the document', '' === Menu_Pages::tree_of( $doc_home, false )['source'] );
 $doc_report = Menu_Pages::for_design( $doc_home );
 $expect( 'the panel is told the same pages and lists from the document, and where they were read from', 'document' === $doc_report['source'] && count( $doc_report['pages'] ) === count( $report['pages'] ) && array_column( $doc_report['lists'], 'path' ) === array_column( $report['lists'], 'path' ), wp_json_encode( array( $doc_report['source'], count( $doc_report['pages'] ), count( $report['pages'] ) ) ) );
+// A header read from a live site links to the old site's addresses: the document knows that host, so they are this site's pages, not another site's.
+$old_nav = static function ( array $nodes ) use ( &$old_nav ): array {
+	return array_map(
+		static function ( array $n ) use ( &$old_nav ): array {
+			$url = (string) $n['url'];
+			if ( $url !== '' && $url[0] === '/' ) {
+				$url = 'https://www.old.example' . $url;
+			}
+
+			return array( 'label' => $n['label'], 'url' => $url, 'description' => (string) ( $n['description'] ?? '' ), 'children' => $old_nav( (array) $n['children'] ) );
+		},
+		$nodes
+	);
+};
+$old_doc = $the_doc->with(
+	array(
+		'source'  => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture old' ), 'origin' => 'old.example' ),
+		'regions' => array( 'header' => array( 'present' => true, 'placed' => 'part', 'nav' => $old_nav( Menu_Pages::tree_of( $home )['tree'] ), 'nav_source' => 'compiled', 'logo' => null, 'actions' => array() ), 'footer' => null ),
+	)
+);
+\DXAI_UI\Design\Document_Store::save( $doc_home, $old_doc );
+$old_report = Menu_Pages::for_design( $doc_home );
+$expect( 'the old site\'s addresses in a document that names the old site are this site\'s pages: the same pages, none "another site\'s"', count( $old_report['pages'] ) === count( $report['pages'] ) && array() === array_filter( $old_report['left_out'], static fn( array $l ): bool => 'external' === $l['why'] ), wp_json_encode( array( count( $old_report['pages'] ), array_column( $old_report['left_out'], 'why' ) ) ) );
+\DXAI_UI\Design\Document_Store::save( $doc_home, $old_doc->with( array( 'source' => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture old' ), 'origin' => '' ) ) ) );
+$no_origin = Menu_Pages::for_design( $doc_home );
+$expect( '…and without the host they are another site\'s, as before', array() === $no_origin['pages'] && count( array_filter( $no_origin['left_out'], static fn( array $l ): bool => 'external' === $l['why'] ) ) >= 4 );
 \DXAI_UI\Design\Document_Store::forget( $doc_home );
 
 $fin();

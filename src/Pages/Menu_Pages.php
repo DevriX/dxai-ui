@@ -71,8 +71,12 @@ final class Menu_Pages {
 		if ( $read['tree'] === array() ) {
 			return $out;
 		}
-		$ctx = array(
-			'hosts'    => self::hosts(),
+		// The design's own site is this site's, for its menu: a header read from a live site links to the old addresses (Site_Origin), and
+		// the document knows that host (`source.origin`); without it every page of the old site would be "another site's".
+		$doc    = \DXAI_UI\Design\Document_Store::load( $home );
+		$origin = $doc === null ? '' : (string) ( $doc->get( 'source' )['origin'] ?? '' );
+		$ctx    = array(
+			'hosts'    => array_values( array_unique( array_merge( self::hosts(), $origin !== '' ? array( $origin ) : array() ) ) ),
 			'base'     => rtrim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' ),
 			'services' => $hints['services'] ?? Team_Pages::services_of_home( $home ),
 			'places'   => $hints['places'] ?? Team_Pages::places_of_home( $home ),

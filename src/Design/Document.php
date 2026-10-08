@@ -25,10 +25,13 @@ use DXAI_UI\Pages\Section_Roles;
  * The shape, version 1:
  *
  *   v            1
- *   source       { kind, name, stack, static_html, hash }
+ *   source       { kind, name, stack, static_html, hash, origin (the host of the design's own site, '' when it has none or it is this site) }
  *   title, home_slug
- *   pages[]      { slug, title, file, id, words, sections[], sections_source: compiled|saved, source_sections[], forms, links[], meta }
- *     sections[] { index, role, kind, name, heading, words, repeats, items[] (what the repeated items are called), has: { image, form, button, video }, sig }
+ *   pages[]      { slug, title, file, id, words, sections[], sections_source: compiled|saved, sections_match (as many as the compiler's
+ *                  structures, so each knows which it came from), source_sections[], forms, links[], meta }
+ *     sections[] { index, role, kind, name, heading, words, repeats, items[] (what the repeated items are called), has: { image, form, button, video },
+ *                  sig, source_name (the component or structure the compiler made it from), layout: { columns: { base|sm|md|lg|xl|2xl: n },
+ *                  direction, centered, max_width } | null (read off the design's own classes; null when it has none that say) }
  *     links[]    { url, internal }
  *     meta       { title, description }
  *   regions      { header: Region|null, footer: Region|null }
@@ -75,6 +78,7 @@ final class Document {
 					'stack'       => '',
 					'static_html' => false,
 					'hash'        => '',
+					'origin'      => '',
 				),
 				is_array( $data['source'] ?? null ) ? $data['source'] : array()
 			),
@@ -302,6 +306,7 @@ final class Document {
 
 		return array(
 			'hash'        => (string) ( $this->data['source']['hash'] ?? '' ),
+			'origin'      => (string) ( $this->data['source']['origin'] ?? '' ),
 			'title'       => $this->data['title'],
 			'home_slug'   => $this->data['home_slug'],
 			'pages'       => $pages,
