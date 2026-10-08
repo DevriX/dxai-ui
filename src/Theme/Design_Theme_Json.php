@@ -75,7 +75,10 @@ final class Design_Theme_Json {
 	);
 
 	public function register(): void {
-		add_filter( 'wp_theme_json_data_theme', array( $this, 'filter' ) );
+		// After a theme's own filters on the same hook: American Restoration rewrites the palette from its options at priority 100, and
+		// a merge replaces a palette whole, so presets added at the default priority never reached theme.json on it — the brand design's
+		// colours were not presets there, and the converters could not bind to them. Design\Style_Variation runs after this (PHP_INT_MAX).
+		add_filter( 'wp_theme_json_data_theme', array( $this, 'filter' ), PHP_INT_MAX - 1 );
 
 		// theme.json is cached per request and across requests; a changed brand
 		// has to be visible on the next page load, not whenever the cache

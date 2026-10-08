@@ -73,6 +73,7 @@ final class Document_Builder {
 					'notes'       => array_values( array_unique( array_merge( array_map( 'strval', is_array( $result['compiler_notes'] ?? null ) ? $result['compiler_notes'] : array() ), $notes ) ) ),
 					'coverage'    => $coverage,
 					'css'         => self::css_budget( $result, $home, $pages ),
+					'bound'       => self::bound( $result, $home, $pages ),
 				),
 				'built'       => array(
 					'plugin'   => defined( 'DXAI_UI_VERSION' ) ? (string) DXAI_UI_VERSION : '',
@@ -310,6 +311,51 @@ final class Document_Builder {
 			'bytes'    => strlen( $css ),
 			'rules'    => substr_count( $css, '{' ),
 			'literals' => $literals,
+		);
+	}
+
+	/**
+	 * How the pages' blocks carry their colours (phase 2 of the plan measures it): as a preset of the site (`textColor`,
+	 * `backgroundColor`), as the block's custom colour (`style.color`), or still as a class the design's stylesheet rules
+	 * (`text-dxai-…`, `bg-dxai-…`) — the saved pages after a save, the compiled markup before.
+	 *
+	 * @param array<string, mixed>             $result
+	 * @param array<int, array<string, mixed>> $pages
+	 * @return array{text:array{preset:int, custom:int, class:int}, background:array{preset:int, custom:int, class:int}}
+	 */
+	private static function bound( array $result, int $home, array $pages ): array {
+		$markup = '';
+		if ( $home > 0 ) {
+			foreach ( $pages as $page ) {
+				$id = (int) ( $page['id'] ?? 0 );
+				if ( $id > 0 ) {
+					$markup .= "\n" . (string) get_post_field( 'post_content', $id );
+				}
+			}
+		} else {
+			// A Claude Design export keeps the home's markup in its structures alone.
+			$markup = (string) ( $result['gutenberg_markup'] ?? '' );
+			if ( trim( $markup ) === '' ) {
+				foreach ( is_array( $result['structures'] ?? null ) ? $result['structures'] : array() as $s ) {
+					$markup .= "\n" . (string) ( is_array( $s ) ? ( $s['gutenberg_markup'] ?? '' ) : '' );
+				}
+			}
+			foreach ( is_array( $result['pages'] ?? null ) ? $result['pages'] : array() as $page ) {
+				$markup .= "\n" . (string) ( is_array( $page ) ? ( $page['gutenberg_markup'] ?? '' ) : '' );
+			}
+		}
+
+		return array(
+			'text'       => array(
+				'preset' => preg_match_all( '/"textColor":"/', $markup ),
+				'custom' => preg_match_all( '/"color":\{"text":"/', $markup ),
+				'class'  => preg_match_all( '/(?<=[\s"])text-dxai-[a-z0-9-]+(?=[\s"])/', $markup ),
+			),
+			'background' => array(
+				'preset' => preg_match_all( '/"backgroundColor":"/', $markup ),
+				'custom' => preg_match_all( '/"color":\{"background":"/', $markup ),
+				'class'  => preg_match_all( '/(?<=[\s"])bg-dxai-[a-z0-9-]+(?=[\s"])/', $markup ),
+			),
 		);
 	}
 

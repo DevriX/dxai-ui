@@ -32,7 +32,7 @@ use DXAI_UI\Theme\Theme_Class_Swap;
  * one whose stored markup is not what its attributes say (someone edited it), and — on a design that follows its theme — a colour
  * that Theme_Class_Swap gives the theme's own class or colour setting.
  */
-final class Text_Color extends Converter {
+class Text_Color extends Converter {
 
 	/**
 	 * The blocks with a text colour setting this reads: their tag (empty: it follows from the attributes) and the classes the block
@@ -40,7 +40,7 @@ final class Text_Color extends Converter {
 	 *
 	 * @var array<string, array{0:string, 1:array<int, string>}>
 	 */
-	private const BLOCKS = array(
+	protected const BLOCKS = array(
 		'core/paragraph' => array( 'p', array() ),
 		'core/heading'   => array( '', array( 'wp-block-heading' ) ),
 		'core/group'     => array( '', array( 'wp-block-group' ) ),
@@ -49,9 +49,9 @@ final class Text_Color extends Converter {
 	);
 
 	/** The attributes it knows how to carry: nothing here changes the tag but the classes. */
-	private const KNOWN = array( 'className', 'dxaiCss', 'anchor', 'metadata', 'level', 'tagName', 'ordered' );
+	protected const KNOWN = array( 'className', 'dxaiCss', 'anchor', 'metadata', 'level', 'tagName', 'ordered', 'style', 'backgroundColor' );
 
-	private const GROUP_TAGS = array( 'div', 'section', 'header', 'footer', 'main', 'article', 'aside', 'nav', 'figure' );
+	protected const GROUP_TAGS = array( 'div', 'section', 'header', 'footer', 'main', 'article', 'aside', 'nav', 'figure' );
 
 	/** @var array<int, array<string, string>> The design's own colours that are presets, by home: slug => colour. */
 	private static array $design = array();
@@ -92,7 +92,8 @@ final class Text_Color extends Converter {
 			return null;
 		}
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		if ( ! self::only( $attrs, self::KNOWN ) ) {
+		// A background the other converter set (Background_Color) may be there; a text colour already set, or any other style, may not.
+		if ( ! self::only( $attrs, self::KNOWN ) || ! self::settings_fit( $attrs, 'text' ) ) {
 			return null;
 		}
 		$tokens = preg_split( '/\s+/', trim( (string) ( $attrs['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
@@ -135,10 +136,65 @@ final class Text_Color extends Converter {
 		if ( $preset !== '' ) {
 			$new['textColor'] = $preset;
 		} else {
-			$new['style'] = array( 'color' => array( 'text' => 'var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . '))' ) );
+			$new['style']['color']['text'] = 'var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . '))';
 		}
 
 		return self::rewrite( $block, $tag, self::BLOCKS[ $name ][1], $attrs, $new, $extra, $style );
+	}
+
+	/**
+	 * Whether a block's colour settings leave room for this one: nothing of the kind being set is set yet, and whatever style there is
+	 * is a colour setting of the other kind (the other converter's), nothing else — a style someone wrote is not moved.
+	 *
+	 * @param array<string, mixed> $attrs
+	 * @param string               $kind `text` or `background`.
+	 */
+	protected static function settings_fit( array $attrs, string $kind ): bool {
+		$other = $kind === 'text' ? 'background' : 'text';
+		if ( isset( $attrs[ $kind === 'text' ? 'textColor' : 'backgroundColor' ] ) ) {
+			return false;
+		}
+		if ( ! array_key_exists( 'style', $attrs ) ) {
+			return true;
+		}
+		$style = $attrs['style'];
+		if ( ! is_array( $style ) || array_keys( $style ) !== array( 'color' ) || ! is_array( $style['color'] ) ) {
+			return false;
+		}
+		$keys = array_keys( $style['color'] );
+
+		return $keys === array( $other ) && is_string( $style['color'][ $other ] ) && ! isset( $attrs[ $other === 'text' ? 'textColor' : 'backgroundColor' ] );
+	}
+
+	/**
+	 * The classes and the style attribute the other colour setting already put on the tag, from the attributes: what the stored tag
+	 * must carry for the block to be read, and what the rewritten tag keeps.
+	 *
+	 * @param array<string, mixed> $attrs
+	 * @return array{classes:array<int, string>, style:string}
+	 */
+	protected static function setting_marks( array $attrs ): array {
+		$classes = array();
+		$style   = array();
+		if ( isset( $attrs['textColor'] ) && is_string( $attrs['textColor'] ) ) {
+			$classes[] = 'has-' . $attrs['textColor'] . '-color';
+			$classes[] = 'has-text-color';
+		} elseif ( isset( $attrs['style']['color']['text'] ) && is_string( $attrs['style']['color']['text'] ) ) {
+			$classes[] = 'has-text-color';
+			$style[]   = 'color:' . $attrs['style']['color']['text'];
+		}
+		if ( isset( $attrs['backgroundColor'] ) && is_string( $attrs['backgroundColor'] ) ) {
+			$classes[] = 'has-' . $attrs['backgroundColor'] . '-background-color';
+			$classes[] = 'has-background';
+		} elseif ( isset( $attrs['style']['color']['background'] ) && is_string( $attrs['style']['color']['background'] ) ) {
+			$classes[] = 'has-background';
+			$style[]   = 'background-color:' . $attrs['style']['color']['background'];
+		}
+
+		return array(
+			'classes' => $classes,
+			'style'   => implode( ';', $style ),
+		);
 	}
 
 	/**
@@ -146,7 +202,7 @@ final class Text_Color extends Converter {
 	 *
 	 * @param array<string, mixed> $attrs
 	 */
-	private static function tag( string $name, array $attrs ): string {
+	protected static function tag( string $name, array $attrs ): string {
 		if ( self::BLOCKS[ $name ][0] !== '' ) {
 			return self::BLOCKS[ $name ][0];
 		}
@@ -175,21 +231,28 @@ final class Text_Color extends Converter {
 	 * @param array<int, string>   $extra The classes the colour adds.
 	 * @return array<string, mixed>|null
 	 */
-	private static function rewrite( array $block, string $tag, array $base, array $old, array $new, array $extra, string $style ): ?array {
+	protected static function rewrite( array $block, string $tag, array $base, array $old, array $new, array $extra, string $style ): ?array {
 		$content = is_array( $block['innerContent'] ?? null ) ? $block['innerContent'] : array();
 		if ( ! is_string( $content[0] ?? null ) || preg_match( '/^(\s*)(<' . preg_quote( $tag, '/' ) . '\b[^>]*>)(.*)$/s', $content[0], $m ) !== 1 ) {
 			return null;
 		}
 		$have = self::tag_attributes( $m[2], $tag );
-		if ( $have === null || array_diff( array_keys( $have ), array( 'id', 'class' ) ) !== array() || ( $have['id'] ?? null ) !== ( $old['anchor'] ?? null ) ) {
+		if ( $have === null || array_diff( array_keys( $have ), array( 'id', 'class', 'style' ) ) !== array() || ( $have['id'] ?? null ) !== ( $old['anchor'] ?? null ) ) {
 			return null;
 		}
-		$want = self::tokens( trim( implode( ' ', $base ) . ' ' . self::class_tail( $old ) ) );
+		// The other colour setting, when the other converter set it before this one: its classes and its style are on the tag as the
+		// attributes say, and they stay.
+		$marks = self::setting_marks( $old );
+		if ( (string) ( $have['style'] ?? '' ) !== $marks['style'] ) {
+			return null;
+		}
+		$want = self::tokens( trim( implode( ' ', $base ) . ' ' . self::class_tail( $old ) . ' ' . implode( ' ', $marks['classes'] ) ) );
 		$got  = self::tokens( (string) ( $have['class'] ?? '' ) );
 		if ( array_diff( $want, $got ) !== array() || array_diff( $got, $want ) !== array() ) {
 			return null;
 		}
-		$classes = self::tokens( trim( implode( ' ', $base ) . ' ' . self::class_tail( $new ) . ' ' . implode( ' ', $extra ) ) );
+		$classes = self::tokens( trim( implode( ' ', $base ) . ' ' . self::class_tail( $new ) . ' ' . implode( ' ', $marks['classes'] ) . ' ' . implode( ' ', $extra ) ) );
+		$style   = trim( $marks['style'] . ( $style !== '' ? ( $marks['style'] !== '' ? ';' : '' ) . $style : '' ) );
 		foreach ( array_merge( $classes, array( $style ) ) as $part ) {
 			if ( self::hazard( $part ) ) {
 				return null;
@@ -214,7 +277,7 @@ final class Text_Color extends Converter {
 	/**
 	 * @return array<int, string>
 	 */
-	private static function tokens( string $classes ): array {
+	protected static function tokens( string $classes ): array {
 		return array_values( array_unique( preg_split( '/\s+/', trim( $classes ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() ) );
 	}
 
@@ -222,7 +285,7 @@ final class Text_Color extends Converter {
 	 * Whether a colour is Theme_Class_Swap's: on a design that follows its theme, a token bound directly to a theme colour becomes
 	 * that theme's class or colour setting there, from the class — which must still be there for it to find.
 	 */
-	private static function theme_handles( int $home, string $slug ): bool {
+	protected static function theme_handles( int $home, string $slug ): bool {
 		if ( ! isset( self::$swaps[ $home ] ) ) {
 			self::$swaps[ $home ] = Theme_Binding::follows( $home ) ? array_fill_keys( array_keys( Theme_Class_Swap::plan( $home ) ), true ) : array();
 		}
@@ -234,7 +297,7 @@ final class Text_Color extends Converter {
 	 * The slug of a preset of the site's palette that is this token of the design, or ''. A preset is only the design's own when it
 	 * has the token's name and its colour, and only where the design does not follow a theme (there its colours are the theme's).
 	 */
-	private static function preset( int $home, string $slug ): string {
+	protected static function preset( int $home, string $slug ): string {
 		if ( Theme_Binding::follows( $home ) ) {
 			return '';
 		}

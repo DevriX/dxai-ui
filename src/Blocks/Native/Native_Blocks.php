@@ -53,6 +53,8 @@ final class Native_Blocks {
 			new Span(),
 			// After Span: the amr/span it makes is one that has a text colour setting.
 			new Text_Color(),
+			// The other half of it: the background of a group, the columns or a column, in the Colour panel too.
+			new Background_Color(),
 			// Last of the ones that change a block's classes: it reads the classes the others left.
 			new Sizes(),
 			// Whole-page passes, after the sizes are fitted: the same kind of heading in the same style, the sections at the same spacing.

@@ -16,6 +16,7 @@
  */
 
 use DXAI_UI\Compiler\Source_Compiler;
+use DXAI_UI\Compiler\Token_Styles;
 use DXAI_UI\Connectors\Dc_Connector;
 use DXAI_UI\Content\Content_Types;
 use DXAI_UI\Design\Document_Store;
@@ -25,6 +26,7 @@ use DXAI_UI\Structures\Structure_Repository;
 use DXAI_UI\Support\Upload_Paths;
 use DXAI_UI\Theme\Capabilities;
 use DXAI_UI\Theme\Design_Theme_Json;
+use DXAI_UI\Theme\Theme_Palette;
 
 $fail   = 0;
 $pass   = 0;
@@ -191,6 +193,18 @@ Design_Theme_Json::flush();
 $settings = wp_get_global_settings( array( 'color', 'palette' ) );
 $theme_slugs = array_column( is_array( $settings['theme'] ?? null ) ? $settings['theme'] : array(), 'slug' );
 $expect( 'the theme layer of theme.json now has the design\'s presets beside the theme\'s own', in_array( 'brand', $theme_slugs, true ) && in_array( 'accent', $theme_slugs, true ) && count( $theme_slugs ) > 2, wp_json_encode( $theme_slugs ) );
+// The presets the plugin registered (the design's slug with the design's value) are not the theme's colours: the palette a design is
+// fitted to (Theme_Palette, Theme_Binding) leaves them out, on a classic theme — where they reach theme.json since 2б — as on a block one.
+Theme_Palette::reset();
+$fitted     = array_keys( Theme_Palette::current()['entries'] );
+$theme_rows = array_change_key_case( array_map( 'strtolower', array_column( is_array( $settings['theme'] ?? null ) ? $settings['theme'] : array(), 'color', 'slug' ) ) );
+$registered = array();
+foreach ( (array) ( get_post_meta( $home, Token_Styles::META, true )['colors'] ?? array() ) as $row ) {
+	if ( is_array( $row ) && ! empty( $row['preset'] ) && isset( $row['slug'], $row['value'] ) && ( $theme_rows[ (string) $row['slug'] ] ?? '' ) === strtolower( (string) $row['value'] ) ) {
+		$registered[] = (string) $row['slug'];
+	}
+}
+$expect( 'the palette the plugin fits designs to leaves the brand design\'s own presets out, on this theme too (a design is never fitted to itself)', $registered !== array() && array() === array_intersect( $registered, $fitted ) && ( $fitted !== array() || count( $theme_slugs ) === count( $registered ) ), wp_json_encode( array( 'registered' => $registered, 'fitted' => $fitted ) ) );
 $families = array_column( (array) ( wp_get_global_settings( array( 'typography', 'fontFamilies' ) )['theme'] ?? array() ), 'slug' );
 $expect( '…and its fonts', in_array( 'dxai-heading', $families, true ) && in_array( 'dxai-body', $families, true ), wp_json_encode( $families ) );
 $sheet = wp_get_global_stylesheet();
@@ -199,7 +213,8 @@ $home_after  = $fetch( $home );
 $plain_after = $fetch( $plain );
 $expect( 'a plain page of the site is drawn in the design\'s look: the global styles carry the button in the brand and the heading font', str_contains( $global_of( $plain_after ), '--wp--preset--color--brand' ) && str_contains( $global_of( $plain_after ), 'var(--wp--preset--font-family--dxai-heading)' ), substr( $global_of( $plain_after ), 0, 200 ) );
 $expect( 'the design\'s own page is as it was, byte for byte but for the two blocks a brand change rewrites by design', $home_before !== '' && $without_global( $home_before ) === $without_global( $home_after ), (string) strlen( $without_global( $home_before ) ) . ' vs ' . strlen( $without_global( $home_after ) ) );
-$expect( '…its tokens now refer to the presets (the same colours, changeable in one place)', str_contains( $tokens_of( $home_after ), 'var(--wp--preset--color--brand' ) && ! str_contains( $tokens_of( $home_before ), 'var(--wp--preset--color--brand' ), substr( $tokens_of( $home_after ), 0, 200 ) );
+// The slug exactly: the site's brand before the suite may have a `brand-green` of its own (a prefix match once failed this check for that).
+$expect( '…its tokens block now defines the design\'s presets and their classes (the same colours, changeable in one place)', str_contains( $tokens_of( $home_after ), '--wp--preset--color--brand:' ) && str_contains( $tokens_of( $home_after ), 'var(--wp--preset--color--brand)' ) && ! str_contains( $tokens_of( $home_before ), '--wp--preset--color--brand:' ), substr( $tokens_of( $home_after ), 0, 200 ) );
 // (The tokens block may point the design's own font token at the font preset — the same font; that is the brand mechanism, not a style.)
 $rest_of_home = $without_global( $home_after );
 $expect( '…and none of the variation\'s styles is on it: its own rules draw it', ! str_contains( $rest_of_home, 'var(--wp--preset--font-family--dxai-heading)' ) && ! preg_match( '#wp-element-button[^}]*var\(--wp--preset--color--brand\)#', $rest_of_home ) );
@@ -256,6 +271,14 @@ $expect( 'POST write answers as write() does for this theme', Capabilities::styl
 if ( Capabilities::styles_writable() && 200 === $r['status'] ) {
 	wp_delete_file( Capabilities::styles_dir() . '/' . Style_Variation::file_name( $home ) );
 }
+// The writes publish a design's look site-wide, so they take what an import takes (unfiltered_html on top of manage_options); the reads take
+// manage_options. Denied the way a multisite site admin or DISALLOW_UNFILTERED_HTML denies it (a super admin passes every cap but do_not_allow).
+$no_html = static fn( array $caps, string $cap ): array => $cap === 'unfiltered_html' ? array( 'do_not_allow' ) : $caps;
+add_filter( 'map_meta_cap', $no_html, 10, 2 );
+$r_write = $rest( 'POST', $home, array( 'action' => 'clear' ) );
+$r_read  = $rest( 'GET', $home );
+remove_filter( 'map_meta_cap', $no_html, 10 );
+$expect( 'an administrator without unfiltered_html may read the variation but not apply, clear or write it', in_array( $r_write['status'], array( 401, 403 ), true ) && Style_Variation::applied() === $home && 200 === $r_read['status'], wp_json_encode( array( $r_write['status'], $r_read['status'] ) ) );
 $r = $rest( 'GET', $plain );
 $expect( 'a page that is no design\'s is 404', 404 === $r['status'] );
 wp_set_current_user( 0 );

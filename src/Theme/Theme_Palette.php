@@ -141,14 +141,16 @@ final class Theme_Palette {
 
 	/**
 	 * The slugs this plugin put into the theme layer itself: the colours of the design adopted as the site's brand
-	 * (Design_Theme_Json registers them there), which are not the theme's.
+	 * (Design_Theme_Json registers them there), which are not the theme's. On a classic theme too: they reach theme.json there since
+	 * Design_Theme_Json runs after the theme's own filters, and read back as the theme's colours they fitted the next design to
+	 * the brand design (american-restoration listed the brand's `fog` and `brand-green` beside its own `primary`).
 	 *
 	 * @return array<string, string> slug => the design's value
 	 */
 	private static function plugin_slugs(): array {
 		$design = get_option( Design_Theme_Json::OPTION );
 		$page   = is_array( $design ) ? (int) ( $design['page_id'] ?? 0 ) : 0;
-		if ( $page < 1 || ! Theme_Compat::may_install_chrome() ) {
+		if ( $page < 1 ) {
 			return array();
 		}
 		$palette = get_post_meta( $page, \DXAI_UI\Compiler\Token_Styles::META, true );

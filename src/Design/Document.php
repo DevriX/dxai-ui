@@ -45,7 +45,9 @@ use DXAI_UI\Pages\Section_Roles;
  *   layout       null (version 1; the layout tree is phase 1б of the plan)
  *   report       { unevaluated[] { kind, source, count }, notes[], coverage[] { dimension, source, page, short, informational },
  *                  css: { bytes, rules, literals } (the design's own stylesheet — what the presets have not taken over yet — and how many
- *                  colours its blocks still write as literals; the budget the plan's phase 2 measures) }
+ *                  colours its blocks still write as literals; the budget the plan's phase 2 measures),
+ *                  bound: { text: { preset, custom, class }, background: { preset, custom, class } } (how the pages' blocks carry their
+ *                  colours: as a preset of the site, as the block's custom colour, or still as a class the design's stylesheet rules) }
  *   built        { plugin, compiler, at }
  */
 final class Document {
@@ -126,6 +128,10 @@ final class Document {
 						'bytes'    => 0,
 						'rules'    => 0,
 						'literals' => 0,
+					),
+					'bound'       => array(
+						'text'       => array( 'preset' => 0, 'custom' => 0, 'class' => 0 ),
+						'background' => array( 'preset' => 0, 'custom' => 0, 'class' => 0 ),
 					),
 				),
 				is_array( $data['report'] ?? null ) ? $data['report'] : array()
