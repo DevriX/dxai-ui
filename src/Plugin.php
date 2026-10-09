@@ -60,7 +60,7 @@ final class Plugin {
 		( new \DXAI_UI\Blocks\Youtube_Facade_View() )->register();
 		// The styles and script of the team's own sections (the library of the pages made from a Home), on the pages whose theme does not bring them.
 		( new \DXAI_UI\Blocks\Library_View() )->register();
-		// A design's states as Interactivity API directives, where the site asks for it (the `interactivity` setting; off by default).
+		// A design's states as Interactivity API directives (the `interactivity` setting; on unless turned off).
 		( new \DXAI_UI\Blocks\Interactivity() )->register();
 		// …and the same sections in the editor's inserter, made for the site they are inserted on.
 		( new \DXAI_UI\Pages\Library_Patterns() )->register();

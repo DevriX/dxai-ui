@@ -147,11 +147,11 @@ export default function SettingsScreen() {
 							<p className="dxai-section-kicker">{ __( 'Pages', 'dxai-ui' ) }</p>
 							<h3>{ __( 'How a design’s states run', 'dxai-ui' ) }</h3>
 						</div>
-						<span className="dxai-pill">{ __( 'Measured on the test install', 'dxai-ui' ) }</span>
+						<span className="dxai-pill">{ __( 'On by default', 'dxai-ui' ) }</span>
 					</div>
 					<ToggleControl
 						label={ __( 'Drive the states with WordPress’s Interactivity API', 'dxai-ui' ) }
-						help={ __( 'A menu that opens, a header that turns solid on scroll, a FAQ that unfolds: with this on, the page’s marks get Interactivity API directives as it renders and WordPress’s own runtime drives them; off, the plugin’s page runtime does, as before. Nothing stored changes, so it can be switched back at any time. The reveal on approach, the counting numbers and the positioned parts stay with the page runtime either way.', 'dxai-ui' ) }
+						help={ __( 'A menu that opens, a header that turns solid on scroll, a FAQ that unfolds: with this on, the page’s marks get Interactivity API directives as it renders and WordPress’s own runtime drives them; off, the plugin’s page runtime does, as before. Measured the same either way on every design with states, at rest and when touched. Nothing stored changes, so it can be switched at any time. The reveal on approach, the counting numbers and the positioned parts stay with the page runtime either way.', 'dxai-ui' ) }
 						checked={ !! settings.interactivity }
 						onChange={ ( value ) => update( 'interactivity', value ) }
 						__nextHasNoMarginBottom

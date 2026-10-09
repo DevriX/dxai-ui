@@ -45,9 +45,10 @@ final class Options {
 			'deepseek_api_key'  => '',
 			'figma_api_token'   => '',
 			'lovable_api_key'   => '',
-			// A design's states driven by WordPress's Interactivity API instead of the page runtime (Blocks\Interactivity). Off
-			// until it is measured on every design (docs/PLAN-ARCHITECTURE.md, phase 3в).
-			'interactivity'     => false,
+			// A design's states driven by WordPress's Interactivity API instead of the page runtime (Blocks\Interactivity). On since
+			// every design with states gave the same outcome either way, at rest and when touched (docs/PLAN-ARCHITECTURE.md, phase 3в);
+			// the setting turns it off.
+			'interactivity'     => true,
 			// Per-structure handling: `copy` reproduces the design, `dynamic`
 			// swaps in the WordPress-native block. Fidelity is the default so
 			// an import looks like what the designer built.

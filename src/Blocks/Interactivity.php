@@ -14,9 +14,9 @@ use DXAI_UI\Settings\Options;
 /**
  * A converted page's states — a menu that opens, a header that turns solid on scroll, a FAQ that unfolds, a carousel moved by steps —
  * are marks the compiler wrote into the markup (`dxai-toggle-<state>`, `dxai-cls-…`, `dxai-on-…`, `data-dxai-*`), and the page runtime
- * (Compiler\Motion_Runtime) drives them with a state machine of its own. With the `interactivity` setting on (off unless chosen), the same
- * marks are driven by WordPress's Interactivity API instead (phase 3б of docs/PLAN-ARCHITECTURE.md): as the page renders, every mark
- * gets the directive that says the same thing —
+ * (Compiler\Motion_Runtime) drives them with a state machine of its own. With the `interactivity` setting on (on unless turned off, since
+ * phase 3в measured every design with states the same either way), the same marks are driven by WordPress's Interactivity API instead
+ * (phase 3б of docs/PLAN-ARCHITECTURE.md): as the page renders, every mark gets the directive that says the same thing —
  *
  *   a trigger          data-wp-on--click="actions.fire" (and mouseenter/focusin, or mouseleave/focusout/blur, for a hover trigger),
  *                      data-wp-bind--aria-expanded="state.expanded" (data-wp-bind--aria-selected="state.selected" too on a tab);
