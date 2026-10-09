@@ -392,6 +392,10 @@ final class Assets {
 		if ( self::has_rail( $content ) ) {
 			wp_enqueue_script( 'dxai-ui-rail' );
 		}
+		// The design's states driven by the Interactivity API, where the site asks for it: the store, before the head prints the import map.
+		if ( Interactivity::has_states( $content ) ) {
+			Interactivity::enqueue();
+		}
 		/*
 		 * Both locations are built from the current upload URL, whichever form
 		 * they were stored in, and versioned by the resolved file's mtime. The

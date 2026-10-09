@@ -80,7 +80,7 @@ final class Page_Scope {
 				$runs[] = $span;
 			}
 		}
-		$open = '<div class="' . esc_attr( self::classes( (int) $post->ID, $scope ) ) . '">';
+		$open = self::open( (int) $post->ID, $scope );
 		foreach ( array_reverse( $runs ) as $run ) {
 			$content = substr( $content, 0, $run[0] ) . $open . "\n" . substr( $content, $run[0], $run[1] - $run[0] ) . "\n</div>" . substr( $content, $run[1] );
 		}
@@ -155,7 +155,15 @@ final class Page_Scope {
 			return $content;
 		}
 
-		return '<div class="' . esc_attr( self::classes( $post->ID, $scope ) ) . '">' . $content . '</div>';
+		return self::open( $post->ID, $scope ) . $content . '</div>';
+	}
+
+	/**
+	 * The scope element's opening tag: its classes, and — where the site drives the design's states with the Interactivity API — the
+	 * attributes that make it the interactive region (Blocks\Interactivity::root_attrs()).
+	 */
+	public static function open( int $post_id, int $scope ): string {
+		return '<div class="' . esc_attr( self::classes( $post_id, $scope ) ) . '"' . \DXAI_UI\Blocks\Interactivity::root_attrs() . '>';
 	}
 
 	/**

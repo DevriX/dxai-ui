@@ -1,7 +1,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { Button, Notice, Spinner, TextControl, SelectControl } from '@wordpress/components';
+import { Button, Notice, Spinner, TextControl, SelectControl, ToggleControl } from '@wordpress/components';
 
 const SECRET_FIELDS = [
 	{ id: 'anthropic_api_key', label: __( 'Anthropic API key', 'dxai-ui' ) },
@@ -140,6 +140,22 @@ export default function SettingsScreen() {
 							onChange={ ( value ) => update( modelField, value ) }
 						/>
 					</div>
+				</div>
+				<div className="dxai-section">
+					<div className="dxai-section-head">
+						<div>
+							<p className="dxai-section-kicker">{ __( 'Pages', 'dxai-ui' ) }</p>
+							<h3>{ __( 'How a design’s states run', 'dxai-ui' ) }</h3>
+						</div>
+						<span className="dxai-pill">{ __( 'Measured on the test install', 'dxai-ui' ) }</span>
+					</div>
+					<ToggleControl
+						label={ __( 'Drive the states with WordPress’s Interactivity API', 'dxai-ui' ) }
+						help={ __( 'A menu that opens, a header that turns solid on scroll, a FAQ that unfolds: with this on, the page’s marks get Interactivity API directives as it renders and WordPress’s own runtime drives them; off, the plugin’s page runtime does, as before. Nothing stored changes, so it can be switched back at any time. The reveal on approach, the counting numbers and the positioned parts stay with the page runtime either way.', 'dxai-ui' ) }
+						checked={ !! settings.interactivity }
+						onChange={ ( value ) => update( 'interactivity', value ) }
+						__nextHasNoMarginBottom
+					/>
 				</div>
 				<div className="dxai-section">
 					<div className="dxai-section-head">

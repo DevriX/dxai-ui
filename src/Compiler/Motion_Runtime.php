@@ -237,6 +237,10 @@ final class Motion_Runtime {
 	});
 	(scopes.length ? scopes : [document]).forEach(function (root) {
 	var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	// A scope the Interactivity API drives (Blocks\Interactivity, the `interactivity` setting): its states are the store's, not this
+	// machine's — the toggles, the hover menus and the state machine below stand down there; the reveal, the counting numbers, the
+	// Radix parts and the rest stay this runtime's.
+	var wpi = !!(root.hasAttribute && root.hasAttribute("data-wp-interactive"));
 	if (root && root.classList) { root.classList.add("dxai-motion"); }
 	function reveal(el) {
 		el.classList.add("is-in");
@@ -446,7 +450,7 @@ final class Motion_Runtime {
 	}
 	root.addEventListener("click", function (event) {
 		var btn = event.target && event.target.closest ? event.target.closest("[class*='dxai-toggle-']") : null;
-		if (!btn || !root.contains(btn)) {
+		if (wpi || !btn || !root.contains(btn)) {
 			return;
 		}
 		if (machineOwns(btn)) {
@@ -598,6 +602,7 @@ final class Motion_Runtime {
 	 * null, so testing at bind time would let every one of them through.
 	 */
 	root.querySelectorAll("[data-dxai-hover='enter'], [class*='dxai-toggle-open--']").forEach(function (el) {
+		if (wpi) { return; }
 		var wrap = el.closest("li, .relative, [class*='relative']") || el.parentElement;
 		el.addEventListener("mouseenter", function () { if (!machineOwns(el)) { setHoverState(el, true); } });
 		if (el.getAttribute("data-dxai-hover") === "enter") {
@@ -613,6 +618,7 @@ final class Motion_Runtime {
 		}
 	});
 	root.querySelectorAll("[data-dxai-hover='leave']").forEach(function (el) {
+		if (wpi) { return; }
 		el.addEventListener("mouseleave", function () { if (!machineOwns(el)) { setHoverState(el, false); } });
 		el.addEventListener("blur", function () { if (!machineOwns(el)) { setHoverState(el, false); } });
 		leaveKeys(el, function () { if (!machineOwns(el)) { setHoverState(el, false); } });
@@ -749,7 +755,7 @@ final class Motion_Runtime {
 			order[state] = byTrigger;
 		}
 	});
-	if (projections.length || panels.length) {
+	if (!wpi && (projections.length || panels.length)) {
 		var machine = {};
 		// Seed from the markup, never the other way round: the compiler already
 		// rendered the initial state, so nothing is projected on load and the

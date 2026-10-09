@@ -45,6 +45,9 @@ final class Options {
 			'deepseek_api_key'  => '',
 			'figma_api_token'   => '',
 			'lovable_api_key'   => '',
+			// A design's states driven by WordPress's Interactivity API instead of the page runtime (Blocks\Interactivity). Off
+			// until it is measured on every design (docs/PLAN-ARCHITECTURE.md, phase 3в).
+			'interactivity'     => false,
 			// Per-structure handling: `copy` reproduces the design, `dynamic`
 			// swaps in the WordPress-native block. Fidelity is the default so
 			// an import looks like what the designer built.
@@ -141,6 +144,10 @@ final class Options {
 		$allowed_engines = array( 'claude', 'openai', 'grok', 'deepseek' );
 		if ( ! in_array( $next['active_engine'], $allowed_engines, true ) ) {
 			$next['active_engine'] = 'claude';
+		}
+
+		if ( array_key_exists( 'interactivity', $input ) ) {
+			$next['interactivity'] = filter_var( $input['interactivity'], FILTER_VALIDATE_BOOLEAN );
 		}
 
 		if ( array_key_exists( 'structure_mode', $input ) && is_array( $input['structure_mode'] ) ) {

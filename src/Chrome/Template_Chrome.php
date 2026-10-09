@@ -104,7 +104,7 @@ final class Template_Chrome {
 		self::$footer = $added['footer'];
 
 		if ( $design ) {
-			echo '<div class="' . esc_attr( Page_Scope::classes( $post_id, $scope ) ) . '">';
+			echo Page_Scope::open( $post_id, $scope ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where it is built.
 		}
 		$top = trim( $lead . "\n" . $added['header'] );
 		if ( $top !== '' ) {
@@ -311,7 +311,7 @@ final class Template_Chrome {
 			return $html;
 		}
 
-		return '<div class="' . esc_attr( Page_Scope::classes( $scope, $scope ) ) . '">' . $html . '</div>';
+		return Page_Scope::open( $scope, $scope ) . $html . '</div>';
 	}
 
 	private static function reset(): void {
