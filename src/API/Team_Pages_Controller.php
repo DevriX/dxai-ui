@@ -68,7 +68,8 @@ final class Team_Pages_Controller {
 						'library' => array(
 							'type'    => 'string',
 							'enum'    => Team_Pages::LIBRARY,
-							'default' => 'fill',
+							// The team's layouts, where the library holds them (Team_Pages::policy() says what a site without them gets).
+							'default' => 'team',
 						),
 						'page'   => array(
 							'type'    => 'integer',

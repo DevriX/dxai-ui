@@ -21,10 +21,10 @@ function Swatch( { color, label } ) {
 	return <span className="dxai-theme-colors__swatch" style={ { background: color } } title={ label || color } aria-hidden="true" />;
 }
 
-export default function ThemeColors() {
+export default function ThemeColors( { design: fixed = 0 } ) {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
-	const [ home, setHome ] = useState( 0 );
+	const [ home, setHome ] = useState( fixed );
 	const [ draft, setDraft ] = useState( {} );
 	const [ follow, setFollow ] = useState( true );
 	const [ showAll, setShowAll ] = useState( false );
@@ -35,7 +35,7 @@ export default function ThemeColors() {
 		apiFetch( { path: '/dxai-ui/v1/theme-colors' } )
 			.then( ( res ) => {
 				setData( res );
-				if ( res.designs && res.designs.length ) {
+				if ( ! fixed && res.designs && res.designs.length ) {
 					setHome( res.designs[ 0 ].id );
 				}
 			} )
@@ -156,7 +156,7 @@ export default function ThemeColors() {
 							{ __( 'Colours set in Appearance > Editor > Styles override the theme’s own settings: changes made in the theme’s options will not show until those are reset.', 'dxai-ui' ) }
 						</Notice>
 					) }
-					{ data.designs.length > 1 && (
+					{ ! fixed && data.designs.length > 1 && (
 						<SelectControl
 							label={ __( 'Design', 'dxai-ui' ) }
 							value={ String( home ) }

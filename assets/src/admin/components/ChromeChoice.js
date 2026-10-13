@@ -140,10 +140,10 @@ export default function ChromeChoice( { facts, value, onChange, stage } ) {
 			{ ! f.dxTheme && f.baseTheme && (
 				<p className="dxai-chrome-choice__base">
 					{ f.baseTheme === 'installed'
-						? __( 'DX Base is installed. Switch the site to it in Library › Template and this header and footer are drawn on every page of the site, not only on this design’s pages.', 'dxai-ui' )
-						: __( 'The header and footer are drawn on this design’s pages only. DX Base, a small theme this plugin carries, draws them on every page of the site: install it in Library › Template.', 'dxai-ui' ) }
+						? __( 'DX Base is installed. Switch the site to it in DX › Site and this header and footer are drawn on every page of the site, not only on this design’s pages.', 'dxai-ui' )
+						: __( 'The header and footer are drawn on this design’s pages only. DX Base, a small theme this plugin carries, draws them on every page of the site: install it in DX › Site.', 'dxai-ui' ) }
 					{ ' ' }
-					<a href="admin.php?page=dxai-ui-library">{ __( 'Open Library', 'dxai-ui' ) }</a>
+					<a href="admin.php?page=dxai-ui-site">{ __( 'Open Site', 'dxai-ui' ) }</a>
 				</p>
 			) }
 			<div className="dxai-chrome-choice__options">

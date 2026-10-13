@@ -83,8 +83,42 @@ final class Dc_Renderer {
 	/** @var array<int, array{selector: string, attr: string, done: bool}> Attributes componentDidMount sets on the first match. */
 	private array $mount_attrs = array();
 
+	/** @var array<string, array{template:string, script:string, props:array<string, mixed>}> The parts a template imports, by name. */
+	private array $components = array();
+
+	/** @var array<int, string> The imports being drawn, outermost first: a part that imports itself is not drawn again. */
+	private array $importing = array();
+
 	public function __construct( Dc_Script $script ) {
 		$this->script = $script;
+	}
+
+	/**
+	 * The parts this template may import with `<dc-import name="…">` (Dc_Site: a site's header, its footer…).
+	 *
+	 * @param array<string, array{template:string, script:string, props:array<string, mixed>}> $components
+	 * @param array<int, string>                                                                $importing The imports around this one.
+	 */
+	public function with_components( array $components, array $importing = array() ): self {
+		$this->components = $components;
+		$this->importing  = $importing;
+
+		return $this;
+	}
+
+	/**
+	 * Number classes on from another renderer of the same design: an imported part's and every page's classes land in one
+	 * stylesheet, and `dxai-sh-1` of the header and `dxai-sh-1` of the page were two rules for one class.
+	 */
+	public function continue_from( int $seq ): self {
+		$this->seq = max( $this->seq, $seq );
+
+		return $this;
+	}
+
+	/** The last number this renderer gave a class. */
+	public function sequence(): int {
+		return $this->seq;
 	}
 
 	/** @return array<int, string> */
@@ -362,11 +396,103 @@ final class Dc_Renderer {
 				return '';
 			case 'x-import':
 			case 'dc-import':
-				$this->notes[] = 'unsupported <' . $tag . '>';
-				return '';
+				return $this->render_import( $node, $tag );
 		}
 
 		return $this->render_element( $node, $tag, $loop, $primary, $gate );
+	}
+
+	/**
+	 * An imported part, drawn where the import stands: its own template under its own logic (a part's state is its own), its
+	 * classes added to the page's, and the page-level states it declares (click outside, scroll) carried to the page's root.
+	 *
+	 * The page's first and last imports are its header and its footer — that is how a Claude Design site shares them — so
+	 * the part is drawn as that landmark, and the import makes the site's header and footer like a page that writes its own.
+	 * An import of a part the export does not hold is not drawn, and is reported, as before.
+	 */
+	private function render_import( \DOMElement $node, string $tag ): string {
+		$name = trim( (string) $node->getAttribute( 'name' ) );
+		$part = $this->components[ $name ] ?? null;
+		if ( ! is_array( $part ) || in_array( $name, $this->importing, true ) || count( $this->importing ) >= 8 ) {
+			$this->notes[] = 'unsupported <' . $tag . '>';
+
+			return '';
+		}
+		$sub = ( new self( new Dc_Script( (string) ( $part['script'] ?? '' ), is_array( $part['props'] ?? null ) ? $part['props'] : array() ) ) )
+			->with_components( $this->components, array_merge( $this->importing, array( $name ) ) )
+			->continue_from( $this->seq );
+		$out       = $sub->render( (string) ( $part['template'] ?? '' ) );
+		$this->seq = max( $this->seq, $sub->sequence() );
+		$this->css .= $out['css'];
+		foreach ( $sub->notes() as $note ) {
+			$this->notes[] = $note;
+		}
+		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxai-outside'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $key ) {
+			if ( ! in_array( $key, $this->outside, true ) ) {
+				$this->outside[] = $key;
+			}
+		}
+		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxai-scroll'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $pair ) {
+			$at = strrpos( $pair, ':' );
+			if ( $at !== false ) {
+				$this->scroll[ substr( $pair, 0, $at ) ] = (int) substr( $pair, $at + 1 );
+			}
+		}
+
+		return self::as_landmark( $out['html'], self::landmark_of( $node ) );
+	}
+
+	/**
+	 * `header` for the first element of the page, `footer` for the last, '' anywhere else (or when it is the page's only one).
+	 * The page is the template's top level, or the one element it is wrapped in.
+	 */
+	private static function landmark_of( \DOMElement $node ): string {
+		$parent = $node->parentNode;
+		if ( ! $parent instanceof \DOMElement ) {
+			return '';
+		}
+		$is_body = static fn( $n ): bool => $n instanceof \DOMElement && strtolower( $n->tagName ) === 'body';
+		$elements = static fn( \DOMNode $n ): array => array_values( array_filter( iterator_to_array( $n->childNodes ), static fn( $c ) => $c instanceof \DOMElement ) );
+		if ( ! $is_body( $parent ) && ! ( $is_body( $parent->parentNode ) && count( $elements( $parent->parentNode ) ) === 1 ) ) {
+			return '';
+		}
+		$siblings = $elements( $parent );
+		if ( count( $siblings ) < 2 ) {
+			return '';
+		}
+		if ( $siblings[0]->isSameNode( $node ) ) {
+			return 'header';
+		}
+
+		return $siblings[ count( $siblings ) - 1 ]->isSameNode( $node ) ? 'footer' : '';
+	}
+
+	/**
+	 * A drawn part as the landmark it is: its own root `<div>` renamed, a root that already is one kept, anything else wrapped.
+	 */
+	private static function as_landmark( string $html, string $tag ): string {
+		if ( $tag === '' || trim( $html ) === '' ) {
+			return $html;
+		}
+		$dom = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$dom->loadHTML( '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' . $html . '</body></html>', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING );
+		libxml_clear_errors();
+		$body  = $dom->getElementsByTagName( 'body' )->item( 0 );
+		$roots = $body instanceof \DOMElement ? array_values( array_filter( iterator_to_array( $body->childNodes ), static fn( $c ) => $c instanceof \DOMElement || ( $c instanceof \DOMText && trim( $c->textContent ) !== '' ) ) ) : array();
+		if ( count( $roots ) === 1 && $roots[0] instanceof \DOMElement ) {
+			$root = strtolower( $roots[0]->tagName );
+			if ( in_array( $root, array( 'header', 'footer', 'nav' ), true ) ) {
+				return $html;
+			}
+			if ( $root === 'div' && preg_match( '/^\s*<div\b/i', $html ) === 1 && preg_match( '/<\/div>\s*$/i', $html ) === 1 ) {
+				$html = (string) preg_replace( '/^(\s*)<div\b/i', '$1<' . $tag, $html, 1 );
+
+				return (string) preg_replace( '/<\/div>(\s*)$/i', '</' . $tag . '>$1', $html, 1 );
+			}
+		}
+
+		return '<' . $tag . '>' . $html . '</' . $tag . '>';
 	}
 
 	/**

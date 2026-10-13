@@ -280,7 +280,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 				// save response names them itself once it creates menus/widgets.
 				'menus'    => current_theme_supports( 'menus' ) ? admin_url( 'nav-menus.php' ) : '',
 				'widgets'  => current_theme_supports( 'widgets' ) ? admin_url( 'widgets.php' ) : '',
-				'library'  => admin_url( 'admin.php?page=dxai-ui-library' ),
+				'designs'  => \DXAI_UI\Admin\Dashboard::url( 'designs' ),
 				'settings' => admin_url( 'admin.php?page=dxai-ui-settings' ),
 			),
 		);

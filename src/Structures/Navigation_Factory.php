@@ -530,6 +530,17 @@ final class Navigation_Factory {
 				if ( is_string( $permalink ) && $permalink !== '' ) {
 					$row['url'] = $permalink;
 				}
+			} elseif ( preg_match( '/^([^#?]+)([#?].*)$/s', $url, $part ) === 1 ) {
+				/*
+				 * A link to a part of a page of the design (`/about#careers`): the page's address with the part kept. It stays a
+				 * link, not the page itself, since the part is what a person picked. An anchor with no page in front of it
+				 * (`#about`) is not one of these: bound_path() explains why that one is left as it is.
+				 */
+				$path = $this->bound_path( $part[1], $origin );
+				$link = $path !== '' && isset( $path_map[ $path ] ) ? get_permalink( (int) $path_map[ $path ] ) : '';
+				if ( is_string( $link ) && $link !== '' ) {
+					$row['url'] = $link . $part[2];
+				}
 			}
 			$kids = is_array( $item['children'] ?? null ) ? $item['children'] : array();
 			if ( $kids !== array() ) {

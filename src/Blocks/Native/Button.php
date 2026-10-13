@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Blocks\Native;
 
+use DXAI_UI\Support\Color_Math;
+use DXAI_UI\Theme\Theme_Binding;
 use DXAI_UI\Theme\Theme_Buttons;
+use DXAI_UI\Theme\Theme_Palette;
 
 /**
  * A `dxai-ui/link` that is a button of the design — padding and a fill or a border — becomes core's Buttons block
@@ -124,7 +127,7 @@ final class Button extends Converter {
 	 * What a call to action needs, or null when the block is not one.
 	 *
 	 * @param array<string, mixed> $block
-	 * @return array{url:string, text:string, style:string, target:string, rel:string, title:string, classes:string, css:string}|null
+	 * @return array{url:string, text:string, style:string, target:string, rel:string, title:string, classes:string, css:string, align:string, fill:string}|null
 	 */
 	private function cta( array $block ): ?array {
 		if ( ( $block['blockName'] ?? '' ) !== $this->source() || ( $block['innerBlocks'] ?? array() ) !== array() ) {
@@ -174,6 +177,8 @@ final class Button extends Converter {
 			'classes' => self::keep_classes( (string) ( $a['className'] ?? '' ) ),
 			'css'     => self::keep_css( $css ),
 			'align'   => '',
+			// The design's own fill, for a button the theme's style would lose on its band (on_band()).
+			'fill'    => \DXAI_UI\Compiler\Color_Usage::background_of( $a, (int) ( self::$context['home'] ?? 0 ) ),
 		);
 	}
 
@@ -195,6 +200,147 @@ final class Button extends Converter {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Distance (OKLab × 100) under which a button cannot be told from the band it sits on. Measured against american-restoration's
+	 * accent #e64804: the same accent 0, Tailwind's orange-600 2.9 and orange-500 9.2 — one orange to the eye — while the design's
+	 * own flame #f28c28 is 13.9, the theme's primary blue 36 and white 43.
+	 */
+	private const APART = 10.0;
+
+	/**
+	 * A call to action whose theme style would vanish into what it sits on: the theme's filled button on a band of the same colour
+	 * (a design's orange band, once its colours follow american-restoration, is the theme's accent — the primary button's own fill).
+	 * Such a button keeps the design's own fill, when that is a colour of the theme's palette, in the Button's Colour panel with the
+	 * palette's black or white for its text, whichever reads; failing that it wears the theme's other style (white). Every other
+	 * button is the theme's, as before.
+	 *
+	 * @param array<string, mixed>      $cta    What cta() read.
+	 * @param array<string, mixed>|null $parent The attributes of the block the buttons sit in.
+	 * @return array{cta:array<string, mixed>, fill:string, text:string} The call to action (its style may change), and the presets
+	 *                                                                      of its background and text ('' for the style's own).
+	 */
+	private static function on_band( array $cta, ?array $parent ): array {
+		$keep = array(
+			'cta'  => $cta,
+			'fill' => '',
+			'text' => '',
+		);
+		if ( ! in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true ) ) {
+			return $keep;
+		}
+		$home  = (int) ( self::$context['home'] ?? 0 );
+		$band  = self::band( $parent, $home );
+		$theme = Theme_Buttons::fill( (string) $cta['style'] );
+		if ( $band === '' || $theme === '' || Color_Math::distance( $theme, $band ) >= self::APART ) {
+			return $keep;
+		}
+		$preset = self::preset_of( (string) ( $cta['fill'] ?? '' ), $home );
+		$hex    = $preset !== '' ? Theme_Palette::hex( $preset ) : '';
+		if ( $hex !== '' && Color_Math::distance( $hex, $band ) >= self::APART ) {
+			$text = '';
+			$best = 0.0;
+			foreach ( array( 'white', 'black' ) as $slug ) {
+				$on = Theme_Palette::hex( $slug );
+				if ( $on !== '' && Color_Math::contrast( $on, $hex ) > $best ) {
+					$best = Color_Math::contrast( $on, $hex );
+					$text = $slug;
+				}
+			}
+
+			return array(
+				'cta'  => $cta,
+				'fill' => $preset,
+				'text' => $text,
+			);
+		}
+		$other = Theme_Buttons::has( 'secondary-button' ) ? Theme_Buttons::fill( 'secondary-button' ) : '';
+		if ( $other !== '' && Color_Math::distance( $other, $band ) >= self::APART ) {
+			$cta['style'] = 'secondary-button';
+
+			return array(
+				'cta'  => $cta,
+				'fill' => '',
+				'text' => '',
+			);
+		}
+
+		return $keep;
+	}
+
+	/**
+	 * The colour (#rrggbb) of what a run of buttons sits on: the nearest block around them that paints a background of its own,
+	 * read as the importer stored it ('' when none does, or it is a picture or a gradient: nothing to judge against).
+	 *
+	 * @param array<string, mixed>|null $parent
+	 */
+	private static function band( ?array $parent, int $home ): string {
+		$around = array_reverse( self::$ancestors );
+		if ( $parent !== null ) {
+			array_unshift( $around, $parent );
+		}
+		foreach ( $around as $attrs ) {
+			$paint = \DXAI_UI\Compiler\Color_Usage::background_of( is_array( $attrs ) ? $attrs : array(), $home );
+			if ( $paint === '' ) {
+				continue;
+			}
+			if ( $paint === 'image' ) {
+				return '';
+			}
+			$value = self::value_of( $paint, $home );
+			$rgba  = $value !== '' ? Color_Math::parse( $value ) : null;
+			if ( $rgba === null ) {
+				return '';
+			}
+			// A translucent band (white at 10%) shows what is under it.
+			if ( $rgba[3] < 1 ) {
+				continue;
+			}
+
+			return Color_Math::hex( $value );
+		}
+
+		return '';
+	}
+
+	/**
+	 * The colour a background_of() answer shows on this site: a token the design's colours follow, as the theme colour it follows
+	 * (Theme_Binding); any other token as the design wrote it; a preset as the palette has it.
+	 */
+	private static function value_of( string $paint, int $home ): string {
+		$preset = self::preset_of( $paint, $home );
+		if ( $preset !== '' && Theme_Palette::hex( $preset ) !== '' ) {
+			return Theme_Palette::hex( $preset );
+		}
+		if ( preg_match( '/^(?:token|preset):([a-z0-9-]+)$/', $paint, $m ) === 1 ) {
+			$palette = get_post_meta( $home, \DXAI_UI\Compiler\Token_Styles::META, true );
+			foreach ( is_array( $palette['colors'] ?? null ) ? $palette['colors'] : array() as $row ) {
+				if ( is_array( $row ) && (string) ( $row['slug'] ?? '' ) === $m[1] ) {
+					return (string) ( $row['value'] ?? '' );
+				}
+			}
+
+			return '';
+		}
+
+		return $paint;
+	}
+
+	/**
+	 * The theme preset a background_of() answer is ('' when it is none): a preset itself, or a token the design's colours follow
+	 * to one (Theme_Binding).
+	 */
+	private static function preset_of( string $paint, int $home ): string {
+		if ( preg_match( '/^preset:([a-z0-9-]+)$/', $paint, $m ) === 1 ) {
+			return Theme_Palette::has( $m[1] ) ? $m[1] : '';
+		}
+		if ( $home < 1 || preg_match( '/^token:([a-z0-9-]+)$/', $paint, $m ) !== 1 || ! Theme_Binding::follows( $home ) ) {
+			return '';
+		}
+		$to = (string) ( Theme_Binding::get( $home )['tokens'][ $m[1] ]['to'] ?? '' );
+
+		return $to !== '' && Theme_Palette::has( $to ) ? $to : '';
 	}
 
 	private static function keep_classes( string $classes ): string {
@@ -232,20 +378,34 @@ final class Button extends Converter {
 		$stack  = self::stacks( $run );
 		$chunks = array( '<div class="' . ( $stack ? 'wp-block-buttons sm-flex-column' : 'wp-block-buttons' ) . '">' );
 		foreach ( $run as $i => $cta ) {
-			$colored = $slug !== '' && in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true );
+			$own     = self::on_band( $cta, $parent );
+			$cta     = $own['cta'];
+			$text    = $own['text'] !== '' ? $own['text'] : ( in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true ) ? $slug : '' );
+			$fill    = $own['fill'];
+			$colored = $text !== '';
 			$attrs   = array();
 			if ( $colored ) {
-				$attrs['textColor'] = $slug;
+				$attrs['textColor'] = $text;
+			}
+			if ( $fill !== '' ) {
+				$attrs['backgroundColor'] = $fill;
 			}
 			$attrs['className'] = trim( $cta['classes'] . ' is-style-' . $cta['style'] );
 			if ( $colored ) {
-				$attrs['style'] = array( 'elements' => array( 'link' => array( 'color' => array( 'text' => 'var:preset|color|' . $slug ) ) ) );
+				$attrs['style'] = array( 'elements' => array( 'link' => array( 'color' => array( 'text' => 'var:preset|color|' . $text ) ) ) );
 			}
 			if ( $cta['css'] !== '' ) {
 				$attrs['dxaiCss'] = $cta['css'];
 			}
 			$wrap = 'wp-block-button ' . self::class_tail( $attrs );
-			$link = 'wp-block-button__link' . ( $colored ? ' has-' . $slug . '-color has-text-color has-link-color' : '' ) . ' wp-element-button';
+			// The classes core's Button writes for its colour settings, in core's order.
+			$link = 'wp-block-button__link'
+				. ( $colored ? ' has-' . $text . '-color' : '' )
+				. ( $fill !== '' ? ' has-' . $fill . '-background-color' : '' )
+				. ( $colored ? ' has-text-color' : '' )
+				. ( $fill !== '' ? ' has-background' : '' )
+				. ( $colored ? ' has-link-color' : '' )
+				. ' wp-element-button';
 			$a    = '<a class="' . esc_attr( $link ) . '" href="' . esc_url( $cta['url'] ) . '"'
 				. ( $cta['title'] !== '' ? ' title="' . esc_attr( $cta['title'] ) . '"' : '' )
 				. ( $cta['target'] !== '' ? ' target="' . esc_attr( $cta['target'] ) . '"' : '' )

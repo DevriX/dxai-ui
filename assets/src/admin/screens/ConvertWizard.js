@@ -1220,7 +1220,7 @@ export default function ConvertWizard() {
 				: __( 'The crawl stopped answering.', 'dxai-ui' ),
 			hint: kind === 'missing'
 				? __( 'The page itself is saved. Start the import again to build the menu pages.', 'dxai-ui' )
-				: __( 'If WordPress cron runs on this site, the crawl carries on in the background and the pages appear in the Library. You can also keep trying from here.', 'dxai-ui' ),
+				: __( 'If WordPress cron runs on this site, the crawl carries on in the background and the pages appear in Designs. You can also keep trying from here.', 'dxai-ui' ),
 			kind,
 			job,
 			base,
@@ -1267,7 +1267,7 @@ export default function ConvertWizard() {
 					setStep( 'preview' );
 				},
 			};
-			const library = links.library ? { label: __( 'Check the Library', 'dxai-ui' ), href: links.library } : null;
+			const library = links.designs ? { label: __( 'Open Designs', 'dxai-ui' ), href: links.designs } : null;
 			// Only when WordPress could not say how the save ended is it worth asking again.
 			const unsure = failure.saveState === 'unchecked' || failure.saveState === 'stuck';
 			const check = unsure && failure.attempt
@@ -1311,7 +1311,7 @@ export default function ConvertWizard() {
 					crawlPartial( base ),
 					failure.kind === 'missing'
 						? __( 'Building the menu pages stopped: the crawl is no longer on the server. The pages listed here were finished before it stopped.', 'dxai-ui' )
-						: __( 'Building the menu pages stopped answering here. If WordPress cron runs on this site it carries on in the background; the remaining pages will appear in the Library.', 'dxai-ui' )
+						: __( 'Building the menu pages stopped answering here. If WordPress cron runs on this site it carries on in the background; the remaining pages will appear in Designs.', 'dxai-ui' )
 				),
 			};
 			if ( failure.kind === 'stalled' && failure.job ) {

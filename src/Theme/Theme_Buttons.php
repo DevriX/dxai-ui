@@ -36,6 +36,11 @@ final class Theme_Buttons {
 	/** @var array{key:string, styles:array<int, string>, file:string}|null */
 	private static ?array $memo = null;
 
+	/** Forget the styles read (a suite switches themes within one request). */
+	public static function reset(): void {
+		self::$memo = null;
+	}
+
 	/**
 	 * The button styles the theme has, from KNOWN.
 	 *
@@ -110,6 +115,43 @@ final class Theme_Buttons {
 		}
 
 		return $top > Color_Math::contrast( $white, $accent ) ? $best : '';
+	}
+
+	/**
+	 * The colour a button style fills its button with, as #rrggbb ('' when the theme's rules for it say none, or it is not a
+	 * colour of the palette): read from the style's own rule (`.wp-block-button.is-style-<style> .wp-block-button__link`), so
+	 * a theme whose primary button is its accent says so itself.
+	 */
+	public static function fill( string $style ): string {
+		static $memo = array();
+		$state = self::state();
+		$key   = $state['key'] . '|' . $style;
+		if ( isset( $memo[ $key ] ) ) {
+			return $memo[ $key ];
+		}
+		$memo[ $key ] = '';
+		$path         = $state['file'] !== '' ? Upload_Paths::path( $state['file'] ) : '';
+		$css          = $path !== '' && is_readable( $path ) ? (string) file_get_contents( $path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$want         = '.wp-block-button.is-style-' . $style . ' .wp-block-button__link';
+		if ( $css === '' || preg_match_all( '/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER ) < 1 ) {
+			return '';
+		}
+		foreach ( $rules as $rule ) {
+			$selectors = array_map( static fn( $s ) => (string) preg_replace( '/\s+/', ' ', trim( $s ) ), explode( ',', (string) $rule[1] ) );
+			if ( ! in_array( $want, $selectors, true ) || preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/i', (string) $rule[2], $m ) !== 1 ) {
+				continue;
+			}
+			$value = trim( $m[1] );
+			if ( preg_match( '/^var\(\s*--wp--preset--color--([a-z0-9-]+)\s*(?:,\s*([^)]+))?\)/i', $value, $v ) === 1 ) {
+				$hex   = Theme_Palette::hex( strtolower( $v[1] ) );
+				$value = $hex !== '' ? $hex : trim( (string) ( $v[2] ?? '' ) );
+			}
+			$memo[ $key ] = Color_Math::parse( $value ) !== null ? Color_Math::hex( $value ) : '';
+
+			return $memo[ $key ];
+		}
+
+		return '';
 	}
 
 	/**

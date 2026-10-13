@@ -167,9 +167,9 @@ function Variation( { design } ) {
 	);
 }
 
-export default function DesignReport() {
+export default function DesignReport( { design: fixed = 0 } ) {
 	const [ list, setList ] = useState( null );
-	const [ design, setDesign ] = useState( 0 );
+	const [ design, setDesign ] = useState( fixed );
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
@@ -179,7 +179,7 @@ export default function DesignReport() {
 		apiFetch( { path: '/dxai-ui/v1/design' } )
 			.then( ( res ) => {
 				setList( res.designs || [] );
-				if ( res.designs && res.designs.length ) {
+				if ( ! fixed && res.designs && res.designs.length ) {
 					setDesign( res.designs[ 0 ].id );
 				}
 			} )
@@ -235,7 +235,7 @@ export default function DesignReport() {
 					</p>
 				</div>
 			</div>
-			{ list.length > 1 && (
+			{ ! fixed && list.length > 1 && (
 				<SelectControl
 					label={ __( 'Design', 'dxai-ui' ) }
 					value={ String( design ) }

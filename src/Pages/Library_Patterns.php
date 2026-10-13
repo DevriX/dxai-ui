@@ -28,7 +28,9 @@ final class Library_Patterns {
 	}
 
 	public function add(): void {
-		if ( ! function_exists( 'register_block_pattern' ) || ! Block_Library::theme_ok() ) {
+		// Only where the theme has a template of its own: the generic library is made for a page as it is asked for, not inserted as the
+		// team's blocks, which this theme does not have.
+		if ( ! function_exists( 'register_block_pattern' ) || Template::for_theme() === null ) {
 			return;
 		}
 		register_block_pattern_category(

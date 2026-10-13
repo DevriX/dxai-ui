@@ -1618,10 +1618,12 @@ final class Structure_Repository {
 			if ( $pid < 1 ) {
 				continue;
 			}
-			$stype = (string) get_post_meta( $pid, '_dxai_ui_structure', true );
-			if ( in_array( $stype, array( 'header', 'footer', 'navigation' ), true ) ) {
-				$rewrite_ids[ $pid ] = true;
-			}
+			/*
+			 * Every pattern this import wrote, not only the header's and footer's: the sections it offers in the inserter
+			 * kept the design's links, and one inserted on a page later linked to `/contact` on a site whose Contact page
+			 * is `/dxai-contact/`.
+			 */
+			$rewrite_ids[ $pid ] = true;
 		}
 		$link_pages_for_rewrite = array_values( $link_pages );
 		foreach ( array_keys( $rewrite_ids ) as $rid ) {

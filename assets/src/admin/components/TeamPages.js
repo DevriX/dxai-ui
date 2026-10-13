@@ -45,8 +45,9 @@ const MODE_HELP = {
 };
 
 // The team's own sections (the library): to fill what the Home has none of, to take the Home's place too, or not used.
-const LIBRARIES = [ 'fill', 'prefer', 'off' ];
+const LIBRARIES = [ 'team', 'fill', 'prefer', 'off' ];
 const LIBRARY_LABEL = {
+	team: __( 'The team’s layouts: the Home’s hero, then sections arranged as the team arranges theirs', 'dxai-ui' ),
 	fill: __( 'Where the Home has none', 'dxai-ui' ),
 	prefer: __( 'Instead of the Home\'s, where it has one', 'dxai-ui' ),
 	off: __( 'Not used', 'dxai-ui' ),
@@ -136,7 +137,7 @@ const menuRowsOf = ( menu ) =>
 		} ) )
 		: [];
 
-export default function TeamPages() {
+export default function TeamPages( { design: fixed = 0 } ) {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
 	const [ services, setServices ] = useState( '' );
@@ -149,7 +150,7 @@ export default function TeamPages() {
 	const [ busy, setBusy ] = useState( '' );
 	// How the sections are chosen; the AI's cost is told before anything is sent.
 	const [ mode, setMode ] = useState( 'new' );
-	const [ library, setLibrary ] = useState( 'fill' );
+	const [ library, setLibrary ] = useState( 'team' );
 	const [ estimate, setEstimate ] = useState( null );
 	const [ priceIn, setPriceIn ] = useState( '' );
 	const [ priceOut, setPriceOut ] = useState( '' );
@@ -185,8 +186,8 @@ export default function TeamPages() {
 	}
 
 	useEffect( () => {
-		load();
-	}, [] );
+		load( fixed );
+	}, [ fixed ] );
 
 	if ( error ) {
 		return <Notice status="error" isDismissible={ false }>{ error }</Notice>;
@@ -370,7 +371,7 @@ export default function TeamPages() {
 				</div>
 			</div>
 
-			{ data.designs.length > 1 && (
+			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
 					label={ __( 'Design', 'dxai-ui' ) }
 					value={ String( data.design ) }
@@ -534,6 +535,18 @@ export default function TeamPages() {
 									data.library.usable,
 									data.library.sections
 								) }
+								{ ' ' }
+								{ data.library.generic
+									? sprintf(
+										/* translators: %s: the name of the active theme. */
+										__( 'This theme (%s) has no template of its own, so the sections are made in the generic library: core blocks, in the colours this theme\'s palette has for the same roles.', 'dxai-ui' ),
+										data.library.theme
+									)
+									: sprintf(
+										/* translators: %s: the name of the template. */
+										__( 'Template: %s.', 'dxai-ui' ),
+										data.library.template_label
+									) }
 							</p>
 						) }
 					</>

@@ -225,7 +225,7 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 					<strong>{ counts.errors }</strong>
 					<span>{ _n( 'error', 'errors', counts.errors, 'dxai-ui' ) }</span>
 				</li>
-				{ /* The design's document: what the import read of the design (Library › Design report). An older server says nothing. */ }
+				{ /* The design's document: what the import read of the design (Designs › the design › Overview). An older server says nothing. */ }
 				{ saved?.document && (
 					<li>
 						<strong>{ saved.document.sections }</strong>
@@ -233,7 +233,7 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 						<em>
 							{ sprintf(
 								/* translators: 1: number of pages, 2: number of navigation items, 3: number of behaviours the page does not carry. */
-								__( '%1$d page(s), %2$d menu items, %3$d behaviour(s) not carried · Library › Design report', 'dxai-ui' ),
+								__( '%1$d page(s), %2$d menu items, %3$d behaviour(s) not carried · Designs › the design › Overview', 'dxai-ui' ),
 								saved.document.pages,
 								saved.document.nav_items,
 								saved.document.behaviours_left
@@ -255,9 +255,9 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 
 			<ChromeRows report={ report } outcome={ outcome } menusUrl={ menusUrl } widgetsUrl={ widgetsUrl } />
 
-			{ outcome.header.mode === CHROME_INSTALL && links?.library && (
+			{ outcome.header.mode === CHROME_INSTALL && links?.designs && (
 				<p className="dxai-done__next" role="note">
-					{ __( 'Next: the header menu names the pages of the site. In Library › Pages in the team’s style they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dxai-ui' ) }
+					{ __( 'Next: the header menu names the pages of the site. On the design’s page (Designs › this design › Pages) they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dxai-ui' ) }
 				</p>
 			) }
 
@@ -269,7 +269,7 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				{ footerEdit && <a className="components-button is-secondary" href={ footerEdit }>{ __( 'Edit footer', 'dxai-ui' ) }</a> }
 				{ menusUrl && headerBuilt && <a className="components-button is-secondary" href={ menusUrl }>{ __( 'Appearance › Menus', 'dxai-ui' ) }</a> }
 				{ widgetsUrl && footerBuilt && <a className="components-button is-secondary" href={ widgetsUrl }>{ __( 'Appearance › Widgets', 'dxai-ui' ) }</a> }
-				{ links?.library && <a className="components-button is-secondary" href={ links.library }>{ __( 'Library', 'dxai-ui' ) }</a> }
+				{ links?.designs && <a className="components-button is-secondary" href={ links.designs + ( saved?.page?.id ? '#/design/' + saved.page.id : '' ) }>{ __( 'Open the design', 'dxai-ui' ) }</a> }
 				<button type="button" className="components-button is-tertiary" onClick={ onReset }>{ __( 'Convert another', 'dxai-ui' ) }</button>
 			</div>
 

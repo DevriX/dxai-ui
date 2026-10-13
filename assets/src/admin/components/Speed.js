@@ -11,7 +11,7 @@ import './speed.css';
  */
 const kb = ( bytes ) => Math.max( 1, Math.round( bytes / 1024 ) );
 
-export default function Speed() {
+export default function Speed( { design: fixed = 0 } ) {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
 	const [ busy, setBusy ] = useState( '' );
@@ -77,7 +77,7 @@ export default function Speed() {
 
 			<h4>{ __( 'Fonts', 'dxai-ui' ) }</h4>
 			<ul className="dxai-speed__list">
-				{ data.designs.map( ( d ) => (
+				{ data.designs.filter( ( d ) => ! fixed || d.id === fixed ).map( ( d ) => (
 					<li key={ d.id }>
 						<div>
 							<strong>{ d.title }</strong>

@@ -38,7 +38,9 @@ final class Capabilities {
 
 	/** Core's block for a role, where the theme has none of its own. */
 	public const CORE_BLOCKS = array(
-		'picture' => 'core/image',
+		'picture'  => 'core/image',
+		'link_box' => 'core/group',
+		'span'     => 'core/paragraph',
 	);
 
 	/** @var Theme_Adapter|null An adapter assumed in a test, in place of the active theme's. */

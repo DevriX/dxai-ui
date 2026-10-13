@@ -297,6 +297,108 @@ final class Color_Usage {
 		}
 	}
 
+	/**
+	 * The background a block paints of its own, as the design wrote it: `token:<slug>` for a design token, `preset:<slug>` for a colour
+	 * preset of the site, a literal colour, `image` for a gradient or a picture, or '' when it paints none (what is under it shows).
+	 *
+	 * Read like scan() reads a block (the importer's `bg-dxai-*` classes, the Colour panel, `dxaiCss`), and also from the design's
+	 * own class names, which a Tailwind design keeps (`bg-flame`): the rule the design's sheet has for the class names the token.
+	 * For a converter that has to judge one colour against what lies behind it (Native\Button), not for the scan: the pairs it
+	 * stores stay what they were.
+	 *
+	 * @param array<string, mixed> $attrs A block's attributes as the importer stored them.
+	 * @param int                  $home  The design's Home, whose sheet holds the rules of its classes.
+	 */
+	public static function background_of( array $attrs, int $home ): string {
+		if ( is_string( $attrs['backgroundColor'] ?? null ) && $attrs['backgroundColor'] !== '' ) {
+			return 'preset:' . sanitize_key( $attrs['backgroundColor'] );
+		}
+		if ( ( $attrs['gradient'] ?? '' ) !== '' || ( $attrs['style']['color']['gradient'] ?? '' ) !== '' ) {
+			return 'image';
+		}
+		$custom = $attrs['style']['color']['background'] ?? '';
+		if ( is_string( $custom ) && $custom !== '' ) {
+			return self::painted( $custom );
+		}
+		$own = self::painted_by( self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) );
+		if ( $own !== '' ) {
+			return $own;
+		}
+		$classes = preg_split( '/\s+/', trim( (string) ( $attrs['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
+		foreach ( $classes as $class ) {
+			if ( preg_match( '/^bg-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $class, $m ) === 1 ) {
+				return 'token:' . $m[1];
+			}
+		}
+		$sheet = $home > 0 ? self::sheet_once( $home ) : '';
+		foreach ( $classes as $class ) {
+			// The class itself, not a variant of it (`hover:bg-…`, `md:bg-…`): what the block paints at rest.
+			if ( ! str_starts_with( $class, 'bg-' ) || str_contains( $class, ':' ) || $sheet === '' ) {
+				continue;
+			}
+			$escaped = (string) preg_replace( '/([^A-Za-z0-9_-])/', '\\\\$1', $class );
+			if ( preg_match_all( '/(?:^|[{},])\s*([^{}]*?(?<![\w\\\\-])\.' . preg_quote( $escaped, '/' ) . '(?![\w\\\\-])[^{}]*)\{([^{}]*)\}/', $sheet, $rules, PREG_SET_ORDER ) < 1 ) {
+				continue;
+			}
+			foreach ( $rules as $rule ) {
+				$paint = self::painted_by( self::declarations( (string) $rule[2] ) );
+				if ( $paint !== '' ) {
+					return $paint;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * What a declaration list paints as a background (see background_of()).
+	 *
+	 * @param array<string, string> $decls
+	 */
+	private static function painted_by( array $decls ): string {
+		$image = trim( (string) ( $decls['background-image'] ?? '' ) );
+		if ( $image !== '' && strtolower( $image ) !== 'none' ) {
+			return 'image';
+		}
+		foreach ( array( 'background-color', 'background' ) as $prop ) {
+			$value = trim( (string) ( $decls[ $prop ] ?? '' ) );
+			if ( $value !== '' ) {
+				return self::painted( $value );
+			}
+		}
+
+		return '';
+	}
+
+	/** A background value as background_of() names it. */
+	private static function painted( string $value ): string {
+		if ( preg_match( '/\b(?:url|(?:linear|radial|conic)-gradient)\(/i', $value ) === 1 ) {
+			return 'image';
+		}
+		$token = self::token_in( $value );
+		if ( $token !== '' ) {
+			return 'token:' . $token;
+		}
+		if ( preg_match( '/^var\(\s*--wp--preset--color--([a-z0-9-]+)\s*[,)]/i', $value, $m ) === 1 ) {
+			return 'preset:' . strtolower( $m[1] );
+		}
+
+		return \DXAI_UI\Support\Color_Math::parse( $value ) !== null ? $value : '';
+	}
+
+	/** @var array<int, string> The design sheets background_of() has read in this request, by Home. */
+	private static array $sheets = array();
+
+	/** A design's sheet, read once per request. */
+	private static function sheet_once( int $home ): string {
+		if ( ! isset( self::$sheets[ $home ] ) ) {
+			self::$sheets[ $home ] = self::sheet( $home );
+		}
+
+		return self::$sheets[ $home ];
+	}
+
 	/** The design's own stylesheet, as written ('' when it cannot be read). */
 	private static function sheet( int $home ): string {
 		$path = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'];

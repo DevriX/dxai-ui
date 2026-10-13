@@ -31,9 +31,9 @@ const PHASE = {
 	save: __( 'Saving', 'dxai-ui' ),
 };
 
-export default function SitePages() {
+export default function SitePages( { design: fixed = 0 } ) {
 	const [ designs, setDesigns ] = useState( null );
-	const [ home, setHome ] = useState( 0 );
+	const [ home, setHome ] = useState( fixed );
 	const [ listing, setListing ] = useState( null );
 	const [ chosen, setChosen ] = useState( {} );
 	const [ error, setError ] = useState( '' );
@@ -52,7 +52,7 @@ export default function SitePages() {
 			.then( ( res ) => {
 				const list = res.designs || [];
 				setDesigns( list );
-				if ( list.length ) {
+				if ( ! fixed && list.length ) {
 					setHome( list[ 0 ].id );
 				}
 			} )
@@ -139,7 +139,7 @@ export default function SitePages() {
 				</div>
 			</div>
 
-			{ designs.length > 1 && (
+			{ ! fixed && designs.length > 1 && (
 				<SelectControl
 					label={ __( 'Design', 'dxai-ui' ) }
 					value={ String( home ) }

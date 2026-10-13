@@ -1,71 +1,33 @@
-/* DXAI Convert admin studio. Scoped to plugin screens; WP chrome is receded. */
-
-body.dxai-ui-admin-screen #wpcontent {
-	padding-left: 0;
-}
-
-body.dxai-ui-admin-screen #wpbody-content {
-	padding-bottom: 48px;
-}
-
-body.dxai-ui-admin-screen #wpfooter {
-	display: none;
-}
-
-body.dxai-ui-admin-screen .wrap.dxai-ui-wrap {
-	margin: 0;
-	max-width: none;
-}
-
-body.dxai-ui-admin-screen .wrap.dxai-ui-wrap > .notice,
-body.dxai-ui-admin-screen #wpbody-content > .notice,
-body.dxai-ui-admin-screen #wpbody-content > .update-nag {
-	margin: 12px 20px 0;
-}
-
 .dxai-ui-wrap #dxai-ui-app.dxai-ui-admin,
 #dxai-ui-app.dxai-ui-admin {
 	/*
-	 * An instrument, not a magazine.
-	 *
-	 * This screen reports measurements — sections found, blocks written, pixels
-	 * of difference — so the surface is a cool graphite ground with hairlines,
-	 * one precision accent, and figures set in tabular numerals. The palette it
-	 * replaces was cream on warm black with a display serif and a terracotta
-	 * accent, which is the look every generated dashboard arrives in; nothing
-	 * about it said what this tool does.
-	 *
-	 * One accent, spent in one place at a time: the current rail item, a focus
-	 * ring, a live figure. Green, amber and red are state only and never
-	 * decoration, so a red number always means something is wrong.
+	 * wp-admin's own palette and type: the screens are WordPress screens, so they are drawn in its colours, its face and
+	 * its size, and the colours that mean something (ok, warn, danger) are WordPress's. The tokens stay for the rules
+	 * below; docs/PLAN-ADMIN-UX.md (U5) reduces them to a handful.
 	 */
-	--dxai-bg: #090d12;
-	--dxai-bg-2: #0d1319;
-	--dxai-panel: #121a22;
-	--dxai-panel-2: #18222c;
-	--dxai-line: rgba(138, 176, 208, 0.14);
-	--dxai-line-strong: rgba(138, 176, 208, 0.3);
-	--dxai-grid: rgba(138, 176, 208, 0.035);
-	--dxai-text: #e7eef5;
-	--dxai-muted: #8497a8;
-	--dxai-accent: #4fc1f0;
-	--dxai-accent-2: #7ee0b8;
-	--dxai-ok: #5fd39b;
-	--dxai-danger: #ff6f6b;
-	--dxai-warn: #ffb03a;
-	/*
-	 * One family, two roles. The display role is the same grotesque held
-	 * tighter and heavier — a measuring tool has no second voice.
-	 */
-	--dxai-display: "Inter var", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	--dxai-sans: "Inter var", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	--dxai-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
-	--dxai-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
-	--dxai-radius: 10px;
+	--dxai-bg: #f0f0f1;
+	--dxai-bg-2: #f6f7f7;
+	--dxai-panel: #fff;
+	--dxai-panel-2: #f6f7f7;
+	--dxai-line: #dcdcde;
+	--dxai-line-strong: #c3c4c7;
+	--dxai-grid: rgba(0, 0, 0, 0.03);
+	--dxai-text: #1d2327;
+	--dxai-muted: #646970;
+	--dxai-accent: #2271b1;
+	--dxai-accent-2: #135e96;
+	--dxai-ok: #00a32a;
+	--dxai-danger: #d63638;
+	--dxai-warn: #dba617;
+	--dxai-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	--dxai-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	--dxai-mono: Consolas, Monaco, monospace;
+	--dxai-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	--dxai-radius: 4px;
 	color: var(--dxai-text);
 	font-family: var(--dxai-sans);
-	font-size: 14.5px;
-	line-height: 1.55;
+	font-size: 13px;
+	line-height: 1.5;
 	margin: 0;
 	max-width: none;
 }
@@ -95,177 +57,14 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	color: var(--dxai-muted);
 }
 
-/*
- * A drafting sheet: a 32px blueprint grid at the edge of visibility, with one
- * cool light source at the top right. It replaces two warm glows that made the
- * ground look like paper; a grid is what this tool measures against.
- */
-#dxai-ui-app .dxai-shell {
-	display: grid;
-	grid-template-columns: 252px minmax(0, 1fr);
-	min-height: calc(100vh - 32px);
-	background:
-		radial-gradient(900px 420px at 88% -12%, rgba(79, 193, 240, 0.08), transparent 60%),
-		repeating-linear-gradient(to right, var(--dxai-grid) 0 1px, transparent 1px 32px),
-		repeating-linear-gradient(to bottom, var(--dxai-grid) 0 1px, transparent 1px 32px),
-		var(--dxai-bg);
-	color: var(--dxai-text);
-}
-
-#dxai-ui-app .dxai-rail {
-	display: flex;
-	flex-direction: column;
-	gap: 26px;
-	padding: 26px 18px 22px;
-	border-right: 1px solid var(--dxai-line);
-	background: linear-gradient(180deg, rgba(9, 13, 18, 0.92), rgba(9, 13, 18, 0.82));
-	backdrop-filter: blur(14px);
-}
-
-#dxai-ui-app .dxai-brand {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	text-decoration: none;
-	color: inherit;
-}
-
-#dxai-ui-app .dxai-mark {
-	width: 36px;
-	height: 36px;
-	flex: 0 0 36px;
-	color: var(--dxai-accent);
-}
-
-#dxai-ui-app .dxai-brand strong {
-	display: block;
-	font-size: 14px;
-	font-weight: 650;
-	letter-spacing: -0.02em;
-	color: #fff;
-}
-
-#dxai-ui-app .dxai-brand em {
-	display: block;
-	font-style: normal;
-	font-size: 11px;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--dxai-muted);
-}
-
-#dxai-ui-app .dxai-nav {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-/*
- * The current item is marked, not filled. A 2px accent bar on the leading edge
- * reads at a glance and spends the accent once; the filled pill it replaces put
- * a coloured block behind text on every visit to every screen.
- */
-#dxai-ui-app .dxai-nav-link {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 9px 12px 9px 14px;
-	border-left: 2px solid transparent;
-	border-radius: 0 6px 6px 0;
-	color: var(--dxai-muted);
-	text-decoration: none;
-	font-size: 14px;
-	font-weight: 500;
-	transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-}
-
-#dxai-ui-app .dxai-nav-link:hover {
-	color: var(--dxai-text);
-	background: rgba(138, 176, 208, 0.06);
-	box-shadow: none;
-}
-
-#dxai-ui-app .dxai-nav-link.is-current {
-	color: #fff;
-	background: rgba(79, 193, 240, 0.08);
-	border-left-color: var(--dxai-accent);
-	font-weight: 600;
-}
-
-#dxai-ui-app .dxai-nav-link.is-current .dxai-nav-ico {
-	color: var(--dxai-accent);
-	opacity: 1;
-}
-
-#dxai-ui-app .dxai-nav-ico {
-	width: 18px;
-	height: 18px;
-	border: 1.5px solid currentColor;
-	border-radius: 5px;
-	position: relative;
-	opacity: 0.85;
-}
-
-#dxai-ui-app .dxai-nav-ico--convert::after {
-	content: "";
-	position: absolute;
-	inset: 4px;
-	border-top: 1.5px solid currentColor;
-	border-right: 1.5px solid currentColor;
-}
-
-#dxai-ui-app .dxai-nav-ico--library {
-	border: 0;
-	box-shadow:
-		inset 0 4px 0 currentColor,
-		inset 0 9px 0 0 transparent,
-		inset 0 11px 0 currentColor,
-		inset 0 16px 0 0 transparent,
-		inset 0 18px 0 currentColor;
-	opacity: 0.8;
-}
-
-#dxai-ui-app .dxai-nav-ico--forms {
-	border-radius: 3px 3px 6px 6px;
-}
-
-#dxai-ui-app .dxai-nav-ico--settings {
-	border-radius: 99px;
-}
-
-#dxai-ui-app .dxai-rail-meta {
-	margin-top: auto;
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-	font-size: 11px;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--dxai-muted);
-}
-
-#dxai-ui-app .dxai-main {
-	min-width: 0;
-	padding: 28px 36px 48px;
-}
-
 #dxai-ui-app .dxai-hero {
 	padding: 8px 0 20px;
 	max-width: 720px;
 }
 
-#dxai-ui-app .dxai-kicker {
-	margin: 0 0 10px;
-	color: var(--dxai-accent);
-	text-transform: uppercase;
-	letter-spacing: 0.16em;
-	font-size: 11px;
-	font-weight: 600;
-}
-
 #dxai-ui-app .dxai-hero h2 {
 	margin: 0 0 10px;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: clamp(32px, 4vw, 44px);
 	font-weight: 600;
@@ -328,13 +127,13 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-levels li.is-current {
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-levels li.is-current span,
 #dxai-ui-app .dxai-levels li.is-done span {
 	background: var(--dxai-accent);
-	color: #1a140e;
+	color: #fff;
 	border-color: var(--dxai-accent);
 }
 
@@ -344,7 +143,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 
 #dxai-ui-app .dxai-step-title {
 	margin: 0 0 18px;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 26px;
 	font-weight: 600;
@@ -492,7 +291,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 
 #dxai-ui-app .dxai-path strong {
 	display: block;
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 16px;
 	font-weight: 600;
 	letter-spacing: -0.02em;
@@ -578,7 +377,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	margin: 0;
 	font-family: var(--dxai-display);
 	font-size: 28px;
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-file {
@@ -621,7 +420,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	margin: 0 0 6px;
 	font-size: 15px;
 	font-weight: 650;
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-section > p {
@@ -642,22 +441,6 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	font-weight: 600;
 }
 
-#dxai-ui-app input,
-#dxai-ui-app select,
-#dxai-ui-app textarea,
-#dxai-ui-app .components-text-control__input,
-#dxai-ui-app .components-textarea-control__input,
-#dxai-ui-app .components-select-control__input,
-#dxai-ui-app .components-input-control__input {
-	width: 100%;
-	background: var(--dxai-bg-2) !important;
-	border: 1px solid var(--dxai-line-strong) !important;
-	color: #fff !important;
-	border-radius: 12px !important;
-	padding: 11px 14px;
-	box-shadow: none !important;
-}
-
 #dxai-ui-app textarea {
 	min-height: 140px;
 	font-family: var(--dxai-mono);
@@ -672,48 +455,42 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	align-items: center;
 }
 
-#dxai-ui-app .dxai-btn,
-#dxai-ui-app .components-button.is-primary {
+#dxai-ui-app .dxai-btn {
 	background: var(--dxai-accent);
-	color: #1a140e;
-	border: 0;
-	border-radius: 999px;
-	padding: 10px 18px;
+	color: #fff;
+	border: 1px solid var(--dxai-accent);
+	border-radius: 3px;
+	padding: 6px 12px;
 	height: auto;
-	font-weight: 650;
+	min-height: 32px;
+	font-size: 13px;
+	line-height: 1.4;
 	cursor: pointer;
 	box-shadow: none;
 }
 
-#dxai-ui-app .dxai-btn:hover,
-#dxai-ui-app .components-button.is-primary:hover:not(:disabled) {
-	filter: brightness(1.06);
-	color: #1a140e;
+#dxai-ui-app .dxai-btn:hover:not(:disabled) {
+	background: var(--dxai-accent-2);
+	border-color: var(--dxai-accent-2);
+	color: #fff;
 }
 
-#dxai-ui-app .dxai-btn:focus,
-#dxai-ui-app .components-button:focus:not(:disabled) {
-	box-shadow: 0 0 0 2px var(--dxai-bg), 0 0 0 4px var(--dxai-accent);
+#dxai-ui-app .dxai-btn:focus:not(:disabled) {
+	box-shadow: 0 0 0 1px #fff, 0 0 0 3px var(--dxai-accent);
+	outline: none;
 }
 
 #dxai-ui-app .dxai-btn:disabled,
-#dxai-ui-app .components-button:disabled,
 #dxai-ui-app .dxai-path:disabled {
-	opacity: 0.45;
+	opacity: 0.6;
 	cursor: not-allowed;
 	transform: none;
 }
 
-#dxai-ui-app .dxai-btn.secondary,
-#dxai-ui-app .components-button.is-secondary,
-#dxai-ui-app .components-button.is-tertiary {
-	background: transparent;
-	color: #fff;
-	border: 1px solid var(--dxai-line-strong);
-	box-shadow: none;
-	border-radius: 999px;
-	height: auto;
-	padding: 10px 18px;
+#dxai-ui-app .dxai-btn.secondary {
+	background: var(--dxai-panel-2);
+	color: var(--dxai-accent);
+	border-color: var(--dxai-accent);
 }
 
 #dxai-ui-app .components-button.is-link {
@@ -738,7 +515,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 
 #dxai-ui-app .dxai-log {
 	margin-top: 16px;
-	background: #05060a;
+	background: #1d2327;
 	border: 1px solid var(--dxai-line);
 	border-radius: 14px;
 	padding: 14px;
@@ -746,7 +523,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	font-size: 12px;
 	max-height: 220px;
 	overflow: auto;
-	color: var(--dxai-muted);
+	color: #c3c4c7;
 }
 
 #dxai-ui-app .dxai-notice {
@@ -771,7 +548,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-card strong {
-	color: #fff;
+	color: var(--dxai-text);
 	font-weight: 600;
 }
 
@@ -812,7 +589,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-run h3 {
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 28px;
 	font-weight: 600;
@@ -845,7 +622,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-run-stages li.is-on {
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-run-stages li.is-on::before {
@@ -903,7 +680,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	list-style: none;
 	padding: 16px 0 4px;
 	margin: 0;
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-pieces li {
@@ -940,7 +717,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	border: 1px solid var(--dxai-line);
 	border-radius: 10px;
 	overflow: hidden;
-	background: #05060a;
+	background: var(--dxai-bg);
 	cursor: pointer;
 }
 
@@ -964,7 +741,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 
 #dxai-ui-app .dxai-stats strong {
 	display: block;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 28px;
 	font-weight: 600;
@@ -997,7 +774,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-success h3 {
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 36px;
 	font-weight: 600;
@@ -1082,44 +859,10 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	#dxai-ui-app .dxai-path,
-	#dxai-ui-app .dxai-nav-link {
-		transition: none;
-	}
 
 	#dxai-ui-app .dxai-path:hover,
 	#dxai-ui-app .dxai-path:focus {
 		transform: none;
-	}
-}
-
-@media (max-width: 960px) {
-	#dxai-ui-app .dxai-shell {
-		grid-template-columns: 1fr;
-	}
-
-	#dxai-ui-app .dxai-rail {
-		flex-direction: row;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 16px;
-		border-right: 0;
-		border-bottom: 1px solid var(--dxai-line);
-		padding: 16px 20px;
-	}
-
-	#dxai-ui-app .dxai-nav {
-		flex-direction: row;
-		flex: 1;
-	}
-
-	#dxai-ui-app .dxai-rail-meta {
-		margin-top: 0;
-		width: 100%;
-	}
-
-	#dxai-ui-app .dxai-main {
-		padding: 20px 16px 40px;
 	}
 }
 
@@ -1131,20 +874,6 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 		grid-template-columns: 1fr;
 	}
 
-	/*
-	 * Stacked, the readings are separated by a rule between them, not on their
-	 * leading edge. The strip's hairlines are vertical while it is a row, so
-	 * without this a one-column stack drew four short lines down the left.
-	 */
-	#dxai-ui-app .dxai-stat-card {
-		border-left: 0;
-		border-top: 1px solid var(--dxai-line);
-	}
-
-	#dxai-ui-app .dxai-stat-card:first-child {
-		border-top: 0;
-	}
-
 	#dxai-ui-app .dxai-preview.is-mobile {
 		width: 100%;
 		height: 520px;
@@ -1154,148 +883,6 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 		flex-direction: column;
 		align-items: flex-start;
 	}
-}
-
-/* Premium admin refresh */
-
-#dxai-ui-app .dxai-main {
-	display: flex;
-	flex-direction: column;
-	gap: 24px;
-}
-
-#dxai-ui-app .dxai-shell-head {
-	display: flex;
-	justify-content: space-between;
-	gap: 24px;
-	align-items: flex-end;
-	padding: 4px 0 0;
-}
-
-#dxai-ui-app .dxai-shell-copy {
-	max-width: 840px;
-}
-
-#dxai-ui-app .dxai-shell-copy h1 {
-	margin: 0 0 10px;
-	font-family: var(--dxai-display);
-	font-size: clamp(36px, 5vw, 56px);
-	font-weight: 600;
-	line-height: 1.02;
-	letter-spacing: -0.04em;
-	color: #fff;
-}
-
-#dxai-ui-app .dxai-shell-copy p {
-	margin: 0;
-	max-width: 60ch;
-	font-size: 15px;
-	color: var(--dxai-muted);
-}
-
-#dxai-ui-app .dxai-shell-actions {
-	display: flex;
-	gap: 10px;
-	flex-wrap: wrap;
-	justify-content: flex-end;
-}
-
-#dxai-ui-app .dxai-shell-link {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 40px;
-	padding: 0 16px;
-	border-radius: 999px;
-	text-decoration: none;
-	border: 1px solid var(--dxai-line-strong);
-	background: rgba(255, 255, 255, 0.03);
-	color: #fff;
-	font-size: 13px;
-	font-weight: 600;
-}
-
-#dxai-ui-app .dxai-shell-link:hover,
-#dxai-ui-app .dxai-shell-link:focus {
-	border-color: var(--dxai-accent);
-	color: #fff;
-	outline: none;
-}
-
-/*
- * An instrument row, not four cards.
- *
- * These are four readings of one machine — provider, pages, conversions,
- * version — so they sit in one strip divided by hairlines. Four separate
- * rounded cards with their own borders and shadows said "four objects" and
- * made the page's most ordinary information its loudest.
- */
-#dxai-ui-app .dxai-shell-stats {
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 0;
-	border: 1px solid var(--dxai-line);
-	border-radius: var(--dxai-radius);
-	background: var(--dxai-panel);
-	overflow: hidden;
-}
-
-#dxai-ui-app .dxai-stat-card {
-	padding: 14px 18px 15px;
-	border-left: 1px solid var(--dxai-line);
-}
-
-#dxai-ui-app .dxai-stat-card:first-child {
-	border-left: 0;
-}
-
-#dxai-ui-app .dxai-stat-card span {
-	display: block;
-	margin-bottom: 6px;
-	font-size: 10.5px;
-	font-weight: 600;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: var(--dxai-muted);
-}
-
-#dxai-ui-app .dxai-stat-card strong {
-	display: block;
-	font-family: var(--dxai-mono);
-	font-size: 21px;
-	font-weight: 500;
-	letter-spacing: -0.01em;
-	color: #fff;
-}
-
-#dxai-ui-app .dxai-rail-card {
-	padding: 16px;
-	border-radius: 16px;
-	border: 1px solid var(--dxai-line);
-	background: linear-gradient(180deg, rgba(79, 193, 240, 0.1), rgba(255, 255, 255, 0.02));
-}
-
-#dxai-ui-app .dxai-rail-label,
-#dxai-ui-app .dxai-section-kicker {
-	margin: 0 0 8px;
-	font-size: 11px;
-	font-weight: 650;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--dxai-accent);
-}
-
-#dxai-ui-app .dxai-rail-card strong {
-	display: block;
-	margin-bottom: 8px;
-	font-size: 15px;
-	color: #fff;
-}
-
-#dxai-ui-app .dxai-rail-card p {
-	margin: 0;
-	font-size: 13px;
-	color: var(--dxai-muted);
 }
 
 #dxai-ui-app .dxai-screen {
@@ -1341,7 +928,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	margin: 0 0 8px;
 	font-size: 20px;
 	font-weight: 600;
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-card-grid {
@@ -1398,7 +985,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 }
 
 #dxai-ui-app .dxai-empty-state strong {
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 18px;
 }
 
@@ -1836,33 +1423,7 @@ body.dxai-ui-admin-screen #wpbody-content > .update-nag {
 	margin-top: 0;
 }
 
-@media (max-width: 1200px) {
-	#dxai-ui-app .dxai-shell-stats,
-	#dxai-ui-app .dxai-card-grid,
-	#dxai-ui-app .dxai-card-grid--tight {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-}
-
-@media (max-width: 960px) {
-	#dxai-ui-app .dxai-shell-head,
-	#dxai-ui-app .dxai-toolbar-card--spread,
-	#dxai-ui-app .dxai-section-head {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-
-	#dxai-ui-app .dxai-shell-actions {
-		justify-content: flex-start;
-	}
-}
-
 @media (max-width: 782px) {
-	#dxai-ui-app .dxai-shell-stats,
-	#dxai-ui-app .dxai-card-grid,
-	#dxai-ui-app .dxai-card-grid--tight {
-		grid-template-columns: 1fr;
-	}
 
 	#dxai-ui-app .dxai-stage-card,
 	#dxai-ui-app .dxai-toolbar-card,

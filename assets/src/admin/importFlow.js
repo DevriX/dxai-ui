@@ -1174,12 +1174,12 @@ export function describeFailure( err, phase, context = {} ) {
 		hint = __( 'WordPress has no record of receiving this save, so nothing was written. Trying again is safe.', 'dxai-ui' );
 	} else if ( phase === 'save' && context.save === 'stuck' ) {
 		hint = context.crawl
-			? __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check the Library first: if the page is there, the menu pages may already be building in the background, and saving again would build them twice and spend the API credit twice.', 'dxai-ui' )
-			: __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check the Library; trying again updates the same page rather than adding a copy.', 'dxai-ui' );
+			? __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs first: if the page is there, the menu pages may already be building in the background, and saving again would build them twice and spend the API credit twice.', 'dxai-ui' )
+			: __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs; trying again updates the same page rather than adding a copy.', 'dxai-ui' );
 	} else if ( phase === 'save' && ( timedOut || context.save === 'unchecked' ) ) {
 		hint = context.crawl
-			? __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working, and this screen could not ask WordPress how the save ended. Check again in a moment, or check the Library. Saving again while the first save is still running would build the menu pages twice and spend the API credit twice.', 'dxai-ui' )
-			: __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working. The page may have been saved anyway: check the Library before you try again (trying again updates the same page rather than adding a copy).', 'dxai-ui' );
+			? __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working, and this screen could not ask WordPress how the save ended. Check again in a moment, or check Designs. Saving again while the first save is still running would build the menu pages twice and spend the API credit twice.', 'dxai-ui' )
+			: __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working. The page may have been saved anyway: check Designs before you try again (trying again updates the same page rather than adding a copy).', 'dxai-ui' );
 	} else if ( phase === 'crawl' && timedOut ) {
 		hint = __( 'One page can take longer than a proxy waits. The server finishes the step anyway; keep trying and the crawl continues where it is.', 'dxai-ui' );
 	} else if ( timedOut ) {

@@ -117,9 +117,11 @@ final class Native_Blocks {
 	 * @return array<string, mixed>
 	 */
 	private static function convert_block( array $block, array $converters, array &$counts, ?array $parent = null ): array {
+		Converter::enter( is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array() );
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
 			$block['innerBlocks'][ $i ] = self::convert_block( (array) $child, $converters, $counts, is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array() );
 		}
+		Converter::leave();
 		$block = self::runs_in( $block, $converters, $counts );
 		// One after the other, each on what the one before made: a box becomes a group, the group gets its layout.
 		foreach ( $converters as $converter ) {

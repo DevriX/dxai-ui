@@ -1,6 +1,6 @@
 <?php
 /**
- * REST: a design's document (the Design IR).
+ * REST: a design's document (the Design IR), where it is, and what to do next.
  *
  * @package DXAI_UI
  */
@@ -9,13 +9,17 @@ declare(strict_types=1);
 
 namespace DXAI_UI\API;
 
+use DXAI_UI\Design\Design_Status;
 use DXAI_UI\Design\Document_Store;
 use DXAI_UI\Structures\Design_Attach;
 
 /**
- * GET  /design                 every design on the site: its Home, its title, and its document's summary (or that it has none, and why).
- * GET  /design/{id}            the document of the design whose Home (or any page) has that id, with its summary.
- * GET  /design/{id}?summary=1  the summary alone.
+ * GET  /design                 every design on the site: its Home, its title, its document's summary (or that it has none, and why)
+ *                              and where it is (Design_Status::of(): imported, native, colours, fonts, states, exported, pages).
+ * GET  /design/{id}            the document of the design whose Home (or any page) has that id, with its summary and its status,
+ *                              the pages of the design listed.
+ * GET  /design/{id}?summary=1  the summary and the status alone.
+ * GET  /design/{id}/next       what to do next with the design (Design_Status::next()), with its status.
  * POST /design/{id}            rebuild: build the document again from the design's conversion snapshot (Document_Store::rebuild()),
  *                              for a design imported before documents were kept or whose document was lost.
  *
@@ -71,6 +75,25 @@ final class Design_Controller {
 							'type'     => 'string',
 							'enum'     => array( 'rebuild' ),
 							'required' => true,
+						),
+					),
+				),
+			)
+		);
+		// What to do next with the design (Design_Status::next()), for the design's page.
+		register_rest_route(
+			DXAI_UI_REST_NAMESPACE,
+			'/design/(?P<id>\d+)/next',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'next' ),
+					'permission_callback' => array( $this, 'permissions' ),
+					'args'                => array(
+						'id' => array(
+							'type'     => 'integer',
+							'required' => true,
+							'minimum'  => 1,
 						),
 					),
 				),
@@ -176,6 +199,7 @@ final class Design_Controller {
 				'document' => $doc !== null,
 				'summary'  => $doc?->summary(),
 				'error'    => $doc === null ? Document_Store::error( $id ) : '',
+				'status'   => Design_Status::of( $id ),
 			);
 		}
 
@@ -194,6 +218,22 @@ final class Design_Controller {
 		}
 
 		return new \WP_REST_Response( $this->answer( $home, $doc, ! filter_var( $request->get_param( 'summary' ), FILTER_VALIDATE_BOOLEAN ) ) );
+	}
+
+	public function next( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
+		if ( $home < 1 ) {
+			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'design' => $home,
+				'title'  => html_entity_decode( get_the_title( $home ), ENT_QUOTES, 'UTF-8' ),
+				'next'   => Design_Status::next( $home ),
+				'status' => Design_Status::of( $home, true ),
+			)
+		);
 	}
 
 	public function run( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
@@ -219,6 +259,7 @@ final class Design_Controller {
 			'title'   => html_entity_decode( get_the_title( $home ), ENT_QUOTES, 'UTF-8' ),
 			'edit'    => get_edit_post_link( $home, 'raw' ),
 			'summary' => $doc->summary(),
+			'status'  => Design_Status::of( $home, true ),
 		);
 		if ( $whole ) {
 			$out['document'] = $doc->to_array();

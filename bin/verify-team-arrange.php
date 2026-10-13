@@ -17,6 +17,10 @@ use DXAI_UI\Pages\Team_Pages;
 use DXAI_UI\Pages\Team_Run;
 use DXAI_UI\Structures\Page_Scope;
 
+// These checks are of the pages made in the Home's own look (the library where the Home has nothing): the usual run, where the library
+// holds the team's layouts, is checked by verify-team-pages.php and verify-block-library.php.
+add_filter( 'dxai_ui_team_library', static fn() => 'fill' );
+
 $fail   = 0;
 $pass   = 0;
 $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( &$fail, &$pass ): void {

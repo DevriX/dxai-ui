@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\API;
 
 use DXAI_UI\Connectors\Zip_Extractor;
+use DXAI_UI\Design\Design_Status;
 use DXAI_UI\Transfer\Import_Job;
 use DXAI_UI\Transfer\Package;
 use DXAI_UI\Transfer\Page_Export;
@@ -268,7 +269,8 @@ final class Transfer_Controller extends \WP_REST_Controller {
 				)
 			);
 		}
-		// A file, not JSON: sent here and the request ends.
+		// A file, not JSON: sent here and the request ends; the design notes when its package left.
+		Design_Status::exported( (int) $request['id'] );
 		Transfer_Admin::send( $built );
 
 		return new \WP_Error( 'dxai_ui_transfer', __( 'The package could not be sent.', 'dxai-ui' ), array( 'status' => 500 ) );

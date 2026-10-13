@@ -28,6 +28,13 @@ final class Native_Blocks_Controller {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'index' ),
 					'permission_callback' => array( $this, 'permissions' ),
+					'args'                => array(
+						// One design's report, for its own page; absent, every design's (which reads every page of every design).
+						'design' => array(
+							'type'    => 'integer',
+							'default' => 0,
+						),
+					),
 				),
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
@@ -53,11 +60,17 @@ final class Native_Blocks_Controller {
 		return ( new Converter_Controller() )->publish_permissions();
 	}
 
-	public function index(): \WP_REST_Response {
+	public function index( \WP_REST_Request $request ): \WP_REST_Response {
+		$only    = (int) $request->get_param( 'design' );
+		$designs = Design_Attach::designs();
+		if ( $only > 0 ) {
+			$designs = array_values( array_filter( $designs, static fn( $page ) => (int) $page->ID === $only ) );
+		}
+
 		return new \WP_REST_Response(
 			array(
 				'theme'   => wp_get_theme()->get( 'Name' ),
-				'designs' => array_map( fn( $page ) => $this->report( (int) $page->ID ), Design_Attach::designs() ),
+				'designs' => array_map( fn( $page ) => $this->report( (int) $page->ID ), $designs ),
 			)
 		);
 	}

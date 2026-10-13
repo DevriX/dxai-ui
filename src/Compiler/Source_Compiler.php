@@ -89,10 +89,27 @@ final class Source_Compiler {
 		$primary        = array();
 		$all_sources    = is_array( $payload['sources'] ?? null ) ? $payload['sources'] : array();
 
-		// A Claude Design export: one template, rendered by Dc_Renderer.
+		// A Claude Design export: a template per page, rendered by Dc_Renderer, with the parts the pages import (Dc_Site).
+		$dc_hover = '';
 		if ( is_array( $payload['dc'] ?? null ) && $payload['dc'] !== array() ) {
-			$primary = $this->compile_dc( $payload['dc'], $title, $css );
-			$pages   = array();
+			$components = is_array( $payload['dc_components'] ?? null ) ? $payload['dc_components'] : array();
+			$primary    = $this->compile_dc( $payload['dc'], $title, $css, $components );
+			$pages      = array();
+			foreach ( is_array( $payload['dc_pages'] ?? null ) ? $payload['dc_pages'] : array() as $dc_page ) {
+				if ( ! is_array( $dc_page ) ) {
+					continue;
+				}
+				$page_title = (string) ( $dc_page['page_title'] ?? $dc_page['name'] ?? $title );
+				$row        = $this->compile_dc( $dc_page, $page_title, $css, $components );
+				if ( $row === array() ) {
+					continue;
+				}
+				$row['slug']        = (string) ( $dc_page['route'] ?? '' );
+				$row['block_title'] = $page_title;
+				$row['seo_title']   = trim( (string) ( $dc_page['title'] ?? '' ) );
+				$dc_hover          .= "\n" . (string) ( $row['hover_css'] ?? '' );
+				$compiled_pages[]   = $row;
+			}
 		}
 
 		foreach ( $pages as $page ) {
@@ -187,7 +204,8 @@ final class Source_Compiler {
 		$js        = (string) Motion_Runtime::should_attach( $markup . wp_json_encode( $structures ), $css );
 		$js        = trim( $js . "\n" . (string) ( $primary['custom_js'] ?? '' ) . "\n" . ( $from_html ? '' : $this->source_javascript( $payload ) ) );
 
-		$hover = trim( (string) ( $primary['hover_css'] ?? '' ) );
+		// The other pages' classes too: every page of a design is compiled against this one stylesheet.
+		$hover = trim( (string) ( $primary['hover_css'] ?? '' ) . $dc_hover );
 		if ( $hover !== '' ) {
 			$css = trim( $css . "\n" . $hover );
 		}
@@ -324,6 +342,9 @@ final class Source_Compiler {
 	/** @var array<int, array<string, mixed>> What Dc_Renderer could not evaluate. */
 	private array $dc_notes = array();
 
+	/** The last class number a page of this Claude Design export used (Dc_Renderer::continue_from()). */
+	private int $dc_seq = 0;
+
 	/**
 	 * A Claude Design export, rendered and split into structures.
 	 *
@@ -335,13 +356,15 @@ final class Source_Compiler {
 	 * resets, which follows scrolling) are written on the first structure's
 	 * root, since the page wrapper itself is minted by the repository.
 	 *
-	 * @param array<string, mixed> $dc
+	 * @param array<string, mixed>                $dc
+	 * @param array<string, array<string, mixed>> $components The parts the page may import, by name.
 	 * @return array<string, mixed>
 	 */
-	private function compile_dc( array $dc, string $title, string $design_css ): array {
-		$logic    = new Dc_Script( (string) ( $dc['script'] ?? '' ), is_array( $dc['props'] ?? null ) ? $dc['props'] : array() );
-		$renderer = new Dc_Renderer( $logic );
-		$out      = $renderer->render( (string) ( $dc['template'] ?? '' ) );
+	private function compile_dc( array $dc, string $title, string $design_css, array $components = array() ): array {
+		$logic         = new Dc_Script( (string) ( $dc['script'] ?? '' ), is_array( $dc['props'] ?? null ) ? $dc['props'] : array() );
+		$renderer      = ( new Dc_Renderer( $logic ) )->with_components( $components )->continue_from( $this->dc_seq );
+		$out           = $renderer->render( (string) ( $dc['template'] ?? '' ) );
+		$this->dc_seq  = $renderer->sequence();
 		foreach ( $renderer->notes() as $note ) {
 			$this->dc_notes[] = array( 'kind' => 'dc', 'source' => $note, 'count' => 1 );
 		}

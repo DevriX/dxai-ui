@@ -103,6 +103,9 @@ final class Transfer_Cli {
 		$file = isset( $assoc['file'] ) && '' !== (string) $assoc['file'] ? (string) $assoc['file'] : getcwd() . DIRECTORY_SEPARATOR . $built['filename'];
 		$ok   = copy( $built['path'], $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
 		Package::remove_dir( (string) $built['dir'] );
+		if ( $ok ) {
+			\DXAI_UI\Design\Design_Status::exported( $page_id );
+		}
 		if ( ! $ok ) {
 			\WP_CLI::error( sprintf( 'The package could not be written to %s.', $file ) );
 		}

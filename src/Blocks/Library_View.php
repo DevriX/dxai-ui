@@ -118,6 +118,18 @@ final class Library_View {
 		if ( str_contains( $markup, 'faq-answer' ) ) {
 			wp_enqueue_script( self::HANDLE );
 		}
+		// The team's layouts are made of the theme's components too (a row of big buttons, a spaced list, a hover on a box): on a
+		// converted page, which does not carry the theme's stylesheet, their rules come from it for the elements inside the design's
+		// scope, as the theme's FAQ does on a page of the theme that holds copied sections (Theme_Components).
+		if ( Theme_Compat::is_converted_page() && is_singular() ) {
+			$src = \DXAI_UI\Structures\Design_Attach::source_for( (int) get_the_ID() );
+			$css = \DXAI_UI\Support\Upload_Paths::for_meta( $src > 0 ? $src : (int) get_the_ID(), '_dxai_ui_css_url' );
+			// The FAQ's accordion is this stylesheet's and this script's here (the theme's opens it another way): its classes are not asked of the theme.
+			$not_faq = static fn( array $classes ): array => array_values( array_filter( $classes, static fn( $c ) => ! str_starts_with( (string) $c, 'faq-' ) ) );
+			add_filter( 'dxai_ui_theme_components', $not_faq );
+			\DXAI_UI\Theme\Theme_Components::enqueue( $markup, (string) ( $css['path'] ?? '' ) );
+			remove_filter( 'dxai_ui_theme_components', $not_faq );
+		}
 	}
 
 	/**

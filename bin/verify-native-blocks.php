@@ -99,6 +99,103 @@ if ( isset( $have['button'] ) ) {
 	echo "  skip  the theme has no button styles here\n";
 }
 
+/*
+ * A call to action on a band of the theme's own button colour: Northlight Roofing's navy "Call" button on its orange band. Once
+ * the design's colours follow american-restoration, the band is the theme's accent, which is what the theme's primary button is
+ * filled with, and the button vanished into it.
+ */
+echo "\nButtons on a band of the theme's button colour\n";
+$accent_hex = \DXAI_UI\Theme\Theme_Palette::hex( 'accent' );
+$dark_hex   = \DXAI_UI\Theme\Theme_Palette::hex( 'primary-dark' );
+$fill_hex   = \DXAI_UI\Theme\Theme_Buttons::fill( 'primary-button' );
+if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fill_hex === '' || ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] ) {
+	echo "  skip  the theme has no button styles, accent or primary dark here\n";
+} else {
+	$expect( 'the theme\'s primary button is filled with its accent, read from the theme\'s own rule', $fill_hex === $accent_hex, $fill_hex . ' / ' . $accent_hex );
+	$bhome = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture buttons on a band' ) );
+	$bfile = \DXAI_UI\Support\Upload_Paths::DIR . '/verify-buttons-' . $bhome . '.css';
+	register_shutdown_function(
+		static function () use ( &$bhome, $bfile ): void {
+			$path = \DXAI_UI\Support\Upload_Paths::path( $bfile );
+			if ( $path !== '' && is_file( $path ) ) {
+				wp_delete_file( $path );
+			}
+			if ( $bhome > 0 ) {
+				wp_delete_post( $bhome, true );
+				$bhome = 0;
+			}
+		}
+	);
+	update_post_meta(
+		$bhome,
+		\DXAI_UI\Compiler\Token_Styles::META,
+		array(
+			'colors' => array(
+				'#f28c28'                 => array( 'slug' => 'flame', 'name' => 'Flame', 'value' => '#f28c28', 'uses' => 2, 'preset' => true ),
+				'#0d2a55'                 => array( 'slug' => 'navy', 'name' => 'Navy', 'value' => '#0d2a55', 'uses' => 2, 'preset' => true ),
+				'#6b21a8'                 => array( 'slug' => 'plum', 'name' => 'Plum', 'value' => '#6b21a8', 'uses' => 1, 'preset' => true ),
+				'rgba(255,255,255,0.1)'   => array( 'slug' => 'neutral-100-a10', 'name' => 'White 10%', 'value' => 'rgba(255,255,255,0.1)', 'uses' => 1, 'preset' => false ),
+			),
+			'roles'  => array(),
+		)
+	);
+	update_post_meta(
+		$bhome,
+		\DXAI_UI\Theme\Theme_Binding::META,
+		array(
+			get_stylesheet() => array(
+				'schema' => \DXAI_UI\Theme\Theme_Binding::SCHEMA,
+				'mode'   => 'follow',
+				'design' => array( 'flame' => '#f28c28', 'navy' => '#0d2a55', 'plum' => '#6b21a8' ),
+				'tokens' => array( 'flame' => array( 'to' => 'accent' ), 'navy' => array( 'to' => 'primary-dark' ) ),
+			),
+		)
+	);
+	// A Tailwind design keeps its own class names; the rules of its sheet say which token each paints.
+	wp_mkdir_p( dirname( \DXAI_UI\Support\Upload_Paths::path( $bfile ) ) );
+	file_put_contents( \DXAI_UI\Support\Upload_Paths::path( $bfile ), '.bg-flame, .dxai-ui.dxai-ui--' . $bhome . ' .bg-flame { background-color:var(--dxai-flame); }' . "\n" . '.bg-navy, .dxai-ui.dxai-ui--' . $bhome . ' .bg-navy { background-color:var(--dxai-navy); }' . "\n" . '.bg-white\/10, .dxai-ui.dxai-ui--' . $bhome . ' .bg-white\/10 { background-color:var(--dxai-neutral-100-a10); }' . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+	update_post_meta( $bhome, '_dxai_ui_css_url', $bfile );
+
+	$on      = static fn( string $markup ): array => Native_Blocks::convert_content( $markup, array( 'home' => $bhome, 'post' => $bhome ) );
+	$band    = static fn( string $outer, string $inner, string $cta_markup ): string => '<!-- wp:dxai-ui/box {"className":"' . $outer . '"} --><div class="' . $outer . '"><!-- wp:dxai-ui/box {"className":"' . $inner . '"} --><div class="' . $inner . '">' . $cta_markup . '</div><!-- /wp:dxai-ui/box --></div><!-- /wp:dxai-ui/box -->';
+	$button  = static function ( string $content ): array {
+		$found = array();
+		$walk  = static function ( array $blocks ) use ( &$walk, &$found ): void {
+			foreach ( $blocks as $b ) {
+				if ( ( $b['blockName'] ?? '' ) === 'core/button' && $found === array() ) {
+					$found = $b;
+				}
+				$walk( (array) ( $b['innerBlocks'] ?? array() ) );
+			}
+		};
+		$walk( parse_blocks( $content ) );
+
+		return $found;
+	};
+	$call    = $cta( 'rounded-lg bg-dxai-navy px-6 py-3 fw-600', '', 'Call (303) 555-0188' );
+	$r       = $on( $band( 'bg-dxai-flame', 'mx-auto flex gap-6 px-6 py-14', $call ) );
+	$b       = $button( $r['content'] );
+	$expect( 'a filled CTA on a band of the theme\'s button colour keeps the design\'s own fill, as the theme colour it follows, in the Button\'s Colour panel', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark' && str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ), wp_json_encode( $b['attrs'] ?? null ) );
+	$expect( 'with the palette\'s white for its text, which reads on it', ( $b['attrs']['textColor'] ?? '' ) === 'white' && ( $b['attrs']['style']['elements']['link']['color']['text'] ?? '' ) === 'var:preset|color|white', wp_json_encode( $b['attrs'] ?? null ) );
+	$expect( 'and the classes core\'s Button writes for those settings, in its order', str_contains( (string) ( $b['innerHTML'] ?? '' ), 'class="wp-block-button__link has-white-color has-primary-dark-background-color has-text-color has-background has-link-color wp-element-button"' ), (string) ( $b['innerHTML'] ?? '' ) );
+	$expect( 'nothing inline on the button: its colours are presets', ! str_contains( (string) ( $b['innerHTML'] ?? '' ), 'style=' ), (string) ( $b['innerHTML'] ?? '' ) );
+	$again = $on( $r['content'] );
+	$expect( 'a second pass changes nothing', $again['content'] === $r['content'] || $again['counts'] === array() );
+
+	$b = $button( $on( $band( 'bg-flame', 'mx-auto flex gap-6', $cta( 'rounded-lg bg-navy px-6 py-3', '', 'Call' ) ) )['content'] );
+	$expect( 'the same where the design keeps its own class names (Tailwind), read from the rules of its sheet', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark', wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $band( 'bg-flame', 'rounded-xl bg-white/10 p-6', $cta( 'rounded-lg bg-navy px-6 py-3', '', 'Call' ) ) )['content'] );
+	$expect( 'a translucent row on the band is seen through to the band', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark', wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $band( 'bg-dxai-flame', 'flex gap-6', $cta( 'rounded-lg bg-dxai-plum px-6 py-3', '', 'Call' ) ) )['content'] );
+	$expect( 'a CTA whose own fill is no colour of the theme wears the theme\'s other style there, which shows on the band', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-secondary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $band( 'bg-dxai-navy', 'flex gap-6', $cta( 'rounded-lg bg-dxai-flame px-6 py-3', '', 'Book' ) ) )['content'] );
+	$expect( 'on any other band the button is the theme\'s, as before', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ) && ! isset( $b['attrs']['backgroundColor'] ) && ( $b['attrs']['textColor'] ?? '' ) === \DXAI_UI\Theme\Theme_Buttons::text_slug(), wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $call )['content'] );
+	$expect( 'and so it is on no band at all', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $band( 'bg-dxai-flame', 'flex gap-6', $ghost ) )['content'] );
+	$expect( 'an outlined CTA on the band keeps the theme\'s secondary style', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-secondary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
+}
+
 echo "\nLayout\n";
 $para  = static fn( string $cls = 'm-0' ): string => '<!-- wp:paragraph {"className":"' . $cls . '"} --><p class="' . $cls . '">A</p><!-- /wp:paragraph -->';
 $group = static fn( string $cls, string $inner, string $css = '' ): string => '<!-- wp:group {"className":"' . $cls . '"' . ( $css !== '' ? ',"dxaiCss":"' . $css . '"' : '' ) . '} -->'

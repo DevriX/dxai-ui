@@ -36,6 +36,8 @@ function Row( { page, facts, engine, onChange } ) {
 	const [ topic, setTopic ] = useState( page.topic );
 	const [ reference, setReference ] = useState( page.reference );
 	const [ open, setOpen ] = useState( false );
+	// The row's work (the fields, the buttons, the prompt, the proposal) shows when the row is opened; a design has tens of pages.
+	const [ shown, setShown ] = useState( false );
 	const [ prompt, setPrompt ] = useState( '' );
 	const [ busy, setBusy ] = useState( '' );
 	const [ error, setError ] = useState( '' );
@@ -153,8 +155,13 @@ function Row( { page, facts, engine, onChange } ) {
 				{ page.home && <span className="dxai-copy__kind">{ __( 'Home', 'dxai-ui' ) }</span> }
 				<span className="dxai-muted">{ sprintf( /* translators: %d: number of blocks. */ _n( '%d block of text', '%d blocks of text', page.blocks, 'dxai-ui' ), page.blocks ) }</span>
 				{ page.edit && <Button variant="link" href={ page.edit }>{ __( 'Edit', 'dxai-ui' ) }</Button> }
+				<Button className="dxai-copy__toggle" variant="secondary" size="small" onClick={ () => setShown( ! shown ) } aria-expanded={ shown }>
+					{ shown ? __( 'Close', 'dxai-ui' ) : __( 'Open', 'dxai-ui' ) }
+				</Button>
 			</div>
 
+			{ shown && (
+			<>
 			<div className="dxai-copy__fields">
 				<TextControl
 					label={ __( 'The page is about', 'dxai-ui' ) }
@@ -311,11 +318,13 @@ function Row( { page, facts, engine, onChange } ) {
 					</div>
 				</div>
 			) }
+			</>
+			) }
 		</li>
 	);
 }
 
-export default function CopyPrompt() {
+export default function CopyPrompt( { design: fixed = 0 } ) {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
 	const [ facts, setFacts ] = useState( false );
@@ -327,8 +336,8 @@ export default function CopyPrompt() {
 	}
 
 	useEffect( () => {
-		load();
-	}, [] );
+		load( fixed );
+	}, [ fixed ] );
 
 	if ( error ) {
 		return <Notice status="error" isDismissible={ false }>{ error }</Notice>;
@@ -356,7 +365,7 @@ export default function CopyPrompt() {
 				</div>
 			</div>
 
-			{ data.designs.length > 1 && (
+			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
 					label={ __( 'Design', 'dxai-ui' ) }
 					value={ String( data.design ) }

@@ -11,18 +11,18 @@ import './native-blocks.css';
  * or the active theme's) and puts them back if asked. The pages look the same
  * (Native_Blocks keeps each page's content from before).
  */
-export default function NativeBlocks() {
+export default function NativeBlocks( { design: fixed = 0 } ) {
 	const [ data, setData ] = useState( null );
 	const [ error, setError ] = useState( '' );
-	const [ home, setHome ] = useState( 0 );
+	const [ home, setHome ] = useState( fixed );
 	const [ busy, setBusy ] = useState( false );
 	const [ note, setNote ] = useState( '' );
 
 	useEffect( () => {
-		apiFetch( { path: '/dxai-ui/v1/native-blocks' } )
+		apiFetch( { path: '/dxai-ui/v1/native-blocks' + ( fixed ? '?design=' + fixed : '' ) } )
 			.then( ( res ) => {
 				setData( res );
-				if ( res.designs && res.designs.length ) {
+				if ( ! fixed && res.designs && res.designs.length ) {
 					setHome( res.designs[ 0 ].id );
 				}
 			} )
@@ -90,7 +90,7 @@ export default function NativeBlocks() {
 					</p>
 				</div>
 			</div>
-			{ data.designs.length > 1 && (
+			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
 					label={ __( 'Design', 'dxai-ui' ) }
 					value={ String( home ) }

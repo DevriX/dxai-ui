@@ -28,6 +28,7 @@ final class Generated_Design_Connector {
 		$styles  = array();
 		$scripts = array();
 		$pkg     = '';
+		$config  = '';
 
 		foreach ( $unpacked['files'] as $relative ) {
 			$norm = str_replace( '\\', '/', $relative );
@@ -36,6 +37,11 @@ final class Generated_Design_Connector {
 
 			if ( strtolower( basename( $norm ) ) === 'package.json' ) {
 				$pkg = Zip_Extractor::read_text( $unpacked['dir'] . '/' . $relative, 40000 );
+			}
+
+			// A Tailwind CLI project's theme — see tailwind_config().
+			if ( $config === '' && preg_match( '#(?:^|/)tailwind\.config\.(?:ts|js|cjs|mjs)$#i', $norm ) === 1 && $this->is_source_path( $norm, false ) ) {
+				$config = $body !== '' ? $body : Zip_Extractor::read_text( $unpacked['dir'] . '/' . $relative, 120000 );
 			}
 
 			if ( in_array( $ext, array( 'html', 'vue', 'tsx', 'jsx', 'ts', 'js', 'mjs' ), true ) && $this->is_source_path( $norm, false ) ) {
@@ -87,6 +93,7 @@ final class Generated_Design_Connector {
 
 		$limited_sources = $this->limit_map( $sources, 200 );
 		$html_pages      = Html_Zip_Pages::from_sources( $limited_sources );
+		$tailwind        = $this->tailwind_config( $sources, $config );
 
 		return new Source_Document(
 			'generated-zip',
@@ -101,6 +108,8 @@ final class Generated_Design_Connector {
 				'harvest'        => Asset_Harvester::for_prompt( $harvest ),
 				'package'        => $this->summarize_package( $pkg ),
 				'design_css_raw' => $raw_css,
+				// The rest of a Tailwind v3 design's theme, which no stylesheet in the archive declares: see tailwind_config().
+				'tailwind_config' => $tailwind,
 				// See Lovable_Connector: the archive name is what pairs a saved
 				// page with the design it has to be measured against, byte for
 				// byte — which is why it is not sanitize_file_name()'d.
@@ -117,6 +126,7 @@ final class Generated_Design_Connector {
 					? sprintf( 'HTML routes: %d page(s)', count( $html_pages ) )
 					: 'No multi-page HTML routes detected',
 				$this->harvest_log( $summary ),
+				...( $tailwind !== '' ? array( sprintf( 'Tailwind theme read from the design (%d bytes)', strlen( $tailwind ) ) ) : array() ),
 			)
 		);
 	}
@@ -157,6 +167,103 @@ final class Generated_Design_Connector {
 		}
 
 		return trim( implode( "\n", $chunks ) );
+	}
+
+	/**
+	 * The design's Tailwind v3 theme, as the text Tailwind\Theme::from_css() reads, or ''.
+	 *
+	 * A page on the Play CDN (`cdn.tailwindcss.com`) declares its theme in a
+	 * script — `tailwind.config = { theme: { extend: { colors: … } } }` — and
+	 * the CDN builds `bg-brand-900` from it in the browser. Nothing in the
+	 * archive's stylesheets says what `brand-900` is, so without the script
+	 * every colour, font and size the design named compiled to no rule at all:
+	 * Northlight Roofing's hero and call-to-action bands lost their
+	 * backgrounds, and their white text sat on white. A project built with the
+	 * Tailwind CLI keeps the same object in a `tailwind.config.*` file, which
+	 * is read the way Lovable_Connector reads it.
+	 *
+	 * The script a page ran comes first: it is what the browser built the
+	 * design from.
+	 *
+	 * @param array<string, string> $sources Archive path → text, every source of the design.
+	 * @param string                $file    A `tailwind.config.*` file's text, or ''.
+	 */
+	private function tailwind_config( array $sources, string $file ): string {
+		foreach ( $sources as $path => $code ) {
+			if ( ! is_string( $code ) || ! str_contains( $code, 'tailwind.config' ) ) {
+				continue;
+			}
+			$ext    = strtolower( (string) pathinfo( (string) $path, PATHINFO_EXTENSION ) );
+			$chunks = array();
+			if ( in_array( $ext, array( 'js', 'mjs' ), true ) ) {
+				$chunks[] = $code;
+			} elseif ( in_array( $ext, array( 'html', 'htm' ), true ) && preg_match_all( '/<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/i', $code, $m ) ) {
+				// Inline scripts only: a `src` one is the CDN itself, or a file of the archive that is a source of its own.
+				$chunks = $m[1];
+			}
+			foreach ( $chunks as $chunk ) {
+				$object = self::config_assignment( (string) $chunk );
+				if ( $object !== '' ) {
+					return $object;
+				}
+			}
+		}
+
+		return $file;
+	}
+
+	/**
+	 * The object literal a script assigns to `tailwind.config`, or ''.
+	 *
+	 * Read up to the brace that closes it, with strings kept whole, so a `'}'`
+	 * in a value cannot end it early, and comments left out: Tailwind\Theme
+	 * reads the object as text, and a `// }` note would close a group there.
+	 */
+	private static function config_assignment( string $js ): string {
+		if ( preg_match( '/\btailwind\.config\s*=\s*\{/', $js, $match, PREG_OFFSET_CAPTURE ) !== 1 ) {
+			return '';
+		}
+		$length = strlen( $js );
+		$depth  = 0;
+		$object = '';
+
+		for ( $i = (int) $match[0][1] + strlen( (string) $match[0][0] ) - 1; $i < $length; $i++ ) {
+			$char = $js[ $i ];
+			$next = $js[ $i + 1 ] ?? '';
+
+			if ( $char === '"' || $char === "'" || $char === '`' ) {
+				$start = $i;
+				for ( ++$i; $i < $length && $js[ $i ] !== $char; $i++ ) {
+					if ( $js[ $i ] === '\\' ) {
+						++$i;
+					}
+				}
+				$object .= substr( $js, $start, $i - $start + 1 );
+				continue;
+			}
+			if ( $char === '/' && ( $next === '/' || $next === '*' ) ) {
+				$end = $next === '/' ? strpos( $js, "\n", $i ) : strpos( $js, '*/', $i + 2 );
+				if ( $end === false ) {
+					return '';
+				}
+				// A line comment stops before its newline, which is kept.
+				$i       = $next === '/' ? $end - 1 : $end + 1;
+				$object .= ' ';
+				continue;
+			}
+
+			$object .= $char;
+			if ( $char === '{' ) {
+				++$depth;
+			} elseif ( $char === '}' ) {
+				--$depth;
+				if ( $depth === 0 ) {
+					return $object;
+				}
+			}
+		}
+
+		return '';
 	}
 
 	/**

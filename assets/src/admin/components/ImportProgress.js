@@ -211,7 +211,7 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 			) }
 			{ running && (
 				<p className="dxai-crawl__note">
-					{ __( 'Keep this tab open to watch it. If you close it, WordPress carries on in the background (when WP-Cron runs) and the pages appear in the Library.', 'dxai-ui' ) }
+					{ __( 'Keep this tab open to watch it. If you close it, WordPress carries on in the background (when WP-Cron runs) and the pages appear in Designs.', 'dxai-ui' ) }
 				</p>
 			) }
 		</div>

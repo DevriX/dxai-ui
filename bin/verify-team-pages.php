@@ -32,6 +32,9 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 		echo "  FAIL  $what" . ( $detail !== '' ? "  — $detail" : '' ) . "\n";
 	}
 };
+// The checks are of the pages made in the Home's own look (the library where the Home has nothing); the team's layouts, the usual
+// where the library holds them, are checked at the end.
+add_filter( 'dxai_ui_team_library', static fn() => 'fill' );
 
 $heading = static fn( string $t, int $l = 2 ): string => '<!-- wp:heading {"level":' . $l . '} --><h' . $l . ' class="wp-block-heading">' . $t . '</h' . $l . '><!-- /wp:heading -->';
 $para    = static fn( string $t ): string => '<!-- wp:paragraph --><p>' . $t . '</p><!-- /wp:paragraph -->';
@@ -590,6 +593,129 @@ $abid = ! is_wp_error( $ab ) ? (int) ( $ab['pages'][0]['id'] ?? 0 ) : 0;
 $made[] = $abid;
 $abc = (string) get_post_field( 'post_content', $abid );
 $expect( 'the About page of a Home that states its phone and address has the ways to reach it, before the questions and the call to action', str_contains( $abc, 'Get in touch' ) && str_contains( $abc, '12 Elm St, Tyler, TX' ) && ( ! str_contains( $abc, 'cta-x' ) || strpos( $abc, 'Get in touch' ) < strpos( $abc, 'cta-x' ) ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $abc ) ), 0, 200 ) );
+
+echo "\nThe team's arrangement (the usual, where the library holds the team's layouts)\n";
+remove_all_filters( 'dxai_ui_team_library' );
+$expect( 'the library holds the team\'s layouts, so a run with nothing said about the library lays the pages out with them', DXAI_UI\Pages\Block_Library::has_layouts() );
+// A restoration company's Home that states what the layouts list: the steps of its work, what customers said, its questions, its
+// badges, and a few points about it.
+$col3  = static fn( string $a, string $b, string $c ): string => '<!-- wp:columns --><div class="wp-block-columns">' . $a . $b . $c . '</div><!-- /wp:columns -->';
+$step  = static fn( int $n, string $t, string $d ): string => '<!-- wp:column --><div class="wp-block-column">' . $para( (string) $n ) . $heading( $t, 3 ) . $para( $d ) . '</div><!-- /wp:column -->';
+$quote = static fn( string $q, string $who ): string => '<!-- wp:column --><div class="wp-block-column">' . $para( $q ) . $para( $who ) . '</div><!-- /wp:column -->';
+$qa    = static fn( string $q, string $a ): string => '<!-- wp:details --><details class="wp-block-details"><summary>' . $q . '</summary>' . $para( $a ) . '</details><!-- /wp:details -->';
+$logo  = static fn( string $n ): string => '<!-- wp:image {"sizeSlug":"full"} --><figure class="wp-block-image size-full"><img src="https://example.test/wp-content/uploads/' . $n . '.png" alt="' . ucfirst( $n ) . ' certified"/></figure><!-- /wp:image -->';
+$why   = static fn( string $t, string $d ): string => '<!-- wp:group {"className":"why-item"} --><div class="wp-block-group why-item">' . $heading( $t, 3 ) . $para( $d ) . '</div><!-- /wp:group -->';
+$home9 = $header
+	. $section( 'Hero Section', 'hero-x bg-dark', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Restoration in Tyler', 1 ) . $para( 'Water damage, fire damage and mold remediation for homes and businesses. Restoration done right, with the insurance claim handled.' ) . '<!-- wp:list --><ul class="wp-block-list"><!-- wp:list-item --><li>24/7 emergency response</li><!-- /wp:list-item --><!-- wp:list-item --><li>Licensed and insured crews</li><!-- /wp:list-item --><!-- wp:list-item --><li>Direct insurance billing</li><!-- /wp:list-item --></ul><!-- /wp:list -->' . $button( 'Call now', 'tel:5550100101' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Trust Row', 'trust-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $logo( 'iicrc' ) . $logo( 'bbb' ) . $logo( 'angi' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Services grid', 'svc-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Restoration Services We Provide' ) . $para( 'What we do.' ) . '<!-- wp:columns --><div class="wp-block-columns">' . $card( 'Water Damage', 'Extraction and drying.' ) . $card( 'Fire Damage', 'Soot and smoke.' ) . $card( 'Mold Removal', 'Containment.' ) . '</div><!-- /wp:columns -->' . '</div><!-- /wp:group -->' )
+	. $section( 'How It Works', 'proc-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'How it works' ) . $col3( $step( 1, 'Call us', 'We answer around the clock and ask what you are seeing.' ), $step( 2, 'Inspection', 'A technician inspects the damage and writes the plan.' ), $step( 3, 'Restoration', 'The crew dries, cleans and rebuilds, and walks the site with you.' ) ) . '</div><!-- /wp:group -->' )
+	. $section( 'Reviews Section', 'rev-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'What customers say' ) . $col3( $quote( 'They were at the house within the hour and had the water out by evening.', 'Maria G., Tyler' ), $quote( 'Clear about the cost, careful with the furniture, done when they said.', 'Dan R., Longview' ), $quote( 'The claim paperwork was handled for us. Could not ask for more.', 'Priya S., Dallas' ) ) . '</div><!-- /wp:group -->' )
+	. $section( 'FAQ Section', 'faq-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Frequently asked questions' ) . $qa( 'How fast can you come?', 'Within the hour, day or night.' ) . $qa( 'Do you work with my insurance?', 'Yes. We document everything and talk to the adjuster.' ) . $qa( 'Is the equipment loud?', 'The dryers hum. Most people sleep fine.' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Why Section', 'why-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Why property owners choose us' ) . '<!-- wp:columns --><div class="wp-block-columns"><!-- wp:column --><div class="wp-block-column">' . $why( 'Veteran founded', 'Founded on military values, and it shows in how we treat your home.' ) . $why( 'Thousands of properties restored', 'Our team has guided thousands of homeowners through a claim.' ) . $why( 'Decades of combined experience', 'The crew at your door has likely handled damage just like yours.' ) . '</div><!-- /wp:column --><!-- wp:column --><div class="wp-block-column">' . $logo( 'crew' ) . '</div><!-- /wp:column --></div><!-- /wp:columns --></div><!-- /wp:group -->' )
+	. $section( 'CTA Banner', 'cta-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Water where it should not be?' ) . $button( 'Call (555) 010-0101', 'tel:5550100101' ) . '</div><!-- /wp:group -->' )
+	. $footer;
+$home9_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Restoration', 'post_content' => wp_slash( $home9 ) ) );
+$made[]   = (int) $home9_id;
+update_post_meta( $home9_id, Page_Scope::META, $home9_id );
+update_post_meta( $home9_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home9_id, '_dxai_ui_css_url', 'dxai-ui/fixture-rich.css' );
+$lists9 = DXAI_UI\Pages\Layouts::lists( $home9_id, Section_Library::for_page( $home9_id ) );
+$expect( 'the Home gives the layouts its steps, reviews, questions, badges and points (three bare, three with their words), each read once; the number of a step is not a figure', count( $lists9['steps'] ) === 3 && count( $lists9['reviews'] ) === 3 && count( $lists9['faq'] ) === 3 && count( $lists9['logos'] ) === 3 && count( $lists9['items'] ) === 6 && $lists9['stats'] === array(), json_encode( array_map( 'count', $lists9 ) ) );
+$expect( 'a review is who said it and what was said; a question is the question and its answer; a step is numbered', ( $lists9['reviews'][0]['title'] ?? '' ) === 'Maria G., Tyler' && str_starts_with( (string) ( $lists9['reviews'][0]['text'] ?? '' ), 'They were at the house' ) && ( $lists9['faq'][1]['title'] ?? '' ) === 'Do you work with my insurance?' && str_starts_with( (string) ( $lists9['faq'][1]['text'] ?? '' ), 'Yes.' ) && ( $lists9['steps'][1]['title'] ?? '' ) === 'Inspection' && ( $lists9['steps'][1]['eyebrow'] ?? '' ) === '2', json_encode( array( $lists9['reviews'][0] ?? null, $lists9['steps'][1] ?? null ) ) );
+// Three pages: a page's related services are the other two, enough for the Home's own cards to be poured into — which a team run does not do.
+$tm = Team_Pages::build( $home9_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Fire Damage' ), array( 'type' => 'service', 'title' => 'Mold Removal' ) ), true, array( 'library' => 'team' ) );
+$tmid = 0;
+$tms  = array();
+foreach ( ! is_wp_error( $tm ) ? $tm['pages'] : array() as $p ) {
+	$made[] = (int) $p['id'];
+	if ( $p['title'] === 'Water Damage' ) {
+		$tmid = (int) $p['id'];
+		$tms  = (array) $p['strip'];
+	}
+}
+$by_source = array_count_values( array_map( static fn( $x ) => (string) ( $x['source'] ?? '' ), $tms ) );
+$strip_s   = array_map( static fn( $x ) => ( $x['role'] ?? '' ) . ':' . ( $x['source'] ?? '' ), $tms );
+$ctas      = array_values( array_filter( $tms, static fn( $x ) => ( $x['role'] ?? '' ) === 'cta' && ( $x['source'] ?? '' ) !== '' ) );
+$expect( 'the page opens with the Home\'s hero; its first call to action is the Home\'s own band; the rest of it is the team\'s sections', ( $tms[0]['role'] ?? '' ) === 'hero' && ( $tms[0]['source'] ?? '' ) === 'home' && ( $by_source['home'] ?? 0 ) === 2 && ( $ctas[0]['source'] ?? '' ) === 'home' && ( $by_source['library'] ?? 0 ) >= 5, json_encode( $strip_s ) );
+$per_role = array();
+foreach ( $tms as $x ) {
+	if ( ( $x['source'] ?? '' ) !== '' ) {
+		$per_role[ (string) $x['role'] ] = ( $per_role[ (string) $x['role'] ] ?? 0 ) + 1;
+	}
+}
+$expect( 'a role is on the page once, a call to action twice at most, and each section of a role is another one', count( array_filter( $per_role, static fn( $n, $r ) => $n > ( $r === 'cta' ? 2 : 1 ), ARRAY_FILTER_USE_BOTH ) ) === 0 && ( $per_role['cta'] ?? 0 ) === 2 && count( array_unique( array_map( static fn( $x ) => json_encode( $x['ops'] ?? array() ), $ctas ) ) ) === count( $ctas ), json_encode( $per_role ) );
+$tmc = (string) get_post_field( 'post_content', $tmid );
+$expect( 'the sections carry the library\'s class, and nothing the library keeps for itself is on the page', substr_count( $tmc, 'dxai-lib' ) >= 5 && ! str_contains( $tmc, '{{' ) && ! str_contains( $tmc, '[[' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon|dxaiCount|dxaiSlice/', $tmc ), (string) substr_count( $tmc, 'dxai-lib' ) );
+$expect( 'the Home\'s services, steps, reviews, questions and trust row are not copied onto it (their classes are not on the page); its hero and its call to action band are, once', str_contains( $tmc, 'hero-x' ) && substr_count( $tmc, '"className":"cta-x"' ) === 1 && ! str_contains( $tmc, 'svc-x' ) && ! str_contains( $tmc, 'why-x' ) && ! str_contains( $tmc, 'proc-x' ) && ! str_contains( $tmc, 'rev-x' ) && ! str_contains( $tmc, 'faq-x' ) && ! str_contains( $tmc, 'trust-x' ) );
+$tmt = html_entity_decode( wp_strip_all_tags( $tmc ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+$expect( 'the layouts show what the Home states: its steps, a review with who said it, a question with its answer', str_contains( $tmt, 'Inspection' ) && str_contains( $tmt, 'Maria G., Tyler' ) && str_contains( $tmt, 'Do you work with my insurance?' ) && str_contains( $tmt, 'talk to the adjuster' ), substr( preg_replace( '/\s+/', ' ', $tmt ), 0, 300 ) );
+$expect( 'the related services are the team\'s cards (not the Home\'s cards made into a list), and they link to the other two pages', ! str_contains( $tmc, 'svc-card' ) && str_contains( $tmc, 'Fire Damage' ) && str_contains( $tmc, 'Mold Removal' ) && str_contains( $tmc, (string) get_permalink( (int) ( $tm['pages'][1]['id'] ?? 0 ) ) ) && str_contains( $tmc, (string) get_permalink( (int) ( $tm['pages'][2]['id'] ?? 0 ) ) ), substr( preg_replace( '/\s+/', ' ', $tmt ), 0, 200 ) );
+$expect( 'the words are about this page and this company (provisional, until written), not another site\'s', preg_match( '/Fixture( Restoration)?\b/', $tmt ) === 1 && str_contains( $tmt, '(555) 010-0101' ) && ! preg_match( '/\b(paces|calludk|iddk|ajrestores|procraft|h2oaway|floodrescue|americanrestorationnm)\b/i', $tmc ), substr( preg_replace( '/\s+/', ' ', $tmt ), 0, 300 ) );
+$with_words = array_values( array_filter( $lists9['items'], static fn( $r ) => (string) ( $r['text'] ?? '' ) !== '' ) );
+$expect( 'the Home\'s headed lines ("Veteran founded — …") are its points with their words, before the bare ones, and the page shows them with their words', count( $with_words ) === 3 && ( $lists9['items'][0]['title'] ?? '' ) === 'Veteran founded' && count( $lists9['items'] ) === 6 && str_contains( $tmt, 'Veteran founded' ) && str_contains( $tmt, 'Founded on military values' ), json_encode( array_column( $lists9['items'], 'title' ) ) );
+$expect( 'no line is left on the page with no words in it', preg_match( '/<p[^>]*>\s*<\/p>|<h[1-6][^>]*>\s*<\/h[1-6]>|<li[^>]*>\s*<\/li>/', $tmc ) !== 1 );
+$tmf = Team_Pages::build( $home9_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ) ), true, array( 'library' => 'fill' ) );
+foreach ( ! is_wp_error( $tmf ) ? $tmf['pages'] : array() as $p ) {
+	$made[] = (int) $p['id'];
+}
+$tmfs = ! is_wp_error( $tmf ) ? array_count_values( array_map( static fn( $x ) => (string) ( $x['source'] ?? '' ), (array) ( $tmf['pages'][0]['strip'] ?? array() ) ) ) : array();
+$expect( 'asked for the Home\'s look instead ("fill"), the page is the Home\'s sections again', ( $tmfs['home'] ?? 0 ) >= 4, json_encode( $tmfs ) );
+// A Home whose reviews the design left as placeholders ("Paste a verbatim review here", "Reviewer Name"): the placeholders are the Home's
+// to fill, and no page made from it carries them — not the Home's section, not the library's.
+$ph_home = $header
+	. $section( 'Hero Section', 'hero-x bg-dark', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Restoration in Tyler', 1 ) . $para( 'Water damage, fire damage and mold remediation for homes and businesses. Restoration done right, with the insurance claim handled.' ) . '</div><!-- /wp:group -->' )
+	. $section( 'Reviews Section', 'rev-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'What customers say' ) . $col3( $quote( '“Paste a verbatim 5-star Google review here, word for word.”', 'Reviewer Name' ), $quote( '“Paste a verbatim 5-star Google review here, word for word.”', 'Reviewer Name' ), $quote( '“Paste a verbatim 5-star Google review here, word for word.”', 'Reviewer Name' ) ) . '</div><!-- /wp:group -->' )
+	. $section( 'CTA Banner', 'cta-x', '<!-- wp:group {"className":"inner"} --><div class="wp-block-group inner">' . $heading( 'Water where it should not be?' ) . $button( 'Call (555) 010-0101', 'tel:5550100101' ) . '</div><!-- /wp:group -->' )
+	. $footer;
+$ph_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Placeholder Restoration', 'post_content' => wp_slash( $ph_home ) ) );
+$made[] = (int) $ph_id;
+update_post_meta( $ph_id, Page_Scope::META, $ph_id );
+update_post_meta( $ph_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $ph_id, '_dxai_ui_css_url', 'dxai-ui/fixture-placeholder.css' );
+$ph_made = Team_Pages::build( (int) $ph_id, array( array( 'type' => 'testimonials', 'title' => 'Testimonials' ), array( 'type' => 'service', 'title' => 'Water Damage' ) ), true, array( 'library' => 'team' ) );
+$ph_text = '';
+foreach ( ! is_wp_error( $ph_made ) ? $ph_made['pages'] : array() as $p ) {
+	$made[]   = (int) $p['id'];
+	$ph_text .= (string) get_post_field( 'post_content', (int) $p['id'] );
+}
+$expect( 'a Home\'s reviews left as placeholders by its design are not copied onto the pages made from it (the pages are made, without them)', ! is_wp_error( $ph_made ) && count( $ph_made['pages'] ) === 2 && $ph_text !== '' && ! str_contains( $ph_text, 'Paste a verbatim' ) && ! str_contains( $ph_text, 'Reviewer Name' ), is_wp_error( $ph_made ) ? $ph_made->get_error_message() : (string) substr_count( $ph_text, 'Paste a verbatim' ) );
+
+echo "\nOn a theme with no template (Twenty Twenty-Five, when it is installed)\n";
+if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
+	$theme_was = get_stylesheet();
+	$back      = static function () use ( $theme_was ): void {
+		if ( get_stylesheet() !== $theme_was ) {
+			switch_theme( $theme_was );
+			DXAI_UI\Theme\Theme_Palette::reset();
+			DXAI_UI\Theme\Theme_Buttons::reset();
+		}
+	};
+	register_shutdown_function( $back );
+	switch_theme( 'twentytwentyfive' );
+	DXAI_UI\Theme\Theme_Palette::reset();
+	DXAI_UI\Theme\Theme_Buttons::reset();
+	$tt = Team_Pages::build( $home9_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Fire Damage' ), array( 'type' => 'service', 'title' => 'Mold Removal' ) ), true, array( 'library' => 'team' ) );
+	$ttid = 0;
+	$tts  = array();
+	foreach ( ! is_wp_error( $tt ) ? $tt['pages'] : array() as $p ) {
+		$made[] = (int) $p['id'];
+		if ( $p['title'] === 'Water Damage' ) {
+			$ttid = (int) $p['id'];
+			$tts  = (array) $p['strip'];
+		}
+	}
+	$tt_src = array_count_values( array_map( static fn( $x ) => (string) ( $x['source'] ?? '' ), $tts ) );
+	$ttc    = (string) get_post_field( 'post_content', $ttid );
+	$tt_pal = DXAI_UI\Theme\Capabilities::palette();
+	preg_match_all( '/\bhas-([a-z0-9-]+?)-(?:background-color|border-color|color)\b/', $ttc, $cm );
+	$foreign = array_values( array_filter( array_unique( $cm[1] ), static fn( $s ) => ! in_array( $s, array( 'text', 'link', 'background' ), true ) && ! isset( $tt_pal[ $s ] ) ) );
+	$expect( 'the page is laid out with the generic library: the Home\'s hero, then the team\'s sections in core blocks, with this theme\'s colours', ( $tts[0]['role'] ?? '' ) === 'hero' && ( $tt_src['library'] ?? 0 ) >= 4 && ! preg_match( '/<!-- wp:(?:amr|dx)\//', $ttc ) && ! str_contains( $ttc, '{{' ) && ! str_contains( $ttc, '[[' ) && $foreign === array() && substr_count( $ttc, 'dxai-lib' ) >= 4, json_encode( array( array_map( static fn( $x ) => ( $x['role'] ?? '' ) . ':' . ( $x['source'] ?? '' ), $tts ), $foreign ) ) );
+	$back();
+	$expect( 'and the theme is switched back', get_stylesheet() === $theme_was, get_stylesheet() );
+} else {
+	echo "  (not installed: skipped)\n";
+}
 
 $fin();
 

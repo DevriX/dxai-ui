@@ -210,7 +210,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 				</div>
 			</div>
 			<p className="dxai-muted">
-				{ __( 'A package is a converted page exported with its styles: its blocks, design stylesheet and script, fonts, images, template parts and patterns, and its header and footer. Copying blocks from one editor into another site carries none of that — export the page on the site it was built on (Library › Export, or Pages › Export with styles) and import the file here.', 'dxai-ui' ) }
+				{ __( 'A package is a converted page exported with its styles: its blocks, design stylesheet and script, fonts, images, template parts and patterns, and its header and footer. Copying blocks from one editor into another site carries none of that — export the page on the site it was built on (Designs › the design › Transfer, or Pages › Export with styles) and import the file here.', 'dxai-ui' ) }
 			</p>
 
 			{ infoError && <Notice status="error" isDismissible={ false }>{ infoError }</Notice> }

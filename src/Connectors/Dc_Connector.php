@@ -60,31 +60,54 @@ final class Dc_Connector {
 		$harvest = ( new Asset_Harvester() )->from_zip( $unpacked['dir'], $unpacked['files'] );
 		$texts   = is_array( $harvest['texts'] ?? null ) ? $harvest['texts'] : array();
 
-		$path = '';
-		$html = '';
+		// Every .dc.html: the pages, and the parts they import (Dc_Site).
+		$files = array();
 		foreach ( $unpacked['files'] as $relative ) {
 			$norm = str_replace( '\\', '/', $relative );
 			if ( preg_match( '/\.dc\.html$/i', $norm ) !== 1 ) {
 				continue;
 			}
-			// The shallowest .dc.html is the page; helper HTML lives deeper.
-			if ( $path === '' || substr_count( $norm, '/' ) < substr_count( $path, '/' ) ) {
-				$path = $norm;
-				$html = (string) ( $texts[ $norm ] ?? '' );
-				if ( $html === '' ) {
-					$html = Zip_Extractor::read_text( $unpacked['dir'] . '/' . $relative, 4000000 );
-				}
+			$text = (string) ( $texts[ $norm ] ?? '' );
+			if ( $text === '' ) {
+				$text = Zip_Extractor::read_text( $unpacked['dir'] . '/' . $relative, 4000000 );
+			}
+			if ( $text !== '' ) {
+				$files[ $norm ] = $text;
 			}
 		}
 		Zip_Extractor::cleanup( $unpacked['dir'] );
 
-		if ( $html === '' ) {
+		if ( $files === array() ) {
 			return new \WP_Error( 'dxai_ui_zip', __( 'No .dc.html page was found in the ZIP.', 'dxai-ui' ), array( 'status' => 400 ) );
 		}
 
-		$parts = self::split( $html );
-		$name  = preg_replace( '/\.dc\.html$/i', '', basename( $path ) ) ?? basename( $path );
+		$site  = Dc_Site::read( $files );
+		$home  = $site['pages'][0];
+		$parts = $home['parts'];
+		$path  = $home['path'];
+		$name  = $home['name'];
 		$title = $parts['title'] !== '' ? $parts['title'] : $name;
+
+		/*
+		 * One stylesheet for the whole design, as the repository compiles every page of a design against it: the Home's
+		 * helmet style, then each component's and each page's, each once.
+		 */
+		$styles = array( $parts['style'] );
+		foreach ( $site['components'] as $component ) {
+			$styles[] = (string) $component['style'];
+		}
+		foreach ( array_slice( $site['pages'], 1 ) as $page ) {
+			$styles[] = (string) $page['parts']['style'];
+		}
+		$style = trim( implode( "\n", array_unique( array_filter( array_map( 'trim', $styles ), 'strlen' ) ) ) );
+
+		$sources = array( $path => $files[ $path ] );
+		foreach ( $files as $file_path => $text ) {
+			$file_name = (string) preg_replace( '/\.dc\.html$/i', '', basename( $file_path ) );
+			if ( isset( $site['components'][ $file_name ] ) || in_array( $file_name, array_column( $site['pages'], 'name' ), true ) ) {
+				$sources[ $file_path ] = $text;
+			}
+		}
 
 		$summary = is_array( $harvest['summary'] ?? null ) ? $harvest['summary'] : array();
 		$assets  = is_array( $harvest['assets'] ?? null ) ? $harvest['assets'] : array();
@@ -94,23 +117,29 @@ final class Dc_Connector {
 			$title,
 			array(
 				'stack'          => 'claude-design',
-				'dc'             => array(
-					'name'     => $name,
-					'path'     => $path,
-					'template' => $parts['template'],
-					'script'   => $parts['script'],
-					'props'    => $parts['props'],
-					'title'    => $parts['title'],
-					'style'    => $parts['style'],
-					'links'    => $parts['links'],
-					'meta'     => $parts['meta'],
-					'ld_json'  => $parts['ld_json'],
+				'dc'             => self::dc_row( $name, $path, $parts ),
+				// The parts the pages import (`<dc-import name="…">`), by that name: the header, the footer…
+				'dc_components'  => array_map(
+					static fn( array $c ): array => array(
+						'template' => (string) $c['template'],
+						'script'   => (string) $c['script'],
+						'props'    => is_array( $c['props'] ) ? $c['props'] : array(),
+					),
+					$site['components']
 				),
-				'sources'        => array( $path => $html ),
+				// The design's other pages, each with the route its links were written to.
+				'dc_pages'       => array_map(
+					static fn( array $page ): array => self::dc_row( $page['name'], $page['path'], $page['parts'] ) + array(
+						'route'      => $page['route'],
+						'page_title' => $page['title'],
+					),
+					array_slice( $site['pages'], 1 )
+				),
+				'sources'        => $sources,
 				'assets'         => $assets,
 				'harvest'        => Asset_Harvester::for_prompt( $harvest ),
-				// The helmet's <style>, verbatim: it is the design's whole stylesheet.
-				'design_css_raw' => $parts['style'],
+				// The helmets' <style>, verbatim: they are the design's whole stylesheet.
+				'design_css_raw' => $style,
 				'static_html'    => true,
 				// See Lovable_Connector: the archive name is what pairs a saved
 				// page with the design it has to be measured against, byte for
@@ -121,8 +150,32 @@ final class Dc_Connector {
 			array(
 				'Unpacked Claude Design export (' . count( $unpacked['files'] ) . ' files)',
 				'Page: ' . $path,
+				count( $site['pages'] ) > 1 ? sprintf( 'Pages: %d (%s)', count( $site['pages'] ), implode( ', ', array_column( $site['pages'], 'name' ) ) ) : 'Pages: 1',
+				$site['components'] !== array() ? 'Imported parts: ' . implode( ', ', array_keys( $site['components'] ) ) : 'Imported parts: none',
+				$site['skipped'] !== array() ? 'Left out as copies of other pages: ' . implode( ', ', $site['skipped'] ) : 'Left out: none',
 				is_array( $summary ) && $summary !== array() ? 'Assets: ' . wp_json_encode( $summary ) : 'Assets: none',
 			)
+		);
+	}
+
+	/**
+	 * A page's parts as the compiler reads them.
+	 *
+	 * @param array<string, mixed> $parts Dc_Connector::split().
+	 * @return array<string, mixed>
+	 */
+	private static function dc_row( string $name, string $path, array $parts ): array {
+		return array(
+			'name'     => $name,
+			'path'     => $path,
+			'template' => $parts['template'],
+			'script'   => $parts['script'],
+			'props'    => $parts['props'],
+			'title'    => $parts['title'],
+			'style'    => $parts['style'],
+			'links'    => $parts['links'],
+			'meta'     => $parts['meta'],
+			'ld_json'  => $parts['ld_json'],
 		);
 	}
 

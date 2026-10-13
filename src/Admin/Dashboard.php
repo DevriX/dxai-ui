@@ -1,6 +1,6 @@
 <?php
 /**
- * React admin dashboard loader.
+ * The admin menu "DX" and the React app its screens are.
  *
  * @package DXAI_UI
  */
@@ -9,12 +9,34 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Admin;
 
+/**
+ * One top-level menu, DX, with five screens: Designs (the landing: every design on the site and, by a hash route, one
+ * design's page with its tabs), Convert (the wizard), Site (the site's template, header, footer and what the imports
+ * made for the whole site), Form entries and Settings. Each is one wp-admin page that mounts the same React app
+ * (assets/src/admin), told which screen it is; WordPress draws the menu and the page title, the app draws the rest.
+ *
+ * The Library screen of earlier versions (dxai-ui-library) is the Designs screen now: its address is sent there.
+ */
 final class Dashboard {
 
+	/** The landing screen: Designs. Also the menu's own slug. */
 	public const SLUG          = 'dxai-ui';
-	public const SLUG_LIBRARY  = 'dxai-ui-library';
+	public const SLUG_CONVERT  = 'dxai-ui-convert';
+	public const SLUG_SITE     = 'dxai-ui-site';
 	public const SLUG_FORMS    = 'dxai-ui-forms';
 	public const SLUG_SETTINGS = 'dxai-ui-settings';
+
+	/** The screen of earlier versions whose panels are now a design's tabs and the Site screen; sent to Designs. */
+	public const SLUG_LIBRARY = 'dxai-ui-library';
+
+	/** Screen name => slug, in menu order. */
+	public const SCREENS = array(
+		'designs'  => self::SLUG,
+		'convert'  => self::SLUG_CONVERT,
+		'site'     => self::SLUG_SITE,
+		'forms'    => self::SLUG_FORMS,
+		'settings' => self::SLUG_SETTINGS,
+	);
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -24,9 +46,12 @@ final class Dashboard {
 	}
 
 	public function menu(): void {
+		// Here, on admin_menu: WordPress refuses an address no menu has (403) right after this action, before admin_init.
+		$this->forward_library();
+
 		add_menu_page(
-			__( 'DX Convert', 'dxai-ui' ),
-			__( 'DX Convert', 'dxai-ui' ),
+			__( 'DX', 'dxai-ui' ),
+			__( 'DX', 'dxai-ui' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' ),
@@ -34,41 +59,16 @@ final class Dashboard {
 			58
 		);
 
-		add_submenu_page(
-			self::SLUG,
-			__( 'Convert', 'dxai-ui' ),
-			__( 'Convert', 'dxai-ui' ),
-			'manage_options',
-			self::SLUG,
-			array( $this, 'render' )
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Library', 'dxai-ui' ),
-			__( 'Library', 'dxai-ui' ),
-			'manage_options',
-			self::SLUG_LIBRARY,
-			array( $this, 'render' )
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Form entries', 'dxai-ui' ),
-			__( 'Form entries', 'dxai-ui' ),
-			'manage_options',
-			self::SLUG_FORMS,
-			array( $this, 'render' )
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Settings', 'dxai-ui' ),
-			__( 'Settings', 'dxai-ui' ),
-			'manage_options',
-			self::SLUG_SETTINGS,
-			array( $this, 'render' )
-		);
+		foreach ( self::labels() as $screen => $label ) {
+			add_submenu_page(
+				self::SLUG,
+				$label,
+				$label,
+				'manage_options',
+				self::SCREENS[ $screen ],
+				array( $this, 'render' )
+			);
+		}
 
 		add_options_page(
 			__( 'DX UI', 'dxai-ui' ),
@@ -79,14 +79,41 @@ final class Dashboard {
 		);
 	}
 
+	/** The old Library address opens Designs, so a bookmark or a link in an older summary still lands somewhere. */
+	public function forward_library(): void {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( $page === self::SLUG_LIBRARY && current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( self::url( 'designs' ), 301 );
+			exit;
+		}
+	}
+
+	/** The admin URL of a screen. */
+	public static function url( string $screen ): string {
+		return admin_url( 'admin.php?page=' . ( self::SCREENS[ $screen ] ?? self::SLUG ) );
+	}
+
+	/**
+	 * @return array<string, string> screen => its name in the menu.
+	 */
+	public static function labels(): array {
+		return array(
+			'designs'  => __( 'Designs', 'dxai-ui' ),
+			'convert'  => __( 'Convert', 'dxai-ui' ),
+			'site'     => __( 'Site', 'dxai-ui' ),
+			'forms'    => __( 'Form entries', 'dxai-ui' ),
+			'settings' => __( 'Settings', 'dxai-ui' ),
+		);
+	}
+
 	/**
 	 * @param array<string, string> $links
 	 * @return array<string, string>
 	 */
 	public function action_links( array $links ): array {
-		$convert  = '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Convert', 'dxai-ui' ) . '</a>';
-		$settings = '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG_SETTINGS ) ) . '">' . esc_html__( 'Settings', 'dxai-ui' ) . '</a>';
-		array_unshift( $links, $convert, $settings );
+		$designs  = '<a href="' . esc_url( self::url( 'designs' ) ) . '">' . esc_html__( 'Designs', 'dxai-ui' ) . '</a>';
+		$settings = '<a href="' . esc_url( self::url( 'settings' ) ) . '">' . esc_html__( 'Settings', 'dxai-ui' ) . '</a>';
+		array_unshift( $links, $designs, $settings );
 
 		return $links;
 	}
@@ -97,18 +124,20 @@ final class Dashboard {
 		}
 
 		$screen = $this->current_screen();
-		$title  = $this->title_for( $screen );
+		$title  = self::labels()[ $screen ] ?? __( 'DX', 'dxai-ui' );
 
 		echo '<div class="wrap dxai-ui-wrap">';
+		echo '<div id="dxai-ui-app" class="dxai-ui-admin" data-screen="' . esc_attr( $screen ) . '">';
+		// Until the app mounts (and for good if its script never runs): the page's title and the way to every screen.
 		echo '<h1 class="screen-reader-text">' . esc_html( $title ) . '</h1>';
-		echo '<div id="dxai-ui-app" class="dxai-ui-admin">';
 		echo '<div class="dxai-ui-php-fallback notice notice-info"><p>';
-		echo esc_html__( 'DX Convert is loading. If this message stays, JavaScript failed to start. Use the links below.', 'dxai-ui' );
+		echo esc_html__( 'DX is loading. If this message stays, JavaScript failed to start. Use the links below.', 'dxai-ui' );
 		echo '</p><p>';
-		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Convert', 'dxai-ui' ) . '</a> · ';
-		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG_LIBRARY ) ) . '">' . esc_html__( 'Library', 'dxai-ui' ) . '</a> · ';
-		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG_FORMS ) ) . '">' . esc_html__( 'Form entries', 'dxai-ui' ) . '</a> · ';
-		echo '<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG_SETTINGS ) ) . '">' . esc_html__( 'Settings', 'dxai-ui' ) . '</a>';
+		$links = array();
+		foreach ( self::labels() as $name => $label ) {
+			$links[] = '<a href="' . esc_url( self::url( $name ) ) . '">' . esc_html( $label ) . '</a>';
+		}
+		echo wp_kses_post( implode( ' · ', $links ) );
 		echo '</p></div>';
 		echo '</div></div>';
 	}
@@ -121,9 +150,9 @@ final class Dashboard {
 		wp_enqueue_style( 'wp-components' );
 		/*
 		 * No web font. This screen used to load Instrument Sans and Serif from
-		 * Google Fonts, which admin.css never uses (its stacks are Inter and
-		 * the system faces) — a request to a third party with every admin's IP
-		 * address on every visit, which plugin review and GDPR both object to.
+		 * Google Fonts, which admin.css never uses (its stacks are the system
+		 * faces) — a request to a third party with every admin's IP address on
+		 * every visit, which plugin review and GDPR both object to.
 		 */
 		wp_enqueue_style(
 			'dxai-ui-admin',
@@ -165,6 +194,14 @@ final class Dashboard {
 
 		wp_set_script_translations( $handle, 'dxai-ui', DXAI_UI_DIR . 'languages' );
 
+		$links = array();
+		foreach ( array_keys( self::SCREENS ) as $name ) {
+			$links[ $name ] = self::url( $name );
+		}
+		$links['menus']   = current_theme_supports( 'menus' ) ? admin_url( 'nav-menus.php' ) : '';
+		$links['widgets'] = current_theme_supports( 'widgets' ) ? admin_url( 'widgets.php' ) : '';
+		$links['themes']  = admin_url( 'themes.php' );
+
 		wp_localize_script(
 			$handle,
 			'dxaiUI',
@@ -172,7 +209,11 @@ final class Dashboard {
 				'restUrl' => esc_url_raw( rest_url( DXAI_UI_REST_NAMESPACE . '/' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'screen'  => $this->current_screen(),
+				'labels'  => self::labels(),
+				// Where each screen is, so the app never spells an admin address itself.
+				'links'   => $links,
 				'version' => DXAI_UI_VERSION,
+				'theme'   => wp_get_theme()->get( 'Name' ),
 				// The icon runtime the preview uses, from the plugin itself
 				// rather than a CDN a host's CSP or a firewall may block.
 				'lucide'  => DXAI_UI_URL . 'assets/vendor/lucide.min.js',
@@ -202,7 +243,7 @@ final class Dashboard {
 
 	public function body_class( string $classes ): string {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( in_array( $page, array( self::SLUG, self::SLUG_LIBRARY, self::SLUG_FORMS, self::SLUG_SETTINGS ), true ) ) {
+		if ( in_array( $page, self::SCREENS, true ) ) {
 			$classes .= ' dxai-ui-admin-screen';
 		}
 
@@ -211,21 +252,8 @@ final class Dashboard {
 
 	private function current_screen(): string {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : self::SLUG; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$name = array_search( $page, self::SCREENS, true );
 
-		return match ( $page ) {
-			self::SLUG_LIBRARY  => 'library',
-			self::SLUG_FORMS    => 'forms',
-			self::SLUG_SETTINGS => 'settings',
-			default             => 'convert',
-		};
-	}
-
-	private function title_for( string $screen ): string {
-		return match ( $screen ) {
-			'library'  => __( 'Library', 'dxai-ui' ),
-			'forms'    => __( 'Form entries', 'dxai-ui' ),
-			'settings' => __( 'DX UI Settings', 'dxai-ui' ),
-			default    => __( 'DX Convert', 'dxai-ui' ),
-		};
+		return is_string( $name ) ? $name : 'designs';
 	}
 }

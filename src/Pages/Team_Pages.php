@@ -54,7 +54,7 @@ final class Team_Pages {
 	 * What the team's library (Block_Library) is for in a page: its sections only where the Home has none of the kind (or only a section of
 	 * another kind to stand in for it), its sections instead of the Home's where it has one, or not used.
 	 */
-	public const LIBRARY = array( 'fill', 'prefer', 'off' );
+	public const LIBRARY = array( 'fill', 'prefer', 'off', 'team' );
 
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
@@ -240,6 +240,16 @@ final class Team_Pages {
 	private static function policy( array $options ): string {
 		$policy = (string) ( $options['library'] ?? '' );
 
+		// The usual, where the library holds the team's layouts (bin/build-layouts.php): the pages laid out as the team lays out theirs.
+		$policy = in_array( $policy, self::LIBRARY, true ) ? $policy : ( Block_Library::has_layouts() ? 'team' : 'fill' );
+
+		/**
+		 * What the library is for in a run of the pages made from a Home (LIBRARY).
+		 *
+		 * @param string $policy 'team' (the team's layouts), 'fill', 'prefer' or 'off'.
+		 */
+		$policy = (string) apply_filters( 'dxai_ui_team_library', $policy );
+
 		return in_array( $policy, self::LIBRARY, true ) ? $policy : 'fill';
 	}
 
@@ -273,7 +283,10 @@ final class Team_Pages {
 				$vary['lib'] = Block_Library::facts( $home, (array) $vary['facts'] ) + array(
 					'places_home' => self::places_of_home( $home ),
 					'contact_was' => self::page_url_of( $home, 'contact' ),
-					'prefer'      => $policy === 'prefer',
+					'prefer'      => in_array( $policy, array( 'prefer', 'team' ), true ),
+					// The team's layouts (Layouts): every section but the hero is one of theirs, filled with what the Home says.
+					'team'        => $policy === 'team',
+					'lists'       => $policy === 'team' ? Layouts::lists( $home, $library ) : array(),
 				);
 			}
 		}
@@ -953,6 +966,8 @@ final class Team_Pages {
 	 *         the number of the shuffle its variant is from, and what was done to it.
 	 */
 	private static function compose( array $library, array $roles, array $recipe, array $item, array $siblings, string $seed, array $vary = array() ): array {
+		// A page starts with none of the Home's pictures and none of its lists' rows shown (a plan and a build in one request are two pages).
+		Layouts::begin( (string) ( $item['title'] ?? '' ), (string) ( $item['type'] ?? '' ) );
 		$library  = array_values( $library );
 		$used     = array();
 		$sections = array();
@@ -965,6 +980,10 @@ final class Team_Pages {
 		// theme they are not made for or in a run that is to use only the Home's sections.
 		$lib      = is_array( $vary['lib'] ?? null ) ? $vary['lib'] : null;
 		$lib_used = array();
+		// In the team's arrangement: how many sections of each role the page has (a role is on a page once, a call to action twice), and
+		// whether the Home's own call to action band is on it (the first of the two, when the Home has one).
+		$made_roles    = array();
+		$home_cta_used = false;
 		$prev     = -1; // the Home section the page showed last
 		// An AI's plan (Page_Planner, checked): the roles it chose, and for each place the Home's section that fills it.
 		$plan  = is_array( $vary['plan'] ?? null ) ? $vary['plan'] : null;
@@ -1030,7 +1049,8 @@ final class Team_Pages {
 			$added = true;
 			array_splice( $recipe, $at, 0, array( 'related' ) );
 		}
-		if ( $at !== false && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
+		// (In the team's layouts the related pages are one of them, poured in the loop below; the Home's cards are not used for it.)
+		if ( $at !== false && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 && empty( $lib['team'] ) ) {
 			$refused = array();
 			// The Home's sections the page's other sections are taken from are left alone while another one will do.
 			$others = array();
@@ -1095,6 +1115,13 @@ final class Team_Pages {
 					unset( $cand[ $i ] );
 				}
 			}
+			// A section whose words are a placeholder the design left to be filled in ("Paste a verbatim review here", "Reviewer Name") is
+			// the Home's to fill, not copied onto every page.
+			foreach ( $forced ? array() : array_keys( $cand ) as $i ) {
+				if ( Layouts::placeholder( wp_strip_all_tags( serialize_block( (array) $library[ $i ]['block'] ) ) ) ) {
+					unset( $cand[ $i ] );
+				}
+			}
 			$none = '';
 			if ( $cand === array() ) {
 				$none = 'the Home has none';
@@ -1111,9 +1138,18 @@ final class Team_Pages {
 			// The team's own section of the kind takes the place when the Home has none, or only a section of another kind to stand in for
 			// it (a Home with no steps would show its cards as the steps), or when it was asked to take the Home's place too; a place locked
 			// to one keeps it. A plan that chose a Home's section keeps it.
-			if ( $lib !== null && ! $forced && ! isset( $picks[ $place ] ) && ( $held || $none !== '' || ! empty( $lib['prefer'] ) || min( $cand ) > 0 ) ) {
+			// In the team's arrangement a role is on a page once (a call to action twice, each another section); a place whose role the page
+			// already has is left out. The Home's own call to action band is the first of the two when the Home has one.
+			$team     = $lib !== null && ! empty( $lib['team'] );
+			$home_cta = $team && $role === 'cta' && ! $home_cta_used && $none === '' && min( $cand ) === 0;
+			if ( $team && ! $forced && ! $held && ! isset( $picks[ $place ] ) && ( $made_roles[ $role ] ?? 0 ) >= ( $role === 'cta' ? 2 : 1 ) ) {
+				$log[]    = sprintf( '%s: already on the page — left out', $role );
+				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
+				continue;
+			}
+			if ( $lib !== null && ! $forced && ! isset( $picks[ $place ] ) && ! $home_cta && ( $held || $none !== '' || ! empty( $lib['prefer'] ) || min( $cand ) > 0 ) ) {
 				$why  = '';
-				$made = Block_Library::section( (string) $role, $lib, ( $held ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place, array_keys( $lib_used ), $held ? (string) $lock['lib'] : '', $why );
+				$made = Block_Library::section( (string) $role, ! empty( $lib['team'] ) ? Layouts::page_facts( $lib, $item, (string) $role, $seed . '|' . $place, $vary ) : $lib, ( $held ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place, array_keys( $lib_used ), $held ? (string) $lock['lib'] : '', $why );
 				if ( $made !== null ) {
 					$block = $made['block'];
 					if ( isset( $block['attrs']['anchor'] ) && str_contains( implode( '', array_map( 'serialize_block', $sections ) ), 'id="' . esc_attr( (string) $block['attrs']['anchor'] ) . '"' ) ) {
@@ -1121,6 +1157,7 @@ final class Team_Pages {
 						Block_Tree::strip_anchors( $block );
 					}
 					$lib_used[ $made['id'] ] = true;
+					$made_roles[ $role ] = ( $made_roles[ $role ] ?? 0 ) + 1;
 					$ops[]                   = array( 'lib:' . $made['id'] );
 					$sections[]              = $block;
 					$places[]                = array( 'place' => $place, 'role' => $role, 'source' => 'library', 'home' => 0, 'n' => $held ? (int) $lock['n'] : $shuffle, 'ops' => array( 'lib:' . $made['id'] ), 'label' => $made['label'], 'locked' => $held );
@@ -1128,7 +1165,7 @@ final class Team_Pages {
 					$prev                    = -1;
 					continue;
 				}
-				if ( $why !== '' && ( $held || $none !== '' ) ) {
+				if ( $why !== '' && ( $held || $none !== '' || ! empty( $lib['team'] ) ) ) {
 					$log[] = sprintf( '%s: the library has nothing for it (%s)', $role, $why );
 				}
 			}
@@ -1189,7 +1226,15 @@ final class Team_Pages {
 				$block = self::fill_related( $block, $component, $siblings, $item['title'], (array) ( $vary['kit']['texts'] ?? array() ) );
 			}
 			$sections[] = $block;
+			// What the Home's section says is said on the page: the library's sections after it do not say it again.
+			if ( $lib !== null && ! empty( $lib['team'] ) ) {
+				Layouts::hear( array( 'title' => (string) ( $item['title'] ?? '' ), 'home' => $lib['home'] ?? '', 'kind' => (string) ( $item['type'] ?? '' ) ), $block );
+			}
 			$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'home', 'home' => $pick + 1, 'n' => $forced ? (int) $lock['n'] : $shuffle, 'ops' => $done, 'locked' => $forced );
+			$made_roles[ $role ] = ( $made_roles[ $role ] ?? 0 ) + 1;
+			if ( $home_cta ) {
+				$home_cta_used = true;
+			}
 			$log[]      = sprintf( '%s ← Home section %d (%s)%s', $role, $pick + 1, $component['kind'], $done === array() ? '' : ' — ' . implode( ', ', $done ) );
 		}
 

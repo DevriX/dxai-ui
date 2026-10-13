@@ -91,10 +91,34 @@ abstract class Converter {
 	protected static array $context = array();
 
 	/**
+	 * The attributes of the blocks around the container being converted, outermost first, as the importer stored them (Native_Blocks
+	 * keeps it while it walks down the tree): what a block sits on, when that is not its own container (a call to action in a row
+	 * of a coloured band).
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	protected static array $ancestors = array();
+
+	/**
 	 * @param array<string, int> $context
 	 */
 	public static function set_context( array $context ): void {
-		self::$context = $context;
+		self::$context   = $context;
+		self::$ancestors = array();
+	}
+
+	/**
+	 * Native_Blocks goes into a block's inner blocks.
+	 *
+	 * @param array<string, mixed> $attrs
+	 */
+	public static function enter( array $attrs ): void {
+		self::$ancestors[] = $attrs;
+	}
+
+	/** Native_Blocks comes back out of them. */
+	public static function leave(): void {
+		array_pop( self::$ancestors );
 	}
 
 	/**

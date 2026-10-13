@@ -1,0 +1,58 @@
+/* The frame of a screen: breadcrumb, title the way wp-admin sets it, a line of facts, the actions on the right. */
+
+#dxai-ui-app .dxai-page {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 1280px;
+}
+
+#dxai-ui-app .dxai-page__crumbs {
+	font-size: 13px;
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-page__crumbs a {
+	text-decoration: none;
+}
+
+#dxai-ui-app .dxai-page__crumb-sep {
+	margin: 0 6px;
+	color: var(--dxai-line-strong);
+}
+
+#dxai-ui-app .dxai-page__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px 24px;
+}
+
+#dxai-ui-app .dxai-page__title {
+	flex: 1 1 360px;
+	min-width: 0;
+}
+
+#dxai-ui-app .dxai-page__head h1.wp-heading-inline {
+	margin: 0;
+	padding: 0;
+	font-size: 23px;
+	font-weight: 400;
+	line-height: 1.3;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-page__meta {
+	margin: 4px 0 0;
+	color: var(--dxai-muted);
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-page__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding-top: 2px;
+}

@@ -46,9 +46,13 @@ final class Amr_Adapter extends Theme_Adapter {
 
 	public function markup(): array {
 		return array(
-			'amr/span' => array(
+			'amr/span'     => array(
 				'tag'     => 'span',
 				'classes' => array( 'wp-block-amr-span', 'amr-span' ),
+			),
+			'amr/link-box' => array(
+				'tag'     => 'a',
+				'classes' => array( 'wp-block-amr-link-box', 'amr-link-box', 'amr-link-box--has-link' ),
 			),
 		);
 	}

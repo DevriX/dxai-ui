@@ -20,6 +20,29 @@ body.dxai-ui-blank .dxai-ui .dxai-lib :where(.is-layout-flow, .is-layout-constra
 	margin-block-start: var(--wp--style--block-gap, 20px);
 }
 
+/* A logo in a row of logos (a layout's `logos` list): a logo's size wherever the row is, as the theme sizes the team's by its own rules. */
+/* A heading or a line in a row of a flex box is spaced by the row's gap, not by the browser's own margins (a page of a design has no theme
+   rule that takes them off): with no weight, so any margin the design or the block sets still wins. */
+:where(body.dxai-ui-blank .dxai-ui .dxai-lib .d-flex, body.dxai-ui-blank .dxai-ui .dxai-lib .is-layout-flex) > :where(h1, h2, h3, h4, h5, h6, p) {
+	margin-block: 0;
+}
+
+/* A box that is a link (a card whose whole surface leads to a page) is a box, not a link in its words: they keep the card's colours, not
+   the design's colour for links. */
+body.dxai-ui-blank .dxai-ui .dxai-lib a.wp-block-amr-link-box,
+body.dxai-ui-blank .dxai-ui .dxai-lib a.amr-link-box {
+	color: inherit;
+	text-decoration: none;
+}
+
+.dxai-lib .dxai-logo img {
+	width: auto;
+	height: auto;
+	max-height: 64px;
+	max-width: 200px;
+	object-fit: contain;
+}
+
 /* The questions: the theme's accordion (its `_faq-accordion.scss`), for the pages that do not have it. A question is a card holding its
    title, an arrow and its answer; the answer is shut until the question is pressed (block-library.js), and the card is marked while it is open. */
 .dxai-lib .faq-answer {

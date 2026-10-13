@@ -36,6 +36,7 @@ final class Transfer_Admin {
 			\DXAI_UI\Support\Base_Theme_Cli::register();
 			\DXAI_UI\Support\Design_Cli::register();
 			\DXAI_UI\Pages\Order_Cli::register();
+			\DXAI_UI\Pages\Library_Cli::register();
 		}
 	}
 
@@ -98,6 +99,7 @@ final class Transfer_Admin {
 		if ( is_wp_error( $built ) ) {
 			wp_die( esc_html( $built->get_error_message() ), esc_html__( 'Export failed', 'dxai-ui' ), array( 'response' => (int) ( $built->get_error_data()['status'] ?? 500 ), 'back_link' => true ) );
 		}
+		\DXAI_UI\Design\Design_Status::exported( $page_id );
 		self::send( $built );
 	}
 

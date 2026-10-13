@@ -149,6 +149,10 @@ final class Internal_Links {
 	}
 
 	/**
+	 * Links to a page's old path, and to a part of it or with a query after it (`/about#careers`, `/search?q=`): those keep what
+	 * follows the path on the page's address. Only the path alone used to be matched, and a link to a part of a page kept the
+	 * design's path, which no page of the site has.
+	 *
 	 * @param array<string, string> $map
 	 */
 	private function rewrite_markup( string $markup, array $map ): string {
@@ -162,6 +166,15 @@ final class Internal_Links {
 			if ( $esc_path !== $path ) {
 				$markup = str_replace( '"url":"' . $esc_path . '"', '"url":"' . $esc_perm . '"', $markup );
 				$markup = str_replace( 'href=\"' . $esc_path . '\"', 'href=\"' . $esc_perm . '\"', $markup );
+			}
+			foreach ( array( '#', '?' ) as $tail ) {
+				$markup = str_replace( 'href="' . $path . $tail, 'href="' . $permalink . $tail, $markup );
+				$markup = str_replace( "href='" . $path . $tail, "href='" . $permalink . $tail, $markup );
+				$markup = str_replace( '"url":"' . $path . $tail, '"url":"' . $permalink . $tail, $markup );
+				if ( $esc_path !== $path ) {
+					$markup = str_replace( '"url":"' . $esc_path . $tail, '"url":"' . $esc_perm . $tail, $markup );
+					$markup = str_replace( 'href=\"' . $esc_path . $tail, 'href=\"' . $esc_perm . $tail, $markup );
+				}
 			}
 		}
 

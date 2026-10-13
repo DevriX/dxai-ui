@@ -31,7 +31,11 @@ use DXAI_UI\Support\Upload_Paths;
  * What is bound (propose()), per the choices made for DevriX sites:
  *  - by role: the design's brand, accent and ink to the theme colour with that
  *    role — close ones (auto), and bigger changes too (review: applied, and
- *    shown for review in the Library);
+ *    shown for review in the Library). The brand takes a shade of the theme's
+ *    primary instead when the shade is practically the brand's own colour
+ *    (within the auto distance): a navy brand follows american-restoration's
+ *    Primary Dark, not its bright Primary, while a red or a yellow brand still
+ *    follows the Primary;
  *  - neutrals and every other colour only when the theme has practically the
  *    same one (a white, a light grey);
  *  - tints, shades and translucent versions of a bound colour follow it,
@@ -64,6 +68,9 @@ final class Theme_Binding {
 
 	/** Distance (OKLab × 100) under which two colours count as the same one. */
 	private const SAME = 2.0;
+
+	/** Distance (OKLab × 100) under which a role's colour follows the theme's without review. */
+	private const AUTO = 6.0;
 
 	/** @var array<string, string> memo: key => css */
 	private static array $css = array();
@@ -193,12 +200,24 @@ final class Theme_Binding {
 					$best = array( $tslug, $d );
 				}
 			}
+			// A shade of the theme's primary that is practically the brand itself (a navy brand, the theme's Primary Dark).
+			if ( $role === 'brand' ) {
+				foreach ( $theme as $tslug => $t ) {
+					if ( $t['family'] !== 'brand' || in_array( $t['role'], $accept, true ) || isset( $taken[ $tslug ] ) ) {
+						continue;
+					}
+					$d = Color_Math::distance( $design[ $slug ]['value'], $t['hex'] );
+					if ( $d <= self::AUTO && ( $best === null || $d < $best[1] ) ) {
+						$best = array( $tslug, $d );
+					}
+				}
+			}
 			if ( $best === null ) {
 				continue;
 			}
 			$tokens[ $slug ]    = array(
 				'to'   => $best[0],
-				'tier' => $best[1] <= 6.0 ? 'auto' : 'review',
+				'tier' => $best[1] <= self::AUTO ? 'auto' : 'review',
 				'role' => $role,
 				'de'   => round( $best[1], 1 ),
 			);
@@ -609,10 +628,12 @@ final class Theme_Binding {
 	}
 
 	/**
-	 * The theme's colours with a role each: brand, accent, ink (dark text and dark bands), surface, border.
+	 * The theme's colours with a role each: brand, accent, ink (dark text and dark bands), surface, border. A colour
+	 * named after the brand (primary, brand, main) is of the brand's family whatever its role: american-restoration's
+	 * Primary Dark is an ink by its value and a shade of the brand by its name.
 	 *
 	 * @param array<string, mixed> $palette
-	 * @return array<string, array{hex:string, role:string, origin:string, lch:array{0:float,1:float,2:float}}>
+	 * @return array<string, array{hex:string, role:string, family:string, origin:string, lch:array{0:float,1:float,2:float}}>
 	 */
 	private static function theme_candidates( array $palette ): array {
 		$out = array();
@@ -621,9 +642,11 @@ final class Theme_Binding {
 				continue;
 			}
 			$lch         = Color_Math::oklch( Color_Math::parse( $entry['hex'] ) );
+			$name        = $slug . ' ' . strtolower( $entry['name'] );
 			$out[ $slug ] = array(
 				'hex'    => $entry['hex'],
-				'role'   => self::theme_role( $slug . ' ' . strtolower( $entry['name'] ), $lch ),
+				'role'   => self::theme_role( $name, $lch ),
+				'family' => $lch[1] >= 0.03 && preg_match( '/\b(primary|brand|main)\b/', $name ) === 1 ? 'brand' : '',
 				'origin' => 'theme',
 				'lch'    => $lch,
 			);
@@ -633,6 +656,7 @@ final class Theme_Binding {
 			$out[ $slug ] = array(
 				'hex'    => $hex,
 				'role'   => $slug === 'white' ? 'surface' : 'ink',
+				'family' => '',
 				'origin' => 'anchor',
 				'lch'    => $lch,
 			);
