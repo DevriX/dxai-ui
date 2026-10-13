@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.32
+Stable tag: 0.4.0-beta.34
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.34 =
+* Updates come from the plugin's GitHub releases: Dashboard › Updates offers a new DX the way it offers a plugin from wordpress.org, and "View details" shows the release's notes. The plugin's header names its repository (`Update URI: https://github.com/DevriX/dxai-ui`), so WordPress never takes another plugin of the same folder name on wordpress.org for it. A release counts when it is published, its tag is a version and it carries the plugin's ZIP; a beta is offered to a site that runs a beta (`dxai_ui_update_channel` says otherwise, `dxai_ui_update_repository` changes the repository or turns the updates off). The releases are read at most once in six hours (once an hour after a failure). A copy that is a development checkout (a link to the source, or a folder with git, node_modules or the suites in it) is offered nothing: WordPress replaces a plugin by deleting its folder, and through a link that is the repository. `verify-updater.php` has 26 checks (8 mutations), one of them WordPress's own update check with GitHub and wordpress.org answered in place.
+* Fixed on themes other than American Restoration, found on a clean site with Twenty Twenty-Five: the team's layouts asked for American Restoration's own blocks (its label, its link box, its picture) by name, and now ask the theme what it has for the role (on American Restoration the 65 layouts are built byte for byte the same); the generic library's colours were swapped one after another (a primary could end up as a third colour through the template's accent), and the colour classes in a block's own class names were left as they were — now one pass over whole names, the class names included.
+* Fixed: an AI engine plugged in through a filter had to answer `complete()`, which the copywriter, the critic and the planner call, but the engine's interface did not ask for it; it does now. The form entries' CSV export passes the escape character PHP 8.4 asks for (the same CSV), and a section tree's error messages are escaped.
+* Try it in WordPress Playground: `blueprint.json` installs the plugin from its newest release, active and logged in, on DX › Designs.
+* For developers: every push and pull request goes through GitHub Actions — every PHP file and script parses, `docs/HOOKS.md` (every filter and action, written from the code: 49 filters, 1 action) is what the code fires, a PHPCS gate (security, prepared SQL, translations, PHP 8.2 and later), PHPStan at level 5 against its baseline, the admin builds, and the 43 suites of the `ci` group on a clean WordPress (wp-env) with `--strict`. `node bin/run-suites.cjs` runs the suites from `bin/suites.json` anywhere: each exits 0 (pass), 1 (fail) or 77 (skipped, with the reason), and anything else, or a pass that measured nothing, is an error — suites that said PASS without measuring, or exited 0 on a failure, now say what happened. `composer check` runs the static checks locally. A tag `v<version>` builds the ZIP with `bin/release.cjs` and attaches it, with its SHA-256, to the GitHub release. `bin/eval-ai.php` judges the planner's and the copywriter's answers by rules (no phone, email or link the site does not show, lengths, no placeholder): recorded answers in CI (19 cases, 5 mutations), live with a key.
 
 = 0.4.0-beta.33 =
 * The pages made in the team's style are made on any theme now, not only on American Restoration. The team's sections belong to a template (a theme and the sections written for it; the plugin carries American Restoration's, for that theme and the DX themes made from it), and a site whose theme has none gets the generic library: the same sections in core blocks, in the colours the theme's palette has for the same roles, with its font sizes and button styles where it has them. The panel says which is in use. Checked on Twenty Twenty-Five in the suites, with the theme switched and switched back.
