@@ -69,12 +69,26 @@ jobs:
         with:
           node-version: '22'
 
+      # Some suites call the site over HTTP from the CLI container, where localhost:8888 (the runner's port) is no site: there the
+      # site is the WordPress container, so its address is that container's name. Only CI's development site is told so.
+      - name: The site's address, as the CLI container reaches it
+        run: |
+          cat > .wp-env.override.json <<'JSON'
+          { "env": { "development": { "config": { "WP_HOME": "http://wordpress", "WP_SITEURL": "http://wordpress" } } } }
+          JSON
+          cat .wp-env.override.json
+
       - name: Start WordPress
         run: $WP_ENV start
 
       # The suites write the fixture archives into .verify/ of the plugin, which the CLI container sees mounted.
       - name: A folder the container may write
         run: mkdir -p .verify && chmod 0777 .verify
+
+      # DX Base installed by the plugin itself, a folder of the site's own as a person's install makes it (a mount of
+      # themes/dx-base would be the plugin's own files: the suite that installs it would copy them onto themselves).
+      - name: DX Base, installed by the plugin
+        run: $WP_ENV run cli --env-cwd=wp-content/plugins/dxai-ui wp dxai-ui base-theme install
 
       - name: The ci group, strict
         run: node bin/run-suites.cjs --wp "$WP_ENV run cli --env-cwd=wp-content/plugins/dxai-ui wp" --group ci --strict --json suites.json

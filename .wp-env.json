@@ -3,7 +3,6 @@
 	"core": null,
 	"phpVersion": "8.2",
 	"plugins": [ "." ],
-	"themes": [ "./themes/dx-base" ],
 	"config": {
 		"WP_DEBUG": false
 	}
