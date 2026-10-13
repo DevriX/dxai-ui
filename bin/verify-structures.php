@@ -247,4 +247,22 @@ echo 'preview_status=' . $previewed->get_status() . PHP_EOL;
 echo 'preview_has_html=' . ( ! empty( $preview_data['html'] ) ? 'yes' : 'no' ) . PHP_EOL;
 echo 'preview_has_css=' . ( ! empty( $preview_data['css'] ) ? 'yes' : 'no' ) . PHP_EOL;
 
+// What the save, the form, the library, the page-scoped save and the preview gave: each must be what a working site gives.
+$fail   = 0;
+$pass   = 0;
+$expect = static function ( string $what, bool $ok ) use ( &$fail, &$pass ): void {
+	$ok ? ++$pass : ++$fail;
+	echo ( $ok ? '  ok    ' : '  FAIL  ' ) . $what . "\n";
+};
+$expect( 'a site save answers 200 and makes the page, its header and footer parts, its navigation and its conversion record', 200 === $saved->get_status() && $page_id > 0 && (int) ( $created['header_id'] ?? 0 ) > 0 && (int) ( $created['footer_id'] ?? 0 ) > 0 && count( $created['navigation_ids'] ?? array() ) > 0 && (int) ( $created['conversion_id'] ?? 0 ) > 0 );
+$expect( 'the page holds the query loop, the form and the slider, on the plugin\'s template with its stylesheet', ( str_contains( $content, 'wp:query' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dxai-ui/form' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dxai-ui/slider' ) || str_contains( $content, 'wp:block' ) ) && '' !== (string) get_post_meta( $page_id, '_wp_page_template', true ) && (bool) get_post_meta( $page_id, '_dxai_ui_css_url', true ) );
+$expect( 'the form and slider blocks are registered', $registry->is_registered( 'dxai-ui/form' ) && $registry->is_registered( 'dxai-ui/slider' ) );
+$expect( 'a form entry is accepted', 200 === $submitted->get_status() && ! empty( $submitted->get_data()['ok'] ) );
+$expect( 'the library lists the page, its parts, its navigation and its conversion', count( $lib['pages'] ?? array() ) > 0 && count( $lib['template_parts'] ?? array() ) > 0 && count( $lib['navigations'] ?? array() ) > 0 && count( $lib['conversions'] ?? array() ) > 0 );
+$expect( 'a blog list becomes a query loop, a slider and a form become their blocks', $blog_ok && $slider_ok && $form_ok );
+$expect( 'a page-scoped save makes its own page, header and footer', 200 === $page_res->get_status() && (int) ( $page_created['header_id'] ?? 0 ) > 0 && (int) ( $page_created['footer_id'] ?? 0 ) > 0 && (int) ( $page_created['page_id'] ?? 0 ) > 0 );
+$expect( 'the preview answers with HTML and CSS', 200 === $previewed->get_status() && ! empty( $preview_data['html'] ) && ! empty( $preview_data['css'] ) );
+
 dxai_verify_cleanup( $dxai_snapshot );
+echo "\n$pass passed, $fail failed\n";
+exit( $fail > 0 ? 1 : 0 );

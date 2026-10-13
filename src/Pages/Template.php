@@ -20,7 +20,7 @@ use DXAI_UI\Theme\Capabilities;
 final class Template {
 
 	/** The built-in template's slug: the theme it is for. */
-	public const BUILT_IN = 'american-restoration';
+	public const BUILT_IN = \DXAI_UI\Theme\Adapters\Amr_Adapter::SLUGS[0];
 
 	/** The generic library's slug. */
 	public const GENERIC = 'generic';

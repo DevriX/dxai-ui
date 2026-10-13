@@ -1,6 +1,7 @@
 # Dependencies and build output (the release builds assets/build: npm run release -- <version>)
 node_modules/
 vendor/
+.phpstan-cache/
 assets/build/
 
 # Release ZIPs (attach them to a GitHub release instead)

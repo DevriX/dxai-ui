@@ -122,6 +122,10 @@ final class Plugin {
 		}
 		// The must-use loader that does the above while the plugin is deactivated.
 		( new \DXAI_UI\Support\Runtime() )->register();
+		// New versions in Dashboard › Updates, from the plugin's GitHub releases (the header's Update URI).
+		if ( ! $render_only ) {
+			( new \DXAI_UI\Update\Github_Updater() )->register();
+		}
 		add_filter( 'pre_get_document_title', array( $this, 'document_title' ), 20 );
 	}
 
@@ -188,6 +192,7 @@ final class Plugin {
 		 * 'rewrite' => false (Content_Types::post_types()).
 		 */
 		if ( $network_wide && is_multisite() ) {
+			// `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 			$sites = get_sites(
 				array(
 					'fields'     => 'ids',
@@ -299,6 +304,7 @@ final class Plugin {
 	 */
 	public static function deactivate( bool $network_wide = false ): void {
 		if ( $network_wide && is_multisite() ) {
+			// `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 			$sites = get_sites(
 				array(
 					'fields'     => 'ids',

@@ -346,7 +346,9 @@ $expect( 'a template with text in it is left alone', str_contains( $convert( '<!
 
 echo "\nTwo passes, and a stable round trip\n";
 foreach ( array( 'card' => $card, 'span' => $span, 'box' => $box, 'filled' => $filled, 'filled+ghost' => $filled . "\n\n" . $ghost, 'row' => $row ) as $label => $markup ) {
-	$once  = $convert( $markup )['content'];
+	// As WordPress stores it ("--" in an attribute is written --): a block no converter takes is left as it came, and on a
+	// theme with no style for it (the ghost button on Twenty Twenty-Five) a hand-written fixture would not survive the round trip.
+	$once  = $convert( serialize_blocks( parse_blocks( $markup ) ) )['content'];
 	$twice = $convert( $once );
 	$expect( "$label: a second pass changes nothing", $twice['counts'] === array() && $twice['content'] === $once );
 	$expect( "$label: parse and serialize give the same bytes", serialize_blocks( parse_blocks( $once ) ) === $once );

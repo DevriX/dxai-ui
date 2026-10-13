@@ -1,0 +1,59 @@
+{
+	"about": "Cases for bin/eval-ai.php. The Home (home.html) lists its sections to the planner as 1 hero, 2 the services (cards), 3 the places, 4 the reviews, 5 the questions, 6 the call to action. A copy reply names a block of the page by its words now. Recorded replies: 'accept' must be taken; 'reject' must be refused, by the planner with a reason that holds 'reason', by the copy rules with 'rule' among the broken ones.",
+	"home": "home.html",
+	"planner": [
+		{
+			"id": "service page",
+			"item": { "type": "service", "title": "Water Damage", "slug": "water-damage" },
+			"usual": [ "hero", "cards", "reviews", "faq", "cta" ],
+			"made": { "related": true, "contact": true },
+			"replies": [
+				{ "verdict": "accept", "why": "a plan by the rules", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"reviews\",\"home\":4},{\"role\":\"related\",\"made\":\"related\"},{\"role\":\"faq\",\"home\":5},{\"role\":\"cta\",\"home\":6}],\"why\":\"Proof first, then the other services, the questions and a call.\"}" },
+				{ "verdict": "accept", "why": "the same plan in prose and a code fence", "reply": "Here is the plan:\n```json\n{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"reviews\",\"home\":4},{\"role\":\"related\",\"made\":\"related\"},{\"role\":\"faq\",\"home\":5},{\"role\":\"cta\",\"home\":6}],\"why\":\"Proof, services, questions, a call.\"}\n```" },
+				{ "verdict": "reject", "reason": "the first section is not the hero", "why": "a plan that does not start with the hero", "reply": "{\"sections\":[{\"role\":\"reviews\",\"home\":4},{\"role\":\"hero\",\"home\":1},{\"role\":\"faq\",\"home\":5},{\"role\":\"cta\",\"home\":6}]}" },
+				{ "verdict": "reject", "reason": "the Home has no section 9", "why": "a section the Home does not have", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"reviews\",\"home\":9},{\"role\":\"cta\",\"home\":6}]}" },
+				{ "verdict": "reject", "reason": "twice in a row", "why": "the call to action twice in a row", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"reviews\",\"home\":4},{\"role\":\"cta\",\"home\":6},{\"role\":\"cta\",\"home\":6}]}" },
+				{ "verdict": "reject", "reason": "is after the faq", "why": "the list of the site's pages after the questions", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"faq\",\"home\":5},{\"role\":\"related\",\"made\":\"related\"},{\"role\":\"cta\",\"home\":6}]}" },
+				{ "verdict": "reject", "reason": "sections (3 to 10 are allowed)", "why": "a page of two sections", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"cta\",\"home\":6}]}" },
+				{ "verdict": "reject", "reason": "not JSON", "why": "an answer in words", "reply": "I would start with the hero, then the reviews and the questions." }
+			]
+		},
+		{
+			"id": "FAQ page",
+			"item": { "type": "faq", "title": "FAQ", "slug": "faq" },
+			"usual": [ "hero", "faq", "cta" ],
+			"made": { "related": false, "contact": true },
+			"replies": [
+				{ "verdict": "accept", "why": "the questions on the questions page", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"faq\",\"home\":5},{\"role\":\"cta\",\"home\":6}],\"why\":\"The questions, then a call.\"}" },
+				{ "verdict": "reject", "reason": "a faq page without its faq section", "why": "a questions page without the questions", "reply": "{\"sections\":[{\"role\":\"hero\",\"home\":1},{\"role\":\"reviews\",\"home\":4},{\"role\":\"cta\",\"home\":6}]}" }
+			]
+		}
+	],
+	"copy": [
+		{
+			"id": "water damage page",
+			"page": "page-water-damage.html",
+			"title": "Water Damage",
+			"topic": "Water Damage in Tyler, TX",
+			"replies": [
+				{ "verdict": "accept", "why": "rewritten to the topic, the facts kept", "blocks": {
+					"Restoration in Tyler": "Water Damage Restoration in Tyler",
+					"Family run since 1983. One team from the first call to the finished repair.": "Water in your home or business? Family run since 1983, we extract it, dry the structure and repair the damage — one team from the first call to the finished repair.",
+					"Restoration Services We Provide": "How We Handle Water Damage",
+					"What we do.": "Extraction, drying and repair after a leak or a flood.",
+					"Frequently asked questions": "Water damage questions",
+					"How fast can you come?": "How fast can you come for a flooded basement?",
+					"Within the hour.": "Within the hour, day or night."
+				} },
+				{ "verdict": "accept", "why": "the site's own phone and e-mail repeated", "blocks": { "Within the hour.": "Within the hour — call (555) 010-0101 or write to help@fixture-restoration.test." } },
+				{ "verdict": "reject", "rule": "contact", "why": "a phone number the site does not have", "blocks": { "Call (555) 010-0101": "Call (555) 999-1234" } },
+				{ "verdict": "reject", "rule": "contact", "why": "an e-mail address the site does not have", "blocks": { "Within the hour.": "Within the hour. Write to office@water-pros.test." } },
+				{ "verdict": "reject", "rule": "contact", "why": "a link the site does not have", "blocks": { "What we do.": "See https://example.com/water for what we do." } },
+				{ "verdict": "reject", "rule": "length", "why": "a heading grown into a sentence", "blocks": { "Restoration in Tyler": "Water Damage Restoration in Tyler, Texas, for Homes, Offices, Basements, Kitchens and Everything Else Water Can Reach" } },
+				{ "verdict": "reject", "rule": "placeholder", "why": "a placeholder left in", "blocks": { "What we do.": "[Insert your service description here]" } },
+				{ "verdict": "reject", "rule": "placeholder", "why": "filler text", "blocks": { "How fast can you come?": "Lorem ipsum dolor sit amet?" } },
+				{ "verdict": "reject", "rule": "answer", "why": "an answer that is not JSON", "raw": "Sure! Here is a better version of your page copy." }
+			]
+		}
+	]
+}

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Pages;
 
+use DXAI_UI\Theme\Capabilities;
+
 /**
  * A layout is a section of a team page with every word taken out and a slot left in its place: a heading, a paragraph, a list item,
  * a label and a button each become a token the page maker fills ({{t:h2-m}}: a heading of middle length; {{row:title}} in a repeated
@@ -158,7 +160,7 @@ final class Layout_Builder {
 			'content' => 'items',
 		);
 		$banned_blocks = array( 'core/shortcode', 'core/html', 'core/freeform', 'core/embed', 'core/code', 'core/video', 'core/audio', 'core/file', 'core/table', 'core/query', 'core/post-content', 'core/template-part', 'core/navigation', 'core/social-links' );
-		$leaf_text     = array( 'core/heading', 'core/paragraph', 'core/list-item', 'amr/span', 'core/button', 'dxai-ui/text', 'core/details' );
+		$leaf_text     = array_merge( array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dxai-ui/text', 'core/details' ), \DXAI_UI\Theme\Capabilities::blocks( 'span' ) );
 
 		// --- 1. The sections, by role and structure. -----------------------------------------------------------------------------------
 
@@ -488,13 +490,13 @@ final class Layout_Builder {
 			// What an item holds: its words and its pictures, and whether it reads as a figure (a number and a word under it).
 			$tally = static function ( array $x ) use ( &$tally ): array {
 				$n = array( 'texts' => 0, 'pics' => 0, 'words' => 0, 'figure' => false );
-				if ( in_array( (string) $x['blockName'], array( 'core/heading', 'core/paragraph', 'core/list-item', 'amr/span', 'core/button', 'core/details' ), true ) ) {
+				if ( in_array( (string) $x['blockName'], array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'core/details' ), true ) || Capabilities::is_block( (string) $x['blockName'], 'span' ) ) {
 					++$n['texts'];
 					$t           = trim( wp_strip_all_tags( (string) $x['innerHTML'] ) );
 					$n['words'] += str_word_count( $t );
 					$n['figure'] = $n['figure'] || preg_match( '/^[\$]?\d[\d,.]*\s*(\+|%|k|\/7|hr|min)?$/i', $t ) === 1;
 				}
-				if ( in_array( (string) $x['blockName'], array( 'core/image', 'dx/picture' ), true ) ) {
+				if ( (string) $x['blockName'] === 'core/image' || Capabilities::is_block( (string) $x['blockName'], 'picture' ) ) {
 					++$n['pics'];
 				}
 				foreach ( (array) $x['innerBlocks'] as $y ) {
@@ -522,7 +524,7 @@ final class Layout_Builder {
 			$groups_of = static function ( array $b ) use ( $loose ): array {
 				$groups = array();
 				foreach ( $b['innerBlocks'] as $i => $c ) {
-					if ( ! empty( $c['blockName'] ) && in_array( (string) $c['blockName'], array( 'core/group', 'core/column', 'core/list-item', 'amr/link-box', 'core/details' ), true ) ) {
+					if ( ! empty( $c['blockName'] ) && ( in_array( (string) $c['blockName'], array( 'core/group', 'core/column', 'core/list-item', 'core/details' ), true ) || Capabilities::is_block( (string) $c['blockName'], 'link_box' ) ) ) {
 						$groups[ $loose( $c ) ][] = $i;
 					}
 				}
@@ -534,7 +536,7 @@ final class Layout_Builder {
 			/** The text blocks of a box, counted by kind: how its words are laid out, whatever boxes they sit in. */
 			$leaf_kinds = static function ( array $x ) use ( &$leaf_kinds ): array {
 				$out = array();
-				if ( in_array( (string) ( $x['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'core/list-item', 'amr/span', 'core/button', 'dxai-ui/text', 'core/details' ), true ) ) {
+				if ( in_array( (string) ( $x['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dxai-ui/text', 'core/details' ), true ) || Capabilities::is_block( (string) ( $x['blockName'] ?? '' ), 'span' ) ) {
 					$out[ (string) $x['blockName'] ] = 1;
 				}
 				foreach ( (array) ( $x['innerBlocks'] ?? array() ) as $c ) {
@@ -599,7 +601,7 @@ final class Layout_Builder {
 					$item_words = $leaf_kinds( $b['innerBlocks'][ $idx[0] ] );
 					$also       = array();
 					foreach ( $b['innerBlocks'] as $j => $sib ) {
-						if ( ! in_array( $j, $idx, true ) && ! empty( $sib['blockName'] ) && in_array( (string) $sib['blockName'], array( 'core/group', 'core/column', 'amr/link-box' ), true ) && $item_words !== array() && $leaf_kinds( $sib ) === $item_words ) {
+						if ( ! in_array( $j, $idx, true ) && ! empty( $sib['blockName'] ) && ( in_array( (string) $sib['blockName'], array( 'core/group', 'core/column' ), true ) || Capabilities::is_block( (string) $sib['blockName'], 'link_box' ) ) &&$item_words !== array() && $leaf_kinds( $sib ) === $item_words ) {
 							$also[] = $j;
 						}
 					}
@@ -772,7 +774,7 @@ final class Layout_Builder {
 						$row_plan[ $p ] = '{{row:point' . ++$points . '|}}';
 						continue;
 					}
-					if ( $before && ! $eyebrow && ( $l['name'] === 'amr/span' || $l['words'] <= 3 || preg_match( $numeric, $l['text'] ) === 1 ) ) {
+					if ( $before && ! $eyebrow && ( Capabilities::is_block( (string) $l['name'], 'span' ) || $l['words'] <= 3 || preg_match( $numeric, $l['text'] ) === 1 ) ) {
 						$row_plan[ $p ] = '{{row:eyebrow|}}';
 						$eyebrow        = true;
 						continue;
@@ -790,7 +792,7 @@ final class Layout_Builder {
 				$kids = $b['innerBlocks'];
 				foreach ( $kids as $i => $c ) {
 					$next = $kids[ $i + 1 ] ?? null;
-					$n    = in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/paragraph', 'amr/span', 'dxai-ui/text' ), true ) ? $words( (string) $c['innerHTML'] ) : 0;
+					$n    = ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/paragraph', 'dxai-ui/text' ), true ) || Capabilities::is_block( (string) ( $c['blockName'] ?? '' ), 'span' ) ) ?$words( (string) $c['innerHTML'] ) : 0;
 					if ( $n >= 1 && $n <= 4 && is_array( $next ) && (string) ( $next['blockName'] ?? '' ) === 'core/heading' ) {
 						$b['innerBlocks'][ $i ]['attrs']['dxaiEyebrow'] = true;
 					}
@@ -1064,7 +1066,7 @@ final class Layout_Builder {
 					$in_row             = $in_list !== '';
 					// The root of a repeated item that is a box (a background, a border, a shadow, rounded corners) is a card: the Home's card
 					// look goes on it (Library_Style).
-					if ( $in_row && $path === $item && in_array( $name, array( 'core/group', 'core/column', 'amr/link-box' ), true ) ) {
+					if ( $in_row && $path === $item && ( in_array( $name, array( 'core/group', 'core/column' ), true ) || Capabilities::is_block( $name, 'link_box' ) ) ) {
 						$st = (array) ( $b['attrs']['style'] ?? array() );
 						if ( isset( $b['attrs']['backgroundColor'] ) || isset( $st['color']['background'] ) || isset( $st['border'] ) || isset( $st['shadow'] ) || preg_match( '/(^|\s)(bg-|shadow|rounded|border)/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1 ) {
 							$add_own_class( $b, 'dxai-lib-card' );
@@ -1088,11 +1090,10 @@ final class Layout_Builder {
 					// Words.
 					if ( in_array( $name, $leaf_text, true ) ) {
 						$n    = $words( (string) $b['innerHTML'] );
-						$kind = match ( $name ) {
+						$kind = Capabilities::is_block( $name, 'span' ) ? 'label' : match ( $name ) {
 							'core/heading'   => 'h' . (int) ( $a['level'] ?? 2 ),
 							'core/paragraph' => 'p',
 							'core/list-item' => 'li',
-							'amr/span'       => 'label',
 							'dxai-ui/text'   => 'p',
 							'core/details'   => 'h3',
 							default          => 'button',
@@ -1144,7 +1145,7 @@ final class Layout_Builder {
 						$notes[] = 'nested list at ' . $path;
 					}
 					// A box that is a link: to the row's page in a list, else to the page the maker names.
-					if ( $name === 'amr/link-box' && isset( $a['url'] ) ) {
+					if ( Capabilities::is_block( $name, 'link_box' ) && isset( $a['url'] ) ) {
 						$to = $in_row ? '{{row:url}}' : ( preg_match( '/^tel:/i', (string) $a['url'] ) ? '{{phone_url}}' : '{{contact_url}}' );
 						if ( $to === '{{phone_url}}' ) {
 							$needs[] = 'phone';
@@ -1233,12 +1234,13 @@ final class Layout_Builder {
 							++$slots['image'];
 						}
 					}
-					if ( $name === 'dx/picture' ) {
+					$pic = Capabilities::picture_shape( $name );
+					if ( $pic !== array() ) {
 						if ( $in_list === 'logos' ) {
-							$b['attrs']['imageUrl'] = '{{row:image_url}}';
-							$b['attrs']['imageId']  = '{{row:image_id|0}}';
-							$b['attrs']['alt']      = '{{row:image_alt|}}';
-							foreach ( array( 'mobileImageId', 'mobileImageUrl', 'mobileImageWidth', 'mobileImageHeight', 'priority' ) as $k ) {
+							$b['attrs'][ $pic['url'] ] = '{{row:image_url}}';
+							$b['attrs'][ $pic['id'] ]  = '{{row:image_id|0}}';
+							$b['attrs']['alt']         = '{{row:image_alt|}}';
+							foreach ( array_merge( $pic['mobile'], array( 'priority' ) ) as $k ) {
 								unset( $b['attrs'][ $k ] );
 							}
 						} elseif ( $in_row || $in_grid || $decor( $a ) ) {
@@ -1292,7 +1294,7 @@ final class Layout_Builder {
 			$walk(
 				$root,
 				static function ( array &$b ): void {
-					if ( (string) $b['blockName'] === 'core/column' && count( $b['innerBlocks'] ) === 1 && isset( $b['innerBlocks'][0]['attrs']['dxaiIf'] ) && in_array( (string) $b['innerBlocks'][0]['blockName'], array( 'core/image', 'dx/picture' ), true ) ) {
+					if ( (string) $b['blockName'] === 'core/column' && count( $b['innerBlocks'] ) === 1 && isset( $b['innerBlocks'][0]['attrs']['dxaiIf'] ) && ( 'core/image' === (string) $b['innerBlocks'][0]['blockName'] || Capabilities::is_block( (string) $b['innerBlocks'][0]['blockName'], 'picture' ) ) ) {
 						$b['attrs']['dxaiIf'] = $b['innerBlocks'][0]['attrs']['dxaiIf'];
 						unset( $b['innerBlocks'][0]['attrs']['dxaiIf'] );
 					}

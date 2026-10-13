@@ -13,6 +13,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 require DXAI_UI_DIR . 'bin/verify-cleanup.php';
 $dxai_snapshot = dxai_verify_snapshot();
 
+/**
+ * Every "name=ok" / "name=fail" line this check prints is one check: count them, clean up, and exit by the pack's protocol.
+ *
+ * @param array<int, int> $snapshot The posts that were there before (bin/verify-cleanup.php).
+ */
+function dxai_lovable_finish( array $snapshot ): void {
+	$out = (string) ob_get_clean();
+	echo $out;
+	dxai_verify_cleanup( $snapshot );
+	$pass = preg_match_all( '/^[a-z_]+=ok\b/m', $out );
+	$fail = preg_match_all( '/^[a-z_]+=fail\b/m', $out );
+	echo "\n$pass passed, $fail failed\n";
+	exit( $fail > 0 ? 1 : 0 );
+}
+ob_start();
+
 /*
  * Where the design ZIPs live is a fact about the checkout. `DXAI_DESIGN_ZIPS`
  * names a directory to look in; `_inbox/` is the in-repo convention. Two
@@ -76,8 +92,9 @@ $excerpt = DXAI_UI\Compiler\Design_Css::excerpt( $css );
 echo 'design_css=' . ( str_contains( $excerpt, '.rv-header' ) && str_contains( $excerpt, '--rv-green' ) ? 'ok' : 'fail' ) . PHP_EOL;
 
 if ( $zip_path === '' ) {
-	echo "zip=skip (GTM Strategy Hub.zip not found)\n";
-	return;
+	// The archive half did not run: said here, and not counted as passed.
+	echo "zip=not here (GTM Strategy Hub.zip is not on this machine: its four checks did not run)\n";
+	dxai_lovable_finish( $dxai_snapshot );
 }
 
 $file = array(
@@ -86,8 +103,8 @@ $file = array(
 );
 $doc = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip( $file );
 if ( is_wp_error( $doc ) ) {
-	echo 'zip_error=' . $doc->get_error_message() . PHP_EOL;
-	return;
+	echo 'zip_read=fail (' . $doc->get_error_message() . ')' . PHP_EOL;
+	dxai_lovable_finish( $dxai_snapshot );
 }
 
 $files = array_keys( $doc->payload['components'] ?? array() );
@@ -100,4 +117,4 @@ echo 'zip_skips_ui=' . ( str_contains( $joined, 'components/ui' ) ? 'fail' : 'ok
 echo 'zip_design_css=' . ( str_contains( (string) ( $doc->payload['design_css'] ?? '' ), '.rv-header' ) ? 'ok' : 'fail' ) . PHP_EOL;
 echo 'zip_tokens=' . ( ! empty( $doc->payload['harvest']['tokens']['variables'] ) ? 'ok' : 'fail' ) . PHP_EOL;
 
-dxai_verify_cleanup( $dxai_snapshot );
+dxai_lovable_finish( $dxai_snapshot );

@@ -815,21 +815,44 @@ final class Block_Library {
 		}
 		// The colours: the template's slugs as this theme's; one the palette has no role for goes.
 		$map  = Template::slug_map();
-		$swap = static function ( string $s ) use ( $map ): string {
-			$keys = Template::built_in_slugs();
-			usort( $keys, static fn( string $a, string $b ): int => strlen( $b ) <=> strlen( $a ) );
-			foreach ( $keys as $old ) {
-				$new = $map[ $old ] ?? '';
-				if ( $new === $old ) {
-					continue;
-				}
-				$s = (string) preg_replace( '/\bhas-' . preg_quote( $old, '/' ) . '-(background-color|border-color|color)\b\s?/', $new === '' ? '' : 'has-' . $new . '-$1 ', $s );
-				$s = str_replace( 'var(--wp--preset--color--' . $old . ')', $new === '' ? 'inherit' : 'var(--wp--preset--color--' . $new . ')', $s );
-				$s = str_replace( 'var:preset|color|' . $old, $new === '' ? '' : 'var:preset|color|' . $new, $s );
-			}
+		// One pass, each slug read whole: a slug replaced is never read again (on Twenty Twenty-Five `primary` becomes `accent-3`,
+		// which one replacement after another turned into `accent-1-3` through the template's `accent`).
+		$slugs = Template::built_in_slugs();
+		$swap  = static function ( string $s ) use ( $map, $slugs ): string {
+			$to = static fn( string $old ): ?string => in_array( $old, $slugs, true ) && ( $map[ $old ] ?? '' ) !== $old ? (string) ( $map[ $old ] ?? '' ) : null;
+			$s  = (string) preg_replace_callback(
+				'/\bhas-([a-z0-9-]+?)-(background-color|border-color|color)\b\s?/',
+				static function ( array $m ) use ( $to ): string {
+					$new = $to( $m[1] );
+					return $new === null ? $m[0] : ( $new === '' ? '' : 'has-' . $new . '-' . $m[2] . ' ' );
+				},
+				$s
+			);
+			$s  = (string) preg_replace_callback(
+				'/var\(--wp--preset--color--([a-z0-9-]+)\)/',
+				static function ( array $m ) use ( $to ): string {
+					$new = $to( $m[1] );
+					return $new === null ? $m[0] : ( $new === '' ? 'inherit' : 'var(--wp--preset--color--' . $new . ')' );
+				},
+				$s
+			);
 
-			return $s;
+			return (string) preg_replace_callback(
+				'/var:preset\|color\|([a-z0-9-]+)/',
+				static function ( array $m ) use ( $to ): string {
+					$new = $to( $m[1] );
+					return $new === null ? $m[0] : ( $new === '' ? '' : 'var:preset|color|' . $new );
+				},
+				$s
+			);
 		};
+		// The class names the block keeps in its comment are the ones its HTML has: the same colours.
+		if ( isset( $block['attrs']['className'] ) ) {
+			$block['attrs']['className'] = trim( (string) preg_replace( '/\s+/', ' ', $swap( (string) $block['attrs']['className'] ) ) );
+			if ( $block['attrs']['className'] === '' ) {
+				unset( $block['attrs']['className'] );
+			}
+		}
 		foreach ( array( 'backgroundColor', 'textColor', 'borderColor' ) as $k ) {
 			$old = (string) ( $block['attrs'][ $k ] ?? '' );
 			if ( $old !== '' && in_array( $old, Template::built_in_slugs(), true ) ) {
@@ -1440,7 +1463,7 @@ final class Block_Library {
 		for ( $i = count( $block['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
 			$child = $block['innerBlocks'][ $i ];
 			$name  = (string) ( $child['blockName'] ?? '' );
-			if ( in_array( $name, array( 'core/paragraph', 'core/heading', 'core/list-item', 'amr/span', 'dxai-ui/text' ), true ) && (array) ( $child['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' && ! str_contains( (string) $child['innerHTML'], '<img' ) ) {
+			if ( ( in_array( $name, array( 'core/paragraph', 'core/heading', 'core/list-item', 'dxai-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) &&(array) ( $child['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' && ! str_contains( (string) $child['innerHTML'], '<img' ) ) {
 				Block_Tree::drop( $block, $i );
 				continue;
 			}
@@ -1586,7 +1609,7 @@ final class Block_Library {
 				}
 				$b    = self::set_colour( $b, 'text', $to );
 				$mine = $to !== '' ? (string) ( $colours[ $to ] ?? '' ) : '';
-			} elseif ( $mine === '' && in_array( $name, array( 'core/heading', 'core/paragraph', 'core/list', 'amr/span', 'core/details', 'core/quote', 'dxai-ui/text' ), true ) ) {
+			} elseif ( $mine === '' && ( in_array( $name, array( 'core/heading', 'core/paragraph', 'core/list', 'core/details', 'core/quote', 'dxai-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) ) {
 				// Words with no colour of their own: on a dark ground unless a box above gave them one that reads, and on a light ground
 				// under a box's colour that does not read here, the theme's colour for this ground.
 				if ( ( $dark && ! $heir_reads ) || ( ! $dark && $inherit !== '' && ! $heir_reads ) ) {

@@ -178,7 +178,7 @@ foreach ( $it as $file ) {
 		$hits[] = $rel . ': ' . $hit;
 	}
 }
-$expect( 'in the ' . $files . ' source files outside the adapters, no theme name and no theme block in code (comments may say where a thing was measured)', $files > 100 && $hits === array(), implode( '; ', array_slice( $hits, 0, 8 ) ) );
+$expect( 'in the ' . $files . ' source files outside the adapters, no theme name and no theme block in code (comments may say where a thing was measured)', $files > 100 && $hits === array(), count( $hits ) . ' places, the first ones: ' . implode( '; ', array_slice( $hits, 0, 8 ) ) );
 $expect( '…and the reader would see one: a planted name in code is found, one in a comment is not', array( 'american-restoration at line 3', 'dx/picture at line 4' ) === $spelled( "<?php\n// american-restoration in a comment\n\$a = 'american-restoration';\n\$b = \"dx/picture\";\n/* amr/span in a block comment */\n" ) );
 $expect( 'the adapters are where the names live: the DX theme\'s folder and its three blocks are spelled there', in_array( 'american-restoration', Amr_Adapter::SLUGS, true ) && array( 'picture', 'link_box', 'span' ) === array_keys( ( new Amr_Adapter() )->blocks() ) );
 

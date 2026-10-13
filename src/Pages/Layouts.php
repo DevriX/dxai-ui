@@ -38,7 +38,7 @@ final class Layouts {
 	private static array $said = array();
 
 	/** The leaf blocks that hold words. */
-	private const TEXT = array( 'core/heading', 'core/paragraph', 'core/list-item', 'amr/span', 'dxai-ui/text', 'dxai-ui/html', 'core/button', 'core/details' );
+	private const TEXT = array( 'core/heading', 'core/paragraph', 'core/list-item', 'dxai-ui/text', 'dxai-ui/html', 'core/button', 'core/details' );
 
 	/** Words that are a mark, not a sentence (a row of stars, a tick). */
 	private const MARKS = '/^[★☆✔✓•·\-\s]+$/u';
@@ -355,7 +355,7 @@ final class Layouts {
 	 * @param array<string, mixed> $block
 	 */
 	public static function hear( array $facts, array $block ): void {
-		if ( in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'amr/span', 'dxai-ui/text' ), true ) ) {
+		if ( in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'span' ) ) {
 			self::said( $facts, Block_Tree::own_text( $block ) );
 		}
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $c ) {
@@ -641,7 +641,7 @@ final class Layouts {
 		$out  = array();
 		$walk = static function ( array $b ) use ( &$walk, &$out ): void {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( in_array( $name, self::TEXT, true ) ) {
+			if ( in_array( $name, self::TEXT, true ) || \DXAI_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
 				$html = '';
 				foreach ( (array) ( $b['innerContent'] ?? array() ) as $part ) {
 					if ( is_string( $part ) ) {
@@ -692,14 +692,15 @@ final class Layouts {
 	private static function picture_of( array $block ): ?array {
 		$name  = (string) ( $block['blockName'] ?? '' );
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		if ( $name === 'dx/picture' ) {
-			$id  = (int) ( $attrs['imageId'] ?? 0 );
-			$url = (string) ( $attrs['imageUrl'] ?? '' );
+		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( $name );
+		if ( $shape !== array() ) {
+			$id  = (int) ( $attrs[ $shape['id'] ] ?? 0 );
+			$url = (string) ( $attrs[ $shape['url'] ] ?? '' );
 			if ( $url === '' && $id > 0 ) {
 				$url = (string) wp_get_attachment_url( $id );
 			}
 
-			return $url === '' ? null : array( 'id' => $id, 'url' => $url, 'alt' => (string) ( $attrs['imageAlt'] ?? $attrs['alt'] ?? '' ) );
+			return $url === '' ? null : array( 'id' => $id, 'url' => $url, 'alt' => (string) ( $attrs[ $shape['alt'] ] ?? $attrs['alt'] ?? '' ) );
 		}
 		if ( $name === 'core/image' ) {
 			$id  = Block_Tree::image_id( $block );
@@ -901,7 +902,7 @@ final class Layouts {
 		$leaves = array();
 		$walk   = static function ( array $b ) use ( &$walk, &$leaves ): void {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( in_array( $name, array( 'core/heading', 'core/paragraph', 'amr/span', 'dxai-ui/text' ), true ) ) {
+			if ( in_array( $name, array( 'core/heading', 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
 				$t = Block_Tree::own_text( $b );
 				if ( $t !== '' ) {
 					$leaves[] = $t;

@@ -1,0 +1,88 @@
+# The checks every push to main and every pull request goes through (docs/PLAN-ARCHITECTURE.md, phase 4).
+#   static: every file parses, the PHPCS gate (security, SQL, translations, PHP 8.2+), PHPStan against its baseline, the admin builds.
+#   suites: the ci group of bin/suites.json on a clean WordPress (wp-env: the plugin, DX Base, Twenty Twenty-Five), --strict:
+#           every suite must run and pass, and a suite file the manifest does not list fails the run.
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Lint, PHPCS, PHPStan, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Composer dev tools
+        run: composer install --no-interaction --no-progress
+
+      - name: Every PHP file and script parses
+        run: node bin/lint.cjs
+
+      - name: docs/HOOKS.md says what the code fires
+        run: node bin/hooks-doc.cjs --check
+
+      - name: PHPCS gate
+        run: vendor/bin/phpcs
+
+      - name: PHPStan (new problems only)
+        run: vendor/bin/phpstan analyse --memory-limit=2G --no-progress
+
+      - name: The admin builds
+        run: |
+          npm ci
+          npm run build
+
+  suites:
+    name: Suites on a clean site (wp-env)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      WP_ENV: npx --yes @wordpress/env@11.16.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Start WordPress
+        run: $WP_ENV start
+
+      # The suites write the fixture archives into .verify/ of the plugin, which the CLI container sees mounted.
+      - name: A folder the container may write
+        run: mkdir -p .verify && chmod 0777 .verify
+
+      - name: The ci group, strict
+        run: node bin/run-suites.cjs --wp "$WP_ENV run cli --env-cwd=wp-content/plugins/dxai-ui wp" --group ci --strict --json suites.json
+
+      - name: The report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suites-report
+          path: suites.json
+          if-no-files-found: ignore

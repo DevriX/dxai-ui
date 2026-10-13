@@ -23,6 +23,10 @@ PHP 8.2+ (with `dom`, `libxml`, `mbstring`, `zip`), WordPress 6.6+, an administr
 2. **Plugins › Add New › Upload Plugin**, choose the ZIP, **Activate**.
 3. Open **DX** in the admin menu.
 
+To try it first, open it in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/DevriX/dxai-ui/main/blueprint.json) (`blueprint.json`: the newest release, logged in, on DX).
+
+Updates come as any plugin's do: **Dashboard › Updates** offers each new release of this repository's GitHub releases (the header's `Update URI`; betas while the site runs a beta — `dxai_ui_update_channel` chooses). A development checkout — this repository linked into a site — is never offered one: WordPress deletes the folder it replaces, and through the link that is the repository.
+
 Activation stops and names any PHP extension that is missing. Do not update the plugin from wp-admin on a site where it is a junction to this repository (see [the working environment](#the-working-environment)).
 
 ## Using the plugin
@@ -145,6 +149,18 @@ node bin/build-icons.cjs
 
 ### Run the checks
 
+The whole pack runs with one command, each suite judged by one rule — exit 0 is PASS, 1 is FAIL, 77 is SKIP (something it needs is not here; a line `SKIP: <why>` says what), anything else is an ERROR, and a pass that ran no checks is an ERROR too:
+
+```bash
+node bin/run-suites.cjs --wp "wp --path=/path/to/a/test/site" --group ci --strict
+```
+
+`--wp` is however wp-cli reaches the site you test on, run from this folder (CI uses `npx @wordpress/env run cli --env-cwd=wp-content/plugins/dxai-ui wp`). [`bin/suites.json`](bin/suites.json) puts every suite in a group: **ci** runs on a clean WordPress (this plugin, DX Base, Twenty Twenty-Five, nothing imported), **local** needs what a working site holds (the American Restoration theme, imported designs), **manual** and **browser** are run by hand. `--strict` fails a SKIP too, and a `bin/verify-*` file the manifest does not list. The pack packs the fixture archives first (`bin/pack-fixtures.php`: `.verify/` is not in git).
+
+The static checks need `composer install` once, then `composer check`: every PHP file and script parses (`bin/lint.cjs`), the PHPCS gate holds (`phpcs.xml.dist`: security, prepared SQL, translations, PHP 8.2 and later — not formatting), and PHPStan finds nothing that is not in `phpstan-baseline.neon`. `node bin/hooks-doc.cjs` writes [`docs/HOOKS.md`](docs/HOOKS.md), the filters and actions the plugin fires; document a hook with a comment above its call.
+
+CI (`.github/workflows/ci.yml`) runs the static checks, `hooks-doc --check`, the admin build and the **ci** group under `--strict` on wp-env for every push to `main` and every pull request.
+
 Each suite is a PHP script that loads WordPress, runs its checks offline against fixtures, prints `ok` / `FAIL`, and exits non-zero on a failure:
 
 ```bash
@@ -203,6 +219,7 @@ Run the suites a change can touch before you commit. For a conversion change, al
    ```
    It builds the admin app, stamps the version into a snapshot, checks the promises a release must keep (the runtime ships; uninstall never deletes posts; the PHP and WordPress requirements agree), lints every PHP and JS file that ships, writes `dist/dxai-ui-<version>.zip` with forward-slash names under one `dxai-ui/` folder (the only shape WordPress's plugin upload installs on Linux hosts), and reads the ZIP back to check it. A release that fails a check is not written. `dist/` is git-ignored: attach the ZIP to a GitHub release.
 3. Push the commits: `git push origin main`.
+4. Tag the release and push the tag: `git tag v0.4.0-beta.28 && git push origin v0.4.0-beta.28`. `.github/workflows/release.yml` builds the same ZIP on GitHub and attaches it, with its `.sha256`, to the release of that tag (it makes the release when there is none: a pre-release for a version with a `-`). That ZIP is what sites are offered in Dashboard › Updates. Bump the version `blueprint.json` names in the same commit.
 
 ### Conventions
 

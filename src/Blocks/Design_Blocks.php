@@ -1008,8 +1008,9 @@ final class Design_Blocks {
 
 	private function editing_post_id(): int {
 		$post_id = 0;
-		if ( isset( $_GET['post'] ) && is_scalar( $_GET['post'] ) ) {
-			$post_id = absint( wp_unslash( (string) $_GET['post'] ) );
+		// Which post the editor shows, to load its fonts: read only, nothing is changed, so there is no nonce to check.
+		if ( isset( $_GET['post'] ) && is_scalar( $_GET['post'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$post_id = absint( wp_unslash( (string) $_GET['post'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
 		if ( $post_id <= 0 && isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) {
 			$post_id = (int) $GLOBALS['post']->ID;

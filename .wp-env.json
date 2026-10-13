@@ -1,0 +1,10 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/wp-env.json",
+	"core": null,
+	"phpVersion": "8.2",
+	"plugins": [ "." ],
+	"themes": [ "./themes/dx-base" ],
+	"config": {
+		"WP_DEBUG": false
+	}
+}

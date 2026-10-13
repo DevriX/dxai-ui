@@ -138,7 +138,8 @@ $expect( 'the store is a script module on @wordpress/interactivity', ( static fu
 echo "\nOn a page of the fixture\n";
 $zip = dirname( __DIR__ ) . '/.verify/dc-minimal.zip';
 if ( ! is_file( $zip ) ) {
-	echo "  skip  no .verify/dc-minimal.zip\n";
+	// The pack makes the fixture first (bin/pack-fixtures.php); without it this half did not run, which is not a pass.
+	$expect( 'the fixture .verify/dc-minimal.zip is here (wp eval-file bin/pack-fixtures.php makes it)', false );
 } else {
 	$src  = ( new Dc_Connector() )->import_zip( array( 'tmp_name' => $zip, 'name' => 'dc-minimal.zip' ) );
 	$nat  = ( new Source_Compiler() )->compile( $src );

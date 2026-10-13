@@ -8,6 +8,7 @@
  * Requires PHP:      8.2
  * Author:            DevriX
  * Author URI:        https://devrix.com
+ * Update URI:        https://github.com/DevriX/dxai-ui
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       dxai-ui

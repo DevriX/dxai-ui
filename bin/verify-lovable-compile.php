@@ -18,8 +18,8 @@ if ( $user instanceof WP_User ) {
 $tsx = DXAI_UI_DIR . '.tmp-gtm-hub/src/routes/index.tsx';
 $css = DXAI_UI_DIR . '.tmp-gtm-hub/src/styles.css';
 if ( ! is_readable( $tsx ) ) {
-	echo "tsx_missing=1\n";
-	return;
+	echo "SKIP: the GTM Strategy Hub project is not unpacked in .tmp-gtm-hub on this machine\n";
+	exit( 77 );
 }
 
 $code    = (string) file_get_contents( $tsx ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents

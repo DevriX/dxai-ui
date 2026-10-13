@@ -32,8 +32,8 @@ $pages = get_posts(
 );
 
 if ( $pages === array() ) {
-	echo "audit_pages=0\n";
-	return;
+	echo "SKIP: no page on this site was made by an import (nothing to audit)\n";
+	exit( 77 );
 }
 
 $failed = 0;
@@ -51,6 +51,5 @@ foreach ( $pages as $page ) {
 }
 
 printf( "audit_pages=%d audit_failed=%d\n", count( $pages ), $failed );
-if ( $failed > 0 ) {
-	echo "FAIL\n";
-}
+printf( "\n%d passed, %d failed\n", count( $pages ) - $failed, $failed );
+exit( $failed > 0 ? 1 : 0 );

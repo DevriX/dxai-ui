@@ -1,0 +1,55 @@
+# A tag v<version> (v0.4.0-beta.33) builds the plugin's ZIP with bin/release.cjs and attaches it, with its SHA-256, to the GitHub
+# release of that tag; the release is made when there is none (a pre-release when the version has a "-": a beta). The ZIP is the
+# file the plugin's updater offers (docs/PLAN-ARCHITECTURE.md, phase 4).
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    name: Build and attach the ZIP
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: zip
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: The version from the tag
+        id: v
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build the ZIP (snapshot, version stamp, checks, lint, zip, the ZIP read back)
+        run: |
+          export DXAI_PHP="$(command -v php)"
+          export DXAI_PHP_INI="$(php -r 'echo php_ini_loaded_file();')"
+          node bin/release.cjs "${{ steps.v.outputs.version }}"
+          cd dist && sha256sum "dxai-ui-${{ steps.v.outputs.version }}.zip" > "dxai-ui-${{ steps.v.outputs.version }}.zip.sha256"
+
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            pre=""
+            case "$VERSION" in *-*) pre="--prerelease" ;; esac
+            gh release create "$GITHUB_REF_NAME" $pre --title "DX $VERSION" --notes "DX $VERSION. The ZIP below is the plugin; its SHA-256 is in the .sha256 file."
+          fi
+          gh release upload "$GITHUB_REF_NAME" "dist/dxai-ui-$VERSION.zip" "dist/dxai-ui-$VERSION.zip.sha256" --clobber

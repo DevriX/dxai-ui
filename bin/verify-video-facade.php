@@ -97,7 +97,8 @@ min-height: 300px;
 EX;
 $want = strtr( $example, array( '%%ID%%' => $ID, '%%TITLE%%' => 'Roof repair tour' ) );
 $got  = Video_Facade::markup( $ID, 'Roof repair tour', true );
-$expect( 'a video is the example, byte for byte, with the id in every place and the title in the facades', $got === $want );
+// Line endings follow the checkout (a Windows working copy is CRLF, this file and the class's heredoc both); the bytes between them are compared.
+$expect( 'a video is the example, byte for byte, with the id in every place and the title in the facades', str_replace( "\r\n", "\n", $got ) === str_replace( "\r\n", "\n", $want ) );
 $top = array_values( array_filter( parse_blocks( $got ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
 $expect( 'it is four blocks: two embeds, then the mobile group and the desktop group', array_column( $top, 'blockName' ) === array( 'core/embed', 'core/embed', 'core/group', 'core/group' ) );
 $expect( 'the embeds are hidden and carry the address; each group holds one HTML block', ( $top[0]['attrs']['metadata']['blockVisibility'] ?? null ) === false && ( $top[1]['attrs']['metadata']['blockVisibility'] ?? null ) === false && $top[0]['attrs']['url'] === 'https://www.youtube.com/watch?v=' . $ID && count( $top[2]['innerBlocks'] ) === 1 && $top[2]['innerBlocks'][0]['blockName'] === 'core/html' && count( $top[3]['innerBlocks'] ) === 1 );

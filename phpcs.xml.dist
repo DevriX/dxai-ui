@@ -1,14 +1,35 @@
 <?xml version="1.0"?>
 <ruleset name="DXAI-UI">
-	<description>WordPress coding standards for DXAI-UI.</description>
-	<file>.</file>
-	<exclude-pattern>*/node_modules/*</exclude-pattern>
-	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*/assets/build/*</exclude-pattern>
-	<exclude-pattern>*/assets/js/*</exclude-pattern>
-	<rule ref="WordPress">
-		<exclude name="WordPress.Files.FileName"/>
+	<description>The gate CI holds the plugin to: security, prepared SQL, translations and PHP compatibility. The code keeps its own layout and comment style (no Yoda conditions, its own docblocks), so WordPress' formatting sniffs are not enforced; run `vendor/bin/phpcs --standard=WordPress` to see them.</description>
+
+	<file>./src</file>
+	<file>./dxai-ui.php</file>
+	<file>./uninstall.php</file>
+	<file>./templates</file>
+	<file>./themes</file>
+	<arg name="extensions" value="php"/>
+	<arg name="parallel" value="8"/>
+	<arg value="sp"/>
+
+	<!-- Security: output escaped, input checked and sanitised, nonces verified. -->
+	<rule ref="WordPress.Security"/>
+	<!-- SQL: prepared, placeholders right. -->
+	<rule ref="WordPress.DB.PreparedSQL"/>
+	<rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+	<!-- Translations: the plugin's text domain, and DX Base's own (themes/dx-base is a theme), strings well formed. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="dxai-ui"/>
+				<element value="dx-base"/>
+			</property>
+		</properties>
 	</rule>
-	<config name="minimum_supported_wp_version" value="6.4"/>
+	<!-- PHP 8.2 and later (PHPCompatibility 10: the 9.x line knows nothing after PHP 7.4). -->
+	<rule ref="PHPCompatibility">
+		<!-- It reads a method named family() as a call into the old FAM extension. -->
+		<exclude name="PHPCompatibility.Extensions.RemovedExtensions.famRemoved"/>
+	</rule>
 	<config name="testVersion" value="8.2-"/>
+	<config name="minimum_wp_version" value="6.4"/>
 </ruleset>

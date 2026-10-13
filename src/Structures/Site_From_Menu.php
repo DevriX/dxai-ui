@@ -301,6 +301,7 @@ final class Site_From_Menu {
 	 */
 	public static function engine( array $context, int $home_id ): string {
 		$engine = (string) ( $context['pages_engine'] ?? 'design' );
+		// `dxai_ui_pages_engine`: what builds the pages the design's menu links to — 'design' (from its own sections) or 'ai' — for this Home.
 		$engine = (string) apply_filters( 'dxai_ui_pages_engine', $engine === 'ai' ? 'ai' : 'design', $home_id );
 
 		return $engine === 'ai' ? 'ai' : 'design';

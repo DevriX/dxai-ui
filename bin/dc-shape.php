@@ -42,33 +42,15 @@ $page     = $project . '/Ledger Close.dc.html';
 $zip_path = $root . '/.verify/dc-minimal.zip';
 $zip_only = in_array( '--zip-only', $argv, true );
 
-/** Pack the fixture the way a Claude Design export is packed: flat, forward slashes. */
-function dxai_pack_dc_fixture( string $dir, string $out ): int {
-	wp_mkdir_p( dirname( $out ) );
-	if ( file_exists( $out ) ) {
-		unlink( $out );
-	}
-	$zip = new ZipArchive();
-	if ( $zip->open( $out, ZipArchive::CREATE ) !== true ) {
-		fwrite( STDERR, "dc-shape: could not create {$out}\n" );
-		exit( 2 );
-	}
-	$count    = 0;
-	$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) );
-	foreach ( $iterator as $file ) {
-		if ( ! $file instanceof SplFileInfo || ! $file->isFile() ) {
-			continue;
-		}
-		$relative = str_replace( '\\', '/', substr( $file->getPathname(), strlen( $dir ) + 1 ) );
-		$zip->addFile( $file->getPathname(), $relative );
-		++$count;
-	}
-	$zip->close();
-
-	return $count;
-}
+// The packing is shared with bin/pack-fixtures.php (the suite runner packs the fixture with it on a fresh checkout).
+define( 'DXAI_PACK_FIXTURES_LIBRARY', true );
+require __DIR__ . '/pack-fixtures.php';
 
 $packed = dxai_pack_dc_fixture( $project, $zip_path );
+if ( $packed < 1 ) {
+	fwrite( STDERR, "dc-shape: could not create {$zip_path}\n" );
+	exit( 2 );
+}
 echo 'zip=' . $zip_path . ' files=' . $packed . "\n";
 if ( $zip_only ) {
 	exit( 0 );

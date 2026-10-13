@@ -71,8 +71,8 @@ foreach ( get_users( array( 'role' => 'administrator', 'number' => 10, 'fields' 
 	}
 }
 if ( $admin === 0 ) {
-	echo "  skip  this site has no administrator who may publish unfiltered HTML (multisite site admin, DISALLOW_UNFILTERED_HTML)\n";
-	exit( 0 );
+	echo "SKIP: this site has no administrator who may publish unfiltered HTML (multisite site admin, DISALLOW_UNFILTERED_HTML)\n";
+	exit( 77 );
 }
 
 /** Act as one of five people. 'subscriber' and 'editor' are made up in memory: nothing is written to the users table. */

@@ -107,3 +107,11 @@ foreach ( $rows as $name => $sum ) {
 
 printf( 'pages=%d unknown_rows=%d short_rows=%d' . PHP_EOL, $measured, $unknown, count( $short ) );
 echo 'verify-coverage: ' . ( $short === array() ? 'ok' : 'FAIL' ) . PHP_EOL;
+if ( $measured === 0 ) {
+	echo "SKIP: no conversion record on this site holds a page to measure\n";
+	exit( 77 );
+}
+// One line per short row starts "#<page id> "; a page is failed once however many of its rows are short.
+$pages_short = count( array_unique( array_map( static fn( string $line ): string => (string) strtok( $line, ' ' ), $short ) ) );
+printf( "\n%d passed, %d failed\n", $measured - $pages_short, $pages_short );
+exit( $pages_short > 0 ? 1 : 0 );

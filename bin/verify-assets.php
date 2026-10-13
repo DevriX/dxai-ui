@@ -46,8 +46,8 @@ CSS;
 
 $zip = new ZipArchive();
 if ( true !== $zip->open( $zip_path, ZipArchive::CREATE ) ) {
-	echo "zip_create=fail\n";
-	return;
+	echo "  FAIL  a test archive can be written in the uploads folder\n";
+	exit( 1 );
 }
 $zip->addFromString( 'index.html', $html );
 $zip->addFromString( 'style.css', $css );
@@ -65,8 +65,9 @@ $doc = ( new DXAI_UI\Connectors\Generated_Design_Connector() )->import_zip(
 );
 
 if ( is_wp_error( $doc ) ) {
-	echo 'zip_error=' . $doc->get_error_message() . PHP_EOL;
-	return;
+	echo '  FAIL  the test archive is read: ' . $doc->get_error_message() . PHP_EOL;
+	dxai_verify_cleanup( $dxai_snapshot );
+	exit( 1 );
 }
 
 $harvest = $doc->payload['harvest'] ?? array();
@@ -118,4 +119,19 @@ $paste = ( new DXAI_UI\Media\Asset_Harvester() )->from_text(
 echo 'paste_fonts=' . (int) ( $paste['summary']['fonts'] ?? 0 ) . PHP_EOL;
 echo 'paste_links=' . (int) ( $paste['summary']['links'] ?? 0 ) . PHP_EOL;
 dxai_verify_cleanup( $dxai_snapshot );
-echo 'ok=yes' . PHP_EOL;
+
+// What the archive and the two other sources hold is known: each must come across.
+$fail   = 0;
+$pass   = 0;
+$expect = static function ( string $what, bool $ok ) use ( &$fail, &$pass ): void {
+	$ok ? ++$pass : ++$fail;
+	echo ( $ok ? '  ok    ' : '  FAIL  ' ) . $what . "\n";
+};
+$expect( 'the archive is read as a generated design', 'generated-zip' === $doc->kind );
+$expect( 'its two images, its video, its fonts (the hosted family and the @font-face) and its link are harvested', (int) ( $summary['images'] ?? 0 ) >= 2 && (int) ( $summary['videos'] ?? 0 ) >= 1 && (int) ( $summary['fonts'] ?? 0 ) >= 2 && (int) ( $summary['links'] ?? 0 ) >= 1 );
+$expect( 'the font declarations reach the harvested CSS', str_contains( $css_out, '@font-face' ) || str_contains( $css_out, '@import' ) );
+$expect( 'the stylesheet\'s url() points at the uploaded copies', str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dxai-ui/assets' ) );
+$expect( 'a Figma node gives its font, its link and its fill colour', count( $figma['fonts'] ?? array() ) >= 1 && count( $figma['links'] ?? array() ) >= 1 && count( $figma['tokens']['colors'] ?? array() ) >= 1 );
+$expect( 'pasted code gives its imported font and its link', (int) ( $paste['summary']['fonts'] ?? 0 ) >= 1 && (int) ( $paste['summary']['links'] ?? 0 ) >= 1 );
+echo "\n$pass passed, $fail failed\n";
+exit( $fail > 0 ? 1 : 0 );

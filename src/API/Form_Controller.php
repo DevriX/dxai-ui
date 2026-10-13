@@ -182,7 +182,8 @@ final class Form_Controller extends \WP_REST_Controller {
 			return rest_ensure_response( array( 'csv' => '' ) );
 		}
 
-		fputcsv( $fh, array( 'id', 'date', 'page_id', 'email', 'message', 'fields' ) );
+		// The separator, enclosure and escape are PHP's defaults, said out loud: PHP 8.4 deprecates leaving the escape out.
+		fputcsv( $fh, array( 'id', 'date', 'page_id', 'email', 'message', 'fields' ), ',', '"', '\\' );
 		foreach ( $entries as $entry ) {
 			if ( ! is_array( $entry ) ) {
 				continue;
@@ -196,7 +197,10 @@ final class Form_Controller extends \WP_REST_Controller {
 					(string) ( $entry['email'] ?? '' ),
 					(string) ( $entry['message'] ?? '' ),
 					wp_json_encode( $entry['fields'] ?? array() ) ?: '',
-				)
+				),
+				',',
+				'"',
+				'\\'
 			);
 		}
 		rewind( $fh );

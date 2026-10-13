@@ -689,12 +689,20 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 			switch_theme( $theme_was );
 			DXAI_UI\Theme\Theme_Palette::reset();
 			DXAI_UI\Theme\Theme_Buttons::reset();
+			if ( function_exists( 'wp_clean_theme_json_cache' ) ) {
+				wp_clean_theme_json_cache();
+			}
 		}
 	};
 	register_shutdown_function( $back );
 	switch_theme( 'twentytwentyfive' );
 	DXAI_UI\Theme\Theme_Palette::reset();
 	DXAI_UI\Theme\Theme_Buttons::reset();
+	// WordPress keeps the theme.json it read for the rest of the request: without this the palette is still the theme switched
+	// from (on a site that runs American Restoration the check read its colours and could not see a colour foreign to this theme).
+	if ( function_exists( 'wp_clean_theme_json_cache' ) ) {
+		wp_clean_theme_json_cache();
+	}
 	$tt = Team_Pages::build( $home9_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Fire Damage' ), array( 'type' => 'service', 'title' => 'Mold Removal' ) ), true, array( 'library' => 'team' ) );
 	$ttid = 0;
 	$tts  = array();

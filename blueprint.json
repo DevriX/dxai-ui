@@ -1,0 +1,30 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "DX UI",
+		"description": "DX UI in WordPress Playground: the plugin from its newest GitHub release, active, logged in, on DX › Designs.",
+		"author": "DevriX",
+		"categories": [ "Site building" ]
+	},
+	"landingPage": "/wp-admin/admin.php?page=dxai-ui",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"login": true,
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://github.com/DevriX/dxai-ui/releases/download/v0.4.0-beta.32/dxai-ui-0.4.0-beta.32.zip"
+			},
+			"options": {
+				"activate": true
+			}
+		}
+	]
+}

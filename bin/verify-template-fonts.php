@@ -21,8 +21,8 @@ use DXAI_UI\Theme\Theme_Compat;
 use DXAI_UI\Theme\Theme_Fonts;
 
 if ( Template_Fonts::get() !== array() ) {
-	echo "This site has template fonts installed: the suite would replace them. Run it on a test install. (not run)\n";
-	exit( 0 );
+	echo "SKIP: this site has template fonts installed and the suite would replace them; run it on a test install\n";
+	exit( 77 );
 }
 
 $fail   = 0;

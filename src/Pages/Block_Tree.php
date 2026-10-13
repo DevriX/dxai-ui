@@ -36,7 +36,7 @@ final class Block_Tree {
 		$node = &$root;
 		foreach ( $path as $i ) {
 			if ( ! isset( $node['innerBlocks'][ $i ] ) ) {
-				throw new \RuntimeException( 'No block at ' . implode( '.', $path ) );
+				throw new \RuntimeException( esc_html( 'No block at ' . implode( '.', $path ) ) );
 			}
 			$node = &$node['innerBlocks'][ $i ];
 		}
@@ -77,12 +77,12 @@ final class Block_Tree {
 	 */
 	public static function set_content( array &$block, string $html ): void {
 		if ( ! empty( $block['innerBlocks'] ) ) {
-			throw new \RuntimeException( 'set_content: ' . (string) $block['blockName'] . ' has inner blocks' );
+			throw new \RuntimeException( esc_html( 'set_content: ' . (string) $block['blockName'] . ' has inner blocks' ) );
 		}
 		$markup = trim( (string) $block['innerHTML'] );
 		$new    = self::replace_in_element( $markup, $html );
 		if ( $new === null ) {
-			throw new \RuntimeException( 'set_content: ' . (string) $block['blockName'] . ' is not a single element' );
+			throw new \RuntimeException( esc_html( 'set_content: ' . (string) $block['blockName'] . ' is not a single element' ) );
 		}
 		$lead = substr( (string) $block['innerHTML'], 0, strlen( (string) $block['innerHTML'] ) - strlen( ltrim( (string) $block['innerHTML'] ) ) );
 		$tail = substr( (string) $block['innerHTML'], strlen( rtrim( (string) $block['innerHTML'] ) ) );

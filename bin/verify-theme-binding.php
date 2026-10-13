@@ -32,9 +32,8 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 $primary = Theme_Palette::hex( 'primary' );
 $dark    = Theme_Palette::hex( 'primary-dark' );
 if ( ! Theme_Palette::current()['has_palette'] || $primary === '' || $dark === '' ) {
-	echo "  skip  the theme has no colour settings with a primary and its dark shade here\n";
-	echo "\n$pass passed, $fail failed\n";
-	return;
+	echo "SKIP: the theme has no colour settings with a primary and its dark shade here\n";
+	exit( 77 );
 }
 
 $home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture theme binding' ) );

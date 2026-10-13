@@ -118,6 +118,7 @@ final class Theme_Binding {
 	public static function default_mode( int $home ): string {
 		$mode = Theme_Palette::current()['has_palette'] && ! Theme_Compat::may_install_chrome() ? 'follow' : 'keep';
 
+		// `dxai_ui_theme_color_mode`: 'follow' (the design's colours bound to the theme's palette) or 'keep' (its own), for a Home and the palette.
 		return (string) apply_filters( 'dxai_ui_theme_color_mode', $mode, $home, Theme_Palette::current() );
 	}
 
@@ -159,6 +160,7 @@ final class Theme_Binding {
 		$all[ get_stylesheet() ] = $binding;
 		update_post_meta( $home, self::META, $all );
 		self::$css = array();
+		// `dxai_ui_theme_colors_changed`: a design's colours were bound to the theme anew (its Home given); what was drawn from the old binding is stale.
 		do_action( 'dxai_ui_theme_colors_changed', $home );
 
 		return $binding;

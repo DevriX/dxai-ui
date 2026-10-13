@@ -318,7 +318,7 @@ final class Library_Style extends Style_Harmony {
 			$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
 			foreach ( $kids as $i => $c ) {
 				$next = $kids[ $i + 1 ] ?? null;
-				if ( in_array( (string) $c['blockName'], array( 'core/paragraph', 'amr/span', 'dxai-ui/text' ), true ) && is_array( $next ) && (string) $next['blockName'] === 'core/heading' && (int) ( $next['attrs']['level'] ?? 2 ) <= 2 ) {
+				if ( ( in_array( (string) $c['blockName'], array( 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) $c['blockName'], 'span' ) ) &&is_array( $next ) && (string) $next['blockName'] === 'core/heading' && (int) ( $next['attrs']['level'] ?? 2 ) <= 2 ) {
 					$n = str_word_count( trim( wp_strip_all_tags( (string) $c['innerHTML'] ) ) );
 					if ( $n >= 1 && $n <= 4 ) {
 						$look = self::look_of( $c, self::TYPE_CLASS, self::TYPE_PROP );

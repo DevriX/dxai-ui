@@ -93,6 +93,7 @@ final class Theme_Trim {
 	public static function filter( $html, $phase = 0 ) {
 		// Only a document that arrives whole: a page flushed in pieces has its head out before its body is known.
 		$whole = ( $phase & PHP_OUTPUT_HANDLER_START ) && ( $phase & PHP_OUTPUT_HANDLER_FINAL );
+		// `dxai_ui_trim_min_bytes`: the smallest page, in bytes, whose unused theme CSS is trimmed (never under 16 KB).
 		$min   = max( 16384, (int) apply_filters( 'dxai_ui_trim_min_bytes', self::MIN_BYTES ) );
 		if ( ! $whole || ! is_string( $html ) || strlen( $html ) < $min || stripos( $html, '<style' ) === false || stripos( $html, '</html>' ) === false ) {
 			return $html;

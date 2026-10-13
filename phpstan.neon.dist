@@ -1,0 +1,29 @@
+# PHPStan for the plugin: WordPress from its stubs, the plugin's constants from bin/phpstan-bootstrap.php.
+# What was there when the check came in is in phpstan-baseline.neon: only a new problem fails a run (composer phpstan).
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+	- phpstan-baseline.neon
+
+parameters:
+	level: 5
+	paths:
+		- src
+		- dxai-ui.php
+		- uninstall.php
+	bootstrapFiles:
+		- bin/phpstan-bootstrap.php
+	scanFiles:
+		- bin/phpstan-stubs.php
+	ignoreErrors:
+		# The admin's asset manifest exists after `npm run build`; a checkout has none.
+		-
+			identifier: include.fileNotFound
+			path: src/Admin/Dashboard.php
+	# Set in wp-config.php on a site, or not at all.
+	dynamicConstantNames:
+		- DXAI_UI_SECRETS_KEY
+		- DXAI_UI_RENDER_ONLY
+	tmpDir: .phpstan-cache
+	# The baseline was made on Windows and is read on Linux in CI: an entry that does not come up on one of them is not an error.
+	# Regenerate it (composer phpstan -- --generate-baseline phpstan-baseline.neon) when problems in it are fixed.
+	reportUnmatchedIgnoredErrors: false

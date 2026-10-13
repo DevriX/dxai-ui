@@ -1,0 +1,2629 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to function is_array\(\) with array\{id\: string, label\: string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{\}\|array\{menus\: true, widgets\: true\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Method DXAI_UI\\API\\Converter_Controller\:\:publish_permissions\(\) should return WP_Error\|true but returns false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''footer'' on array\{header\: array\<string, mixed\>, footer\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''header'' on array\{header\: array\<string, mixed\>, footer\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''id'' on array\{id\: string, label\: string, models\: array\<int, array\{id\: string, label\: string\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''id'' on array\{id\: string, label\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''label'' on array\{id\: string, label\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''models'' on array\{id\: ''claude''\|''deepseek''\|''grok''\|''openai'', label\: string, models\: array\<int, array\{id\: string, label\: string\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Converter_Controller.php
+
+		-
+			message: '#^Offset ''error'' on array\{name\: non\-empty\-string, type\: non\-empty\-string, size\: int\<0, max\>, tmp_name\: non\-falsy\-string, error\: int\<0, 8\>, full_path\?\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Libraries_Controller.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/API/Libraries_Controller.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/API/Settings_Controller.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<mixed, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/API/Settings_Controller.php
+
+		-
+			message: '#^Offset ''footer'' on array\{header\: array\<string, mixed\>, footer\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Template_Controller.php
+
+		-
+			message: '#^Offset ''header'' on array\{header\: array\<string, mixed\>, footer\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Template_Controller.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''chrome_owner'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/API/Transfer_Controller.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: non\-empty\-string, type\: non\-empty\-string, size\: int\<0, max\>, tmp_name\: non\-falsy\-string, error\: int\<0, 8\>, full_path\?\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/API/Transfer_Controller.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/API/Transfer_Controller.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Admin/Part_Shortcuts.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Blocks/Assets.php
+
+		-
+			message: '#^Offset 2 on array\{non\-falsy\-string, '''', numeric\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Assets.php
+
+		-
+			message: '#^Property _WP_Dependency\:\:\$src \(string\|false\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Blocks/Assets.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Blocks\\\\Style_Rules'' and ''rest_rules'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false, splitting\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''span''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}, dxaiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{svgAttrs\: array\{type\: ''array'', default\: array\{\}\}, svgInner\: array\{type\: ''string'', default\: ''''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''div''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, dxaiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, elType\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, alt\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, width\: array\{type\: ''string'', default\: ''''\}, height\: array\{type\: ''string'', default\: ''''\}, loading\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, html\: false, customCSS\: false, anchor\: false\}, attributes\: array\{content\: array\{type\: ''string'', source\: ''html''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false, anchor\: true\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, text\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, tagName\: array\{type\: ''string'', default\: ''a''\}, suffix\: array\{type\: ''string'', default\: ''''\}, suffixClass\: array\{type\: ''string'', default\: ''''\}, ariaLabel\: array\{type\: ''string'', default\: ''''\}, role\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{num\: array\{type\: ''string'', default\: ''''\}, question\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{value\: array\{type\: ''string'', default\: ''''\}, suffix\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''rv\-num''\}, srClass\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Property WP_Block_Type\:\:\$editor_style_handles \(array\<string\>\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Property WP_Block_Type\:\:\$style_handles \(array\<string\>\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Property _WP_Dependency\:\:\$src \(string\|false\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Blocks/Design_Blocks.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxai\-ui\-blocks…'', view_script\: ''dxai\-ui\-form\-view'', style\: ''dxai\-ui\-dynamic'', render_callback\: array\{\$this\(DXAI_UI\\Blocks\\Form_Block\), ''render''\}, attributes\: array\{fields\: array\{type\: ''array'', default\: array\{\}\}, submitLabel\: array\{type\: ''string'', default\: ''Send''\}, successMessage\: array\{type\: ''string'', default\: ''Thank you\.''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Form_Block.php
+
+		-
+			message: '#^Offset ''path'' on array\{url\: string, path\: string, relative\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Library_View.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Blocks/Native/Button.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: src/Blocks/Native/Button.php
+
+		-
+			message: '#^Anonymous function has an unused use \$count\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Comparison operation "\>" between 0 and 0 is always false\.$#'
+			identifier: greater.alwaysFalse
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Offset int on array\<string, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Blocks/Native/Heading_Scale.php
+
+		-
+			message: '#^Offset ''path'' on array\{url\: string, path\: string, relative\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Native/Image.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Blocks/Native/Library_Style.php
+
+		-
+			message: '#^Offset 2 on array\<string, mixed\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Blocks/Native/Library_Style.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: src/Blocks/Native/Library_Style.php
+
+		-
+			message: '#^Instanceof between DXAI_UI\\Blocks\\Native\\Converter and DXAI_UI\\Blocks\\Native\\Converter will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Blocks/Native/Native_Blocks.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\<string, mixed\>\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Blocks/Native/Native_Blocks.php
+
+		-
+			message: '#^Offset ''desktop'' on array\{desktop\: string, mobile\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Native/Picture.php
+
+		-
+			message: '#^Offset ''mobile'' on array\{desktop\: string, mobile\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Native/Picture.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between numeric\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Blocks/Native/Section_Spacing.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between numeric\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Blocks/Native/Style_Harmony.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Blocks/Native/Tidy.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, render_callback\: array\{\$this\(DXAI_UI\\Blocks\\Pattern_Block\), ''render''\}, attributes\: array\{patternId\: array\{type\: ''number'', default\: 0\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Pattern_Block.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxai\-ui\-blocks…'', view_script\: ''dxai\-ui\-slider\-view'', style\: ''dxai\-ui\-dynamic'', supports\: array\{className\: true, html\: false, align\: array\{''wide'', ''full''\}\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Blocks/Slider_Block.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 2
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Offset ''inner'' on array\{dxs\: non\-falsy\-string, css\: string, classes\: array\<int, string\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Offset ''part_utilities'' does not exist on array\{rules\: string, utilities\: array\<int, string\>, utility_css\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Offset ''part_utilities'' on array\{rules\: string, utilities\: array\<int, string\>, utility_css\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Offset \*NEVER\* on array\{dxai\-part\-img\: '' img''\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{\}\) to function array_values is empty, call has no effect\.$#'
+			identifier: arrayValues.empty
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between array\{\} and array\{\} will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Blocks/Style_Rules.php
+
+		-
+			message: '#^Default value of the parameter \#5 \$site \(array\{\}\) of method DXAI_UI\\Chrome\\Chrome_Choice\:\:message\(\) is incompatible with type array\{menus\: array\<string, string\>, widgets\: array\<string, int\>\}\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: src/Chrome/Chrome_Choice.php
+
+		-
+			message: '#^Offset ''footer''\|''header'' on array\{header\: array\<string, mixed\>, footer\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Chrome/Chrome_Choice.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{blockName\: string\|null, attrs\: array, innerBlocks\: array\<array\>, innerHTML\: string, innerContent\: array\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Chrome/Footer_Template.php
+
+		-
+			message: '#^Offset ''innerHTML'' on array\{blockName\: ''''\|''0''\|null, attrs\: array, innerBlocks\: array\<array\>, innerHTML\: string, innerContent\: array\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Chrome/Footer_Template.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_Widget_Factory and ''get_widget_object'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Chrome/Footer_Widgets.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Chrome/Header_Menus.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Chrome/Header_Menus.php
+
+		-
+			message: '#^Instanceof between WP_Screen and WP_Screen will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Chrome/Header_Menus.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Chrome/Header_Renderer.php
+
+		-
+			message: '#^Offset ''part'' on array\{path\: array\<int, int\>, el\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Chrome/Header_Renderer.php
+
+		-
+			message: '#^Offset ''via'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Chrome/Header_Renderer.php
+
+		-
+			message: '#^Offset ''attrs'' on array\{name\: ''a'', attrs\: array\<string, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Chrome/Header_Template.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Chrome/Header_Template.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Chrome/Site_Footer_Block.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', keywords\: array\{''footer'', ''widgets''\}, editor_script_handles\: array\{''dxai\-ui\-site\-footer…''\}, render_callback\: array\{''DXAI_UI\\\\Chrome\\\\Site_Footer_Block'', ''render''\}, supports\: array\{html\: false, className\: false, customClassName\: false, reusable\: false, multiple\: false\}, \.\.\.\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Chrome/Site_Footer_Block.php
+
+		-
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', icon\: ''menu'', keywords\: array\{''header'', ''menu'', ''navigation'', ''logo''\}, editor_script\: ''dxai\-ui\-site\-header…'', render_callback\: array\{\$this\(DXAI_UI\\Chrome\\Site_Header_Block\), ''render''\}, \.\.\.\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Chrome/Site_Header_Block.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Block_Normalizer.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_HTML_Tag_Processor and ''get_token_type'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Block_Normalizer.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_HTML_Tag_Processor and ''next_token'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Block_Normalizer.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_HTML_Tag_Processor and ''paused_at…'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Block_Normalizer.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 2
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Offset ''target'' does not exist on array\{name\: string, default\: mixed, rest\: false, pattern\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Offset ''target'' does not exist on array\{name\: string, default\: mixed, rest\: true, pattern\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Parameter &\$out by\-ref type of method DXAI_UI\\Compiler\\Dc_Js\:\:collect_setstate\(\) expects array\<int, array\<mixed\>\>, array\<int, mixed\> given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Parameter &\$scope by\-ref type of method DXAI_UI\\Compiler\\Dc_Js\:\:ev\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: parameterByRef.type
+			count: 2
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 3
+			path: src/Compiler/Dc_Js.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Instanceof between DOMAttr and DOMAttr will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Offset ''open'' on array\{media\: array\<string, string\>, scroll\: array\<string, int\>, outside\: array\<int, string\>, mount\: array\<string, mixed\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Offset ''props'' on array\{template\: string, script\: string, props\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Offset ''script'' on array\{template\: string, script\: string, props\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Offset ''template'' on array\{template\: string, script\: string, props\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: src/Compiler/Dc_Renderer.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Dc_Script.php
+
+		-
+			message: '#^Static method DXAI_UI\\Compiler\\Design_Css\:\:unwrap_at_layer\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Compiler/Design_Css.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Design_Html.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: src/Compiler/Design_Html.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$html with type array\<string, mixed\>\|string is not subtype of native type string\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: src/Compiler/Design_Html.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Compiler/Design_Tokens.php
+
+		-
+			message: '#^Offset ''111111'' on array\<non\-falsy\-string, int\<1, max\>\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Compiler/Design_Tokens.php
+
+		-
+			message: '#^Offset 111111 on array\<non\-falsy\-string, int\<1, max\>\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Compiler/Design_Tokens.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Compiler/Design_Tokens.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: src/Compiler/Design_Tokens.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<non\-empty\-string\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Compiler/Fidelity_Confidence.php
+
+		-
+			message: '#^Offset ''needs_refine'' on array\{score\: int, issues\: array\<int, string\>, needs_refine\: array\<int, int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Compiler/Fidelity_Gate.php
+
+		-
+			message: '#^Offset ''score'' on array\{score\: int, issues\: array\<int, string\>, needs_refine\: array\<int, int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Compiler/Fidelity_Gate.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, int\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Fidelity_Refiner.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Compiler/Fidelity_Refiner.php
+
+		-
+			message: '#^Offset ''needs_refine'' on array\{score\: int, issues\: array\<int, string\>, structures\: array\<int, array\<string, mixed\>\>, needs_refine\: array\<int, int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Fidelity_Refiner.php
+
+		-
+			message: '#^Offset ''structures'' on array\{score\: int, issues\: array\<int, string\>, structures\: array\<int, array\<string, mixed\>\>, needs_refine\: array\<int, int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Fidelity_Refiner.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Generation_Merger.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, array\<string, mixed\>\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Instanceof between DOMAttr and DOMAttr will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 16
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Instanceof between DOMElement and DOMElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 6
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Offset ''cells'' on array\{cells\: array\<int, array\<string, mixed\>\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''article''\|''aside''\|''div''\|''footer''\|''header''\|''main''\|''nav''\|''section'' and ''p'' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Compiler/Html_To_Blocks.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Internal_Links.php
+
+		-
+			message: '#^Offset ''id'' on array\{id\: int, paths\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Internal_Links.php
+
+		-
+			message: '#^Offset ''paths'' on array\{id\: int, paths\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Internal_Links.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Json_Repair.php
+
+		-
+			message: '#^Call to function is_int\(\) with string will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Match arm comparison between ''%%'' and ''%%'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Method DXAI_UI\\Compiler\\Jsx_Compiler\:\:is_landmark\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Method DXAI_UI\\Compiler\\Jsx_Compiler\:\:skip_value\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset ''html'' on array\{name\: string, type\: string, html\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset ''logoAsset'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset ''lucide'' on array\{local\: array\<string, string\>, external\: array\<int, string\>, assets\: array\<string, string\>, lucide\: array\<string, string\>, packages\: array\<string, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset ''packages'' on array\{local\: array\<string, string\>, external\: array\<int, string\>, assets\: array\<string, string\>, lucide\: array\<string, string\>, packages\: array\<string, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset ''pattern'' on array\{names\: array\<int, string\>, pattern\: string, patterns\?\: array\<int, array\{props\: array\<int, array\<string, mixed\>\>, rest\: string\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, string, non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<mixed\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 2
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-list\<''\)''\|''\]''\|''\}''\> and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: src/Compiler/Jsx_Compiler.php
+
+		-
+			message: '#^Instanceof between DOMElement and DOMElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 4
+			path: src/Compiler/Menu_Tree.php
+
+		-
+			message: '#^Call to function is_array\(\) with null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 2
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Offset ''allowed_tokens'' on array\{home_html\?\: string, class_sample\?\: string, allowed_colors\?\: array\<int, string\>, style_recipes\?\: array\<int, string\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Offset ''allowed_tokens'' on array\{home_html\?\: string, design_css\?\: string, home_title\?\: string, class_sample\?\: string, allowed_colors\?\: array\<int, string\>, style_recipes\?\: array\<int, string\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Offset ''name'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Offset ''token'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Offset ''value'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 3
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\{0\: ''Open with a focused…'', 1\: ''Keep one clear…'', 2\: ''Reuse Home card /…'', 3\: ''Balance whitespace…'', 4\: ''Accordion\-like…''\|''Compose from…''\|''Culture intro →…''\|''Feature\-led layout\:…''\|''Grid of people…''\|''Lead with trust \+…''\|''Listing feel\: page…''\|''Readable legal…''\|''Service catalog\:…''\|''Story arc\: mission…''\|''Visual\-first\: short…'', 5\?\: non\-falsy\-string, 6\?\: non\-falsy\-string, 7\?\: non\-falsy\-string, \.\.\.\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 3
+			path: src/Compiler/Prompt_Builder.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Instanceof between DOMElement and DOMElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Method DXAI_UI\\Compiler\\Source_Compiler\:\:compile_html_zip\(\) should return array\{block_title\: string, gutenberg_markup\: string, structures\: array\<int, array\<string, mixed\>\>, slug\?\: string, from_html\?\: bool\} but returns array\{\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Method DXAI_UI\\Compiler\\Source_Compiler\:\:root_class\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset ''html'' on array\{name\: string, type\: string, html\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: string, type\: string, html\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset ''slug'' on array\{block_title\: string, slug\: string, gutenberg_markup\: string, structures\: non\-empty\-array\<int, array\<string, mixed\>\>, custom_js\: string, from_html\: bool, fidelity\: bool, source_html\: string, \.\.\.\}\|array\{block_title\: string, slug\: string, gutenberg_markup\: string, structures\: non\-empty\-array\<int, array\<string, mixed\>\>, source_sections\: list\<non\-empty\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset ''type'' on array\{name\: string, type\: string, html\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset 1 on list\{0\: non\-falsy\-string, 1\: string, 2\?\: string, 3\?\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{block_title\: string, gutenberg_markup\: string, structures\: array\<int, array\<string, mixed\>\>, slug\?\: string, from_html\?\: bool\} and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Compiler/Source_Compiler.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 4
+			path: src/Compiler/Tailwind/Engine.php
+
+		-
+			message: '#^Constant DXAI_UI\\Compiler\\Tailwind\\Utilities\\Mask\:\:CSS_NUMBER is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: src/Compiler/Tailwind/Utilities/Mask.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: src/Compiler/Tailwind/Utilities/Motion.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<non\-empty\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 5
+			path: src/Compiler/Tailwind_Purger.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Token_Styles.php
+
+		-
+			message: '#^Offset 2 on array\{string, non\-falsy\-string, string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Tsx_Section_Splitter.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-list\<''\)''\|''\]''\|''\}''\> and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Compiler/Tsx_Section_Splitter.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''\-5'' and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Compiler/Utility_Classes.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Compiler/Utility_Classes.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Compiler/Xdc_Template_Renderer.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: src/Compiler/Xdc_Template_Renderer.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Compiler/Xdc_Template_Renderer.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Compiler/Xdc_Template_Renderer.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Connectors/Dc_Connector.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connectors/Dc_Connector.php
+
+		-
+			message: '#^Offset 3 on array\{string, non\-empty\-string, non\-falsy\-string, string, string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Connectors/Dc_Site.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Connectors/Figma_Connector.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Connectors/Generated_Design_Connector.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Connectors/Html_Zip_Pages.php
+
+		-
+			message: '#^Offset ''file'' on array\{slug\: string, title\: string, file\: non\-falsy\-string, code\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 6
+			path: src/Connectors/Html_Zip_Pages.php
+
+		-
+			message: '#^Offset ''slug'' on array\{slug\: string, title\: string, file\: non\-falsy\-string, code\: non\-empty\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: src/Connectors/Html_Zip_Pages.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: src/Connectors/Html_Zip_Pages.php
+
+		-
+			message: '#^Instanceof between DOMElement and DOMElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Connectors/Live_Page_Fetcher.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Connectors/Lovable_Connector.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{label\?\: string, url\?\: string, children\?\: array\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Call to function is_wp_error\(\) with array\{html\: string, images\: array\<int, string\>, title\: string, raw\?\: string, url\?\: string\} will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Offset ''label'' on array\{label\: string, url\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Offset ''url'' on array\{label\: string, url\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Offset 1 on array\{non\-falsy\-string, non\-falsy\-string\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Connectors/Site_Origin.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ZipArchive and ''getStreamIndex'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Connectors/Zip_Extractor.php
+
+		-
+			message: '#^Parameter \#1 \$bytes of function size_format expects int\|string, float given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Connectors/Zip_Extractor.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, int\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Design/Design_Status.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Design/Design_Status.php
+
+		-
+			message: '#^Offset ''blocks'' on array\{applied\: bool, converters\: array\<int, array\{id\: string, label\: string, count\: int\}\>, blocks\: int, posts\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Design_Status.php
+
+		-
+			message: '#^Offset ''lists'' on array\{source\: string, menus\: array\<int, string\>, pretty\: bool, pages\: array\<int, array\<string, mixed\>\>, lists\: array\<int, array\<string, mixed\>\>, left_out\: array\<int, array\<string, string\>\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Design_Status.php
+
+		-
+			message: '#^Offset ''pages'' on array\{source\: string, menus\: array\<int, string\>, pretty\: bool, pages\: array\<int, array\<string, mixed\>\>, lists\: array\<int, array\<string, mixed\>\>, left_out\: array\<int, array\<string, string\>\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Design_Status.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, array\<string, mixed\>\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 5
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Offset ''path'' on array\{url\: string, path\: string, relative\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Offset ''rows'' on array\{rows\: array\<int, array\<string, mixed\>\>, findings\: int, unknown\: int, score\: int\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Offset ''tree'' on array\{source\: string, menus\: array\<int, string\>, tree\: array\<int, array\<string, mixed\>\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Design/Document_Builder.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Design/Style_Variation.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WpOrg\\Requests\\Utility\\CaseInsensitiveDictionary and ''getAll'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Http/Remote_Client.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$json$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Http/Remote_Client.php
+
+		-
+			message: '#^Action callback returns array but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: src/Media/Font_Host.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and false will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Media/Font_Host.php
+
+		-
+			message: '#^Call to function is_int\(\) with int\<0, max\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Media/Svg_Files.php
+
+		-
+			message: '#^Instanceof between DOMAttr and DOMAttr will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Media/Svg_Sanitizer.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Call to function is_scalar\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Expression in isset\(\) is not nullable\.$#'
+			identifier: isset.expr
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Method DXAI_UI\\Pages\\Block_Library\:\:fill\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
+			identifier: parameterByRef.unusedType
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Method DXAI_UI\\Pages\\Block_Library\:\:section\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
+			identifier: parameterByRef.unusedType
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Offset ''address'' on array\{phone\: array\{text\: string, url\: string\}\|null, email\: string, address\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Offset ''anchors'' on array\{has_palette\: bool, entries\: array\<string, array\{slug\: string, name\: string, raw\: string, hex\: string, origin\: string\}\>, anchors\: array\<string, string\>, hash\: string, user_override\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Offset ''email'' on array\{phone\: array\{text\: string, url\: string\}\|null, email\: string, address\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Offset ''link_box''\|''picture''\|''span'' on array\{picture\: ''core/image'', link_box\: ''core/group'', span\: ''core/paragraph''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-list\<non\-empty\-string\> and array\{\} will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Variable \$swap_button might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Variable \$swap_size might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Pages/Block_Library.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Pages/Block_Tree.php
+
+		-
+			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Pages/Content_Extractor.php
+
+		-
+			message: '#^Parameter \#1 \$img of method DXAI_UI\\Pages\\Content_Extractor\:\:image_from\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Pages/Content_Extractor.php
+
+		-
+			message: '#^Call to function method_exists\(\) with DXAI_UI\\Engines\\LLM_Provider_Interface and ''complete'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Pages/Copy_Writer.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Pages/Home_Kit.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\|false\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Pages/Home_Kit.php
+
+		-
+			message: '#^Instanceof between DOMElement and DOMElement will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 3
+			path: src/Pages/Html_Main.php
+
+		-
+			message: '#^Anonymous function has an unused use \$shape\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments non\-falsy\-string, array\{\} and true will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 2
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Left side of \|\| is always false\.$#'
+			identifier: booleanOr.leftAlwaysFalse
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Offset ''areas''\|''faq''\|''process''\|''related''\|''reviews''\|''trust'' on array\{two\-col\: ''Two columns'', cards\: ''Cards'', process\: ''Steps'', reviews\: ''Reviews'', faq\: ''Questions'', cta\: ''Call to action'', related\: ''Related pages'', trust\: ''Trust row'', \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Offset ''kind'' on array\{site\: string, page\: int, kind\: ''about''\|''areas''\|''contact''\|''faq''\|''location''\|''service''\|''services''\|''showcase''\|''testimonials'', index\: int\<0, max\>, block\: array\{blockName\: non\-falsy\-string, attrs\: array, innerBlocks\: array\<array\>, innerHTML\: string, innerContent\: array\}, names\: non\-empty\-array, title\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<\(float\|int\)\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Variable \$index on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Pages/Layout_Builder.php
+
+		-
+			message: '#^Offset ''eyebrow'' does not exist on array\{title\: string, text\: string, meta\: string, url\: string, image_url\?\: string, image_id\?\: string, image_alt\?\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Offset ''eyebrow'' on array\{title\: string, text\: string, meta\: string, url\: string, image_url\?\: string, image_id\?\: string, image_alt\?\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Offset ''text'' on array\{title\: string, text\: string, meta\: '''', url\: '''', icon\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Offset ''text'' on array\{title\: string, text\: string, meta\?\: string, url\: string, image_url\?\: string, image_id\?\: string, image_alt\?\: string, eyebrow\?\: string, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_values contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: src/Pages/Layouts.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Pages/Library_Store.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 0 and 2 is always false\.$#'
+			identifier: greaterOrEqual.alwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 0 and 3 is always false\.$#'
+			identifier: greaterOrEqual.alwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 2
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Left side of && is always false\.$#'
+			identifier: booleanAnd.leftAlwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between 0 and \*NEVER\* will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: src/Pages/Page_Composer.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Pages/Page_Recipes.php
+
+		-
+			message: '#^Offset ''blockName'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Section_Library.php
+
+		-
+			message: '#^Call to function is_array\(\) with null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 2
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 2
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Left side of && is always false\.$#'
+			identifier: booleanAnd.leftAlwaysFalse
+			count: 3
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Left side of \|\| is always false\.$#'
+			identifier: booleanOr.leftAlwaysFalse
+			count: 2
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 6
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''home'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''image'' on \*NEVER\* in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''item'' does not exist on array\{type\: string, title\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''item'' on array\{type\: string, title\: string, slug\: string, shuffle\: int, recipe\: int, locks\: array\<int, array\<string, mixed\>\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''item'' on array\{type\: string, title\: string\} in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''lib'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''locks'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''locks'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''n'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''name'' on array\{type\: string, title\: string, slug\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''parent_path'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''path'' on array\{type\: ''areas''\|''services'', title\: string, slug\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''path'' on array\{type\: string, title\: string, slug\: string, shuffle\: int, recipe\: int, locks\: array\<int, array\<string, mixed\>\>\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 3
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''path'' on array\{type\: string, title\: string, slug\: string, shuffle\: int, recipe\: int, locks\: array\<int, array\<string, mixed\>\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 4
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''path'' on array\{type\: string, title\: string, slug\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''path'' on array\{type\: string, title\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''plan'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''recipe'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''seed_of'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''shuffle'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''team'' on null in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''title'' on array\{type\: string, title\: string, slug\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''title'' on array\{type\: string, title\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''type'' on array\{type\: string, title\: string, slug\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset ''type'' on array\{type\: string, title\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset \*NEVER\* on list\<string\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset int on array\{\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset int\<0, max\> on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 3
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Offset int\<0, max\> on array\{\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{\}\) to function array_values is empty, call has no effect\.$#'
+			identifier: arrayValues.empty
+			count: 3
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 22
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 19
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 5
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 8
+			path: src/Pages/Team_Pages.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Pages/Team_Quality.php
+
+		-
+			message: '#^Method DXAI_UI\\Pages\\Team_Run\:\:finish\(\) should return array\{at\: int, posts\: array\<int, array\<string, mixed\>\>\} but returns array\{at\: int, pages\: array\<int, array\<string, mixed\>\>, menu\: bool\}\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Pages/Team_Run.php
+
+		-
+			message: '#^Cannot access offset ''i'' on false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Comparison operation "\>" between \*NEVER\* and 0 results in an error\.$#'
+			identifier: greater.invalid
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 0 and 2 is always false\.$#'
+			identifier: greaterOrEqual.alwaysFalse
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Left side of \|\| is always false\.$#'
+			identifier: booleanOr.leftAlwaysFalse
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between array\{\} and array\{\} will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: src/Sections/Section_Markup.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Call to function is_array\(\) with null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Offset ''allowed_tokens'' on array\{home_html\?\: string, design_css\?\: string, home_title\?\: string, class_sample\?\: string, allowed_colors\?\: array\<int, string\>, style_recipes\?\: array\<int, string\>\} in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Offset ''html'' on array\{title\: string, path\: string, html\: string, images\?\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Offset ''palette'' on array\{home_html\?\: string, design_css\?\: string, home_title\?\: string, class_sample\?\: string, allowed_colors\?\: array\<int, string\>, style_recipes\?\: array\<int, string\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Offset ''path'' on array\{title\: string, path\: string, html\: string, images\?\: array\<int, string\>, content_facts\: array\{headings\: array\<int, string\>, paragraphs\: array\<int, string\>, list_items\: array\<int, string\>, image_alts\: array\<int, string\>, form_signals\: array\<int, string\>, signals\: array\<string, mixed\>\}\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Offset ''title'' on array\{title\: string, path\: string, html\: string, images\?\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: src/Structures/Live_Page_Restyler.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$attr_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$classes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$menu_item_parent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$object\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$object_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$target\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Access to an undefined property WP_Post\:\:\$xfn\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{label\?\: string, url\?\: string, children\?\: array\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 2
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Method DXAI_UI\\Structures\\Navigation_Factory\:\:classic_plan\(\) should return array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\<string, array\>\} but returns array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\{existing\: array\<int, array\{key\?\: string, label\?\: string, children\: list\<int\>, owned\?\: bool, matchable\?\: bool, record\?\: string\|null, ref\?\: WP_Post\}\>, desired\: array\<int, array\<string, mixed\>\>, d_to_e\: array\<int, int\>, e_to_d\: array\<int, int\>, skip\: array\<int, true\>, header\: bool\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Offset ''attr_title''\|''description''\|''target''\|''xfn'' on array\{label\?\: string, url\?\: string, children\?\: array\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Offset ''label'' on array\{label\: string, url\: string, children\?\: array, page_id\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Offset ''url'' on array\{label\: string, url\: string, children\?\: array, page_id\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Parameter \#3 \$m of method DXAI_UI\\Structures\\Navigation_Factory\:\:merge_level\(\) expects array\<string, array\>, array\<string, array\<int, array\<string, mixed\>\|int\|true\>\|bool\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Structures/Navigation_Factory.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''/'' and ''/'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 2
+			path: src/Structures/Page_Scope.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''html'' on array\{html\: string, images\: array\<int, string\>, title\: string, raw\?\: string, url\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''images'' on array\{html\: string, images\: array\<int, string\>, title\: string, raw\?\: string, url\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''label'' on array\{label\: string, url\: string, path\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''markup'' on array\{markup\: string, engine\: string, restyled\: bool, archetype\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''page_id'' on array\{page_id\: int, title\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''path'' on array\{label\: string, url\: string, path\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Offset ''title'' on array\{html\: string, images\: array\<int, string\>, title\: string, raw\?\: string, url\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{label\: string, url\: string, path\: string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Parameter &\$run by\-ref type of method DXAI_UI\\Structures\\Site_From_Menu\:\:step\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: parameterByRef.type
+			count: 11
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Static method DXAI_UI\\Structures\\Site_From_Menu\:\:chrome_markup\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Structures/Site_From_Menu.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{label\?\: string, url\?\: string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 4
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Offset ''paths'' on array\{id\: int, paths\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Offset ''unedited'' on array\{path_map\: array\<string, int\>, link_pages\: array\<int, array\{id\: int, paths\: array\<int, string\>\}\>, unedited\: array\<int, int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Parameter &\$link_pages by\-ref type of method DXAI_UI\\Structures\\Structure_Repository\:\:apply_crawl\(\) expects array\<int, array\<string, mixed\>\>, array\<int, mixed\> given\.$#'
+			identifier: parameterByRef.type
+			count: 2
+			path: src/Structures/Structure_Repository.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Structures/Template_Part_Factory.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Structures/Template_Part_Factory.php
+
+		-
+			message: '#^Offset 3 on array\{float, float, float, float\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Support/Color_Math.php
+
+		-
+			message: '#^Method DXAI_UI\\Support\\Css_Trim\:\:trim\(\) never assigns null to &\$stats so it can be removed from the by\-ref type\.$#'
+			identifier: parameterByRef.unusedType
+			count: 1
+			path: src/Support/Css_Trim.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Support/Kses_Styles.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: src/Support/Style_Repair.php
+
+		-
+			message: '#^Offset ''basedir'' on array\{path\: string, url\: string, subdir\: string, basedir\: string, baseurl\: string, error\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Support/Upload_Paths.php
+
+		-
+			message: '#^Offset ''baseurl'' on array\{path\: string, url\: string, subdir\: string, basedir\: string, baseurl\: string, error\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Support/Upload_Paths.php
+
+		-
+			message: '#^Method DXAI_UI\\Theme\\Adapters\\Amr_Adapter\:\:picture_shape\(\) never returns array\{\} so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: src/Theme/Adapters/Amr_Adapter.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Theme/Base_Theme.php
+
+		-
+			message: '#^Offset ''classes'' on array\{tag\: string, classes\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Capabilities.php
+
+		-
+			message: '#^Offset ''hex'' on array\{slug\: string, name\: string, raw\: string, hex\: string, origin\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Capabilities.php
+
+		-
+			message: '#^Offset ''tag'' on array\{tag\: string, classes\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Capabilities.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Theme/Capabilities.php
+
+		-
+			message: '#^Call to function is_object\(\) with WP_Theme_JSON_Data will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Theme/Design_Theme_Json.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_Theme_JSON_Data and ''get_data'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Theme/Design_Theme_Json.php
+
+		-
+			message: '#^Call to function method_exists\(\) with WP_Theme_JSON_Data and ''update_with'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Theme/Design_Theme_Json.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Theme/Template_Fonts.php
+
+		-
+			message: '#^Offset ''path'' on array\{url\: string, path\: string, relative\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Template_Fonts.php
+
+		-
+			message: '#^Offset 1 on array\{string, string, string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Template_Fonts.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: src/Theme/Theme_Binding.php
+
+		-
+			message: '#^Offset ''entries'' on array\{has_palette\: bool, entries\: array\<string, array\{slug\: string, name\: string, raw\: string, hex\: string, origin\: string\}\>, anchors\: array\<string, string\>, hash\: string, user_override\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Theme/Theme_Class_Swap.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Theme/Theme_Compat.php
+
+		-
+			message: '#^Constant WPINC not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: src/Theme/Theme_Fence.php
+
+		-
+			message: '#^Constant WPINC not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: src/Theme/Theme_Trim.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Import_Job.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Package.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ZipArchive and ''setCompressionName'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Package.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ZipArchive and ''setMtimeName'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Package.php
+
+		-
+			message: '#^Constant PCLZIP_OPT_REMOVE_PATH not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: src/Transfer/Package.php
+
+		-
+			message: '#^Method PclZip\:\:create\(\) invoked with 3 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Transfer/Package.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{file\: non\-empty\-string, width\: int\<1, max\>, height\: int\<1, max\>, mime\-type\: non\-empty\-string, filesize\?\: int\<0, max\>, \.\.\.\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 2
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''basedir'' on array\{path\: string, url\: string, subdir\: string, basedir\: string, baseurl\: string, error\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''baseurl'' on array\{path\: string, url\: string, subdir\: string, basedir\: string, baseurl\: string, error\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''file'' on array\{file\: non\-empty\-string, width\: int\<1, max\>, height\: int\<1, max\>, mime\-type\: non\-empty\-string, filesize\?\: int\<0, max\>, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''height'' on array\{file\: non\-empty\-string, width\: int\<1, max\>, height\: int\<1, max\>, mime\-type\: non\-empty\-string, filesize\?\: int\<0, max\>, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''type'' on array\{ext\: string\|false, type\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Offset ''width'' on array\{file\: non\-empty\-string, width\: int\<1, max\>, height\: int\<1, max\>, mime\-type\: non\-empty\-string, filesize\?\: int\<0, max\>, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Export.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''chrome_report'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''unfiltered_html…'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Structures\\\\Navigation_Factory'' and ''header_menu'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Structures\\\\Structure_Repository'' and ''install_site_footer'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Theme\\\\Theme_Compat'' and ''may_install_chrome'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 2
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Offset ''baseurl'' on array\{path\: string, url\: string, subdir\: string, basedir\: string, baseurl\: string, error\: string\|false\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Offset ''id'' on array\{path\: string, url\: string, id\: int, kind\: string, mime\: string, original\: string, filename\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Offset ''trees'' on array\{version\: int, markup\: string, hash\: string, slots\: array, logos\: array, trees\: array\<string, array\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Offset ''url'' on array\{path\: string, url\: string, id\: int, kind\: string, mime\: string, original\: string, filename\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Offset int\<1, max\> on array\<string, int\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Property DXAI_UI\\Transfer\\Page_Import\:\:\$made_media \(array\<string, int\>\) does not accept array\<int, int\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 2
+			path: src/Transfer/Page_Import.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Transfer/Transfer_Admin.php
+
+		-
+			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<non\-empty\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<non\-falsy\-string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 5
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Offset 2 on array\{string, non\-falsy\-string, ''\)''\|'',''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Property WP_Block_Template\:\:\$content \(string\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Verification/Design_Coverage.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Verification/Import_Audit.php
+
+		-
+			message: '#^Constant WPINC not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: src/Verification/Import_Audit.php
+
+		-
+			message: '#^Method DXAI_UI\\Verification\\Import_Audit\:\:note_editability\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Verification/Import_Audit.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Verification/Import_Audit.php
