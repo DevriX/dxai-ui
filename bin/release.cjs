@@ -69,6 +69,7 @@ const read = (rel) => fs.readFileSync(path.join(DST, rel), 'utf8');
 need(fs.existsSync(path.join(DST, 'runtime/dxai-ui-runtime.php')), 'the runtime loader ships');
 need(fs.existsSync(path.join(DST, 'templates/dxai-template.php')) && fs.existsSync(path.join(DST, 'templates/dxai-blank.php')), 'both page templates ship (the DX template, and DX Blank for the pages of earlier imports)');
 need(fs.existsSync(path.join(DST, 'themes/dx-base/style.css')) && fs.existsSync(path.join(DST, 'themes/dx-base/header.php')), 'the DX Base theme ships (the Template card installs it from the plugin)');
+need(fs.existsSync(path.join(DST, 'assets/vendor/lucide.min.js')), 'the icon runtime ships (assets/vendor/lucide.min.js: Assets::lucide_src() loads it on a page with icons, the admin too)');
 const un = read('uninstall.php');
 need(!/wp_delete_post\s*\(/.test(un), 'uninstall.php never deletes posts');
 need(/dxai_ui_keep_runtime/.test(un), 'uninstall.php keeps the runtime');

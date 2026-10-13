@@ -1,6 +1,7 @@
 # Dependencies and build output (the release builds assets/build: npm run release -- <version>)
 node_modules/
-vendor/
+# Composer's, at the root only: assets/vendor/ is the plugin's own (the icon runtime) and ships.
+/vendor/
 .phpstan-cache/
 assets/build/
 
