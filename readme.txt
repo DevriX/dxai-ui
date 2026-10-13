@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.34
+Stable tag: 0.4.0-beta.35
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.35 =
+* The icon runtime is in the ZIP again. 0.4.0-beta.34, the first release built from git by the release workflow, did not carry `assets/vendor/lucide.min.js` (a rule meant for Composer's folder kept it out of git, and the ZIPs built before took it from the disk), so the icons of a converted page and of the convert preview did not load. Everything else is 0.4.0-beta.34.
+* For developers: the file is in git, `bin/release.cjs` refuses a ZIP without it, and CI builds the release ZIP from what git carries on every push, so a file the plugin needs that git does not have fails on the push, not on the tag.
 
 = 0.4.0-beta.34 =
 * Updates come from the plugin's GitHub releases: Dashboard › Updates offers a new DX the way it offers a plugin from wordpress.org, and "View details" shows the release's notes. The plugin's header names its repository (`Update URI: https://github.com/DevriX/dxai-ui`), so WordPress never takes another plugin of the same folder name on wordpress.org for it. A release counts when it is published, its tag is a version and it carries the plugin's ZIP; a beta is offered to a site that runs a beta (`dxai_ui_update_channel` says otherwise, `dxai_ui_update_repository` changes the repository or turns the updates off). The releases are read at most once in six hours (once an hour after a failure). A copy that is a development checkout (a link to the source, or a folder with git, node_modules or the suites in it) is offered nothing: WordPress replaces a plugin by deleting its folder, and through a link that is the repository. `verify-updater.php` has 26 checks (8 mutations), one of them WordPress's own update check with GitHub and wordpress.org answered in place.
