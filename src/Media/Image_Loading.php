@@ -20,11 +20,21 @@ use DXAI_UI\Seo\Page_Meta;
  * the high priority; the blocks the page opens on are left to WordPress. So do the ones of a panel hidden until the page's runtime opens
  * it (`hidden` with a `dxai-on-` state mark: a header's dropdown, whose five icons were 231 KiB loaded with every page of H2O), and
  * the ones of the footer the DX template draws after the page (Template_Chrome). `dxai_ui_lazy_below` turns it off.
+ *
+ * A map's frame there waits for more: Chrome loads a lazy frame once it is about 1250 px from the screen, and H2O Away's Contact page
+ * has its Google map 1229 px below the first screen — 400 KiB of the map's script loaded with the page, 730 ms of blocking time. Its
+ * address goes to `data-dxai-src` and a few lines at the end of the page load it when it is 300 px from the screen (FRAME_MARGIN).
  */
 final class Image_Loading {
 
 	/** The attribute a top-level block below the first screen is marked with while it renders. */
 	private const MARK = '__dxai_below';
+
+	/** How near the screen a waiting frame is loaded. */
+	public const FRAME_MARGIN = '300px';
+
+	/** Whether this page has a frame waiting for the screen (the loader is printed at its end). */
+	private static bool $waiting = false;
 
 	/** Whether the page's content has had its first block of content (not a header) yet. */
 	private static bool $content = false;
@@ -39,6 +49,7 @@ final class Image_Loading {
 		add_filter( 'the_content', array( self::class, 'reset' ), 1 );
 		add_filter( 'render_block_data', array( self::class, 'enter' ), 10, 3 );
 		add_filter( 'render_block', array( self::class, 'leave' ), 10, 2 );
+		add_action( 'wp_footer', array( self::class, 'print_loader' ), 20 );
 	}
 
 	/**
@@ -129,9 +140,30 @@ final class Image_Loading {
 			if ( $name === 'IMG' && strtolower( (string) $tags->get_attribute( 'fetchpriority' ) ) === 'high' ) {
 				$tags->remove_attribute( 'fetchpriority' );
 			}
+			$src = (string) $tags->get_attribute( 'src' );
+			if ( $name === 'IFRAME' && self::is_map( $src ) ) {
+				$tags->set_attribute( 'data-dxai-src', $src );
+				// No address until it is near the screen (WordPress refuses about:blank: not a protocol esc_url() allows).
+				$tags->remove_attribute( 'src' );
+				self::$waiting = true;
+			}
 		}
 
 		return $tags->get_updated_html();
+	}
+
+	/** Whether a frame's address is a Google map (an embed, or maps.google.* with a query). */
+	public static function is_map( string $src ): bool {
+		return preg_match( '#^https?://(?:(?:www\.)?google\.[a-z.]{2,6}/maps\b|maps\.google\.[a-z.]{2,6}/)#i', $src ) === 1;
+	}
+
+	/** At the end of a page with a waiting frame: the lines that load it near the screen (at once without IntersectionObserver). */
+	public static function print_loader(): void {
+		if ( ! self::$waiting ) {
+			return;
+		}
+		self::$waiting = false;
+		echo "<script id=\"dxai-ui-frames\">(function(){var f=document.querySelectorAll('iframe[data-dxai-src]');function go(i){var s=i.getAttribute('data-dxai-src');if(s){i.removeAttribute('data-dxai-src');i.src=s;}}if(!('IntersectionObserver' in window)){for(var k=0;k<f.length;k++){go(f[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::FRAME_MARGIN ) . " 0px'});for(var j=0;j<f.length;j++){io.observe(f[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its one value is escaped.
 	}
 
 	/** On the main content of a design's page, unless turned off. */

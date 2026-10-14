@@ -262,6 +262,61 @@ final class Block_Tree {
 		}
 	}
 
+	/**
+	 * Markup with no link inside a link: an inner `<a>` keeps its words and loses its tag. Browsers close the outer link where the
+	 * inner one opens, so the outer one is left empty — a link with no name (H2O Away's Contact page: the old page's e-mail link poured
+	 * into a template line that was a link already; Lighthouse's "Links do not have a discernible name").
+	 */
+	public static function unnest_links( string $html ): string {
+		if ( preg_match_all( '#<a\b#i', $html ) < 2 ) {
+			return $html;
+		}
+		$out   = '';
+		$pos   = 0;
+		$depth = 0;
+		$kept  = array();
+		while ( preg_match( '#<(/?)a\b[^>]*>#i', $html, $m, PREG_OFFSET_CAPTURE, $pos ) === 1 ) {
+			$at   = (int) $m[0][1];
+			$out .= substr( $html, $pos, $at - $pos );
+			$pos  = $at + strlen( $m[0][0] );
+			if ( $m[1][0] === '' ) {
+				$kept[] = $depth === 0;
+				$out   .= $depth === 0 ? $m[0][0] : '';
+				++$depth;
+			} elseif ( $depth > 0 ) {
+				--$depth;
+				$out .= array_pop( $kept ) ? $m[0][0] : '';
+			} else {
+				$out .= $m[0][0];
+			}
+		}
+
+		return $out . substr( $html, $pos );
+	}
+
+	/**
+	 * A block and the blocks in it with no link inside a link in their own markup (unnest_links()). A block whose words are in its
+	 * inner blocks is left to them: its own markup is the frame around them.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array<string, mixed>
+	 */
+	public static function unnest_links_deep( array $block ): array {
+		if ( ! empty( $block['innerBlocks'] ) ) {
+			$block['innerBlocks'] = array_map( array( self::class, 'unnest_links_deep' ), (array) $block['innerBlocks'] );
+
+			return $block;
+		}
+		$html = (string) ( $block['innerHTML'] ?? '' );
+		$new  = self::unnest_links( $html );
+		if ( $new !== $html ) {
+			$block['innerHTML']    = $new;
+			$block['innerContent'] = array( $new );
+		}
+
+		return $block;
+	}
+
 	/** The attachment an image block shows: core's `id`, DX Picture's `imageId`, or 0. @param array<string, mixed> $block */
 	public static function image_id( array $block ): int {
 		return (int) ( $block['attrs']['id'] ?? $block['attrs']['imageId'] ?? 0 );

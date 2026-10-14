@@ -152,6 +152,13 @@ final class Page_Composer {
 			}
 		}
 
+		// No link inside a link, whatever wrote it: browsers break the outer one apart and leave it without a name.
+		$unnested = array_map( array( Block_Tree::class, 'unnest_links_deep' ), $sections );
+		if ( $unnested !== $sections ) {
+			$this->log[] = 'links: a link inside a link unwrapped';
+			$sections    = $unnested;
+		}
+
 		// The tail in the team's order (related services, questions, the call to action last), whatever order the old page had.
 		$composed = $sections;
 		$sections = Page_Order::arrange( $sections );

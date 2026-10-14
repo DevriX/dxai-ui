@@ -116,6 +116,29 @@ $expect( 'the questions the Home has no section for are core/details in one of i
 $expect( 'the figures the Home has no section for are shown in its text, not left out', str_contains( $markup, '40,000+ Properties Restored' ) && str_contains( $markup, '24/7 Live dispatch' ) && ! str_contains( $log, 'left out' ), $log );
 $expect( 'every section of the page parses back to the same blocks', ! is_wp_error( Block_Tree::serialize_checked( $out['sections'] ) ) );
 
+echo "\nLinks\n";
+// Cloudflare's protected e-mail, as the live H2O Away writes it: a link to /cdn-cgi/l/email-protection whose words are the address,
+// XOR-ed with the first byte.
+$cf_hex = '2a' . implode( '', array_map( static fn( string $c ): string => sprintf( '%02x', ord( $c ) ^ 0x2a ), str_split( 'crew@old-crx.example' ) ) );
+$cf_doc = ( new Content_Extractor() )->extract( '<html><body><main><section><h2>Contact us</h2><div class="wp-block-group"><p class="text-16"><a href="/cdn-cgi/l/email-protection#' . $cf_hex . '" data-type="mailto"><span class="__cf_email__" data-cfemail="' . $cf_hex . '">[email&#160;protected]</span></a></p></div></section></main></body></html>', 'https://old-crx.example/contact/' );
+$cf_html = (string) wp_json_encode( $cf_doc['sections'] );
+$expect( 'a protected e-mail is read as one link to the address, not a link in a link', 1 === substr_count( $cf_html, '<a ' ) && str_contains( $cf_html, 'mailto:crew@old-crx.example' ), $cf_html );
+$expect( 'Block_Tree::unnest_links() keeps the outer link and the inner one\'s words', '<p><a href="mailto:a@b.c">a@b.c</a> and <a href="/x">x</a></p>' === Block_Tree::unnest_links( '<p><a href="mailto:a@b.c"><a href="mailto:a@b.c">a@b.c</a></a> and <a href="/x">x</a></p>' ) && '<abbr>a</abbr> <a href="/y">y</a>' === Block_Tree::unnest_links( '<abbr>a</abbr> <a href="/y">y</a>' ) );
+// Whatever writes a link in a link, the composed page has none: an old page read as usual, then one of its paragraphs given one.
+$nest_model = ( new Content_Extractor() )->extract( '<html><body><main><section><h1>Nested links</h1><p>We answer every message the same day, at any hour of the day or night.</p></section><section><h2>Write to us</h2><p>Our office answers every message the same day: NESTED and on the phone, at any hour.</p></section></main></body></html>', 'https://old-crx.example/nested/' );
+foreach ( $nest_model['sections'] as &$nest_s ) {
+	foreach ( $nest_s['blocks'] as &$nest_b ) {
+		if ( isset( $nest_b['html'] ) && is_string( $nest_b['html'] ) ) {
+			$nest_b['html'] = str_replace( 'NESTED', '<a href="mailto:crew@old-crx.example"><a href="mailto:crew@old-crx.example">crew@old-crx.example</a></a>', $nest_b['html'] );
+		}
+	}
+	unset( $nest_b );
+}
+unset( $nest_s );
+$nest_out = ( new Page_Composer( $library, static fn( string $src ) => null ) )->compose( $nest_model );
+$nest_mk  = implode( "\n", array_map( 'serialize_block', $nest_out['sections'] ) );
+$expect( 'the composed page holds no link in a link, and says it unwrapped one', str_contains( $nest_mk, 'crew@old-crx.example' ) && 0 === preg_match( '#<a\b[^>]*>(?:(?!</a>).)*<a\b#is', $nest_mk ) && in_array( 'links: a link inside a link unwrapped', $nest_out['log'], true ), implode( ' | ', $nest_out['log'] ) );
+
 echo "\nA call button of the design\n";
 // The Home's call to action: a heading, a line, and a call button written as a link that does not wrap.
 $button = '<!-- wp:dxai-ui/text {"tagName":"a","url":"tel:5550100","className":"crx-btn whitespace-nowrap"} --><a class="wp-block-dxai-ui-text crx-btn whitespace-nowrap" href="tel:5550100">Call (555) 010-0100</a><!-- /wp:dxai-ui/text -->';

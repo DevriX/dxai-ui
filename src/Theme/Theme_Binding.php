@@ -362,29 +362,9 @@ final class Theme_Binding {
 	 * @param array<string, mixed> $binding
 	 */
 	private static function build_css( int $home, array $binding ): string {
-		$design = array_map( 'strval', (array) ( $binding['design'] ?? array() ) );
-		$bound  = array();
-		foreach ( (array) ( $binding['tokens'] ?? array() ) as $token => $row ) {
-			$slug = (string) ( $row['to'] ?? '' );
-			$hex  = Theme_Palette::hex( $slug );
-			if ( $slug !== '' && Theme_Palette::has( $slug ) && $hex !== '' && isset( $design[ $token ] ) ) {
-				$bound[ $token ] = array(
-					'slug' => $slug,
-					'hex'  => $hex,
-				);
-			}
-		}
+		list( $design, $bound, $derived, $now ) = self::live( $binding );
 		if ( $bound === array() ) {
 			return '';
-		}
-		// Every token's value on this request: bound ones the theme's, derived ones relative to their anchor.
-		$now     = $design;
-		$derived = self::derived( $design, $bound );
-		foreach ( $bound as $token => $b ) {
-			$now[ $token ] = $b['hex'];
-		}
-		foreach ( $derived as $token => $d ) {
-			$now[ $token ] = $d['hex'];
 		}
 		$decls = array();
 		foreach ( $bound as $token => $b ) {
@@ -407,6 +387,56 @@ final class Theme_Binding {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Every token's value on this request: the design's, a bound token's the theme's, a tint of a bound token moved with it. For a
+	 * design that keeps its colours, or with no binding, the design's own.
+	 *
+	 * @return array<string, string> token => colour
+	 */
+	public static function values( int $home ): array {
+		$binding = self::get( $home );
+		if ( $binding === null ) {
+			return array_map( static fn( $d ) => (string) $d['value'], self::design_colors( $home ) );
+		}
+		if ( ( $binding['mode'] ?? '' ) !== 'follow' || ! Theme_Palette::current()['has_palette'] ) {
+			return array_map( 'strval', (array) ( $binding['design'] ?? array() ) );
+		}
+
+		return self::live( $binding )[3];
+	}
+
+	/**
+	 * A binding's design values, its bound tokens, the tokens derived from them, and every token's value now.
+	 *
+	 * @param array<string, mixed> $binding
+	 * @return array{0: array<string, string>, 1: array<string, array{slug:string, hex:string}>, 2: array<string, array{hex:string, css:string}>, 3: array<string, string>}
+	 */
+	private static function live( array $binding ): array {
+		$design = array_map( 'strval', (array) ( $binding['design'] ?? array() ) );
+		$bound  = array();
+		foreach ( (array) ( $binding['tokens'] ?? array() ) as $token => $row ) {
+			$slug = (string) ( $row['to'] ?? '' );
+			$hex  = Theme_Palette::hex( $slug );
+			if ( $slug !== '' && Theme_Palette::has( $slug ) && $hex !== '' && isset( $design[ $token ] ) ) {
+				$bound[ $token ] = array(
+					'slug' => $slug,
+					'hex'  => $hex,
+				);
+			}
+		}
+		// Every token's value on this request: bound ones the theme's, derived ones relative to their anchor.
+		$now     = $design;
+		$derived = $bound === array() ? array() : self::derived( $design, $bound );
+		foreach ( $bound as $token => $b ) {
+			$now[ $token ] = $b['hex'];
+		}
+		foreach ( $derived as $token => $d ) {
+			$now[ $token ] = $d['hex'];
+		}
+
+		return array( $design, $bound, $derived, $now );
 	}
 
 	/**
@@ -716,27 +746,6 @@ final class Theme_Binding {
 
 	/** An OKLCH colour as #rrggbb, clipped to sRGB. */
 	private static function oklch_hex( float $l, float $c, float $h ): string {
-		$a  = $c * cos( deg2rad( $h ) );
-		$b  = $c * sin( deg2rad( $h ) );
-		$l_ = $l + 0.3963377774 * $a + 0.2158037573 * $b;
-		$m_ = $l - 0.1055613458 * $a - 0.0638541728 * $b;
-		$s_ = $l - 0.0894841775 * $a - 1.2914855480 * $b;
-		$l3 = $l_ ** 3;
-		$m3 = $m_ ** 3;
-		$s3 = $s_ ** 3;
-		$rgb = array(
-			4.0767416621 * $l3 - 3.3077115913 * $m3 + 0.2309699292 * $s3,
-			-1.2684380046 * $l3 + 2.6097574011 * $m3 - 0.3413193965 * $s3,
-			-0.0041960863 * $l3 - 0.7034186147 * $m3 + 1.7076147010 * $s3,
-		);
-		$out = array_map(
-			static function ( $v ) {
-				$v = $v <= 0.0031308 ? 12.92 * $v : 1.055 * ( $v ** ( 1 / 2.4 ) ) - 0.055;
-				return (int) round( max( 0.0, min( 1.0, $v ) ) * 255 );
-			},
-			$rgb
-		);
-
-		return sprintf( '#%02x%02x%02x', $out[0], $out[1], $out[2] );
+		return Color_Math::from_oklch( $l, $c, $h );
 	}
 }

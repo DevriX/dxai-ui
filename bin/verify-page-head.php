@@ -138,9 +138,10 @@ echo "\nPictures below the first screen\n";
 $img  = static fn( string $n, string $extra = '' ): string => '<!-- wp:image {"sizeSlug":"large"} --><figure class="wp-block-image size-large"><img src="https://example.test/uploads/' . $n . '.jpg" alt="' . $n . '"' . $extra . '/></figure><!-- /wp:image -->';
 $sect = static fn( string $inner, string $tag = 'section' ): string => '<!-- wp:group {"tagName":"' . $tag . '"} --><' . $tag . ' class="wp-block-group">' . $inner . '</' . $tag . '><!-- /wp:group -->';
 $map  = '<!-- wp:html --><iframe src="https://www.google.com/maps/embed?pb=x" title="Map"></iframe><!-- /wp:html -->';
+$film = '<!-- wp:html --><iframe src="https://player.example.test/film/1" title="Film"></iframe><!-- /wp:html -->';
 $panel = static fn( string $cls, string $inner ): string => '<!-- wp:group {"className":"' . $cls . '"} --><div class="wp-block-group ' . $cls . '">' . $inner . '</div><!-- /wp:group -->';
 $spacer = '<!-- wp:group {"className":"h-104px"} --><div class="wp-block-group h-104px"></div><!-- /wp:group -->';
-$body  = $spacer . $sect( $img( 'logo' ) . $panel( 'dxai-on-menu--services hidden', $img( 'icon' ) ), 'header' ) . $sect( $panel( 'hidden', $img( 'wide' ) ) . $img( 'hero' ) ) . $sect( $img( 'team', ' fetchpriority="high"' ) . $map ) . $sect( $img( 'van', ' loading="eager"' ) );
+$body  = $spacer . $sect( $img( 'logo' ) . $panel( 'dxai-on-menu--services hidden', $img( 'icon' ) ), 'header' ) . $sect( $panel( 'hidden', $img( 'wide' ) ) . $img( 'hero' ) ) . $sect( $img( 'team', ' fetchpriority="high"' ) . $map . $film ) . $sect( $img( 'van', ' loading="eager"' ) );
 $lazy = $page( 'Page head fixture (pictures)', $body, '', $home );
 $html = '';
 if ( $lazy ) {
@@ -156,6 +157,16 @@ $tag_of = static function ( string $html, string $needle ): string {
 $expect( 'the header\'s picture and the first section\'s are left to WordPress (not made lazy here), after a fixed header\'s spacer too', ! str_contains( $tag_of( $html, 'logo.jpg' ), 'loading="lazy"' ) && ! str_contains( $tag_of( $html, 'hero.jpg' ), 'loading="lazy"' ), $tag_of( $html, 'logo.jpg' ) . ' | ' . $tag_of( $html, 'hero.jpg' ) );
 $expect( 'a picture below the first screen loads lazily and loses the high priority', str_contains( $tag_of( $html, 'team.jpg' ), 'loading="lazy"' ) && ! str_contains( $tag_of( $html, 'team.jpg' ), 'fetchpriority' ), $tag_of( $html, 'team.jpg' ) );
 $expect( 'a map\'s frame below the first screen loads lazily', str_contains( $tag_of( $html, 'google.com/maps' ), 'loading="lazy"' ), $tag_of( $html, 'google.com/maps' ) );
+$expect( '…and waits for the screen: its address kept aside (Chrome loads a lazy frame 1250 px early)', 0 === preg_match( '#\ssrc=#', $tag_of( $html, 'google.com/maps' ) ) && str_contains( $tag_of( $html, 'google.com/maps' ), 'data-dxai-src="https://www.google.com/maps/embed?pb=x"' ), $tag_of( $html, 'google.com/maps' ) );
+$expect( 'another frame keeps its address (only lazy)', str_contains( $tag_of( $html, 'player.example.test' ), 'src="https://player.example.test/film/1"' ) && str_contains( $tag_of( $html, 'player.example.test' ), 'loading="lazy"' ), $tag_of( $html, 'player.example.test' ) );
+ob_start();
+Image_Loading::print_loader();
+$loader = (string) ob_get_clean();
+ob_start();
+Image_Loading::print_loader();
+$again = (string) ob_get_clean();
+$expect( 'the page ends with the lines that load it near the screen, once', str_contains( $loader, 'id="dxai-ui-frames"' ) && str_contains( $loader, "rootMargin:'" . Image_Loading::FRAME_MARGIN . " 0px'" ) && str_contains( $loader, 'data-dxai-src' ) && '' === $again, $loader );
+$expect( 'Google maps are told apart from other frames', Image_Loading::is_map( 'https://maps.google.com/maps?q=Olympia&output=embed' ) && Image_Loading::is_map( 'https://www.google.com/maps/embed?pb=x' ) && Image_Loading::is_map( 'https://www.google.co.uk/maps/embed?pb=x' ) && ! Image_Loading::is_map( 'https://www.google.com/search?q=maps' ) && ! Image_Loading::is_map( 'https://www.youtube.com/embed/x' ) && ! Image_Loading::is_map( 'https://evil.example/www.google.com/maps' ) );
 $expect( 'a picture the design marked eager stays eager', str_contains( $tag_of( $html, 'van.jpg' ), 'loading="eager"' ), $tag_of( $html, 'van.jpg' ) );
 $expect( 'the mark used while rendering is not left in the page', ! str_contains( $html, '__dxai_below' ) );
 $expect( 'a picture in a panel the page\'s runtime opens (hidden, dxai-on-) loads lazily, in the header too', str_contains( $tag_of( $html, 'icon.jpg' ), 'loading="lazy"' ), $tag_of( $html, 'icon.jpg' ) );
@@ -210,7 +221,7 @@ $expect( '…and not when the filter turns it off', '' !== $tag_of( $footer_off,
 add_filter( 'dxai_ui_lazy_below', '__return_false' );
 $off = $lazy ? (string) apply_filters( 'the_content', (string) get_post_field( 'post_content', $lazy ) ) : '';
 remove_filter( 'dxai_ui_lazy_below', '__return_false' );
-$expect( 'none of it when the filter turns it off', str_contains( $tag_of( $off, 'team.jpg' ), 'fetchpriority="high"' ) || ! str_contains( $tag_of( $off, 'team.jpg' ), 'loading="lazy"' ), $tag_of( $off, 'team.jpg' ) );
+$expect( 'none of it when the filter turns it off', ( str_contains( $tag_of( $off, 'team.jpg' ), 'fetchpriority="high"' ) || ! str_contains( $tag_of( $off, 'team.jpg' ), 'loading="lazy"' ) ) && str_contains( $tag_of( $off, 'google.com/maps' ), 'src="https://www.google.com/maps/embed?pb=x"' ), $tag_of( $off, 'team.jpg' ) . ' | ' . $tag_of( $off, 'google.com/maps' ) );
 $two = Image_Loading::lazy( '<img src="a.jpg" loading="eager"><img src="b.jpg" fetchpriority="high">' );
 $expect( 'Image_Loading::lazy() keeps a picture\'s own loading and drops the high priority', 1 === preg_match( '#<img[^>]*src="a\.jpg"[^>]*>#', $two, $a ) && str_contains( $a[0], 'loading="eager"' ) && ! str_contains( $a[0], 'lazy' ) && 1 === preg_match( '#<img[^>]*src="b\.jpg"[^>]*>#', $two, $b ) && str_contains( $b[0], 'loading="lazy"' ) && ! str_contains( $b[0], 'fetchpriority' ), $two );
 

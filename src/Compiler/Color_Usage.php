@@ -198,6 +198,11 @@ final class Color_Usage {
 		if ( $out['bg'] === '' && is_string( $attrs['backgroundColor'] ?? null ) ) {
 			$out['bg'] = sanitize_key( $attrs['backgroundColor'] );
 		}
+		// …and its custom background that names one (Native\Background_Color writes the class's own declaration there): a card's colour
+		// lives there, and the text in it was read against the section under the card.
+		if ( $out['bg'] === '' && is_string( $attrs['style']['color']['background'] ?? null ) ) {
+			$out['bg'] = self::token_in( $attrs['style']['color']['background'] );
+		}
 		foreach ( self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $prop => $value ) {
 			$token = self::token_in( $value );
 			if ( $token === '' ) {

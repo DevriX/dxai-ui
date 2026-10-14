@@ -691,6 +691,12 @@ final class Content_Extractor {
 			$inner .= $this->inline_html_node( $c );
 		}
 		if ( $tag === 'a' ) {
+			// Its words are a link already — Cloudflare's protected e-mail (`<a href="/cdn-cgi/l/email-protection#…"><span
+			// data-cfemail="…">`), decoded above into its own mailto link: that link is the link. Two would nest, and a browser
+			// leaves the outer one empty (H2O Away's Contact page: a link with no name).
+			if ( stripos( $inner, '<a ' ) !== false ) {
+				return $inner;
+			}
 			$href = $this->href( (string) $n->getAttribute( 'href' ) );
 			return $href !== '' && self::plain( $inner ) !== '' ? '<a href="' . esc_attr( $href ) . '">' . $inner . '</a>' : $inner;
 		}

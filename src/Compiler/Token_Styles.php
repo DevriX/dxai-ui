@@ -253,6 +253,9 @@ final class Token_Styles {
 		$follow = \DXAI_UI\Theme\Theme_Binding::css( $post_id );
 		$css    = $follow !== '' ? $follow : self::adopt_css( $post_id );
 
+		// Text that nearly reads on its backgrounds, in the nearest colour that does (Legible_Text).
+		$css .= \DXAI_UI\Theme\Legible_Text::css( $post_id );
+
 		// Theme classes swapped into the design's content, anchored to their tokens (Theme_Class_Swap).
 		$css .= \DXAI_UI\Theme\Theme_Class_Swap::css( $post_id );
 

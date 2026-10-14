@@ -218,6 +218,32 @@ final class Color_Math {
 		return array( ( $rgb[0] + $m ) * 255, ( $rgb[1] + $m ) * 255, ( $rgb[2] + $m ) * 255 );
 	}
 
+	/** An sRGB hex colour from OKLCH (lightness 0-1, chroma, hue in degrees), clipped to the sRGB gamut. */
+	public static function from_oklch( float $l, float $c, float $h ): string {
+		$a   = $c * cos( deg2rad( $h ) );
+		$b   = $c * sin( deg2rad( $h ) );
+		$l_  = $l + 0.3963377774 * $a + 0.2158037573 * $b;
+		$m_  = $l - 0.1055613458 * $a - 0.0638541728 * $b;
+		$s_  = $l - 0.0894841775 * $a - 1.2914855480 * $b;
+		$l3  = $l_ ** 3;
+		$m3  = $m_ ** 3;
+		$s3  = $s_ ** 3;
+		$rgb = array(
+			4.0767416621 * $l3 - 3.3077115913 * $m3 + 0.2309699292 * $s3,
+			-1.2684380046 * $l3 + 2.6097574011 * $m3 - 0.3413193965 * $s3,
+			-0.0041960863 * $l3 - 0.7034186147 * $m3 + 1.7076147010 * $s3,
+		);
+		$out = array_map(
+			static function ( $v ) {
+				$v = $v <= 0.0031308 ? 12.92 * $v : 1.055 * ( $v ** ( 1 / 2.4 ) ) - 0.055;
+				return (int) round( max( 0.0, min( 1.0, $v ) ) * 255 );
+			},
+			$rgb
+		);
+
+		return sprintf( '#%02x%02x%02x', $out[0], $out[1], $out[2] );
+	}
+
 	private static function cbrt( float $v ): float {
 		return $v < 0 ? -( ( -$v ) ** ( 1 / 3 ) ) : $v ** ( 1 / 3 );
 	}
