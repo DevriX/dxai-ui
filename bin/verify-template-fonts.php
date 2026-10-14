@@ -61,7 +61,8 @@ $css      = $face( 'vietnamese', 'Tf Display', '400', 'U+0102-0103, U+1EA0-1EF9'
 $gstatic[] = $remote( 'evil' );
 
 // What the network answers: Google's stylesheet for the address of the design, a font file for each address on its CDN, and a failure for one address.
-$answers = static function ( $pre, $args, $url ) use ( $google, $bad_url, $css ) {
+$measured = array();
+$answers  = static function ( $pre, $args, $url ) use ( $google, $bad_url, $css, &$measured ) {
 	if ( ! is_string( $url ) ) {
 		return $pre;
 	}
@@ -73,6 +74,12 @@ $answers = static function ( $pre, $args, $url ) use ( $google, $bad_url, $css )
 	}
 	if ( str_starts_with( $url, 'https://fonts.gstatic.com/' ) ) {
 		return array( 'response' => array( 'code' => 200, 'message' => 'OK' ), 'body' => 'wOF2' . str_repeat( 'x', 300 ), 'headers' => array(), 'cookies' => array(), 'filename' => null );
+	}
+	// Any other question to Google (the TrueType files the fallback faces are measured from, verify-font-fallbacks.php): not known here.
+	if ( str_starts_with( $url, 'https://fonts.googleapis.com/' ) ) {
+		$measured[] = $url;
+
+		return array( 'response' => array( 'code' => 400, 'message' => 'Bad Request' ), 'body' => '', 'headers' => array(), 'cookies' => array(), 'filename' => null );
 	}
 
 	return $pre;
@@ -134,6 +141,7 @@ $expect( 'its fonts are installed as the template\'s', is_array( $done ) && ! em
 $rec = Template_Fonts::get();
 $expect( 'the page root\'s font is the body font, any other web font the headline font', ( $rec['body_family'] ?? '' ) === 'Tf Body' && ( $rec['heading_family'] ?? '' ) === 'Tf Display', wp_json_encode( array( $rec['heading_family'] ?? '', $rec['body_family'] ?? '' ) ) );
 $expect( 'their stacks are the design\'s own, fallbacks included', ( $rec['heading'] ?? '' ) === "'Tf Display',Impact,sans-serif" && ( $rec['body'] ?? '' ) === "'Tf Body',system-ui,sans-serif", wp_json_encode( array( $rec['heading'] ?? '', $rec['body'] ?? '' ) ) );
+$expect( 'they are measured for their fallback faces as they are installed (Google is asked for each font\'s TrueType file)', isset( $rec['fallbacks'], $rec['measured'] ) && array() !== preg_grep( '#family=Tf\+Body:wght@400$#', $measured ) && array() !== preg_grep( '#family=Tf\+Display:wght@400$#', $measured ), wp_json_encode( $measured ) );
 $faces = (string) ( $rec['faces'] ?? '' );
 $expect( 'only the Latin faces are kept: 1 + 1 + 1 + 1 + 1 (Latin and Latin Extended; Vietnamese and Devanagari are not text this site has)', 5 === substr_count( $faces, '@font-face' ), (string) substr_count( $faces, '@font-face' ) );
 $expect( 'the weights and unicode ranges are kept as Google gave them', str_contains( $faces, 'font-weight:700' ) && str_contains( $faces, 'unicode-range:U+0000-00FF' ) && str_contains( $faces, 'unicode-range:U+0100-02BA' ) );

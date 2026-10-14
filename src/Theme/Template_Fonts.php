@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Theme;
 
 use DXAI_UI\Media\Font_Host;
+use DXAI_UI\Media\Font_Metrics;
 use DXAI_UI\Structures\Design_Attach;
 use DXAI_UI\Support\Upload_Paths;
 
@@ -33,6 +34,10 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * Nothing here changes the theme, its files or its settings, and nothing is rewritten in a design: a design installed later replaces
  * the record, remove() puts the theme's own choice back.
+ *
+ * Each font has a fallback face of its size (Font_Metrics): a local font with the web font's line height and average width, named
+ * "<family> Fallback" and placed right after it in the stacks, so nothing moves when the web font arrives (H2O Away: the phone header
+ * grew 5 px with Hind, CLS 0.077). The numbers are read when the fonts are installed, and once, by cron, for fonts installed before.
  */
 final class Template_Fonts {
 
@@ -41,6 +46,9 @@ final class Template_Fonts {
 
 	/** The folder of the files, under uploads/dxai-ui. */
 	public const DIR = 'template-fonts';
+
+	/** The event that reads the numbers of fonts installed before they were read at install. */
+	public const MEASURE_HOOK = 'dxai_ui_template_fonts_measure';
 
 	/** The record's version. */
 	private const VERSION = 1;
@@ -57,6 +65,8 @@ final class Template_Fonts {
 		add_action( 'wp_head', array( self::class, 'print_site' ), 99 );
 		add_filter( 'block_editor_settings_all', array( self::class, 'editor_settings' ), 20 );
 		add_filter( 'dx_fonts_preload_urls', array( self::class, 'preload' ), 20 );
+		add_action( 'admin_init', array( self::class, 'maybe_measure' ) );
+		add_action( self::MEASURE_HOOK, array( self::class, 'measure_event' ) );
 	}
 
 	/* ---------------------------------------------------------------------------------------------- the record */
@@ -64,7 +74,7 @@ final class Template_Fonts {
 	/**
 	 * The record, or [] when none is installed.
 	 *
-	 * @return array{v:int, design:int, source:string, title:string, heading:string, body:string, heading_family:string, body_family:string, faces:string, files:array<int, string>, urls:array<int, string>, installed:int, complete:bool}|array{}
+	 * @return array{v:int, design:int, source:string, title:string, heading:string, body:string, heading_family:string, body_family:string, faces:string, files:array<int, string>, urls:array<int, string>, installed:int, complete:bool, preload?:array<int, mixed>, fallbacks?:array<string, mixed>, measured?:int}|array{}
 	 */
 	public static function get(): array {
 		$r = get_option( self::OPTION, array() );
@@ -169,12 +179,63 @@ final class Template_Fonts {
 
 		return array(
 			'id'           => get_stylesheet(),
-			'heading'      => self::safe_stack( (string) $t['heading'] ),
-			'body'         => self::safe_stack( (string) $t['body'] ),
+			'heading'      => self::stack( $t, 'heading' ),
+			'body'         => self::stack( $t, 'body' ),
 			'heading_slug' => 'dx-template-heading',
 			'body_slug'    => 'dx-template-body',
-			'faces'        => (string) $t['faces'],
+			'faces'        => self::faces( $t ),
 		);
+	}
+
+	/**
+	 * A role's stack, with the font's fallback face right after it when its numbers are known.
+	 *
+	 * @param array<string, mixed> $t The record.
+	 */
+	public static function stack( array $t, string $role ): string {
+		$stack  = self::safe_stack( (string) ( $t[ $role ] ?? '' ) );
+		$family = (string) ( $t[ $role . '_family' ] ?? '' );
+		if ( $stack === '' || $family === '' || ! self::fallbacks_on() || ! is_array( $t['fallbacks'][ $family ] ?? null ) ) {
+			return $stack;
+		}
+		$parts = array_map( 'trim', explode( ',', $stack ) );
+		if ( strtolower( trim( $parts[0], '"\'' ) ) !== strtolower( $family ) ) {
+			return $stack;
+		}
+		array_splice( $parts, 1, 0, '"' . Font_Metrics::fallback_name( $family ) . '"' );
+		$with = self::safe_stack( implode( ', ', $parts ) );
+
+		return $with !== '' ? $with : $stack;
+	}
+
+	/**
+	 * The record's faces, and the fallback face of each font whose numbers are known.
+	 *
+	 * @param array<string, mixed> $t The record.
+	 */
+	public static function faces( array $t ): string {
+		$out = (string) $t['faces'];
+		if ( ! self::fallbacks_on() ) {
+			return $out;
+		}
+		foreach ( (array) ( $t['fallbacks'] ?? array() ) as $family => $f ) {
+			if ( is_array( $f ) && is_array( $f['normal'] ?? null ) && preg_match( '/^[A-Za-z0-9 ._-]{1,80}$/', (string) $family ) === 1 ) {
+				$out .= "\n" . Font_Metrics::fallback_css( (string) $family, $f['normal'], (string) ( $f['kind'] ?? 'sans' ), is_array( $f['bold'] ?? null ) ? $f['bold'] : null );
+			}
+		}
+
+		return $out;
+	}
+
+	/** Whether the fonts get their fallback faces. */
+	private static function fallbacks_on(): bool {
+		/**
+		 * Whether the template's fonts are printed with a fallback face of their size (a local font with their line height and average
+		 * width), so the page does not move when they arrive.
+		 *
+		 * @param bool $on Default true.
+		 */
+		return (bool) apply_filters( 'dxai_ui_font_fallbacks', true );
 	}
 
 	/**
@@ -183,7 +244,7 @@ final class Template_Fonts {
 	 * @param array<string, mixed> $t The record.
 	 */
 	public static function site_css( array $t ): string {
-		$css = (string) $t['faces'] . "\n:root{--font-heading:" . self::safe_stack( (string) $t['heading'] ) . ';--font-primary:' . self::safe_stack( (string) $t['body'] ) . ';}';
+		$css = self::faces( $t ) . "\n:root{--font-heading:" . self::stack( $t, 'heading' ) . ';--font-primary:' . self::stack( $t, 'body' ) . ';}';
 
 		// Nothing in it can close a style element.
 		return str_replace( '</', '<\\/', $css );
@@ -374,7 +435,9 @@ final class Template_Fonts {
 			'installed'      => time(),
 			'complete'       => $complete,
 		);
-		$before = self::get();
+		$record['fallbacks'] = self::measure( $record );
+		$record['measured']  = time();
+		$before              = self::get();
 		update_option( self::OPTION, $record, true );
 		// The files the record before this one named and this one does not are not wanted any more.
 		foreach ( array_diff( array_map( 'strval', (array) ( $before['files'] ?? array() ) ), array_keys( $files ) ) as $old ) {
@@ -394,6 +457,81 @@ final class Template_Fonts {
 			'bytes'     => $bytes,
 			'complete'  => $complete,
 		);
+	}
+
+	/**
+	 * The numbers of the record's fonts (headline and body), for their fallback faces: by family, the kind of local font that stands in
+	 * (a serif for a serif stack), and the regular and bold faces read. A font that cannot be read (Google not reached, a monospace or an
+	 * icon font) has none.
+	 *
+	 * @param array<string, mixed> $r The record.
+	 * @return array<string, array{kind:string, normal:array<string, int|float>, bold:array<string, int|float>|null}>
+	 */
+	public static function measure( array $r ): array {
+		$weights = array();
+		if ( preg_match_all( '/@font-face\s*\{([^}]*)\}/i', (string) ( $r['faces'] ?? '' ), $blocks ) ) {
+			foreach ( $blocks[1] as $block ) {
+				if ( preg_match( '/font-family\s*:\s*"([^"]+)"/i', $block, $f ) === 1 && preg_match( '/font-style\s*:\s*normal/i', $block ) === 1 && preg_match( '/font-weight\s*:\s*(\d{3})/i', $block, $w ) === 1 ) {
+					$weights[ $f[1] ][] = (int) $w[1];
+				}
+			}
+		}
+		$out = array();
+		foreach ( array( 'heading', 'body' ) as $role ) {
+			$family = (string) ( $r[ $role . '_family' ] ?? '' );
+			$stack  = strtolower( (string) ( $r[ $role ] ?? '' ) );
+			if ( $family === '' || isset( $out[ $family ] ) || Theme_Fonts::is_icon( strtolower( $family ) ) || str_contains( $stack, 'monospace' ) ) {
+				continue;
+			}
+			$read = Font_Metrics::of_google( $family, $weights[ $family ] ?? array( 400 ) );
+			if ( $read['normal'] === null ) {
+				continue;
+			}
+			$out[ $family ] = array(
+				'kind'   => preg_match( '/(?<!sans-)\bserif\b/', $stack ) === 1 ? 'serif' : 'sans',
+				'normal' => $read['normal'],
+				'bold'   => $read['bold'],
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * On an admin page: fonts installed before their numbers were read get them, once, by cron (a request to Google, off the page).
+	 * Tried again a day later when Google could not be reached.
+	 */
+	public static function maybe_measure(): void {
+		$r = self::get();
+		if ( $r === array() || ( isset( $r['fallbacks'] ) && ( $r['fallbacks'] !== array() || time() - (int) ( $r['measured'] ?? 0 ) < DAY_IN_SECONDS ) ) ) {
+			return;
+		}
+		if ( ! wp_next_scheduled( self::MEASURE_HOOK ) ) {
+			wp_schedule_single_event( time(), self::MEASURE_HOOK );
+		}
+	}
+
+	/** The cron event: read the numbers of the installed fonts. */
+	public static function measure_event(): void {
+		self::measure_now();
+	}
+
+	/**
+	 * Read the numbers of the installed fonts and keep them with the record.
+	 *
+	 * @return array<string, mixed> The fallbacks read.
+	 */
+	public static function measure_now(): array {
+		$r = self::get();
+		if ( $r === array() ) {
+			return array();
+		}
+		$r['fallbacks'] = self::measure( $r );
+		$r['measured']  = time();
+		update_option( self::OPTION, $r, true );
+		Theme_Fonts::reset();
+
+		return $r['fallbacks'];
 	}
 
 	/**

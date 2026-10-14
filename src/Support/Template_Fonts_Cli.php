@@ -33,7 +33,7 @@ final class Template_Fonts_Cli {
 					array(
 						'type'     => 'positional',
 						'name'     => 'action',
-						'options'  => array( 'status', 'install', 'remove' ),
+						'options'  => array( 'status', 'install', 'remove', 'measure' ),
 						'optional' => false,
 					),
 					array(
@@ -67,6 +67,15 @@ final class Template_Fonts_Cli {
 				\WP_CLI::error( $done->get_error_message() );
 			}
 			\WP_CLI::success( sprintf( 'Headline font %s, body font %s: %d faces, %d files, %d KB%s.', $done['heading'], $done['body'], $done['faces'], $done['files'], (int) round( $done['bytes'] / 1024 ), $done['complete'] ? '' : ' (some files could not be fetched)' ) );
+
+			return;
+		}
+		if ( $action === 'measure' ) {
+			if ( Template_Fonts::get() === array() ) {
+				\WP_CLI::error( 'No template fonts are installed.' );
+			}
+			$read = Template_Fonts::measure_now();
+			\WP_CLI::success( $read === array() ? 'No font could be read (Google not reached?): no fallback faces.' : 'Fallback faces for ' . implode( ', ', array_keys( $read ) ) . '.' );
 
 			return;
 		}

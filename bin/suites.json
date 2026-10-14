@@ -49,6 +49,7 @@
 		{ "file": "verify-structures.php", "group": "ci" },
 		{ "file": "verify-team-arrange.php", "group": "ci" },
 		{ "file": "verify-team-pages.php", "group": "ci" },
+		{ "file": "verify-font-fallbacks.php", "group": "ci" },
 		{ "file": "verify-template-fonts.php", "group": "ci" },
 		{ "file": "verify-theme-contract.php", "group": "ci" },
 		{ "file": "verify-theme-fonts.php", "group": "ci" },

@@ -16,12 +16,16 @@
  * Below that first screen, pictures and frames load lazily and none has the high priority: those of the sections after the first,
  * of a panel the page's runtime opens (a header's dropdown: H2O's five icons, 231 KiB), and of the footer the DX template draws.
  *
+ * The plugin's small stylesheets say where their file is, so WordPress writes them into the page (wp_maybe_inline_styles, smallest
+ * first, within its size limit) instead of four requests the first paint waited for (T5.3): the plugin's own only, with what they need.
+ *
  * Makes the pages and deletes them, also when a check dies half-way. Exit code 1 when a check fails.
  *
  * @package DXAI_UI
  */
 
 use DXAI_UI\Media\Image_Loading;
+use DXAI_UI\Media\Inline_Styles;
 use DXAI_UI\Media\Lcp_Preload;
 use DXAI_UI\Seo\Page_Meta;
 use DXAI_UI\Structures\Page_Scope;
@@ -209,6 +213,42 @@ remove_filter( 'dxai_ui_lazy_below', '__return_false' );
 $expect( 'none of it when the filter turns it off', str_contains( $tag_of( $off, 'team.jpg' ), 'fetchpriority="high"' ) || ! str_contains( $tag_of( $off, 'team.jpg' ), 'loading="lazy"' ), $tag_of( $off, 'team.jpg' ) );
 $two = Image_Loading::lazy( '<img src="a.jpg" loading="eager"><img src="b.jpg" fetchpriority="high">' );
 $expect( 'Image_Loading::lazy() keeps a picture\'s own loading and drops the high priority', 1 === preg_match( '#<img[^>]*src="a\.jpg"[^>]*>#', $two, $a ) && str_contains( $a[0], 'loading="eager"' ) && ! str_contains( $a[0], 'lazy' ) && 1 === preg_match( '#<img[^>]*src="b\.jpg"[^>]*>#', $two, $b ) && str_contains( $b[0], 'loading="lazy"' ) && ! str_contains( $b[0], 'fetchpriority' ), $two );
+
+echo "\nThe plugin's small stylesheets in the page\n";
+wp_register_style( 'dxai-ui-test-dep', DXAI_UI_URL . 'assets/css/blank-canvas.css', array(), '1' );
+wp_register_style( 'dxai-ui-test-sheet', DXAI_UI_URL . 'assets/css/dynamic.css?ver=1', array( 'dxai-ui-test-dep' ), null );
+wp_register_style( 'dxai-ui-test-print', DXAI_UI_URL . 'assets/css/dynamic.css', array(), '1', 'print' );
+wp_register_style( 'dxai-ui-test-php', DXAI_UI_URL . 'dxai-ui.php', array(), '1' );
+// A stylesheet that exists, reached from the plugin's address by climbing out of it: WordPress's own dashicons.css.
+wp_register_style( 'dxai-ui-test-up', DXAI_UI_URL . 'assets/css/../../../../../wp-includes/css/dashicons.css', array(), '1' );
+wp_register_style( 'test-theme-sheet', get_stylesheet_directory_uri() . '/style.css', array(), '1' );
+foreach ( array( 'dxai-ui-test-sheet', 'dxai-ui-test-print', 'dxai-ui-test-php', 'dxai-ui-test-up', 'test-theme-sheet' ) as $h ) {
+	wp_enqueue_style( $h );
+}
+$styles = wp_styles();
+$path   = static fn( string $h ) => (string) $styles->get_data( $h, 'path' );
+add_filter( 'dxai_ui_inline_styles', '__return_false' );
+Inline_Styles::mark();
+remove_filter( 'dxai_ui_inline_styles', '__return_false' );
+$expect( 'nothing when the filter says no', '' === $path( 'dxai-ui-test-sheet' ) );
+Inline_Styles::mark();
+$expect( 'a stylesheet of the plugin says where its file is (its query left off)', realpath( DXAI_UI_DIR . 'assets/css/dynamic.css' ) === $path( 'dxai-ui-test-sheet' ), $path( 'dxai-ui-test-sheet' ) );
+$expect( '…and so does the one it needs, which is queued so WordPress looks at it', realpath( DXAI_UI_DIR . 'assets/css/blank-canvas.css' ) === $path( 'dxai-ui-test-dep' ) && in_array( 'dxai-ui-test-dep', $styles->queue, true ) );
+$expect( 'not the theme\'s stylesheet', '' === $path( 'test-theme-sheet' ) );
+$expect( 'not a stylesheet for print', '' === $path( 'dxai-ui-test-print' ) );
+$expect( 'not a file that is no stylesheet, nor one outside the plugin\'s folders', '' === $path( 'dxai-ui-test-php' ) && '' === $path( 'dxai-ui-test-up' ) );
+wp_maybe_inline_styles();
+$after = (array) ( $styles->registered['dxai-ui-test-sheet']->extra['after'] ?? array() );
+$expect( 'WordPress writes it into the page: no file to request, its rules inline', false === $styles->registered['dxai-ui-test-sheet']->src && str_contains( implode( '', $after ), (string) substr( trim( (string) file_get_contents( DXAI_UI_DIR . 'assets/css/dynamic.css' ) ), 0, 40 ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+$expect( 'the theme\'s stays a file', is_string( $styles->registered['test-theme-sheet']->src ) && '' !== $styles->registered['test-theme-sheet']->src );
+$head = $GLOBALS['wp_filter']['wp_head']->callbacks[1] ?? array();
+$keys = array_keys( $head );
+$at   = static fn( string $fn ) => array_search( $fn, $keys, true );
+$expect( 'it is marked at the end of wp_enqueue_scripts, which WordPress runs in wp_head before it decides (both at priority 1)', PHP_INT_MAX === has_action( 'wp_enqueue_scripts', array( Inline_Styles::class, 'mark' ) ) && false !== $at( 'wp_enqueue_scripts' ) && false !== $at( 'wp_maybe_inline_styles' ) && $at( 'wp_enqueue_scripts' ) < $at( 'wp_maybe_inline_styles' ), wp_json_encode( $keys ) );
+foreach ( array( 'dxai-ui-test-sheet', 'dxai-ui-test-dep', 'dxai-ui-test-print', 'dxai-ui-test-php', 'dxai-ui-test-up', 'test-theme-sheet' ) as $h ) {
+	wp_dequeue_style( $h );
+	wp_deregister_style( $h );
+}
 
 $clean();
 echo "\n{$pass} passed, {$fail} failed\n";
