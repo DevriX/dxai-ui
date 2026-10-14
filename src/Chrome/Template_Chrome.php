@@ -121,7 +121,7 @@ final class Template_Chrome {
 			return;
 		}
 		if ( self::$footer !== '' ) {
-			echo self::drawn( self::$footer, self::$footer_scope ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
+			echo \DXAI_UI\Media\Image_Loading::below( self::drawn( self::$footer, self::$footer_scope ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
 		}
 		if ( self::$wrapped ) {
 			echo '</div>';
@@ -193,7 +193,7 @@ final class Template_Chrome {
 	public static function site_footer(): string {
 		$markup = self::site_chrome()['footer'];
 
-		return $markup === '' ? '' : self::drawn( $markup, self::footer_scope( 0 ) );
+		return $markup === '' ? '' : \DXAI_UI\Media\Image_Loading::below( self::drawn( $markup, self::footer_scope( 0 ) ) );
 	}
 
 	/**

@@ -22,7 +22,7 @@ const os = require( 'os' );
 const path = require( 'path' );
 
 // The audits that measure the host, not the page.
-const HOST = new Set( [ 'server-response-time', 'document-latency-insight', 'uses-http2', 'modern-http-insight', 'is-on-https', 'redirects-http', 'uses-long-cache-ttl', 'cache-insight', 'uses-text-compression' ] );
+const HOST = new Set( [ 'server-response-time', 'document-latency-insight', 'uses-http2', 'modern-http-insight', 'is-on-https', 'redirects-http', 'uses-long-cache-ttl', 'cache-insight', 'uses-text-compression', 'robots-txt' ] );
 
 /**
  * The site as a good host serves it: every file of its own address from memory (a page cache), compressed, the static ones
@@ -87,7 +87,11 @@ function summary( lhr ) {
 	const reqs = ( lhr.audits[ 'network-requests' ] && lhr.audits[ 'network-requests' ].details && lhr.audits[ 'network-requests' ].details.items ) || [];
 	const kb = ( type ) => Math.round( reqs.filter( ( r ) => r.resourceType === type ).reduce( ( a, r ) => a + ( r.transferSize || 0 ), 0 ) / 1024 );
 	const weight = { total: Math.round( ( lhr.audits[ 'total-byte-weight' ] || {} ).numericValue / 1024 ) || 0, html: kb( 'Document' ), css: kb( 'Stylesheet' ), js: kb( 'Script' ), img: kb( 'Image' ), font: kb( 'Font' ), dom: ( lhr.audits[ 'dom-size' ] || {} ).numericValue || 0 };
-	return { weight, url: lhr.finalDisplayedUrl || lhr.requestedUrl, scores, metrics, lcp: lcpNode && lcpNode.node ? ( lcpNode.node.snippet || lcpNode.node.nodeLabel || '' ).slice( 0, 140 ) : '', failing, version: lhr.lighthouseVersion };
+	// Where the LCP's time goes (time to first byte, load delay, load time, render delay), and what blocks the first paint.
+	const items = ( id ) => ( lhr.audits[ id ] && lhr.audits[ id ].details && Array.isArray( lhr.audits[ id ].details.items ) ? lhr.audits[ id ].details.items : [] );
+	const phases = items( 'lcp-breakdown-insight' ).filter( ( i ) => i.subpart ).map( ( i ) => i.label + ' ' + Math.round( i.duration ) + ' ms' );
+	const blocking = items( 'render-blocking-insight' ).filter( ( i ) => i.url ).map( ( i ) => String( i.url ).replace( /^https?:\/\/[^/]+/, '' ).slice( 0, 90 ) + ( i.wastedMs ? ' (' + Math.round( i.wastedMs ) + ' ms)' : '' ) );
+	return { phases, blocking, weight, url: lhr.finalDisplayedUrl || lhr.requestedUrl, scores, metrics, lcp: lcpNode && lcpNode.node ? ( lcpNode.node.snippet || lcpNode.node.nodeLabel || '' ).slice( 0, 140 ) : '', failing, version: lhr.lighthouseVersion };
 }
 
 ( async () => {
@@ -148,6 +152,8 @@ function summary( lhr ) {
 		console.log( `${ r.url }\n  ${ CATEGORIES.map( ( c ) => r.scores[ c ] ).join( ' / ' ) }  (Performance / Accessibility / Best Practices / SEO${ RUNS > 1 ? ', Performance of the runs ' + r.runs.join( ' ' ) : '' })` );
 		console.log( `  FCP ${ m.FCP && m.FCP.shown } · LCP ${ m.LCP && m.LCP.shown } · TBT ${ m.TBT && m.TBT.shown } · CLS ${ m.CLS && m.CLS.shown } · SI ${ m.SI && m.SI.shown }` );
 		if ( r.lcp ) console.log( `  LCP element: ${ r.lcp }` );
+		if ( r.phases.length ) console.log( `  LCP: ${ r.phases.join( ' · ' ) }` );
+		if ( r.blocking.length ) console.log( `  blocking: ${ r.blocking.join( '; ' ) }` );
 		const w = r.weight;
 		console.log( `  weight ${ w.total } KiB: HTML ${ w.html }, CSS ${ w.css }, JS ${ w.js }, pictures ${ w.img }, fonts ${ w.font } KiB · ${ w.dom } DOM nodes` );
 		r.failing.filter( ( a ) => ! a.host ).slice( 0, 12 ).forEach( ( a ) => console.log( `  - ${ a.title }${ a.shown ? ' — ' + a.shown : '' }` ) );

@@ -15,6 +15,8 @@ final class Sideloader {
 	 * Post meta holding the SHA-1 of the bytes an attachment was made from —
 	 * the file as handed to the media library, after an SVG's scrub, so a
 	 * later image optimiser rewriting the stored file does not break reuse.
+	 * A WebP made of a JPEG or PNG carries its own bytes' here, and the
+	 * file's in Webp::SOURCE_META.
 	 *
 	 * Every import used to make a new attachment for every file. The wizard
 	 * sends the same ZIP to process-source, to generate-block and again per
@@ -151,8 +153,26 @@ final class Sideloader {
 		 * images by both, and a stored `favicon-1.png` must still answer to
 		 * `public/favicon.png`.
 		 */
-		$hash  = (string) sha1_file( $path );
-		$known = '' !== $hash ? self::stored( $hash, $original ) : null;
+		$hash = (string) sha1_file( $path );
+		/*
+		 * A JPEG or PNG is stored as WebP when that is smaller (Webp). The same file met again is answered with its WebP; a file whose
+		 * WebP was not kept, with itself. A file this site stored before WebP was made of it is converted now, and the WebP is the
+		 * answer from then on: a re-import moves a design's pages to it, and nothing already stored is changed or deleted.
+		 */
+		$webp  = '' !== $hash && Webp::wanted( $path, $filename );
+		$known = $webp ? self::stored_webp( $hash ) : null;
+		$plain = '' !== $hash && null === $known ? self::stored( $hash, $original ) : null;
+		if ( null === $known && null !== $plain && ( ! $webp || '' !== (string) get_post_meta( $plain['id'], Webp::KEPT_META, true ) ) ) {
+			$known = $plain;
+		}
+		$made = null === $known && $webp ? Webp::make( $path, $filename ) : null;
+		if ( null === $known && null === $made && null !== $plain ) {
+			// Its WebP was not kept: what the site holds is the answer, now and the next time.
+			if ( $plain['id'] > 0 ) {
+				update_post_meta( $plain['id'], Webp::KEPT_META, '1' );
+			}
+			$known = $plain;
+		}
 		if ( null !== $known ) {
 			if ( $is_temp ) {
 				wp_delete_file( $path );
@@ -168,8 +188,15 @@ final class Sideloader {
 			);
 		}
 
-		$tmp = $path;
-		if ( ! $is_temp ) {
+		$tmp  = $path;
+		$name = $filename;
+		if ( null !== $made ) {
+			if ( $is_temp ) {
+				wp_delete_file( $path );
+			}
+			$tmp  = $made['path'];
+			$name = $made['filename'];
+		} elseif ( ! $is_temp ) {
 			$tmp = wp_tempnam( $filename );
 			if ( ! copy( $path, $tmp ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
 				return new \WP_Error( 'dxai_ui_media', __( 'Unable to copy asset for sideload.', 'dxai-ui' ), array( 'status' => 500 ) );
@@ -177,9 +204,11 @@ final class Sideloader {
 		}
 
 		$file_array = array(
-			'name'     => $filename,
+			'name'     => $name,
 			'tmp_name' => $tmp,
 		);
+		// The WebP's own bytes are what the media library is handed.
+		$stamp = null !== $made ? (string) sha1_file( $tmp ) : $hash;
 
 		$id = Mime_Policy::with_allowed(
 			static function () use ( $file_array ) {
@@ -188,7 +217,7 @@ final class Sideloader {
 		);
 
 		if ( is_wp_error( $id ) ) {
-			$stored = self::persist_raw( $tmp, $filename, $kind );
+			$stored = self::persist_raw( $tmp, $name, $kind );
 			wp_delete_file( $tmp );
 			if ( is_wp_error( $stored ) ) {
 				return $id;
@@ -213,9 +242,15 @@ final class Sideloader {
 		if ( $original !== '' ) {
 			update_post_meta( (int) $id, '_dxai_ui_asset_original', $original );
 		}
-		if ( '' !== $hash ) {
-			update_post_meta( (int) $id, self::HASH_META, $hash );
-			self::$by_hash[ self::memo_key( $hash ) ] = $attachment;
+		if ( '' !== $stamp ) {
+			update_post_meta( (int) $id, self::HASH_META, $stamp );
+			self::$by_hash[ self::memo_key( $stamp ) ] = $attachment;
+		}
+		if ( null !== $made ) {
+			update_post_meta( (int) $id, Webp::SOURCE_META, $hash );
+			self::$by_hash[ 'webp:' . self::memo_key( $hash ) ] = $attachment;
+		} elseif ( $webp ) {
+			update_post_meta( (int) $id, Webp::KEPT_META, '1' );
 		}
 
 		return $attachment;
@@ -459,6 +494,46 @@ final class Sideloader {
 		}
 
 		return null;
+	}
+
+	/**
+	 * The WebP this site made of these bytes (Webp::SOURCE_META), or null. Newest first, and kept for the request, as stored() does.
+	 *
+	 * @return array{path:string, url:string, id:int, kind:string, mime:string, original:string, filename:string}|null
+	 */
+	private static function stored_webp( string $hash ): ?array {
+		$key = 'webp:' . self::memo_key( $hash );
+		if ( isset( self::$by_hash[ $key ] ) ) {
+			return self::$by_hash[ $key ];
+		}
+		$ids = get_posts(
+			array(
+				'post_type'              => 'attachment',
+				'post_status'            => 'inherit',
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'orderby'                => 'ID',
+				'order'                  => 'DESC',
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'suppress_filters'       => true,
+				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'     => Webp::SOURCE_META,
+						'value'   => $hash,
+						'compare' => '=',
+					),
+				),
+			)
+		);
+		$id  = (int) ( $ids[0] ?? 0 );
+		if ( $id < 1 || ! self::is_live( $id ) ) {
+			return null;
+		}
+		self::$by_hash[ $key ] = self::describe( $id );
+
+		return self::$by_hash[ $key ];
 	}
 
 	/**

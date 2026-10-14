@@ -280,10 +280,11 @@ final class Motion_Runtime {
 	function sweep() {
 		var vh = window.innerHeight || document.documentElement.clientHeight;
 		var pending = 0;
-		targets.forEach(function (el) {
-			if (el.classList.contains("is-in")) { return; }
-			var box = el.getBoundingClientRect();
-			if (box.top < vh * 0.95 && box.bottom > 0) { reveal(el); return; }
+		// Every box is read before any class changes: a read after a change lays the page out again (a forced reflow per section).
+		var waiting = targets.filter(function (el) { return !el.classList.contains("is-in"); });
+		var boxes = waiting.map(function (el) { return el.getBoundingClientRect(); });
+		waiting.forEach(function (el, i) {
+			if (boxes[i].top < vh * 0.95 && boxes[i].bottom > 0) { reveal(el); return; }
 			pending++;
 		});
 		if (!pending) {
@@ -315,7 +316,15 @@ final class Motion_Runtime {
 				io.unobserve(entry.target);
 			});
 		}, { threshold: 0, rootMargin: "0px 0px -5% 0px" });
-		targets.forEach(function (el) { arm(el); io.observe(el); });
+		// What is on screen as the page opens is shown as it is, never hidden for an entrance: the first paint is the page, and
+		// Largest Contentful Paint does not wait for this script and a fade (an armed section is opacity 0 until it is revealed).
+		var vh0 = window.innerHeight || document.documentElement.clientHeight;
+		var boxes0 = targets.map(function (el) { return el.getBoundingClientRect(); });
+		targets.forEach(function (el, i) {
+			if (boxes0[i].top < vh0 && boxes0[i].bottom > 0) { reveal(el); return; }
+			arm(el);
+			io.observe(el);
+		});
 		window.addEventListener("scroll", onSweep, { passive: true });
 		window.addEventListener("resize", onSweep);
 		onSweep();

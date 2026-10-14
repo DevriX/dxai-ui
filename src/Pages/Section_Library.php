@@ -750,9 +750,9 @@ final class Section_Library {
 	}
 
 	/**
-	 * @param array<int, array<string, mixed>> $own
-	 * @param array<int, array<string, mixed>> $repeats
-	 * @param array<int, array<string, mixed>> $panels
+	 * The fields a block asks a visitor to fill: inputs (not hidden ones or buttons), selects and text areas.
+	 *
+	 * @param array<string, mixed> $block
 	 */
 	private static function fields( array $block ): int {
 		return (int) preg_match_all( '#<(?:input(?![^>]*\btype=["\x27]?(?:hidden|submit|button|image|reset)\b)|select|textarea)\b#i', serialize_block( $block ) );

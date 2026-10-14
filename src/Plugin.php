@@ -87,6 +87,12 @@ final class Plugin {
 		( new \DXAI_UI\Theme\Theme_Fence() )->register();
 		// A page of the design on a theme that prints its whole stylesheet inline: only the part the page can use.
 		( new \DXAI_UI\Theme\Theme_Trim() )->register();
+		// A design's pages described for search engines, unless an SEO plugin does it (T5.4 of docs/PLAN-PERFECT-PAGES.md).
+		( new \DXAI_UI\Seo\Page_Meta() )->register();
+		// The picture a design's page opens on (behind its first section), asked for with the HTML (T5.1).
+		( new \DXAI_UI\Media\Lcp_Preload() )->register();
+		// …and what is below its first screen lazy, with no picture there taking the high priority (T5.1).
+		( new \DXAI_UI\Media\Image_Loading() )->register();
 		// The pages made for a design carry a key, so an import of another design never takes them.
 		if ( ! $render_only ) {
 			add_action( 'admin_init', array( \DXAI_UI\Pages\Team_Pages::class, 'upgrade' ), 42 );

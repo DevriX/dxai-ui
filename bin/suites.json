@@ -37,6 +37,7 @@
 		{ "file": "verify-lovable-zip.php", "group": "ci", "note": "the archive half runs only where GTM Strategy Hub.zip is (DXAI_DESIGN_ZIPS); the rest always" },
 		{ "file": "verify-menu-pages.php", "group": "ci" },
 		{ "file": "verify-native-blocks.php", "group": "ci" },
+		{ "file": "verify-page-head.php", "group": "ci" },
 		{ "file": "verify-page-order.php", "group": "ci" },
 		{ "file": "verify-page-recipes.php", "group": "ci" },
 		{ "file": "verify-picture-block.php", "group": "ci" },
@@ -56,6 +57,7 @@
 		{ "file": "eval-ai.php", "group": "ci", "note": "the AI steps against recorded replies: the planner's checks and the copy rules judge each as its case says" },
 		{ "file": "eval-ai.php", "group": "paid", "args": [ "live" ], "needs": "an AI engine with a key in Settings (a few cents a run); SKIP without" },
 		{ "file": "verify-video-facade.php", "group": "ci" },
+		{ "file": "verify-webp.php", "group": "ci" },
 
 		{ "file": "verify-block-library.php", "group": "local", "needs": "the American Restoration theme: the team's sections are made of its blocks" },
 		{ "file": "verify-style-variation.php", "group": "local", "needs": "the American Restoration theme: its tokens block" },
@@ -73,6 +75,7 @@
 		{ "file": "verify-editor-canvas.cjs", "group": "browser", "needs": "a browser, a test site and its editor" },
 		{ "file": "verify-import.cjs", "group": "browser", "needs": "a browser, design archives and the React oracle (see full-verification notes)" },
 		{ "file": "verify-rail.cjs", "group": "browser", "needs": "a browser and a test site" },
+		{ "file": "verify-reveal.cjs", "group": "browser", "needs": "a browser and PHP (no site); CI runs it in the static job" },
 		{ "file": "verify-video-facade-view.cjs", "group": "browser", "needs": "a browser and a test site" },
 		{ "file": "verify-windowed-list.cjs", "group": "browser", "needs": "a browser and a test site" }
 	]
