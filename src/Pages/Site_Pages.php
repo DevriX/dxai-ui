@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Pages;
 
+use DXAI_UI\Chrome\Footer_Template;
+use DXAI_UI\Chrome\Header_Template;
 use DXAI_UI\Compiler\Internal_Links;
 use DXAI_UI\Connectors\Site_Origin;
 use DXAI_UI\Structures\Crawl_Job;
@@ -474,8 +476,116 @@ final class Site_Pages {
 		// Menu items that are custom links to an old page become links to its new page; links to a section of the
 		// Home ("#about") open it from every page, not only from the Home.
 		$home_url = (string) get_permalink( $home_id );
-		$menus    = 0;
+		$menus    = self::rewrite_menus( $home_id, $origin, $rows, $home_url );
+
+		// Footer widgets (block widgets): their links.
+		$widgets = self::rewrite_widgets( $home_id, $rows, $home_url );
+
+		$created = array();
+		foreach ( (array) ( $summary['pages_created'] ?? array() ) as $row ) {
+			$id        = (int) ( $row['id'] ?? 0 );
+			$created[] = array(
+				'id'    => $id,
+				'label' => (string) ( $row['label'] ?? '' ),
+				'path'  => (string) ( $row['path'] ?? '' ),
+				'view'  => (string) get_permalink( $id ),
+				'edit'  => (string) get_edit_post_link( $id, 'raw' ),
+			);
+		}
+
+		// The new pages count for the design's colour use (Theme_Binding).
+		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id, false );
+		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $home_id, false );
+		\DXAI_UI\Media\Font_Host::after_import( $home_id );
+
+		return array(
+			'mode'          => self::MODE,
+			'pages_created' => $created,
+			'pages_skipped' => (array) ( $summary['pages_skipped'] ?? array() ),
+			'crawl_errors'  => (array) ( $summary['crawl_errors'] ?? array() ),
+			'menus_updated' => $menus,
+			'widgets'       => $widgets,
+			'compose_log'   => (array) ( $summary['compose_log'] ?? array() ),
+		);
+	}
+
+	/** The id of the new page an old URL points to, or 0. */
+	/** Whether the Home has an element with this id (a section anchor). */
+	/**
+	 * After the design is imported again: its Home and parts come back with the design's own links, which lead to the old site again
+	 * (an import writes them from the archive); the pages built from that site are where they lead, as finish() had made them — in the
+	 * Home, the parts, the design's own menus and footer widgets. Nothing when the design has no pages built from its old site.
+	 *
+	 * @return int The pages the links were led to.
+	 */
+	public static function relink( int $home_id ): int {
+		$origin = (string) get_post_meta( $home_id, self::ORIGIN_META, true );
+		$rows   = array();
+		foreach ( $origin === '' ? array() : self::built( $home_id ) as $page ) {
+			$route = trim( (string) get_post_meta( $page->ID, '_dxai_ui_source_route', true ), '/' );
+			if ( $route !== '' ) {
+				$rows[] = array(
+					'id'    => (int) $page->ID,
+					'paths' => self::paths( '/' . $route . '/', $origin ),
+				);
+			}
+		}
+		if ( $rows === array() ) {
+			return 0;
+		}
+		$built = count( $rows );
+		// The old site's own home is the design's Home here: by its address only (a bare "/" is whatever this site's root is).
+		$rows[] = array(
+			'id'    => $home_id,
+			'paths' => array_values( array_filter( self::paths( '/', $origin ), static fn( $p ) => preg_match( '#^https?://#i', (string) $p ) === 1 ) ),
+		);
+		$targets = $rows;
+		foreach ( array_merge( array( $home_id ), self::part_ids( $home_id ) ) as $id ) {
+			if ( $id > 0 ) {
+				$targets[] = array(
+					'id'    => $id,
+					'paths' => array(),
+				);
+			}
+		}
+		( new Internal_Links() )->rewrite_posts( $targets );
+		$home_url = (string) get_permalink( $home_id );
+		self::rewrite_menus( $home_id, $origin, $rows, $home_url );
+		self::rewrite_widgets( $home_id, $rows, $home_url );
+
+		return $built;
+	}
+
+	/**
+	 * What of the site's shared places is this design's own: the menus its header was written as (Header_Template), and the
+	 * block widgets when the stored footer is its (Footer_Template). Another design's menus and widgets — or the site's own —
+	 * hold links like "/about/" and "#reviews" that are pages and sections of this site; only a link that names the old site
+	 * by its address is the old site's there.
+	 *
+	 * @return array{menus: array<int, int>, widgets: bool}
+	 */
+	public static function owned_places( int $home_id ): array {
+		$spec   = Header_Template::scoped( $home_id );
+		$menus  = array_values( array_filter( array_map( 'intval', $spec === null ? array() : (array) ( $spec['menus'] ?? array() ) ) ) );
+		$footer = Footer_Template::get();
+
+		return array(
+			'menus'   => $menus,
+			'widgets' => $footer !== array() && (int) ( $footer['page_id'] ?? 0 ) === $home_id,
+		);
+	}
+
+	/**
+	 * Menu items that are custom links to an old page become links to its new page (in any menu: such a link names the old
+	 * site by its address); links to a section of the Home ("#about") open it from every page — in the design's own menus only.
+	 *
+	 * @param array<int, array<string, mixed>> $rows
+	 */
+	public static function rewrite_menus( int $home_id, string $origin, array $rows, string $home_url ): int {
+		$mine  = self::owned_places( $home_id )['menus'];
+		$menus = 0;
 		foreach ( wp_get_nav_menus() as $menu ) {
+			$own = in_array( (int) $menu->term_id, $mine, true );
 			foreach ( (array) wp_get_nav_menu_items( $menu->term_id ) as $item ) {
 				if ( ! is_object( $item ) || $item->type !== 'custom' ) {
 					continue;
@@ -493,7 +603,7 @@ final class Site_Pages {
 					'menu-item-status'      => 'publish',
 				);
 				$url  = (string) $item->url;
-				if ( preg_match( '/^#[A-Za-z][\w-]*$/', $url ) && $home_url !== '' && self::home_has_anchor( $home_id, substr( $url, 1 ) ) ) {
+				if ( $own && preg_match( '/^#[A-Za-z][\w-]*$/', $url ) && $home_url !== '' && self::home_has_anchor( $home_id, substr( $url, 1 ) ) ) {
 					wp_update_nav_menu_item( (int) $menu->term_id, (int) $item->ID, array_merge( $keep, array( 'menu-item-type' => 'custom', 'menu-item-url' => $home_url . $url ) ) );
 					continue;
 				}
@@ -531,7 +641,18 @@ final class Site_Pages {
 			}
 		}
 
-		// Footer widgets (block widgets): their links.
+		return $menus;
+	}
+
+	/**
+	 * Block widgets: links to the old pages open the new ones. In the design's own footer widgets every link to an old page
+	 * (its path too) and to a section of the Home; in anyone else's only a link that names the old site by its address.
+	 *
+	 * @param array<int, array<string, mixed>> $rows
+	 */
+	public static function rewrite_widgets( int $home_id, array $rows, string $home_url ): int {
+		$own     = self::owned_places( $home_id )['widgets'];
+		$links   = new Internal_Links();
 		$widgets = 0;
 		$blocks  = get_option( 'widget_block', array() );
 		if ( is_array( $blocks ) ) {
@@ -539,8 +660,10 @@ final class Site_Pages {
 				if ( ! is_array( $widget ) || ! isset( $widget['content'] ) ) {
 					continue;
 				}
-				$new = $links->rewrite_html( (string) $widget['content'], $rows );
-				$new = self::home_anchors( $new, $home_id, $home_url );
+				$new = $links->rewrite_html( (string) $widget['content'], $rows, ! $own );
+				if ( $own ) {
+					$new = self::home_anchors( $new, $home_id, $home_url );
+				}
 				if ( $new !== (string) $widget['content'] ) {
 					$blocks[ $k ]['content'] = $new;
 					++$widgets;
@@ -551,36 +674,9 @@ final class Site_Pages {
 			}
 		}
 
-		$created = array();
-		foreach ( (array) ( $summary['pages_created'] ?? array() ) as $row ) {
-			$id        = (int) ( $row['id'] ?? 0 );
-			$created[] = array(
-				'id'    => $id,
-				'label' => (string) ( $row['label'] ?? '' ),
-				'path'  => (string) ( $row['path'] ?? '' ),
-				'view'  => (string) get_permalink( $id ),
-				'edit'  => (string) get_edit_post_link( $id, 'raw' ),
-			);
-		}
-
-		// The new pages count for the design's colour use (Theme_Binding).
-		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id, false );
-		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $home_id, false );
-		\DXAI_UI\Media\Font_Host::after_import( $home_id );
-
-		return array(
-			'mode'          => self::MODE,
-			'pages_created' => $created,
-			'pages_skipped' => (array) ( $summary['pages_skipped'] ?? array() ),
-			'crawl_errors'  => (array) ( $summary['crawl_errors'] ?? array() ),
-			'menus_updated' => $menus,
-			'widgets'       => $widgets,
-			'compose_log'   => (array) ( $summary['compose_log'] ?? array() ),
-		);
+		return $widgets;
 	}
 
-	/** The id of the new page an old URL points to, or 0. */
-	/** Whether the Home has an element with this id (a section anchor). */
 	private static function home_has_anchor( int $home_id, string $id ): bool {
 		return (bool) preg_match( '/\bid="' . preg_quote( $id, '/' ) . '"|"anchor":"' . preg_quote( $id, '/' ) . '"/', (string) get_post_field( 'post_content', $home_id ) );
 	}
@@ -684,7 +780,17 @@ final class Site_Pages {
 				}
 			}
 		}
+		// The DX template draws the design's header and footer itself, with no template-part block in the Home: its parts are the ones
+		// named after the design's part key (dxai-header-<key>, dxai-footer-<key>).
+		$key = sanitize_title( (string) get_post_meta( $home_id, '_dxai_ui_part_key', true ) );
+		if ( $key !== '' ) {
+			foreach ( array( 'dxai-header-' . $key, 'dxai-footer-' . $key ) as $slug ) {
+				foreach ( get_posts( array( 'post_type' => 'wp_template_part', 'name' => $slug, 'post_status' => 'publish', 'posts_per_page' => 5, 'fields' => 'ids' ) ) as $id ) {
+					$ids[] = (int) $id;
+				}
+			}
+		}
 
-		return $ids;
+		return array_values( array_unique( $ids ) );
 	}
 }

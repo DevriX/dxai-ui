@@ -689,6 +689,8 @@ final class Structure_Repository {
 		// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
 		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
 		\DXAI_UI\Media\Font_Host::after_import( (int) $page_id );
+		// A design imported again comes back with its own links to its old site: the pages built from that site are where they lead.
+		\DXAI_UI\Pages\Site_Pages::relink( (int) $page_id );
 
 		/*
 		 * Audit every page this import wrote, here rather than in the REST

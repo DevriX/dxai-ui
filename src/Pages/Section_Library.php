@@ -373,6 +373,11 @@ final class Section_Library {
 
 		$panels = self::panels( $own );
 		$kind   = self::kind( $own, $repeats, $panels );
+		// A form written a field to a block (a Claude Design step form: one input in each HTML block) is no form block, and is a form all
+		// the same: two or more fields a person fills in make the section the design's form — where the old page's form goes, and no text.
+		if ( ! in_array( $kind, array( 'hero', 'form' ), true ) && self::fields( $block ) >= 2 ) {
+			$kind = 'form';
+		}
 
 		return array(
 			'index'    => $index,
@@ -466,6 +471,10 @@ final class Section_Library {
 			case 'dxai-ui/link':
 				return empty( $block['innerBlocks'] ) ? 'link' : 'card';
 			case 'dxai-ui/text':
+				// Text written as a link (a call button: <a href="tel:…">) is a link: it takes a button's words, not a sentence.
+				if ( $tag === 'a' ) {
+					return 'link';
+				}
 				return preg_match( '/^h[1-6]$/', $tag ) ? 'heading' : 'text';
 			case 'dxai-ui/html':
 				$html = (string) $block['innerHTML'];
@@ -738,6 +747,15 @@ final class Section_Library {
 		}
 
 		return false;
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $own
+	 * @param array<int, array<string, mixed>> $repeats
+	 * @param array<int, array<string, mixed>> $panels
+	 */
+	private static function fields( array $block ): int {
+		return (int) preg_match_all( '#<(?:input(?![^>]*\btype=["\x27]?(?:hidden|submit|button|image|reset)\b)|select|textarea)\b#i', serialize_block( $block ) );
 	}
 
 	/**

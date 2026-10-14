@@ -192,6 +192,55 @@ $t = static fn( array $r ): string => (string) ( $r['pages'][0]['type'] ?? '' );
 $expect( 'the single words of a site\'s general pages, in any of their usual spellings', array( 'contact', 'contact', 'faq', 'faq', 'about', 'testimonials', 'testimonials' ) === array_map( static fn( $path ) => $t( $one( array( $item( 'x', $path ) ) ) ), array( '/contact/', '/contact-us/', '/faq/', '/frequently-asked-questions/', '/our-story/', '/reviews/', '/customer-reviews/' ) ) );
 $expect( 'the list of services and the list of places have a word of their own', 'services' === $t( $one( array( $item( 'x', '/services/' ) ) ) ) && 'areas' === $t( $one( array( $item( 'x', '/service-areas/' ) ) ) ) && 'areas' === $t( $one( array( $item( 'x', '/locations/' ) ) ) ) );
 $expect( 'a site with flat addresses: a service is told by the dropdown it is in ("What we do"), a place by its words', 'service' === $t( $one( array( $item( 'What we do', '#', array( $item( 'Water Damage', '/water-damage/' ) ) ) ) ) ) && 'location' === $t( $one( array( $item( 'Revere, MA', '/revere/' ) ) ) ) );
+$towns = $one( array( $item( 'Service Areas', '#', array( $item( 'Lacey', '/water-damage-lacey-wa/' ), $item( 'Olympia & Thurston County', '/water-damage-thurston-county-wa/' ) ) ) ) );
+$expect( 'towns in a "Service Areas" dropdown at addresses of their own (/water-damage-lacey-wa/) are places, not services — the dropdown says "service" too (H2O Away)', array( 'location', 'location' ) === array_column( $towns['pages'], 'type' ) && 'Lacey, WA' === $towns['pages'][0]['title'], wp_json_encode( $towns['pages'] ) );
+$expect( 'a firm\'s "Practice Areas" dropdown still holds services, not places', 'service' === $t( $one( array( $item( 'Practice Areas', '#', array( $item( 'Family Law', '/family-law/' ) ) ) ) ) ) );
+echo "\nThe live site's own menu (H2O Away: the design's menu guesses some addresses and leaves pages out)\n";
+$lv_lh       = 'https://live-mfx.example';
+$lv_live_ctx = array_merge( $ctx, array( 'hosts' => array_merge( (array) $ctx['hosts'], array( 'live-mfx.example' ) ), 'live_origin' => $lv_lh ) );
+$lv_design   = array(
+	$item( 'Services', '/services/', array( $item( 'Water Damage', $lv_lh . '/' ), $item( 'Fire & Smoke Damage', $lv_lh . '/services/fire-damage/' ) ) ),
+	$item( 'Service Areas', '#', array( $item( 'Lacey', $lv_lh . '/water-damage-lacey-wa/' ), $item( 'Tumwater', $lv_lh . '/water-damage-tumwater-wa/' ) ) ),
+	$item( 'About', $lv_lh . '/about-us/' ),
+	$item( 'FAQs', '#faq' ),
+);
+$lv_live_menu = array(
+	$item( 'Services', $lv_lh . '/services/' ),
+	$item( 'Water Damage Restoration', $lv_lh . '/services/water-damage-restoration/' ),
+	$item( 'Fire & Smoke Damage', $lv_lh . '/services/fire-damage-restoration/' ),
+	$item( 'Locations', $lv_lh . '/locations/' ),
+	$item( 'Tumwater, WA', $lv_lh . '/locations/restoration-services-tumwater-wa/' ),
+	$item( 'About H2O Away', $lv_lh . '/about/' ),
+	$item( 'FAQ', $lv_lh . '/faq/' ),
+	$item( 'Financing', $lv_lh . '/financing/' ),
+);
+$lv_merged = $one( $lv_design, array( 'hosts' => $lv_live_ctx['hosts'], 'live' => $lv_live_menu, 'live_origin' => $lv_lh ) );
+$lv_at     = static function ( array $r, string $path ): array {
+	foreach ( array_merge( $r['pages'], $r['lists'] ) as $p ) {
+		if ( $p['path'] === $path ) {
+			return $p;
+		}
+	}
+	return array();
+};
+$lv_fire = $lv_at( $lv_merged, '/services/fire-damage-restoration/' );
+$expect( 'a design\'s item at a guessed address moves to the live page with its words ("Fire & Smoke Damage": /services/fire-damage/ → /services/fire-damage-restoration/)', 'service' === ( $lv_fire['type'] ?? '' ) && 'Fire & Smoke Damage' === ( $lv_fire['title'] ?? '' ) && '/services/fire-damage/' === ( $lv_fire['was'] ?? '' ) && $lv_lh . '/services/fire-damage-restoration/' === ( $lv_fire['live'] ?? '' ) && array() === $lv_at( $lv_merged, '/services/fire-damage/' ), wp_json_encode( $lv_fire ) );
+$lv_water = $lv_at( $lv_merged, '/services/water-damage-restoration/' );
+$expect( 'a live page the design\'s menu does not name (its item leads to the Home) is made, as the live site\'s', 'service' === ( $lv_water['type'] ?? '' ) && 'live' === ( $lv_water['from'] ?? '' ) && $lv_lh . '/services/water-damage-restoration/' === ( $lv_water['live'] ?? '' ), wp_json_encode( $lv_water ) );
+$lv_tum = $lv_at( $lv_merged, '/locations/restoration-services-tumwater-wa/' );
+$expect( 'a town the live site has a page for is made at that page\'s address', 'location' === ( $lv_tum['type'] ?? '' ) && 'Tumwater, WA' === ( $lv_tum['title'] ?? '' ) && '/water-damage-tumwater-wa/' === ( $lv_tum['was'] ?? '' ) && '/locations/' === ( $lv_tum['parent'] ?? '' ), wp_json_encode( $lv_tum ) );
+$lv_lacey = $lv_at( $lv_merged, '/water-damage-lacey-wa/' );
+$expect( 'a town the live site has no page for stays where the design put it, with no live page', 'location' === ( $lv_lacey['type'] ?? '' ) && ! isset( $lv_lacey['live'] ), wp_json_encode( $lv_lacey ) );
+$lv_about = $lv_at( $lv_merged, '/about/' );
+$expect( 'a kind a site has one of (About) is matched by its kind: the design\'s words at the live address', 'about' === ( $lv_about['type'] ?? '' ) && 'About' === ( $lv_about['title'] ?? '' ) && '/about-us/' === ( $lv_about['was'] ?? '' ) && array() === $lv_at( $lv_merged, '/about-us/' ), wp_json_encode( $lv_about ) );
+$lv_faq = $lv_at( $lv_merged, '/faq/' );
+$expect( 'the FAQ the design only linked into the Home (#faq) is a page now, and no longer left out', 'faq' === ( $lv_faq['type'] ?? '' ) && ! in_array( 'FAQs', array_column( $lv_merged['left_out'], 'title' ), true ), wp_json_encode( $lv_merged['left_out'] ) );
+$lv_fin = array_values( array_filter( $lv_merged['left_out'], static fn( $l ) => 'Financing' === $l['title'] ) );
+$expect( 'a live page of no kind (Financing) is left out as such, saying it is the live site\'s', 1 === count( $lv_fin ) && 'kind' === $lv_fin[0]['why'] && 'live' === ( $lv_fin[0]['source'] ?? '' ), wp_json_encode( $lv_fin ) );
+$lv_svc = $lv_at( $lv_merged, '/services/' );
+$expect( 'the list of services the design and the live site share an address for is the live one', 'services' === ( $lv_svc['type'] ?? '' ) && $lv_lh . '/services/' === ( $lv_svc['live'] ?? '' ), wp_json_encode( $lv_svc ) );
+$lv_plain = $one( $lv_design, array( 'hosts' => $lv_live_ctx['hosts'] ) );
+$expect( 'without the live site\'s menu the design\'s menu is read as before', array() !== $lv_at( $lv_plain, '/services/fire-damage/' ) && array() === $lv_at( $lv_plain, '/services/water-damage-restoration/' ) && array() === $lv_at( $lv_plain, '/faq/' ) );
 $expect( 'what the Home calls a service or a place tells an item no address or dropdown does', 'service' === $t( $one( array( $item( 'Mold Remediation', '/mold/' ) ), array( 'services' => array( 'Mold Remediation' ) ) ) ) && 'location' === $t( $one( array( $item( 'Tyler', '/tyler/' ) ), array( 'places' => array( 'Tyler' ) ) ) ) );
 $expect( 'a general page told by its words when its address says nothing ("Get a free quote")', 'contact' === $t( $one( array( $item( 'Get a free quote', '/start/' ) ) ) ) );
 $expect( 'an item of no kind (Pricing) is left out as such, not made a page of', array() === $one( array( $item( 'Pricing', '/pricing/' ) ) )['pages'] && 'kind' === $one( array( $item( 'Pricing', '/pricing/' ) ) )['left_out'][0]['why'] );

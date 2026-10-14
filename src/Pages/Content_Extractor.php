@@ -391,8 +391,12 @@ final class Content_Extractor {
 			$this->widget( $c, $out );
 			return;
 		}
-		if ( str_contains( $class, ' faq-item ' ) || str_contains( $class, 'rank-math-faq-item' ) || str_contains( $class, 'schema-faq-section' ) || $tag === 'details' ) {
-			$qn     = $this->xp->query( './/*[contains(@class,"faq-question") or contains(@class,"rank-math-question") or contains(@class,"schema-faq-question")] | .//summary', $c )->item( 0 );
+		// The American Restoration theme's item is the .faq-question group itself: a heading that asks, and .faq-answer.
+		$amr_faq = str_contains( $class, ' faq-question ' ) && $this->xp->query( './/*[contains(@class,"faq-answer")]', $c )->length > 0;
+		if ( str_contains( $class, ' faq-item ' ) || str_contains( $class, 'rank-math-faq-item' ) || str_contains( $class, 'schema-faq-section' ) || $tag === 'details' || $amr_faq ) {
+			$qn     = $amr_faq
+				? $this->xp->query( './/h2 | .//h3 | .//h4 | .//h5 | .//h6 | .//strong', $c )->item( 0 )
+				: $this->xp->query( './/*[contains(@class,"faq-question") or contains(@class,"rank-math-question") or contains(@class,"schema-faq-question")] | .//summary', $c )->item( 0 );
 			$an     = $this->xp->query( './/*[contains(@class,"faq-answer") or contains(@class,"rank-math-answer") or contains(@class,"schema-faq-answer")]', $c )->item( 0 );
 			$answer = array();
 			if ( $an instanceof \DOMElement ) {
@@ -418,6 +422,11 @@ final class Content_Extractor {
 		}
 		if ( preg_match( '/^h([1-6])$/', $tag, $m ) ) {
 			$this->push_heading( $out, (int) $m[1], $this->inline_html( $c ) );
+			return;
+		}
+		$stat = $this->figure( $c );
+		if ( $stat !== null ) {
+			$out[] = $stat;
 			return;
 		}
 		switch ( $tag ) {
@@ -471,6 +480,42 @@ final class Content_Extractor {
 				return;
 		}
 		$this->walk( $c, $out );
+	}
+
+	/**
+	 * A figure written as a group of two texts: a number on its own ("40,000+", "~60 min", "24/7", "$2M") and a few words of what it
+	 * counts ("Properties Restored"). A step's number ("1", "01") is no figure.
+	 *
+	 * @return array{type:string, value:string, label:string}|null
+	 */
+	private function figure( \DOMElement $c ): ?array {
+		if ( ! in_array( strtolower( $c->nodeName ), array( 'div', 'section', 'li' ), true ) ) {
+			return null;
+		}
+		$kids = array();
+		foreach ( $c->childNodes as $n ) {
+			if ( $n instanceof \DOMElement ) {
+				$kids[] = $n;
+			} elseif ( trim( (string) $n->textContent ) !== '' ) {
+				return null;
+			}
+		}
+		if ( count( $kids ) !== 2 || $this->xp->query( './/img | .//a | .//button | .//input', $c )->length > 0 ) {
+			return null;
+		}
+		$value = self::clean( (string) $kids[0]->textContent );
+		$label = self::clean( (string) $kids[1]->textContent );
+		$plain = preg_match( '/^[~<>≈]?\s*[$€£]?\d[\d,.]*\s*(?:\+|%|k|K|M|B|min|mins|hrs?|hours?|yrs?|years?)?\+?$|^24\/7$/u', $value ) === 1;
+		$step  = preg_match( '/^0?\d$/', $value ) === 1;
+		if ( ! $plain || $step || $label === '' || str_word_count( $label ) > 8 || mb_strlen( $value ) > 12 ) {
+			return null;
+		}
+
+		return array(
+			'type'  => 'stat',
+			'value' => $value,
+			'label' => $label,
+		);
 	}
 
 	/**

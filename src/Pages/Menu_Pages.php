@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace DXAI_UI\Pages;
 
 use DXAI_UI\Chrome\Header_Template;
+use DXAI_UI\Connectors\Site_Origin;
 
 /**
  * A design's header is Appearance > Menus (Header_Menus): the menu of the site, with its dropdowns and the address of each page. It says
@@ -81,6 +82,19 @@ final class Menu_Pages {
 			'services' => $hints['services'] ?? Team_Pages::services_of_home( $home ),
 			'places'   => $hints['places'] ?? Team_Pages::places_of_home( $home ),
 		);
+		$live = $origin === '' ? '' : ( preg_match( '#^https?://#i', $origin ) === 1 ? $origin : 'https://' . $origin );
+		/**
+		 * Whether the pages of a design's menu are matched with its live site's own menu (its header, menus and footer, read once and
+		 * kept for twelve hours): a page the live site has is made at the live site's address, and one the design's menu does not name
+		 * is made too.
+		 *
+		 * @param bool $on   Read the live site's menu.
+		 * @param int  $home The design's Home.
+		 */
+		if ( $live !== '' && apply_filters( 'dxai_ui_menu_pages_live', true, $home ) ) {
+			$ctx['live']        = Site_Origin::from_site( $live );
+			$ctx['live_origin'] = $live;
+		}
 		$sorted = self::classify( $read['tree'], $ctx );
 		$mark   = static function ( array $row ) use ( $home ): array {
 			$id = Team_Pages::page_at( (string) $row['path'] );
@@ -320,9 +334,39 @@ final class Menu_Pages {
 		};
 		$walk( $tree, array(), '' );
 
+		// The live site's own menu, when there is one (for_design() reads it): a page the live site has is made at the live address — the
+		// design's item for it moves there (a designer's link may be a guess: /services/fire-damage/ for /services/fire-damage-restoration/),
+		// and one the design's menu does not name (an item that leads to the Home, "FAQs" as a link into the Home) is added. A page of
+		// the design the live site has not stays where the design put it.
+		if ( ! empty( $ctx['live'] ) ) {
+			$live  = self::classify( (array) $ctx['live'], array_merge( $ctx, array( 'live' => array() ) ) );
+			$pages = self::with_live( $pages, $live, rtrim( (string) ( $ctx['live_origin'] ?? '' ), '/' ) );
+			// What the design left out and the site now has a page for ("FAQs" over #faq, when the live site has /faq/) is not left out.
+			$types  = array_flip( array_column( $pages, 'type' ) );
+			$titles = array_flip( array_map( static fn( $p ) => self::norm( (string) $p['title'] ), $pages ) );
+			$left   = array_values(
+				array_filter(
+					$left,
+					static fn( $l ) => ! isset( $titles[ self::norm( (string) $l['title'] ) ] ) && ! isset( $types[ self::kind_of( array(), (string) $l['title'], '', array(), array() ) ] )
+				)
+			);
+			// A page of the live site with no kind (Financing, a policy) is left out as such, saying it is the live site's.
+			foreach ( $live['left_out'] as $l ) {
+				if ( ( $l['why'] ?? '' ) === 'kind' && ! isset( $titles[ self::norm( (string) $l['title'] ) ] ) && ! in_array( self::norm( (string) $l['title'] ), array_map( static fn( $x ) => self::norm( (string) $x['title'] ), $left ), true ) ) {
+					$left[] = $l + array( 'source' => 'live' );
+				}
+			}
+		}
+
 		// The page above a page, when the menu names no page there: for services and places it is their list, whatever its address says
 		// (/service/, /what-we-do/); for any other kind the page waits for a page there.
 		$lists = array();
+		foreach ( $pages as $path => $page ) {
+			if ( ! empty( $page['implied'] ) ) {
+				$lists[ $path ] = $page;
+				unset( $pages[ $path ] );
+			}
+		}
 		foreach ( $pages as $page ) {
 			$parent = (string) $page['parent'];
 			if ( $parent === '' || isset( $pages[ $parent ] ) || isset( $lists[ $parent ] ) ) {
@@ -365,6 +409,52 @@ final class Menu_Pages {
 			'lists'    => $lists,
 			'left_out' => $left,
 		);
+	}
+
+	/**
+	 * The design's pages with the live site's (classify() of the live menu). A live page is matched to a page of the design by its address,
+	 * else by its kind and words ("Tumwater, WA"), else — for a kind a site has one of — by its kind; the match takes the live address and
+	 * keeps the design's words, and says where the design had put it (`was`). A live page with no match is added (`from` live). Every
+	 * page the live site has says which (`live`), so its content can be carried over.
+	 *
+	 * @param array<string, array<string, mixed>> $pages The design's pages by address.
+	 * @param array{pages:array<int, array<string, mixed>>, lists:array<int, array<string, mixed>>} $live
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function with_live( array $pages, array $live, string $origin ): array {
+		$bare = static fn( string $t ): string => self::norm( (string) preg_replace( '/,\s*[A-Z]{2}$/', '', trim( $t ) ) );
+		foreach ( array_merge( (array) $live['lists'], (array) $live['pages'] ) as $l ) {
+			$path = (string) $l['path'];
+			$hit  = isset( $pages[ $path ] ) && ! isset( $pages[ $path ]['live'] ) ? $path : '';
+			if ( $hit === '' && ! isset( $pages[ $path ] ) ) {
+				foreach ( $pages as $at => $d ) {
+					if ( isset( $d['live'] ) || $d['type'] !== $l['type'] ) {
+						continue;
+					}
+					if ( $bare( (string) $d['title'] ) === $bare( (string) $l['title'] ) || in_array( (string) $l['type'], Team_Pages::ONCE, true ) ) {
+						$hit = (string) $at;
+						break;
+					}
+				}
+			}
+			// A list the live menu only implies (the page above its places) has no live page of its own.
+			$url = empty( $l['implied'] ) ? $origin . $path : '';
+			if ( $hit !== '' ) {
+				$d = $pages[ $hit ];
+				unset( $pages[ $hit ] );
+				if ( $hit !== $path ) {
+					$d['was'] = $hit;
+				}
+				$d['path']   = $path;
+				$d['parent'] = self::parent_of( $path );
+				$d['live']   = $url;
+				$pages[ $path ] = $d;
+			} elseif ( ! isset( $pages[ $path ] ) ) {
+				$pages[ $path ] = array_merge( $l, array( 'live' => $url, 'from' => 'live' ) );
+			}
+		}
+
+		return $pages;
 	}
 
 	/**
@@ -450,6 +540,11 @@ final class Menu_Pages {
 			}
 		}
 		if ( $group !== '' ) {
+			// "Service Areas" says "service" too, and the towns under it are places (H2O Away: /water-damage-lacey-wa/); "Practice Areas"
+			// are a firm's services, so only this one name is read before the services' words.
+			if ( preg_match( '/\bservice[\s-]+areas?\b/i', $group ) === 1 ) {
+				return 'location';
+			}
 			if ( preg_match( self::GROUP_SERVICES, $group ) === 1 ) {
 				return 'service';
 			}

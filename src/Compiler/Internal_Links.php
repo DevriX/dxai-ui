@@ -18,9 +18,11 @@ final class Internal_Links {
 	 * Markup with its links to the pages' old paths pointing at the pages (a widget's content, say).
 	 *
 	 * @param array<int, array{id:int, paths:array<int, string>}> $pages
+	 * @param bool $addresses_only Only links that name the old site by its address (https://old-host/about/): in markup that is
+	 *                             not the design's own a bare "/about/" is a page of this site, and stays.
 	 */
-	public function rewrite_html( string $markup, array $pages ): string {
-		$map = $this->permalink_map( $pages );
+	public function rewrite_html( string $markup, array $pages, bool $addresses_only = false ): string {
+		$map = $this->permalink_map( $pages, $addresses_only );
 
 		return $map === array() ? $markup : $this->rewrite_markup( $markup, $map );
 	}
@@ -61,7 +63,7 @@ final class Internal_Links {
 	 * @param array<int, array{id:int, paths:array<int, string>}> $pages
 	 * @return array<string, string> normalized path / absolute URL => permalink
 	 */
-	private function permalink_map( array $pages ): array {
+	private function permalink_map( array $pages, bool $addresses_only = false ): array {
 		$map = array();
 		foreach ( $pages as $page ) {
 			$id  = (int) ( $page['id'] ?? 0 );
@@ -70,7 +72,7 @@ final class Internal_Links {
 				continue;
 			}
 			foreach ( is_array( $page['paths'] ?? null ) ? $page['paths'] : array() as $path ) {
-				foreach ( $this->variants( (string) $path ) as $norm ) {
+				foreach ( $this->variants( (string) $path, $addresses_only ) as $norm ) {
 					$map[ $norm ] = $url;
 				}
 			}
@@ -89,7 +91,7 @@ final class Internal_Links {
 	/**
 	 * @return array<int, string>
 	 */
-	private function variants( string $path ): array {
+	private function variants( string $path, bool $addresses_only = false ): array {
 		$path = trim( $path );
 		if ( $path === '' || $path === '#' ) {
 			return array();
@@ -106,7 +108,7 @@ final class Internal_Links {
 			if ( ! str_ends_with( $clean, '/' ) ) {
 				$out[] = $clean . '/';
 			}
-			$rel = $this->path_only( $clean );
+			$rel = $addresses_only ? '' : $this->path_only( $clean );
 			if ( $rel !== '' ) {
 				foreach ( $this->path_alts( $rel ) as $alt ) {
 					$out[] = $alt;
@@ -116,7 +118,7 @@ final class Internal_Links {
 			return array_values( array_unique( array_filter( $out ) ) );
 		}
 
-		return $this->path_alts( $this->path_only( $path ) );
+		return $addresses_only ? array() : $this->path_alts( $this->path_only( $path ) );
 	}
 
 	/**

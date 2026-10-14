@@ -106,6 +106,36 @@ final class Page_Composer {
 				}
 			}
 			$target = $this->choose( $unit, $n === 0 );
+			// Figures the Home has no section for are a list of them ("40,000+ Properties Restored"), where the Home shows text.
+			if ( $target === null && $unit['kind'] === 'stats' && (array) $unit['stats'] !== array() ) {
+				$unit = array_merge(
+					$unit,
+					array(
+						'kind'  => 'list',
+						'list'  => array_map( static fn( $s ) => esc_html( trim( (string) $s['value'] . ' ' . (string) $s['label'] ) ), (array) $unit['stats'] ),
+						'stats' => array(),
+					)
+				);
+				foreach ( $unit['list'] as $line ) {
+					$this->allow( $line );
+				}
+				$target = $this->choose( $unit, false );
+				// No section of the Home shows a list: the figures are one line of its text.
+				if ( $target === null ) {
+					$line = implode( ' · ', $unit['list'] );
+					$unit = array_merge( $unit, array( 'kind' => 'text', 'paras' => array( $line ), 'list' => array() ) );
+					$this->allow( $line );
+					$target = $this->choose( $unit, false );
+				}
+			}
+			if ( $target === null && $unit['kind'] === 'faq' ) {
+				$block = $this->questions( $unit );
+				if ( $block !== null ) {
+					$sections[]  = $block;
+					$this->log[] = sprintf( 'unit %d %-12s → the Home\'s text section with core/details', $n, $unit['kind'] );
+					continue;
+				}
+			}
 			if ( $target === null ) {
 				$this->log[] = sprintf( 'unit %d (%s "%s"): no design section fits — left out', $n, $unit['kind'], mb_substr( Content_Extractor::plain( (string) $unit['heading'] ), 0, 40 ) );
 				continue;
@@ -632,6 +662,69 @@ final class Page_Composer {
 		return 'text';
 	}
 
+	/**
+	 * Questions the Home has no section for: one of its text sections, with the unit's heading, the questions in it as core/details
+	 * (a question and its answer each, open and shut without a script, read by a screen reader as such) where its text goes.
+	 *
+	 * @param array<string, mixed> $unit
+	 * @return array<string, mixed>|null
+	 */
+	private function questions( array $unit ): ?array {
+		$slot = 'dxai faq slot';
+		$text = array_merge( $unit, array( 'kind' => 'text', 'paras' => array( $slot ), 'faq' => array(), 'items' => array(), 'list' => array(), 'buttons' => array(), 'images' => array() ) );
+		$into = $this->choose( $text, false );
+		if ( $into === null || (array) $unit['faq'] === array() ) {
+			return null;
+		}
+		$this->allow( $slot );
+		$this->allow( (string) $unit['heading'] );
+		$block = $this->fill( $into['component'], $into['panel'], $text );
+		if ( $block === null ) {
+			return null;
+		}
+		$path = self::path_of_text( $block, $slot );
+		if ( $path === null ) {
+			return null;
+		}
+		$at     = (int) array_pop( $path );
+		$parent = &Block_Tree::at( $block, $path );
+		Block_Tree::drop( $parent, $at );
+		foreach ( array_values( (array) $unit['faq'] ) as $i => $qa ) {
+			$q = trim( (string) ( $qa['q'] ?? '' ) );
+			$a = trim( (string) ( $qa['a'] ?? '' ) );
+			if ( $q === '' ) {
+				continue;
+			}
+			$markup = '<!-- wp:details --><details class="wp-block-details"><summary>' . esc_html( $q ) . '</summary>'
+				. ( $a !== '' ? '<!-- wp:paragraph --><p>' . esc_html( $a ) . '</p><!-- /wp:paragraph -->' : '' )
+				. '</details><!-- /wp:details -->';
+			Block_Tree::insert( $parent, $at + $i, parse_blocks( $markup )[0] );
+		}
+		unset( $parent );
+
+		return $block;
+	}
+
+	/**
+	 * Where in a block the block whose own text is $text is (the indexes of innerBlocks down to it), or null.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array<int, int>|null
+	 */
+	private static function path_of_text( array $block, string $text ): ?array {
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
+			if ( mb_strtolower( trim( Block_Tree::own_text( $child ) ) ) === $text && empty( $child['innerBlocks'] ) ) {
+				return array( (int) $i );
+			}
+			$below = self::path_of_text( $child, $text );
+			if ( $below !== null ) {
+				return array_merge( array( (int) $i ), $below );
+			}
+		}
+
+		return null;
+	}
+
 	/* ---------------------------------------------------------------- choose */
 
 	/**
@@ -808,8 +901,9 @@ final class Page_Composer {
 		//    breakpoint-only duplicates the next step removes — so each item can take the copy that fits it.
 		$templates = self::templates( $c, $unit['kind'] );
 
-		// 1. The design's machinery that has no content of its own: "show more" boxes, their toggles, breakpoint duplicates.
-		$block = $this->prune( $block, static fn( $b ) => str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-on-' )
+		// 1. The design's machinery that has no content of its own: "show more" boxes, their toggles, breakpoint duplicates. Not in
+		//    the design's form: a step form shows and hides its fields with that machinery, and without it there is no form.
+		$block = $c['kind'] === 'form' ? $block : $this->prune( $block, static fn( $b ) => str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-on-' )
 			|| str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-toggle-' )
 			|| ( ( $b['blockName'] ?? '' ) === 'dxai-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'button' )
 			|| array_intersect( array( 'data-mob', 'data-desk' ), array_keys( (array) ( $b['attrs']['dxaiData'] ?? array() ) ) ) );
