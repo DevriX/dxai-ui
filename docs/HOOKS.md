@@ -220,12 +220,15 @@ Whether the site drives a design's states with the Interactivity API: the settin
 
 For the footer the DX template draws: true on any page.
 
+For a waiting background on a design's page: the same switch as its pictures'.
+
 Whether the pictures and frames below a design's first screen load lazily.
 @param bool $on Whether the page is a design's (for the content; the footer the DX template draws passes true).
 @param int  $id The page.
 
-- `src/Media/Image_Loading.php:127` — value and arguments: `true`, `$id`
-- `src/Media/Image_Loading.php:204` — value and arguments: `$id > 0 && Page_Meta::is_design_page( $id )`, `$id`
+- `src/Media/Image_Loading.php:155` — value and arguments: `true`, `$id`
+- `src/Media/Image_Loading.php:219` — value and arguments: `true`, `$id`
+- `src/Media/Image_Loading.php:290` — value and arguments: `$id > 0 && Page_Meta::is_design_page( $id )`, `$id`
 
 ### dxai_ui_lcp_preload
 

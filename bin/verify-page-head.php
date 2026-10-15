@@ -259,6 +259,67 @@ add_filter( 'dxai_ui_lazy_below', '__return_false' );
 $off = $lazy ? (string) apply_filters( 'the_content', (string) get_post_field( 'post_content', $lazy ) ) : '';
 remove_filter( 'dxai_ui_lazy_below', '__return_false' );
 $expect( 'none of it when the filter turns it off', ( str_contains( $tag_of( $off, 'team.jpg' ), 'fetchpriority="high"' ) || ! str_contains( $tag_of( $off, 'team.jpg' ), 'loading="lazy"' ) ) && str_contains( $tag_of( $off, 'google.com/maps' ), 'src="https://www.google.com/maps/embed?pb=x"' ), $tag_of( $off, 'team.jpg' ) . ' | ' . $tag_of( $off, 'google.com/maps' ) );
+
+echo "\nBackgrounds below the first screen\n";
+// A block whose own CSS paints a picture: in the hero, in a later section (a card inside it, and the section itself), and one
+// painted with a data: picture written into the CSS.
+$bg      = static fn( string $name, string $css, string $inner = '' ): string => '<!-- wp:group {"className":"' . $name . '","dxaiCss":"' . $css . '"} --><div class="wp-block-group ' . $name . '">' . $inner . '</div><!-- /wp:group -->';
+$bg_hero = '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group">' . $bg( 'bg-hero', 'background-image:url(https://example.test/uploads/hero-bg.jpg);background-size:cover' ) . '</section><!-- /wp:group -->';
+$bg_late = '<!-- wp:group {"tagName":"section","className":"bg-section","dxaiCss":"background:#000 url(https://example.test/uploads/section-bg.jpg) center/cover"} --><section class="wp-block-group bg-section">' . $bg( 'bg-card', 'background-image:url(https://example.test/uploads/card-bg.jpg)' ) . $bg( 'bg-dot', 'background-image:url(data:image/svg+xml;utf8,x)' ) . $bg( 'bg-plain', 'color:red' ) . '</section><!-- /wp:group -->';
+$bg_page = $page( 'Page head fixture (backgrounds)', $bg_hero . $sect( '<!-- wp:paragraph --><p>Next</p><!-- /wp:paragraph -->' ) . $bg_late, '', $home );
+$bg_html = '';
+$render  = static function ( int $id ): string {
+	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
+	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+	$GLOBALS['post']         = get_post( $id );
+	setup_postdata( $GLOBALS['post'] );
+
+	return (string) apply_filters( 'the_content', (string) get_post_field( 'post_content', $id ) );
+};
+$bg_html = $bg_page ? $render( $bg_page ) : '';
+$el_of   = static fn( string $html, string $cls ): string => preg_match( '#<(?:div|section)\b[^>]*class="[^"]*\b' . preg_quote( $cls, '#' ) . '\b[^"]*"[^>]*>#', $html, $m ) ? $m[0] : '';
+$waits   = static fn( string $html, string $cls ): bool => str_contains( $el_of( $html, $cls ), Image_Loading::BG_CLASS );
+$expect( 'a picture behind a block below the first screen waits: the block is marked (a card in the section, and the section itself)', $waits( $bg_html, 'bg-card' ) && $waits( $bg_html, 'bg-section' ), $el_of( $bg_html, 'bg-card' ) . ' | ' . $el_of( $bg_html, 'bg-section' ) );
+$expect( 'not the picture behind the block the page opens on (the hero)', '' !== $el_of( $bg_html, 'bg-hero' ) && ! $waits( $bg_html, 'bg-hero' ), $el_of( $bg_html, 'bg-hero' ) );
+$expect( 'not a data: picture written into the CSS (no request to wait for), nor a block whose CSS paints none', '' !== $el_of( $bg_html, 'bg-dot' ) && ! $waits( $bg_html, 'bg-dot' ) && ! $waits( $bg_html, 'bg-plain' ), $el_of( $bg_html, 'bg-dot' ) );
+ob_start();
+Image_Loading::print_loader();
+$bg_loader = (string) ob_get_clean();
+ob_start();
+Image_Loading::print_loader();
+$bg_again = (string) ob_get_clean();
+$expect( 'the page ends with the lines that paint it 600 px from the screen, once', str_contains( $bg_loader, 'id="dxai-ui-backgrounds"' ) && str_contains( $bg_loader, "rootMargin:'" . Image_Loading::BG_MARGIN . " 0px'" ) && str_contains( $bg_loader, "classList.remove('" . Image_Loading::BG_CLASS . "')" ) && '' === $bg_again, $bg_loader );
+// The head: <html> marked while scripts run, and the rule.
+$bg_head = static function ( int $id ): array {
+	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
+	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+	foreach ( array( 'dxai-ui-lazy-bg' ) as $h ) {
+		wp_dequeue_style( $h );
+		wp_deregister_style( $h );
+	}
+	wp_dequeue_script( 'dxai-ui-js' );
+	wp_deregister_script( 'dxai-ui-js' );
+	Image_Loading::enqueue_background_rule();
+	$css = wp_style_is( 'dxai-ui-lazy-bg', 'enqueued' ) ? implode( '', (array) wp_styles()->get_data( 'dxai-ui-lazy-bg', 'after' ) ) : '';
+	$js  = wp_script_is( 'dxai-ui-js', 'enqueued' ) ? implode( '', (array) wp_scripts()->get_data( 'dxai-ui-js', 'after' ) ) : '';
+
+	return array( $css, $js );
+};
+list( $bg_css, $bg_js ) = $bg_page ? $bg_head( $bg_page ) : array( '', '' );
+$expect( 'a design\'s page marks <html> in its head while scripts run, and hides a waiting background with the precedence of four ids (a block\'s own rule has three)', str_contains( $bg_js, 'document.documentElement.classList.add("dxai-js")' ) && str_starts_with( $bg_css, '.dxai-js :is(.' . Image_Loading::BG_CLASS . ',#dxai-h)' ) && 4 === substr_count( $bg_css, '#dxai-h' ) && 3 === substr_count( \DXAI_UI\Blocks\Style_Rules::rule( 'dxs-abc123', 'background-image:url(x.jpg)' ), '#dxai-h' ) && str_contains( $bg_css, '{background-image:none}' ), $bg_css . ' | ' . $bg_js );
+$bg_none = $page( 'Page head fixture (no design)', '<!-- wp:paragraph --><p>url(x)</p><!-- /wp:paragraph -->' );
+list( $none_css, $none_js ) = $bg_none ? $bg_head( $bg_none ) : array( 'x', 'x' );
+$expect( 'not on a page that is no design\'s', '' === $none_css && '' === $none_js );
+add_filter( 'dxai_ui_lazy_below', '__return_false' );
+$bg_off                   = $bg_page ? $render( $bg_page ) : '';
+list( $off_css, $off_js ) = $bg_page ? $bg_head( $bg_page ) : array( 'x', 'x' );
+remove_filter( 'dxai_ui_lazy_below', '__return_false' );
+ob_start();
+Image_Loading::print_loader();
+$off_loader = (string) ob_get_clean();
+$expect( 'none of it when the filter turns it off (no mark, no rule, no lines)', '' !== $el_of( $bg_off, 'bg-card' ) && ! $waits( $bg_off, 'bg-card' ) && '' === $off_css && '' === $off_js && ! str_contains( $off_loader, 'dxai-ui-backgrounds' ) );
+$expect( '…and no mark of the render left in the page', ! str_contains( $bg_html, '__dxai_' ) );
+
 $two = Image_Loading::lazy( '<img src="a.jpg" loading="eager"><img src="b.jpg" fetchpriority="high">' );
 $expect( 'Image_Loading::lazy() keeps a picture\'s own loading and drops the high priority', 1 === preg_match( '#<img[^>]*src="a\.jpg"[^>]*>#', $two, $a ) && str_contains( $a[0], 'loading="eager"' ) && ! str_contains( $a[0], 'lazy' ) && 1 === preg_match( '#<img[^>]*src="b\.jpg"[^>]*>#', $two, $b ) && str_contains( $b[0], 'loading="lazy"' ) && ! str_contains( $b[0], 'fetchpriority' ), $two );
 

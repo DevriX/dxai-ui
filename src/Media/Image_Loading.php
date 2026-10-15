@@ -27,6 +27,13 @@ use DXAI_UI\Seo\Page_Meta;
  * A map's frame there waits for more: Chrome loads a lazy frame once it is about 1250 px from the screen, and H2O Away's Contact page
  * has its Google map 1229 px below the first screen — 400 KiB of the map's script loaded with the page, 730 ms of blocking time. Its
  * address goes to `data-dxai-src` and a few lines at the end of the page load it when it is 300 px from the screen (FRAME_MARGIN).
+ *
+ * A picture written as CSS (a block's own `background-image`) cannot be lazy: the browser asks for it once the block is styled,
+ * wherever it is. Arcus's two photographs six and ten screens down (323 KiB) shared the phone's bandwidth with its hero: LCP 4.7 s,
+ * 3.9 s without them. A block below the first screen whose own CSS paints a file behind it gets BG_CLASS; while scripts run (the
+ * head marks <html> `dxai-js`), a rule with the precedence of four ids (one more than a block's own rule, Style_Rules) keeps its
+ * background unpainted, and the lines at the end of the page take the class off 600 px from the screen (BG_MARGIN). Without scripts
+ * it paints at once. A background in an inline style (a group's background image in the editor) is not covered.
  */
 final class Image_Loading {
 
@@ -36,8 +43,23 @@ final class Image_Loading {
 	/** How near the screen a waiting frame is loaded. */
 	public const FRAME_MARGIN = '300px';
 
+	/** The class of a block whose background picture waits for the screen. */
+	public const BG_CLASS = 'dxai-lazy-bg';
+
+	/** How near the screen a waiting background is painted. */
+	public const BG_MARGIN = '600px';
+
+	/** The attribute a block below the first screen with a background picture is marked with while it renders. */
+	private const LAZY_BG = '__dxai_lazy_bg';
+
 	/** Whether this page has a frame waiting for the screen (the loader is printed at its end). */
 	private static bool $waiting = false;
+
+	/** Whether this page has a background waiting for the screen. */
+	private static bool $backgrounds = false;
+
+	/** The depth of the top-level block below the first screen that is rendering now; 0 outside one. */
+	private static int $below_at = 0;
 
 	/** Whether the page's content has had its first block of content (not a header) yet. */
 	private static bool $content = false;
@@ -64,6 +86,7 @@ final class Image_Loading {
 		add_filter( 'render_block_data', array( self::class, 'enter' ), 10, 3 );
 		add_filter( 'render_block', array( self::class, 'leave' ), 10, 2 );
 		add_action( 'wp_footer', array( self::class, 'print_loader' ), 20 );
+		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_background_rule' ) );
 	}
 
 	/**
@@ -73,9 +96,10 @@ final class Image_Loading {
 	 * @return string
 	 */
 	public static function reset( $content ) {
-		self::$content = false;
-		self::$base    = self::$depth;
-		self::$levels  = array( self::$depth );
+		self::$content  = false;
+		self::$below_at = 0;
+		self::$base     = self::$depth;
+		self::$levels   = array( self::$depth );
 
 		return $content;
 	}
@@ -103,9 +127,13 @@ final class Image_Loading {
 		} elseif ( $top ) {
 			if ( self::$content ) {
 				$block['attrs'][ self::MARK ] = true;
+				self::$below_at                = self::$depth;
 			} elseif ( ! self::is_header( $block ) ) {
 				self::$content = true;
 			}
+		}
+		if ( self::$below_at > 0 && self::$depth >= self::$below_at && self::has_background( $block ) ) {
+			$block['attrs'][ self::LAZY_BG ] = true;
 		}
 		if ( self::waits( $block ) ) {
 			$block['attrs'][ self::MARK ] = true;
@@ -138,14 +166,65 @@ final class Image_Loading {
 		if ( self::$depth > 0 ) {
 			--self::$depth;
 		}
+		if ( self::$below_at > 0 && self::$depth < self::$below_at ) {
+			self::$below_at = 0;
+		}
 		if ( is_array( $block ) && ! empty( $block['attrs'][ self::WRAP ] ) && count( self::$levels ) > 1 ) {
 			array_pop( self::$levels );
 		}
-		if ( ! is_string( $html ) || ! is_array( $block ) || empty( $block['attrs'][ self::MARK ] ) || ( stripos( $html, '<img' ) === false && stripos( $html, '<iframe' ) === false ) ) {
+		if ( ! is_string( $html ) || ! is_array( $block ) ) {
+			return $html;
+		}
+		if ( ! empty( $block['attrs'][ self::LAZY_BG ] ) ) {
+			$html = self::wait_background( $html );
+		}
+		if ( empty( $block['attrs'][ self::MARK ] ) || ( stripos( $html, '<img' ) === false && stripos( $html, '<iframe' ) === false ) ) {
 			return $html;
 		}
 
 		return self::lazy( $html );
+	}
+
+	/** A block's markup whose own element keeps its background picture until it is near the screen. */
+	private static function wait_background( string $html ): string {
+		$tags = new \WP_HTML_Tag_Processor( $html );
+		if ( ! $tags->next_tag() ) {
+			return $html;
+		}
+		$tags->add_class( self::BG_CLASS );
+		self::$backgrounds = true;
+
+		return $tags->get_updated_html();
+	}
+
+	/**
+	 * Whether a block's own CSS paints a file behind it (not a data: picture written into the CSS, which costs no request).
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function has_background( array $block ): bool {
+		return preg_match( '/background(?:-image)?\s*:[^;]*url\(\s*[\'"]?(?!data:)/i', (string) ( $block['attrs']['dxaiCss'] ?? '' ) ) === 1;
+	}
+
+	/**
+	 * On a design's page that may have one: what keeps a waiting background unpainted while scripts run — <html> marked `dxai-js`
+	 * in the head, and the rule (four ids, one more than a block's own rule). Without scripts the background paints at once.
+	 */
+	public static function enqueue_background_rule(): void {
+		$id = is_singular() ? (int) get_queried_object_id() : 0;
+		if ( $id < 1 || ! Page_Meta::is_design_page( $id ) || ! str_contains( (string) get_post_field( 'post_content', $id ), 'url(' ) ) {
+			return;
+		}
+		/** For a waiting background on a design's page: the same switch as its pictures'. */
+		if ( ! (bool) apply_filters( 'dxai_ui_lazy_below', true, $id ) ) {
+			return;
+		}
+		wp_register_script( 'dxai-ui-js', false, array(), DXAI_UI_VERSION, false );
+		wp_enqueue_script( 'dxai-ui-js' );
+		wp_add_inline_script( 'dxai-ui-js', 'document.documentElement.classList.add("dxai-js");' );
+		wp_register_style( 'dxai-ui-lazy-bg', false, array(), DXAI_UI_VERSION );
+		wp_enqueue_style( 'dxai-ui-lazy-bg' );
+		wp_add_inline_style( 'dxai-ui-lazy-bg', '.dxai-js ' . str_repeat( ':is(.' . self::BG_CLASS . ',#dxai-h)', 4 ) . '{background-image:none}' );
 	}
 
 	/** Markup with its pictures and frames lazy, and no high priority on them. */
@@ -179,8 +258,15 @@ final class Image_Loading {
 		return preg_match( '#^https?://(?:(?:www\.)?google\.[a-z.]{2,6}/maps\b|maps\.google\.[a-z.]{2,6}/)#i', $src ) === 1;
 	}
 
-	/** At the end of a page with a waiting frame: the lines that load it near the screen (at once without IntersectionObserver). */
+	/**
+	 * At the end of a page with a waiting frame or background: the lines that load it near the screen (at once without
+	 * IntersectionObserver).
+	 */
 	public static function print_loader(): void {
+		if ( self::$backgrounds ) {
+			self::$backgrounds = false;
+			echo "<script id=\"dxai-ui-backgrounds\">(function(){var b=document.querySelectorAll('." . esc_js( self::BG_CLASS ) . "');function go(e){e.classList.remove('" . esc_js( self::BG_CLASS ) . "');}if(!('IntersectionObserver' in window)){for(var k=0;k<b.length;k++){go(b[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::BG_MARGIN ) . " 0px'});for(var j=0;j<b.length;j++){io.observe(b[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its values are escaped.
+		}
 		if ( ! self::$waiting ) {
 			return;
 		}
