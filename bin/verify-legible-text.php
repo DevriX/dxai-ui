@@ -10,7 +10,11 @@
  * card's colour is in the Colour panel (`style.color.background`, written by Native\Background_Color), which it did not read, so the text
  * was read against the white section under the card.
  *
- * Makes a design page and deletes it, also when a check dies half-way. Exit code 1 when a check fails.
+ * And where one text colour cannot read on every background the theme gave it (Five Star: its yellow brand follows the theme's blue,
+ * black text there is 3.9:1, the same black is on white elsewhere), Theme_Binding gives it a colour per background, on what paints
+ * that background — Color_Usage records those painters with the text they paint under.
+ *
+ * Makes design pages and deletes them, also when a check dies half-way. Exit code 1 when a check fails.
  *
  * @package DXAI_UI
  */
@@ -116,6 +120,43 @@ $expect( '…and the page prints it with its design\'s colours (Token_Styles::br
 add_filter( 'dxai_ui_legible_text', '__return_false' );
 $expect( 'nothing when the filter says no', '' === Legible_Text::css( $home ) );
 remove_filter( 'dxai_ui_legible_text', '__return_false' );
+
+echo "\nWhat paints each background\n";
+$run_css  = 'background:var(--dxai-band);padding:8px';
+$painting = '<!-- wp:group {"tagName":"section","className":"text-dxai-ink"} --><section class="wp-block-group text-dxai-ink">'
+	. '<!-- wp:group {"className":"bg-dxai-band text-dxai-paper"} --><div class="wp-block-group bg-dxai-band text-dxai-paper"><!-- wp:paragraph --><p>On the band</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '<!-- wp:paragraph {"dxaiInner":{"dxs-run9":"background:var(\u002d\u002ddxai-band);padding:0 4px"}} --><p>Step <span class="dxs-run9">01</span></p><!-- /wp:paragraph -->'
+	. '<!-- wp:group {"className":"bg-dxai-band","dxaiCss":"color:#ffffff"} --><div class="wp-block-group bg-dxai-band"><!-- wp:paragraph --><p>White by a literal</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '<!-- wp:group {"style":{"color":{"background":"var(\u002d\u002ddxai-band)"}}} --><div class="wp-block-group has-background" style="background-color:var(--dxai-band)"><!-- wp:paragraph --><p>Panel</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '<!-- wp:group {"dxaiCss":"' . $run_css . '"} --><div class="wp-block-group"><!-- wp:paragraph --><p>Own rule</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '</section><!-- /wp:group -->';
+$painted = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Legible text fixture (painters)', 'post_content' => wp_slash( $painting ) ), true );
+$painted = is_wp_error( $painted ) ? 0 : (int) $painted;
+if ( $painted > 0 ) {
+	$made[] = $painted;
+	update_post_meta( $painted, Page_Scope::META, (string) $painted );
+	update_post_meta( $painted, Token_Styles::META, array( 'colors' => array( array( 'slug' => 'ink', 'value' => '#111111' ), array( 'slug' => 'paper', 'value' => '#ffffff' ), array( 'slug' => 'band', 'value' => '#0b4f8a' ) ) ) );
+}
+$pu       = $painted > 0 ? Color_Usage::scan( $painted ) : array();
+$painters = (array) ( $pu['painters'] ?? array() );
+$ink_band = (array) ( $painters['band|ink'] ?? array() );
+$expect( 'a background is painted by the importer\'s class, under the text it holds (band under paper)', in_array( '.bg-dxai-band', (array) ( $painters['band|paper'] ?? array() ), true ), wp_json_encode( $painters ) );
+$expect( '…by an inline run of a block, by the Colour panel\'s style and by a block\'s own rule, under the text they inherit (ink)', in_array( '.dxs-run9', $ink_band, true ) && in_array( '[style*="background-color:var(--dxai-band)"]', $ink_band, true ) && in_array( '.' . \DXAI_UI\Compiler\Style_Hoister::css_class( $run_css ), $ink_band, true ), wp_json_encode( $ink_band ) );
+$expect( 'a block that sets its text in a colour that is no token is no painter of the text above it, and its text is no token\'s', ! in_array( '.bg-dxai-band', $ink_band, true ), wp_json_encode( $ink_band ) );
+$expect( 'the inline run is paired with its own background', in_array( 'ink|band', array_map( static fn( $r ) => $r[0] . '|' . $r[1], Color_Usage::pair_rows( (array) ( $pu['pairs'] ?? array() ) ) ), true ) );
+
+echo "\nA colour for each background (Theme_Binding::scoped)\n";
+$sd_design = array( 'body' => '#000000', 'brand' => '#fcb123', 'white' => '#ffffff', 'on' => '#111111' );
+$sd_now    = array( 'body' => '#000000', 'brand' => '#016bc4', 'white' => '#ffffff', 'on' => '#111111' );
+$sd_pairs  = array( array( 'body', 'brand', 8, false ), array( 'body', 'white', 30, false ), array( 'body', 'body', 2, false ) );
+$sd_paint  = array( 'brand|body' => array( '.bg-dxai-brand', '.dxs-step' ), 'white|body' => array( '.bg-dxai-white' ), 'brand|on' => array( '.bg-dxai-brand' ), 'body|body' => array( '.dxs-icon' ) );
+$sd_rules  = \DXAI_UI\Theme\Theme_Binding::scoped( $sd_pairs, $sd_design, $sd_now, array(), $sd_paint );
+$sd_all    = implode( "\n", $sd_rules );
+$expect( 'black text on the brand the theme turned blue (3.9:1) gets a colour that reads there, on what paints it', 1 === preg_match( '/:is\(\.bg-dxai-brand,\.dxs-step\)\{--dxai-body--fg:([^;}]+)\}/', $sd_all, $sm ) && Color_Math::contrast( (string) ( preg_match( '/#[0-9a-f]{6}/i', $sm[1], $sh ) ? $sh[0] : $sm[1] ), '#016bc4' ) >= 4.5, $sd_all );
+$expect( '…and that colour as its text too where only it is painted that way (.dxs-step), not where the class paints other text too', str_contains( $sd_all, ':is(.dxs-step){color:' ) && ! preg_match( '/:is\([^)]*\.bg-dxai-brand[^)]*\)\{color:/', $sd_all ), $sd_all );
+$expect( 'on what paints its other backgrounds, its usual colour again (a white card inside the band)', str_contains( $sd_all, ':is(.bg-dxai-white){--dxai-body--fg:var(--dxai-body)}' ) && str_contains( $sd_all, ':is(.bg-dxai-white){color:var(--dxai-body)}' ), $sd_all );
+$expect( 'a pair that does not read in the design itself (black on black: an icon) makes no rule', ! str_contains( $sd_all, '.dxs-icon' ), $sd_all );
+$expect( 'nothing when one colour reads everywhere', array() === \DXAI_UI\Theme\Theme_Binding::scoped( $sd_pairs, $sd_design, $sd_design, array(), $sd_paint ) );
 
 $clean();
 echo "\n{$pass} passed, {$fail} failed\n";

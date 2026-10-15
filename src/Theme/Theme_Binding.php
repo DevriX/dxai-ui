@@ -260,8 +260,9 @@ final class Theme_Binding {
 			'tokens'       => $tokens,
 			'overrides'    => array(),
 			'usage'        => array(
-				'tokens' => (array) ( $usage['tokens'] ?? array() ),
-				'pairs'  => (array) ( $usage['pairs'] ?? array() ),
+				'tokens'   => (array) ( $usage['tokens'] ?? array() ),
+				'pairs'    => (array) ( $usage['pairs'] ?? array() ),
+				'painters' => (array) ( $usage['painters'] ?? array() ),
 			),
 		);
 	}
@@ -280,7 +281,7 @@ final class Theme_Binding {
 		if ( ! $palette['has_palette'] ) {
 			return '';
 		}
-		$key = md5( (string) wp_json_encode( array( $home, $binding['tokens'] ?? array(), $binding['created_gmt'] ?? '', $palette['hash'], self::SCHEMA ) ) );
+		$key = md5( (string) wp_json_encode( array( $home, $binding['tokens'] ?? array(), $binding['created_gmt'] ?? '', $palette['hash'], self::SCHEMA, self::painters( $home, $binding ) ) ) );
 		if ( isset( self::$css[ $key ] ) ) {
 			return self::$css[ $key ];
 		}
@@ -339,7 +340,10 @@ final class Theme_Binding {
 	public static function text_values( int $home ): array {
 		$binding = self::get( $home );
 		$text    = array();
-		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', self::css( $home ), $m, PREG_SET_ORDER ) ) {
+		// The design's own rule only (the first): the rules for one background (scoped()) are not its text's value everywhere.
+		$css = self::css( $home );
+		$css = (string) strtok( $css, '}' );
+		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', $css, $m, PREG_SET_ORDER ) ) {
 			foreach ( $m as $hit ) {
 				$value           = trim( $hit[2] );
 				$text[ $hit[1] ] = preg_match( '/,\s*(#[0-9a-f]{3,8})\)$/i', $value, $hex ) ? $hex[1] : $value;
@@ -376,11 +380,16 @@ final class Theme_Binding {
 			$relative[] = '--dxai-' . $token . ':' . $d['css'];
 		}
 		// Text colours: each chosen against the backgrounds it sits on.
-		foreach ( self::text_channels( $binding, $design, $now, $bound ) as $token => $value ) {
+		$channels = self::text_channels( $binding, $design, $now, $bound );
+		foreach ( $channels as $token => $value ) {
 			$decls[] = '--dxai-' . $token . '--fg:' . $value;
 		}
 		$scope = '.dxai-ui.dxai-ui--' . $home;
 		$out   = $scope . '{' . implode( ';', $decls ) . '}';
+		// …and where one colour cannot read on all of them, a colour for each background, on what paints it.
+		foreach ( self::scoped( Color_Usage::pair_rows( (array) ( $binding['usage']['pairs'] ?? array() ) ), $design, $now, $channels, self::painters( $home, $binding ) ) as $rule ) {
+			$out .= $scope . ' ' . $rule;
+		}
 		if ( $relative !== array() ) {
 			// Live in the editor and in Styles: the tints recomputed from the theme colour itself where supported.
 			$out .= '@supports (color:oklch(from red l c h)){' . $scope . '{' . implode( ';', $relative ) . '}}';
@@ -437,6 +446,98 @@ final class Theme_Binding {
 		}
 
 		return array( $design, $bound, $derived, $now );
+	}
+
+	/**
+	 * What paints each background of the design, with the text it paints it under (Color_Usage's painters): the binding's copy, else
+	 * the scan's (a binding made before painters were recorded).
+	 *
+	 * @param array<string, mixed> $binding
+	 * @return array<string, array<int, string>>
+	 */
+	private static function painters( int $home, array $binding ): array {
+		$painters = (array) ( $binding['usage']['painters'] ?? array() );
+		if ( $painters === array() ) {
+			$usage    = get_post_meta( $home, Color_Usage::META, true );
+			$painters = is_array( $usage ) ? (array) ( $usage['painters'] ?? array() ) : array();
+		}
+
+		return array_map( static fn( $list ) => array_values( array_filter( (array) $list, 'is_string' ) ), $painters );
+	}
+
+	/**
+	 * A text colour for each background where the one colour of a token cannot read on all of them: Five Star's black text reads on
+	 * its yellow brand and on white, but the brand follows the theme's blue (#016bc4, 3.9:1) and white text would vanish on white.
+	 * On what paints the failing background (its class, its rule, its inline style — Color_Usage's painters, recorded with the text
+	 * they paint it under) the token's text channel gets a colour that reads there (the design's own, black or white, as the binding
+	 * picks: reads()), and `color` too, for text that only inherits it; on what paints its other backgrounds, the token's usual colour
+	 * again, so a white card inside a blue band is not left in white text. `color` is set only on a selector that paints the
+	 * background under one text colour alone.
+	 *
+	 * @param array<int, array{0:string, 1:string, 2:int, 3:bool}> $pairs    Text token, background token, uses, large.
+	 * @param array<string, string>                                $design   The design's colours.
+	 * @param array<string, string>                                $now      Every token's value on this request.
+	 * @param array<string, string>                                $channels Token => the text channel the binding set (CSS).
+	 * @param array<string, array<int, string>>                    $painters "<bg>|<fg>" => selectors.
+	 * @return array<int, string> Rules, without the design's scope.
+	 */
+	public static function scoped( array $pairs, array $design, array $now, array $channels, array $painters ): array {
+		$by_fg = array();
+		foreach ( $pairs as $pair ) {
+			// A pair that does not read in the design itself (Five Star's "black on black": an icon button the scan saw as text) says
+			// nothing about text on that background: no rule is made from it.
+			if ( isset( $design[ $pair[0] ], $design[ $pair[1] ], $now[ $pair[0] ], $now[ $pair[1] ] ) && Color_Math::contrast( $design[ $pair[0] ], $design[ $pair[1] ] ) >= self::LARGE_MIN ) {
+				$by_fg[ $pair[0] ][ $pair[1] ][] = $pair;
+			}
+		}
+		$hex_of = static fn( string $css ): string => preg_match( '/(#[0-9a-f]{3,8})\)?\s*$/i', $css, $m ) ? $m[1] : $css;
+		// How many text colours each selector paints a background under.
+		$under = array();
+		foreach ( $painters as $key => $selectors ) {
+			$bg = (string) strtok( (string) $key, '|' );
+			foreach ( $selectors as $selector ) {
+				$under[ $bg ][ $selector ] = (int) ( $under[ $bg ][ $selector ] ?? 0 ) + 1;
+			}
+		}
+		$rules = array();
+		foreach ( $by_fg as $token => $grounds ) {
+			$global = isset( $channels[ $token ] ) ? $hex_of( (string) $channels[ $token ] ) : $now[ $token ];
+			$over   = array();
+			foreach ( $grounds as $bg => $list ) {
+				if ( self::reads( $global, $list, $design, $now ) ) {
+					continue;
+				}
+				$candidates = array( array( $design[ $token ], $design[ $token ] ) );
+				foreach ( array( 'black' => '#000000', 'white' => '#ffffff' ) as $slug => $hex ) {
+					$live         = Theme_Palette::hex( $slug );
+					$candidates[] = array( Theme_Palette::has( $slug ) ? 'var(--wp--preset--color--' . $slug . ',' . ( $live !== '' ? $live : $hex ) . ')' : $hex, $live !== '' ? $live : $hex );
+				}
+				foreach ( $candidates as $candidate ) {
+					if ( self::reads( $candidate[1], $list, $design, $now ) ) {
+						$over[ $bg ] = $candidate[0];
+						break;
+					}
+				}
+			}
+			if ( $over === array() ) {
+				continue;
+			}
+			$usual = isset( $channels[ $token ] ) ? (string) $channels[ $token ] : 'var(--dxai-' . $token . ')';
+			foreach ( array_keys( $grounds ) as $bg ) {
+				$selectors = (array) ( $painters[ $bg . '|' . $token ] ?? array() );
+				if ( $selectors === array() ) {
+					continue;
+				}
+				$value = $over[ $bg ] ?? $usual;
+				$alone = array_values( array_filter( $selectors, static fn( $sel ) => (int) ( $under[ $bg ][ $sel ] ?? 0 ) === 1 ) );
+				$rules[] = ':is(' . implode( ',', $selectors ) . '){--dxai-' . $token . '--fg:' . $value . '}';
+				if ( $alone !== array() ) {
+					$rules[] = ':is(' . implode( ',', $alone ) . '){color:' . $value . '}';
+				}
+			}
+		}
+
+		return $rules;
 	}
 
 	/**

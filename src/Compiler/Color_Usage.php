@@ -30,6 +30,13 @@ use DXAI_UI\Support\Upload_Paths;
  * Text over photos and colours set only by descendant rules of the sheet are
  * not seen; the render guard (Theme_Binding) keeps the design colour when a
  * pair it does see would fail.
+ *
+ * And which selectors paint each background, with the text colour they paint
+ * it under (`painters`, keyed `<bg>|<fg>`): the importer's class, a core
+ * preset's class, the Colour panel's inline style, a block's own rule class
+ * (its `dxaiCss`, or an inline run of it). A text colour the theme's
+ * background no longer reads on can then be given another one there alone
+ * (Theme_Binding's scoped channels).
  */
 final class Color_Usage {
 
@@ -44,15 +51,16 @@ final class Color_Usage {
 	/**
 	 * Scan a design (its Home id) and store the result on the Home.
 	 *
-	 * @return array{tokens: array<string, array{fg:int, bg:int, border:int}>, pairs: array<string, int>, root: array{fg:string, bg:string}}
+	 * @return array{tokens: array<string, array{fg:int, bg:int, border:int}>, pairs: array<string, int>, root: array{fg:string, bg:string}, painters: array<string, mixed>}
 	 */
 	public static function scan( int $home ): array {
 		self::$translucent = self::translucent_tokens( $home );
 		$root  = self::root_colors( $home );
 		$usage = array(
-			'tokens' => array(),
-			'pairs'  => array(),
-			'root'   => $root,
+			'tokens'   => array(),
+			'pairs'    => array(),
+			'root'     => $root,
+			'painters' => array(),
 		);
 		foreach ( self::posts( $home ) as $post_id ) {
 			foreach ( parse_blocks( (string) get_post_field( 'post_content', $post_id ) ) as $block ) {
@@ -60,6 +68,10 @@ final class Color_Usage {
 			}
 		}
 		self::sheet_counts( $home, $usage );
+		// Selectors as lists, a few dozen at most for one background and text.
+		foreach ( $usage['painters'] as $key => $set ) {
+			$usage['painters'][ $key ] = array_slice( array_keys( (array) $set ), 0, 40 );
+		}
 		update_post_meta( $home, self::META, $usage );
 
 		return $usage;
@@ -145,9 +157,13 @@ final class Color_Usage {
 		foreach ( $own['border'] as $slug ) {
 			self::bump( $usage, $slug, 'border' );
 		}
-		$fg = $own['fg'] !== '' ? $own['fg'] : $fg;
+		// Text set in a colour that is no token (`text-white`, a literal) is no token's: nothing in it is paired with the one above.
+		$fg = $own['fg'] !== '' ? $own['fg'] : ( $own['other'] ? '' : $fg );
 		// A translucent background (white at 10% on a dark band) is read as the opaque one under it.
 		$bg = $own['bg'] !== '' && ! isset( self::$translucent[ $own['bg'] ] ) ? $own['bg'] : $bg;
+		if ( $own['bg'] !== '' && $own['painter'] !== '' && $fg !== '' && ! isset( self::$translucent[ $own['bg'] ] ) ) {
+			$usage['painters'][ $own['bg'] . '|' . $fg ][ $own['painter'] ] = true;
+		}
 		if ( in_array( $name, self::TEXT_BLOCKS, true ) && trim( wp_strip_all_tags( (string) ( $block['innerHTML'] ?? '' ) ) ) !== '' ) {
 			$large = $name === 'core/heading' && (int) ( $block['attrs']['level'] ?? 2 ) <= 3;
 			self::pair( $usage, $fg, $bg, $large );
@@ -155,6 +171,16 @@ final class Color_Usage {
 		foreach ( $own['inner'] as $run ) {
 			self::pair( $usage, $run, $bg, false );
 			self::bump( $usage, $run, 'fg' );
+		}
+		// An inline run with a background of its own (Five Star's step numbers: a brand circle around the text they inherit).
+		foreach ( $own['runs'] as $run ) {
+			$run_fg = $run['fg'] !== '' ? $run['fg'] : $fg;
+			if ( $run_fg === '' || isset( self::$translucent[ $run['bg'] ] ) ) {
+				continue;
+			}
+			self::pair( $usage, $run_fg, $run['bg'], false );
+			self::bump( $usage, $run['bg'], 'bg' );
+			$usage['painters'][ $run['bg'] . '|' . $run_fg ][ '.' . $run['class'] ] = true;
 		}
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $child ) {
 			if ( is_array( $child ) ) {
@@ -167,15 +193,18 @@ final class Color_Usage {
 	 * A block's own colour tokens.
 	 *
 	 * @param array<string, mixed> $block
-	 * @return array{fg:string, bg:string, border:array<int, string>, inner:array<int, string>}
+	 * @return array{fg:string, bg:string, border:array<int, string>, inner:array<int, string>, painter:string, runs:array<int, array{class:string, fg:string, bg:string}>, other:bool}
 	 */
 	private static function block_colors( array $block ): array {
 		$attrs = (array) ( $block['attrs'] ?? array() );
 		$out   = array(
-			'fg'     => '',
-			'bg'     => '',
-			'border' => array(),
-			'inner'  => array(),
+			'fg'      => '',
+			'bg'      => '',
+			'border'  => array(),
+			'inner'   => array(),
+			'painter' => '',
+			'runs'    => array(),
+			'other'   => false,
 		);
 		$class = (string) ( $attrs['className'] ?? '' );
 		if ( preg_match( '/^\s*<[a-z][a-z0-9]*\b[^>]*\bclass="([^"]*)"/i', (string) ( $block['innerHTML'] ?? '' ), $m ) ) {
@@ -184,8 +213,17 @@ final class Color_Usage {
 		if ( preg_match( '/(?:^|\s)text-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
 			$out['fg'] = $m[1];
 		}
+		foreach ( preg_split( '/\s+/', trim( $class ) ) ?: array() as $name ) {
+			if ( str_starts_with( $name, 'text-' ) && ! str_starts_with( $name, 'text-dxai-' ) && preg_match( '/(?:^|;)\s*color\s*:/', Utility_Classes::base_declarations( $name ) ) === 1 ) {
+				$out['other'] = true;
+			}
+		}
+		if ( is_string( $attrs['style']['color']['text'] ?? null ) && self::token_in( $attrs['style']['color']['text'] ) === '' ) {
+			$out['other'] = true;
+		}
 		if ( preg_match( '/(?:^|\s)bg-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
-			$out['bg'] = $m[1];
+			$out['bg']      = $m[1];
+			$out['painter'] = '.bg-dxai-' . $m[1];
 		}
 		// Older imports carry the design's colours as core presets named after its tokens.
 		if ( $out['fg'] === '' && is_string( $attrs['textColor'] ?? null ) ) {
@@ -196,14 +234,20 @@ final class Color_Usage {
 			$out['fg'] = self::token_in( $attrs['style']['color']['text'] );
 		}
 		if ( $out['bg'] === '' && is_string( $attrs['backgroundColor'] ?? null ) ) {
-			$out['bg'] = sanitize_key( $attrs['backgroundColor'] );
+			$out['bg']      = sanitize_key( $attrs['backgroundColor'] );
+			$out['painter'] = '.has-' . $out['bg'] . '-background-color';
 		}
 		// …and its custom background that names one (Native\Background_Color writes the class's own declaration there): a card's colour
 		// lives there, and the text in it was read against the section under the card.
 		if ( $out['bg'] === '' && is_string( $attrs['style']['color']['background'] ?? null ) ) {
-			$out['bg'] = self::token_in( $attrs['style']['color']['background'] );
+			$out['bg']      = self::token_in( $attrs['style']['color']['background'] );
+			$out['painter'] = $out['bg'] !== '' ? '[style*="background-color:var(--dxai-' . $out['bg'] . ')"]' : '';
 		}
-		foreach ( self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $prop => $value ) {
+		$own_css = self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) );
+		if ( isset( $own_css['color'] ) && self::token_in( $own_css['color'] ) === '' && ! preg_match( '/^\s*(inherit|currentcolor)\s*$/i', (string) $own_css['color'] ) ) {
+			$out['other'] = true;
+		}
+		foreach ( $own_css as $prop => $value ) {
 			$token = self::token_in( $value );
 			if ( $token === '' ) {
 				continue;
@@ -211,15 +255,28 @@ final class Color_Usage {
 			if ( $prop === 'color' ) {
 				$out['fg'] = $token;
 			} elseif ( str_starts_with( $prop, 'background' ) ) {
-				$out['bg'] = $out['bg'] !== '' ? $out['bg'] : $token;
+				if ( $out['bg'] === '' ) {
+					$out['bg']      = $token;
+					$out['painter'] = '.' . Style_Hoister::css_class( (string) $attrs['dxaiCss'] );
+				}
 			} elseif ( str_starts_with( $prop, 'border' ) || str_starts_with( $prop, 'outline' ) ) {
 				$out['border'][] = $token;
 			}
 		}
-		foreach ( is_array( $attrs['dxaiInner'] ?? null ) ? $attrs['dxaiInner'] : array() as $css ) {
-			$decls = self::declarations( (string) $css );
-			$token = isset( $decls['color'] ) ? self::token_in( $decls['color'] ) : '';
-			if ( $token !== '' ) {
+		foreach ( is_array( $attrs['dxaiInner'] ?? null ) ? $attrs['dxaiInner'] : array() as $run_class => $css ) {
+			$decls  = self::declarations( (string) $css );
+			$token  = isset( $decls['color'] ) ? self::token_in( $decls['color'] ) : '';
+			$ground = '';
+			foreach ( array( 'background', 'background-color' ) as $prop ) {
+				$ground = $ground !== '' ? $ground : ( isset( $decls[ $prop ] ) ? self::token_in( $decls[ $prop ] ) : '' );
+			}
+			if ( $ground !== '' && is_string( $run_class ) && preg_match( '/^dxs-[a-z0-9]+$/', $run_class ) === 1 ) {
+				$out['runs'][] = array(
+					'class' => $run_class,
+					'fg'    => $token,
+					'bg'    => $ground,
+				);
+			} elseif ( $token !== '' ) {
 				$out['inner'][] = $token;
 			}
 		}
