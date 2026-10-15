@@ -20,8 +20,10 @@ use DXAI_UI\Support\Color_Math;
  * nearest colour that does: the same hue and chroma, moved away from the background it reads worst on (darker on a light one,
  * lighter on a dark one) by the least step that reaches the ratio on all of them, at most MAX_STEP of OKLCH lightness. It goes on the token's text channel only (`--dxai-<token>--fg`, which
  * the design's text, fill and stroke read; Token_Styles::fg_channel()), so its backgrounds and borders keep the design's value. A colour
- * further off is the design's decision and is left as it is, and so is a token whose text the theme binding already chose
- * (Theme_Binding::text_values()). `dxai_ui_legible_text` turns it off.
+ * further off is the design's decision and is left as it is. A token whose text the theme binding chose (Theme_Binding::text_values():
+ * a theme colour kept readable on the backgrounds it saw) is read in that colour, as the page shows it, and nudged the same way when it
+ * nearly reads — Semper Dry's white on the theme's #1a7aca was 4.48:1, Arcus's ink on the theme's orange 4.38:1. The rule comes after
+ * the binding's, so its value wins. `dxai_ui_legible_text` turns it off.
  */
 final class Legible_Text {
 
@@ -61,11 +63,11 @@ final class Legible_Text {
 			return '';
 		}
 		$values = Theme_Binding::values( $home );
-		$skip   = array_keys( Theme_Binding::text_values( $home ) );
-		$key    = md5( (string) wp_json_encode( array( $home, $values, $pairs, $skip ) ) );
+		$text   = Theme_Binding::text_values( $home );
+		$key    = md5( (string) wp_json_encode( array( $home, $values, $pairs, $text ) ) );
 		if ( ! isset( self::$memo[ $key ] ) ) {
 			$decls = array();
-			foreach ( self::adjust( $values, $pairs, $skip ) as $token => $hex ) {
+			foreach ( self::adjust( $values, $pairs, array(), $text ) as $token => $hex ) {
 				$decls[] = '--dxai-' . $token . '--fg:' . $hex;
 			}
 			self::$memo[ $key ] = $decls === array() ? '' : '.dxai-ui.dxai-ui--' . $home . '{' . implode( ';', $decls ) . '}';
@@ -80,10 +82,18 @@ final class Legible_Text {
 	 * @param array<string, string>                                $values Token => colour now.
 	 * @param array<int, array{0:string, 1:string, 2:int, 3:bool}> $pairs  Text token, background token, uses, large (Color_Usage::pair_rows()).
 	 * @param array<int, string>                                   $skip   Tokens whose text channel is chosen elsewhere.
+	 * @param array<string, string>                                $text   Token => the colour its text has on the page, when not its own (the theme binding's).
 	 * @return array<string, string>
 	 */
-	public static function adjust( array $values, array $pairs, array $skip = array() ): array {
+	public static function adjust( array $values, array $pairs, array $skip = array(), array $text = array() ): array {
+		// A text is read in the colour the page gives it.
+		foreach ( $text as $token => $hex ) {
+			if ( Color_Math::parse( (string) $hex ) !== null ) {
+				$values[ 'text:' . $token ] = (string) $hex;
+			}
+		}
 		$by_fg = array();
+		$seen  = array();
 		foreach ( $pairs as $pair ) {
 			$fg = (string) $pair[0];
 			$bg = Color_Math::parse( (string) ( $values[ (string) $pair[1] ] ?? '' ) );
@@ -92,14 +102,16 @@ final class Legible_Text {
 				continue;
 			}
 			$by_fg[ $fg ][] = array( (string) $values[ (string) $pair[1] ], ! empty( $pair[3] ) ? self::LARGE_MIN : self::TEXT_MIN );
+			$seen[ $fg ]    = (string) ( $values[ 'text:' . $fg ] ?? $values[ $fg ] );
 		}
 		$out = array();
 		foreach ( $by_fg as $token => $grounds ) {
-			$rgba = Color_Math::parse( $values[ $token ] );
+			$color = $seen[ $token ];
+			$rgba  = Color_Math::parse( $color );
 			if ( $rgba === null || $rgba[3] < 1 ) {
 				continue;
 			}
-			$short = self::shortfall( $values[ $token ], $grounds );
+			$short = self::shortfall( $color, $grounds );
 			if ( $short <= 0.0 || $short > self::NEAR ) {
 				continue;
 			}
@@ -108,7 +120,7 @@ final class Legible_Text {
 			$text  = Color_Math::luminance( $rgba );
 			$worst = $grounds[0];
 			foreach ( $grounds as $g ) {
-				if ( $g[1] - Color_Math::contrast( $values[ $token ], $g[0] ) > $worst[1] - Color_Math::contrast( $values[ $token ], $worst[0] ) ) {
+				if ( $g[1] - Color_Math::contrast( $color, $g[0] ) > $worst[1] - Color_Math::contrast( $color, $worst[0] ) ) {
 					$worst = $g;
 				}
 			}

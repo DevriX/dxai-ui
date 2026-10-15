@@ -51,6 +51,7 @@
 		{ "file": "verify-team-pages.php", "group": "ci" },
 		{ "file": "verify-font-fallbacks.php", "group": "ci" },
 		{ "file": "verify-legible-text.php", "group": "ci" },
+		{ "file": "verify-accessible-markup.php", "group": "ci" },
 		{ "file": "verify-template-fonts.php", "group": "ci" },
 		{ "file": "verify-theme-contract.php", "group": "ci" },
 		{ "file": "verify-theme-fonts.php", "group": "ci" },

@@ -62,7 +62,10 @@ $both = Legible_Text::adjust( $values, array( $pair( 'mid', 'white' ), $pair( 'm
 $expect( 'a colour on white (4.42:1) and on black (4.76:1) goes darker, away from white, and still reads on black', isset( $both['mid'] ) && Color_Math::contrast( $both['mid'], '#ffffff' ) >= 4.5 && Color_Math::contrast( $both['mid'], '#000000' ) >= 4.5, wp_json_encode( $both ) );
 $expect( '3.9:1 is not nearly reading: the design\'s decision, left as it is', array() === Legible_Text::adjust( $values, array( $pair( 'dim', 'white' ) ) ) );
 $expect( 'a translucent background (a grey veil at 12%, under which muted text is 4.3:1) is not what the text is read on', array() === Legible_Text::adjust( $values, array( $pair( 'muted', 'veil' ) ) ) );
-$expect( 'a token whose text the theme binding chose is left to it', array() === Legible_Text::adjust( $values, array( $pair( 'muted', 'card' ) ), array( 'muted' ) ) );
+$expect( 'a token named to be skipped is left as it is', array() === Legible_Text::adjust( $values, array( $pair( 'muted', 'card' ) ), array( 'muted' ) ) );
+// The theme binding gave the ink's text a dark grey on the theme's orange (4.01:1, Arcus's ink on the theme's orange is 4.38:1): read in that grey, not the design's own white.
+$bound = Legible_Text::adjust( array_merge( $values, array( 'ink' => '#ffffff', 'orange' => '#e64804' ) ), array( $pair( 'ink', 'orange' ) ), array(), array( 'ink' => '#222222' ) );
+$expect( 'a text colour the theme binding chose is read as the page shows it (#222 on the orange, 4.01:1) and nudged darker, the least step, to read', isset( $bound['ink'] ) && Color_Math::contrast( $bound['ink'], '#e64804' ) >= 4.5 && Color_Math::luminance( (array) Color_Math::parse( $bound['ink'] ) ) < Color_Math::luminance( (array) Color_Math::parse( '#222222' ) ) && Color_Math::contrast( $bound['ink'], '#e64804' ) < 4.7, wp_json_encode( $bound ) . ' from ' . round( Color_Math::contrast( '#222222', '#e64804' ), 2 ) );
 
 echo "\nA design's page\n";
 $made  = array();
