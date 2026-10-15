@@ -14,7 +14,8 @@ namespace DXAI_UI\Media;
  * picture the page opens on among them (docs/PLAN-PERFECT-PAGES.md, T5.1). The import stores the design's JPEG and PNG pictures as
  * WebP instead — the media library holds the WebP, its sizes are made from it, and the page, its CSS and the editor all point at it,
  * with nothing rewritten while a page is served. On this server's GD, at WordPress's own WebP quality (86, `wp_editor_set_quality`),
- * H2O's icons became 12–13% of their PNG, its logos 54%, its photographs 55–65%.
+ * H2O's icons became 12–13% of their PNG, its logos 54%, its photographs 55–65%. A photograph still over Lighthouse's target at
+ * that quality is written again at the quality that meets it (Image_Quality).
  *
  * Not converted: a picture the server cannot write as WebP, an animated PNG, a palette PNG under GD (which cannot encode one), a
  * file under MIN_BYTES, a favicon or touch icon (browsers and platforms that ask for those want PNG), and a WebP that would not be at
@@ -82,7 +83,7 @@ final class Webp {
 		}
 		$editor->maybe_exif_rotate();
 		$dir   = get_temp_dir();
-		$saved = $editor->save( $dir . wp_unique_filename( $dir, 'dxai-webp-' . wp_generate_password( 8, false ) . '.webp' ), 'image/webp' );
+		$saved = Image_Quality::save( $editor, $dir . wp_unique_filename( $dir, 'dxai-webp-' . wp_generate_password( 8, false ) . '.webp' ), 'image/webp' );
 		$made  = is_array( $saved ) ? (string) $saved['path'] : '';
 		$size  = '' !== $made && is_file( $made ) ? filesize( $made ) : false;
 		$was   = filesize( $path );

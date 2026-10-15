@@ -177,6 +177,8 @@ final class Sideloader {
 			if ( $is_temp ) {
 				wp_delete_file( $path );
 			}
+			// A picture stored before its sizes were fitted to Lighthouse's target is fitted when an import meets it again.
+			Image_Quality::fit_or_queue( (int) $known['id'] );
 
 			return array_merge(
 				$known,
@@ -252,6 +254,8 @@ final class Sideloader {
 		} elseif ( $webp ) {
 			update_post_meta( (int) $id, Webp::KEPT_META, '1' );
 		}
+		// Its sizes, written by WordPress at its own quality, as light as Lighthouse asks of a photograph.
+		Image_Quality::fit_or_queue( (int) $id );
 
 		return $attachment;
 	}

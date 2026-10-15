@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Pages;
 
+use DXAI_UI\Media\Image_Quality;
 use DXAI_UI\Media\Sideloader;
 
 final class Image_Fit {
@@ -72,7 +73,7 @@ final class Image_Fit {
 		$editor->crop( (int) floor( ( $w - $cw ) / 2 ), (int) floor( ( $h - $ch ) / 2 ), $cw, $ch );
 		$ext   = strtolower( (string) pathinfo( $file, PATHINFO_EXTENSION ) );
 		$tmp   = wp_tempnam( 'dxai-crop' ) . '.' . $ext;
-		$saved = $editor->save( $tmp );
+		$saved = Image_Quality::save( $editor, $tmp );
 		if ( is_wp_error( $saved ) ) {
 			return array( 'url' => (string) wp_get_attachment_url( $id ), 'id' => $id );
 		}
@@ -85,6 +86,7 @@ final class Image_Fit {
 			return array( 'url' => (string) wp_get_attachment_url( $id ), 'id' => $id );
 		}
 		update_post_meta( $new_id, self::CROP_META, $key );
+		Image_Quality::fit_or_queue( (int) $new_id );
 		update_post_meta( $new_id, '_wp_attachment_image_alt', (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) );
 
 		return array( 'url' => (string) wp_get_attachment_url( $new_id ), 'id' => (int) $new_id );
