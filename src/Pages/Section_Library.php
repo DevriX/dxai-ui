@@ -284,6 +284,16 @@ final class Section_Library {
 		return $area === 'footer' || ( $area === '' && str_contains( strtolower( (string) ( $b['attrs']['slug'] ?? '' ) ), 'footer' ) );
 	}
 
+	/**
+	 * Whether a top-level block is what a page opens with before its content — a skip link, the design's header bar, the box that
+	 * holds a fixed header's place, markup that shows nothing — as the import reads a design's Home. Image_Loading asks it too.
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	public static function is_lead_chrome( array $b ): bool {
+		return self::is_skip_link( $b ) || self::is_header_spacer( $b ) || self::is_island( $b ) || self::is_header_bar( $b );
+	}
+
 	/** @param array<string, mixed> $b The skip link: a lone link to the main content. */
 	private static function is_skip_link( array $b ): bool {
 		return ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && empty( $b['innerBlocks'] ) && preg_match( '#href="\#[^"]*"#', (string) $b['innerHTML'] ) === 1;

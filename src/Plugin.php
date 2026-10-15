@@ -93,6 +93,8 @@ final class Plugin {
 		( new \DXAI_UI\Media\Lcp_Preload() )->register();
 		// …and what is below its first screen lazy, with no picture there taking the high priority (T5.1).
 		( new \DXAI_UI\Media\Image_Loading() )->register();
+		// …and the pictures of its own blocks named after their attachment, so WordPress writes their sizes (T5.1).
+		( new \DXAI_UI\Media\Image_Sizes() )->register();
 		// The plugin's small stylesheets written into the page, as WordPress writes its own (T5.3).
 		( new \DXAI_UI\Media\Inline_Styles() )->register();
 		// The pages made for a design carry a key, so an import of another design never takes them.

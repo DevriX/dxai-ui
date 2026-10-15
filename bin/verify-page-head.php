@@ -204,6 +204,43 @@ $expect( 'a block in the first section that renders blocks itself keeps their pi
 $expect( '…and the page\'s next section loads lazily', str_contains( $tag_of( $ohtml, 'second.jpg' ), 'loading="lazy"' ), $tag_of( $ohtml, 'second.jpg' ) );
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $lazy ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+// Two shapes of the corpus. Semper Dry: its header inside a group with no tag of its own, then the hero. Clean Joe: one group around
+// the whole page (a skip link, a sticky group with the header, a <main> of sections, a section after it, the footer).
+$render = static function ( int $id ): string {
+	if ( $id < 1 ) {
+		return '';
+	}
+	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
+	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+	$GLOBALS['post']         = get_post( $id );
+	setup_postdata( $GLOBALS['post'] );
+
+	return (string) apply_filters( 'the_content', (string) get_post_field( 'post_content', $id ) );
+};
+$group   = static fn( string $inner, string $class = 'x' ): string => '<!-- wp:group {"className":"' . $class . '"} --><div class="wp-block-group ' . $class . '">' . $inner . '</div><!-- /wp:group -->';
+$h1      = '<!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Dry in a day</h1><!-- /wp:heading -->';
+$nav     = '<!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group"><!-- wp:paragraph --><p>Services</p><!-- /wp:paragraph --></nav><!-- /wp:group -->';
+// …and its skip link, a link block to #main with none of the usual classes.
+$skip    = '<!-- wp:dxai-ui/link {"url":"#main","className":"dxai-sh-1 absolute top-0"} --><a class="wp-block-dxai-ui-link dxai-sh-1 absolute top-0" href="#main">Skip to content</a><!-- /wp:dxai-ui/link -->';
+$semper  = $page( 'Page head fixture (header in a group)', $group( $sect( $img( 'sd-logo' ), 'header' ) . $group( $nav, 'phone-menu' ), 'sticky top-0' ) . $skip . $spacer . $sect( $h1 . $img( 'sd-hero' ) ) . $sect( $img( 'sd-next' ) ), '', $home );
+$sd_html = $render( (int) $semper );
+$expect( 'a header inside a group (Semper Dry) is the header: the hero after it is the first content, its picture left to WordPress', '' !== $tag_of( $sd_html, 'sd-hero.jpg' ) && ! str_contains( $tag_of( $sd_html, 'sd-hero.jpg' ), 'loading="lazy"' ) && ! str_contains( $tag_of( $sd_html, 'sd-logo.jpg' ), 'loading="lazy"' ), $tag_of( $sd_html, 'sd-logo.jpg' ) . ' | ' . $tag_of( $sd_html, 'sd-hero.jpg' ) );
+$expect( '…and the section after the hero loads lazily', str_contains( $tag_of( $sd_html, 'sd-next.jpg' ), 'loading="lazy"' ), $tag_of( $sd_html, 'sd-next.jpg' ) );
+$cj_main = '<!-- wp:group {"tagName":"main"} --><main class="wp-block-group">' . $sect( $h1 . $img( 'cj-hero' ) ) . $sect( $img( 'cj-second' ) ) . '</main><!-- /wp:group -->';
+$cj_foot = '<!-- wp:group {"tagName":"footer"} --><footer class="wp-block-group">' . $img( 'cj-foot' ) . '</footer><!-- /wp:group -->';
+$cleanjoe = $page( 'Page head fixture (one group around the page)', $group( '<!-- wp:paragraph {"className":"skip-link"} --><p class="skip-link"><a href="#main">Skip to content</a></p><!-- /wp:paragraph -->' . $group( $sect( $img( 'cj-logo' ), 'header' ), 'sticky top-0' ) . $cj_main . $sect( $img( 'cj-after' ) ) . $cj_foot, 'max-w-full' ), '', $home );
+$cj_html  = $render( (int) $cleanjoe );
+$expect( 'a group around the whole page (Clean Joe) is opened: its header and its first section are left to WordPress', '' !== $tag_of( $cj_html, 'cj-hero.jpg' ) && ! str_contains( $tag_of( $cj_html, 'cj-hero.jpg' ), 'loading="lazy"' ) && ! str_contains( $tag_of( $cj_html, 'cj-logo.jpg' ), 'loading="lazy"' ), $tag_of( $cj_html, 'cj-logo.jpg' ) . ' | ' . $tag_of( $cj_html, 'cj-hero.jpg' ) );
+$expect( '…and the sections after it, in its <main> and after it, and its footer load lazily', str_contains( $tag_of( $cj_html, 'cj-second.jpg' ), 'loading="lazy"' ) && str_contains( $tag_of( $cj_html, 'cj-after.jpg' ), 'loading="lazy"' ) && str_contains( $tag_of( $cj_html, 'cj-foot.jpg' ), 'loading="lazy"' ), $tag_of( $cj_html, 'cj-second.jpg' ) . ' | ' . $tag_of( $cj_html, 'cj-after.jpg' ) . ' | ' . $tag_of( $cj_html, 'cj-foot.jpg' ) );
+$expect( '…with no mark of it left in the page', ! str_contains( $cj_html . $sd_html, '__dxai_' ) );
+$wrapped = $page( 'Page head fixture (a plain group around the header)', $group( $sect( $img( 'pg-logo' ), 'header' ), 'top-wrap' ) . $sect( $h1 . $img( 'pg-hero' ) ) . $sect( $img( 'pg-next' ) ), '', $home );
+$pg_html = $render( (int) $wrapped );
+$expect( 'a plain group around a <header> (no menu, nothing stuck) is the header too: the hero after it is left to WordPress', '' !== $tag_of( $pg_html, 'pg-hero.jpg' ) && ! str_contains( $tag_of( $pg_html, 'pg-hero.jpg' ), 'loading="lazy"' ) && str_contains( $tag_of( $pg_html, 'pg-next.jpg' ), 'loading="lazy"' ), $tag_of( $pg_html, 'pg-hero.jpg' ) . ' | ' . $tag_of( $pg_html, 'pg-next.jpg' ) );
+$navhero = $page( 'Page head fixture (a hero with a menu)', $group( $nav . $h1 . $img( 'nh-hero' ), 'hero-with-menu' ) . $sect( $img( 'nh-next' ) ), '', $home );
+$nh_html = $render( (int) $navhero );
+$expect( 'a hero group with its own menu and the main heading is content, not a header: the section after it loads lazily', str_contains( $tag_of( $nh_html, 'nh-next.jpg' ), 'loading="lazy"' ) && ! str_contains( $tag_of( $nh_html, 'nh-hero.jpg' ), 'loading="lazy"' ), $tag_of( $nh_html, 'nh-hero.jpg' ) . ' | ' . $tag_of( $nh_html, 'nh-next.jpg' ) );
+$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $lazy ) );
+$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
 // The footer the DX template draws after the page, from a stored footer given for this run only (no option is written).
 $foot = static fn(): array => array(
 	'template' => '<!-- wp:group {"tagName":"footer"} --><footer class="wp-block-group"><!-- wp:image --><figure class="wp-block-image"><img src="https://example.test/uploads/footer-logo.jpg" alt="Footer logo"/></figure><!-- /wp:image --></footer><!-- /wp:group -->',

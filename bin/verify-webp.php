@@ -11,7 +11,10 @@
  * WebP that would not be at most 90% of the file, and anything when `dxai_ui_webp` says no. A file stored before keeps its
  * attachment; the next import makes its WebP beside it and uses that.
  *
- * Makes its pictures in the temp folder and its attachments in the media library, and deletes them, also when a check dies
+ * The pictures of the plugin's own blocks (a `dxai-ui/box` written as an <img>: Five Star's full-width hero, 2400 px on a phone) are
+ * named after their attachment (Media\Image_Sizes), so WordPress writes their width, height, srcset and sizes as for an Image block.
+ *
+ * Makes its pictures in the temp folder, its attachments in the media library and a page, and deletes them, also when a check dies
  * half-way. Exit code 1 when a check fails, 77 when this server cannot write WebP.
  *
  * @package DXAI_UI
@@ -46,12 +49,16 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 
 $snapshot = dxai_verify_snapshot();
 $files    = array();
+$pages    = array();
 $cleaned  = false;
-$clean    = static function () use ( &$files, &$cleaned, $snapshot ): void {
+$clean    = static function () use ( &$files, &$pages, &$cleaned, $snapshot ): void {
 	if ( $cleaned ) {
 		return;
 	}
 	$cleaned = true;
+	foreach ( $pages as $page_id ) {
+		wp_delete_post( (int) $page_id, true );
+	}
 	foreach ( array_reverse( $files ) as $file ) {
 		if ( is_file( $file ) ) {
 			wp_delete_file( $file );
@@ -218,6 +225,46 @@ $images = is_wp_error( $doc ) ? array() : (array) ( $doc->payload['harvest']['im
 $crew   = array_values( array_filter( $images, static fn( $i ) => is_array( $i ) && str_ends_with( (string) ( $i['original'] ?? $i['filename'] ?? '' ), 'crew.jpg' ) ) );
 $expect( 'the design\'s stylesheet points at the hero\'s WebP', 1 === preg_match( '#url\([\'"]?[^)\'"]*/hero[^)\'"/]*\.webp#', $css ), $css );
 $expect( 'the image map gives the WebP for crew.jpg', isset( $crew[0]['url'] ) && str_ends_with( (string) $crew[0]['url'], '.webp' ), wp_json_encode( $crew ?: array_slice( $images, 0, 3 ) ) );
+
+echo "\nThe pictures of the plugin's own blocks\n";
+$full   = $id > 0 ? (string) wp_get_attachment_url( $id ) : '';
+$medium = $id > 0 ? (string) ( wp_get_attachment_image_src( $id, 'medium' )[0] ?? '' ) : '';
+$box    = static fn( string $src, string $class, string $extra = '' ): string => '<!-- wp:dxai-ui/box {"tagName":"img","src":"' . esc_url( $src ) . '","className":"' . $class . '"} --><img src="' . esc_url( $src ) . '" alt="" class="' . $class . '"' . $extra . '/><!-- /wp:dxai-ui/box -->';
+$scope  = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Image sizes fixture Home', 'post_content' => 'x' ) );
+$body   = $box( $full, 'w-full hero-shot' ) . $box( $medium, 'w-200px card-shot' ) . $box( 'https://example.test/uploads/elsewhere.jpg', 'w-full away-shot' ) . $box( $full, 'w-full own-set', ' srcset="' . esc_url( $full ) . ' 400w"' );
+$sized  = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Image sizes fixture', 'post_content' => $body ) );
+$plain  = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Image sizes fixture (no design)', 'post_content' => $body ) );
+foreach ( array( $scope, $sized, $plain ) as $p ) {
+	if ( ! is_wp_error( $p ) ) {
+		$pages[] = (int) $p;
+	}
+}
+if ( ! is_wp_error( $scope ) && ! is_wp_error( $sized ) ) {
+	update_post_meta( (int) $sized, '_dxai_ui_scope_id', (string) $scope );
+}
+$render = static function ( $page_id ): string {
+	if ( is_wp_error( $page_id ) || (int) $page_id < 1 ) {
+		return '';
+	}
+	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => (int) $page_id ) );
+	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+	$GLOBALS['post']         = get_post( (int) $page_id );
+	setup_postdata( $GLOBALS['post'] );
+
+	return (string) apply_filters( 'the_content', (string) get_post_field( 'post_content', (int) $page_id ) );
+};
+$img_of = static fn( string $html, string $class ): string => preg_match( '#<img\b[^>]*\b' . preg_quote( $class, '#' ) . '\b[^>]*>#', $html, $m ) ? $m[0] : '';
+$html   = $render( $sized );
+$hero   = $img_of( $html, 'hero-shot' );
+$expect( 'a picture of the plugin\'s block is named after its attachment, and WordPress writes its width, height, srcset and sizes', $id > 0 && str_contains( $hero, 'wp-image-' . $id ) && str_contains( $hero, 'width="400"' ) && str_contains( $hero, 'height="300"' ) && str_contains( $hero, 'srcset=' ) && str_contains( $hero, 'sizes=' ), $hero );
+$expect( '…also when it shows one of the attachment\'s sizes', $medium !== '' && str_contains( $img_of( $html, 'card-shot' ), 'wp-image-' . $id ), $img_of( $html, 'card-shot' ) );
+$expect( 'a picture from another site is left as it is', '' !== $img_of( $html, 'away-shot' ) && ! str_contains( $img_of( $html, 'away-shot' ), 'wp-image-' ) );
+$expect( 'a picture with a srcset of its own is left as it is', '' !== $img_of( $html, 'own-set' ) && ! str_contains( $img_of( $html, 'own-set' ), 'wp-image-' ) );
+$expect( 'not on a page that is no design\'s', ! str_contains( $img_of( $render( $plain ), 'hero-shot' ), 'wp-image-' ) );
+add_filter( 'dxai_ui_image_sizes', '__return_false' );
+$off = $render( $sized );
+remove_filter( 'dxai_ui_image_sizes', '__return_false' );
+$expect( 'nothing when the filter says no', '' !== $img_of( $off, 'hero-shot' ) && ! str_contains( $img_of( $off, 'hero-shot' ), 'wp-image-' ) );
 
 $clean();
 echo "\n{$pass} passed, {$fail} failed\n";
