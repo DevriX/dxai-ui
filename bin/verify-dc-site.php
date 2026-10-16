@@ -211,5 +211,40 @@ $expect( 'its stylesheet and sources are its own, as before', ( $q['design_css_r
 $solo = is_wp_error( $one ) ? array() : ( new Source_Compiler() )->compile( $one );
 $expect( 'and an import it cannot draw is still reported', in_array( 'unsupported <dc-import>', array_column( $solo['unevaluated'] ?? array(), 'source' ), true ), wp_json_encode( $solo['unevaluated'] ?? null ) );
 
+echo "\nA handoff whose page is index.html\n";
+// Taylored Restoration's handoff: index.html with the template and the component's script, support.js, README, assets — no .dc.html.
+// Read as a generated design its states were never run: both dropdowns open, a banner that is off shown.
+// Its pictures go through the resource helper the script declares before its component, each declared in the helmet too.
+$script  = '<script type="text/x-dc" data-dc-script data-props="{&quot;banner&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">'
+	. "const R=(id,p)=>(window.__resources&&window.__resources[id])||p;\nclass Component extends DCLogic { state = { open: false }; crew = [ { img: R('crew1','assets/crew-photo.png'), alt: 'Our crew' } ]; renderVals() { return { crew: this.crew }; } }</script>";
+$handoff = '<!DOCTYPE html><html><head><meta charset="utf-8"><script src="./support.js"></script></head><body><x-dc><helmet><title>Handoff Home</title><meta name="ext-resource-dependency" content="assets/crew-photo.png" data-resource-id="crew1" /></helmet>'
+	. '<div data-root><header><a href="#main">Logo</a></header><main id="main"><section><h1>Handoff builds decks</h1>'
+	. '<sc-if value="{{ banner }}"><p>Storm alert banner</p></sc-if><p>Since 1972.</p><sc-for list="{{ crew }}" as="c"><img src="{{ c.img }}" alt="{{ c.alt }}"></sc-for></section></main><footer><p>Handoff Inc.</p></footer></div></x-dc>'
+	. $script . '</body></html>';
+$png = static function (): string {
+	$im = imagecreatetruecolor( 40, 30 );
+	imagefill( $im, 0, 0, imagecolorallocate( $im, 200, 40, 30 ) );
+	ob_start();
+	imagepng( $im );
+
+	return (string) ob_get_clean();
+};
+$h  = $read( 'handoff', array( 'Handoff/index.html' => $handoff, 'Handoff/support.js' => '/* runtime */', 'Handoff/README.md' => '# Handoff', 'Handoff/assets/crew-photo.png' => $png() ) );
+$hp = is_wp_error( $h ) ? array() : $h->payload;
+$expect( 'an export with no .dc.html whose index.html holds the template and the component\'s script is a Claude Design export', ! is_wp_error( $h ) && 'dc-zip' === $h->kind, is_wp_error( $h ) ? $h->get_error_message() : $h->kind );
+$expect( '…its page is the Home, named without .html', 'index' === ( $hp['dc']['name'] ?? '' ) && array() === ( $hp['dc_pages'] ?? null ), wp_json_encode( array( $hp['dc']['name'] ?? null, $hp['dc_pages'] ?? null ) ) );
+$hr    = is_wp_error( $h ) ? array() : ( new Source_Compiler() )->compile( $h );
+$htypes = array_column( $hr['structures'] ?? array(), 'type' );
+$hhtml  = implode( '', array_column( $hr['structures'] ?? array(), 'source_html' ) );
+$expect( 'a picture its script names through the resource helper (R(\'crew1\', \'assets/…\'), declared in the helmet) is the uploaded file — not "[object Object]", not the archive path', 1 === preg_match( '#<img[^>]*src="([^"]+)"[^>]*alt="Our crew"#', $hhtml, $cm ) && str_contains( $cm[1], '/uploads/' ) && str_contains( $cm[1], 'crew-photo' ), $cm[1] ?? substr( $hhtml, 0, 300 ) );
+$expect( '…and its component runs: a banner that is off by default is not drawn, and its header and footer are the site\'s', ! str_contains( $hhtml, 'Storm alert banner' ) && str_contains( $hhtml, 'Since 1972.' ) && 'header' === ( $htypes[0] ?? '' ) && 'footer' === end( $htypes ), wp_json_encode( $htypes ) );
+$standalone = $site;
+$standalone['index.html'] = $handoff;
+$st = $read( 'acme-standalone', $standalone );
+$sp = is_wp_error( $st ) ? array() : $st->payload;
+$expect( 'an export with .dc.html pages keeps to them: an index.html beside them (a bundle of the Home) is no page of its own', ! is_wp_error( $st ) && 'Acme Home' === ( $sp['dc']['name'] ?? '' ) && array_keys( $routes ) === array_column( $sp['dc_pages'] ?? array(), 'name' ), wp_json_encode( array_column( $sp['dc_pages'] ?? array(), 'name' ) ) );
+$plain = $read( 'xdc-plain', array( 'index.html' => '<!DOCTYPE html><html><body><x-dc><div><h1>Template only</h1></div></x-dc></body></html>' ) );
+$expect( 'an HTML page with an <x-dc> template and no component script stays a generated design', ! is_wp_error( $plain ) && 'dc-zip' !== $plain->kind, is_wp_error( $plain ) ? $plain->get_error_message() : $plain->kind );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

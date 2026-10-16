@@ -377,6 +377,16 @@ final class Asset_Harvester {
 		if ( preg_match_all( '/(?:src|href|url)\s*[:=]\s*[\'"]([^\'"]+)[\'"]/i', $blob, $m ) ) {
 			$urls = array_merge( $urls, $m[1] );
 		}
+		// Claude Design declares every file its script names in its helmet — `R('rtb1','assets/tech-van.webp')` is
+		// `<meta name="ext-resource-dependency" content="assets/tech-van.webp" data-resource-id="rtb1">` — a reference like a src:
+		// without it the script's path matched no file, and twelve of Taylored Restoration's pictures were left at `assets/…`.
+		if ( preg_match_all( '/<meta\b[^>]*\bname\s*=\s*[\'"]ext-resource-dependency[\'"][^>]*>/i', $blob, $m ) ) {
+			foreach ( $m[0] as $tag ) {
+				if ( preg_match( '/\bcontent\s*=\s*[\'"]([^\'"]+)[\'"]/i', $tag, $c ) === 1 ) {
+					$urls[] = $c[1];
+				}
+			}
+		}
 
 		if ( preg_match_all( '/@font-face\s*\{(.*?)\}/is', $blob, $blocks ) ) {
 			foreach ( $blocks[1] as $block ) {

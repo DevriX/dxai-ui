@@ -43,6 +43,14 @@ final class Dc_Connector {
 		return false;
 	}
 
+	/**
+	 * Whether an HTML page is a Claude Design page whatever its file is called: its template (`<x-dc>`) and its component's script
+	 * (`data-dc-script`). A handoff can name it index.html (Taylored Restoration); a template with no script of its own is not one.
+	 */
+	public static function is_dc_page( string $html ): bool {
+		return str_contains( $html, '<x-dc' ) && str_contains( $html, 'data-dc-script' );
+	}
+
 	/** Whether an HTML source is a Claude Design template. */
 	public static function is_dc_html( string $path, string $html ): bool {
 		return str_ends_with( strtolower( $path ), '.dc.html' ) || str_contains( $html, '<x-dc' ) || str_contains( $html, 'data-dc-script' );
@@ -60,22 +68,34 @@ final class Dc_Connector {
 		$harvest = ( new Asset_Harvester() )->from_zip( $unpacked['dir'], $unpacked['files'] );
 		$texts   = is_array( $harvest['texts'] ?? null ) ? $harvest['texts'] : array();
 
-		// Every .dc.html: the pages, and the parts they import (Dc_Site).
+		// Every .dc.html: the pages, and the parts they import (Dc_Site). An export with none has its pages as .html files that
+		// are Claude Design pages (is_dc_page(): a handoff's index.html); one with .dc.html files keeps to them, so its
+		// "(standalone).html" bundle is not read as another page.
 		$files = array();
+		$html  = array();
 		foreach ( $unpacked['files'] as $relative ) {
 			$norm = str_replace( '\\', '/', $relative );
-			if ( preg_match( '/\.dc\.html$/i', $norm ) !== 1 ) {
+			$dc   = preg_match( '/\.dc\.html$/i', $norm ) === 1;
+			if ( ! $dc && ( preg_match( '/\.html?$/i', $norm ) !== 1 || preg_match( '#(?:^|/)(?:node_modules|dist|build|\.next|\.git)/#i', $norm ) === 1 ) ) {
 				continue;
 			}
 			$text = (string) ( $texts[ $norm ] ?? '' );
 			if ( $text === '' ) {
 				$text = Zip_Extractor::read_text( $unpacked['dir'] . '/' . $relative, 4000000 );
 			}
-			if ( $text !== '' ) {
+			if ( $text === '' ) {
+				continue;
+			}
+			if ( $dc ) {
 				$files[ $norm ] = $text;
+			} elseif ( self::is_dc_page( $text ) ) {
+				$html[ $norm ] = $text;
 			}
 		}
 		Zip_Extractor::cleanup( $unpacked['dir'] );
+		if ( $files === array() ) {
+			$files = $html;
+		}
 
 		if ( $files === array() ) {
 			return new \WP_Error( 'dxai_ui_zip', __( 'No .dc.html page was found in the ZIP.', 'dxai-ui' ), array( 'status' => 400 ) );
@@ -103,7 +123,7 @@ final class Dc_Connector {
 
 		$sources = array( $path => $files[ $path ] );
 		foreach ( $files as $file_path => $text ) {
-			$file_name = (string) preg_replace( '/\.dc\.html$/i', '', basename( $file_path ) );
+			$file_name = (string) preg_replace( '/(?:\.dc)?\.html?$/i', '', basename( $file_path ) );
 			if ( isset( $site['components'][ $file_name ] ) || in_array( $file_name, array_column( $site['pages'], 'name' ), true ) ) {
 				$sources[ $file_path ] = $text;
 			}

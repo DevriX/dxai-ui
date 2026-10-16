@@ -147,6 +147,19 @@ final class Dc_Js {
 	}
 
 	/**
+	 * The names a statement list declares, with their values: what a script sets up before its component (`const R = (id, p) => …`).
+	 *
+	 * @param array<int, array<string, mixed>> $body
+	 * @return array<string, mixed>
+	 */
+	public function scope_of( array $body ): array {
+		$scope = array();
+		$this->run( $body, $scope, null );
+
+		return $scope;
+	}
+
+	/**
 	 * Call a function value.
 	 *
 	 * @param array<int, mixed> $args
@@ -1638,7 +1651,9 @@ final class Dc_Js {
 					'navigator'   => array( '__host' => 'navigator' ),
 					'document'    => array( '__host' => 'document' ),
 					'React'       => array( '__host' => 'React' ),
-					default       => array( '__host' => 'window.' . $prop ),
+					// A global the page sets itself (Claude Design's `__resources`, its bundle's map of a picture to its file) is
+					// not there when the page is drawn here: undefined, so `window.__resources && …` falls through to the address.
+					default       => str_starts_with( $prop, '__' ) ? null : array( '__host' => 'window.' . $prop ),
 				};
 			case 'location':
 				return match ( $prop ) {

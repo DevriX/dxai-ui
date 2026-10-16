@@ -777,7 +777,9 @@ final class Source_Compiler {
 				if ( ( $in_main && $type !== 'section' ) || ( $content_seen && in_array( $type, array( 'header', 'navigation' ), true ) ) ) {
 					$type = 'section';
 				}
-				if ( $type === 'section' ) {
+				// A skip link or an empty band (a fixed header's spacer) is not the page's content: the header after it is the site's
+				// (Taylored Restoration: "Skip to content", then the sticky wrapper with the top bar and the <header> — read as a section).
+				if ( $type === 'section' && ! self::opens_page( $band ) ) {
 					$content_seen = true;
 				}
 				// Consecutive headers (a desktop and a mobile one) or footers are one template part, as in
@@ -1126,6 +1128,27 @@ final class Source_Compiler {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Whether a band at the top of a page only opens it: a skip link (a link to a place on the page) or a band with nothing in it (a
+	 * fixed header's spacer). Neither is the page's content, so a header after it is still the site's.
+	 */
+	private static function opens_page( \DOMElement $band ): bool {
+		$tag = strtolower( $band->tagName );
+		if ( $tag === 'a' ) {
+			return str_starts_with( trim( (string) $band->getAttribute( 'href' ) ), '#' );
+		}
+		if ( trim( (string) $band->textContent ) !== '' ) {
+			return false;
+		}
+		foreach ( array( 'img', 'svg', 'picture', 'video', 'iframe', 'canvas', 'object', 'embed', 'input', 'button', 'select', 'textarea' ) as $media ) {
+			if ( $band->getElementsByTagName( $media )->length > 0 ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

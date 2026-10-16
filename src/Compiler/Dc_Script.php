@@ -41,6 +41,15 @@ final class Dc_Script {
 	private ?array $initial_state = null;
 
 	/**
+	 * What the script declares before its component, by name: Claude Design writes every picture's address through
+	 * `const R=(id,p)=>(window.__resources&&window.__resources[id])||p` there (Taylored Restoration), and the component's fields
+	 * call it — read without it, twelve of the Home's pictures had no address at all.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $globals = array();
+
+	/**
 	 * @param string               $script    The script element's text.
 	 * @param array<string, mixed> $props_meta Decoded `data-props` JSON, if any.
 	 */
@@ -48,6 +57,14 @@ final class Dc_Script {
 		$this->js         = new Dc_Js();
 		$this->props_meta = $props_meta;
 
+		$prelude = self::prelude( $script );
+		if ( $prelude !== '' ) {
+			try {
+				$this->globals = $this->js->scope_of( $this->js->parse_body_source( $prelude ) );
+			} catch ( \Throwable $e ) {
+				$this->globals = array();
+			}
+		}
 		$body = self::class_body( $script );
 		if ( $body !== '' ) {
 			$parsed        = $this->js->parse_class_body( $body );
@@ -120,13 +137,13 @@ final class Dc_Script {
 		$inst->state = $state;
 		$inst->props = $props;
 		foreach ( $this->methods as $name => $method ) {
-			$inst->methods[ $name ] = new Dc_Js_Fn( $method['params'], $method['body'], false, array(), $inst, $method['source'] );
+			$inst->methods[ $name ] = new Dc_Js_Fn( $method['params'], $method['body'], false, $this->globals, $inst, $method['source'] );
 		}
 		foreach ( $this->fields as $name => $ast ) {
 			if ( $name === 'state' ) {
 				continue;
 			}
-			$inst->fields[ $name ] = $this->js->evaluate( $ast, array(), $inst );
+			$inst->fields[ $name ] = $this->js->evaluate( $ast, $this->globals, $inst );
 		}
 
 		return $inst;
@@ -272,6 +289,15 @@ final class Dc_Script {
 	}
 
 	/* ---------------------------------------------------------- helpers */
+
+	/** The script before its class: the declarations it makes for the component. */
+	private static function prelude( string $script ): string {
+		if ( preg_match( '/class\s+\w+(?:\s+extends\s+[\w.]+)?\s*\{/', $script, $m, PREG_OFFSET_CAPTURE ) !== 1 ) {
+			return '';
+		}
+
+		return trim( substr( $script, 0, (int) $m[0][1] ) );
+	}
 
 	/** The text between the class's braces. */
 	private static function class_body( string $script ): string {

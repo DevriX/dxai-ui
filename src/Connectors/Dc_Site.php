@@ -43,7 +43,8 @@ final class Dc_Site {
 		$parts = array();
 		$paths = array();
 		foreach ( $files as $path => $html ) {
-			$name = (string) preg_replace( '/\.dc\.html$/i', '', basename( str_replace( '\\', '/', (string) $path ) ) );
+			// A page's name: its file's, without .dc.html (or .html: a handoff's index.html).
+			$name = (string) preg_replace( '/(?:\.dc)?\.html?$/i', '', basename( str_replace( '\\', '/', (string) $path ) ) );
 			if ( $name === '' || isset( $parts[ $name ] ) ) {
 				continue;
 			}

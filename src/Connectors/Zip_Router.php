@@ -116,7 +116,48 @@ final class Zip_Router {
 			return $entries;
 		}
 
-		return self::connector( self::kind( array_column( $entries, 'name' ) ) )->import_zip( $file );
+		$names = array_column( $entries, 'name' );
+		$kind  = self::kind( $names );
+		if ( self::GENERATED === $kind && self::has_dc_html( $path, $names ) ) {
+			$kind = self::DC;
+		}
+
+		return self::connector( $kind )->import_zip( $file );
+	}
+
+	/**
+	 * Whether an archive with no `.dc.html` is a Claude Design export all the same: an .html page holding the template and the
+	 * component's script (Dc_Connector::is_dc_page()). Taylored Restoration's handoff is index.html, support.js and its assets; read
+	 * as a generated design its states were never run — both dropdowns open, a banner that is off shown. Needs the zip extension to
+	 * look inside (without it the archive is read as before).
+	 *
+	 * @param array<int, string> $names The archive's paths.
+	 */
+	public static function has_dc_html( string $path, array $names ): bool {
+		$pages = array_values(
+			array_filter(
+				$names,
+				static fn( $n ): bool => preg_match( '/\.html?$/i', (string) $n ) === 1 && preg_match( '#(?:^|/)(?:node_modules|dist|build|\.next|\.git)/#i', (string) $n ) !== 1
+			)
+		);
+		if ( $pages === array() || ! class_exists( \ZipArchive::class ) ) {
+			return false;
+		}
+		$zip = new \ZipArchive();
+		if ( true !== $zip->open( $path ) ) {
+			return false;
+		}
+		$found = false;
+		foreach ( array_slice( $pages, 0, 50 ) as $name ) {
+			$text = $zip->getFromName( (string) $name, 4000000 );
+			if ( is_string( $text ) && Dc_Connector::is_dc_page( $text ) ) {
+				$found = true;
+				break;
+			}
+		}
+		$zip->close();
+
+		return $found;
 	}
 
 	/**
