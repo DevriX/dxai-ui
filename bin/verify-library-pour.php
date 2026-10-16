@@ -23,6 +23,7 @@
 
 use DXAI_UI\Pages\Block_Library;
 use DXAI_UI\Pages\Block_Tree;
+use DXAI_UI\Pages\Layouts;
 use DXAI_UI\Pages\Section_Library;
 use DXAI_UI\Pages\Section_Variants;
 use DXAI_UI\Pages\Template;
@@ -186,8 +187,9 @@ foreach ( (array) wp_get_global_settings( array( 'typography', 'fontFamilies' ) 
 }
 $entries = Block_Library::entries();
 // The layouts that hold an item of their list apart from its rows (found by bin's shape check, 2026-10-16).
-$source_words = array( 'Phase 3', 'Phase 5', 'Repairs and Restoration', 'Final Review and Return to Operation', 'Drying, Repairs and Final Review', 'Final Walkthrough and Reopening' );
-foreach ( array( 'layout-process-1', 'layout-process-4', 'layout-process-5', 'layout-process-7', 'layout-process-8' ) as $id ) {
+$source_words = array( 'Phase 3', 'Phase 4', 'Phase 5', 'Repairs and Restoration', 'Final Review and Return to Operation', 'Drying, Repairs and Final Review', 'Final Walkthrough and Reopening', 'After cleanup is complete', 'Our team repairs or replaces', 'Restoration & Project Completion', 'From structural repairs to finish work' );
+// (In six of them the last step's number sits in one box more than its rows' — "Phase 4" — and was a sentence in a 48px box.)
+foreach ( array( 'layout-process-1', 'layout-process-3', 'layout-process-4', 'layout-process-5', 'layout-process-6', 'layout-process-7', 'layout-process-8' ) as $id ) {
 	if ( ! isset( $entries[ $id ] ) ) {
 		$expect( "$id: in the library", false );
 		continue;
@@ -309,6 +311,87 @@ $badges = $section( '<!-- wp:list-item --><li><img src="https://example.test/bbb
 $ticks  = $section( '<!-- wp:list-item --><li>24/7 line</li><!-- /wp:list-item --><!-- wp:list-item --><li>About 60 min arrival</li><!-- /wp:list-item --><!-- wp:list-item --><li>3 Alaska locations</li><!-- /wp:list-item -->' );
 $expect( 'a list of badges (pictures) is what the section shows: not something it can do without', ! isset( $optional->invoke( null, Section_Library::analyze( $badges, 0 ), $badges )['list'] ) );
 $expect( 'the ticks under a heading still are', isset( $optional->invoke( null, Section_Library::analyze( $ticks, 0 ), $ticks )['list'] ) );
+
+echo "\nA page made from the menu: what its sections are given (Taylored Restoration, 2026-10-16)\n";
+// Cards whose words the page has none of: the Home's points are titles alone.
+$points = array_map( static fn( $t ) => array( 'title' => $t, 'text' => '', 'url' => 'tel:9073441239' ), array( 'About 60 min arrival', '3 Alaska locations', 'IICRC Certified Firm', 'Licensed, bonded, insured', 'In-house crews', 'Insurance claim support' ) );
+$why   = '';
+$bare  = Block_Library::fill( 'layout-cards-8', array( 'role' => 'cards', 'lists' => array( 'items' => $points ) ) + $facts, $why );
+$expect( 'a layout of cards with a slot for their words, and the Home\'s points titles alone: not made (a box with a title and buttons is no card)', null === $bare && str_contains( $why, 'title alone' ), $why );
+$worded = array_map( static fn( $r ) => array( 'text' => 'What ' . strtolower( $r['title'] ) . ' means for you.' ) + $r, $points );
+$made   = Block_Library::fill( 'layout-cards-8', array( 'role' => 'cards', 'lists' => array( 'items' => $worded ) ) + $facts, $why );
+$expect( '…with words for them: made, as before', null !== $made, $why );
+
+// A badge the layout sets as a figure takes the Home's figure, not a sentence; with no figure of the Home's, the badge goes.
+$figs  = array( array( 'title' => '01', 'text' => 'Here Fast, Day or Night' ), array( 'title' => '25,000+', 'text' => 'Alaska homes restored' ) );
+$badge = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => $figs ) ) + $facts, $why );
+$text  = null === $badge ? '' : html_entity_decode( wp_strip_all_tags( serialize_block( $badge ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+$expect( 'a badge set as a figure: the Home\'s figure and its words (a step\'s number is no figure), not the layout\'s "Properties restored"', null !== $badge && str_contains( $text, '25,000+' ) && str_contains( $text, 'Alaska homes restored' ) && ! str_contains( $text, 'Properties restored' ) && ! str_contains( $text, 'Here Fast' ), $why . ' ' . $one_line( $text ) );
+$plain = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => array() ) ) + $facts, $why );
+$expect( '…and with none, no badge: no sentence set at 38px', null !== $plain && ! str_contains( serialize_block( $plain ), 'Properties restored' ) && preg_match( '/"fontSize":"38px"/', serialize_block( $plain ) ) !== 1, $why );
+$fig_m  = new ReflectionMethod( Block_Library::class, 'figures' );
+$fig_m->setAccessible( true );
+$header = parse_blocks( '<!-- wp:group --><div class="wp-block-group"><!-- wp:group --><div class="wp-block-group"><!-- wp:heading {"style":{"typography":{"fontSize":"42px"}}} --><h2 class="wp-block-heading" style="font-size:42px">{{t:h2-s}}</h2><!-- /wp:heading --><!-- wp:paragraph --><p>{{t:p-m}}</p><!-- /wp:paragraph --></div><!-- /wp:group --></div><!-- /wp:group -->' )[0];
+$left   = $figs;
+$fig_m->invokeArgs( null, array( &$header, &$left ) );
+$expect( 'a section\'s heading set large over its line is no figure: its words stay the section\'s (Related services was "25,000+")', str_contains( serialize_block( $header ), '{{t:h2-s}}' ) && ! str_contains( serialize_block( $header ), '25,000+' ) && 2 === count( $left ) );
+
+// A caption beside a button (13px) has no provisional sentence.
+$cta = Block_Library::fill( 'layout-cta-4', array( 'role' => 'cta' ) + $facts, $why );
+$expect( 'a call to action\'s small caption under its button takes no provisional sentence: it is left out', null !== $cta && preg_match( '/<p class="text-13[^"]*"[^>]*>[^<]{20,}/', serialize_block( $cta ) ) !== 1, $why );
+
+echo "\nA service's page and the other services\n";
+$services = array(
+	array( 'Water Damage Restoration', 'Extraction, structural drying and daily moisture readings after burst pipes, appliance leaks and floods.' ),
+	array( 'Frozen Pipes & Ice Dams', 'Burst pipes, ice dams and freeze-thaw damage stabilized before it spreads.' ),
+	array( 'Fire & Smoke Damage', 'Board-up, soot and odor removal, then the full rebuild by the same crew.' ),
+	array( 'Reconstruction', 'Drywall to roofing, built to Alaska standards with vapor barriers and insulation done right.' ),
+);
+$carpet = array( 'Carpet & Upholstery Cleaning', 'Deep cleaning for carpet, upholstery and blinds in homes and offices.' );
+$expect( 'a question of one other service, on a service\'s page: that service\'s (ice dams, pipes freezing — "Alaska", a name, names no service)', Layouts::names_other( 'What causes ice dams, and can they damage my home?', $carpet, $services ) && Layouts::names_other( 'How do I keep pipes from freezing during an Alaska winter?', $carpet, $services ) );
+$expect( 'a question of two services, or of none, is anyone\'s', ! Layouts::names_other( 'Will homeowners insurance cover my water or fire damage?', $carpet, $services ) && ! Layouts::names_other( 'Do you serve Wasilla, Palmer, Eagle River and North Pole?', $carpet, $services ) && ! Layouts::names_other( 'What should I do if a pipe bursts in my Anchorage home?', $carpet, $services ) );
+$frozen = $services[1];
+$rest   = array_merge( array( $carpet ), array_values( array_filter( $services, static fn( $s ) => $s[0] !== $frozen[0] ) ) );
+$expect( '…and a question of this page\'s service is its own', ! Layouts::names_other( 'What causes ice dams, and can they damage my home?', $frozen, $rest ) );
+$expect( 'the Home\'s call to action about water damage is not the fire page\'s', Layouts::names_other( 'Water damage? We\'re on site in about 60 minutes. Local crews in Anchorage, Mat-Su, and Fairbanks.', array( 'Fire & Smoke Damage', $services[2][1] ), array_merge( array( $services[0], $services[1], $services[3] ) ) ) );
+
+echo "\nA page says a sentence once\n";
+\DXAI_UI\Pages\Layouts::begin( 'Reconstruction', 'service' );
+$page = array( 'title' => 'Reconstruction', 'home' => 0, 'kind' => 'service', 'once' => true, 'company' => 'Taylored Restoration', 'company_short' => 'Taylored', 'phone' => '(907) 344-1239', 'subject' => 'Reconstruction', 'region' => 'Anchorage, AK' );
+$lines = array();
+$blank = 0;
+for ( $n = 0; $n < 30; $n++ ) {
+	$p = Layouts::words( 'p-l', array( 'slot_seed' => (string) ( $n * 7 ) ) + $page, null );
+	if ( $p === '' ) {
+		++$blank;
+		continue;
+	}
+	foreach ( preg_split( '/(?<=[.!?])\s+/', $p ) as $s ) {
+		$lines[] = $s;
+	}
+}
+$expect( 'many paragraphs of a page: no sentence twice, and none left when they are all said (the paragraph goes)', count( $lines ) === count( array_unique( $lines ) ) && $blank > 0 && count( $lines ) >= 12, count( $lines ) . ' lines, ' . count( array_unique( $lines ) ) . ' different, ' . $blank . ' blank' );
+$state = Layouts::said_state( $page );
+Layouts::said( $page, 'A line said by a section that was given up.' );
+Layouts::said_back( $page, $state );
+$expect( 'a section given up gives its lines back', ! Layouts::said( $page, 'A line said by a section that was given up.', false ) );
+
+echo "\nA call after a call, a box fixed over the page\n";
+$calls = new ReflectionMethod( \DXAI_UI\Pages\Team_Pages::class, 'calls' );
+$calls->setAccessible( true );
+$last  = new ReflectionMethod( \DXAI_UI\Pages\Team_Pages::class, 'last_calls' );
+$last->setAccessible( true );
+$band  = parse_blocks( '<!-- wp:group --><div class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Damage won\'t wait.</h2><!-- /wp:heading --><!-- wp:paragraph --><p><a href="tel:9073441239">Call (907) 344-1239</a></p><!-- /wp:paragraph --></div><!-- /wp:group -->' )[0];
+$grid  = parse_blocks( '<!-- wp:group --><div class="wp-block-group">' . str_repeat( '<!-- wp:paragraph --><p><a href="tel:9073441239">In-house crews</a></p><!-- /wp:paragraph -->', 6 ) . '</div><!-- /wp:group -->' )[0];
+$expect( 'a band with a phone and a line is a call; a grid of six cards that each lead to the phone is not', $calls->invoke( null, $band ) && ! $calls->invoke( null, $grid ) );
+$expect( 'the last place shown decides (a place left out is not one)', $last->invoke( null, array( array( 'source' => 'library', 'role' => 'two-col', 'calls' => true ), array( 'source' => '', 'role' => 'cards' ) ) ) && ! $last->invoke( null, array( array( 'source' => 'home', 'role' => 'cta', 'calls' => true ), array( 'source' => 'library', 'role' => 'faq', 'calls' => false ) ) ) );
+$fixed_home = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Library pour fixed bar Home', 'post_content' => '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Our services</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Every kind of damage, made right.</p><!-- /wp:paragraph --></section><!-- /wp:group --><!-- wp:group {"className":"fixed bottom-0","dxaiCss":"position:fixed;bottom:0;left:0;right:0"} --><div class="wp-block-group fixed bottom-0"><!-- wp:group --><div class="wp-block-group"><!-- wp:paragraph --><p>On site in ~60 min</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>24/7 · Since 1972</p><!-- /wp:paragraph --></div><!-- /wp:group --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="tel:9073441239">Call: (907) 344-1239</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->' ), true );
+if ( ! is_wp_error( $fixed_home ) ) {
+	$kinds = array_map( static fn( $c ) => (int) $c['index'], \DXAI_UI\Pages\Section_Library::for_page( (int) $fixed_home ) );
+	$float = \DXAI_UI\Pages\Section_Library::floating( (int) $fixed_home );
+	$expect( 'a box the Home fixes over the page (a call bar for phones) takes no section\'s place, and every page made from the Home carries it', array( 0 ) === $kinds && 1 === count( $float ) && str_contains( serialize_block( $float[0] ), 'Call: (907) 344-1239' ), wp_json_encode( $kinds ) . ' ' . count( $float ) );
+	wp_delete_post( (int) $fixed_home, true );
+}
 
 echo "\n{$pass} passed, {$fail} failed\n";
 if ( $fail > 0 ) {

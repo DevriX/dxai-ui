@@ -959,7 +959,7 @@ final class Team_Pages {
 	 * @param array<int, string>                           $recipe
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
-	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
+	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool, plan?:array<string, mixed>|null, locks?:array<int, array<string, mixed>>, n?:int, seed_of?:callable, lib?:array<string, mixed>|null} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
 	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>, places:array<int, array<string, mixed>>}
 	 *         `places` is the page as laid out, one entry for each place of the recipe: the role, where its section is from (`home`: a Home section as it is; `new`: the Home's cards with
 	 *         the pages of the site poured in; `library`: one of the team's own (Block_Library), with its `label`; empty: the Home has none, so it is left out), the number of the Home section (from 1),
@@ -989,7 +989,7 @@ final class Team_Pages {
 		$plan  = is_array( $vary['plan'] ?? null ) ? $vary['plan'] : null;
 		// Sections a person locked: they come back as they were (the same Home section, the same changes, the same picture) when the page is shuffled.
 		$locks   = $plan === null ? (array) ( $vary['locks'] ?? array() ) : array();
-		$seed_of = isset( $vary['seed_of'] ) && is_callable( $vary['seed_of'] ) ? $vary['seed_of'] : static fn( int $n ): string => $seed;
+		$seed_of = $vary['seed_of'] ?? static fn( int $n ): string => $seed;
 		$shuffle = (int) ( $vary['n'] ?? 0 );
 		$locked  = static function ( string $role, string $source ) use ( $locks ): ?array {
 			foreach ( $locks as $l ) {
@@ -1122,6 +1122,17 @@ final class Team_Pages {
 					unset( $cand[ $i ] );
 				}
 			}
+			// A service's page does not call for another service: the Home's call to action that names one ("Water damage? We're on site…")
+			// is the water damage page's; the fire damage page takes another (Layouts::names_other()).
+			if ( $role === 'cta' && ! $forced && ! isset( $picks[ $place ] ) && $item['type'] === 'service' ) {
+				$own    = array( (string) $item['title'], (string) ( $vary['kit']['texts'][ mb_strtolower( (string) $item['title'] ) ] ?? '' ) );
+				$others = array_map( static fn( $r ) => array( (string) ( $r['title'] ?? '' ), (string) ( $r['text'] ?? '' ) ), (array) ( $vary['rows'] ?? array() ) );
+				foreach ( array_keys( $cand ) as $i ) {
+					if ( Layouts::names_other( wp_strip_all_tags( serialize_block( (array) $library[ $i ]['block'] ) ), $own, $others ) ) {
+						unset( $cand[ $i ] );
+					}
+				}
+			}
 			$none = '';
 			if ( $cand === array() ) {
 				$none = 'the Home has none';
@@ -1140,6 +1151,13 @@ final class Team_Pages {
 			// to one keeps it. A plan that chose a Home's section keeps it.
 			// In the team's arrangement a role is on a page once (a call to action twice, each another section); a place whose role the page
 			// already has is left out. The Home's own call to action band is the first of the two when the Home has one.
+			// Two calls to action are not side by side (a place between them left out, a band and then a banner): the second is left out, and
+			// the page's last place for one, which closes it, takes it.
+			if ( $role === 'cta' && ! $forced && ! $held && ! isset( $picks[ $place ] ) && self::last_calls( $places ) ) {
+				$log[]    = 'cta: right after another call to action — left out';
+				$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
+				continue;
+			}
 			$team     = $lib !== null && ! empty( $lib['team'] );
 			$home_cta = $team && $role === 'cta' && ! $home_cta_used && $none === '' && min( $cand ) === 0;
 			if ( $team && ! $forced && ! $held && ! isset( $picks[ $place ] ) && ( $made_roles[ $role ] ?? 0 ) >= ( $role === 'cta' ? 2 : 1 ) ) {
@@ -1148,8 +1166,18 @@ final class Team_Pages {
 				continue;
 			}
 			if ( $lib !== null && ! $forced && ! isset( $picks[ $place ] ) && ! $home_cta && ( $held || $none !== '' || ! empty( $lib['prefer'] ) || min( $cand ) > 0 ) ) {
-				$why  = '';
-				$made = Block_Library::section( (string) $role, ! empty( $lib['team'] ) ? Layouts::page_facts( $lib, $item, (string) $role, $seed . '|' . $place, $vary ) : $lib, ( $held ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place, array_keys( $lib_used ), $held ? (string) $lock['lib'] : '', $why );
+				$why    = '';
+				$page_k = array( 'title' => $item['title'], 'home' => $lib['home'] ?? '', 'kind' => $item['type'] );
+				$said   = Layouts::said_state( $page_k );
+				$made   = Block_Library::section( (string) $role, ! empty( $lib['team'] ) ? Layouts::page_facts( $lib, $item, (string) $role, $seed . '|' . $place, $vary ) : $lib, ( $held ? $seed_of( (int) $lock['n'] ) : $seed ) . '|' . $place, array_keys( $lib_used ), $held ? (string) $lock['lib'] : '', $why );
+				// (A section of the library that is a call — a band of phone links — is not put right after another call: two in a row read as one.)
+				if ( $made !== null && ! $held && $role !== 'cta' && self::calls( (array) $made['block'] ) && self::last_calls( $places ) ) {
+					$log[]    = sprintf( '%s: a call right after another — left out', $role );
+					// (Its words are not said: the page's next section may say them.)
+					Layouts::said_back( $page_k, $said );
+					$places[] = array( 'place' => $place, 'role' => $role, 'source' => '', 'home' => 0, 'n' => $shuffle, 'ops' => array(), 'locked' => false );
+					continue;
+				}
 				if ( $made !== null ) {
 					$block = $made['block'];
 					if ( isset( $block['attrs']['anchor'] ) && str_contains( implode( '', array_map( 'serialize_block', $sections ) ), 'id="' . esc_attr( (string) $block['attrs']['anchor'] ) . '"' ) ) {
@@ -1160,7 +1188,7 @@ final class Team_Pages {
 					$made_roles[ $role ] = ( $made_roles[ $role ] ?? 0 ) + 1;
 					$ops[]                   = array( 'lib:' . $made['id'] );
 					$sections[]              = $block;
-					$places[]                = array( 'place' => $place, 'role' => $role, 'source' => 'library', 'home' => 0, 'n' => $held ? (int) $lock['n'] : $shuffle, 'ops' => array( 'lib:' . $made['id'] ), 'label' => $made['label'], 'locked' => $held );
+					$places[]                = array( 'place' => $place, 'role' => $role, 'source' => 'library', 'home' => 0, 'n' => $held ? (int) $lock['n'] : $shuffle, 'ops' => array( 'lib:' . $made['id'] ), 'label' => $made['label'], 'locked' => $held, 'calls' => $role === 'cta' || self::calls( $block ) );
 					$log[]                   = sprintf( '%s ← the library: %s', $role, $made['id'] );
 					$prev                    = -1;
 					continue;
@@ -1230,7 +1258,7 @@ final class Team_Pages {
 			if ( $lib !== null && ! empty( $lib['team'] ) ) {
 				Layouts::hear( array( 'title' => (string) ( $item['title'] ?? '' ), 'home' => $lib['home'] ?? '', 'kind' => (string) ( $item['type'] ?? '' ) ), $block );
 			}
-			$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'home', 'home' => $pick + 1, 'n' => $forced ? (int) $lock['n'] : $shuffle, 'ops' => $done, 'locked' => $forced );
+			$places[]   = array( 'place' => $place, 'role' => $role, 'source' => 'home', 'home' => $pick + 1, 'n' => $forced ? (int) $lock['n'] : $shuffle, 'ops' => $done, 'locked' => $forced, 'calls' => $role === 'cta' || self::calls( $block ) );
 			$made_roles[ $role ] = ( $made_roles[ $role ] ?? 0 ) + 1;
 			if ( $home_cta ) {
 				$home_cta_used = true;
@@ -1333,6 +1361,36 @@ final class Team_Pages {
 		);
 
 		return $found !== array() ? (string) get_permalink( (int) $found[0] ) : '';
+	}
+
+	/**
+	 * Whether the last place a page shows something in is a call: a call to action, or a section that is one (calls()).
+	 *
+	 * @param array<int, array<string, mixed>> $places
+	 */
+	private static function last_calls( array $places ): bool {
+		for ( $i = count( $places ) - 1; $i >= 0; $i-- ) {
+			if ( (string) ( $places[ $i ]['source'] ?? '' ) !== '' ) {
+				return ! empty( $places[ $i ]['calls'] ) || (string) ( $places[ $i ]['role'] ?? '' ) === 'cta';
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether a section is a call: it rings the company (one or two `tel:` links) and says little else (fewer than 45 words) — a band of phone
+	 * links and a line, whatever its role.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function calls( array $block ): bool {
+		$html = serialize_block( $block );
+
+		// (A grid of cards that each lead to the phone is a list, not a call: a call has one or two of them.)
+		$tel = substr_count( $html, 'href="tel:' );
+
+		return $tel >= 1 && $tel <= 2 && str_word_count( wp_strip_all_tags( (string) preg_replace( '/<!--.*?-->/s', '', $html ) ) ) < 45 && preg_match( '/<h1\b/i', $html ) !== 1;
 	}
 
 	/**
@@ -1859,6 +1917,8 @@ final class Team_Pages {
 		$chrome = Section_Library::chrome_markup( $home );
 		$embed  = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dxai-ui/site-' );
 		$blocks = static fn( string $m ): array => array_values( array_filter( parse_blocks( $m ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
+		// What the Home has fixed over the page (a call bar for phones) is on this page too, after its sections, as on the Home.
+		$sections = array_merge( $sections, Section_Library::floating( $home ) );
 		$markup = Block_Tree::serialize_checked( Page_Frame::build( $home, $embed( $chrome['header'] ) ? $blocks( $chrome['header'] ) : array(), $sections, $embed( $chrome['footer'] ) ? $blocks( $chrome['footer'] ) : array() ) );
 		if ( is_wp_error( $markup ) ) {
 			return $markup;

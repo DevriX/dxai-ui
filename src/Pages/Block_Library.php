@@ -623,8 +623,20 @@ final class Block_Library {
 		preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', self::markup( $id ), $lm );
 		$facts['section_lists'] = array_values( array_unique( $lm[1] ) );
 		self::$rows_used = array();
+		// Cards with a slot for their words and nothing of the page's to put in it: a box with a title and buttons is no card.
+		if ( self::bare_cards( $root, $lists ) ) {
+			$why = 'its cards would hold a title alone';
+
+			return null;
+		}
+		// A figure the layout shows as a figure takes one of the Home's (figures()).
+		$stats = (array) ( $lists['stats'] ?? array() );
+		self::figures( $root, $stats );
+		// The lines the page has said, given back when this layout is not used (a layout given up takes none of them with it).
+		$said = Layouts::said_state( $facts );
 		if ( ! self::repeats( $root, $lists, $facts, $missing ) ) {
 			$why = 'it has nothing to list';
+			Layouts::said_back( $facts, $said );
 
 			return null;
 		}
@@ -633,6 +645,7 @@ final class Block_Library {
 		self::tokens( $root, $facts, null, $missing );
 		if ( $missing !== array() ) {
 			$why = 'it needs ' . implode( ', ', array_unique( $missing ) );
+			Layouts::said_back( $facts, $said );
 
 			return null;
 		}
@@ -642,6 +655,7 @@ final class Block_Library {
 		self::markers( $root );
 		if ( str_contains( serialize_block( $root ), '{{' ) ) {
 			$why = 'a token was left';
+			Layouts::said_back( $facts, $said );
 
 			return null;
 		}
@@ -657,6 +671,12 @@ final class Block_Library {
 		// A section that shows one of the Home's pictures counts towards the page's share of them (Layouts::page_facts gives no more after four).
 		if ( (string) ( $facts['image_url:1'] ?? '' ) !== '' && str_contains( serialize_block( $root ), (string) $facts['image_url:1'] ) ) {
 			Layouts::pictured( $facts, 1 );
+		}
+		// …and each picture it shows is one the page has shown.
+		foreach ( array( 1, 2, 3 ) as $n ) {
+			if ( (string) ( $facts[ 'image_url:' . $n ] ?? '' ) !== '' && str_contains( serialize_block( $root ), (string) $facts[ 'image_url:' . $n ] ) ) {
+				Layouts::saw( $facts, (string) $facts[ 'image_url:' . $n ] );
+			}
 		}
 		// …and the rows of the Home's lists it shows count towards the page's: the next section that lists them goes on from there.
 		foreach ( isset( $facts['lists'] ) ? self::$rows_used : array() as $list => $n ) {
@@ -1185,12 +1205,111 @@ final class Block_Library {
 	}
 
 	/**
+	 * Whether a list of cards would show its rows' titles alone: the row has a slot for its words, no picture and no drawing, and none of
+	 * the rows the page has says anything but its title (the Home's points: "About 60 min arrival", "In-house crews"). Made of such a
+	 * layout a section was a grid of boxes with a title and two buttons in each ("Call / Learn more", Taylored Restoration's pages).
+	 *
+	 * @param array<string, mixed>                          $block
+	 * @param array<string, array<int, array<string, mixed>>> $lists
+	 */
+	private static function bare_cards( array $block, array $lists ): bool {
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $child ) {
+			if ( ! is_array( $child ) ) {
+				continue;
+			}
+			if ( isset( $child['attrs']['dxaiRepeat'] ) ) {
+				$tpl  = serialize_block( $child );
+				$rows = array_values( array_filter( (array) ( $lists[ (string) $child['attrs']['dxaiRepeat'] ] ?? array() ), static fn( array $r ) => trim( (string) ( $r['title'] ?? '' ) ) !== '' ) );
+				if ( $rows !== array() && str_contains( $tpl, '{{row:text' ) && preg_match( '/\{\{row:(?:icon|image)|dxaiIcon|\{\{icon/', $tpl ) !== 1
+					&& array_filter( $rows, static fn( $r ) => trim( (string) ( $r['text'] ?? '' ) ) !== '' ) === array() ) {
+					return true;
+				}
+				continue;
+			}
+			if ( self::bare_cards( $child, $lists ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * A figure the team's layout shows as one — a number set large over its words in a badge ("10,000+ / properties restored") — written
+	 * as the Home states its own figure ("25,000+ / Alaska homes restored"), one figure a badge. The layout keeps no figure of its site:
+	 * its slots are for words, and words were what filled them (a sentence set at 38px, over "Properties restored"). With no figure of
+	 * the Home's left, the badge goes.
+	 *
+	 * @param array<string, mixed>             $block
+	 * @param array<int, array<string, mixed>> $stats The Home's figures, in its order; those used are taken off.
+	 */
+	private static function figures( array &$block, array &$stats ): void {
+		$token = '/\{\{t:[a-z0-9-]+(?:\|[^{}]*)?\}\}/';
+		$only  = static function ( array $b ) use ( $token ): bool {
+			return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/paragraph', 'core/heading' ), true ) && preg_match( '/^\s*<[^>]+>\s*' . trim( $token, '/' ) . '\s*<\/[a-z0-9]+>\s*$/i', (string) ( $b['innerHTML'] ?? '' ) ) === 1;
+		};
+		$large = static function ( array $b ): bool {
+			$size = (string) ( $b['attrs']['style']['typography']['fontSize'] ?? '' );
+
+			return ( preg_match( '/^(\d+(?:\.\d+)?)px$/', $size, $m ) === 1 && (float) $m[1] >= 28 ) || preg_match( '/(?:^|-)(?:x{1,3}-?large|huge|gigantic|[4-9]xl)$/', (string) ( $b['attrs']['fontSize'] ?? '' ) ) === 1;
+		};
+		for ( $i = 0; $i < count( (array) ( $block['innerBlocks'] ?? array() ) ); $i++ ) {
+			$child = $block['innerBlocks'][ $i ];
+			if ( ! is_array( $child ) ) {
+				continue;
+			}
+			$kids = array_values( array_filter( (array) ( $child['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+			// (A paragraph for a few words set large: a section's heading over its line, which is set large too, is no figure.)
+			if ( ! isset( $child['attrs']['dxaiRepeat'] ) && count( $kids ) === 2 && $only( $kids[0] ) && $only( $kids[1] ) && $large( $kids[0] ) && ! $large( $kids[1] )
+				&& $kids[0]['blockName'] === 'core/paragraph' && str_contains( (string) $kids[0]['innerHTML'], '{{t:p-s' ) ) {
+				$figure = null;
+				while ( $stats !== array() && $figure === null ) {
+					$s = array_shift( $stats );
+					// A figure with words of its own (not "60 / min"); a step's number ("01") is none.
+					if ( preg_match( '/\d/', (string) ( $s['title'] ?? '' ) ) === 1 && preg_match( '/^0\d$/', trim( (string) $s['title'] ) ) !== 1 && str_word_count( (string) ( $s['text'] ?? '' ) ) >= 2 ) {
+						$figure = $s;
+					}
+				}
+				if ( $figure === null ) {
+					Block_Tree::drop( $block, $i );
+					--$i;
+					continue;
+				}
+				$n = 0;
+				foreach ( (array) $child['innerBlocks'] as $k => $kid ) {
+					if ( ! is_array( $kid ) || empty( $kid['blockName'] ) ) {
+						continue;
+					}
+					$text = esc_html( trim( (string) ( $n === 0 ? $figure['title'] : $figure['text'] ) ) );
+					$put  = static fn( string $s ): string => (string) preg_replace_callback( $token, static fn() => $text, $s, 1 );
+					$kid['innerHTML'] = $put( (string) $kid['innerHTML'] );
+					foreach ( (array) $kid['innerContent'] as $c => $part ) {
+						if ( is_string( $part ) ) {
+							$kid['innerContent'][ $c ] = $put( $part );
+						}
+					}
+					$child['innerBlocks'][ $k ] = $kid;
+					++$n;
+				}
+				$block['innerBlocks'][ $i ] = $child;
+				continue;
+			}
+			self::figures( $child, $stats );
+			$block['innerBlocks'][ $i ] = $child;
+		}
+	}
+
+	/**
 	 * What a block is made of: its name and its blocks' names, nested (`core/group(core/group(core/paragraph()),core/heading())`).
 	 *
 	 * @param array<string, mixed> $block
 	 */
 	private static function shape( array $block ): string {
 		$kids = array_values( array_filter( (array) ( $block['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+		// A group around one group is the group inside it: a layout wrote its last step's number in one box more than its rows' ("Phase 4").
+		if ( ( $block['blockName'] ?? '' ) === 'core/group' && count( $kids ) === 1 && $kids[0]['blockName'] === 'core/group' ) {
+			return self::shape( $kids[0] );
+		}
 
 		return (string) ( $block['blockName'] ?? '' ) . '(' . implode( ',', array_map( array( self::class, 'shape' ), $kids ) ) . ')';
 	}
@@ -1321,7 +1440,13 @@ final class Block_Library {
 		// words it is given rotate with each slot asked for (Layouts::words), so the two copies would get different words.
 		$cache       = array();
 		$provisional = false;
-		$sub         = static function ( string $s, bool $html ) use ( $facts, $row, &$missing, &$cache, &$provisional ): string {
+		// A caption (small words beside a button: the team's "Available 24/7", a claim of their site) has no words of the page's to say: a
+		// sentence of provisional words set at 13px under a call to action's button is not one. Without the team's own words it is left out.
+		$size        = (string) ( $block['attrs']['style']['typography']['fontSize'] ?? '' );
+		$caption     = preg_match( '/(?:^|\s)text-1[0-3](?:\s|$)/', (string) ( $block['attrs']['className'] ?? '' ) ) === 1
+			|| in_array( (string) ( $block['attrs']['fontSize'] ?? '' ), array( 'small', 'x-small', 'tiny' ), true )
+			|| ( preg_match( '/^(\d+(?:\.\d+)?)px$/', $size, $px ) === 1 && (float) $px[1] <= 13 );
+		$sub         = static function ( string $s, bool $html ) use ( $facts, $row, &$missing, &$cache, &$provisional, $caption ): string {
 			if ( ! str_contains( $s, '{{' ) ) {
 				return $s;
 			}
@@ -1329,7 +1454,7 @@ final class Block_Library {
 
 			return (string) preg_replace_callback(
 				self::TOKEN,
-				static function ( array $m ) use ( $facts, $row, $html, &$missing, &$cache, &$seen, &$provisional ): string {
+				static function ( array $m ) use ( $facts, $row, $html, &$missing, &$cache, &$seen, &$provisional, $caption ): string {
 					$name    = strtolower( $m[1] );
 					$arg     = strtolower( $m[2] ?? '' );
 					// A default is there when the token has a bar, even an empty one ({{row:eyebrow|}}: nothing where the row says nothing).
@@ -1351,8 +1476,8 @@ final class Block_Library {
 							if ( $once && $team !== '' && Layouts::said( $facts, $team, false ) ) {
 								$team = '';
 							}
-							$cache[ $key ] = $team !== '' ? $team : Layouts::words( $arg, $facts, $row );
-							if ( $once && $team === '' && Layouts::said( $facts, $cache[ $key ], false ) ) {
+							$cache[ $key ] = $team !== '' ? $team : ( $caption && str_starts_with( $arg, 'p-' ) ? '' : Layouts::words( $arg, $facts, $row ) );
+							if ( $once && $team === '' && $cache[ $key ] !== '' && Layouts::said( $facts, $cache[ $key ], false ) ) {
 								$again = Layouts::words( $arg, $facts, $row );
 								if ( $again !== '' && ! Layouts::said( $facts, $again, false ) ) {
 									$cache[ $key ] = $again;
@@ -1367,7 +1492,8 @@ final class Block_Library {
 							}
 						}
 						$has_default = false;
-						$value       = $cache[ $key ] === '' ? null : $cache[ $key ];
+						// (A paragraph the page has no words left for is empty, and goes: prune_empty().)
+						$value       = $cache[ $key ] === '' ? ( str_starts_with( $arg, 'p-' ) ? '' : null ) : $cache[ $key ];
 					} elseif ( $arg !== '' && isset( $facts[ $name . ':' . $arg ] ) && is_scalar( $facts[ $name . ':' . $arg ] ) && (string) $facts[ $name . ':' . $arg ] !== '' ) {
 						// A fact of a numbered slot (a layout's picture: image_url:1).
 						$value = (string) $facts[ $name . ':' . $arg ];
@@ -1438,6 +1564,8 @@ final class Block_Library {
 			'/\b(?:reviews?|testimonials?|customers say)\b/i'           => array( 'reviews' ),
 			'/\b(?:steps?|process|how it works)\b/i'                    => array( 'steps' ),
 			'/\b(?:questions|faqs?)\b/i'                                => array( 'faq' ),
+			// "Contact us" over a section that lists no way to reach the company is another section's label.
+			'/\b(?:contact(?:\s+us)?|get\s+in\s+touch|reach\s+us)\b/i'     => array( 'contact' ),
 		);
 		foreach ( $names as $re => $wants ) {
 			if ( preg_match( $re, $words ) === 1 && array_intersect( $wants, $lists ) === array() ) {

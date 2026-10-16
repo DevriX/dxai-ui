@@ -40,6 +40,11 @@ final class Section_Library {
 			if ( ( $block['blockName'] ?? '' ) === 'dxai-ui/link' && empty( $block['innerBlocks'] ) ) {
 				continue; // the skip link
 			}
+			// A box fixed over the page (a phone's call bar) is no band of it: it does not take a section's place (it took a call to action's,
+			// and showed nothing there on a wide screen); the pages made from the Home carry it as the Home does (floating()).
+			if ( self::is_floating( $block ) ) {
+				continue;
+			}
 			$component = self::analyze( $block, (int) $i );
 			if ( $component['kind'] !== 'skip' ) {
 				$out[] = $component;
@@ -177,6 +182,25 @@ final class Section_Library {
 			$run[] = $i;
 		}
 		$out['footer'] = $found ? array_reverse( $run ) : array();
+
+		return $out;
+	}
+
+	/**
+	 * The boxes the Home has fixed over the page that are not its footer's (a call bar for phones, a back-to-top button): every page
+	 * made from the Home carries them, as the Home does.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function floating( int $home_id ): array {
+		$blocks = self::flatten( parse_blocks( (string) get_post_field( 'post_content', $home_id ) ) );
+		$chrome = self::chrome_blocks( $blocks );
+		$out    = array();
+		foreach ( $blocks as $i => $block ) {
+			if ( ! empty( $block['blockName'] ) && ! in_array( $i, $chrome['footer'], true ) && ! in_array( $i, $chrome['header'], true ) && self::is_floating( $block ) ) {
+				$out[] = $block;
+			}
+		}
 
 		return $out;
 	}
@@ -340,10 +364,18 @@ final class Section_Library {
 			&& trim( wp_strip_all_tags( (string) ( $b['innerHTML'] ?? '' ) ) ) === '';
 	}
 
-	/** @param array<string, mixed> $b A box fixed over the page (a call bar, a back-to-top button) with no page heading. */
-	private static function is_floating( array $b ): bool {
+	/**
+	 * A box fixed over the page (a call bar, a back-to-top button) with no page heading: saved, its CSS is the block's own
+	 * (dxaiCss); compiled, before the import hoists it, the design's inline style (dxaiStyle), so the design's document reads the
+	 * same sections before the save as after it.
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	public static function is_floating( array $b ): bool {
+		$inline = is_string( $b['attrs']['dxaiStyle'] ?? null ) ? strtolower( (string) preg_replace( '/\s*:\s*/', ':', $b['attrs']['dxaiStyle'] ) ) : '';
+
 		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box', 'dxai-ui/link' ), true )
-			&& str_contains( Block_Tree::css_of( $b ), 'position:fixed' )
+			&& ( str_contains( Block_Tree::css_of( $b ), 'position:fixed' ) || str_contains( $inline, 'position:fixed' ) )
 			&& ! preg_match( '#<h[12]\b#i', serialize_block( $b ) );
 	}
 

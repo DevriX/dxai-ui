@@ -46,6 +46,10 @@ final class Section_Reader {
 			if ( $name === 'dxai-ui/link' && empty( $block['innerBlocks'] ) ) {
 				continue; // the skip link
 			}
+			// A box fixed over the page (a phone's call bar) is no section of it, as the team pages read a Home (Section_Library::for_page()).
+			if ( Section_Library::is_floating( $block ) ) {
+				continue;
+			}
 			$component = Section_Library::analyze( $block, (int) $i );
 			if ( ( $component['kind'] ?? '' ) === 'skip' ) {
 				continue;

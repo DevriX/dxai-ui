@@ -568,6 +568,10 @@ $dealt = 0;
 // it goes with the list when the page's rows are made (Block_Library::repeats()), so its words are not the page's to show.
 $shape_of      = static function ( array $b ) use ( &$shape_of ): string {
 	$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => ! empty( $c['blockName'] ) ) );
+	// (A group around one group is the group inside it, as Block_Library::shape() reads it.)
+	if ( (string) ( $b['blockName'] ?? '' ) === 'core/group' && count( $kids ) === 1 && (string) ( $kids[0]['blockName'] ?? '' ) === 'core/group' ) {
+		return $shape_of( $kids[0] );
+	}
 
 	return (string) $b['blockName'] . '(' . implode( ',', array_map( $shape_of, $kids ) ) . ')';
 };
@@ -707,6 +711,8 @@ foreach ( $layouts as $id => $e ) {
 	// (A heading the team wrote for another list — "Our Restoration Services" over the Home's points — gives way to the page's own words:
 	// Block_Library::says_what_it_lists(); it is still held to claiming nothing of one site.)
 	$kept_from = serialize_blocks( array_map( $without_apart, array_values( array_filter( parse_blocks( $markup ), static fn( $b ) => ! empty( $b['blockName'] ) ) ) ) );
+	// (A badge set as a figure shows the Home's figure and its words, not the team's label: Block_Library::figures().)
+	$kept_from = (string) preg_replace( '#<!-- wp:paragraph [^>]*"fontSize":"(?:2[89]|[3-9]\d)px"[^>]*-->\s*<p[^>]*>\{\{t:p-s\}\}</p>\s*<!-- /wp:paragraph -->\s*<!-- wp:paragraph[^>]*-->\s*<p[^>]*>\{\{t:p-s\|[^}]*\}\}</p>#', '', $kept_from );
 	preg_match_all( '/\{\{t:([a-z0-9-]+)\|([^{}]*)\}\}/', $kept_from, $km_sets, PREG_SET_ORDER );
 	preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', $markup, $km_lists );
 	$km_every = array_map( static fn( array $m ): string => $m[2], $km_sets );
@@ -767,7 +773,12 @@ $pf_loc   = \DXAI_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'Water
 $pf_about = \DXAI_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'About Us', 'type' => 'about' ), 'cta', 'seed|2', array() );
 $pf_svc   = \DXAI_UI\Pages\Layouts::page_facts( array_merge( $facts, array( 'places_home' => array( 'Longview, TX' ) ) ), array( 'title' => 'Mold Removal', 'type' => 'service' ), 'cta', 'seed|3', array() );
 $expect( 'a place\'s page is about its service, in its place; a page about the company is about restoration, in the Home\'s first place; a page\'s title is never the place', ( $pf_loc['subject'] ?? '' ) === 'Water Damage' && ( $pf_loc['region'] ?? '' ) === 'Tyler, TX' && ( $pf_about['subject'] ?? '' ) === 'restoration' && ( $pf_about['region'] ?? '' ) === 'Tyler, TX' && ( $pf_svc['subject'] ?? '' ) === 'Mold Removal' && ( $pf_svc['region'] ?? '' ) === 'Longview, TX', json_encode( array( $pf_loc['subject'] ?? null, $pf_loc['region'] ?? null, $pf_about['subject'] ?? null, $pf_about['region'] ?? null, $pf_svc['region'] ?? null ) ) );
-$expect( 'and the words say so: the place, not the page\'s title, and "restoration", not "about us"', str_contains( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ), 'in Tyler, TX trust' ) && str_contains( \DXAI_UI\Pages\Layouts::words( 'p-l', $pf_about, null ), 'restoration' ) && ! str_contains( mb_strtolower( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) . \DXAI_UI\Pages\Layouts::words( 'p-l', $pf_about, null ) ), 'about us' ), \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ) . ' | ' . \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) );
+// (A page says a sentence once, a paragraph is two of them at most: the company's line is in one of the page's paragraphs.)
+$about_p = '';
+for ( $i = 0; $i < 5; $i++ ) {
+	$about_p .= ' ' . \DXAI_UI\Pages\Layouts::words( 'p-l', array_merge( $pf_about, array( 'slot_seed' => (string) $i ) ), null );
+}
+$expect( 'and the words say so: the place, not the page\'s title, and "restoration", not "about us"', str_contains( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ), 'in Tyler, TX trust' ) && str_contains( $about_p, 'restoration' ) && ! str_contains( mb_strtolower( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) . \DXAI_UI\Pages\Layouts::words( 'p-l', $pf_about, null ) ), 'about us' ), \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ) . ' | ' . \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) );
 $planted_site = '<!-- wp:paragraph --><p>Why homeowners choose PacesGA for water damage.</p><!-- /wp:paragraph -->';
 $expect( 'the leak check is able to catch the name of a site the layouts came from', $leaks( $planted_site ) !== array(), implode( '; ', $leaks( $planted_site ) ) );
 

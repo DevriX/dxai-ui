@@ -37,6 +37,9 @@ final class Layouts {
 	/** @var array<string, array<string, bool>> The lines of words a page says so far, by page (said()). */
 	private static array $said = array();
 
+	/** @var array<string, array<string, bool>> The pictures a page shows so far, by page and picture (saw()). */
+	private static array $seen = array();
+
 	/** The leaf blocks that hold words. */
 	private const TEXT = array( 'core/heading', 'core/paragraph', 'core/list-item', 'dxai-ui/text', 'dxai-ui/html', 'core/button', 'core/details' );
 
@@ -232,6 +235,13 @@ final class Layouts {
 		if ( $facts['kind'] === 'faq' ) {
 			$caps['faq'] = 12;
 		}
+		// A service's page does not answer another service's questions ("What causes ice dams?" on the carpet cleaning page): a question
+		// that names one other service of the site and not this one is that service's. A question of no service, or of two, is anyone's.
+		if ( $facts['kind'] === 'service' && isset( $lists['faq'] ) ) {
+			$own    = array( $title, (string) $facts['about'] );
+			$others = array_map( static fn( array $r ) => array( (string) $r['title'], $r['text'] ), (array) $lists['related'] );
+			$lists['faq'] = array_values( array_filter( (array) $lists['faq'], static fn( $r ) => ! self::names_other( (string) ( $r['title'] ?? '' ), $own, $others ) ) );
+		}
 		foreach ( $lists as $name => $rows ) {
 			$rows = array_values( (array) $rows );
 			// Every row leads somewhere a card can go: the row's own page, else the page's call.
@@ -252,6 +262,10 @@ final class Layouts {
 		$facts['once'] = true;
 		// The pictures: the Home's, the ones about the page's topic first, and not the same one at every place of the page.
 		$pool  = array_values( (array) ( $vary['pool'] ?? array() ) );
+		// (Not one the page shows already: the hero's own picture is the Home's, and it is not shown again beside a section's words.)
+		$seen  = self::$seen[ self::page_key( $facts ) ] ?? array();
+		$fresh = array_values( array_filter( $pool, static fn( $p ) => ! isset( $seen[ self::picture_key( (string) ( $p['url'] ?? '' ) ) ] ) ) );
+		$pool  = $fresh !== array() ? $fresh : $pool;
 		$topic = self::topic( $title );
 		$score = static function ( array $p ) use ( $topic ): int {
 			$hay = mb_strtolower( (string) $p['alt'] . ' ' . basename( (string) $p['url'] ) );
@@ -322,12 +336,71 @@ final class Layouts {
 		return self::$shown[ $page ][ $list ];
 	}
 
+	/**
+	 * Whether words are about another service of the site and not this one: they name one other service — a word of it no other service
+	 * of the site has ("ice dams" is Frozen Pipes & Ice Dams'; "pipes" is also Water Damage's, "burst pipes") — and nothing of this one.
+	 * Words that name two other services ("water or fire damage") are about restoration in general. A name in words — a place ("during an
+	 * Alaska winter"), a brand — names no service: a word that starts with a capital where no sentence starts is left out of them, and a
+	 * service's title is read whole.
+	 *
+	 * @param array{0:string, 1:string}             $own    This page's service: its title, its words.
+	 * @param array<int, array{0:string, 1:string}> $others The site's other services, the same way.
+	 */
+	public static function names_other( string $text, array $own, array $others ): bool {
+		$stems = static function ( string $s, bool $names_out = false ): array {
+			$stop = array( 'and', 'the', 'for', 'with', 'your', 'our', 'you', 'from', 'that', 'this', 'what', 'how', 'can', 'will', 'are', 'its', 'damage', 'restoration', 'restore', 'clean', 'cleaning', 'cleanup', 'service', 'services', 'repair', 'repairs', 'home', 'homes', 'business', 'businesses', 'property', 'after', 'before', 'then', 'same', 'full', 'crew', 'team', 'day', 'night', 'help', 'work', 'job', 'all', 'any', 'out', 'into', 'when', 'who', 'why', 'not', 'just', 'like', 'more', 'most', 'other', 'every', 'each', 'have', 'has', 'was', 'were', 'they', 'them', 'their', 'there', 'here', 'about' );
+			$out   = array();
+			$words = array();
+			$start = true;
+			foreach ( (array) preg_split( '/\s+/u', trim( $s ), -1, PREG_SPLIT_NO_EMPTY ) as $raw ) {
+				$raw  = (string) $raw;
+				$name = $names_out && ! $start && preg_match( '/^[^\p{L}]*\p{Lu}/u', $raw ) === 1;
+				$start = preg_match( '/[.!?:]\W*$/u', $raw ) === 1;
+				if ( ! $name ) {
+					$words = array_merge( $words, (array) preg_split( '/[^\p{L}]+/u', mb_strtolower( $raw ), -1, PREG_SPLIT_NO_EMPTY ) );
+				}
+			}
+			foreach ( $words as $w ) {
+				$w = (string) $w;
+				if ( mb_strlen( $w ) < 3 || in_array( $w, $stop, true ) ) {
+					continue;
+				}
+				if ( mb_strlen( $w ) > 5 && str_ends_with( $w, 'ing' ) ) {
+					$w = mb_substr( $w, 0, -3 );
+				} elseif ( mb_strlen( $w ) > 4 && str_ends_with( $w, 'ed' ) ) {
+					$w = mb_substr( $w, 0, -2 );
+				}
+				if ( mb_strlen( $w ) > 3 && str_ends_with( $w, 's' ) ) {
+					$w = mb_substr( $w, 0, -1 );
+				}
+				if ( mb_strlen( $w ) > 4 && str_ends_with( $w, 'e' ) ) {
+					$w = mb_substr( $w, 0, -1 );
+				}
+				$out[ $w ] = true;
+			}
+
+			return $out;
+		};
+		$doc  = static fn( array $d ): array => $stems( (string) ( $d[0] ?? '' ) ) + $stems( (string) ( $d[1] ?? '' ), true );
+		$docs = array_merge( array( $doc( $own ) ), array_map( $doc, array_values( array_filter( $others, static fn( array $o ) => trim( $o[0] ) !== '' ) ) ) );
+		$said = $stems( $text, true );
+		$hits = array();
+		foreach ( array_keys( $said ) as $w ) {
+			$in = array_keys( array_filter( $docs, static fn( $d ) => isset( $d[ $w ] ) ) );
+			if ( count( $in ) === 1 ) {
+				$hits[ $in[0] ] = true;
+			}
+		}
+
+		return ! isset( $hits[0] ) && count( $hits ) === 1;
+	}
+
 	/** A page begins: none of the Home's pictures, none of its lists' rows and none of its lines shown on it yet. */
 	public static function begin( string $title, string $kind ): void {
 		$head = $title . '|';
-		foreach ( array_keys( self::$pictures + self::$shown + self::$said ) as $key ) {
+		foreach ( array_keys( self::$pictures + self::$shown + self::$said + self::$seen ) as $key ) {
 			if ( str_starts_with( (string) $key, $head ) && str_ends_with( (string) $key, '|' . $kind ) ) {
-				unset( self::$pictures[ $key ], self::$shown[ $key ], self::$said[ $key ] );
+				unset( self::$pictures[ $key ], self::$shown[ $key ], self::$said[ $key ], self::$seen[ $key ] );
 			}
 		}
 	}
@@ -354,6 +427,46 @@ final class Layouts {
 	}
 
 	/**
+	 * A picture a section of the page shows, noted as shown: a later section of the page takes another of the Home's (the same skyline
+	 * behind the hero and again beside a section's words read as one picture twice). Its sizes are the picture (`-768x255`, `-scaled`).
+	 *
+	 * @param array<string, mixed> $facts
+	 */
+	public static function saw( array $facts, string $url ): void {
+		$key = self::picture_key( $url );
+		if ( $key !== '' ) {
+			self::$seen[ self::page_key( $facts ) ][ $key ] = true;
+		}
+	}
+
+	/** A picture by its file, whatever its size or format. */
+	private static function picture_key( string $url ): string {
+		$name = strtolower( basename( (string) strtok( $url, '?#' ) ) );
+		$name = (string) preg_replace( '/\.(?:jpe?g|png|webp|gif|avif)$/', '', $name );
+
+		return (string) preg_replace( '/-(?:\d+x\d+|scaled)$/', '', $name );
+	}
+
+	/**
+	 * What a page has said so far, to give back when a section made for it is not used (said_back()): a layout tried and given up takes
+	 * none of the page's lines with it — Taylored Restoration's pages ran out of words half-way, the rest of them said again.
+	 *
+	 * @param array<string, mixed> $facts
+	 * @return array<string, bool>
+	 */
+	public static function said_state( array $facts ): array {
+		return self::$said[ self::page_key( $facts ) ] ?? array();
+	}
+
+	/**
+	 * @param array<string, mixed> $facts
+	 * @param array<string, bool>  $state said_state() before the section was tried.
+	 */
+	public static function said_back( array $facts, array $state ): void {
+		self::$said[ self::page_key( $facts ) ] = $state;
+	}
+
+	/**
 	 * The lines of a section the page shows as the Home has it (its headings, labels and paragraphs), noted as said.
 	 *
 	 * @param array<string, mixed> $facts
@@ -362,6 +475,15 @@ final class Layouts {
 	public static function hear( array $facts, array $block ): void {
 		if ( in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'span' ) ) {
 			self::said( $facts, Block_Tree::own_text( $block ) );
+		}
+		// …and its pictures as shown.
+		if ( preg_match_all( '/<img\b[^>]*\bsrc="([^"]+)"/i', (string) ( $block['innerHTML'] ?? '' ), $imgs ) ) {
+			foreach ( $imgs[1] as $src ) {
+				self::saw( $facts, (string) $src );
+			}
+		}
+		if ( is_string( $block['attrs']['url'] ?? null ) && \DXAI_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'picture' ) ) {
+			self::saw( $facts, (string) $block['attrs']['url'] );
 		}
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $c ) {
 			if ( is_array( $c ) ) {
@@ -434,7 +556,10 @@ final class Layouts {
 				return $pick( match ( $role ) {
 					'process' => array( sprintf( /* translators: %s: the page's topic. */ __( 'How %s work moves forward', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the page's topic. */ __( 'What to expect from %s', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'From the first call to the last walk-through', 'dxai-ui' ) ),
 					'two-col' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Why property owners%1$s choose %2$s', 'dxai-ui' ), $where, $short ), sprintf( /* translators: %s: the company. */ __( 'What sets %s apart', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'The %s work, done the way it should be', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Help with the claim, not just the damage', 'dxai-ui' ) ),
-					'cards'   => array( sprintf( /* translators: %s: the page's topic. */ __( 'What %s includes', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'Signs you need %s help', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'What our customers count on', 'dxai-ui' ) ),
+					// (Cards of the Home's points — "About 60 min arrival", "In-house crews" — are about the company, not about what the service includes.)
+					'cards'   => in_array( 'items', (array) ( $facts['section_lists'] ?? array() ), true )
+						? array( sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), __( 'What our customers count on', 'dxai-ui' ), sprintf( /* translators: %s: the company. */ __( 'Why property owners call %s', 'dxai-ui' ), $short ) )
+						: array( sprintf( /* translators: %s: the page's topic. */ __( 'What %s includes', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'Signs you need %s help', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'What our customers count on', 'dxai-ui' ) ),
 					'reviews' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Property owners%1$s trust %2$s', 'dxai-ui' ), $where, $short ) ),
 					'faq'     => array( sprintf( /* translators: %s: the page's topic. */ __( '%s questions, answered', 'dxai-ui' ), mb_strtoupper( mb_substr( $topic, 0, 1 ) ) . mb_substr( $topic, 1 ) ) ),
 					'cta'     => array( sprintf( /* translators: %s: the page's topic. */ __( 'Need %s help now?', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Talk to a real person', 'dxai-ui' ) ),
@@ -468,11 +593,30 @@ final class Layouts {
 				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'The scope of the %s work is written down and agreed before it begins, and the site is walked with you when it ends.', 'dxai-ui' ), mb_strtolower( $topic ) );
 				$lines[] = sprintf( /* translators: %s: the company. */ __( 'One %s crew stays with the job from the first visit to the last, so nothing is lost between hands.', 'dxai-ui' ), $short );
 				$lines[] = __( 'What was found, what was done and what it cost are documented for you and for anyone else who needs to see it.', 'dxai-ui' );
-				$take    = $len === 's' ? 1 : ( $len === 'm' ? 2 : 3 );
+				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'Every %s job starts with an inspection and a written plan, so the cost is clear before the work begins.', 'dxai-ui' ), mb_strtolower( $topic ) );
+				$lines[] = __( 'Readings and photos are taken at each step, so your insurance company sees what we see.', 'dxai-ui' );
+				$lines[] = __( 'What can be saved is protected first; what cannot is removed safely and replaced.', 'dxai-ui' );
+				$lines[] = __( 'You hear how long the work will take before it starts, and you are told at once if anything changes.', 'dxai-ui' );
+				$lines[] = __( 'When the work is done, the rooms are clean, dry and ready to be lived or worked in again.', 'dxai-ui' );
+				$lines[] = sprintf( /* translators: %s: the company. */ __( '%s keeps you informed from the first call to the final walkthrough.', 'dxai-ui' ), $short );
+				// A paragraph of provisional words is short (a line, two at the longest): a page has many of them, each says its own.
+				$take    = $len === 'l' ? 2 : 1;
 				$from    = $nth % count( $lines );
 				$out     = array();
-				for ( $n = 0; $n < $take; $n++ ) {
-					$out[] = $lines[ ( $from + $n ) % count( $lines ) ];
+				// A page says a sentence once (said()): the lines a paragraph of it has said are passed over, so two sections do not repeat a
+				// sentence in other paragraphs (Taylored Restoration's pages said "The scope of the … work is written down…" three times).
+				$once = ! empty( $facts['once'] );
+				for ( $n = 0; $n < count( $lines ) && count( $out ) < $take; $n++ ) {
+					$line = $lines[ ( $from + $n ) % count( $lines ) ];
+					if ( $once && self::said( $facts, $line, false ) ) {
+						continue;
+					}
+					$out[] = $line;
+				}
+				// All of them said: nothing is left, and a page made from a Home leaves the paragraph out (Block_Library::prune_empty()) rather
+				// than say a line again.
+				foreach ( $once ? $out : array() as $line ) {
+					self::said( $facts, $line );
 				}
 
 				return implode( ' ', array_unique( $out ) );
@@ -933,7 +1077,7 @@ final class Layouts {
 				continue;
 			}
 			// …or the figure alone, with its words in the line under it. One digit alone is the number of a step, not a figure.
-			if ( preg_match( '/^[\$]?\d[\d,.]*\s*(\+|%|k|\/7|hrs?|min|yrs?)?$/i', $t ) !== 1 || preg_match( '/^\d$/', $t ) === 1 ) {
+			if ( preg_match( '/^[\$]?\d[\d,.]*\s*(\+|%|k|\/7|hrs?|min|yrs?)?$/i', $t ) !== 1 || preg_match( '/^0?\d$/', $t ) === 1 ) {
 				continue;
 			}
 			$label = (string) ( $leaves[ $i + 1 ] ?? '' );
