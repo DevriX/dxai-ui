@@ -52,14 +52,15 @@ jobs:
       - name: PHPStan (new problems only)
         run: vendor/bin/phpstan analyse --memory-limit=2G --no-progress
 
-      # The page runtime in a browser: what is on screen as a page opens is never hidden for an entrance (no site needed).
-      - name: The page runtime reveals nothing that is already on screen
-        run: DXAI_PHP="$(command -v php)" node bin/verify-reveal.cjs
-
       - name: The admin builds
         run: |
           npm ci
           npm run build
+
+      # The page runtime in a browser: what is on screen as a page opens is never hidden for an entrance (no site needed). After
+      # npm ci: puppeteer-core comes with the dev tools (the runner has Chrome).
+      - name: The page runtime reveals nothing that is already on screen
+        run: DXAI_PHP="$(command -v php)" node bin/verify-reveal.cjs
 
       # The ZIP a tag would release, made from what git carries: a file the plugin needs that git does not have fails here,
       # on the push, not on the tag (v0.4.0-beta.34 shipped without the icon runtime, ignored by a `vendor/` rule).
