@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.36
+Stable tag: 0.4.0-beta.37
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.37 =
+* Sites in a folder: a design's links from the root of its host (`/careers/`) go under the site's address on a network in folders or WordPress in a folder, and a link to a section of the Home (`#why`) leads there from every other page. Read where the links are drawn — the design's pages, the header and footer, the footer widgets and menu items the plugin wrote — so the pages made before are right as they are (`dxai_ui_site_links`).
+* Pages made from the Home and the team's sections: a theme colour named "border" no longer draws a frame round the words set in it (it is the block's own colour now); a section keeps only the fonts the page draws, not every family the theme names; a layout's steps are the page's own (no leftover "Phase 3" of the site it came from); a credentials band keeps its badges; a place's page talks about the work done there, not about its name.
+* Every design page: its content is the page's `<main>`, with the header and footer outside it, and a skip link has a target; with an SEO plugin on, the page's description is added when the plugin writes none; the theme's button sheet leaves out the editor's own rules (202 KB → 34.5 KB on the team's network).
+* For developers: new CI suites verify-site-links and verify-library-pour; `Capabilities::text_slug_ok()`.
 
 = 0.4.0-beta.36 =
 * Pages from the live site (DX › Site): each new page keeps the live page's words, pictures, address and order, in the new Home's look. The live site's menu is read beside the design's, a page the design's menu names at another address keeps its words, and the design's own links (the menus, the footer, the Home) are pointed at the pages made for them. A page's questions, figures and forms are read as what they are; a link inside a link (an e-mail protected by Cloudflare) is unwrapped.
