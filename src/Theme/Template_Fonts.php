@@ -11,6 +11,7 @@ namespace DXAI_UI\Theme;
 
 use DXAI_UI\Media\Font_Host;
 use DXAI_UI\Media\Font_Metrics;
+use DXAI_UI\Media\Late_Fonts;
 use DXAI_UI\Structures\Design_Attach;
 use DXAI_UI\Support\Upload_Paths;
 
@@ -256,7 +257,7 @@ final class Template_Fonts {
 		if ( $t === null || is_admin() || Theme_Compat::is_converted_page() ) {
 			return;
 		}
-		echo '<style id="dxai-template-fonts">' . self::site_css( $t ) . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the faces and stacks are made here and validated when read.
+		echo '<style id="dxai-template-fonts">' . Late_Fonts::hold( self::site_css( $t ) ) . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the faces and stacks are made here and validated when read.
 	}
 
 	/**
@@ -289,6 +290,10 @@ final class Template_Fonts {
 		}
 		$theme = trailingslashit( get_stylesheet_directory_uri() ) . 'assets/src/fonts/';
 		$keep  = array_values( array_filter( $urls, static fn( $u ) => ! is_string( $u ) || ! str_starts_with( $u, $theme ) ) );
+		// While the fonts wait for the page to load (Late_Fonts), a preload would ask for them first.
+		if ( Late_Fonts::on() ) {
+			return $keep;
+		}
 		// One file for each font, the Latin face in the regular weight: what the first paint of text needs.
 		$ours = array();
 		foreach ( array( 'heading_family', 'body_family' ) as $role ) {

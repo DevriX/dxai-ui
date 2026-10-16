@@ -480,7 +480,8 @@ final class Assets {
 			 * presets on the next load instead of silently wearing the new
 			 * brand's colours.
 			 */
-			$brand = \DXAI_UI\Compiler\Token_Styles::brand_css( $src );
+			// Its web font faces wait for the page to load (Late_Fonts); their fallback faces stay.
+			$brand = \DXAI_UI\Media\Late_Fonts::hold( \DXAI_UI\Compiler\Token_Styles::brand_css( $src ) );
 			if ( $brand !== '' ) {
 				wp_add_inline_style( 'dxai-ui-page-' . $id, $brand );
 			}

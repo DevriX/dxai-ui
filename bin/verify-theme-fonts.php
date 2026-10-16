@@ -161,6 +161,27 @@ $expect( 'code stays monospace whatever the design\'s variable says', str_contai
 $expect( 'an icon class and a variable are not touched', ! str_contains( $css, 'Material' ) && ! str_contains( $css, ' .keep{' ) );
 $expect( 'a rule inside a media query stays inside it', str_contains( $css, '@media (min-width: 600px){' . str_replace( '{ID}', (string) $id, $scope ) . ' .sub{font-family:var(--dxai-theme-heading)}}' ) );
 $expect( 'nothing in it can close a style element', ! str_contains( $css, '</' ) );
+// The page's head (Blocks\Assets): its brand CSS keeps the stacks, and the theme's web face waits for the end of the page (Late_Fonts).
+$let_go = static function (): void {
+	ob_start();
+	\DXAI_UI\Media\Late_Fonts::print_late();
+	ob_end_clean();
+};
+$let_go();
+$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
+$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+$GLOBALS['post']         = get_post( $id );
+do_action( 'wp_enqueue_scripts' );
+$inline = implode( '', (array) wp_styles()->get_data( 'dxai-ui-page-' . $id, 'after' ) );
+$held   = \DXAI_UI\Media\Late_Fonts::held();
+$expect( 'on the design\'s page, its brand CSS keeps the stacks and the theme\'s web face waits for the end of the page (Late_Fonts)', str_contains( $inline, '--dxai-theme-heading' ) && ! str_contains( $inline, 'vtx-head.woff2' ) && str_contains( $held, 'vtx-head.woff2' ), substr( $inline, 0, 160 ) . ' | ' . $held );
+wp_dequeue_style( 'dxai-ui-page-' . $id );
+$let_go();
+$footer_css = new ReflectionMethod( \DXAI_UI\Chrome\Site_Footer_Block::class, 'design_css' );
+$footer_css->setAccessible( true );
+$fcss = (string) $footer_css->invoke( null, array( 'page_id' => $id, 'scope' => $id ) );
+$expect( '…and so does the design\'s footer on a page of the theme (Site_Footer_Block)', str_contains( $fcss, '--dxai-theme-heading' ) && ! str_contains( $fcss, 'vtx-head.woff2' ) && str_contains( \DXAI_UI\Media\Late_Fonts::held(), 'vtx-head.woff2' ), \DXAI_UI\Media\Late_Fonts::held() );
+$let_go();
 
 $prior = Theme_Fonts::use_design( $id );
 $bound = Theme_Fonts::bind_css( "color:red;font-family:'Vtx Tfserif', serif;margin:0" );

@@ -455,7 +455,7 @@ final class Site_Footer_Block {
 		// The brand's override: its tokens and the design's own custom
 		// properties pointed at the Styles presets (Assets adds it after the
 		// sheet on the design's own page).
-		$css .= Token_Styles::brand_css( $page );
+		$css .= \DXAI_UI\Media\Late_Fonts::hold( Token_Styles::brand_css( $page ) );
 		$own  = '.dxai-ui.dxai-ui--' . $scope . '.dxai-ui--' . $scope . '{';
 		$css  = str_replace( self::GENERIC_TOKENS, $own, $css );
 		// Printed in a <style> element: nothing in it may close that element.

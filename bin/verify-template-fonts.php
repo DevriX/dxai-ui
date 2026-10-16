@@ -167,8 +167,12 @@ $expect( 'every page the theme draws gets the faces and the two variables the th
 $ed = Template_Fonts::editor_settings( array( 'styles' => array( array( 'css' => 'a{}' ) ) ) );
 $expect( 'the block editor gets them as a style of its canvas, after what it had', 2 === count( $ed['styles'] ) && 'a{}' === $ed['styles'][0]['css'] && str_contains( $ed['styles'][1]['css'], '--font-heading' ) );
 $theme_dir = trailingslashit( get_stylesheet_directory_uri() ) . 'assets/src/fonts/';
-$urls      = Template_Fonts::preload( array( $theme_dir . 'Inter-VariableFont_wght.woff2', 'https://example.com/other.woff2' ) );
-$expect( 'the theme\'s fonts module preloads the template\'s two first-paint files and no longer the theme\'s own fonts', 3 === count( $urls ) && ! in_array( $theme_dir . 'Inter-VariableFont_wght.woff2', $urls, true ) && in_array( 'https://example.com/other.woff2', $urls, true ) && 2 === count( array_filter( $urls, static fn( $u ) => str_contains( $u, '/' . Template_Fonts::DIR . '/' ) ) ), wp_json_encode( $urls ) );
+$late      = Template_Fonts::preload( array( $theme_dir . 'Inter-VariableFont_wght.woff2', 'https://example.com/other.woff2' ) );
+$expect( 'while the fonts wait for the page to load (Late_Fonts), the theme\'s fonts module preloads none of them, and no longer the theme\'s own', array( 'https://example.com/other.woff2' ) === $late, wp_json_encode( $late ) );
+add_filter( 'dxai_ui_late_fonts', '__return_false' );
+$urls = Template_Fonts::preload( array( $theme_dir . 'Inter-VariableFont_wght.woff2', 'https://example.com/other.woff2' ) );
+remove_filter( 'dxai_ui_late_fonts', '__return_false' );
+$expect( '…and when they do not wait, it preloads the template\'s two first-paint files and no longer the theme\'s own fonts', 3 === count( $urls ) && ! in_array( $theme_dir . 'Inter-VariableFont_wght.woff2', $urls, true ) && in_array( 'https://example.com/other.woff2', $urls, true ) && 2 === count( array_filter( $urls, static fn( $u ) => str_contains( $u, '/' . Template_Fonts::DIR . '/' ) ) ), wp_json_encode( $urls ) );
 $st = Template_Fonts::status();
 $expect( 'status says what is installed and that it is in use', ! empty( $st['installed'] ) && ! empty( $st['live'] ) && 'Tf Body' === $st['body'] && 5 === $st['files'] && $st['bytes'] > 0 );
 
