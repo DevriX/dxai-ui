@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.35
+Stable tag: 0.4.0-beta.36
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.36 =
+* Pages from the live site (DX › Site): each new page keeps the live page's words, pictures, address and order, in the new Home's look. The live site's menu is read beside the design's, a page the design's menu names at another address keeps its words, and the design's own links (the menus, the footer, the Home) are pointed at the pages made for them. A page's questions, figures and forms are read as what they are; a link inside a link (an e-mail protected by Cloudflare) is unwrapped.
+* Faster pages, measured with the mobile profile pagespeed.web.dev uses (H2O Away's pages: 69–84 before, 94–99 now): a design's JPEG and PNG pictures are stored as WebP, and its photographs at the highest quality that is as light as Lighthouse asks; the plugin's own pictures get their sizes from WordPress; pictures, map frames and CSS background pictures below the first screen wait for it; the picture the page opens on is asked for first; nothing above the first screen is hidden for an entrance; the plugin's small stylesheets are written into the page; a design's web fonts come after the first paint, drawn until then in fallback faces of their size, so nothing moves when they arrive.
+* Search and accessibility: a design's pages get a meta description (unless an SEO plugin writes them). Its markup is served as assistive technology reads it: no stray attributes, nothing hidden in the Tab order, names that hold their visible words, no reference to an id the page does not have. Text colours that nearly read are brought to 4.5:1, and where the theme's colours leave a text unreadable on one of its backgrounds, it gets a colour for that background.
+* Claude Design handoffs whose page is `index.html` (its template and its component's script, with `support.js` and the assets) are read as Claude Design exports: their states run (menus closed, a banner that is off by default not shown) and their header and footer are installed as Menus and Widgets. A page that opens with a skip link keeps its header as the site's header.
+* For developers: `bin/page-speed.cjs` (Lighthouse's mobile profile; `--warm` measures a local site as a good host serves it), `bin/live-parity.cjs` and `bin/gutenberg-audit.php`; new suites in the CI group (page head, WebP, image quality, font fallbacks, late fonts, legible text, accessible markup, composer roles, site pages, HTML chrome); 13 new filters, all in `docs/HOOKS.md`.
 
 = 0.4.0-beta.35 =
 * The icon runtime is in the ZIP again. 0.4.0-beta.34, the first release built from git by the release workflow, did not carry `assets/vendor/lucide.min.js` (a rule meant for Composer's folder kept it out of git, and the ZIPs built before took it from the disk), so the icons of a converted page and of the convert preview did not load. Everything else is 0.4.0-beta.34.
