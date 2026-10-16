@@ -33,6 +33,9 @@ final class Theme_Buttons {
 	/** Theme stylesheets are read up to this size. */
 	private const MAX_BYTES = 6291456;
 
+	/** How the rules are read: a sheet written by an earlier reading is read again (2: without the editor's `#editor` rules). */
+	private const READING = 2;
+
 	/** @var array{key:string, styles:array<int, string>, file:string}|null */
 	private static ?array $memo = null;
 
@@ -162,7 +165,7 @@ final class Theme_Buttons {
 			return self::$memo;
 		}
 		$files = self::sheets();
-		$key   = md5( get_stylesheet() . '|' . (string) wp_get_theme()->get( 'Version' ) . '|' . implode( ',', array_map( static fn( $f ) => $f . ':' . (int) filemtime( $f ), $files ) ) );
+		$key   = md5( self::READING . '|' . get_stylesheet() . '|' . (string) wp_get_theme()->get( 'Version' ) . '|' . implode( ',', array_map( static fn( $f ) => $f . ':' . (int) filemtime( $f ), $files ) ) );
 		$saved = get_option( self::OPTION );
 		if ( is_array( $saved ) && ( $saved['key'] ?? '' ) === $key && is_array( $saved['styles'] ?? null ) ) {
 			$file = (string) ( $saved['file'] ?? '' );
@@ -285,6 +288,8 @@ final class Theme_Buttons {
 			if ( $prelude === '' ) {
 				continue;
 			}
+			// A rule's selectors less the editor's own (outside_editor()).
+			$sel = $prelude[0] !== '@' ? self::outside_editor( $prelude ) : '';
 			if ( preg_match( '/^@(?:-webkit-)?keyframes\s+([\w-]+)/i', $prelude, $m ) === 1 ) {
 				$frames[ $m[1] ] = $prelude . '{' . $body . '}';
 			} elseif ( preg_match( '/^@(media|supports|layer|container)\b/i', $prelude ) === 1 ) {
@@ -292,17 +297,49 @@ final class Theme_Buttons {
 				if ( $inner !== '' ) {
 					$out .= $prelude . '{' . $inner . '}';
 				}
-			} elseif ( $prelude[0] !== '@' && self::is_button_rule( $prelude ) ) {
-				if ( preg_match_all( '/\.wp-block-button\.is-style-([\w-]+)/', $prelude, $found ) ) {
+			} elseif ( $sel !== '' && self::is_button_rule( $sel ) ) {
+				if ( preg_match_all( '/\.wp-block-button\.is-style-([\w-]+)/', $sel, $found ) ) {
 					foreach ( $found[1] as $name ) {
 						$styles[ $name ] = true;
 					}
 				}
-				$out .= $prelude . '{' . $body . '}';
+				$out .= $sel . '{' . $body . '}';
 			}
 		}
 
 		return $out;
+	}
+
+	/**
+	 * A rule's selectors less those of the editor's own screen (`#editor …`): a theme's editor stylesheet holds rules for the editor's
+	 * screen, which match nothing on a page, nor in the editor's canvas (a frame of its own, with no `#editor` in it). American Restoration's
+	 * on the team's network held 503 of them: 166 KB of the 202 KB sheet every design page waited for, 96% of it unused (2026-10-16).
+	 * '' when every selector was one.
+	 */
+	private static function outside_editor( string $prelude ): string {
+		if ( ! str_contains( $prelude, '#editor' ) ) {
+			return $prelude;
+		}
+		// The selector list, split at its own commas (not at those inside :is(…), :not(…)).
+		$parts = array();
+		$depth = 0;
+		$from  = 0;
+		$len   = strlen( $prelude );
+		for ( $i = 0; $i < $len; $i++ ) {
+			$ch = $prelude[ $i ];
+			if ( $ch === '(' ) {
+				++$depth;
+			} elseif ( $ch === ')' ) {
+				--$depth;
+			} elseif ( $ch === ',' && $depth === 0 ) {
+				$parts[] = substr( $prelude, $from, $i - $from );
+				$from    = $i + 1;
+			}
+		}
+		$parts[] = substr( $prelude, $from );
+		$keep    = array_filter( array_map( 'trim', $parts ), static fn( $s ) => $s !== '' && preg_match( '/(?:^|[\s>+~(])#editor(?![\w-])/', $s ) !== 1 );
+
+		return implode( ',', $keep );
 	}
 
 	/** A rule of the Button block's own styles: the selector names `.wp-block-button` together with a style or state class. */

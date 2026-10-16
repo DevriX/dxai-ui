@@ -382,7 +382,7 @@ if ( $design_url !== '' ) {
 	$now = $get( $design_url );
 	$was = $shape_of( $design_was['body'] );
 	$is  = $shape_of( $now['body'] );
-	$expect( 'the design\'s own page is drawn by the plugin, not by this theme: 200, its own document, no theme wrapper, none of the theme\'s style sheet', 200 === $now['code'] && ! str_contains( $now['body'], 'dx-base-main' ) && ! str_contains( $now['body'], 'dx-base.css' ) && ! str_contains( $now['body'], 'dx-base-css' ) && 1 === substr_count( $now['body'], '<main id="dxai-root"' ), $now['code'] . ' ' . $now['error'] );
+	$expect( 'the design\'s own page is drawn by the plugin, not by this theme: 200, its own document, no theme wrapper, none of the theme\'s style sheet', 200 === $now['code'] && ! str_contains( $now['body'], 'dx-base-main' ) && ! str_contains( $now['body'], 'dx-base.css' ) && ! str_contains( $now['body'], 'dx-base-css' ) && 1 === substr_count( $now['body'], '<div id="dxai-root"' ) && 1 === substr_count( $now['body'], '<main' ), $now['code'] . ' ' . $now['error'] );
 	$expect( '…and it is made of the same elements and the same words as on the theme the site had (the pictures aside)', $was !== '' && $was === $is, $was . ' vs ' . $is );
 }
 

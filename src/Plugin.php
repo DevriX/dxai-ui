@@ -89,6 +89,8 @@ final class Plugin {
 		( new \DXAI_UI\Theme\Theme_Trim() )->register();
 		// A design's pages described for search engines, unless an SEO plugin does it (T5.4 of docs/PLAN-PERFECT-PAGES.md).
 		( new \DXAI_UI\Seo\Page_Meta() )->register();
+		// A design's links where the site is: under its folder on a network in folders, and to the Home's sections from the other pages.
+		( new \DXAI_UI\Chrome\Site_Links() )->register();
 		// …and their markup as assistive technology reads it: no stray attributes, nothing hidden in the Tab order, names that hold their words (T5.5).
 		( new \DXAI_UI\Seo\Accessible_Markup() )->register();
 		// The picture a design's page opens on (behind its first section), asked for with the HTML (T5.1).

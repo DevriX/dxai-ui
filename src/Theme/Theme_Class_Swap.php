@@ -240,7 +240,7 @@ final class Theme_Class_Swap {
 			if ( isset( $swap['class'] ) ) {
 				$block = self::rename( $block, $from, (string) $swap['class'] );
 				++$count;
-			} elseif ( in_array( (string) ( $block['blockName'] ?? '' ), self::CORE_TEXT, true ) && empty( $block['attrs']['textColor'] ) && self::root_has( $block, $from ) ) {
+			} elseif ( in_array( (string) ( $block['blockName'] ?? '' ), self::CORE_TEXT, true ) && empty( $block['attrs']['textColor'] ) && self::root_has( $block, $from ) && Capabilities::text_slug_ok( (string) $swap['text_color'] ) ) {
 				$slug                         = (string) $swap['text_color'];
 				$block                        = self::rename( $block, $from, '', true );
 				$block['attrs']['textColor'] = $slug;

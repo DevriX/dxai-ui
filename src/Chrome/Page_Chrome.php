@@ -42,6 +42,10 @@ final class Page_Chrome {
 	public const PART_KEY_META = '_dxai_ui_part_key';
 	public const MODE_META     = '_dxai_ui_chrome';
 
+	/** Where the page's own content is, between the header and footer added as it is drawn: DX Blank makes it the page's <main>. */
+	public const MAIN_OPEN  = '<!--dxai-ui:main-->';
+	public const MAIN_CLOSE = '<!--/dxai-ui:main-->';
+
 	/** @var array<string, array{header: string, footer: string}> Home id@modified => its chrome markup. */
 	private static array $home_chrome = array();
 
@@ -92,7 +96,10 @@ final class Page_Chrome {
 			return $content;
 		}
 
-		return self::with_chrome( (int) $post->ID, $content );
+		$whole = self::with_chrome( (int) $post->ID, $content, true );
+
+		// (Given nothing, the content is marked all the same: its <main> is inside its scope element, as the DX template draws it.)
+		return $whole === $content ? self::MAIN_OPEN . "\n" . $content . "\n" . self::MAIN_CLOSE : $whole;
 	}
 
 	/**
@@ -100,7 +107,7 @@ final class Page_Chrome {
 	 * already carries both areas comes back unchanged. Used for rendering, for export, and to find where a page's
 	 * header and footer are edited.
 	 */
-	public static function with_chrome( int $post_id, string $content ): string {
+	public static function with_chrome( int $post_id, string $content, bool $mark = false ): string {
 		if ( $post_id < 1 || ! self::composes( $post_id ) ) {
 			return $content;
 		}
@@ -117,7 +124,10 @@ final class Page_Chrome {
 			list( $lead, $content ) = Section_Library::split_lead( $content );
 		}
 
-		return trim( ( $lead !== '' ? $lead . "\n" : '' ) . $header . "\n" . $content . "\n" . $footer );
+		// (Drawn, the content is marked where it is: the template makes it the page's <main>, Template_Chrome::in_main().)
+		$body = $mark ? self::MAIN_OPEN . "\n" . $content . "\n" . self::MAIN_CLOSE : $content;
+
+		return trim( ( $lead !== '' ? $lead . "\n" : '' ) . $header . "\n" . $body . "\n" . $footer );
 	}
 
 	/**

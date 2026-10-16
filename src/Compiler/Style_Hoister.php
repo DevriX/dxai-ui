@@ -873,7 +873,8 @@ final class Style_Hoister {
 				// A preset text colour becomes core's colour attribute.
 				if ( in_array( $name, self::TEXT_COLOR_BLOCKS, true ) && empty( $attrs['textColor'] ) ) {
 					$slug = self::preset_color( $css, $state['slugs'] );
-					if ( $slug !== '' ) {
+					// (A name whose class WordPress gives a meaning of its own stays the design's colour: `has-border-color` is a border.)
+					if ( $slug !== '' && \DXAI_UI\Theme\Capabilities::text_slug_ok( $slug ) ) {
 						$attrs['textColor'] = $slug;
 						$css                = self::without( $css, 'color' );
 						$extra              = array( 'has-' . $slug . '-color', 'has-text-color' );

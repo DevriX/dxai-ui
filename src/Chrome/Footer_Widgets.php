@@ -260,6 +260,11 @@ final class Footer_Widgets {
 		);
 	}
 
+	/** Whether a widget (`block-12`) is one the plugin installed in the footer's areas. */
+	public static function owns( string $id ): bool {
+		return isset( self::owned()[ $id ] );
+	}
+
 	/**
 	 * Where a stored footer came from, as the import report names it.
 	 *

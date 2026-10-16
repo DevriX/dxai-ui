@@ -239,5 +239,21 @@ foreach ( $mine as $f ) {
 }
 delete_transient( 'dxai_ui_fonts_wait_' . Font_Host::key( $google ) );
 
+echo "\nThe theme's button rules a design page loads\n";
+// As American Restoration's sheets on the team's network have them: its editor sheet's rules for the editor's own screen (`#editor …`, 503 of
+// them, 166 KB of a 202 KB sheet each design page waited for, 2026-10-16) beside the rules a page uses.
+$theme_css = '#editor .wp-block-button.is-style-primary-button div{color:red;display:flex}'
+	. '#editor .wp-block-button.is-style-primary-button .wp-block-button__link, .wp-block-button.is-style-primary-button .wp-block-button__link{background:#8e251f;color:#fff}'
+	. '.editor-styles-wrapper .wp-block-button.is-style-link-button .wp-block-button__link{color:#0c2341}'
+	. '@media (max-width:600px){#editor .wp-block-button.is-style-primary-button .wp-block-button__link{padding:0}}'
+	. '@media (min-width:782px){.wp-block-button.is-style-secondary-button .wp-block-button__link{padding:18px 24px}}'
+	. '.site-header a{color:#000}';
+$rules = \DXAI_UI\Theme\Theme_Buttons::extract( $theme_css );
+$expect( 'no rule of the editor\'s own screen is kept (`#editor …`), in a rule or a media query', ! str_contains( $rules['css'], '#editor' ), $rules['css'] );
+$expect( 'a rule that names both keeps the page\'s selector, with its declarations', str_contains( $rules['css'], '.wp-block-button.is-style-primary-button .wp-block-button__link{background:#8e251f;color:#fff}' ), $rules['css'] );
+$expect( 'a media query left with nothing is not written; one with the page\'s rules is', ! str_contains( $rules['css'], 'max-width:600px' ) && str_contains( $rules['css'], '@media (min-width:782px){.wp-block-button.is-style-secondary-button' ), $rules['css'] );
+$expect( 'the editor canvas\'s rules stay (the sheet is its too), a rule of no button goes', str_contains( $rules['css'], '.editor-styles-wrapper .wp-block-button.is-style-link-button' ) && ! str_contains( $rules['css'], 'site-header' ), $rules['css'] );
+$expect( 'the styles found are the ones the kept rules have', array( 'primary-button', 'secondary-button', 'link-button' ) === $rules['styles'], implode( ',', $rules['styles'] ) );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

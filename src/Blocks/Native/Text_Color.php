@@ -317,7 +317,8 @@ class Text_Color extends Converter {
 	 * has the token's name and its colour, and only where the design does not follow a theme (there its colours are the theme's).
 	 */
 	protected static function preset( int $home, string $slug ): string {
-		if ( Theme_Binding::follows( $home ) ) {
+		// A name whose class WordPress gives a meaning of its own (`has-border-color` is a border) is no text colour's.
+		if ( Theme_Binding::follows( $home ) || ! Capabilities::text_slug_ok( $slug ) ) {
 			return '';
 		}
 		if ( ! isset( self::$design[ $home ] ) ) {

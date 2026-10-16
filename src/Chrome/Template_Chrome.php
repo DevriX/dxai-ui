@@ -56,6 +56,9 @@ final class Template_Chrome {
 	private static string $footer       = '';
 	private static int $footer_scope    = 0;
 
+	/** Whether open() opened the page's <main>, for close() to end. */
+	private static bool $main = false;
+
 	public function register(): void {
 		// The content the template asks for is the page's, less the blocks open() has drawn before the header. Before do_blocks (9).
 		add_filter( 'the_content', array( self::class, 'body' ), 7 );
@@ -111,6 +114,10 @@ final class Template_Chrome {
 			echo self::drawn( $top, $design ? 0 : self::header_scope( $home ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
 		}
 		self::$footer_scope = $design ? 0 : self::footer_scope( $home );
+		// The page's own content is its <main>: the header above it and the footer below are the page's banner and its footer, not part
+		// of it (inside <main> they were neither, for a screen reader; Taylored Restoration's pages on the team's network, 2026-10-16).
+		echo self::main_open( self::$raw ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed tag.
+		self::$main = true;
 	}
 
 	/**
@@ -120,6 +127,10 @@ final class Template_Chrome {
 		if ( self::$post < 1 || self::$post !== $post_id ) {
 			return;
 		}
+		if ( self::$main ) {
+			echo '</main>';
+			self::$main = false;
+		}
 		if ( self::$footer !== '' ) {
 			echo \DXAI_UI\Media\Image_Loading::below( self::drawn( self::$footer, self::$footer_scope ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
 		}
@@ -127,6 +138,30 @@ final class Template_Chrome {
 			echo '</div>';
 		}
 		self::reset();
+	}
+
+	/**
+	 * The page's <main>: with the id a skip link goes to (`#main`) when nothing on the page has it — a page made from the Home's sections
+	 * may not carry the Home's first section, which had it — and without one when something does (an id is the page's once).
+	 */
+	public static function main_open( string $content ): string {
+		$has = str_contains( $content, 'id="main"' ) || str_contains( $content, '"anchor":"main"' );
+
+		return $has ? '<main>' : '<main id="main">';
+	}
+
+	/**
+	 * DX Blank's page as it is drawn: the header and footer Page_Chrome added around the content stand outside its <main> (Page_Chrome::inject()
+	 * marks where the content is); content that was given none, or carries a <main> of its own, is drawn as it is, in <main> when it has none.
+	 */
+	public static function in_main( int $post_id, string $html ): string {
+		if ( str_contains( $html, Page_Chrome::MAIN_OPEN ) ) {
+			$main = self::main_open( (string) get_post_field( 'post_content', $post_id ) );
+
+			return str_replace( array( Page_Chrome::MAIN_OPEN, Page_Chrome::MAIN_CLOSE ), array( $main, '</main>' ), $html );
+		}
+
+		return preg_match( '/<main\b/i', $html ) === 1 ? $html : self::main_open( (string) get_post_field( 'post_content', $post_id ) ) . $html . '</main>';
 	}
 
 	/**
@@ -321,5 +356,6 @@ final class Template_Chrome {
 		self::$body         = '';
 		self::$footer       = '';
 		self::$footer_scope = 0;
+		self::$main         = false;
 	}
 }

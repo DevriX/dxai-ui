@@ -122,7 +122,8 @@ $sub_blank  = $page( 'DX template fixture page (blank)', $lead_home . "\n\n" . $
 $sub_tpl    = $page( 'DX template fixture page', $lead_home . "\n\n" . $body, $home_tpl, Blank_Template::TEMPLATE );
 
 echo "\nThe pages of earlier imports (DX Blank)\n";
-$legacy = $through( $sub_blank );
+// DX Blank's page as its template draws it: the content Page_Chrome marked, made the page's <main> (Template_Chrome::in_main()).
+$legacy = Template_Chrome::in_main( $sub_blank, $through( $sub_blank ) );
 $expect( 'the chrome is still put into the content as it renders: the Home\'s header and footer around the page', str_contains( $legacy, 'h-58px' ) && str_contains( $legacy, 'mb-4-5' ) && str_contains( $legacy, 'py-0' ) );
 $expect( '…inside one scope element', 1 === substr_count( $legacy, 'wp-block-group alignfull dxai-ui' ), (string) substr_count( $legacy, 'wp-block-group alignfull dxai-ui' ) );
 $expect( 'Page_Chrome adds it to DX Blank pages, as it did', Page_Chrome::applies_to( $sub_blank ) && Page_Chrome::applies_to( $home_blank ) );
@@ -143,7 +144,20 @@ $expect( 'after the template is done the page is read as before: the scope eleme
 
 $home_out = $drawn( $own_tpl );
 $expect( 'a Home that carries its own header and footer is not given a second', 1 === substr_count( $home_out, 'h-58px' ) && 1 === substr_count( $home_out, 'mb-4-5' ) && 1 === substr_count( $home_out, 'Skip to content' ), $home_out === '' ? 'empty' : '' );
-$expect( '…and is drawn as DX Blank drew it', $norm( $same( $home_out, $own_tpl ) ) === $norm( $same( $through( $own_blank ), $own_blank ) ) );
+$expect( '…and is drawn as DX Blank drew it', $norm( $same( $home_out, $own_tpl ) ) === $norm( $same( Template_Chrome::in_main( $own_blank, $through( $own_blank ) ), $own_blank ) ) );
+
+echo "\nThe page's landmarks\n";
+// The header above the page's <main>, the footer below it: on the team's network they were inside it, so neither was the page's banner
+// or its footer for a screen reader (Taylored Restoration, 2026-10-16).
+$main_at  = $at( $mine, '<main' );
+$close_at = $at( $mine, '</main>' );
+$expect( 'the DX template: one <main>, with the page\'s content in it, the header before it and the footer after it', 1 === substr_count( $mine, '<main' ) && false !== $main_at && false !== $close_at && $at( $mine, 'h-58px' ) < $main_at && $main_at < $at( $mine, 'py-0' ) && $at( $mine, 'py-0' ) < $close_at && $close_at < $at( $mine, 'mb-4-5' ), wp_json_encode( array( $at( $mine, 'h-58px' ), $main_at, $at( $mine, 'py-0' ), $close_at, $at( $mine, 'mb-4-5' ) ) ) );
+$expect( '…the skip link and the spacer before the header, outside it too', $at( $mine, 'Skip to content' ) < $main_at && $at( $mine, 'dxai-dc-1' ) < $main_at );
+$expect( '…inside the scope element, which still holds it all', $at( $mine, 'wp-block-group alignfull dxai-ui' ) < $main_at && str_ends_with( trim( $mine ), '</div>' ) );
+$expect( 'DX Blank: the same — its header and footer outside the content\'s <main>, and no mark of where they were left', 1 === substr_count( $legacy, '<main' ) && $at( $legacy, 'h-58px' ) < $at( $legacy, '<main' ) && $at( $legacy, '</main>' ) < $at( $legacy, 'mb-4-5' ) && ! str_contains( $legacy, 'dxai-ui:main' ) );
+$expect( 'a page given no header or footer is its <main> as it is, on either template', 1 === substr_count( $home_out, '<main' ) && 1 === substr_count( Template_Chrome::in_main( $own_blank, $through( $own_blank ) ), '<main' ) );
+$expect( 'the <main> is where a skip link goes (#main) when nothing on the page is; when something is, it has no id (an id is the page\'s once)', '<main id="main">' === Template_Chrome::main_open( '<p>Body</p>' ) && '<main>' === Template_Chrome::main_open( '<section id="main"><p>Hero</p></section>' ) && '<main>' === Template_Chrome::main_open( '<!-- wp:group {"anchor":"main"} -->' ) );
+$expect( 'what is exported is the page with its header and footer, with no mark in it (only a page drawn is marked)', ! str_contains( Page_Chrome::with_chrome( $sub_blank, (string) get_post_field( 'post_content', $sub_blank ) ), 'dxai-ui:main' ) );
 
 echo "\nWhat a page loses\n";
 // The import keeps the Home's skip link and spacer; the spacer is an empty block and an editor deletes it.
@@ -188,7 +202,7 @@ add_filter( 'pre_option_' . Header_Template::OPTION, static fn() => $stored );
 update_post_meta( $menu_home, Page_Chrome::MODE_META, 'install' );
 $expect( 'the page is given the site header block (built from the menus)', str_contains( Page_Chrome::header_markup( $menu_page ), 'dxai-ui/site-header' ) );
 $with_menus = $drawn( $menu_page );
-$blank_menus = $through( $menu_blank );
+$blank_menus = Template_Chrome::in_main( $menu_blank, $through( $menu_blank ) );
 $expect( 'the header the template draws is the menus\' own, in the page\'s scope element, before the content', 1 === substr_count( $with_menus, '<header' ) && str_contains( $with_menus, '>One<' ) && str_contains( $with_menus, '>Two<' ) && $at( $with_menus, '<header' ) < $at( $with_menus, 'py-0' ) && 1 === substr_count( $with_menus, 'wp-block-group alignfull dxai-ui' ), substr( $with_menus, 0, 200 ) );
 $expect( '…and the page DX Blank makes is the same markup', $norm( $same( $with_menus, $menu_home ) ) === $norm( $same( $blank_menus, $menu_home ) ) );
 // The quality measure (Team_Quality, bin/team-quality.cjs) takes what opens a page off before it reads the sections: it is told how many elements

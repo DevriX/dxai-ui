@@ -16,9 +16,11 @@ use DXAI_UI\Theme\Theme_Compat;
  * The pages a design makes — its Home, the pages from its menu and from its old site — say what they are about to search engines
  * and to whoever shares them: `<meta name="description">`, from the page's excerpt when it has one, else its first paragraph that
  * says something (twelve words or more), cut at a word to 155 characters. Lighthouse's SEO audit counts a page without one (every
- * page of H2O Away scored 92 for it, docs/PLAN-PERFECT-PAGES.md, T5.4). Not when an SEO plugin writes it (Yoast, Rank Math, All in
- * One SEO, SEOPress, The SEO Framework, Slim SEO; `dxai_ui_seo_plugin` says otherwise); `dxai_ui_meta_description` changes it, or
- * removes it with ''.
+ * page of H2O Away scored 92 for it, docs/PLAN-PERFECT-PAGES.md, T5.4). Not when an SEO plugin writes one (Yoast, Rank Math, All in
+ * One SEO, SEOPress, The SEO Framework, Slim SEO; `dxai_ui_seo_plugin` says otherwise): with one of them on, the head is read when it is
+ * written and the page's description is added only where the head has none — Rank Math was on for Taylored Restoration's site on the
+ * team's network and wrote nothing in the head of its pages, so they had no description at all (2026-10-16). `dxai_ui_meta_description`
+ * changes it, or removes it with ''.
  */
 final class Page_Meta {
 
@@ -28,17 +30,54 @@ final class Page_Meta {
 	/** The fewest words a paragraph has to say something. */
 	private const WORDS = 12;
 
+	/** Whether the head is being read for an SEO plugin's description (listen() … after_seo()). */
+	private static bool $listening = false;
+
 	public function register(): void {
 		add_action( 'wp_head', array( self::class, 'print_description' ), 2 );
+		// With an SEO plugin on, the head as it is written, from before the plugin's tags (Rank Math's, at 1) to after everything.
+		add_action( 'wp_head', array( self::class, 'listen' ), 0 );
+		add_action( 'wp_head', array( self::class, 'after_seo' ), PHP_INT_MAX );
 	}
 
-	/** The meta tag, on a design's page. */
+	/** The meta tag, on a design's page (with an SEO plugin on: after_seo()). */
 	public static function print_description(): void {
-		$id = is_singular( 'page' ) ? (int) get_queried_object_id() : 0;
-		if ( $id < 1 || self::seo_plugin() || ! self::is_design_page( $id ) ) {
+		$id = self::page();
+		if ( $id < 1 || self::seo_plugin() ) {
 			return;
 		}
-		$text = self::description( $id );
+		self::emit( $id );
+	}
+
+	/** With an SEO plugin on: read the head as it is written. */
+	public static function listen(): void {
+		if ( ! self::$listening && self::page() > 0 && self::seo_plugin() ) {
+			self::$listening = ob_start();
+		}
+	}
+
+	/** …and at its end, the page's description when nothing in it gave one. */
+	public static function after_seo(): void {
+		if ( ! self::$listening ) {
+			return;
+		}
+		self::$listening = false;
+		$head            = (string) ob_get_clean();
+		echo $head; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the head as WordPress and its plugins wrote it.
+		if ( preg_match( '/<meta\s[^>]*\bname\s*=\s*["\']?description\b/i', $head ) !== 1 ) {
+			self::emit( self::page() );
+		}
+	}
+
+	/** The page being drawn, when it is a design's page; 0 otherwise. */
+	private static function page(): int {
+		$id = is_singular( 'page' ) ? (int) get_queried_object_id() : 0;
+
+		return $id > 0 && self::is_design_page( $id ) ? $id : 0;
+	}
+
+	private static function emit( int $id ): void {
+		$text = $id > 0 ? self::description( $id ) : '';
 		if ( $text !== '' ) {
 			echo '<meta name="description" content="' . esc_attr( $text ) . '" />' . "\n";
 		}
@@ -98,7 +137,7 @@ final class Page_Meta {
 		$on = defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) || defined( 'AIOSEO_VERSION' ) || defined( 'SEOPRESS_VERSION' ) || defined( 'THE_SEO_FRAMEWORK_VERSION' ) || defined( 'SLIM_SEO_VER' );
 
 		/**
-		 * Whether an SEO plugin writes the pages' descriptions (then the plugin's description is not printed).
+		 * Whether an SEO plugin may write the pages' descriptions: then the plugin's waits for the head, and is printed only when it has none.
 		 *
 		 * @param bool $on Whether one of the known SEO plugins is active.
 		 */

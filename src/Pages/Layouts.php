@@ -188,6 +188,11 @@ final class Layouts {
 		if ( $facts['kind'] === 'location' && preg_match( '/^(.*\S)\s+in\s+(.+\S)\s*$/iu', $title, $m ) === 1 && Team_Pages::is_place( $m[2] ) ) {
 			$subject = $m[1];
 			$region  = $m[2];
+		} elseif ( $facts['kind'] === 'location' && $title !== '' && preg_match( '/\sin\s/iu', $title ) !== 1 ) {
+			// A place's own page ("Anchorage, AK", "Wasilla & Mat-Su Valley"): the company's trade, in that place. Its title is no service:
+			// "Taylored Restoration handles anchorage, ak for homes and businesses in Anchorage, AK" (the team's network, 2026-10-16).
+			$subject = __( 'restoration', 'dxai-ui' );
+			$region  = $title;
 		} elseif ( ! in_array( $facts['kind'], array( 'service', 'location', '' ), true ) ) {
 			$subject = __( 'restoration', 'dxai-ui' );
 		}
@@ -431,7 +436,7 @@ final class Layouts {
 					'two-col' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Why property owners%1$s choose %2$s', 'dxai-ui' ), $where, $short ), sprintf( /* translators: %s: the company. */ __( 'What sets %s apart', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'The %s work, done the way it should be', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Help with the claim, not just the damage', 'dxai-ui' ) ),
 					'cards'   => array( sprintf( /* translators: %s: the page's topic. */ __( 'What %s includes', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'Signs you need %s help', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'What our customers count on', 'dxai-ui' ) ),
 					'reviews' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Property owners%1$s trust %2$s', 'dxai-ui' ), $where, $short ) ),
-					'faq'     => array( sprintf( /* translators: %s: the page's topic. */ __( '%s questions, answered', 'dxai-ui' ), $topic ) ),
+					'faq'     => array( sprintf( /* translators: %s: the page's topic. */ __( '%s questions, answered', 'dxai-ui' ), mb_strtoupper( mb_substr( $topic, 0, 1 ) ) . mb_substr( $topic, 1 ) ) ),
 					'cta'     => array( sprintf( /* translators: %s: the page's topic. */ __( 'Need %s help now?', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Talk to a real person', 'dxai-ui' ) ),
 					'trust'   => array( __( 'Trusted in the restoration industry', 'dxai-ui' ) ),
 					'areas'   => array( $region !== '' ? sprintf( /* translators: %s: a place. */ __( 'Serving %s and the surrounding area', 'dxai-ui' ), $region ) : __( 'Where we work', 'dxai-ui' ) ),

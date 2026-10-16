@@ -564,6 +564,27 @@ $site_leaks = static function ( string $markup ) use ( $forbidden ): array {
 	return $out;
 };
 $dealt = 0;
+// A layout's markup less an item it held apart from a list's rows (the source site's last step, "Phase 5 · Final Walkthrough and Reopening"):
+// it goes with the list when the page's rows are made (Block_Library::repeats()), so its words are not the page's to show.
+$shape_of      = static function ( array $b ) use ( &$shape_of ): string {
+	$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => ! empty( $c['blockName'] ) ) );
+
+	return (string) $b['blockName'] . '(' . implode( ',', array_map( $shape_of, $kids ) ) . ')';
+};
+$without_apart = static function ( array $b ) use ( &$without_apart, $shape_of ): array {
+	$kids  = (array) ( $b['innerBlocks'] ?? array() );
+	$rows  = array_map( $shape_of, array_filter( $kids, static fn( $c ) => isset( $c['attrs']['dxaiRepeat'] ) ) );
+	$keep  = array();
+	foreach ( $kids as $c ) {
+		if ( ! isset( $c['attrs']['dxaiRepeat'] ) && in_array( $shape_of( $c ), $rows, true ) && str_contains( serialize_block( $c ), '{{t:' ) ) {
+			continue;
+		}
+		$keep[] = $without_apart( $c );
+	}
+	$b['innerBlocks'] = $keep;
+
+	return $b;
+};
 foreach ( $layouts as $id => $e ) {
 	$markup = Block_Library::markup( (string) $id );
 	$blocks = array_values( array_filter( parse_blocks( $markup ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
@@ -685,7 +706,8 @@ foreach ( $layouts as $id => $e ) {
 	// The team's words a slot kept are the page's words, with its facts in them; a kept line claims nothing of one site.
 	// (A heading the team wrote for another list — "Our Restoration Services" over the Home's points — gives way to the page's own words:
 	// Block_Library::says_what_it_lists(); it is still held to claiming nothing of one site.)
-	preg_match_all( '/\{\{t:([a-z0-9-]+)\|([^{}]*)\}\}/', $markup, $km_sets, PREG_SET_ORDER );
+	$kept_from = serialize_blocks( array_map( $without_apart, array_values( array_filter( parse_blocks( $markup ), static fn( $b ) => ! empty( $b['blockName'] ) ) ) ) );
+	preg_match_all( '/\{\{t:([a-z0-9-]+)\|([^{}]*)\}\}/', $kept_from, $km_sets, PREG_SET_ORDER );
 	preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', $markup, $km_lists );
 	$km_every = array_map( static fn( array $m ): string => $m[2], $km_sets );
 	$km       = array( 1 => array_values( array_map( static fn( array $m ): string => $m[2], array_filter( $km_sets, static fn( array $m ): bool => Block_Library::says_what_it_lists( $m[1], $m[2], array( 'section_lists' => array_values( array_unique( $km_lists[1] ) ) ) ) ) ) ) );

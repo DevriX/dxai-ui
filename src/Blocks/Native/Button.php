@@ -381,6 +381,10 @@ final class Button extends Converter {
 			$own     = self::on_band( $cta, $parent );
 			$cta     = $own['cta'];
 			$text    = $own['text'] !== '' ? $own['text'] : ( in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true ) ? $slug : '' );
+			// (A colour whose class WordPress gives a meaning of its own — `has-border-color` is a border — is left to the button's style.)
+			if ( $text !== '' && ! \DXAI_UI\Theme\Capabilities::text_slug_ok( $text ) ) {
+				$text = '';
+			}
 			$fill    = $own['fill'];
 			$colored = $text !== '';
 			$attrs   = array();

@@ -155,6 +155,11 @@ final class Navigation_Factory {
 		$this->adopt_legacy = $adopt_legacy;
 	}
 
+	/** Whether a menu item is one this factory wrote (a person's item never carries ITEM_META). */
+	public static function wrote( int $item_id ): bool {
+		return $item_id > 0 && '1' === (string) get_post_meta( $item_id, self::ITEM_META, true );
+	}
+
 	/**
 	 * The owner key of a design: its home page's page key.
 	 *

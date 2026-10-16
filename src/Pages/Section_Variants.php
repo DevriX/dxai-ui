@@ -297,6 +297,11 @@ final class Section_Variants {
 				continue;
 			}
 			$list = Block_Tree::at( $block, (array) $s['path'] );
+			// A list of pictures (a credentials band's badges, partners' logos) is what the section shows, not ticks under its heading:
+			// without it Taylored Restoration's "Certified, Accredited & Accountable" was a heading over nothing (2026-10-16).
+			if ( preg_match( '/<(?:img|svg|picture)\b/i', serialize_block( $list ) ) === 1 ) {
+				continue;
+			}
 			if ( count( (array) $list['innerBlocks'] ) >= 2 ) {
 				$out['list'] = (array) $s['path'];
 			}

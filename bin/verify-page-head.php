@@ -107,9 +107,30 @@ echo "\nIn the page's head\n";
 $out = $head( $with );
 $expect( 'a page of a design (in its scope) prints the description', str_contains( $out, '<meta name="description" content="' . esc_attr( $cut ) . '" />' ), $out );
 $expect( 'a page that is no design\'s prints none', '' === $head( $none ) );
+// With an SEO plugin on: the head as it is written, what the SEO plugin printed in it, then ours only where it gave none.
+$seo_head = static function ( int $id, string $theirs ): string {
+	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
+	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+	$GLOBALS['post']         = get_post( $id );
+	ob_start();
+	Page_Meta::listen();
+	echo $theirs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixture.
+	Page_Meta::print_description();
+	echo '<link rel="canonical" href="https://example.test/water/" />';
+	Page_Meta::after_seo();
+
+	return (string) ob_get_clean();
+};
 add_filter( 'dxai_ui_seo_plugin', '__return_true' );
-$expect( 'none when an SEO plugin writes the descriptions', '' === $head( $with ) );
+$out = $seo_head( $with, '<!-- Search Engine Optimization by Rank Math --><meta name="description" content="Theirs."/>' );
+$expect( 'an SEO plugin that writes the description: its own, and not a second', 1 === substr_count( $out, 'name="description"' ) && str_contains( $out, 'content="Theirs."' ), $out );
+$out = $seo_head( $with, "<meta name='description' content='Theirs, quoted another way.' />" );
+$expect( '…however it quotes it', 1 === preg_match_all( '/name=["\']description/', $out ), $out );
+$out = $seo_head( $with, '<meta property="og:title" content="Water" />' );
+$expect( 'an SEO plugin that writes none (Rank Math on the team\'s network): the page\'s, once, after the rest of the head', 1 === substr_count( $out, 'name="description"' ) && str_contains( $out, 'content="' . esc_attr( $cut ) . '"' ) && strpos( $out, 'og:title' ) < strpos( $out, 'name="description"' ) && str_contains( $out, 'rel="canonical"' ), $out );
+$expect( '…and on a page that is no design\'s, the head is left as it was', '<meta property="og:title" content="Water" /><link rel="canonical" href="https://example.test/water/" />' === $seo_head( $none, '<meta property="og:title" content="Water" />' ) );
 remove_filter( 'dxai_ui_seo_plugin', '__return_true' );
+$expect( 'no SEO plugin: the head is not read, the description is printed in its place', '' === (string) ( static function () use ( $with ): string { $GLOBALS['wp_query'] = new WP_Query( array( 'page_id' => $with ) ); ob_start(); Page_Meta::listen(); Page_Meta::after_seo(); return (string) ob_get_clean(); } )() && str_contains( $head( $with ), 'name="description"' ) );
 add_filter( 'dxai_ui_meta_description', '__return_empty_string' );
 $expect( 'none when the filter says \'\'', '' === $head( $with ) );
 remove_filter( 'dxai_ui_meta_description', '__return_empty_string' );

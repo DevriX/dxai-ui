@@ -26,6 +26,8 @@
 		{ "file": "verify-dc-media.php", "group": "ci" },
 		{ "file": "verify-dc-site.php", "group": "ci" },
 		{ "file": "verify-html-chrome.php", "group": "ci" },
+		{ "file": "verify-site-links.php", "group": "ci" },
+		{ "file": "verify-library-pour.php", "group": "ci" },
 		{ "file": "verify-design-document.php", "group": "ci" },
 		{ "file": "verify-design-system.php", "group": "ci" },
 		{ "file": "verify-dx-template.php", "group": "ci" },

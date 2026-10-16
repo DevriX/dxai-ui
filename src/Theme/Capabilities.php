@@ -215,6 +215,17 @@ final class Capabilities {
 		return Theme_Buttons::styles();
 	}
 
+	/**
+	 * Whether a colour of the palette can be a block's text colour by its name. WordPress names the class of a text colour
+	 * `has-{slug}-color`, and three such names are classes it gives a meaning of their own: `has-border-color` (core's stylesheet draws
+	 * a solid border round anything that has it: American Restoration's white is named "border" on the team's network, and the words a
+	 * section set in it stood in a 3px frame, 2026-10-16), `has-text-color` and `has-link-color`. Such a colour is the block's own colour
+	 * instead (`style.color.text`, `var:preset|color|{slug}`: the same colour, from the theme, without the class).
+	 */
+	public static function text_slug_ok( string $slug ): bool {
+		return ! in_array( $slug, array( 'border', 'text', 'link' ), true );
+	}
+
 	/** @return array<string, string> The theme's palette, slug => hex, '' when it has none of its own. */
 	public static function palette(): array {
 		$out = array();

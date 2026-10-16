@@ -648,6 +648,8 @@ final class Block_Library {
 		// A line left with no words (a row that has a title and nothing more: the slot for its words is empty) is not left on the page.
 		self::prune_empty( $root );
 		$root = Layouts::finish( $root );
+		// The words in the page's own font where the theme has not the team's (fonts()).
+		self::fonts( $root );
 		// On a theme with no template of its own: core blocks, and the colours this theme has for the roles.
 		if ( Template::is_generic() ) {
 			$root = self::generic( $root );
@@ -1139,6 +1141,19 @@ final class Block_Library {
 
 					return false;
 				}
+				// An item of the list the team's section held apart from its rows (the source's last step written another way: "Phase 3", or
+				// "Phase 5 · Final Walkthrough and Reopening" in the source site's own words) goes with the list: the page lists its own rows.
+				// It has the row's shape and its words are still the layout's (its tokens are not filled yet; a row made here has none left).
+				$shape = self::shape( $child );
+				for ( $j = count( $block['innerBlocks'] ) - 1; $j >= 0; $j-- ) {
+					$other = $block['innerBlocks'][ $j ];
+					if ( $j !== $i && ! isset( $other['attrs']['dxaiRepeat'] ) && self::shape( $other ) === $shape && str_contains( serialize_block( $other ), '{{t:' ) ) {
+						Block_Tree::drop( $block, $j );
+						if ( $j < $i ) {
+							--$i;
+						}
+					}
+				}
 				unset( $child['attrs']['dxaiRepeat'], $child['attrs']['dxaiCount'], $child['attrs']['dxaiSlice'] );
 				foreach ( $rows as $n => $row ) {
 					$copy = $child;
@@ -1167,6 +1182,17 @@ final class Block_Library {
 		}
 
 		return true;
+	}
+
+	/**
+	 * What a block is made of: its name and its blocks' names, nested (`core/group(core/group(core/paragraph()),core/heading())`).
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function shape( array $block ): string {
+		$kids = array_values( array_filter( (array) ( $block['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+
+		return (string) ( $block['blockName'] ?? '' ) . '(' . implode( ',', array_map( array( self::class, 'shape' ), $kids ) ) . ')';
 	}
 
 	/**
@@ -1455,6 +1481,86 @@ final class Block_Library {
 	}
 
 	/**
+	 * Font families the page does not draw, taken off the section's blocks. The team's layouts come from sites with families of their
+	 * own (Barlow Condensed, Inter, Montserrat, Source Sans 3): where the page has no such font the setting names one no stylesheet gives,
+	 * and the words fell back to the browser's own (Taylored Restoration's site on the network: a call to action's heading in a heavy
+	 * Arial, its questions in Arial, 2026-10-16). A family's name in the theme's settings is not enough: American Restoration names
+	 * seventeen, Inter among them, and loads two. What the page draws: the theme's heading and body fonts when it manages them
+	 * (Theme_Fonts: Theme Global Settings, or a design's installed with its template), a family whose faces WordPress prints
+	 * (`fontFace`), a system stack. The words take the page's font instead.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function fonts( array &$block ): void {
+		$first = static fn( string $stack ): string => strtolower( trim( (string) strtok( $stack, ',' ), " \t\n\r\0\x0B\"'" ) );
+		$drawn = array();
+		$theme = Capabilities::fonts();
+		foreach ( null === $theme ? array() : array( $theme['heading'], $theme['body'] ) as $stack ) {
+			if ( $first( (string) $stack ) !== '' ) {
+				$drawn[ $first( (string) $stack ) ] = true;
+			}
+		}
+		$have = array();
+		foreach ( (array) wp_get_global_settings( array( 'typography', 'fontFamilies' ) ) as $rows ) {
+			foreach ( (array) $rows as $row ) {
+				if ( ! is_array( $row ) || ! isset( $row['slug'] ) ) {
+					continue;
+				}
+				$stack = (string) ( $row['fontFamily'] ?? '' );
+				if ( ! empty( $row['fontFace'] ) || isset( $drawn[ $first( $stack ) ] ) || preg_match( '/^\s*(?:-apple-system|system-ui|ui-sans-serif|ui-serif|ui-monospace|sans-serif|serif|monospace)\b/i', $stack ) === 1 ) {
+					$have[ _wp_to_kebab_case( (string) $row['slug'] ) ] = true;
+				}
+			}
+		}
+		self::fonts_walk( $block, $have );
+	}
+
+	/**
+	 * @param array<string, mixed> $block
+	 * @param array<string, true>  $have The families the page draws, by slug (kebab-case, as their classes have them).
+	 */
+	private static function fonts_walk( array &$block, array $have ): void {
+		$gone  = array();
+		$slug  = _wp_to_kebab_case( (string) ( $block['attrs']['fontFamily'] ?? '' ) );
+		if ( $slug !== '' && ! isset( $have[ $slug ] ) ) {
+			unset( $block['attrs']['fontFamily'] );
+			$gone[] = '/\s?(?<![\w-])has-' . preg_quote( $slug, '/' ) . '-font-family(?![\w-])/';
+		}
+		$own = $block['attrs']['style']['typography']['fontFamily'] ?? null;
+		if ( is_string( $own ) && preg_match( '/^var:preset\|font-family\|([a-z0-9-]+)$/', $own, $m ) === 1 && ! isset( $have[ _wp_to_kebab_case( $m[1] ) ] ) ) {
+			unset( $block['attrs']['style']['typography']['fontFamily'] );
+			if ( $block['attrs']['style']['typography'] === array() ) {
+				unset( $block['attrs']['style']['typography'] );
+			}
+			if ( $block['attrs']['style'] === array() ) {
+				unset( $block['attrs']['style'] );
+			}
+			$gone[] = '/(?<![\w-])font-family:\s*var\(--wp--preset--font-family--' . preg_quote( $m[1], '/' ) . '\);?/';
+		}
+		if ( $gone !== array() ) {
+			// What the setting wrote, in the block's own markup (a button writes it on its link, not on the box around it).
+			$tag = static function ( string $html ) use ( $gone ): string {
+				return (string) preg_replace_callback(
+					'/<[a-z][a-z0-9]*\b[^>]*>/i',
+					static fn( array $t ): string => (string) preg_replace( array( '/\sstyle="\s*"/', '/\sclass="\s*"/' ), '', (string) preg_replace( $gone, '', $t[0] ) ),
+					$html
+				);
+			};
+			$block['innerHTML'] = $tag( (string) ( $block['innerHTML'] ?? '' ) );
+			foreach ( (array) ( $block['innerContent'] ?? array() ) as $k => $part ) {
+				if ( is_string( $part ) ) {
+					$block['innerContent'][ $k ] = $tag( $part );
+				}
+			}
+		}
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
+			if ( is_array( $child ) ) {
+				self::fonts_walk( $block['innerBlocks'][ $i ], $have );
+			}
+		}
+	}
+
+	/**
 	 * The lines of words that have none (a paragraph, a heading, a label, a list item whose slot was filled with nothing) are taken out.
 	 *
 	 * @param array<string, mixed> $block
@@ -1585,7 +1691,9 @@ final class Block_Library {
 		// The words' colour: their own, a box's above them, or the design's.
 		$tc     = (string) ( $a['textColor'] ?? '' );
 		$custom = is_string( $a['style']['color']['text'] ?? null ) ? (string) $a['style']['color']['text'] : '';
-		$mine   = $tc !== '' ? (string) ( $colours[ $tc ] ?? '?' ) : ( $custom !== '' ? self::over( $custom, $here ) : '' );
+		// (A colour of the theme set as the block's own, `var:preset|color|{slug}`, is that colour.)
+		$preset = preg_match( '/^var:preset\|color\|([a-z0-9-]+)$/', $custom, $pm ) === 1 ? (string) ( $colours[ $pm[1] ] ?? '?' ) : '';
+		$mine   = $tc !== '' ? (string) ( $colours[ $tc ] ?? '?' ) : ( $preset !== '' ? $preset : ( $custom !== '' ? self::over( $custom, $here ) : '' ) );
 		$heir_reads = $inherit !== '' && Color_Math::contrast( $inherit, $here ) >= 3.0;
 		// (A button is judged by the colours set on it — its words on its own ground; one drawn by its style alone is the theme's.)
 		if ( $name !== 'core/buttons' && $name !== 'core/image' && ( $name !== 'core/button' || $mine !== '' ) ) {
@@ -1686,27 +1794,34 @@ final class Block_Library {
 		if ( isset( $b['attrs']['style'] ) && $b['attrs']['style'] === array() ) {
 			unset( $b['attrs']['style'] );
 		}
-		if ( $slug !== '' ) {
+		// A text colour whose class WordPress gives a meaning of its own (Capabilities::text_slug_ok()) is the block's own colour, from the theme.
+		$own = $kind === 'text' && $slug !== '' && ! Capabilities::text_slug_ok( $slug );
+		if ( $own ) {
+			$b['attrs']['style']['color']['text'] = 'var:preset|color|' . $slug;
+		} elseif ( $slug !== '' ) {
 			$b['attrs'][ $attr ] = $slug;
 		}
 		$suffix = $kind === 'text' ? 'color' : 'background-color';
 		$flag   = $kind === 'text' ? 'has-text-color' : 'has-background';
 		$prop   = $kind === 'text' ? '(?<![\w-])color' : 'background(?:-color)?';
+		$decl   = $own ? 'color:var(--wp--preset--color--' . $slug . ')' : '';
 		// A button's settings are written on its link, not on the box around it.
 		$open   = (string) ( $b['blockName'] ?? '' ) === 'core/button' ? '/(<a\b)([^>]*)(>)/i' : '/^(\s*<[a-z][a-z0-9]*\b)([^>]*)(>)/i';
-		$tag    = static function ( string $html ) use ( $old, $slug, $suffix, $flag, $prop, $open ): string {
+		$tag    = static function ( string $html ) use ( $old, $slug, $suffix, $flag, $prop, $open, $own, $decl ): string {
 			return (string) preg_replace_callback(
 				$open,
-				static function ( array $m ) use ( $old, $slug, $suffix, $flag, $prop ): string {
+				static function ( array $m ) use ( $old, $slug, $suffix, $flag, $prop, $own, $decl ): string {
 					$attrs = (string) preg_replace( '/(\sstyle="[^"]*?)' . $prop . ':[^;"]*;?/i', '$1', $m[2] );
 					$attrs = (string) preg_replace( '/\sstyle=""/', '', $attrs );
 					$attrs = (string) preg_replace_callback(
 						'/\sclass="([^"]*)"/',
-						static function ( array $c ) use ( $old, $slug, $suffix, $flag ): string {
+						static function ( array $c ) use ( $old, $slug, $suffix, $flag, $own ): string {
 							// Only what this setting wrote: its flag and its preset's class (a background's classes stay when the words change).
 							$list = array_values( array_filter( preg_split( '/\s+/', $c[1] ) ?: array(), static fn( $t ) => $t !== '' && $t !== $flag && ( $old === '' || $t !== 'has-' . $old . '-' . $suffix ) ) );
 							if ( $slug !== '' ) {
-								$list[] = 'has-' . $slug . '-' . $suffix;
+								if ( ! $own ) {
+									$list[] = 'has-' . $slug . '-' . $suffix;
+								}
 								$list[] = $flag;
 							}
 
@@ -1717,7 +1832,13 @@ final class Block_Library {
 						$n
 					);
 					if ( ! $n && $slug !== '' ) {
-						$attrs .= ' class="has-' . $slug . '-' . $suffix . ' ' . $flag . '"';
+						$attrs .= ' class="' . ( $own ? '' : 'has-' . $slug . '-' . $suffix . ' ' ) . $flag . '"';
+					}
+					// The block's own colour is written as save() writes it: a declaration in its style.
+					if ( $decl !== '' ) {
+						$attrs = preg_match( '/\sstyle="[^"]*"/', $attrs ) === 1
+							? (string) preg_replace_callback( '/\sstyle="([^"]*)"/', static fn( array $s ): string => ' style="' . $decl . ( trim( $s[1] ) !== '' ? ';' . rtrim( trim( $s[1] ), ';' ) : '' ) . '"', $attrs, 1 )
+							: $attrs . ' style="' . $decl . '"';
 					}
 
 					return $m[1] . $attrs . $m[3];
