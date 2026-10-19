@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.38
+Stable tag: 0.4.0-beta.39
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,11 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.39 =
+* Pages made from a design's menu in the look of its Home: the team's sections a page is made of take the Home's cards (read right now: each of the Home's cards has a hover class of its own, and a strip of small claims was taken for the cards), its light ground, the band of its call to action, its section heads (at the left, in its titles' colour, as wide as the grid they head), its eyebrows (no skewed badge) and the line under its questions. A card that is boxes in boxes is one card; a title-less strip stays a strip.
+* On a phone, a team's section no longer stands on the edge of the screen: a box set full width inside it takes the section's padding as its own.
+* A figure laid over a picture the layout has not lies over one of the page's pictures (or the layout is not used); a line set in capitals takes no sentence; a call said twice in a layout (for a phone and a screen) is said both times, no link to the phone is left with no words.
+* For developers: new local suite verify-library-style; Button::ground_hex(); Block_Library::set_colour() is public.
 = 0.4.0-beta.38 =
 * Pages made from a design's menu look finished: a figure badge of the team's layout shows the Home's own figure and its words, or goes; a layout whose cards would hold a title and nothing else is not used; a page says each sentence once, and a paragraph with nothing new to say is left out; a caption under a button takes no sentence; a service's page answers its own questions and calls for its own service, not another's; two calls to action are not side by side; the bar the Home fixes to a phone's screen is on every page and never in a section's place; a picture is not shown twice on a page.
 * The team's sections on another site: a wave laid over a section's edge in the colour of the section after it on the team's site is left out; a button the theme fills with the colour of the band it stands on wears the theme's other style; a design that follows the theme's colours is judged in the colours the page draws (the theme's, and its own only where the theme has none).
