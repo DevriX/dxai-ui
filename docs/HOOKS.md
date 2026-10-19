@@ -44,14 +44,14 @@ What the library's sections are filled with.
 @param array<string, mixed> $facts
 @param int                  $home  The design's Home.
 
-- `src/Pages/Block_Library.php:334` — value and arguments: `$facts`, `$home`
+- `src/Pages/Block_Library.php:336` — value and arguments: `$facts`, `$home`
 
 ### dxai_ui_block_library_themes
 
 The themes whose pages may take the library's sections.
 @param array<int, string> $themes Theme folder names (the child's or the parent's).
 
-- `src/Pages/Block_Library.php:187` — value and arguments: `$themes`
+- `src/Pages/Block_Library.php:189` — value and arguments: `$themes`
 
 ### dxai_ui_chrome_mode
 
