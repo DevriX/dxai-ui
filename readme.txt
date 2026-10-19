@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.40
+Stable tag: 0.4.0-beta.41
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.41 =
+* Pages arranged by hand in the pages panel: drag a section to another place (or move it with the arrows), take it out (×), or add one of the Home's sections or of the team's library ("+ Add a section"), each shown in the plan before anything is made. A page arranged by hand holds what it shows (unlock a section to let a shuffle change it), is made as it is arranged and keeps its arrangement; nothing is put in between its places; "Back to the usual" puts the arrangement away.
+* For developers: a page's arrangement may carry its places (`roles`); the panel's data carries what can be added (`choices`).
 = 0.4.0-beta.40 =
 * A Home's band of steps is its steps: the line of a few words over a section's title ("How it works") is read with the title, and a list of steps, each with its own title, is a process however it is named. A Home's steps were read as text, so a page made from the Home with its own sections first never took them for its steps; they do now, and the design's document names them so.
 = 0.4.0-beta.39 =
