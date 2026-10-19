@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.39
+Stable tag: 0.4.0-beta.40
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,8 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.40 =
+* A Home's band of steps is its steps: the line of a few words over a section's title ("How it works") is read with the title, and a list of steps, each with its own title, is a process however it is named. A Home's steps were read as text, so a page made from the Home with its own sections first never took them for its steps; they do now, and the design's document names them so.
 = 0.4.0-beta.39 =
 * Pages made from a design's menu in the look of its Home: the team's sections a page is made of take the Home's cards (read right now: each of the Home's cards has a hover class of its own, and a strip of small claims was taken for the cards), its light ground, the band of its call to action, its section heads (at the left, in its titles' colour, as wide as the grid they head), its eyebrows (no skewed badge) and the line under its questions. A card that is boxes in boxes is one card; a title-less strip stays a strip.
 * On a phone, a team's section no longer stands on the edge of the screen: a box set full width inside it takes the section's padding as its own.
