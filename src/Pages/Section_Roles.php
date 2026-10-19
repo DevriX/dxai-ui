@@ -48,7 +48,9 @@ final class Section_Roles {
 		$s     = self::scan( $block );
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$name  = strtolower( (string) ( $attrs['metadata']['name'] ?? '' ) . ' ' . (string) ( $attrs['anchor'] ?? '' ) . ' ' . $s['classes'] );
-		$head  = strtolower( implode( ' | ', array_slice( $s['headings'], 0, 2 ) ) );
+		// The line of a few words over the section's title is read with it: a design names its steps there ("How it works" over
+		// "From First Call to Final Walkthrough", Taylored Restoration's Home).
+		$head  = strtolower( implode( ' | ', array_merge( array_slice( $s['eyebrows'], 0, 1 ), array_slice( $s['headings'], 0, 2 ) ) ) );
 		$len   = strlen( trim( $s['text'] ) );
 		// A picture behind the words: the theme's own picture block (a design's hero image becomes it where the theme has one).
 		$has = static fn( array $names ): bool => array_intersect_key( $s['names'], array_flip( $names ) ) !== array();
@@ -70,7 +72,8 @@ final class Section_Roles {
 		if ( preg_match( '/related|other services|more services|our services|services we|what we (do|offer)/', $name . ' ' . $head ) === 1 && ( $s['links'] >= 3 || $s['columns'] >= 3 ) ) {
 			return 'related';
 		}
-		if ( preg_match( '/process|how it works|our approach|what to expect|\bsteps\b/', $name . ' ' . $head ) === 1 ) {
+		// …or by what it holds: a list of steps, each with its own title (a design that names it nowhere still has its steps).
+		if ( preg_match( '/process|how it works|our approach|what to expect|\bsteps\b/', $name . ' ' . $head ) === 1 || Section_Library::analyze( $block, 0 )['kind'] === 'steps' ) {
 			return 'process';
 		}
 		if ( ( $len < 260 && $s['images'] >= 2 && $s['buttons'] === 0 ) || preg_match( '/\bstats?\b|numbers|trust|badge|certif|\blogos?\b|partner|insurance/', $name ) === 1 ) {
@@ -140,7 +143,7 @@ final class Section_Roles {
 	 * What a section holds.
 	 *
 	 * @param array<string, mixed> $block
-	 * @return array{names:array<string, int>, classes:string, text:string, headings:array<int, string>, h1:bool, buttons:int, faq:int, columns:int, cards:int, images:int, links:int, iframe:bool, trust:bool, form:bool}
+	 * @return array{names:array<string, int>, classes:string, text:string, headings:array<int, string>, eyebrows:array<int, string>, h1:bool, buttons:int, faq:int, columns:int, cards:int, images:int, links:int, iframe:bool, trust:bool, form:bool}
 	 */
 	private static function scan( array $block ): array {
 		$out  = array(
@@ -148,6 +151,7 @@ final class Section_Roles {
 			'classes'  => '',
 			'text'     => '',
 			'headings' => array(),
+			'eyebrows' => array(),
 			'h1'       => false,
 			'buttons'  => 0,
 			'faq'      => 0,
@@ -206,6 +210,18 @@ final class Section_Roles {
 			}
 			if ( Section_Library::is_form_block( $b ) ) {
 				$out['form'] = true;
+			}
+			// A line of one to four words right before a heading (a paragraph, the theme's label): the eyebrow over a title.
+			$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+			foreach ( $kids as $k => $c ) {
+				$line = (string) $c['blockName'];
+				if ( (string) ( $kids[ $k + 1 ]['blockName'] ?? '' ) === 'core/heading' && ( in_array( $line, array( 'core/paragraph', 'dxai-ui/text' ), true ) || Capabilities::is_block( $line, 'span' ) ) ) {
+					$words = trim( html_entity_decode( wp_strip_all_tags( (string) ( $c['innerHTML'] ?? '' ) ), ENT_QUOTES, 'UTF-8' ) );
+					$n     = str_word_count( $words );
+					if ( $n >= 1 && $n <= 4 ) {
+						$out['eyebrows'][] = $words;
+					}
+				}
 			}
 			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {
 				if ( is_array( $child ) ) {

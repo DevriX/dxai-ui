@@ -214,6 +214,18 @@ $beside = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'About the 
 $expect( 'a section with a picture and long text beside them stays text and picture (two-col)', Section_Roles::of( $beside, false ) === 'two-col', Section_Roles::of( $beside, false ) );
 $plain = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'A line' ) . $para( 'Words' ) ), 'section' ) )[0];
 $expect( 'a section with no set of cards is not cards', Section_Roles::of( $plain, false ) !== 'cards' );
+// Steps named only in the line over their title (Taylored Restoration's Home: "How it works" over "From First Call to Final
+// Walkthrough", read as text, so no page made from the Home took it for its steps).
+$eyebrow = static fn( string $t ): string => '<!-- wp:paragraph {"className":"text-13 uppercase"} --><p class="text-13 uppercase">' . $t . '</p><!-- /wp:paragraph -->';
+// (A step as the importer writes one: a list item whose number, title and words are its own markup.)
+$step    = static fn( string $n, string $t ): string => '<!-- wp:list-item --><li><p>' . $n . '</p><h3>' . $t . '</h3><p>What happens then.</p></li><!-- /wp:list-item -->';
+$steps   = '<!-- wp:list --><ul class="wp-block-list">' . $step( '01', 'You call' ) . $step( '02', 'We come' ) . $step( '03', 'We dry' ) . $step( '04', 'We rebuild' ) . '</ul><!-- /wp:list -->';
+$named   = parse_blocks( $group( 'section', $group( 'wrap', $eyebrow( 'How it works' ) . $heading( 'From First Call to Final Walkthrough' ) . $para( 'Four steps.' ) ), 'section' ) )[0];
+$expect( 'steps named in the line over the title ("How it works") are the steps of the section (process)', Section_Roles::of( $named, false ) === 'process', Section_Roles::of( $named, false ) );
+$shaped  = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'From First Call to Final Walkthrough' ) . $steps ), 'section' ) )[0];
+$expect( '…and steps named nowhere are steps by what they are: a list of them, each with its title (process)', Section_Roles::of( $shaped, false ) === 'process', Section_Roles::of( $shaped, false ) );
+$over    = parse_blocks( $group( 'section', $group( 'wrap', $eyebrow( 'Services' ) . $heading( 'What we fix most' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'A', 3 ) . $para( 'words of a card' ) ), 3 ) ) ), 'section' ) )[0];
+$expect( 'a line over a title that names nothing of a role ("Services" over cards) changes nothing: cards', Section_Roles::of( $over, false ) === 'cards', Section_Roles::of( $over, false ) );
 
 echo "\nA card that is a link box of the design's\n";
 $lbox  = static fn( string $t ): string => '<!-- wp:amr/link-box {"url":"#x","className":"tile"} --><a class="wp-block-amr-link-box amr-link-box tile" href="#x">' . $heading( $t, 3 ) . $para( 'Words of ' . $t ) . '</a><!-- /wp:amr/link-box -->';
