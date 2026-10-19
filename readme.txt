@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.41
+Stable tag: 0.4.0-beta.42
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.42 =
+* A whole site's import no longer stops at "Saving the page" with "There has been a critical error" on a host that gives a request 256 MB: the record every save keeps (the compile result and the save's answer) is stored compressed (a 13-page Claude Design package: 39 MB became 6 MB, and writing it no longer takes 352 MB more memory), and reading, compiling and saving use the memory WordPress gives the dashboard (WP_MAX_MEMORY_LIMIT) rather than a front-end request's. The save also lifts PHP's time limit where the host allows it.
+* When PHP stops a save anyway, the import screen says why, in PHP's own words ("Allowed memory size … exhausted"), and what to change, instead of WordPress's general sentence.
+* For developers: a conversion record starts with `dxai-gz1:` (deflate, then base64); `DXAI_UI\Structures\Conversion_Snapshot::decode()` reads it and the records written before. New suite: `verify-import-memory`.
 = 0.4.0-beta.41 =
 * Pages arranged by hand in the pages panel: drag a section to another place (or move it with the arrows), take it out (×), or add one of the Home's sections or of the team's library ("+ Add a section"), each shown in the plan before anything is made. A page arranged by hand holds what it shows (unlock a section to let a shuffle change it), is made as it is arranged and keeps its arrangement; nothing is put in between its places; "Back to the usual" puts the arrangement away.
 * For developers: a page's arrangement may carry its places (`roles`); the panel's data carries what can be added (`choices`).
