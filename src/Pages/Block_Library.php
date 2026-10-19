@@ -625,6 +625,9 @@ final class Block_Library {
 		preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', self::markup( $id ), $lm );
 		$facts['section_lists'] = array_values( array_unique( $lm[1] ) );
 		self::$rows_used = array();
+		// A box laid over a picture the layout has not (a figure in a corner of an empty column) lies over one of the Home's: a slot for
+		// the page's picture goes under it, and with no picture left for the page the layout is not made (tokens(): it needs one).
+		self::picture_under( $root );
 		// Cards with a slot for their words and nothing of the page's to put in it: a box with a title and buttons is no card.
 		if ( self::bare_cards( $root, $lists ) ) {
 			$why = 'its cards would hold a title alone';
@@ -695,7 +698,7 @@ final class Block_Library {
 		}
 
 		// Last: every line readable on what it stands on, in this theme's colours (the Home's look may have changed what a card is).
-		return self::legible( self::follow( $root, (int) ( $facts['home'] ?? 0 ) ), (int) ( $facts['home'] ?? 0 ) );
+		return self::legible( self::follow( $root, (int) ( $facts['home'] ?? 0 ), (string) ( $facts['role'] ?? '' ) ), (int) ( $facts['home'] ?? 0 ) );
 	}
 
 	/**
@@ -796,12 +799,12 @@ final class Block_Library {
 	 * @param array<string, mixed> $block
 	 * @return array<string, mixed>
 	 */
-	private static function follow( array $block, int $home ): array {
+	private static function follow( array $block, int $home, string $role = '' ): array {
 		if ( $home < 1 ) {
 			return $block;
 		}
 
-		return \DXAI_UI\Blocks\Native\Library_Style::follow( $block, $home );
+		return \DXAI_UI\Blocks\Native\Library_Style::follow( $block, $home, $role );
 	}
 
 	/** The role a theme's block plays in the sections ('span', 'link_box', 'picture'), or '' for a block that is not a theme's for one. */
@@ -1239,6 +1242,35 @@ final class Block_Library {
 	}
 
 	/**
+	 * A column whose blocks are all laid over it (`absolute`: a figure's badge in its corner) has no picture of its own for them to lie on:
+	 * on the team's site the picture was the column's background, which the library does not keep (two columns · team layout 2, where a
+	 * badge floated over an empty half of the page). It gets a slot for the page's picture, under them: the theme's picture block where
+	 * the theme has one (as the library's own layouts write it), else core's.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function picture_under( array &$block ): void {
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
+			if ( ! is_array( $child ) || empty( $child['blockName'] ) ) {
+				continue;
+			}
+			if ( $child['blockName'] === 'core/column' ) {
+				$kids = array_values( array_filter( (array) $child['innerBlocks'], static fn( $c ): bool => is_array( $c ) && ! empty( $c['blockName'] ) ) );
+				$over = array_filter( $kids, static fn( array $c ): bool => preg_match( '/(?:^|\s)absolute(?:\s|$)/', (string) ( $c['attrs']['className'] ?? '' ) ) === 1 );
+				if ( $kids !== array() && count( $over ) === count( $kids ) && preg_match( '/<img\b|wp:(?:core\/)?(?:image|cover|video)\b|wp:dx\/picture\b|background-image|"backgroundImage"/', serialize_block( $child ) ) !== 1 ) {
+					$theirs = Capabilities::picture_block();
+					$slot   = $theirs !== Capabilities::CORE_BLOCKS['picture']
+						? '<!-- wp:' . $theirs . ' {"imageId":"{{image_id:1}}","imageUrl":"{{image_url:1}}","imageAlt":"{{image_alt:1|}}","imageWidth":"{{image_w:1}}","imageHeight":"{{image_h:1}}","className":"w-full overflow-hidden"} /-->'
+						: '<!-- wp:image {"sizeSlug":"large","className":"w-full"} --><figure class="wp-block-image size-large w-full"><img src="{{image_url:1}}" alt="{{image_alt:1|}}"/></figure><!-- /wp:image -->';
+					Block_Tree::insert( $block['innerBlocks'][ $i ], 0, parse_blocks( $slot )[0] );
+				}
+				continue;
+			}
+			self::picture_under( $block['innerBlocks'][ $i ] );
+		}
+	}
+
+	/**
 	 * A figure the team's layout shows as one — a number set large over its words in a badge ("10,000+ / properties restored") — written
 	 * as the Home states its own figure ("25,000+ / Alaska homes restored"), one figure a badge. The layout keeps no figure of its site:
 	 * its slots are for words, and words were what filled them (a sentence set at 38px, over "Properties restored"). With no figure of
@@ -1447,7 +1479,9 @@ final class Block_Library {
 		// A caption (small words beside a button: the team's "Available 24/7", a claim of their site) has no words of the page's to say: a
 		// sentence of provisional words set at 13px under a call to action's button is not one. Without the team's own words it is left out.
 		$size        = (string) ( $block['attrs']['style']['typography']['fontSize'] ?? '' );
-		$caption     = preg_match( '/(?:^|\s)text-1[0-3](?:\s|$)/', (string) ( $block['attrs']['className'] ?? '' ) ) === 1
+		// (A line set in capitals is a label too: a sentence in capitals in a strip's corner read as shouting.)
+		$caption     = preg_match( '/(?:^|\s)(?:text-1[0-3]|uppercase)(?:\s|$)/', (string) ( $block['attrs']['className'] ?? '' ) ) === 1
+			|| ( $block['attrs']['style']['typography']['textTransform'] ?? '' ) === 'uppercase'
 			|| in_array( (string) ( $block['attrs']['fontSize'] ?? '' ), array( 'small', 'x-small', 'tiny' ), true )
 			|| ( preg_match( '/^(\d+(?:\.\d+)?)px$/', $size, $px ) === 1 && (float) $px[1] <= 13 );
 		$sub         = static function ( string $s, bool $html ) use ( $facts, $row, &$missing, &$cache, &$provisional, $caption ): string {
@@ -1801,6 +1835,7 @@ final class Block_Library {
 			'text'       => (string) ( $roles['text'] ?? '' ),
 			'on_dark'    => (string) ( $roles['on_dark'] ?? '' ),
 			'light'      => (string) ( $roles['light'] ?? '' ),
+			'home'       => $home,
 		);
 
 		return self::legible_walk( $block, '#ffffff', '', false, $ctx );
@@ -1825,6 +1860,9 @@ final class Block_Library {
 			$own = (string) ( $colours[ $bg ] ?? '' );
 		} elseif ( is_string( $a['style']['color']['background'] ?? null ) ) {
 			$own = self::over( (string) $a['style']['color']['background'], $ground );
+		} elseif ( (int) ( $ctx['home'] ?? 0 ) > 0 && ( preg_match( '/(?:^|\s)bg-/', (string) ( $a['className'] ?? '' ) ) === 1 || str_contains( (string) ( $a['dxaiCss'] ?? '' ), 'background' ) ) ) {
+			// A ground of the Home's, by its class or its own CSS (the band of its call to action, put on a section by Library_Style).
+			$own = \DXAI_UI\Blocks\Native\Button::ground_hex( $a, (int) $ctx['home'] );
 		} elseif ( $name === 'core/cover' ) {
 			$own = (string) ( $colours[ (string) ( $a['overlayColor'] ?? '' ) ] ?? '#222222' );
 		}
@@ -1974,7 +2012,7 @@ final class Block_Library {
 	 * @param array<string, mixed> $b
 	 * @return array<string, mixed>
 	 */
-	private static function set_colour( array $b, string $kind, string $slug ): array {
+	public static function set_colour( array $b, string $kind, string $slug ): array {
 		$attr = $kind === 'text' ? 'textColor' : 'backgroundColor';
 		$old  = (string) ( $b['attrs'][ $attr ] ?? '' );
 		unset( $b['attrs'][ $attr ], $b['attrs']['style']['color'][ $kind ] );

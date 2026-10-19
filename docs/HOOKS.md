@@ -146,13 +146,14 @@ Nothing but those pages is written.
 
 ### dxai_ui_harmony
 
-The section with its titles and its padding as the Home's.
+The section with its titles and its padding as the Home's, on a ground of the Home's, its head set as the Home's are, and its cards,
+eyebrows, questions and buttons in the Home's look.
 
 Whether the same kind of element gets the same style across a design's pages (the Home's).
 @param bool $on   On by default.
 @param int  $home The design's Home.
 
-- `src/Blocks/Native/Library_Style.php:60` — value and arguments: `true`, `$home`
+- `src/Blocks/Native/Library_Style.php:65` — value and arguments: `true`, `$home`
 - `src/Blocks/Native/Style_Harmony.php:81` — value and arguments: `true`, `$home`
 
 ### dxai_ui_harvest_unreferenced

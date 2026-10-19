@@ -324,10 +324,12 @@ $expect( '…with words for them: made, as before', null !== $made, $why );
 
 // A badge the layout sets as a figure takes the Home's figure, not a sentence; with no figure of the Home's, the badge goes.
 $figs  = array( array( 'title' => '01', 'text' => 'Here Fast, Day or Night' ), array( 'title' => '25,000+', 'text' => 'Alaska homes restored' ) );
-$badge = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => $figs ) ) + $facts, $why );
+// (The badge lies over one of the page's pictures: the layout is made with one, Block_Library::picture_under().)
+$pic   = array( 'image_url:1' => 'https://example.test/wp-content/uploads/crew.jpg', 'image_id:1' => '0', 'image_alt:1' => 'The crew', 'image_w:1' => '1200', 'image_h:1' => '800' );
+$badge = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => $figs ) ) + $pic + $facts, $why );
 $text  = null === $badge ? '' : html_entity_decode( wp_strip_all_tags( serialize_block( $badge ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 $expect( 'a badge set as a figure: the Home\'s figure and its words (a step\'s number is no figure), not the layout\'s "Properties restored"', null !== $badge && str_contains( $text, '25,000+' ) && str_contains( $text, 'Alaska homes restored' ) && ! str_contains( $text, 'Properties restored' ) && ! str_contains( $text, 'Here Fast' ), $why . ' ' . $one_line( $text ) );
-$plain = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => array() ) ) + $facts, $why );
+$plain = Block_Library::fill( 'layout-two-col-2', array( 'role' => 'two-col', 'lists' => array( 'stats' => array() ) ) + $pic + $facts, $why );
 $expect( '…and with none, no badge: no sentence set at 38px', null !== $plain && ! str_contains( serialize_block( $plain ), 'Properties restored' ) && preg_match( '/"fontSize":"38px"/', serialize_block( $plain ) ) !== 1, $why );
 $fig_m  = new ReflectionMethod( Block_Library::class, 'figures' );
 $fig_m->setAccessible( true );

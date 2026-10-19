@@ -68,6 +68,7 @@
 		{ "file": "verify-image-quality.php", "group": "ci" },
 
 		{ "file": "verify-block-library.php", "group": "local", "needs": "the American Restoration theme: the team's sections are made of its blocks" },
+		{ "file": "verify-library-style.php", "group": "local", "needs": "the American Restoration theme: the team's layouts are made of its blocks" },
 		{ "file": "verify-style-variation.php", "group": "local", "needs": "the American Restoration theme: its tokens block" },
 		{ "file": "verify-text-color.php", "group": "local", "needs": "the American Restoration theme: Theme_Class_Swap gives its classes" },
 		{ "file": "verify-theme-binding.php", "group": "local", "needs": "a theme with Primary and Primary Dark colour settings (American Restoration); SKIP elsewhere" },

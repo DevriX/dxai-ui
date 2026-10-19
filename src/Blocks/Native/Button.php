@@ -305,6 +305,29 @@ final class Button extends Converter {
 	}
 
 	/**
+	 * The colour (#rrggbb) a block paints as its own ground on this site: '' when it paints none, a picture, a gradient or a see-through
+	 * colour (the Home's grounds and a section's, read by Library_Style).
+	 *
+	 * @param array<string, mixed> $attrs A block's attributes as the importer or the library stored them.
+	 */
+	public static function ground_hex( array $attrs, int $home, bool $on_white = false ): string {
+		$paint = \DXAI_UI\Compiler\Color_Usage::background_of( $attrs, $home );
+		if ( $paint === '' || $paint === 'image' ) {
+			return '';
+		}
+		$value = self::value_of( $paint, $home );
+		$rgba  = $value !== '' ? Color_Math::parse( $value ) : null;
+		if ( $rgba !== null && $rgba[3] < 1 && $on_white ) {
+			// A see-through colour on a white page (the team's grey at half strength) is the colour it shows there.
+			$mix = static fn( float $c ): int => (int) round( $c * $rgba[3] + 255 * ( 1 - $rgba[3] ) );
+
+			return sprintf( '#%02x%02x%02x', $mix( (float) $rgba[0] ), $mix( (float) $rgba[1] ), $mix( (float) $rgba[2] ) );
+		}
+
+		return $rgba !== null && $rgba[3] >= 1 ? Color_Math::hex( $value ) : '';
+	}
+
+	/**
 	 * The colour a background_of() answer shows on this site: a token the design's colours follow, as the theme colour it follows
 	 * (Theme_Binding); any other token as the design wrote it; a preset as the palette has it.
 	 */
