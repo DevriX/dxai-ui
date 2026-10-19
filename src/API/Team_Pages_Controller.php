@@ -136,6 +136,8 @@ final class Team_Pages_Controller {
 				) : null,
 				// Whether the team's own sections can be used for this design, and what is missing when they cannot.
 				'library'     => $ok ? Block_Library::availability( $design ) : null,
+				// The sections a person can add to a page by hand: the Home's, and the library's this site can make.
+				'choices'     => $ok ? Team_Pages::choices( $design ) : null,
 				'existing'    => $ok ? $this->existing( $design ) : array(),
 				'run'         => $ok ? Team_Run::summary( $design ) : null,
 				'kinds'       => array_map( static fn( $k ) => $k['label'], Team_Pages::KINDS ),
@@ -160,7 +162,7 @@ final class Team_Pages_Controller {
 					'title' => (string) ( $row['title'] ?? '' ),
 				);
 				// How a person arranged the page (Team_Pages cleans it): only what the request has.
-				foreach ( array( 'shuffle', 'recipe', 'locks' ) as $key ) {
+				foreach ( array( 'shuffle', 'recipe', 'locks', 'roles' ) as $key ) {
 					if ( isset( $row[ $key ] ) ) {
 						$page[ $key ] = $row[ $key ];
 					}

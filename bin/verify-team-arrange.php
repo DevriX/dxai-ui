@@ -191,6 +191,49 @@ $locked_homes = array_map( static fn( $l ) => $l['home'], array_filter( $locks, 
 $stolen       = array_filter( $pl['strip'], static fn( $x ) => $x['source'] === 'home' && ! $x['locked'] && $x['role'] !== 'cta' && in_array( $x['home'], $locked_homes, true ) );
 $expect( 'a Home section a lock holds is not taken by another place of the page', $stolen === array(), json_encode( $stolen ) );
 
+echo "\nSections arranged by hand: moved, taken out, added (the panel's drag and drop, its ×, its \"Add a section\")\n";
+$of_water = static fn( array $r ): array => array_values( array_filter( $r['pages'], static fn( $p ) => $p['title'] === 'Water Damage' ) )[0]['strip'] ?? array();
+$base    = Team_Pages::plan( $home_id, $wanted )[0];
+$pin     = static fn( array $s ): array => array_values( array_filter( array_map( static fn( $x, $i ) => $x['source'] !== '' ? array( 'place' => $i, 'role' => $x['role'], 'source' => $x['source'], 'home' => $x['home'], 'n' => $x['n'], 'ops' => $x['ops'] ) : null, $s, array_keys( $s ) ) ) );
+$by_hand = static fn( array $s ): array => array_merge( $water, array( 'shuffle' => 0, 'recipe' => 0, 'locks' => $pin( $s ), 'roles' => array_column( $s, 'role' ) ) );
+$asked   = $base['strip'];
+$moved   = array_pop( $asked );
+array_splice( $asked, 1, 0, array( $moved ) );
+array_splice( $asked, 2, 1 );
+$asked[] = array( 'role' => 'faq', 'source' => 'home', 'home' => 5, 'n' => 0, 'ops' => array() );
+$hand    = Team_Pages::plan( $home_id, array_merge( array( $by_hand( $asked ) ), $rest ) )[0];
+$held    = true;
+foreach ( $asked as $i => $x ) {
+	$got  = $hand['strip'][ $i ] ?? null;
+	$held = $held && $got !== null && ( $x['source'] === '' || ( $got['locked'] && $got['source'] === $x['source'] && $got['home'] === $x['home'] && $got['ops'] === $x['ops'] ) );
+}
+$expect( 'a page arranged by hand has its places in the order given — the last moved up, one taken out, the Home\'s questions added at the end', array_column( $hand['strip'], 'role' ) === array_column( $asked, 'role' ) && $hand['strip'][ count( $asked ) - 1 ]['home'] === 5, $line( $base['strip'] ) . ' => ' . $line( $hand['strip'] ) );
+$expect( 'and every section it showed is held where it was put (the same section, the same changes)', $held, $line( $hand['strip'] ) );
+$expect( 'the plan gives the places back with the arrangement, for the next request', ( $hand['arrangement']['roles'] ?? null ) === array_column( $asked, 'role' ), wp_json_encode( $hand['arrangement'] ) );
+$hb = Team_Pages::build( $home_id, array_merge( array( $by_hand( $asked ) ), $rest ), true );
+$expect( 'the page made is that page, and says how it was arranged', ! is_wp_error( $hb ) && $lay( $of_water( $hb ) ) === $lay( $hand['strip'] ) && ( json_decode( (string) get_post_meta( $wid, Team_Pages::ARR_META, true ), true )['roles'] ?? null ) === array_column( $asked, 'role' ), is_wp_error( $hb ) ? $hb->get_error_message() : $lay( $of_water( $hb ) ) );
+$again = Team_Pages::plan( $home_id, $wanted )[0];
+$expect( 'planned again without its arrangement, it is shown as it was arranged by hand', $lay( $again['strip'] ) === $lay( $hand['strip'] ) && ( $again['arrangement']['roles'] ?? null ) === array_column( $asked, 'role' ) );
+$usual = Team_Pages::build( $home_id, array_merge( array( array_merge( $water, array( 'shuffle' => 0, 'recipe' => 0, 'locks' => array(), 'roles' => array() ) ) ), $rest ), true );
+$expect( '"back to the usual" puts the arrangement away: the usual page, nothing kept', ! is_wp_error( $usual ) && (string) get_post_meta( $wid, Team_Pages::ARR_META, true ) === '' && $lay( $of_water( $usual ) ) === $lay( $base['strip'] ) );
+$junk = Team_Pages::plan( $home_id, array_merge( array( array_merge( $water, array( 'shuffle' => 0, 'recipe' => 0, 'locks' => array(), 'roles' => array( 'hero', '<script>', 'faq', 5, array( 'cta' ), 'cta' ) ) ) ), $rest ) )[0];
+$expect( 'places that are not a role (markup, numbers, lists) are dropped, the others kept in their order, and nothing is put in between them (a service page arranged by hand gets no place for the site\'s other pages of its own)', ( $junk['arrangement']['roles'] ?? null ) === array( 'hero', 'faq', 'cta' ) && array_column( $junk['strip'], 'role' ) === array( 'hero', 'faq', 'cta' ), wp_json_encode( $junk['arrangement'] ) . ' strip: ' . $line( $junk['strip'] ) );
+$choices = Team_Pages::choices( $home_id );
+$expect( 'what can be added: the Home\'s sections but its hero, each with its number, role and title; the library\'s, each with its id, role and what it is', count( $choices['home'] ) === 5 && array_column( $choices['home'], 'home' ) === array( 2, 3, 4, 5, 6 ) && ! in_array( 'hero', array_column( $choices['home'], 'role' ), true ) && $choices['home'][3]['label'] === 'Frequently asked questions' && count( array_filter( $choices['library'], static fn( $c ) => ! isset( $c['id'], $c['role'], $c['label'] ) || $c['role'] === 'hero' ) ) === 0, wp_json_encode( $choices['home'] ) );
+$rest_plan = rest_do_request( ( static function () use ( $home_id, $asked, $by_hand ): WP_REST_Request {
+	$r = new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$r->set_body_params( array( 'action' => 'plan', 'design' => $home_id, 'library' => 'fill', 'wanted' => array( $by_hand( $asked ) ) ) );
+
+	return $r;
+} )() );
+$rest_data = (array) $rest_plan->get_data();
+$expect( 'the panel\'s request carries the places to the plan, and the panel is given what it can add', 200 === $rest_plan->get_status() && ( $rest_data['plan'][0]['arrangement']['roles'] ?? null ) === array_column( $asked, 'role' ) && isset( rest_do_request( ( static function () use ( $home_id ): WP_REST_Request {
+	$g = new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$g->set_query_params( array( 'design' => $home_id ) );
+
+	return $g;
+} )() )->get_data()['choices']['home'] ), (string) $rest_plan->get_status() . ' ' . wp_json_encode( $rest_data['plan'][0]['arrangement'] ?? $rest_data ) . ' GET keys: ' . implode( ',', array_keys( (array) rest_do_request( new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages?design=' . $home_id ) )->get_data() ) ) );
+
 echo "\nThe three modes\n";
 $made_in = static fn( array $pl ): int => count( array_filter( $pl, static fn( $p ) => count( array_filter( $p['strip'], static fn( $x ) => $x['source'] === 'new' ) ) > 0 ) );
 $expect( 'only the Home\'s sections: none is made in its cards', $made_in( Team_Pages::plan( $home_id, $wanted, array( 'mode' => 'home' ) ) ) === 0 );

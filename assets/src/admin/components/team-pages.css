@@ -285,6 +285,62 @@
 	outline-offset: 2px;
 }
 
+/* A page arranged by hand: a section is dragged to its place (the hero opens the page and stays), moved with the arrows, taken out. */
+#dxai-ui-app .dxai-team__sec.is-movable {
+	cursor: grab;
+}
+
+#dxai-ui-app .dxai-team__sec.is-dragging {
+	opacity: 0.4;
+	outline: 2px dashed var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-team__sec-tools {
+	display: inline-flex;
+	gap: 2px;
+	margin-top: 4px;
+}
+
+#dxai-ui-app .dxai-team__sec-tools button {
+	min-width: 24px;
+	padding: 0 6px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--dxai-text);
+	font-size: 12px;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-team__sec-tools button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+#dxai-ui-app .dxai-team__sec-tools button:focus-visible {
+	outline: 2px solid var(--dxai-accent);
+	outline-offset: 2px;
+}
+
+#dxai-ui-app .dxai-team__sec-tools .dxai-team__sec-out:not(:disabled):hover {
+	border-color: #d63638;
+	color: #d63638;
+}
+
+#dxai-ui-app .dxai-team__add {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+#dxai-ui-app .dxai-team__add .components-base-control {
+	flex: 1 1 320px;
+	max-width: 560px;
+}
+
 #dxai-ui-app .dxai-team__sec.is-missing {
 	opacity: 0.5;
 	text-decoration: none;

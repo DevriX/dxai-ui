@@ -155,6 +155,10 @@ export default function TeamPages( { design: fixed = 0 } ) {
 	const [ priceIn, setPriceIn ] = useState( '' );
 	const [ priceOut, setPriceOut ] = useState( '' );
 	const [ gave, setGave ] = useState( null );
+	// Arranging a page by hand: the page a section is being added to, the section picked, the section being dragged.
+	const [ adding, setAdding ] = useState( '' );
+	const [ pick, setPick ] = useState( '' );
+	const [ dragging, setDragging ] = useState( null );
 	const [ confirm, setConfirm ] = useState( false );
 
 	function load( design = 0 ) {
@@ -332,10 +336,70 @@ export default function TeamPages( { design: fixed = 0 } ) {
 	// Another page of the same site: a new shuffle. With a section locked the order of the page is held and the others change.
 	function shuffle( p, reset = false ) {
 		const a = p.arrangement;
+		// (A page arranged by hand keeps its places through a shuffle: only the sections that are not locked change.)
 		const next = reset
-			? { shuffle: 0, recipe: 0, locks: [] }
-			: { shuffle: a.shuffle + 1, recipe: a.locks.length ? a.recipe : a.shuffle + 1, locks: a.locks };
+			? { shuffle: 0, recipe: 0, locks: [], roles: [] }
+			: { shuffle: a.shuffle + 1, recipe: a.locks.length ? a.recipe : a.shuffle + 1, locks: a.locks, ...( a.roles && a.roles.length ? { roles: a.roles } : {} ) };
 		send( 'plan', { arr: { [ keyOf( p.type, p.title ) ]: next } } );
+	}
+
+	// A page arranged by hand: its places in the order given, each holding the section it shows, so moving, taking out or adding one
+	// changes nothing else (a section unlocked afterwards is one a shuffle may change). A place the Home has nothing for stays a place.
+	function arrange( p, strip ) {
+		const a = p.arrangement || { shuffle: 0, recipe: 0 };
+		const locks = strip
+			.map( ( x, i ) => ( x.source ? { place: i, role: x.role, source: x.source, home: x.home || 0, n: x.n || 0, ops: x.ops || [] } : null ) )
+			.filter( Boolean );
+		send( 'plan', { arr: { [ keyOf( p.type, p.title ) ]: { shuffle: a.shuffle, recipe: a.recipe, locks, roles: strip.map( ( x ) => x.role ) } } } );
+	}
+
+	// The hero opens the page: it is not moved, and nothing goes above it.
+	function move( p, from, to ) {
+		if ( from < 1 || to < 1 || to >= p.strip.length || from === to ) {
+			return;
+		}
+		const strip = [ ...p.strip ];
+		const [ x ] = strip.splice( from, 1 );
+		strip.splice( to, 0, x );
+		arrange( p, strip );
+	}
+
+	function takeOut( p, at ) {
+		arrange( p, p.strip.filter( ( x, i ) => i !== at ) );
+	}
+
+	// A section picked from the Home's or from the library, put at the end of the page (before nothing: it can be moved after).
+	function addTo( p, value ) {
+		const [ from, id ] = [ value.slice( 0, value.indexOf( ':' ) ), value.slice( value.indexOf( ':' ) + 1 ) ];
+		const c = from === 'home'
+			? ( data.choices.home || [] ).find( ( h ) => String( h.home ) === id )
+			: ( data.choices.library || [] ).find( ( l ) => l.id === id );
+		if ( ! c ) {
+			return;
+		}
+		const x = from === 'home'
+			? { role: c.role, source: 'home', home: c.home, n: 0, ops: [] }
+			: { role: c.role, source: 'library', home: 0, n: 0, ops: [ 'lib:' + c.id ] };
+		setAdding( '' );
+		setPick( '' );
+		arrange( p, [ ...p.strip, x ] );
+	}
+
+	// What can be added to a page: the Home's sections, and the library's when the library is used for this design.
+	function choiceOptions() {
+		const c = data.choices || { home: [], library: [] };
+		const home = ( c.home || [] ).map( ( h ) => ( {
+			value: 'home:' + h.home,
+			label: sprintf( /* translators: 1: role, 2: the number of the Home's section, 3: its title. */ __( 'Home · %1$s · section %2$d — %3$s', 'dxai-ui' ), ROLE[ h.role ] || h.role, h.home, h.label ),
+		} ) );
+		const lib = library !== 'off' && data.library && data.library.code === 'ok'
+			? ( c.library || [] )
+				.slice()
+				.sort( ( m, n ) => ( ROLE[ m.role ] || m.role ).localeCompare( ROLE[ n.role ] || n.role ) )
+				.map( ( l ) => ( { value: 'lib:' + l.id, label: sprintf( /* translators: 1: role, 2: what the section is. */ __( 'Library · %1$s — %2$s', 'dxai-ui' ), ROLE[ l.role ] || l.role, l.label ) } ) )
+			: [];
+
+		return [ { value: '', label: __( 'Pick a section…', 'dxai-ui' ) }, ...home, ...lib ];
 	}
 
 	function toggleLock( p, x ) {
@@ -357,7 +421,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 
 	const total = wanted().length;
 	const run = data.run && data.run.pages && data.run.pages.length ? data.run : null;
-	const arranged = ( p ) => p.arrangement && ( p.arrangement.shuffle > 0 || p.arrangement.locks.length > 0 );
+	const arranged = ( p ) => p.arrangement && ( p.arrangement.shuffle > 0 || p.arrangement.locks.length > 0 || ( p.arrangement.roles && p.arrangement.roles.length > 0 ) );
 
 	return (
 		<section className="dxai-section dxai-team" aria-labelledby="dxai-team-title">
@@ -609,7 +673,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 					<p className="dxai-muted dxai-team__legend">
 						{ mode === 'ai'
 							? __( 'This is the usual plan the AI starts from; it chooses the sections when you press "Make".', 'dxai-ui' )
-							: __( 'What is shown is what is made. Shuffle a page to see another page of the same site; lock a section you like and it stays through the next shuffles.', 'dxai-ui' ) }
+							: __( 'What is shown is what is made. Shuffle a page to see another page of the same site; lock a section you like and it stays through the next shuffles. Drag a section to move it, × takes it out, and "Add a section" puts in one of the Home\'s or of the library: a page arranged by hand holds what it shows (unlock a section to let a shuffle change it).', 'dxai-ui' ) }
 					</p>
 					<ul className="dxai-team__plan">
 						{ plan.map( ( p ) => (
@@ -634,11 +698,30 @@ export default function TeamPages( { design: fixed = 0 } ) {
 									) }
 								</div>
 								<ol className="dxai-team__strip">
-									{ p.strip.map( ( x ) => (
+									{ p.strip.map( ( x, i ) => (
 										<li
 											key={ x.place }
-											className={ 'dxai-team__sec dxai-team__role--' + x.role + ( x.source === '' ? ' is-missing' : '' ) + ( x.locked ? ' is-locked' : '' ) }
+											className={ 'dxai-team__sec dxai-team__role--' + x.role + ( x.source === '' ? ' is-missing' : '' ) + ( x.locked ? ' is-locked' : '' ) + ( dragging && dragging.k === p.type + p.slug && dragging.from === i ? ' is-dragging' : '' ) + ( mode !== 'ai' && i > 0 ? ' is-movable' : '' ) }
 											title={ x.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : '' }
+											draggable={ mode !== 'ai' && i > 0 && ! busy }
+											onDragStart={ ( e ) => {
+												setDragging( { k: p.type + p.slug, from: i } );
+												e.dataTransfer.effectAllowed = 'move';
+												e.dataTransfer.setData( 'text/plain', String( i ) );
+											} }
+											onDragOver={ ( e ) => {
+												if ( dragging && dragging.k === p.type + p.slug && i > 0 ) {
+													e.preventDefault();
+												}
+											} }
+											onDrop={ ( e ) => {
+												e.preventDefault();
+												if ( dragging && dragging.k === p.type + p.slug ) {
+													move( p, dragging.from, i );
+												}
+												setDragging( null );
+											} }
+											onDragEnd={ () => setDragging( null ) }
 										>
 											<span className="dxai-team__sec-role">{ ROLE[ x.role ] || x.role }</span>
 											<span className="dxai-team__sec-from">
@@ -658,9 +741,42 @@ export default function TeamPages( { design: fixed = 0 } ) {
 													{ x.locked ? __( 'Locked', 'dxai-ui' ) : __( 'Lock', 'dxai-ui' ) }
 												</button>
 											) }
+											{ mode !== 'ai' && i > 0 && (
+												<span className="dxai-team__sec-tools">
+													<button type="button" onClick={ () => move( p, i, i - 1 ) } disabled={ !! busy || i < 2 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s up', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>↑</button>
+													<button type="button" onClick={ () => move( p, i, i + 1 ) } disabled={ !! busy || i >= p.strip.length - 1 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s down', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>↓</button>
+													<button type="button" className="dxai-team__sec-out" onClick={ () => takeOut( p, i ) } disabled={ !! busy } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Take %s out of the page', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>×</button>
+												</span>
+											) }
 										</li>
 									) ) }
 								</ol>
+								{ mode !== 'ai' && data.choices && (
+									<div className="dxai-team__add">
+										{ adding === p.type + p.slug ? (
+											<>
+												<SelectControl
+													label={ __( 'Add a section', 'dxai-ui' ) }
+													hideLabelFromVision
+													value={ pick }
+													options={ choiceOptions() }
+													onChange={ setPick }
+													__nextHasNoMarginBottom
+												/>
+												<Button variant="primary" size="small" onClick={ () => addTo( p, pick ) } disabled={ !! busy || pick === '' }>
+													{ __( 'Add', 'dxai-ui' ) }
+												</Button>
+												<Button variant="tertiary" size="small" onClick={ () => { setAdding( '' ); setPick( '' ); } }>
+													{ __( 'Cancel', 'dxai-ui' ) }
+												</Button>
+											</>
+										) : (
+											<Button variant="secondary" size="small" onClick={ () => { setAdding( p.type + p.slug ); setPick( '' ); } } disabled={ !! busy }>
+												{ __( '+ Add a section', 'dxai-ui' ) }
+											</Button>
+										) }
+									</div>
+								) }
 								{ p.nearest > 0 && (
 									<p className="dxai-muted">
 										{ sprintf(

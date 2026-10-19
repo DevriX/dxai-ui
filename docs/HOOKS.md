@@ -44,7 +44,7 @@ What the library's sections are filled with.
 @param array<string, mixed> $facts
 @param int                  $home  The design's Home.
 
-- `src/Pages/Block_Library.php:336` — value and arguments: `$facts`, `$home`
+- `src/Pages/Block_Library.php:361` — value and arguments: `$facts`, `$home`
 
 ### dxai_ui_block_library_themes
 

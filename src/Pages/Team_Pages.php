@@ -307,6 +307,10 @@ final class Team_Pages {
 		// What the team's library can make for this page: a role the Home has no section for may still be a place of the page.
 		$lib_facts = isset( $vary['lib'] ) ? self::library_facts( (array) $vary['lib'], $item, $key, $links ) : null;
 		$recipe    = self::recipe( $item['type'], $seed, $roles, $item['slug'] . ( $m > 0 ? '~' . $m : '' ), $lib_facts !== null ? Block_Library::roles( $lib_facts ) : array() );
+		// A page a person arranged by hand (sections moved, taken out, added): its places are theirs, in their order.
+		if ( ! empty( $item['roles'] ) ) {
+			$recipe['roles'] = array_values( array_map( 'strval', (array) $item['roles'] ) );
+		}
 		$base    = $seed . '|' . $key;
 		$seed_of = static fn( int $n ): string => $base . ( $n > 0 ? '~' . $n : '' );
 		$pages   = $vary;
@@ -318,6 +322,8 @@ final class Team_Pages {
 		$pages['n']       = (int) $item['shuffle'];
 		$pages['seed_of'] = $seed_of;
 		$pages['locks']   = self::lock_map( (array) $item['locks'] );
+		// (Arranged by hand: nothing is put in between the places a person gave — not the site's other pages, not the contact details.)
+		$pages['by_hand'] = ! empty( $item['roles'] );
 		if ( $lib_facts !== null ) {
 			$pages['lib'] = $lib_facts;
 		}
@@ -336,7 +342,7 @@ final class Team_Pages {
 	 *
 	 * @param array<string, mixed>             $item
 	 * @param array<int, array<string, mixed>> $places compose()'s `places`.
-	 * @return array{shuffle:int, recipe:int, locks:array<int, array<string, mixed>>}
+	 * @return array{shuffle:int, recipe:int, locks:array<int, array<string, mixed>>, roles?:array<int, string>}
 	 */
 	private static function arrangement( array $item, array $places ): array {
 		$locks = array();
@@ -353,11 +359,17 @@ final class Team_Pages {
 			}
 		}
 
-		return array(
+		$out = array(
 			'shuffle' => (int) $item['shuffle'],
 			'recipe'  => (int) $item['recipe'],
 			'locks'   => $locks,
 		);
+		// The places a person arranged by hand, in their order (a page in the usual order says nothing of them).
+		if ( ! empty( $item['roles'] ) ) {
+			$out['roles'] = array_values( array_map( 'strval', (array) $item['roles'] ) );
+		}
+
+		return $out;
 	}
 
 	/**
@@ -376,6 +388,7 @@ final class Team_Pages {
 			$stored = is_array( $raw ) ? $raw : array();
 		}
 		$locks   = isset( $item['locks'] ) ? (array) $item['locks'] : self::clean_locks( (array) ( $stored['locks'] ?? array() ) );
+		$placed  = isset( $item['shuffle'], $item['recipe'], $item['locks'] ) ? (array) ( $item['roles'] ?? array() ) : self::clean_roles( (array) ( $stored['roles'] ?? array() ) );
 		$shuffle = isset( $item['shuffle'] ) ? (int) $item['shuffle'] : (int) ( $stored['shuffle'] ?? 0 );
 		if ( isset( $item['recipe'] ) ) {
 			$recipe = (int) $item['recipe'];
@@ -394,6 +407,9 @@ final class Team_Pages {
 			'recipe'  => $recipe,
 			'locks'   => $locks,
 		);
+		if ( $placed !== array() ) {
+			$row['roles'] = $placed;
+		}
 		// Where the page sits, when the request says (the address a menu gave it), and the menu item it came from.
 		foreach ( array( 'path', 'parent_path' ) as $k ) {
 			if ( isset( $item[ $k ] ) ) {
@@ -405,6 +421,24 @@ final class Team_Pages {
 		}
 
 		return $row;
+	}
+
+	/**
+	 * The places a request carries for a page arranged by hand, made safe: role names only (a word of lower-case letters and dashes), in
+	 * their order, two dozen at most.
+	 *
+	 * @param array<int|string, mixed> $roles
+	 * @return array<int, string>
+	 */
+	private static function clean_roles( array $roles ): array {
+		$out = array();
+		foreach ( $roles as $r ) {
+			if ( is_string( $r ) && preg_match( '/^[a-z][a-z-]{1,24}$/', $r ) === 1 && count( $out ) < 24 ) {
+				$out[] = $r;
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -625,7 +659,7 @@ final class Team_Pages {
 			update_post_meta( $id, self::OPS_META, wp_json_encode( $built['ops'] ) );
 			// How the page was arranged, so that it is made the same way again; nothing is kept for the usual arrangement or an AI's plan.
 			$arr = self::arrangement( $item, $built['places'] );
-			if ( $plan === null && ( $arr['shuffle'] > 0 || $arr['recipe'] > 0 || $arr['locks'] !== array() ) ) {
+			if ( $plan === null && ( $arr['shuffle'] > 0 || $arr['recipe'] > 0 || $arr['locks'] !== array() || ! empty( $arr['roles'] ) ) ) {
 				update_post_meta( $id, self::ARR_META, wp_slash( wp_json_encode( $arr, JSON_UNESCAPED_SLASHES ) ) );
 			} else {
 				delete_post_meta( $id, self::ARR_META );
@@ -867,6 +901,36 @@ final class Team_Pages {
 	/* ---------------------------------------------------------------- sections */
 
 	/**
+	 * The sections a person can add to a page (the panel's "Add a section"): the Home's, each with its number, its role and its title,
+	 * and the team's library's that this site can make, each with its id, role and what it is. The hero is the page's own and is not
+	 * offered.
+	 *
+	 * @return array{home:array<int, array{home:int, role:string, label:string}>, library:array<int, array{id:string, role:string, label:string}>}
+	 */
+	public static function choices( int $home ): array {
+		$out = array(
+			'home'    => array(),
+			'library' => array(),
+		);
+		foreach ( array_values( Section_Library::for_page( $home ) ) as $i => $component ) {
+			$block = (array) $component['block'];
+			$role  = Section_Roles::of( $block, $i === 0 );
+			if ( $role === 'hero' ) {
+				continue;
+			}
+			$title = preg_match( '#<h[1-3][^>]*>(.*?)</h[1-3]>#is', serialize_block( $block ), $m ) === 1 ? trim( html_entity_decode( wp_strip_all_tags( $m[1] ), ENT_QUOTES, 'UTF-8' ) ) : '';
+			$out['home'][] = array(
+				'home'  => $i + 1,
+				'role'  => $role,
+				'label' => $title !== '' ? $title : ( (string) ( $block['attrs']['metadata']['name'] ?? '' ) !== '' ? (string) $block['attrs']['metadata']['name'] : wp_trim_words( wp_strip_all_tags( str_replace( '<', ' <', serialize_block( $block ) ) ), 8, '…' ) ),
+			);
+		}
+		$out['library'] = array_values( array_filter( Block_Library::choices( $home ), static fn( array $c ): bool => $c['role'] !== 'hero' ) );
+
+		return $out;
+	}
+
+	/**
 	 * The Home's sections by the role they play, in order.
 	 *
 	 * @param array<int, array<string, mixed>> $library
@@ -959,7 +1023,7 @@ final class Team_Pages {
 	 * @param array<int, string>                           $recipe
 	 * @param array{type:string, title:string, slug:string} $item
 	 * @param array<int, array{title:string, url:string, type:string}> $siblings
-	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool, plan?:array<string, mixed>|null, locks?:array<int, array<string, mixed>>, n?:int, seed_of?:callable, lib?:array<string, mixed>|null} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
+	 * @param array{pool?:array<int, array<string, mixed>>, positional?:array<string, true>|null, kit?:array<string, mixed>, facts?:array<string, mixed>, rows?:array<int, array<string, string>>, heading?:string, list?:bool, plan?:array<string, mixed>|null, locks?:array<int, array<string, mixed>>, n?:int, seed_of?:callable, lib?:array<string, mixed>|null, by_hand?:bool} $vary What a section can be varied with (Section_Variants), the kit of the Home (Home_Kit), and the pages this one links (related_rows()).
 	 * @return array{sections:array<int, array<string, mixed>>, log:array<int, string>, ops:array<int, array<int, string>>, places:array<int, array<string, mixed>>}
 	 *         `places` is the page as laid out, one entry for each place of the recipe: the role, where its section is from (`home`: a Home section as it is; `new`: the Home's cards with
 	 *         the pages of the site poured in; `library`: one of the team's own (Block_Library), with its `label`; empty: the Home has none, so it is left out), the number of the Home section (from 1),
@@ -1028,7 +1092,7 @@ final class Team_Pages {
 				foreach ( $refused as $why ) {
 					$log[] = 'contact: not made from ' . $why;
 				}
-				if ( $contact !== null && $plan === null ) {
+				if ( $contact !== null && $plan === null && empty( $vary['by_hand'] ) ) {
 					$form = array_search( 'form', $recipe, true );
 					$hero = array_search( 'hero', $recipe, true );
 					array_splice( $recipe, $item['type'] === 'about' ? self::before_tail( $recipe ) : ( $form !== false ? (int) $form + 1 : ( $hero !== false ? (int) $hero + 1 : 0 ) ), 0, array( 'contact' ) );
@@ -1042,7 +1106,7 @@ final class Team_Pages {
 		$related = null;
 		$at      = array_search( 'related', $recipe, true );
 		$added   = false;
-		if ( $at === false && $plan === null && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
+		if ( $at === false && $plan === null && empty( $vary['by_hand'] ) && isset( $vary['kit'], $vary['rows'] ) && count( (array) $vary['rows'] ) >= 2 ) {
 			// The team's pages end with the site's other pages, then the questions, then the call to action: this page does not
 			// have them, and the Home does not need a section of its own for it (the other pages are the Home's cards).
 			$at    = self::before_tail( $recipe );
@@ -1630,7 +1694,7 @@ final class Team_Pages {
 	/* ------------------------------------------------------------------- pages */
 
 	/**
-	 * @param array<int, array{type:string, title:string}> $wanted
+	 * @param array<int, array<string, mixed>> $wanted As a request carries them (not to be trusted): type, title, and what a person gave — the address, the menu item, the shuffle, the locks, the places.
 	 * @return array<int, array{type:string, title:string, slug:string}>
 	 */
 	private static function clean_wanted( array $wanted ): array {
@@ -1687,6 +1751,10 @@ final class Team_Pages {
 			}
 			if ( isset( $w['locks'] ) && is_array( $w['locks'] ) ) {
 				$row['locks'] = self::clean_locks( $w['locks'] );
+			}
+			// The places in the order a person gave them (moved, taken out, added), when they arranged the page by hand.
+			if ( isset( $w['roles'] ) && is_array( $w['roles'] ) ) {
+				$row['roles'] = self::clean_roles( $w['roles'] );
 			}
 			$out[] = $row;
 		}

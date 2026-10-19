@@ -201,6 +201,31 @@ final class Block_Library {
 	}
 
 	/**
+	 * The library's sections this site can make for a design's pages, each with its id, its role and what it is (the panel offers them
+	 * to add to a page by hand). None where the library cannot be used (availability()).
+	 *
+	 * @return array<int, array{id:string, role:string, label:string}>
+	 */
+	public static function choices( int $home ): array {
+		if ( ! self::theme_ok() ) {
+			return array();
+		}
+		$facts = self::facts( $home, Home_Kit::facts( $home ) );
+		$out   = array();
+		foreach ( self::entries() as $id => $entry ) {
+			if ( self::usable( $entry, $facts )['ok'] ) {
+				$out[] = array(
+					'id'    => (string) ( $entry['id'] ?? $id ),
+					'role'  => (string) $entry['role'],
+					'label' => (string) $entry['label'],
+				);
+			}
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Whether the library can be used for a design's pages, and when it cannot, which of the things it needs this site does not have:
 	 * the theme its sections are made for, a Home that is the kind of company their words are for, the blocks they are made of.
 	 *
