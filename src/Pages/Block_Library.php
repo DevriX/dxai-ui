@@ -11,7 +11,9 @@ namespace DXAI_UI\Pages;
 
 use DXAI_UI\Media\Svg_Files;
 use DXAI_UI\Support\Color_Math;
+use DXAI_UI\Blocks\Native\Button;
 use DXAI_UI\Theme\Capabilities;
+use DXAI_UI\Theme\Theme_Buttons;
 use DXAI_UI\Theme\Theme_Palette;
 
 /**
@@ -661,6 +663,8 @@ final class Block_Library {
 		}
 		// A line left with no words (a row that has a title and nothing more: the slot for its words is empty) is not left on the page.
 		self::prune_empty( $root );
+		// A wave over the section's edge is the colour of a neighbour on the team's site, not this page's (edges()).
+		self::edges( $root );
 		$root = Layouts::finish( $root );
 		// The words in the page's own font where the theme has not the team's (fonts()).
 		self::fonts( $root );
@@ -1710,6 +1714,25 @@ final class Block_Library {
 	}
 
 	/**
+	 * A wave laid over a section's edge (a transition break set `absolute` at its bottom) is drawn in the colour of the section that
+	 * followed it on the team's site. On a page made here another section follows, so the wave is not drawn: on Taylored Restoration's
+	 * pages a navy wave a third of the page wide hung over a white section (an absolute box with no width is as wide as its drawing).
+	 * A break in the flow of a section, between its own parts, stays.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private static function edges( array &$block ): void {
+		for ( $i = count( $block['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
+			$child = $block['innerBlocks'][ $i ];
+			if ( (string) ( $child['blockName'] ?? '' ) === 'dx/transition-break' && preg_match( '/(?:^|\s)absolute(?:\s|$)/', (string) ( $child['attrs']['className'] ?? '' ) ) === 1 ) {
+				Block_Tree::drop( $block, $i );
+				continue;
+			}
+			self::edges( $block['innerBlocks'][ $i ] );
+		}
+	}
+
+	/**
 	 * The paragraphs of provisional words outside the lists (tokens() marks them): the first stays, the others go. The team's own words
 	 * and a list's rows are not provisional and are not counted.
 	 *
@@ -1756,13 +1779,16 @@ final class Block_Library {
 			return $block;
 		}
 		// The colours a slug is drawn in, where the blocks are: on a page of a design, its own colour of the same name takes the class
-		// inside the design's scope (`.dxai-ui--N .has-accent-color` is the design's accent, not the theme's).
+		// inside the design's scope (`.dxai-ui--N .has-accent-color` is the design's accent, not the theme's). A design that follows the
+		// theme's colours (Theme_Binding) draws the theme's own in a class the theme has — the accent band of a team's layout is the
+		// theme's accent there — and its own only in a class the theme has not (its `on-accent`, which the plugin draws).
 		$candidates = array_keys( $colours );
 		if ( $home > 0 ) {
+			$follows = \DXAI_UI\Theme\Theme_Binding::follows( $home );
 			foreach ( (array) ( get_post_meta( $home, '_dxai_ui_palette', true )['colors'] ?? array() ) as $row ) {
 				$slug = sanitize_key( (string) ( is_array( $row ) ? ( $row['slug'] ?? '' ) : '' ) );
 				$hex  = Color_Math::hex( (string) ( is_array( $row ) ? ( $row['value'] ?? '' ) : '' ) );
-				if ( $slug !== '' && $hex !== '' ) {
+				if ( $slug !== '' && $hex !== '' && ( ! $follows || ! isset( $colours[ $slug ] ) ) ) {
 					$colours[ $slug ] = $hex;
 				}
 			}
@@ -1813,6 +1839,10 @@ final class Block_Library {
 			}
 		}
 		$here  = $own !== '' ? $own : $ground;
+		// A button drawn by the theme's style alone, in the colour of the band it stands on, is not seen (on_band()).
+		if ( $name === 'core/button' && $own === '' ) {
+			$b = self::on_band( $b, $here );
+		}
 		$dark  = Color_Math::contrast( '#ffffff', $here ) > Color_Math::contrast( '#000000', $here );
 		$pick  = array_intersect_key( $colours, array_flip( (array) $ctx['candidates'] ) );
 		$want  = self::fit( $dark ? (string) $ctx['on_dark'] : (string) $ctx['text'], $dark ? '#ffffff' : '#000000', $here, $pick );
@@ -1858,6 +1888,38 @@ final class Block_Library {
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $i => $child ) {
 			if ( is_array( $child ) && ! empty( $child['blockName'] ) ) {
 				$b['innerBlocks'][ $i ] = self::legible_walk( $child, $here, $pass, $in_card || $is_card, $ctx );
+			}
+		}
+
+		return $b;
+	}
+
+	/**
+	 * A button the theme's filled style draws in the colour of the band it stands on — a team's layout set on the accent, its button the
+	 * theme's primary, which is the accent on american-restoration — is a word with no button around it (Taylored Restoration's "Need
+	 * restoration help now?"): it wears the theme's other style when that one stands apart, as an import's button does
+	 * (Native\Button::on_band()). A button with a colour of its own is judged by its own colours, and is left as it is here.
+	 *
+	 * @param array<string, mixed> $b      A core/button.
+	 * @param string               $ground What it stands on, #rrggbb.
+	 * @return array<string, mixed>
+	 */
+	private static function on_band( array $b, string $ground ): array {
+		$class = (string) ( $b['attrs']['className'] ?? '' );
+		if ( preg_match( '/(?:^|\s)is-style-((?:small-)?primary-button)(?=\s|$)/', $class, $m ) !== 1 ) {
+			return $b;
+		}
+		$fill  = Theme_Buttons::fill( $m[1] );
+		$other = Theme_Buttons::has( 'secondary-button' ) ? Theme_Buttons::fill( 'secondary-button' ) : '';
+		if ( $fill === '' || $other === '' || Color_Math::distance( $fill, $ground ) >= Button::APART || Color_Math::distance( $other, $ground ) < Button::APART ) {
+			return $b;
+		}
+		$swap                    = static fn( string $s ): string => (string) preg_replace( '/(?<=[\s"])is-style-' . preg_quote( $m[1], '/' ) . '(?=[\s"])/', 'is-style-secondary-button', $s, 1 );
+		$b['attrs']['className'] = trim( $swap( ' ' . $class . ' ' ) );
+		$b['innerHTML']          = $swap( (string) $b['innerHTML'] );
+		foreach ( (array) $b['innerContent'] as $k => $part ) {
+			if ( is_string( $part ) ) {
+				$b['innerContent'][ $k ] = $swap( $part );
 			}
 		}
 

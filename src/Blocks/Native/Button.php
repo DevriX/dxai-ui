@@ -207,7 +207,7 @@ final class Button extends Converter {
 	 * accent #e64804: the same accent 0, Tailwind's orange-600 2.9 and orange-500 9.2 — one orange to the eye — while the design's
 	 * own flame #f28c28 is 13.9, the theme's primary blue 36 and white 43.
 	 */
-	private const APART = 10.0;
+	public const APART = 10.0;
 
 	/**
 	 * A call to action whose theme style would vanish into what it sits on: the theme's filled button on a band of the same colour

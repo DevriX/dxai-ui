@@ -1066,6 +1066,20 @@ $scope_btn  = (array) ( $on_design['innerBlocks'][1]['innerBlocks'][0] ?? array(
 $btn_slug   = (string) ( $scope_btn['attrs']['textColor'] ?? '' );
 $expect( 'and a button\'s own words on its own ground the same, written on its link (where a button\'s settings go)', $btn_slug !== '' && $btn_slug !== $chroma_slug && \DXAI_UI\Support\Color_Math::contrast( (string) ( $pal[ $btn_slug ] ?? '#ffffff' ), '#ffffff' ) >= 4.5 && preg_match( '/<a class="[^"]*has-' . preg_quote( $btn_slug, '/' ) . '-color/', (string) ( $scope_btn['innerHTML'] ?? '' ) ) === 1 && ! str_contains( (string) ( $scope_btn['innerHTML'] ?? '' ), 'has-' . $chroma_slug . '-color' ), json_encode( array( $btn_slug, substr( (string) ( $scope_btn['innerHTML'] ?? '' ), 0, 160 ) ) ) );
 $expect( 'on a page of a design that draws a theme colour lighter, words in it give way to a colour of the theme that reads (4.5:1) and is still a colour; on a page of the theme they keep it', $chroma_slug !== '' && $theme_slug === $chroma_slug && $scope_slug !== '' && $scope_slug !== $chroma_slug && $scope_rgb !== null && \DXAI_UI\Support\Color_Math::contrast( (string) $pal[ $scope_slug ], '#ffffff' ) >= 4.5 && \DXAI_UI\Support\Color_Math::oklch( $scope_rgb )[1] > 0.08, json_encode( array( $chroma_slug, $theme_slug, $scope_slug ) ) );
+// …but a design that follows the theme's colours draws the theme's: there the class is the theme's colour, and is judged as such
+// (Taylored Restoration's accent was teal in its palette, the page drew the theme's orange band, and an orange button vanished into it).
+// A colour the theme has not (the design's `on-accent`, white) is still the design's, which the plugin draws: white words on the
+// theme's accent band keep it when it reads there.
+$accent_now = (string) ( $pal['accent'] ?? '' );
+$own_only   = '' !== $accent_now && \DXAI_UI\Support\Color_Math::contrast( '#ffffff', $accent_now ) >= 3.0;
+update_post_meta( (int) $said_id, '_dxai_ui_palette', array( 'colors' => array( '#f2e6a0' => array( 'slug' => $chroma_slug, 'name' => 'Pale', 'value' => '#f2e6a0' ), '#ffffff' => array( 'slug' => 'dxtest-on-band', 'name' => 'On band', 'value' => '#ffffff' ) ) ) );
+update_post_meta( (int) $said_id, \DXAI_UI\Theme\Theme_Binding::META, array( get_stylesheet() => array( 'schema' => \DXAI_UI\Theme\Theme_Binding::SCHEMA, 'mode' => 'follow' ) ) );
+$on_follow   = Block_Library::legible( $scoped, (int) $said_id );
+$follow_slug = (string) ( $on_follow['innerBlocks'][0]['attrs']['textColor'] ?? '' );
+$on_band_h   = Block_Library::legible( parse_blocks( '<!-- wp:group {"backgroundColor":"accent"} --><div class="wp-block-group has-accent-background-color has-background"><!-- wp:heading {"textColor":"dxtest-on-band"} --><h2 class="wp-block-heading has-dxtest-on-band-color has-text-color">Need help now?</h2><!-- /wp:heading --></div><!-- /wp:group -->' )[0], (int) $said_id );
+delete_post_meta( (int) $said_id, \DXAI_UI\Theme\Theme_Binding::META );
+$expect( 'on a page of a design that follows the theme\'s colours, a colour of the theme is the theme\'s: words in it are judged as on a page of the theme', ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] || ( $follow_slug === $theme_slug && $theme_slug !== $scope_slug ), json_encode( array( $theme_slug, $scope_slug, $follow_slug ) ) );
+$expect( '…and a colour only the design has is the design\'s: its white heading on the theme\'s accent band stays white', ! $own_only || ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] || ( $on_band_h['innerBlocks'][0]['attrs']['textColor'] ?? '' ) === 'dxtest-on-band', json_encode( array( $accent_now, $on_band_h['innerBlocks'][0]['attrs'] ?? null ) ) );
 
 // The Home's own questions come first: a section that lists them over one that carries the team's questions.
 $faq_ids = array();

@@ -339,6 +339,39 @@ $expect( 'a section\'s heading set large over its line is no figure: its words s
 // A caption beside a button (13px) has no provisional sentence.
 $cta = Block_Library::fill( 'layout-cta-4', array( 'role' => 'cta' ) + $facts, $why );
 $expect( 'a call to action\'s small caption under its button takes no provisional sentence: it is left out', null !== $cta && preg_match( '/<p class="text-13[^"]*"[^>]*>[^<]{20,}/', serialize_block( $cta ) ) !== 1, $why );
+// A wave over a section's bottom edge is the colour of the section after it on the team's site (navy, a third of the width, over white).
+if ( WP_Block_Type_Registry::get_instance()->is_registered( 'dx/transition-break' ) ) {
+	$edged = array();
+	foreach ( array( 'layout-cta-6' => 'cta', 'layout-cta-7' => 'cta', 'layout-process-4' => 'process' ) as $lid => $lrole ) {
+		$lsrc          = (string) file_get_contents( DXAI_UI_DIR . 'data/block-library/blocks/' . $lid . '.html' );
+		$lout          = Block_Library::fill( $lid, array( 'role' => $lrole ) + $facts, $why );
+		$edged[ $lid ] = array( str_contains( $lsrc, '"className":"absolute bottom-0"' ), null === $lout ? 'not made: ' . $why : ( str_contains( serialize_block( $lout ), 'wp:dx/transition-break' ) ? 'wave' : 'none' ) );
+	}
+	$expect( 'a wave the team\'s layout lays over its bottom edge (in the next section\'s colour on its own site) is not drawn on a page made here', array_filter( $edged, static fn( $e ) => true !== $e[0] || 'wave' === $e[1] ) === array() && in_array( 'none', array_column( $edged, 1 ), true ), wp_json_encode( $edged ) );
+} else {
+	echo "  (no dx/transition-break on this theme: the layouts with a wave over their edge are not made here)\n";
+}
+// A button the theme's style fills with the colour of its band (a layout on the accent, its button the theme's primary, the accent too).
+$accent_hex = (string) ( \DXAI_UI\Theme\Capabilities::palette()['accent'] ?? '' );
+$primary    = \DXAI_UI\Theme\Theme_Buttons::fill( 'primary-button' );
+$second     = \DXAI_UI\Theme\Theme_Buttons::has( 'secondary-button' ) ? \DXAI_UI\Theme\Theme_Buttons::fill( 'secondary-button' ) : '';
+if ( $accent_hex !== '' && $primary !== '' && $second !== '' && \DXAI_UI\Support\Color_Math::distance( $primary, $accent_hex ) < 10.0 && \DXAI_UI\Support\Color_Math::distance( $second, $accent_hex ) >= 10.0 ) {
+	$band_markup = '<!-- wp:group {"backgroundColor":"accent","className":"dxai-lib"} --><div class="wp-block-group dxai-lib has-accent-background-color has-background"><!-- wp:heading --><h2 class="wp-block-heading">Need help now?</h2><!-- /wp:heading --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="tel:5550100">Call</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->';
+	// (A band of another colour of the theme, apart from both buttons: the primary is seen there and stays.)
+	$far = '';
+	foreach ( \DXAI_UI\Theme\Capabilities::palette() as $far_slug => $far_hex ) {
+		if ( $far_slug !== 'accent' && \DXAI_UI\Support\Color_Math::distance( $primary, (string) $far_hex ) >= 10.0 && \DXAI_UI\Support\Color_Math::distance( $second, (string) $far_hex ) >= 10.0 ) {
+			$far = (string) $far_slug;
+			break;
+		}
+	}
+	$other_markup = str_replace( array( '"backgroundColor":"accent"', 'has-accent-background-color' ), array( '"backgroundColor":"' . $far . '"', 'has-' . $far . '-background-color' ), $band_markup );
+	$on_band      = serialize_block( Block_Library::legible( parse_blocks( $band_markup )[0] ) );
+	$on_other     = serialize_block( Block_Library::legible( parse_blocks( $other_markup )[0] ) );
+	$expect( 'a button the theme fills with its band\'s colour (the primary on the accent) wears the theme\'s other style; on a band of another colour it keeps the primary', $far !== '' && str_contains( $on_band, '"className":"is-style-secondary-button"' ) && str_contains( $on_band, 'class="wp-block-button is-style-secondary-button"' ) && ! str_contains( $on_band, 'primary-button' ) && str_contains( $on_other, 'class="wp-block-button is-style-primary-button"' ), $far . ' ' . $on_band );
+} else {
+	echo "  (this theme's primary button is not its accent: no button to lose on a band here)\n";
+}
 
 echo "\nA service's page and the other services\n";
 $services = array(
