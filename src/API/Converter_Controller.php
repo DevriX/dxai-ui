@@ -762,6 +762,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	}
 
 	public function process_source( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		self::admin_memory();
 		$source = $this->resolve_source( $request );
 		if ( is_wp_error( $source ) ) {
 			return $source;
@@ -782,6 +783,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	}
 
 	public function generate_block( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		self::admin_memory();
 		$source = $this->resolve_source( $request );
 		if ( is_wp_error( $source ) ) {
 			return $source;
@@ -932,6 +934,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 * saved exactly as before.
 	 */
 	public function save_pattern( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		self::admin_memory();
 		$token = self::save_token( (string) $request->get_param( 'import_token' ) );
 		if ( $token === '' ) {
 			return $this->save_now( $request );
@@ -951,6 +954,15 @@ final class Converter_Controller extends \WP_REST_Controller {
 		 * its crawl never planned. The same rule Crawl_Job::advance() follows.
 		 */
 		ignore_user_abort( true );
+		/*
+		 * A whole site is one save (13 pages of a Claude Design package: 85 s on a
+		 * local machine), longer than the 30 s many hosts give PHP. Lifted where
+		 * the host allows it, as generate_block() does. A host that ends the
+		 * request anyway is what the record and the wizard's wait are for.
+		 */
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- disabled on some hosts.
+		}
 		// A fatal error (memory, max_execution_time) ends the request without
 		// reaching the lines below; the record must still say it stopped.
 		register_shutdown_function( array( self::class, 'save_interrupted' ), $token, $user );
@@ -1036,6 +1048,20 @@ final class Converter_Controller extends \WP_REST_Controller {
 				'status'   => 500,
 			)
 		);
+	}
+
+	/**
+	 * The admin's memory for the import's heavy requests (reading the archive, compiling it, saving it).
+	 *
+	 * They are made from the dashboard, but as REST requests they get WP_MEMORY_LIMIT, what every
+	 * front-end request gets, not the WP_MAX_MEMORY_LIMIT core gives wp-admin and admin-ajax.php
+	 * (WP Engine: 256 MB for all requests, 512 MB for wp-admin's). Measured on a 13-page Claude Design
+	 * package (Gemini Restoration): reading 124 MB, compiling 206 MB, saving 305 MB, so the save stopped
+	 * on a site's 256 MB with "There has been a critical error". Raised the way core raises it, never
+	 * lowered, and only where the host lets PHP change it.
+	 */
+	private static function admin_memory(): void {
+		wp_raise_memory_limit( 'admin' );
 	}
 
 	/** A token is 32 hex characters, made by the browser for one save attempt. */

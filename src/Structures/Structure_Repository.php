@@ -1860,7 +1860,7 @@ final class Structure_Repository {
 			return new \WP_Error( 'dxai_ui_restore', __( 'Conversion snapshot not found.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
 
-		$payload = json_decode( (string) $post->post_content, true );
+		$payload = Conversion_Snapshot::decode( (string) $post->post_content );
 		if ( ! is_array( $payload ) ) {
 			return new \WP_Error( 'dxai_ui_restore', __( 'Conversion snapshot is not valid JSON.', 'dxai-ui' ), array( 'status' => 422 ) );
 		}
@@ -2342,21 +2342,12 @@ final class Structure_Repository {
 	 * @param array<string, mixed> $created
 	 */
 	private function save_conversion( string $title, array $result, array $created ): int {
-		/*
-		 * With <, >, &, ' and " escaped as \u00XX, the JSON holds no character
-		 * KSES acts on — the flags core uses for the global-styles post. Where
-		 * the importing user has no unfiltered_html, KSES runs on this post
-		 * like any other, and it read the design's HTML inside the JSON strings
-		 * as markup: measured, a 290 KB snapshot came back as 67 MB of invalid
-		 * JSON after 70 seconds, and the next one exhausted a 1 GB memory
-		 * limit — as the last step of an import, after every page was written.
-		 */
-		$payload = wp_json_encode(
+		// Compressed: a whole site's record is tens of MB of JSON (Conversion_Snapshot says what that cost).
+		$payload = Conversion_Snapshot::encode(
 			array(
 				'result'  => $result,
 				'created' => $created,
-			),
-			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+			)
 		);
 
 		$page_id  = (int) ( $created['page_id'] ?? 0 );
@@ -2386,7 +2377,7 @@ final class Structure_Repository {
 			 * and anything else that reads the record got nothing back. The
 			 * page itself was never affected: that insert was already slashed.
 			 */
-			'post_content' => wp_slash( is_string( $payload ) ? $payload : '{}' ),
+			'post_content' => wp_slash( $payload ),
 			'meta_input'   => array(
 				'_dxai_ui_generated' => '1',
 				'_dxai_ui_page_id'   => $page_id,

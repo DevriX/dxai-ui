@@ -1372,7 +1372,7 @@ $row   = static function ( int $id, bool $crawled ) use ( $block, $menu ): array
 		)
 	);
 	if ( $conv ) {
-		$record             = json_decode( (string) $conv[0]->post_content, true );
+		$record             = DXAI_UI\Structures\Conversion_Snapshot::decode( (string) $conv[0]->post_content );
 		$chrome             = is_array( $record['created']['chrome'] ?? null ) ? $record['created']['chrome'] : null;
 		$out['conversion']  = array(
 			'id'     => (int) $conv[0]->ID,

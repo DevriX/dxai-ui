@@ -20,6 +20,7 @@ import {
 	crawlKey,
 	describeFailure,
 	engineLine,
+	fatalAnswer,
 	formatBytes,
 	formatDuration,
 	importToken,
@@ -815,7 +816,9 @@ export default function ConvertWizard() {
 				}
 				// A proxy's 504, an error page, a dropped connection: the save
 				// may still be running, or done. Ask before offering it again.
-				if ( lostAnswer( err ) ) {
+				// WordPress's "critical error" did end it, but only the save's
+				// record says why (PHP's own message): ask for that too.
+				if ( lostAnswer( err ) || fatalAnswer( err ) ) {
 					watchSave( { attempt, cause: err, crawlOn, reopen: false } );
 					return;
 				}
@@ -888,6 +891,8 @@ export default function ConvertWizard() {
 		const token = runToken.current;
 		const patience = limit || SAVE_STUCK_MS;
 		const why = lostWhy( cause );
+		// PHP stopped and WordPress answered for it: the request is over.
+		const fatal = fatalAnswer( cause );
 		let misses = 0;
 		let unknowns = 0;
 		// Checking again from the failure: the phase is reopened once, then updated.
@@ -897,14 +902,17 @@ export default function ConvertWizard() {
 		setBusy( true );
 		setStep( 'saving' );
 		const say = ( detail ) => {
-			dispatch( { type: reopenNext ? 'start' : 'detail', id: 'save', force: true, watching: true, detail } );
+			// No answer was lost after a critical error: the row says what it does, not "the connection was cut".
+			dispatch( { type: reopenNext ? 'start' : 'detail', id: 'save', force: true, watching: ! fatal, detail } );
 			reopenNext = false;
 		};
-		say( sprintf(
-			/* translators: %s: what went wrong, e.g. "HTTP 504" */
-			__( 'The answer did not come back (%s). That does not mean the save failed — asking WordPress how it is going…', 'dxai-ui' ),
-			why
-		) );
+		say( fatal
+			? __( 'WordPress stopped with a critical error. Asking it what PHP said…', 'dxai-ui' )
+			: sprintf(
+				/* translators: %s: what went wrong, e.g. "HTTP 504" */
+				__( 'The answer did not come back (%s). That does not mean the save failed — asking WordPress how it is going…', 'dxai-ui' ),
+				why
+			) );
 		const later = ( ms ) => {
 			saveWatch.current = window.setTimeout( ask, ms );
 		};
@@ -929,6 +937,11 @@ export default function ConvertWizard() {
 							{ code: rec.code || 'dxai_ui_save', message: rec.message || '', data: { status: rec.status || 0 } },
 							{ attempt, cause, crawlOn, saveState: 'failed' }
 						);
+						return;
+					}
+					if ( state === 'running' && fatal ) {
+						// The request is over: a record still running was never told why.
+						failSave( cause, { attempt, cause, crawlOn, saveState: 'failed' } );
 						return;
 					}
 					if ( state === 'running' ) {

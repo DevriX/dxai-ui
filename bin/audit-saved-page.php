@@ -37,7 +37,7 @@ $conv = get_posts( array(
 	'posts_per_page' => 1,
 ) );
 if ( $conv ) {
-	$payload = json_decode( $conv[0]->post_content, true );
+	$payload = DXAI_UI\Structures\Conversion_Snapshot::decode( (string) $conv[0]->post_content );
 	$r = is_array( $payload['result'] ?? null ) ? $payload['result'] : array();
 	echo 'structures=' . count( $r['structures'] ?? array() ) . PHP_EOL;
 	echo 'raw_css_len=' . strlen( (string) ( $r['design_css_raw'] ?? '' ) ) . PHP_EOL;

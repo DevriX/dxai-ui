@@ -53,7 +53,7 @@ $measured = 0;
 $unknown  = 0;
 
 foreach ( $records as $record ) {
-	$json = json_decode( (string) get_post_field( 'post_content', (int) $record ), true );
+	$json = DXAI_UI\Structures\Conversion_Snapshot::decode( (string) get_post_field( 'post_content', (int) $record ) );
 	if ( ! is_array( $json ) ) {
 		continue;
 	}

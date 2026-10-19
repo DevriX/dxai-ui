@@ -1088,10 +1088,25 @@ export function lostAnswer( err ) {
 	return TIMEOUT_CODES.includes( String( e.code || '' ) ) || [ 502, 503, 504, 520, 522, 524 ].includes( status );
 }
 
+/**
+ * Whether WordPress's own fatal-error handler gave the answer: PHP stopped
+ * part-way (the memory or time limit, an error) and WordPress said only
+ * "There has been a critical error on this website". The save writes PHP's
+ * own message into its record (/save-status) as it stops, so the screen asks
+ * for that instead of showing the general sentence.
+ */
+export function fatalAnswer( err ) {
+	const e = err && typeof err === 'object' ? err : {};
+	return String( e.code || '' ) === 'internal_server_error';
+}
+
 /** Why an answer did not arrive, in a few words for a sentence. */
 export function lostWhy( err ) {
 	const e = err && typeof err === 'object' ? err : {};
 	const status = Number( e.data?.status || e.status || 0 );
+	if ( fatalAnswer( e ) ) {
+		return __( 'WordPress stopped with a critical error', 'dxai-ui' );
+	}
 	if ( e.code === 'invalid_json' ) {
 		return __( 'the server or a proxy answered with an error page', 'dxai-ui' );
 	}
@@ -1168,6 +1183,9 @@ export function describeFailure( err, phase, context = {} ) {
 		hint = __( 'Run the import as an administrator who may publish unfiltered HTML.', 'dxai-ui' );
 	} else if ( status === 413 || /too large|upload_max_filesize|post_max_size/i.test( message ) ) {
 		hint = __( 'Ask your host to raise upload_max_filesize and post_max_size, or export the design without unused assets.', 'dxai-ui' );
+	} else if ( phase === 'save' && code === 'dxai_ui_save_fatal' && /Allowed memory size/i.test( message ) ) {
+		// The import's requests ask for the dashboard's memory (Converter_Controller::admin_memory()).
+		hint = __( 'PHP ran out of memory part-way through. The import uses the memory WordPress gives the dashboard, WP_MAX_MEMORY_LIMIT in wp-config.php: set it higher (for example define( \'WP_MAX_MEMORY_LIMIT\', \'512M\' );) or ask your host to, then try again — it updates the same page rather than adding a copy.', 'dxai-ui' );
 	} else if ( phase === 'save' && code === 'dxai_ui_save_fatal' ) {
 		hint = __( 'PHP ran out of memory or time part-way through. Ask your host to raise memory_limit or max_execution_time, then try again — it updates the same page rather than adding a copy.', 'dxai-ui' );
 	} else if ( phase === 'save' && context.save === 'unknown' ) {

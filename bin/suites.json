@@ -51,6 +51,7 @@
 		{ "file": "verify-speed.php", "group": "ci" },
 		{ "file": "verify-structures.php", "group": "ci" },
 		{ "file": "verify-team-arrange.php", "group": "ci" },
+		{ "file": "verify-import-memory.php", "group": "ci" },
 		{ "file": "verify-team-pages.php", "group": "ci" },
 		{ "file": "verify-font-fallbacks.php", "group": "ci" },
 		{ "file": "verify-late-fonts.php", "group": "ci" },

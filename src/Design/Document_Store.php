@@ -79,7 +79,7 @@ final class Document_Store {
 			)
 		);
 		$snapshot  = $snapshots[0] ?? null;
-		$payload   = $snapshot instanceof \WP_Post ? json_decode( (string) $snapshot->post_content, true ) : null;
+		$payload   = $snapshot instanceof \WP_Post ? \DXAI_UI\Structures\Conversion_Snapshot::decode( (string) $snapshot->post_content ) : null;
 		if ( ! is_array( $payload ) || ! is_array( $payload['result'] ?? null ) ) {
 			return new \WP_Error( 'dxai_ui_no_snapshot', __( 'The design has no conversion snapshot to build its document from: import it again to get one.', 'dxai-ui' ) );
 		}
