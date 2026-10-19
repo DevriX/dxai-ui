@@ -1511,7 +1511,10 @@ final class Block_Library {
 							$once          = ! empty( $facts['once'] );
 							// A page says a line once: the team's line a section of the page (or the Home's own) already said gives way to
 							// provisional words, and provisional words said already to the next of theirs.
-							if ( $once && $team !== '' && Layouts::said( $facts, $team, false ) ) {
+							// (A call — the team's words with the page's phone in them — is no sentence: a layout says it twice, for a phone and for
+							// a screen, and the second, said already, left a link to the phone with no words.)
+							$call = (string) ( $facts['phone'] ?? '' ) !== '' && str_contains( $team, (string) $facts['phone'] );
+							if ( $once && $team !== '' && ! $call && Layouts::said( $facts, $team, false ) ) {
 								$team = '';
 							}
 							$cache[ $key ] = $team !== '' ? $team : ( $caption && str_starts_with( $arg, 'p-' ) ? '' : Layouts::words( $arg, $facts, $row ) );

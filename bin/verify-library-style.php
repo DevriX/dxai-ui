@@ -269,6 +269,17 @@ foreach ( $caps !== null ? $flat( $caps ) : array() as $b ) {
 	}
 }
 $expect( 'a line set in capitals takes no sentence of provisional words (a label is not a sentence shouted)', $caps !== null && $shout === array(), $why . ' ' . implode( ' | ', $shout ) );
+$mute = array();
+$tels = 0;
+foreach ( $caps !== null ? $flat( $caps ) : array() as $b ) {
+	if ( Capabilities::is_block( (string) $b['blockName'], 'link_box' ) && str_starts_with( (string) ( $b['attrs']['url'] ?? '' ), 'tel:' ) ) {
+		++$tels;
+		if ( trim( wp_strip_all_tags( serialize_block( $b ) ) ) === '' ) {
+			$mute[] = (string) ( $b['attrs']['className'] ?? '' );
+		}
+	}
+}
+$expect( '…and the call it says twice (for a phone and for a screen) is said both times: no link to the phone is left with no words', $tels >= 2 && $mute === array(), $tels . ' ' . implode( ' | ', $mute ) );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
