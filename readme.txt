@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.37
+Stable tag: 0.4.0-beta.38
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.38 =
+* Pages made from a design's menu look finished: a figure badge of the team's layout shows the Home's own figure and its words, or goes; a layout whose cards would hold a title and nothing else is not used; a page says each sentence once, and a paragraph with nothing new to say is left out; a caption under a button takes no sentence; a service's page answers its own questions and calls for its own service, not another's; two calls to action are not side by side; the bar the Home fixes to a phone's screen is on every page and never in a section's place; a picture is not shown twice on a page.
+* The team's sections on another site: a wave laid over a section's edge in the colour of the section after it on the team's site is left out; a button the theme fills with the colour of the band it stands on wears the theme's other style; a design that follows the theme's colours is judged in the colours the page draws (the theme's, and its own only where the theme has none).
+* For developers: a box fixed over the page is no section in the design document either, before or after the save; new checks in verify-library-pour and verify-block-library.
 = 0.4.0-beta.37 =
 * Sites in a folder: a design's links from the root of its host (`/careers/`) go under the site's address on a network in folders or WordPress in a folder, and a link to a section of the Home (`#why`) leads there from every other page. Read where the links are drawn — the design's pages, the header and footer, the footer widgets and menu items the plugin wrote — so the pages made before are right as they are (`dxai_ui_site_links`).
 * Pages made from the Home and the team's sections: a theme colour named "border" no longer draws a frame round the words set in it (it is the block's own colour now); a section keeps only the fonts the page draws, not every family the theme names; a layout's steps are the page's own (no leftover "Phase 3" of the site it came from); a credentials band keeps its badges; a place's page talks about the work done there, not about its name.
