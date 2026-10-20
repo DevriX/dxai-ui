@@ -365,7 +365,8 @@ final class Structure_Repository {
 			$full_source = trim( implode( "\n", $source_chunks ) );
 		}
 
-		$page_id = $this->save_page( $title, $page_content, $css, $js, $design, $compiled, $wrapper_class, $raw_css, $home_slug, $full_source, $wrap_style, $tw_config );
+		$this->chrome_source = $full_source;
+		$page_id             = $this->save_page( $title, $page_content, $css, $js, $design, $compiled, $wrapper_class, $raw_css, $home_slug, $full_source, $wrap_style, $tw_config );
 		if ( is_wp_error( $page_id ) ) {
 			return $page_id;
 		}
@@ -431,7 +432,13 @@ final class Structure_Repository {
 			$extra_slug      = (string) ( $extra['slug'] ?? '' );
 			$home_seo        = $this->seo_title;
 			$this->seo_title = ( str_contains( $extra_raw, '|' ) || strlen( $extra_raw ) > 60 ) ? $extra_raw : '';
-			$extra_id        = $this->save_page( $extra_title, $extra_markup, $css, $js, $design, $compiled, $wrapper_class, $raw_css, $extra_slug, '', '', $tw_config );
+			/*
+			 * Its own root classes, not the Home's: a Claude Design route page's root is `dxg-root dxg-page-about …` and the
+			 * design's rules for that page ask for them. With the Home's, Gemini Restoration's About lost every rule written
+			 * for it (`:where(.dxg-page-about) …`): its fonts, its amber panel, its active menu item.
+			 */
+			$extra_wrapper   = $this->class_list( (string) ( $extra['wrapper_class'] ?? '' ) );
+			$extra_id        = $this->save_page( $extra_title, $extra_markup, $css, $js, $design, $compiled, $extra_wrapper !== '' ? $extra_wrapper : $wrapper_class, $raw_css, $extra_slug, '', '', $tw_config );
 			$this->seo_title = $home_seo;
 			if ( ! is_wp_error( $extra_id ) ) {
 				$created['extra_page_ids'][] = $extra_id;
@@ -1399,6 +1406,9 @@ final class Structure_Repository {
 	/** Original Design.com / source SEO title (browser tab), not the WP page name. */
 	private string $seo_title = '';
 
+	/** The design's whole source, for a route page's stylesheet: its header and footer are on every page (Page_Css_Trim). */
+	private string $chrome_source = '';
+
 	private function inject_navigation( string $markup, int $nav_id ): string {
 		if ( ! $this->inject_nav ) {
 			return $markup;
@@ -2272,6 +2282,9 @@ final class Structure_Repository {
 		// page group, and the source sections no longer carry that element.
 		$compile_src = $source_html !== '' ? $source_html . "\n" . $wrapped : $wrapped;
 		$sheet       = $purger->compile( $compile_src, $css, $id, $compiled_css, $raw_css, $wrapper_style, $tailwind_config );
+		// A design whose stylesheet holds every page's rules (an Elementor site as a Claude Design package: 4.4 MB on each
+		// of its pages) keeps only what this page, its header and its footer can use.
+		$sheet  = \DXAI_UI\Compiler\Page_Css_Trim::apply( $sheet, $source_html !== '' ? $source_html : $this->chrome_source, $wrapped, $id );
 		$url    = $purger->persist( $id, $sheet );
 		// Stored relative to uploads (`dxai-ui/pattern-{id}.css`), never as the
 		// absolute URL persist() returns — see Upload_Paths.

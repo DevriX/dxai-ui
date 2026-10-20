@@ -48,7 +48,7 @@ final class Webp {
 		if ( preg_match( '/(?:^|[-_.\/])(?:favicon|apple-touch-icon|android-chrome|mstile|site-?icon)/i', $filename ) ) {
 			return false;
 		}
-		if ( 'png' === $ext && ( self::animated( $path ) || ( self::palette( $path ) && 'WP_Image_Editor_GD' === self::editor() ) ) ) {
+		if ( 'png' === $ext && ( self::animated( $path ) || ( self::palette( $path ) && 'WP_Image_Editor_GD' === self::editor() && ! function_exists( 'imagepalettetotruecolor' ) ) ) ) {
 			return false;
 		}
 		$able = '' !== self::editor();
@@ -70,20 +70,35 @@ final class Webp {
 	 */
 	public static function make( string $path, string $filename ): ?array {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
-		$type   = wp_check_filetype( $filename );
+		$type = wp_check_filetype( $filename );
+		/*
+		 * GD writes no WebP from a palette image ("Palette image not supported by webp"): such a PNG is read through a true-colour
+		 * copy. Gemini Restoration's team photograph, the picture its service pages open on, is a 783 KiB palette PNG.
+		 */
+		$rgb = 'image/png' === $type['type'] && self::palette( $path ) && 'WP_Image_Editor_GD' === self::editor() ? self::truecolor( $path ) : '';
+		if ( null === $rgb ) {
+			return null;
+		}
 		$editor = wp_get_image_editor(
-			$path,
+			'' !== $rgb ? $rgb : $path,
 			array(
 				'mime_type'        => is_string( $type['type'] ) ? $type['type'] : 'image/jpeg',
 				'output_mime_type' => 'image/webp',
 			)
 		);
 		if ( is_wp_error( $editor ) ) {
+			if ( '' !== $rgb ) {
+				wp_delete_file( $rgb );
+			}
+
 			return null;
 		}
 		$editor->maybe_exif_rotate();
 		$dir   = get_temp_dir();
 		$saved = Image_Quality::save( $editor, $dir . wp_unique_filename( $dir, 'dxai-webp-' . wp_generate_password( 8, false ) . '.webp' ), 'image/webp' );
+		if ( '' !== $rgb ) {
+			wp_delete_file( $rgb );
+		}
 		$made  = is_array( $saved ) ? (string) $saved['path'] : '';
 		$size  = '' !== $made && is_file( $made ) ? filesize( $made ) : false;
 		$was   = filesize( $path );
@@ -108,6 +123,26 @@ final class Webp {
 		$editor = _wp_image_editor_choose( array( 'mime_type' => 'image/webp' ) );
 
 		return is_string( $editor ) ? $editor : '';
+	}
+
+	/** A palette PNG as a true-colour PNG in a temporary file (its transparency kept); null when GD cannot read or write it. */
+	private static function truecolor( string $path ): ?string {
+		if ( ! function_exists( 'imagecreatefrompng' ) || ! function_exists( 'imagepalettetotruecolor' ) ) {
+			return null;
+		}
+		$image = @imagecreatefrompng( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a broken PNG is a null here.
+		if ( false === $image ) {
+			return null;
+		}
+		imagepalettetotruecolor( $image );
+		imagealphablending( $image, false );
+		imagesavealpha( $image, true );
+		$dir = get_temp_dir();
+		$out = $dir . wp_unique_filename( $dir, 'dxai-rgb-' . wp_generate_password( 8, false ) . '.png' );
+		$ok  = imagepng( $image, $out, 1 );
+		imagedestroy( $image );
+
+		return $ok ? $out : null;
 	}
 
 	/** Whether a PNG is animated (APNG): its `acTL` chunk comes before the first image data. */

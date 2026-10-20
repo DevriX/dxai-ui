@@ -78,6 +78,9 @@ final class Image_Loading {
 	 */
 	private static array $levels = array();
 
+	/** Whether the wrapper just opened holds a single block, which may wrap the sections in turn. */
+	private static bool $lone = false;
+
 	/** The attribute a wrapper is marked with while it renders, so its level ends with it. */
 	private const WRAP = '__dxai_wrap';
 
@@ -87,7 +90,41 @@ final class Image_Loading {
 		add_filter( 'render_block', array( self::class, 'leave' ), 10, 2 );
 		add_action( 'wp_footer', array( self::class, 'print_loader' ), 20 );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_background_rule' ) );
+		add_filter( 'dx_lazy_load_skip_image', array( self::class, 'first_screen' ), 10, 2 );
 	}
+
+	/**
+	 * The DX themes' LazyLoadImages module (American Restoration) makes every <img> lazy with `fetchpriority="low"`, the first
+	 * screen's too, and leaves telling it apart to whatever writes the picture (`dx_lazy_load_skip_image`, `data-dx-no-lazy`). A
+	 * picture of a design's page rendered before its first section below the first screen — its header, the section it opens
+	 * on — is skipped, so it loads as WordPress decided; below, the module's lazy loading stands.
+	 *
+	 * @param bool|mixed   $skip Whether the module leaves the picture as it is.
+	 * @param string|mixed $tag  The <img> tag.
+	 * @return bool|mixed
+	 */
+	public static function first_screen( $skip, $tag = '' ) {
+		if ( $skip || ! is_string( $tag ) ) {
+			return $skip;
+		}
+		// A picture its design wrote eager stays so, wherever it is.
+		if ( preg_match( '/\sloading\s*=\s*(["\']?)eager\1/i', $tag ) === 1 ) {
+			return true;
+		}
+		if ( preg_match( '/\ssrc\s*=\s*(["\'])(.*?)\1/i', $tag, $m ) !== 1 ) {
+			return $skip;
+		}
+
+		// By its address: the module asks for each block and again for the whole content, after WordPress has added to the tag.
+		return isset( self::$first[ html_entity_decode( $m[2] ) ] ) ? true : $skip;
+	}
+
+	/**
+	 * The pictures of the page's first screen (its header, the section it opens on), by address.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $first = array();
 
 	/**
 	 * A page's content starts at its first block.
@@ -100,6 +137,8 @@ final class Image_Loading {
 		self::$below_at = 0;
 		self::$base     = self::$depth;
 		self::$levels   = array( self::$depth );
+		self::$lone     = false;
+		self::$first    = array();
 
 		return $content;
 	}
@@ -120,10 +159,15 @@ final class Image_Loading {
 		if ( ! is_array( $block ) || empty( $block['blockName'] ) || ! self::applies() ) {
 			return $block;
 		}
-		if ( $top && ! self::$content && self::is_wrapper( $block ) ) {
+		$lone       = self::$lone;
+		self::$lone = $top ? false : self::$lone;
+		$box = in_array( (string) $block['blockName'], array( 'core/group', 'dxai-ui/box' ), true );
+		if ( $top && ! self::$content && ( self::is_wrapper( $block ) || ( $lone && $box && ( \DXAI_UI\Pages\Section_Library::wraps_sections( $block ) || self::kids( $block ) === 1 ) ) ) ) {
 			// Its children are the page's sections: the next level down is the page's.
 			self::$levels[]              = self::$depth;
 			$block['attrs'][ self::WRAP ] = true;
+			// A <main> around one container (an Elementor site's <main> around its page <div> around its sections): opened too.
+			self::$lone = self::kids( $block ) === 1;
 		} elseif ( $top ) {
 			if ( self::$content ) {
 				$block['attrs'][ self::MARK ] = true;
@@ -177,6 +221,12 @@ final class Image_Loading {
 		}
 		if ( ! empty( $block['attrs'][ self::LAZY_BG ] ) ) {
 			$html = self::wait_background( $html );
+		}
+		if ( self::$below_at === 0 && empty( $block['attrs'][ self::MARK ] ) && stripos( $html, '<img' ) !== false && self::applies()
+			&& preg_match_all( '/<img\b[^>]*?\ssrc\s*=\s*(["\'])(.*?)\1/i', $html, $found ) ) {
+			foreach ( $found[2] as $src ) {
+				self::$first[ html_entity_decode( (string) $src ) ] = true;
+			}
 		}
 		if ( empty( $block['attrs'][ self::MARK ] ) || ( stripos( $html, '<img' ) === false && stripos( $html, '<iframe' ) === false ) ) {
 			return $html;
@@ -332,13 +382,19 @@ final class Image_Loading {
 	 *
 	 * @param array<string, mixed> $block
 	 */
+	/** @param array<string, mixed> $block How many blocks it holds. */
+	private static function kids( array $block ): int {
+		return count( array_filter( (array) ( $block['innerBlocks'] ?? array() ), static fn( $b ) => is_array( $b ) && ! empty( $b['blockName'] ) ) );
+	}
+
 	private static function is_wrapper( array $block ): bool {
 		$kids = array_values( array_filter( (array) ( $block['innerBlocks'] ?? array() ), static fn( $b ) => is_array( $b ) && ! empty( $b['blockName'] ) ) );
+		// A <main> wraps the page's content, also when that is one block (which may wrap the sections in turn).
+		if ( strtolower( (string) ( $block['attrs']['tagName'] ?? '' ) ) === 'main' && $kids !== array() ) {
+			return true;
+		}
 		if ( count( $kids ) < 2 ) {
 			return false;
-		}
-		if ( strtolower( (string) ( $block['attrs']['tagName'] ?? '' ) ) === 'main' ) {
-			return true;
 		}
 		$parts = 0;
 		foreach ( $kids as $kid ) {

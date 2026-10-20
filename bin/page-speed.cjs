@@ -3,7 +3,7 @@
  * PageSpeed in the lab: Lighthouse with pagespeed.web.dev's mobile profile (a mid-range phone, slow 4G simulated) on pages of
  * this site or any other (docs/PLAN-PERFECT-PAGES.md, P13).
  *
- *   node bin/page-speed.cjs <url>... [--runs 3] [--desktop] [--warm] [--out report.json]
+ *   node bin/page-speed.cjs <url>... [--runs 3] [--desktop] [--warm] [--out report.json] [--lhr <dir>]
  *
  * For each page: the four scores (Performance, Accessibility, Best Practices, SEO), FCP, LCP, TBT, CLS and Speed Index, the
  * LCP element, and every audit that does not pass, with what it would save. With --runs the median run by Performance is
@@ -65,9 +65,11 @@ async function warm( url ) {
 const CHROME = process.env.DXAI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
 const args = process.argv.slice( 2 );
 const opt = ( name, fallback ) => { const i = args.indexOf( '--' + name ); return i >= 0 ? args[ i + 1 ] : fallback; };
-const urls = args.filter( ( a, i ) => /^https?:\/\//.test( a ) && ! [ '--runs', '--out' ].includes( args[ i - 1 ] ) );
+const urls = args.filter( ( a, i ) => /^https?:\/\//.test( a ) && ! [ '--runs', '--out', '--lhr' ].includes( args[ i - 1 ] ) );
 const RUNS = Math.max( 1, parseInt( opt( 'runs', '1' ), 10 ) || 1 );
 const DESKTOP = args.includes( '--desktop' );
+// --lhr <dir>: every run's whole Lighthouse report too (main-thread breakdown, long tasks…), as <dir>/<page>-<run>.json.
+const LHR_DIR = opt( 'lhr', '' );
 const CATEGORIES = [ 'performance', 'accessibility', 'best-practices', 'seo' ];
 const METRICS = { 'first-contentful-paint': 'FCP', 'largest-contentful-paint': 'LCP', 'total-blocking-time': 'TBT', 'cumulative-layout-shift': 'CLS', 'speed-index': 'SI' };
 
@@ -116,6 +118,10 @@ function summary( lhr ) {
 				const flags = { port: chrome.port, output: 'json', logLevel: 'error', onlyCategories: CATEGORIES };
 				const config = DESKTOP ? ( await import( 'lighthouse/core/config/desktop-config.js' ) ).default : undefined;
 				const result = await lighthouse( served ? served.url : url, flags, config );
+				if ( LHR_DIR ) {
+					fs.mkdirSync( LHR_DIR, { recursive: true } );
+					fs.writeFileSync( path.join( LHR_DIR, url.replace( /[^a-z0-9]+/gi, '-' ).slice( -60 ) + '-' + runs.length + '.json' ), JSON.stringify( result.lhr ) );
+				}
 				const s = summary( result.lhr );
 				s.url = url;
 				runs.push( s );

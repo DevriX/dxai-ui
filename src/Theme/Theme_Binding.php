@@ -99,8 +99,56 @@ final class Theme_Binding {
 	public static function get( int $home ): ?array {
 		$all = get_post_meta( $home, self::META, true );
 		$one = is_array( $all ) ? ( $all[ get_stylesheet() ] ?? null ) : null;
+		if ( ! is_array( $one ) || (int) ( $one['schema'] ?? 0 ) !== self::SCHEMA ) {
+			return null;
+		}
+		// A route page of a multi-page design takes the mode its Home was given: the choice is the design's, made on its Home.
+		$owner = self::design_home( $home );
+		if ( $owner !== $home ) {
+			$theirs = get_post_meta( $owner, self::META, true );
+			$theirs = is_array( $theirs ) ? ( $theirs[ get_stylesheet() ] ?? null ) : null;
+			if ( is_array( $theirs ) && in_array( $theirs['mode'] ?? '', array( 'follow', 'keep' ), true ) ) {
+				$one['mode'] = $theirs['mode'];
+			}
+		}
 
-		return is_array( $one ) && (int) ( $one['schema'] ?? 0 ) === self::SCHEMA ? $one : null;
+		return $one;
+	}
+
+	/**
+	 * The Home of the design a page is a route of: a multi-page Claude Design site's About, Contact… (its own scope, so the
+	 * colour and font choices made on the Home never reached it — Gemini Restoration's twelve route pages drew themselves in
+	 * American Restoration's orange and Inter while its Home kept its amber and Fraunces). The page of the same archive with
+	 * no route; the page itself when it is the Home, has no archive, or the archive's Home is not one page.
+	 */
+	public static function design_home( int $page ): int {
+		static $memo = array();
+		if ( isset( $memo[ $page ] ) ) {
+			return $memo[ $page ];
+		}
+		$home  = $page;
+		$route = (string) get_post_meta( $page, '_dxai_ui_source_route', true );
+		$zip   = (string) get_post_meta( $page, '_dxai_ui_source_zip', true );
+		if ( $page > 0 && $route !== '' && $zip !== '' ) {
+			$ids   = get_posts(
+				array(
+					'post_type'      => 'page',
+					'post_status'    => array( 'publish', 'draft', 'private', 'future', 'pending' ),
+					'posts_per_page' => 200,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+					'meta_key'       => '_dxai_ui_source_zip', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value'     => $zip, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				)
+			);
+			$homes = array_values( array_filter( array_map( 'intval', $ids ), static fn( int $id ): bool => metadata_exists( 'post', $id, '_dxai_ui_source_route' ) && (string) get_post_meta( $id, '_dxai_ui_source_route', true ) === '' ) );
+			if ( count( $homes ) === 1 ) {
+				$home = $homes[0];
+			}
+		}
+		$memo[ $page ] = $home;
+
+		return $home;
 	}
 
 	/** Whether the design's colours follow the current theme. */

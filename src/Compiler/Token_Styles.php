@@ -273,9 +273,19 @@ final class Token_Styles {
 			return '';
 		}
 		$tokens = \DXAI_UI\Compiler\Design_Tokens::for_page( $post_id );
-		$css    = self::definitions_css(
+		// A slug the theme already had keeps the design's own colour: Design_Theme_Json never replaces a theme preset, so
+		// pointing at it drew the THEME's colour. Gemini Restoration's amber `accent` buttons turned American Restoration's
+		// orange `accent` (#E64804), and its `surface`/`border` the theme's.
+		$taken  = self::taken_by_theme( $stored );
+		$colors = $stored['colors'];
+		foreach ( $colors as $key => $row ) {
+			if ( is_array( $row ) && isset( $taken[ (string) ( $row['slug'] ?? '' ) ] ) ) {
+				$colors[ $key ]['preset'] = false;
+			}
+		}
+		$css = self::definitions_css(
 			array(
-				'colors'  => $stored['colors'],
+				'colors'  => $colors,
 				'shadows' => is_array( $stored['shadows'] ?? null ) ? $stored['shadows'] : array(),
 			),
 			is_array( $tokens ) ? $tokens : array(),
@@ -299,6 +309,13 @@ final class Token_Styles {
 			if ( $slug === '' || preg_match( '/^--[a-z0-9_-]+$/i', (string) $name ) !== 1 ) {
 				continue;
 			}
+			if ( isset( $taken[ $slug ] ) ) {
+				$value = trim( (string) ( $var['value'] ?? '' ) );
+				if ( $value !== '' && preg_match( '/^[a-z0-9#(),.%\/\s-]+$/i', $value ) === 1 ) {
+					$lines[] = $name . ':' . $value;
+				}
+				continue;
+			}
 			$lines[] = $name . ':var(--wp--preset--color--' . $slug . ')';
 		}
 		if ( $lines !== array() ) {
@@ -306,6 +323,43 @@ final class Token_Styles {
 		}
 
 		return $css;
+	}
+
+	/**
+	 * The design's colour slugs whose preset is not the design's colour: the theme layer (without the person's saved
+	 * Styles, which the design follows) holds another value under that slug, or none at all.
+	 *
+	 * @param array<string, mixed> $stored Token_Styles::META of the brand page.
+	 * @return array<string, true>
+	 */
+	private static function taken_by_theme( array $stored ): array {
+		if ( ! function_exists( 'wp_get_global_settings' ) ) {
+			return array();
+		}
+		$same = static fn( string $value ): string => strtolower( (string) preg_replace( '/\s+/', '', $value ) );
+		$base = array();
+		foreach ( (array) wp_get_global_settings( array( 'color', 'palette', 'theme' ), array( 'origin' => 'base' ) ) as $row ) {
+			if ( is_array( $row ) && isset( $row['slug'], $row['color'] ) ) {
+				$base[ (string) $row['slug'] ] = $same( (string) $row['color'] );
+			}
+		}
+		$taken = array();
+		$rows  = array_merge(
+			is_array( $stored['colors'] ?? null ) ? array_values( $stored['colors'] ) : array(),
+			is_array( $stored['vars'] ?? null ) ? array_values( $stored['vars'] ) : array()
+		);
+		foreach ( $rows as $row ) {
+			$slug = is_array( $row ) ? sanitize_key( (string) ( $row['slug'] ?? '' ) ) : '';
+			// A translucent colour has no preset; a token sharing a colour's preset is decided by that colour's row.
+			if ( $slug === '' || ! empty( $row['shared'] ) || ( array_key_exists( 'preset', $row ) && empty( $row['preset'] ) ) ) {
+				continue;
+			}
+			if ( ! isset( $base[ $slug ] ) || $base[ $slug ] !== $same( (string) ( $row['value'] ?? '' ) ) ) {
+				$taken[ $slug ] = true;
+			}
+		}
+
+		return $taken;
 	}
 
 	/**

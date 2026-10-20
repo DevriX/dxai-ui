@@ -170,7 +170,10 @@ final class Theme_Fonts {
 		}
 		$key = (string) $design . '|' . get_stylesheet();
 		if ( ! isset( self::$follow[ $key ] ) ) {
-			$keep = $design > 0 && (string) get_post_meta( $design, self::MODE_META, true ) === 'keep';
+			$own  = $design > 0 ? (string) get_post_meta( $design, self::MODE_META, true ) : '';
+			// A route page with no choice of its own takes its design's Home's (Theme_Binding::design_home).
+			$own  = $own === '' && $design > 0 ? (string) get_post_meta( Theme_Binding::design_home( $design ), self::MODE_META, true ) : $own;
+			$keep = $own === 'keep';
 			/**
 			 * Whether a design uses the theme's fonts.
 			 *

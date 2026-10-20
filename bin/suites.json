@@ -43,6 +43,7 @@
 		{ "file": "verify-page-head.php", "group": "ci" },
 		{ "file": "verify-page-order.php", "group": "ci" },
 		{ "file": "verify-page-recipes.php", "group": "ci" },
+		{ "file": "verify-page-weight.php", "group": "ci" },
 		{ "file": "verify-picture-block.php", "group": "ci" },
 		{ "file": "verify-rest-routes.php", "group": "ci" },
 		{ "file": "verify-section-blueprints.php", "group": "ci" },

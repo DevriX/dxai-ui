@@ -7,7 +7,7 @@
  * Lighthouse's first finding on every page of H2O Away was "Serve images in next-gen formats" (docs/PLAN-PERFECT-PAGES.md, T5.1).
  * The import's Sideloader hands the media library a WebP made of the file (Media\Webp): smaller, upright (a photograph's EXIF turn
  * applied), its sizes made from it, and the page, its CSS and the import's image map pointing at it. What is not converted: a file
- * the server cannot write as WebP, a GIF, an animated PNG, a palette PNG under GD, a file under 2 KB, a favicon or touch icon, a
+ * the server cannot write as WebP, a GIF, an animated PNG, a file under 2 KB, a favicon or touch icon, a
  * WebP that would not be at most 90% of the file, and anything when `dxai_ui_webp` says no. A file stored before keeps its
  * attachment; the next import makes its WebP beside it and uses that.
  *
@@ -131,7 +131,12 @@ $expect( 'not a favicon or a touch icon (they are asked for as PNG)', ! Webp::wa
 $expect( 'not a GIF (it may move)', ! Webp::wanted( $jpg, 'photo.gif' ) );
 $expect( 'not an animated PNG', ! Webp::wanted( $apng, 'moving.png' ) );
 if ( 'WP_Image_Editor_GD' === $editor ) {
-	$expect( 'not a palette PNG under GD, which cannot encode one', ! Webp::wanted( $pal, 'palette.png' ) );
+	// GD writes no WebP from a palette: it is read through a true-colour copy (Gemini Restoration's 783 KiB team photograph).
+	$from_pal = Webp::wanted( $pal, 'palette.png' ) ? Webp::make( $pal, 'palette.png' ) : null;
+	$expect( 'a palette PNG under GD, through a true-colour copy (GD cannot encode a palette)', is_array( $from_pal ) && 'palette.webp' === $from_pal['filename'] && 'RIFF' === (string) file_get_contents( $from_pal['path'], false, null, 0, 4 ), wp_json_encode( $from_pal ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	if ( is_array( $from_pal ) ) {
+		wp_delete_file( $from_pal['path'] );
+	}
 } else {
 	$expect( 'a palette PNG under ' . $editor . ', which can encode one', Webp::wanted( $pal, 'palette.png' ) );
 }
