@@ -139,8 +139,8 @@ final class Webp {
 		imagesavealpha( $image, true );
 		$dir = get_temp_dir();
 		$out = $dir . wp_unique_filename( $dir, 'dxai-rgb-' . wp_generate_password( 8, false ) . '.png' );
-		$ok  = imagepng( $image, $out, 1 );
-		imagedestroy( $image );
+		// The image is freed with its object (imagedestroy() does nothing since PHP 8.0 and is deprecated in 8.5).
+		$ok = imagepng( $image, $out, 1 );
 
 		return $ok ? $out : null;
 	}

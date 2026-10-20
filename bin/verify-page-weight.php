@@ -170,7 +170,7 @@ if ( ! function_exists( 'imagecreate' ) || ! function_exists( 'imagewebp' ) ) {
 	}
 	imagetruecolortopalette( $im, true, 256 );
 	imagepng( $im, $png, 9 );
-	imagedestroy( $im );
+	unset( $im );
 	$made_webp = Webp::wanted( $png, 'team-photo.png' ) ? Webp::make( $png, 'team-photo.png' ) : null;
 	$is_webp   = is_array( $made_webp ) && is_file( $made_webp['path'] ) && 'RIFF' === (string) file_get_contents( $made_webp['path'], false, null, 0, 4 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	$expect( 'a palette PNG is written as WebP through a true-colour copy (GD writes none from a palette)', $is_webp && 'team-photo.webp' === $made_webp['filename'], wp_json_encode( $made_webp ) );
