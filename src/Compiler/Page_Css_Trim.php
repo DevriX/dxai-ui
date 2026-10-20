@@ -51,7 +51,7 @@ final class Page_Css_Trim {
 		self::$failed = false;
 		$tokens       = self::tokens( self::chrome( $source_html ) . "\n" . $page_markup );
 		// A regex that gave up (pcre.backtrack_limit on a huge page) reads as "no classes": the sheet would lose every rule.
-		if ( self::$failed || $tokens['class'] === array() ) {
+		if ( self::gave_up() || $tokens['class'] === array() ) {
 			return $css;
 		}
 		$trimmed = self::trim( $css, $tokens );
@@ -76,12 +76,18 @@ final class Page_Css_Trim {
 	/** Set when a regex of tokens() failed, so apply() keeps the whole sheet. */
 	private static bool $failed = false;
 
+	/** Whether a regex of the last tokens() gave up (read through a call: tokens() sets it). */
+	private static function gave_up(): bool {
+		return self::$failed;
+	}
+
 	/**
 	 * preg_match_all() that records a failure.
 	 *
-	 * @param array<int, array<int, string>>|null $m
+	 * @param mixed $m
+	 * @param-out array<list<string>> $m
 	 */
-	private static function all( string $pattern, string $subject, ?array &$m ): bool {
+	private static function all( string $pattern, string $subject, mixed &$m ): bool {
 		$n = preg_match_all( $pattern, $subject, $m );
 		if ( $n === false ) {
 			self::$failed = true;
@@ -115,7 +121,7 @@ final class Page_Css_Trim {
 	 * block (dxai-ui/box, dxai-ui/link…) writes its classes and attributes from its comment's JSON when it renders, so every
 	 * word of every string there is taken as a class or an id, and every key as an attribute name.
 	 *
-	 * @return array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>}
+	 * @return array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>}
 	 */
 	public static function tokens( string $html ): array {
 		$out = array( 'class' => array(), 'id' => array(), 'attr' => array(), 'chars' => array() );
@@ -176,7 +182,7 @@ final class Page_Css_Trim {
 	 * The attributes of every block in the tree, added to the tokens.
 	 *
 	 * @param array<int, array<string, mixed>>                                                     $blocks
-	 * @param array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>} $out
+	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $out
 	 */
 	private static function block_words( array $blocks, array &$out ): void {
 		foreach ( $blocks as $block ) {
@@ -194,7 +200,7 @@ final class Page_Css_Trim {
 	 * classes and ids (an attribute's HTML, as in dxai-ui/html, is read for its own class and id attributes too).
 	 *
 	 * @param array<mixed>                                                                         $attrs
-	 * @param array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>} $out
+	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $out
 	 */
 	private static function words( array $attrs, array &$out ): void {
 		foreach ( $attrs as $key => $value ) {
@@ -222,7 +228,7 @@ final class Page_Css_Trim {
 	/**
 	 * The stylesheet with every rule no selector of which can match the tokens taken out.
 	 *
-	 * @param array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>} $tokens
+	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $tokens
 	 */
 	public static function trim( string $css, array $tokens ): string {
 		self::$memo  = array();
@@ -456,7 +462,7 @@ final class Page_Css_Trim {
 	 * Google Fonts' CSS declares each family once per subset (cyrillic, greek, vietnamese, latin-ext, latin): 830 faces,
 	 * 359 KB, in Gemini Restoration's sheet, of which an English page uses the latin ones.
 	 *
-	 * @param array<int, true> $chars
+	 * @param array<array-key, true> $chars
 	 */
 	private static function face_needed( string $body, array $chars ): bool {
 		if ( isset( $chars[-1] ) || preg_match( '/unicode-range\\s*:\\s*([^;}]+)/i', $body, $m ) !== 1 ) {
@@ -522,7 +528,7 @@ final class Page_Css_Trim {
 	/**
 	 * Whether one selector of the list can match: every name it requires is in the tokens or added at run time.
 	 *
-	 * @param array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>} $tokens
+	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $tokens
 	 */
 	public static function can_match( string $selector_list, array $tokens ): bool {
 		foreach ( self::split_list( $selector_list ) as $selector ) {
@@ -578,7 +584,7 @@ final class Page_Css_Trim {
 	 */
 	private static function split_list( string $list ): array {
 		if ( strpbrk( $list, '([\\' ) === false ) {
-			return array_values( array_filter( array_map( 'trim', explode( ',', $list ) ), 'strlen' ) );
+			return array_values( array_filter( array_map( 'trim', explode( ',', $list ) ), static fn( string $s ): bool => $s !== '' ) );
 		}
 		$out   = array();
 		$depth = 0;
@@ -599,14 +605,14 @@ final class Page_Css_Trim {
 		}
 		$out[] = substr( $list, $start );
 
-		return array_values( array_filter( array_map( 'trim', $out ), 'strlen' ) );
+		return array_values( array_filter( array_map( 'trim', $out ), static fn( string $s ): bool => $s !== '' ) );
 	}
 
 	/**
 	 * The selector with every :is()/:where()/:not()/:has()/:nth-…() group taken out, nested ones included, or null when an
 	 * :is()/:where() group cannot match.
 	 *
-	 * @param array{class: array<string, true>, id: array<string, true>, attr: array<string, true>, chars?: array<int, true>} $tokens
+	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $tokens
 	 */
 	private static function without_functional_pseudos( string $selector, array $tokens ): ?string {
 		if ( ! str_contains( $selector, '(' ) ) {

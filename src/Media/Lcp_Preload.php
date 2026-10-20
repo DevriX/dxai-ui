@@ -116,7 +116,7 @@ final class Lcp_Preload {
 		}
 
 		return array(
-			'class' => array_values( array_unique( array_filter( $classes, 'strlen' ) ) ),
+			'class' => array_values( array_unique( array_filter( $classes, static fn( string $c ): bool => $c !== '' ) ) ),
 			'id'    => $id,
 		);
 	}
@@ -132,10 +132,8 @@ final class Lcp_Preload {
 	public static function from_sheet( string $css, array $own, array $others ): array {
 		$shared = array();
 		foreach ( $others as $other ) {
-			if ( is_array( $other ) ) {
-				foreach ( self::own_names( $other )['class'] as $class ) {
-					$shared[ $class ] = true;
-				}
+			foreach ( self::own_names( $other )['class'] as $class ) {
+				$shared[ $class ] = true;
 			}
 		}
 		$mine = array_flip( $own['class'] );
@@ -252,8 +250,8 @@ final class Lcp_Preload {
 			$real = array_values(
 				array_filter(
 					$blocks,
-					static function ( $b ): bool {
-						if ( ! is_array( $b ) || empty( $b['blockName'] ) || $b['blockName'] === 'core/template-part' || Section_Library::is_lead_chrome( $b ) ) {
+					static function ( array $b ): bool {
+						if ( empty( $b['blockName'] ) || $b['blockName'] === 'core/template-part' || Section_Library::is_lead_chrome( $b ) ) {
 							return false;
 						}
 
