@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.42
+Stable tag: 0.4.0-beta.43
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,12 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.4.0-beta.43 =
+* A design of several pages (a Claude Design site) is imported as itself on every page: each page keeps its own root classes, so the rules the design wrote for that page apply (an imported About, Contact or Testimonials page lost its fonts, its panels, its review cards), and keeps the colours and fonts chosen on the design's Home ("keep the design's own").
+* A design's colour keeps its own value where the theme already has a colour of the same name (an amber "accent" no longer turns the theme's orange "accent").
+* Lighter pages: a page compiled against a whole site's stylesheet keeps only the rules it can use (4.4 MB to under 0.8 MB on each page of an Elementor site), the picture behind the first section is asked for first also when the page's stylesheet paints it, the pictures below the first screen of such a page load lazily, and a palette PNG is stored as WebP too.
+* On American Restoration, the pictures of a page's first screen are no longer made lazy and low priority by the theme's lazy-loading module.
+* For developers: `dxai_ui_page_css_trim` (whether a page's stylesheet is trimmed); the plugin answers the DX themes' `dx_lazy_load_skip_image`.
 = 0.4.0-beta.42 =
 * A whole site's import no longer stops at "Saving the page" with "There has been a critical error" on a host that gives a request 256 MB: the record every save keeps (the compile result and the save's answer) is stored compressed (a 13-page Claude Design package: 39 MB became 6 MB, and writing it no longer takes 352 MB more memory), and reading, compiling and saving use the memory WordPress gives the dashboard (WP_MAX_MEMORY_LIMIT) rather than a front-end request's. The save also lifts PHP's time limit where the host allows it.
 * When PHP stops a save anyway, the import screen says why, in PHP's own words ("Allowed memory size … exhausted"), and what to change, instead of WordPress's general sentence.
