@@ -231,6 +231,13 @@ final class Design_Blocks {
 						'selector' => '*',
 						'default'  => '',
 					),
+					// What the editor shows in an empty run (a copy of a page,
+					// Network\Page_Copies, leaves its own lines for a person with
+					// the original's words here); never part of the markup.
+					'placeholder' => array(
+						'type'    => 'string',
+						'default' => '',
+					),
 				),
 			)
 		);

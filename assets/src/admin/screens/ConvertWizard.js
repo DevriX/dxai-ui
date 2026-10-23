@@ -8,6 +8,7 @@ import ImportProgress from '../components/ImportProgress';
 import PagesOption from '../components/PagesOption';
 import ChromeChoice from '../components/ChromeChoice';
 import ImportSummary from '../components/ImportSummary';
+import { MenuPagesRun, QuickDrop, QuickPlan, SiteReview, holdNewPages } from './QuickStart';
 import { postForm } from '../upload';
 import {
 	CHROME_INFO_KEYS,
@@ -200,7 +201,17 @@ function auditLine( audit ) {
 }
 
 export default function ConvertWizard() {
-	const [ step, setStep ] = useState( 'path' );
+	// The two-click way first (QuickStart): drop the design, then "Build my site"; the steps below are one link away, and
+	// an address with &steps=1 opens them first (a bookmark, a script that walks the steps).
+	const stepsFirst = /[?&]steps=1\b/.test( window.location.search );
+	const [ step, setStep ] = useState( stepsFirst ? 'path' : 'quick' );
+	const [ quick, setQuick ] = useState( ! stepsFirst );
+	// In the two-click way, today's preview with every choice ("Change something").
+	const [ fullView, setFullView ] = useState( false );
+	// What the site's front page is (Network\Front_Page): before the save, and what the save made of it.
+	const [ front, setFront ] = useState( null );
+	// The menu's pages made from the Home's sections are all there: the whole site can be looked at (SiteReview).
+	const [ menuPagesDone, setMenuPagesDone ] = useState( false );
 	const [ path, setPath ] = useState( '' );
 	const [ scope, setScope ] = useState( 'page' );
 	const [ createMissingPages, setCreateMissingPages ] = useState( false );
@@ -388,8 +399,32 @@ export default function ConvertWizard() {
 		return () => window.removeEventListener( 'beforeunload', warn );
 	}, [ step, busy ] );
 
+	// The two-click way: a dropped design is read at once, as the whole site with the pages its menu names.
+	useEffect( () => {
+		if ( step === 'quick' && quick && file && path === 'design' ) {
+			startConvert();
+		}
+	}, [ step, quick, file, path ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// …and before it is built, what the site's front page is now (a site with one of its own keeps it).
+	useEffect( () => {
+		if ( ! quick || step !== 'preview' || front ) {
+			return;
+		}
+		apiFetch( { path: '/dxai-ui/v1/front-page?home=0&archive=' + encodeURIComponent( ( file && file.name ) || '' ) } )
+			.then( ( res ) => setFront( res ) )
+			.catch( () => {} );
+	}, [ quick, step ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// "Build my site": the pages this import makes are drafts until the whole site is seen and the person chooses (Network\Site_Review).
+	function quickBuild() {
+		const pages = !! ( plan && plan.hasMenu && ( crawlWanted || createMissingPages ) );
+		setMenuPagesDone( false );
+		( pages ? holdNewPages() : Promise.resolve() ).then( () => addToWordPress() );
+	}
+
 	const stepIndex = useMemo( () => {
-		const map = { path: 0, scope: 1, file: 2, engine: 2, run: 3, preview: 4, saving: 5, crawling: 5, success: 6 };
+		const map = { quick: 0, path: 0, scope: 1, file: 2, engine: 2, run: 3, preview: 4, saving: 5, crawling: 5, success: 6 };
 		return map[ step ] ?? 0;
 	}, [ step ] );
 
@@ -832,6 +867,12 @@ export default function ConvertWizard() {
 		setSaved( res );
 		setBusy( false );
 		setFailure( null );
+		// A whole site's Home becomes the site's front page when the site has none of its own (Network\Front_Page).
+		if ( res?.page?.id && ( crawlOn || scope === 'site' ) ) {
+			apiFetch( { path: '/dxai-ui/v1/front-page', method: 'POST', data: { home: res.page.id, action: 'adopt' } } )
+				.then( ( made ) => setFront( made ) )
+				.catch( () => {} );
+		}
 		const title = result?.block_title || '';
 		dispatch( {
 			type: 'done',
@@ -1166,7 +1207,11 @@ export default function ConvertWizard() {
 	function crawlTally( p ) {
 		return [
 			sprintf( /* translators: %d: pages created */ _n( '%d page created', '%d pages created', p.created || 0, 'dxai-ui' ), p.created || 0 ),
-			p.ai !== false ? sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ) : '',
+			p.ai === false
+				? ''
+				: ! p.engine || p.engine === 'design'
+					? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 )
+					: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ),
 			sprintf( /* translators: %d: errors */ _n( '%d error', '%d errors', p.errors || 0, 'dxai-ui' ), p.errors || 0 ),
 		].filter( Boolean ).join( ' · ' );
 	}
@@ -1344,7 +1389,12 @@ export default function ConvertWizard() {
 			crawlStop.current();
 		}
 		window.clearTimeout( saveWatch.current );
-		setStep( 'path' );
+		// Another import starts the two-click way again.
+		setStep( 'quick' );
+		setQuick( true );
+		setFullView( false );
+		setFront( null );
+		setMenuPagesDone( false );
 		setPath( '' );
 		setScope( 'page' );
 		setCreateMissingPages( false );
@@ -1458,14 +1508,18 @@ export default function ConvertWizard() {
 
 	return (
 		<div className="dxai-screen">
-			<ul className="dxai-stats">
-				{ previewStats.map( ( item ) => (
-					<li key={ item.label }>
-						<strong>{ item.value }</strong>
-						{ item.label }
-					</li>
-				) ) }
-			</ul>
+			{ /* The two-click way says what it does in words: no counters, no steps to count. */ }
+			{ ! quick && (
+				<ul className="dxai-stats">
+					{ previewStats.map( ( item ) => (
+						<li key={ item.label }>
+							<strong>{ item.value }</strong>
+							{ item.label }
+						</li>
+					) ) }
+				</ul>
+			) }
+			{ ! quick && (
 			<ol className="dxai-levels">
 				{ LEVELS.map( ( item, index ) => (
 					<li key={ item.id } className={ index === stepIndex ? 'is-current' : ( index < stepIndex ? 'is-done' : '' ) }>
@@ -1477,8 +1531,26 @@ export default function ConvertWizard() {
 					</li>
 				) ) }
 			</ol>
+			) }
 			<div className="dxai-panel dxai-panel--stack">
 				{ error && <Notice status="error" isDismissible={ false }>{ error }</Notice> }
+
+				{ step === 'quick' && (
+					<QuickDrop
+						canImport={ canImport }
+						refusal={ info.import_refusal }
+						onFile={ ( dropped ) => {
+							setPath( 'design' );
+							setScope( 'site' );
+							setCreateMissingPages( true );
+							setFile( dropped );
+						} }
+						onOther={ () => {
+							setQuick( false );
+							setStep( 'path' );
+						} }
+					/>
+				) }
 
 				{ step === 'path' && (
 					<section className="dxai-stage-card">
@@ -1752,7 +1824,28 @@ export default function ConvertWizard() {
 					</ImportProgress>
 				) }
 
-				{ step === 'preview' && result && (
+				{ step === 'preview' && result && quick && ! fullView && (
+					<QuickPlan
+						plan={ plan }
+						canCrawl={ canCrawl }
+						crawlWanted={ crawlWanted }
+						crawlCount={ crawlCount }
+						pagesEngine={ pagesEngine }
+						chrome={ chromeChosen }
+						chromeNote={ facts.own
+							? __( 'The site keeps its own header and footer: its menus and widgets stay as they are.', 'dxai-ui' )
+							: ( facts.defaultReason === 'theme' || facts.themeDraws
+								? sprintf( /* translators: %s: theme name */ __( '%s draws the site’s own header and footer, so they stay; the design’s can be put in Menus and Widgets under “Change something”.', 'dxai-ui' ), facts.themeName || __( 'Your theme', 'dxai-ui' ) )
+								: '' ) }
+						front={ front }
+						sections={ structures.length }
+						busy={ busy }
+						onBuild={ quickBuild }
+						onChange={ () => setFullView( true ) }
+					/>
+				) }
+
+				{ step === 'preview' && result && ( ! quick || fullView ) && (
 					<section className="dxai-stage-card">
 						<ImportProgress compact plan={ phasePlan } progress={ progress } crawl={ crawl } engine={ engine } />
 						<h3 className="dxai-step-title" style={ { marginTop: 18 } }>{ __( 'Your WordPress preview', 'dxai-ui' ) }</h3>
@@ -1848,8 +1941,10 @@ export default function ConvertWizard() {
 							</div>
 						) }
 						<div className="dxai-actions">
-							<Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dxai-ui' ) }</Button>
-							<Button variant="primary" disabled={ busy } onClick={ addToWordPress }>
+							{ quick
+								? <Button variant="secondary" onClick={ () => setFullView( false ) }>{ __( 'Back to the plan', 'dxai-ui' ) }</Button>
+								: <Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dxai-ui' ) }</Button> }
+							<Button variant="primary" disabled={ busy } onClick={ quick ? quickBuild : addToWordPress }>
 								{ crawlWanted && crawlCount > 0
 									? sprintf(
 										/* translators: %d: number of menu pages */
@@ -1873,12 +1968,18 @@ export default function ConvertWizard() {
 							chromeAsked={ chromeAsked }
 							headingRef={ doneHeading }
 							onReset={ resetGame }
+							front={ front }
+							onFront={ () => apiFetch( { path: '/dxai-ui/v1/front-page', method: 'POST', data: { home: saved?.page?.id || 0, action: 'force' } } ).then( ( made ) => setFront( made ) ).catch( ( err ) => setError( err.message ) ) }
 						>
 							{ /* Coverage is counted against the saved page, so it can only appear here. */ }
 							<FidelityReport result={ result } harvest={ harvest } structures={ structures } coverage={ saved?.coverage } compact />
 							<ImportAudit audit={ saved?.audit } />
+							<ImportProgress compact plan={ phasePlan } progress={ progress } crawl={ crawl } engine={ engine } />
 						</ImportSummary>
-						<ImportProgress compact plan={ phasePlan } progress={ progress } crawl={ crawl } engine={ engine } />
+						{ /* The two-click way makes the menu's pages also when the old site they would come from is not known. */ }
+						{ quick && ! crawlRan && createMissingPages && plan.hasMenu && saved?.page?.id > 0 && <MenuPagesRun home={ saved.page.id } onDone={ () => setMenuPagesDone( true ) } /> }
+						{ /* The whole site before its pages go live: all of them, only the Home, or the ones ticked. */ }
+						{ quick && saved?.page?.id > 0 && ( crawlRan || menuPagesDone ) && <SiteReview home={ saved.page.id } /> }
 					</>
 				) }
 			</div>

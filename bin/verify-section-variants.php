@@ -81,6 +81,11 @@ $expect( 'two cards are not turned', $try( 'rotate', $section( $heading( 'Few' )
 $expect( 'the order is what the seed says: another seed, another order', count( array_unique( array_map( static fn( $n ) => (string) ( $try( 'rotate', $sec, $ctx, static fn( $k ) => crc32( $n . $k ) )['op'] ?? '' ), range( 1, 12 ) ) ) ) > 3 );
 $logos = $section( $heading( 'Trusted' ) . $group( 'row', '<!-- wp:image {"className":"w-auto h-40px"} --><figure class="wp-block-image w-auto h-40px"><img src="https://example.test/1.png" alt="One"/></figure><!-- /wp:image --><!-- wp:image {"className":"w-auto h-58px"} --><figure class="wp-block-image w-auto h-58px"><img src="https://example.test/2.png" alt="Two"/></figure><!-- /wp:image --><!-- wp:image {"className":"w-auto h-72px"} --><figure class="wp-block-image w-auto h-72px"><img src="https://example.test/3.png" alt="Three"/></figure><!-- /wp:image -->' ) );
 $expect( 'logos, each its own size, are put in another order too, each keeping its own size', ( function () use ( $try, $logos, $ctx ) { $r = $try( 'rotate', $logos, $ctx ); return $r !== null && str_contains( $r['op'], 'order:logo:' ) && substr_count( serialize_block( $r['block'] ), 'h-40px' ) === 2 && serialize_block( $r['block'] ) !== serialize_block( $logos ); } )() );
+$steps = static fn( array $nums ): array => $section( $heading( 'How it works' ) . $group( 'grid', implode( '', array_map( static fn( string $n ): string => $group( 'card', $para( $n ) . $heading( 'What happens at ' . $n, 3 ) . $para( 'Words of the step' ) ), $nums ) ) ) );
+$expect( 'numbered steps keep their order (01, 02, 03, 04)', $try( 'rotate', $steps( array( '01', '02', '03', '04' ) ), $ctx ) === null );
+$expect( '…also when they say "Step 1", "Step 2", "Step 3"', $try( 'rotate', $steps( array( 'Step 1', 'Step 2', 'Step 3' ) ), $ctx ) === null );
+$expect( 'cards that only begin with figures (4.9, 800+, 24/7) are still put in another order', $try( 'rotate', $steps( array( '4.9 stars', '800+ reviews', '24/7 crews' ) ), $ctx ) !== null );
+$expect( 'and numbers out of order (3, 1, 2) are not a sequence', $try( 'rotate', $steps( array( '3', '1', '2' ) ), $ctx ) !== null );
 
 echo "\nThe questions\n";
 $qa = '';

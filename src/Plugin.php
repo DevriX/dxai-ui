@@ -49,6 +49,8 @@ final class Plugin {
 		( new Content_Types() )->register();
 		if ( ! $render_only ) {
 			( new Dashboard() )->register();
+			( new \DXAI_UI\Network\Copies_Editor() )->register();
+			\DXAI_UI\Network\Site_Review::register();
 		}
 		( new Rest_Registrar() )->register();
 		( new Assets() )->register();

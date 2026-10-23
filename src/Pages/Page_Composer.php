@@ -1467,6 +1467,7 @@ final class Page_Composer {
 			$html = (string) preg_replace( '#</?a\b[^>]*>#i', '', $html );
 		}
 		$node = &Block_Tree::at( $block, $path );
+		self::unstar( $node, $html );
 		$html = self::inline_links( $node, $html );
 		try {
 			Block_Tree::set_content( $node, $html );
@@ -1474,6 +1475,28 @@ final class Page_Composer {
 		} catch ( \RuntimeException $e ) {
 			$this->log[] = 'could not write ' . implode( '.', $path ) . ': ' . $e->getMessage();
 		}
+	}
+
+	/**
+	 * A rating's stars the design drew before a line (an aria-hidden run of ★: drawing, not words) belong to a line about the
+	 * rating — "★★★★★ 4.9 rating · 800+ Google reviews". Before other words ("★★★★★ Skip the form. Call…") or before words that
+	 * bring stars of their own ("★★★★★ ★★★★★") they say what the line does not: they are taken off. An icon that is not stars
+	 * (a tick, a phone) stays where it is.
+	 *
+	 * @param array<string, mixed> $node
+	 */
+	private static function unstar( array &$node, string $html ): void {
+		$inner = (string) ( $node['innerHTML'] ?? '' );
+		$stars = '#<([a-z][a-z0-9]*)\b[^>]*\baria-hidden="true"[^>]*>\s*[\x{2605}\x{2606}\x{2729}\x{272A}\x{2B50}]+\s*</\1>[ \t]*#u';
+		if ( ! empty( $node['innerBlocks'] ) || preg_match( $stars, $inner ) !== 1 ) {
+			return;
+		}
+		$text = Content_Extractor::plain( $html );
+		if ( preg_match( '/\b(?:rat(?:ed|ing|ings)|reviews?|stars?)\b/iu', $text ) === 1 && preg_match( '/[\x{2605}\x{2606}\x{2729}\x{272A}\x{2B50}]/u', $text ) !== 1 ) {
+			return;
+		}
+		$node['innerHTML']    = (string) preg_replace( $stars, '', $inner, 1 );
+		$node['innerContent'] = array( $node['innerHTML'] );
 	}
 
 	/**

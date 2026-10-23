@@ -143,7 +143,7 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
  * The end of an import: what exists now, where to go to see or change it,
  * and — as plainly as the successes — what did not work.
  */
-export default function ImportSummary( { saved, links, elapsed, crawlStopped, crawlRan, chromeAsked, headingRef, onReset, children } ) {
+export default function ImportSummary( { saved, links, elapsed, crawlStopped, crawlRan, chromeAsked, headingRef, onReset, front, onFront, children } ) {
 	const counts = summaryCounts( saved );
 	const report = chromeReport( saved );
 	// What actually happened to the header and footer, whatever was asked.
@@ -177,10 +177,23 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				{ elapsed > 0
 					? sprintf(
 						/* translators: %s: duration, e.g. 2:14 */
-						__( 'Saved as native blocks in %s. The site homepage was not changed.', 'dxai-ui' ),
+						__( 'Saved as native blocks in %s.', 'dxai-ui' ),
 						formatDuration( elapsed )
 					)
-					: __( 'Saved as native blocks. The site homepage was not changed.', 'dxai-ui' ) }
+					: __( 'Saved as native blocks.', 'dxai-ui' ) }
+				{ ' ' }
+				{ /* The site's front page (Network\Front_Page): made the Home when the site had none of its own, else kept, with one button. */ }
+				{ front && ( front.made || front.state === 'this' )
+					? __( 'The Home is the site’s front page now.', 'dxai-ui' )
+					: ( front && front.state === 'own'
+						? sprintf( /* translators: %s: the title of the site's front page */ __( 'The site’s front page is still “%s”.', 'dxai-ui' ), front.title )
+						: __( 'The site’s front page was not changed.', 'dxai-ui' ) ) }
+				{ front && front.state === 'own' && ! front.made && onFront && (
+					<>
+						{ ' ' }
+						<button type="button" className="dxai-link" onClick={ onFront }>{ __( 'Make the Home the front page', 'dxai-ui' ) }</button>
+					</>
+				) }
 			</p>
 
 			<ul className="dxai-done__counts">
@@ -200,9 +213,13 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				{ crawlRan && (
 					<li>
 						<strong>{ counts.restyled }</strong>
-						<span>{ _n( 'page rebuilt with AI', 'pages rebuilt with AI', counts.restyled, 'dxai-ui' ) }</span>
+						<span>
+							{ counts.restyleEngine === 'design' || counts.restyleEngine === ''
+								? _n( 'page built from the design’s sections', 'pages built from the design’s sections', counts.restyled, 'dxai-ui' )
+								: _n( 'page rebuilt with AI', 'pages rebuilt with AI', counts.restyled, 'dxai-ui' ) }
+						</span>
 						{ counts.crawled > counts.restyled && (
-							<em>{ sprintf( /* translators: %d: pages converted without AI */ _n( '%d converted without AI', '%d converted without AI', counts.crawled - counts.restyled, 'dxai-ui' ), counts.crawled - counts.restyled ) }</em>
+							<em>{ sprintf( /* translators: %d: pages kept as the old site had them */ _n( '%d kept as on the old site', '%d kept as on the old site', counts.crawled - counts.restyled, 'dxai-ui' ), counts.crawled - counts.restyled ) }</em>
 						) }
 					</li>
 				) }
@@ -255,11 +272,15 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 
 			<ChromeRows report={ report } outcome={ outcome } menusUrl={ menusUrl } widgetsUrl={ widgetsUrl } />
 
-			{ outcome.header.mode === CHROME_INSTALL && links?.designs && (
+			{ created.length > 0 ? (
+				<p className="dxai-done__next" role="note">
+					{ __( 'Next: open one service page, finish it as you want the others, then choose “Make the other services from this page” in its editor (the Page tab): the others get its build and look, and their own words.', 'dxai-ui' ) }
+				</p>
+			) : ( outcome.header.mode === CHROME_INSTALL && links?.designs && (
 				<p className="dxai-done__next" role="note">
 					{ __( 'Next: the header menu names the pages of the site. On the design’s page (Designs › this design › Pages) they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dxai-ui' ) }
 				</p>
-			) }
+			) ) }
 
 			<div className="dxai-actions dxai-done__actions">
 				{ saved?.page?.view && <a className="components-button is-primary" href={ saved.page.view }>{ __( 'View page', 'dxai-ui' ) }</a> }
@@ -332,7 +353,13 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				</details>
 			) }
 
-			{ children }
+			{ /* What the compiler measured (coverage, raw HTML, Tailwind, the checks): for whoever wants it, not in the way. */ }
+			{ children && (
+				<details className="dxai-done__details">
+					<summary>{ __( 'Details', 'dxai-ui' ) }</summary>
+					{ children }
+				</details>
+			) }
 		</section>
 	);
 }

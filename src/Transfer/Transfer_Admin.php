@@ -37,6 +37,8 @@ final class Transfer_Admin {
 			\DXAI_UI\Support\Design_Cli::register();
 			\DXAI_UI\Pages\Order_Cli::register();
 			\DXAI_UI\Pages\Library_Cli::register();
+			\DXAI_UI\Network\Network_Cli::register();
+			\DXAI_UI\Network\Copies_Cli::register();
 		}
 	}
 

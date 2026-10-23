@@ -16,7 +16,7 @@
 	border: 1px solid var(--dxai-line);
 	border-radius: 24px;
 	background:
-		linear-gradient(180deg, rgba(79, 193, 240, 0.05), rgba(255, 255, 255, 0) 120px),
+		linear-gradient(180deg, rgba(34, 113, 177, 0.05), rgba(255, 255, 255, 0) 120px),
 		var(--dxai-panel);
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -35,7 +35,7 @@
 
 #dxai-ui-app .dxai-progress__title {
 	margin: 0;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 24px;
 	font-weight: 600;
@@ -70,7 +70,7 @@
 
 #dxai-ui-app .dxai-progress__clock strong {
 	display: block;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 26px;
 	font-weight: 600;
@@ -111,8 +111,8 @@
 
 #dxai-ui-app .dxai-phase.is-active,
 #dxai-ui-app .dxai-phase.is-waiting {
-	background: rgba(79, 193, 240, 0.06);
-	box-shadow: inset 0 0 0 1px rgba(79, 193, 240, 0.18);
+	background: rgba(34, 113, 177, 0.06);
+	box-shadow: inset 0 0 0 1px rgba(34, 113, 177, 0.18);
 }
 
 #dxai-ui-app .dxai-phase.is-error {
@@ -143,7 +143,7 @@
 
 /* Running: a turning arc around the number. */
 #dxai-ui-app .is-active > .dxai-phase__mark {
-	border-color: rgba(79, 193, 240, 0.35);
+	border-color: rgba(34, 113, 177, 0.35);
 	color: var(--dxai-accent);
 }
 
@@ -253,7 +253,7 @@
 #dxai-ui-app .is-error .dxai-phase__label,
 #dxai-ui-app .is-done .dxai-phase__label,
 #dxai-ui-app .is-warn .dxai-phase__label {
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-phase__where {
@@ -288,7 +288,7 @@
 }
 
 #dxai-ui-app .is-warn .dxai-phase__detail {
-	color: var(--dxai-warn);
+	color: var(--dxai-warn-text);
 }
 
 #dxai-ui-app .dxai-phase__patience {
@@ -355,7 +355,7 @@
 	flex-wrap: wrap;
 	gap: 4px 10px;
 	margin: 4px 0 0;
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 15px;
 }
 
@@ -469,7 +469,7 @@
 #dxai-ui-app .dxai-crawl__queue .is-current .dxai-crawl__dot {
 	background: var(--dxai-accent);
 	border-color: var(--dxai-accent);
-	box-shadow: 0 0 0 3px rgba(79, 193, 240, 0.25);
+	box-shadow: 0 0 0 3px rgba(34, 113, 177, 0.25);
 }
 
 #dxai-ui-app .dxai-crawl__queue .is-error .dxai-crawl__dot {
@@ -483,7 +483,7 @@
 
 #dxai-ui-app .dxai-crawl__label,
 #dxai-ui-app .dxai-done__name {
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-crawl__queue .is-pending .dxai-crawl__label {
@@ -528,7 +528,7 @@
 }
 
 #dxai-ui-app .dxai-phase-error__title {
-	color: #fff !important;
+	color: var(--dxai-text) !important;
 	font-weight: 650;
 	font-size: 14.5px !important;
 }
@@ -611,8 +611,8 @@
 
 #dxai-ui-app .dxai-chipstep.is-waiting,
 #dxai-ui-app .dxai-chipstep.is-active {
-	background: rgba(79, 193, 240, 0.1);
-	color: #fff;
+	background: rgba(34, 113, 177, 0.1);
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-chipstep.is-done,
@@ -635,13 +635,13 @@
 	border-radius: 18px;
 	border: 1px solid var(--dxai-line-strong);
 	background:
-		linear-gradient(135deg, rgba(79, 193, 240, 0.07), rgba(126, 224, 184, 0.03) 60%, transparent),
+		linear-gradient(135deg, rgba(34, 113, 177, 0.05), transparent 60%),
 		var(--dxai-panel-2);
 }
 
 #dxai-ui-app .dxai-ai-option.is-on {
-	border-color: rgba(79, 193, 240, 0.55);
-	box-shadow: 0 0 0 1px rgba(79, 193, 240, 0.25), 0 12px 32px rgba(0, 0, 0, 0.25);
+	border-color: rgba(34, 113, 177, 0.55);
+	box-shadow: 0 0 0 1px rgba(34, 113, 177, 0.25), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 #dxai-ui-app .dxai-ai-option.is-disabled {
@@ -660,7 +660,7 @@
 	width: 40px;
 	height: 40px;
 	border-radius: 12px;
-	background: rgba(79, 193, 240, 0.12);
+	background: rgba(34, 113, 177, 0.12);
 }
 
 /* Four-point spark: the one place the screen says "AI". */
@@ -702,7 +702,7 @@
 
 #dxai-ui-app .dxai-ai-option__title {
 	margin: 0 0 4px;
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 16px;
 	font-weight: 650;
 	letter-spacing: -0.01em;
@@ -746,7 +746,7 @@
 }
 
 #dxai-ui-app .dxai-ai-option__facts dd code {
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 12.5px;
 }
 
@@ -754,7 +754,7 @@
 	display: block;
 	margin-top: 4px;
 	font-size: 12px;
-	color: var(--dxai-warn);
+	color: var(--dxai-warn-text);
 }
 
 /* The old site's address, when the person types it. */
@@ -871,8 +871,8 @@
 }
 
 #dxai-ui-app .dxai-ai-option__confirm {
-	background: rgba(79, 193, 240, 0.08);
-	border: 1px solid rgba(79, 193, 240, 0.22);
+	background: rgba(34, 113, 177, 0.08);
+	border: 1px solid rgba(34, 113, 177, 0.22);
 	color: var(--dxai-text);
 }
 
@@ -964,7 +964,7 @@
 
 #dxai-ui-app .dxai-done__title {
 	margin: 0 0 8px;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 32px;
 	font-weight: 600;
@@ -1009,7 +1009,7 @@
 
 #dxai-ui-app .dxai-done__counts strong {
 	display: block;
-	color: #fff;
+	color: var(--dxai-text);
 	font-family: var(--dxai-display);
 	font-size: 30px;
 	font-weight: 600;
@@ -1124,7 +1124,7 @@
 		left: 0;
 		width: 100%;
 		opacity: 0.55;
-		background: repeating-linear-gradient(135deg, var(--dxai-accent) 0 8px, rgba(79, 193, 240, 0.35) 8px 16px);
+		background: repeating-linear-gradient(135deg, var(--dxai-accent) 0 8px, rgba(34, 113, 177, 0.35) 8px 16px);
 	}
 
 	#dxai-ui-app .dxai-meter__fill,
@@ -1205,7 +1205,7 @@
 }
 
 #dxai-ui-app .dxai-done__chrome-head strong {
-	color: #fff;
+	color: var(--dxai-text);
 }
 
 #dxai-ui-app .dxai-done__chrome a {
@@ -1304,7 +1304,7 @@
 	width: 100%;
 	margin: 0 0 4px;
 	padding: 0;
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 16px;
 	font-weight: 650;
 	letter-spacing: -0.01em;
@@ -1417,7 +1417,7 @@
 #dxai-ui-app .dxai-chrome-option .dxai-chrome-option__title {
 	grid-column: 2;
 	margin: 0;
-	color: #fff;
+	color: var(--dxai-text);
 	font-size: 14.5px;
 	font-weight: 650;
 	line-height: 1.4;
@@ -1456,9 +1456,10 @@
 #dxai-ui-app .dxai-chrome-choice__warn {
 	margin: 14px 0 0;
 	padding: 12px 14px;
-	border: 1px solid rgba(255, 176, 58, 0.3);
+	border: 1px solid rgba(219, 166, 23, 0.45);
+	border-left: 4px solid var(--dxai-warn);
 	border-radius: 12px;
-	background: rgba(255, 176, 58, 0.06);
+	background: #fcf9e8;
 	color: var(--dxai-text);
 	font-size: 13px;
 	line-height: 1.5;
@@ -1471,7 +1472,7 @@
 
 #dxai-ui-app .dxai-chrome-choice__warn-title {
 	margin: 0 0 6px;
-	color: var(--dxai-warn);
+	color: var(--dxai-text);
 	font-weight: 650;
 }
 

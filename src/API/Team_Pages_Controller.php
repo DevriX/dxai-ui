@@ -71,6 +71,17 @@ final class Team_Pages_Controller {
 							// The team's layouts, where the library holds them (Team_Pages::policy() says what a site without them gets).
 							'default' => 'team',
 						),
+						// The order the network's pages have (Network\Network_Model::recipe()), and each page's own words written.
+						'recipe' => array(
+							'type'    => 'string',
+							'enum'    => array( '', 'network' ),
+							'default' => '',
+						),
+						'words'  => array(
+							'type'    => 'string',
+							'enum'    => array( '', 'write' ),
+							'default' => '',
+						),
 						'page'   => array(
 							'type'    => 'integer',
 							'default' => 0,
@@ -202,6 +213,7 @@ final class Team_Pages_Controller {
 						array(
 							'mode'    => $mode,
 							'library' => $lib,
+							'recipe'  => (string) $request->get_param( 'recipe' ),
 						)
 					),
 				)
@@ -230,10 +242,18 @@ final class Team_Pages_Controller {
 			array(
 				'mode'    => $mode,
 				'library' => $lib,
+				'recipe'  => (string) $request->get_param( 'recipe' ),
+				'words'   => (string) $request->get_param( 'words' ),
 			)
 		);
 		if ( is_wp_error( $out ) ) {
 			return $out;
+		}
+		// Pages whose own words were written are measured against the team's pages of their kind (N3).
+		if ( (string) $request->get_param( 'words' ) === 'write' ) {
+			foreach ( $out['pages'] as $i => $p ) {
+				$out['pages'][ $i ]['quality'] = \DXAI_UI\Network\Page_Quality::of( (int) $p['id'] );
+			}
 		}
 
 		return new \WP_REST_Response( $out + array( 'existing' => $this->existing( $design ) ) );

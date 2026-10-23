@@ -19,6 +19,10 @@ parameters:
 		-
 			identifier: include.fileNotFound
 			path: src/Admin/Dashboard.php
+		# …and the editor panel's (assets/build/make-the-rest.asset.php).
+		-
+			identifier: include.fileNotFound
+			path: src/Network/Copies_Editor.php
 	# Set in wp-config.php on a site, or not at all.
 	dynamicConstantNames:
 		- DXAI_UI_SECRETS_KEY

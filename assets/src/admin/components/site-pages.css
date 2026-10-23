@@ -105,11 +105,11 @@
 }
 
 #dxai-ui-app .dxai-site-pages__status.is-imported {
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 #dxai-ui-app .dxai-site-pages__status.is-edited {
-	color: var(--dxai-warn);
+	color: var(--dxai-warn-text);
 }
 
 #dxai-ui-app .dxai-site-pages__links {

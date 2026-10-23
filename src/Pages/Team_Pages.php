@@ -56,6 +56,12 @@ final class Team_Pages {
 	 */
 	public const LIBRARY = array( 'fill', 'prefer', 'off', 'team' );
 
+	/** Whether the run in progress lays its pages out as the network's (network_wanted()). */
+	private static bool $network = false;
+
+	/** The roles a site says the same way on every page: their words stay the Home's when a page's own are written. */
+	public const KEEP_ROLES = array( 'reviews', 'form', 'trust', 'cta' );
+
 	/** Option: the version of the key stamping (upgrade()). */
 	public const KEYS_DONE = 'dxai_ui_team_keys_done';
 
@@ -183,10 +189,11 @@ final class Team_Pages {
 	 * its locked sections), unless the request says otherwise.
 	 *
 	 * @param array<int, array<string, mixed>> $wanted  type, title, and per page `shuffle`, `recipe` and `locks` (the arrangement, as this returned it).
-	 * @param array{mode?:string, library?:string} $options mode: `home` (only the Home's sections as they are), `new` (the usual: also sections made in its cards) or `ai` (the usual plan is shown: the AI's is made when the pages are); library: see LIBRARY.
+	 * @param array{mode?:string, library?:string, recipe?:string} $options mode: `home` (only the Home's sections as they are), `new` (the usual: also sections made in its cards) or `ai` (the usual plan is shown: the AI's is made when the pages are); library: see LIBRARY; recipe: `network` (the order the network's pages have).
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function plan( int $home, array $wanted, array $options = array() ): array {
+		self::$network = self::network_wanted( $options );
 		$mode    = self::mode( $options );
 		$seed    = self::seed( $home );
 		$library = Section_Library::for_page( $home );
@@ -513,13 +520,14 @@ final class Team_Pages {
 	 * and named in `kept`).
 	 *
 	 * @param array<int, array<string, mixed>>               $wanted  As plan() takes them: type, title, and the arrangement (shuffle, recipe, locks) of the pages a person arranged.
-	 * @param array{ai?:bool, mode?:string, cap?:int, library?:string} $options library: see LIBRARY. mode: `home`, `new`, or `ai` (an AI plans the sections of each page: one request a page, within the ceiling, the usual plan when it cannot; `ai` is the same).
+	 * @param array{ai?:bool, mode?:string, cap?:int, library?:string, recipe?:string, words?:string} $options library: see LIBRARY. mode: `home`, `new`, or `ai` (an AI plans the sections of each page: one request a page, within the ceiling, the usual plan when it cannot; `ai` is the same). recipe: `network` (the order the network's pages have). words: `write` (each page's own words written: Network\Page_Copies::write_own_words()).
 	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>, report:array<int, array<string, mixed>>, run:array<string, mixed>}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false, array $options = array() ) {
 		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
 			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
 		}
+		self::$network = self::network_wanted( $options );
 		$mode  = self::mode( $options );
 		$items = array_map( static fn( $i ) => self::arranged( $home, $i ), self::clean_wanted( $wanted ) );
 		// The pages that list others first, so the pages they list can sit under them; a page at an address after the page above it.
@@ -657,6 +665,16 @@ final class Team_Pages {
 				continue;
 			}
 			update_post_meta( $id, self::OPS_META, wp_json_encode( $built['ops'] ) );
+			// The page's own words, asked for (`words` => `write`): no section says the Home's words on a page about something else.
+			$wrote_words = null;
+			if ( ( $options['words'] ?? '' ) === 'write' ) {
+				$wrote_words = \DXAI_UI\Network\Page_Copies::write_own_words( $id, self::KEEP_ROLES );
+				// The plugin wrote them: the page is not one a person edited.
+				update_post_meta( $id, self::HASH, md5( (string) get_post_field( 'post_content', $id ) ) );
+				$log[] = $item['title'] . ': ' . ( $wrote_words['words'] === 'ai'
+					? sprintf( 'words written by %s', $wrote_words['engine'] )
+					: sprintf( '%d lines left to write (the Home\'s words are their hints)%s', $wrote_words['places'], $wrote_words['error'] !== '' ? ' — ' . $wrote_words['error'] : '' ) );
+			}
 			// How the page was arranged, so that it is made the same way again; nothing is kept for the usual arrangement or an AI's plan.
 			$arr = self::arrangement( $item, $built['places'] );
 			if ( $plan === null && ( $arr['shuffle'] > 0 || $arr['recipe'] > 0 || $arr['locks'] !== array() || ! empty( $arr['roles'] ) ) ) {
@@ -673,6 +691,8 @@ final class Team_Pages {
 				'planned' => $plan !== null ? 'ai' : 'usual',
 				'strip'   => $built['places'],
 				'sections' => count( $built['sections'] ),
+				'words'   => $wrote_words['words'] ?? '',
+				'places'  => $wrote_words['places'] ?? 0,
 				'edit'    => (string) get_edit_post_link( $id, 'raw' ),
 				'view'    => (string) get_permalink( $id ),
 			);
@@ -845,6 +865,14 @@ final class Team_Pages {
 	 * @return array{roles:array<int, string>, edits:array<int, string>, nearest:int}
 	 */
 	private static function recipe( string $type, string $seed, array $home_roles = array(), string $variant = '', array $also = array() ): array {
+		$net = self::network_recipe( $type, $variant );
+		if ( $net !== null ) {
+			return array(
+				'roles'   => self::must_have( $type, $net, $home_roles, $also ),
+				'edits'   => array(),
+				'nearest' => 0,
+			);
+		}
 		$model = self::KINDS[ $type ]['model'] ?? '';
 		if ( $model === '' ) {
 			// A list of the pages under it: what the page opens with, the list, what people say, the call to action. The list of
@@ -863,6 +891,54 @@ final class Team_Pages {
 			'edits'   => $r['edits'],
 			'nearest' => $r['nearest'],
 		);
+	}
+
+	/**
+	 * Whether a run lays its pages out the way the network's sites lay out theirs (Network\Network_Model::recipe()): asked for
+	 * (`recipe` => `network`), or this site's network has been read (`wp dxai-ui network learn`).
+	 *
+	 * @param array<string, mixed> $options
+	 */
+	private static function network_wanted( array $options ): bool {
+		return ( $options['recipe'] ?? '' ) === 'network' || \DXAI_UI\Network\Network_Model::stored() !== null;
+	}
+
+	/**
+	 * The order of a page's sections as the network's pages of its kind have it on the sites whose Home is a design: the
+	 * same for every page of a kind (the team's pages of one kind are made from one page), so a shuffle (`~n`) is the usual
+	 * recipe's. The list of the other services is the cards right before the questions, as the network's pages have it.
+	 *
+	 * @return array<int, string>|null
+	 */
+	private static function network_recipe( string $type, string $variant ): ?array {
+		$kind = array(
+			'service'      => 'service',
+			'location'     => 'location',
+			'about'        => 'about',
+			'contact'      => 'contact',
+			'faq'          => 'faq',
+			'testimonials' => 'reviews',
+		)[ $type ] ?? '';
+		if ( ! self::$network || $kind === '' || str_contains( $variant, '~' ) ) {
+			return null;
+		}
+		$r = \DXAI_UI\Network\Network_Model::recipe( $kind );
+		if ( $r === null || count( $r['roles'] ) < 3 ) {
+			return null;
+		}
+		$roles = $r['roles'];
+		$faq   = array_search( 'faq', $roles, true );
+		if ( in_array( $kind, array( 'service', 'location' ), true ) && ! in_array( 'related', $roles, true ) && is_int( $faq ) ) {
+			for ( $i = $faq - 1; $i > 0; $i-- ) {
+				if ( $roles[ $i ] === 'cards' ) {
+					$roles[ $i ] = 'related';
+					break;
+				}
+			}
+		}
+
+		// A real page's order, as it is: not put in the usual tail (the network's pages end with the form as often as with a call to action).
+		return $roles;
 	}
 
 	/**
@@ -1953,7 +2029,8 @@ final class Team_Pages {
 		$id = wp_insert_post(
 			array(
 				'post_type'    => 'page',
-				'post_status'  => 'publish',
+				/** This filter is documented in src/Structures/Site_From_Menu.php */
+				'post_status'  => (string) apply_filters( 'dxai_ui_new_page_status', 'publish', $home ),
 				'post_title'   => wp_slash( $item['title'] ),
 				'post_name'    => (string) ( $item['name'] ?? $item['slug'] ),
 				'post_parent'  => $parent,

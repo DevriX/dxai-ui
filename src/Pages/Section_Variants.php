@@ -384,7 +384,8 @@ final class Section_Variants {
 				}
 				$run[] = $item;
 			}
-			if ( ! $ok ) {
+			// Steps that are numbered are an order to read in, not cards to deal: 1, 4, 5, 2, 3 says the wrong thing.
+			if ( ! $ok || self::numbered( $run ) ) {
 				continue;
 			}
 			$order = self::shuffled( count( $run ), $h, 'order:' . $n );
@@ -421,6 +422,24 @@ final class Section_Variants {
 	}
 
 	/* ------------------------------------------------------------------------------------------------ helpers */
+
+	/**
+	 * Whether items are numbered in their order: each begins with its number ("1", "01", "Step 2"), one after the other.
+	 *
+	 * @param array<int, array<string, mixed>> $items
+	 */
+	public static function numbered( array $items ): bool {
+		$numbers = array();
+		foreach ( $items as $item ) {
+			$text = trim( (string) preg_replace( '/\s+/u', ' ', html_entity_decode( wp_strip_all_tags( serialize_block( $item ) ), ENT_QUOTES, 'UTF-8' ) ) );
+			if ( preg_match( '/^(?:step\s*)?0*(\d{1,2})(?!\d)/iu', $text, $m ) !== 1 ) {
+				return false;
+			}
+			$numbers[] = (int) $m[1];
+		}
+
+		return count( $numbers ) > 1 && $numbers === range( $numbers[0], $numbers[0] + count( $numbers ) - 1 );
+	}
 
 	/**
 	 * What a block is called, without the importer's per-block helper classes (`dxai-sh-26`, `dxai-sh-27`: one each, with the same

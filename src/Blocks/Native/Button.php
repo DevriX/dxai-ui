@@ -183,6 +183,16 @@ final class Button extends Converter {
 	}
 
 	/** Which of the theme's styles the design's button is: filled → primary, white or outlined → secondary. */
+	/** Which of the theme's button styles a design's link would wear (look()): `primary-button`, `secondary-button`, or null when it is no button. */
+	public static function style_of( string $class, string $css ): ?string {
+		return self::look( $class, $css );
+	}
+
+	/** The theme preset a design's colour (`token:accent`) follows on this site, '' when none (preset_of()). */
+	public static function preset_for( string $paint, int $home ): string {
+		return self::preset_of( $paint, $home );
+	}
+
 	private static function look( string $class, string $css ): ?string {
 		$padded = preg_match( '/\s(?:p[xy]?|p[trbl])-\d/', $class ) === 1 || preg_match( '/(?:^|;)\s*padding(?:-[a-z]+)?\s*:/', $css ) === 1;
 		if ( ! $padded ) {

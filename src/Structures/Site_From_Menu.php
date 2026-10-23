@@ -937,7 +937,14 @@ final class Site_From_Menu {
 
 		$data = array(
 			'post_type'    => 'page',
-			'post_status'  => 'publish',
+			/**
+			 * The status of a page an import makes new from its design's menu (a published page that is there already stays so):
+			 * a draft while a person looks at the whole site before it goes live (Network\Site_Review).
+			 *
+			 * @param string $status  'publish'.
+			 * @param int    $home_id The design's Home.
+			 */
+			'post_status'  => $existing instanceof \WP_Post && $existing->post_status !== 'draft' ? 'publish' : (string) apply_filters( 'dxai_ui_new_page_status', 'publish', $home_id ),
 			'post_title'   => wp_slash( $title ),
 			'post_name'    => $slug,
 			'post_content' => wp_slash( $content ),

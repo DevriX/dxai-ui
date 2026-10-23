@@ -48,13 +48,13 @@
 }
 
 #dxai-ui-app .dxai-copy__kind--location {
-	background: rgba(79, 193, 240, 0.16);
-	color: var(--dxai-accent);
+	background: rgba(34, 113, 177, 0.16);
+	color: var(--dxai-accent-2);
 }
 
 #dxai-ui-app .dxai-copy__kind--service {
-	background: rgba(95, 211, 155, 0.16);
-	color: var(--dxai-ok);
+	background: #edfaef;
+	color: #007017;
 }
 
 #dxai-ui-app .dxai-copy__fields {

@@ -339,3 +339,301 @@
 		width: auto;
 	}
 }
+
+/* The two-click way (QuickStart.js): one place to drop the design, then what will be made, in words, with one button. */
+#dxai-ui-app .dxai-quick__drop {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	margin: 18px 0 10px;
+	padding: 48px 24px;
+	border: 2px dashed var(--dxai-line-strong);
+	border-radius: 12px;
+	background: var(--dxai-panel-2);
+	color: var(--dxai-text);
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 14px;
+	cursor: pointer;
+	text-align: center;
+}
+
+#dxai-ui-app .dxai-quick__drop:hover,
+#dxai-ui-app .dxai-quick__drop:focus-within {
+	border-color: var(--dxai-accent);
+	background: #f0f6fc;
+}
+
+#dxai-ui-app .dxai-quick__drop strong {
+	font-size: 18px;
+}
+
+#dxai-ui-app .dxai-quick__drop span {
+	color: var(--dxai-muted);
+}
+
+#dxai-ui-app .dxai-quick__drop input[type="file"] {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+}
+
+#dxai-ui-app .dxai-quick__plan {
+	display: grid;
+	gap: 10px;
+	margin: 16px 0 20px;
+	padding: 0;
+	list-style: none;
+}
+
+#dxai-ui-app .dxai-quick__plan li {
+	display: flex;
+	gap: 10px;
+	align-items: baseline;
+	color: var(--dxai-text);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+#dxai-ui-app .dxai-quick__tick {
+	flex: none;
+	color: var(--dxai-ok-text);
+	font-weight: 700;
+}
+
+#dxai-ui-app .dxai-done__details {
+	margin-top: 18px;
+}
+
+#dxai-ui-app .dxai-done__details > summary {
+	cursor: pointer;
+	color: var(--dxai-accent-2);
+	font-weight: 600;
+}
+
+#dxai-ui-app .dxai-quick__pages {
+	margin-top: 18px;
+	padding: 16px 18px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 8px;
+	background: var(--dxai-panel);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-quick__pages h4 {
+	margin: 0 0 8px;
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-done__list-plain {
+	margin: 8px 0 0;
+	padding-left: 18px;
+}
+
+/* The whole site before its pages go live (QuickStart.js SiteReview): the pages in a list, one of them drawn live beside it. */
+#dxai-ui-app .dxai-review {
+	margin-top: 18px;
+	padding: 18px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 8px;
+	background: var(--dxai-panel);
+	color: var(--dxai-text);
+}
+
+#dxai-ui-app .dxai-review__body {
+	display: grid;
+	grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+	margin: 16px 0;
+}
+
+#dxai-ui-app .dxai-review__list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-height: 760px;
+	margin: 0;
+	padding: 0 4px 0 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+#dxai-ui-app .dxai-review__card {
+	display: grid;
+	grid-template-columns: 96px minmax(0, 1fr);
+	gap: 10px;
+	margin: 0;
+	padding: 8px;
+	border: 1px solid var(--dxai-line);
+	border-radius: 6px;
+	background: var(--dxai-panel);
+}
+
+#dxai-ui-app .dxai-review__card.is-shown {
+	border-color: var(--dxai-accent);
+	box-shadow: 0 0 0 1px var(--dxai-accent);
+}
+
+#dxai-ui-app .dxai-review__card.is-off .dxai-review__thumb {
+	opacity: 0.4;
+}
+
+#dxai-ui-app .dxai-review__thumb {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 96px;
+	height: 64px;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	border-radius: 4px;
+	background: var(--dxai-panel-2);
+	color: var(--dxai-muted);
+	font-size: 22px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-review__thumb:focus-visible {
+	outline: 2px solid var(--dxai-accent);
+	outline-offset: 2px;
+}
+
+#dxai-ui-app .dxai-review__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+#dxai-ui-app .dxai-review__meta {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	font-size: 13px;
+}
+
+#dxai-ui-app .dxai-review__pick {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin: 0;
+	color: var(--dxai-text);
+	font-size: 13px;
+	text-transform: none;
+	letter-spacing: 0;
+	cursor: pointer;
+}
+
+#dxai-ui-app .dxai-review__pick input {
+	margin-top: 2px;
+}
+
+#dxai-ui-app .dxai-review__tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+#dxai-ui-app .dxai-review__tag {
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--dxai-panel-2);
+	color: var(--dxai-muted);
+	font-size: 12px;
+}
+
+#dxai-ui-app .dxai-review__tag.is-live,
+#dxai-ui-app .dxai-review__tag.is-good {
+	background: #edfaef;
+	color: var(--dxai-ok-text);
+}
+
+#dxai-ui-app .dxai-review__tag.is-check {
+	background: #fcf9e8;
+	color: var(--dxai-warn-text);
+}
+
+#dxai-ui-app .dxai-review__issues {
+	color: var(--dxai-muted);
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+#dxai-ui-app .dxai-review__links a,
+#dxai-ui-app .dxai-review__widths a {
+	color: var(--dxai-accent-2);
+}
+
+#dxai-ui-app .dxai-review__stage {
+	position: sticky;
+	top: 40px;
+	min-width: 0;
+}
+
+#dxai-ui-app .dxai-review__bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+
+#dxai-ui-app .dxai-review__widths {
+	display: inline-flex;
+	gap: 6px;
+	align-items: center;
+}
+
+/* One page live: 1440 px wide drawn at half (720 x 700 shown), or a phone at its own size. */
+#dxai-ui-app .dxai-review__screen {
+	overflow: hidden;
+	border: 1px solid var(--dxai-line);
+	border-radius: 6px;
+	background: var(--dxai-panel-2);
+}
+
+#dxai-ui-app .dxai-review__screen.is-desktop {
+	width: 720px;
+	max-width: 100%;
+	height: 700px;
+}
+
+#dxai-ui-app .dxai-review__screen.is-desktop iframe {
+	width: 1440px;
+	height: 1400px;
+	border: 0;
+	transform: scale(0.5);
+	transform-origin: 0 0;
+}
+
+#dxai-ui-app .dxai-review__screen.is-phone {
+	width: 392px;
+	max-width: 100%;
+	height: 760px;
+}
+
+#dxai-ui-app .dxai-review__screen.is-phone iframe {
+	width: 390px;
+	height: 760px;
+	border: 0;
+}
+
+@media (max-width: 1180px) {
+	#dxai-ui-app .dxai-review__body {
+		grid-template-columns: 1fr;
+	}
+
+	#dxai-ui-app .dxai-review__stage {
+		position: static;
+	}
+
+	#dxai-ui-app .dxai-review__list {
+		max-height: 420px;
+	}
+}

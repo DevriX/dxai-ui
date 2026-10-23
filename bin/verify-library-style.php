@@ -281,5 +281,59 @@ foreach ( $caps !== null ? $flat( $caps ) : array() as $b ) {
 }
 $expect( '…and the call it says twice (for a phone and for a screen) is said both times: no link to the phone is left with no words', $tels >= 2 && $mute === array(), $tels . ' ' . implode( ' | ', $mute ) );
 
+echo "A Home that draws its buttons as links (a design kept as it was)\n";
+// Its calls to action are the design's links with a fill of its colours (bg-dxai-accent text-dxai-ink), and its colours follow the
+// theme's: the library's buttons keep the theme's style and take the Home's fill and text in their Colour panel (H2O Away, 2026-10-23).
+$ink = '';
+foreach ( $palette as $slug => $hex ) {
+	if ( (string) $slug !== $dark && Capabilities::text_slug_ok( (string) $slug ) && is_string( $hex ) && Color_Math::parse( $hex ) !== null ) {
+		$ink = (string) $slug;
+		break;
+	}
+}
+$cta_link  = static fn( string $t ): string => '<!-- wp:dxai-ui/link {"url":"tel:+15550100101","text":"' . $t . '","className":"rounded-10px px-7 gap-2-5 items-center flex-inline text-dxai-ink fw-900 bg-dxai-accent"} /-->';
+// (The second call is a text the design drew as a link — a call with its icon, as H2O Away's are.)
+$cta_text  = static fn( string $t ): string => '<!-- wp:dxai-ui/text {"tagName":"a","url":"tel:+15550100101","className":"dxai-sh-71 rounded-10px px-6-5 gap-2-5 items-center flex-inline text-18 text-dxai-ink fw-900 bg-dxai-accent"} /-->';
+$link_home = $ground( $light, $heading( 'Restoration in Harborview', 1 ) . $cta_link( 'Call now' ) ) . $plain( $heading( 'Water damage?' ) . $cta_text( 'Get help now' ) );
+$binding   = static fn( string $mode ): array => array(
+	get_stylesheet() => array(
+		'schema' => DXAI_UI\Theme\Theme_Binding::SCHEMA,
+		'mode'   => $mode,
+		'tokens' => array(
+			'accent' => array( 'to' => $dark ),
+			'ink'    => array( 'to' => $ink ),
+		),
+	),
+);
+$link_id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Harborview Links ' . $run, 'post_content' => wp_slash( $link_home ) ) );
+$made[]  = $link_id;
+update_post_meta( $link_id, Page_Scope::META, $link_id );
+update_post_meta( $link_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
+$look = Library_Style::look( $link_id );
+$expect( 'its buttons are read from its links: the presets their fill and their text follow', ( $look['button']['primary']['fill'] ?? '' ) === $dark && ( $look['button']['primary']['text'] ?? '' ) === $ink, wp_json_encode( $look['button'] ?? null ) );
+$band = parse_blocks(
+	'<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Call us</h2><!-- /wp:heading -->'
+	. '<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="tel:+15550100101">Call now</a></div><!-- /wp:button -->'
+	. '<!-- wp:button {"className":"is-style-secondary-button"} --><div class="wp-block-button is-style-secondary-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Write to us</a></div><!-- /wp:button --></div><!-- /wp:buttons --></section><!-- /wp:group -->'
+)[0];
+$dressed = Library_Style::follow( $band, $link_id, 'cta' );
+$buttons = array();
+foreach ( $flat( $dressed ) as $b ) {
+	if ( (string) $b['blockName'] === 'core/button' ) {
+		$buttons[] = $b;
+	}
+}
+$first = $buttons[0] ?? array();
+$expect( 'the library\'s button keeps the theme\'s style and wears the Home\'s fill and text in its Colour panel', ( $first['attrs']['backgroundColor'] ?? '' ) === $dark && ( $first['attrs']['textColor'] ?? '' ) === $ink && str_contains( (string) ( $first['attrs']['className'] ?? '' ), 'is-style-primary-button' ), wp_json_encode( $first['attrs'] ?? null ) );
+$expect( '…with the classes core\'s Button writes for them on its link, in core\'s order', str_contains( (string) ( $first['innerHTML'] ?? '' ), 'class="wp-block-button__link has-' . $ink . '-color has-' . $dark . '-background-color has-text-color has-background has-link-color wp-element-button"' ), (string) ( $first['innerHTML'] ?? '' ) );
+$expect( 'the second button (an outline) keeps its own look', ! isset( $buttons[1]['attrs']['backgroundColor'] ) && ! str_contains( (string) ( $buttons[1]['innerHTML'] ?? '' ), 'has-background' ) );
+update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'keep' ) );
+wp_update_post( array( 'ID' => $link_id, 'post_content' => wp_slash( $link_home . ' ' ) ) );
+$expect( 'a Home that keeps its own colours (they follow no preset) says nothing about its buttons', ( Library_Style::look( $link_id )['button'] ?? null ) === null );
+update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
+wp_update_post( array( 'ID' => $link_id, 'post_content' => wp_slash( $ground( $light, $heading( 'Restoration in Harborview', 1 ) . $cta_link( 'Call now' ) ) ) ) );
+$expect( '…nor does a Home with one such link', ( Library_Style::look( $link_id )['button'] ?? null ) === null );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

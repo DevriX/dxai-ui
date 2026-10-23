@@ -1663,6 +1663,9 @@
 			// holds, and hpq reads innerHTML off the first element it finds.
 			// With no selector it would hand back the whole `<span>…</span>`.
 			content: { type: 'string', source: 'html', selector: '*', default: '' },
+			// What the editor shows in an empty run (a copy of a page leaves its
+			// own lines for a person with the original's words here); never saved.
+			placeholder: { type: 'string', default: '' },
 		},
 		edit: function ( props ) {
 			const a = props.attributes;
@@ -1698,7 +1701,7 @@
 					// space is layout. Without this, rich text trims it at the
 					// root and 92 of these leaves lose a space on first edit.
 					preserveWhiteSpace: true,
-					placeholder: 'Text',
+					placeholder: a.placeholder || 'Text',
 					onChange: function ( value ) { props.setAttributes( { content: value } ); },
 				} ) )
 			);

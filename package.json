@@ -4,8 +4,8 @@
   "private": true,
   "description": "DXAI-UI admin SPA build",
   "scripts": {
-    "build": "wp-scripts build assets/src/admin/index.js --output-path=assets/build",
-    "start": "wp-scripts start assets/src/admin/index.js --output-path=assets/build",
+    "build": "wp-scripts build assets/src/admin/index.js assets/src/admin/editor/make-the-rest.js --output-path=assets/build",
+    "start": "wp-scripts start assets/src/admin/index.js assets/src/admin/editor/make-the-rest.js --output-path=assets/build",
     "release": "node bin/release.cjs"
   },
   "devDependencies": {

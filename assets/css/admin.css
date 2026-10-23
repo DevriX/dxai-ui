@@ -19,6 +19,8 @@
 	--dxai-ok: #00a32a;
 	--dxai-danger: #d63638;
 	--dxai-warn: #dba617;
+	--dxai-ok-text: #007017;
+	--dxai-warn-text: #8a6d00;
 	--dxai-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 	--dxai-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 	--dxai-mono: Consolas, Monaco, monospace;
@@ -193,7 +195,7 @@
 	height: 40px;
 	border-radius: 12px;
 	margin-bottom: 16px;
-	background: rgba(79, 193, 240, 0.12);
+	background: rgba(34, 113, 177, 0.12);
 	color: var(--dxai-accent);
 	position: relative;
 }
@@ -324,7 +326,7 @@
 	justify-content: center;
 	gap: 10px;
 	background:
-		radial-gradient(400px 160px at 50% 0%, rgba(79, 193, 240, 0.08), transparent 70%),
+		radial-gradient(400px 160px at 50% 0%, rgba(34, 113, 177, 0.08), transparent 70%),
 		var(--dxai-bg-2);
 	transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -340,7 +342,7 @@
 
 #dxai-ui-app .dxai-drop.is-drag {
 	border-color: var(--dxai-accent);
-	background: rgba(79, 193, 240, 0.06);
+	background: rgba(34, 113, 177, 0.06);
 }
 
 #dxai-ui-app .dxai-drop-mark {
@@ -531,7 +533,7 @@
 	padding: 12px 14px;
 	border-radius: 12px;
 	background: rgba(143, 191, 154, 0.12);
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 #dxai-ui-app .dxai-notice.is-error {
@@ -574,8 +576,8 @@
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	font-weight: 650;
-	background: rgba(79, 193, 240, 0.14);
-	color: var(--dxai-accent);
+	background: rgba(34, 113, 177, 0.14);
+	color: var(--dxai-accent-2);
 }
 
 #dxai-ui-app .dxai-run {
@@ -823,8 +825,8 @@
 
 #dxai-ui-app .components-notice {
 	margin: 0 0 18px;
-	background: rgba(79, 193, 240, 0.1);
-	border: 1px solid rgba(79, 193, 240, 0.24);
+	background: rgba(34, 113, 177, 0.1);
+	border: 1px solid rgba(34, 113, 177, 0.24);
 	border-left-width: 3px;
 	color: var(--dxai-text);
 	box-shadow: none;
@@ -1030,7 +1032,7 @@
 }
 
 #dxai-ui-app .dxai-fidelity.is-perfect .dxai-fidelity-head h4 {
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 /* Four figures on one baseline, separated by hairlines rather than boxes. */
@@ -1130,7 +1132,7 @@
 }
 
 #dxai-ui-app .dxai-fidelity-rows li.is-warn .dxai-fidelity-value {
-	color: var(--dxai-warn);
+	color: var(--dxai-warn-text);
 }
 
 #dxai-ui-app .dxai-fidelity-detail {
@@ -1223,7 +1225,7 @@
 }
 
 #dxai-ui-app .dxai-coverage.is-whole .dxai-coverage-head h4 {
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 #dxai-ui-app .dxai-coverage-score {
@@ -1415,8 +1417,8 @@
 }
 
 #dxai-ui-app .dxai-chip.is-on {
-	border-color: rgba(79, 193, 240, 0.4);
-	background: rgba(79, 193, 240, 0.12);
+	border-color: rgba(34, 113, 177, 0.4);
+	background: rgba(34, 113, 177, 0.12);
 }
 
 #dxai-ui-app .dxai-library-group + .dxai-library-group {

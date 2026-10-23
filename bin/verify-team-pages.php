@@ -101,6 +101,14 @@ $expect( 'the hero is first on every page', count( array_filter( $plan, static f
 $expect( 'the same Home gets the same plan', $plan === Team_Pages::plan( $home_id, $wanted ) );
 $expect( 'nothing is made by planning', get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => 50, 'meta_query' => array( array( 'key' => Team_Pages::META, 'compare' => 'EXISTS' ), array( 'key' => Page_Scope::META, 'value' => (string) $home_id ) ) ) ) === array() );
 
+echo "\nThe network's order (asked for; or on a site whose network was read: Network\\Network_Model::recipe)\n";
+$net  = Team_Pages::plan( $home_id, $wanted, array( 'recipe' => 'network' ) );
+$seq  = static fn( array $p ): string => implode( ' ', array_column( $p['roles'], 'role' ) );
+$svcs = array_values( array_filter( $net, static fn( $p ) => $p['type'] === 'service' ) );
+$want = DXAI_UI\Network\Network_Model::recipe( 'service' );
+$expect( 'every service page has the same order, as the team\'s services are made from one page', count( $svcs ) >= 2 && count( array_unique( array_map( $seq, $svcs ) ) ) === 1, implode( ' | ', array_map( $seq, $svcs ) ) );
+$expect( '…the network\'s order of a service page (hero first, its questions, the list of the other services before them)', $want !== null && $svcs !== array() && $svcs[0]['roles'][0]['role'] === 'hero' && in_array( 'faq', array_column( $svcs[0]['roles'], 'role' ), true ) && is_int( array_search( 'related', array_column( $svcs[0]['roles'], 'role' ), true ) ) && array_search( 'related', array_column( $svcs[0]['roles'], 'role' ), true ) < array_search( 'faq', array_column( $svcs[0]['roles'], 'role' ), true ), $svcs !== array() ? $seq( $svcs[0] ) : '' );
+$expect( 'not asked for, and no network read here: the usual plan, as it was', DXAI_UI\Network\Network_Model::stored() !== null || Team_Pages::plan( $home_id, $wanted ) === $plan );
 echo "\nThe pages\n";
 $out = Team_Pages::build( $home_id, $wanted );
 $expect( 'they are made', ! is_wp_error( $out ) && count( $out['pages'] ) === 7, is_wp_error( $out ) ? $out->get_error_message() : (string) count( $out['pages'] ) );
@@ -724,6 +732,29 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 } else {
 	echo "  (not installed: skipped)\n";
 }
+
+echo "\nEach page's own words (words => write): no section says the Home's words on a page about something else\n";
+// An AI that does not answer: the page's own lines wait for a person, with the Home's words as their hints.
+$down = new class() extends DXAI_UI\Engines\Abstract_Engine {
+	public function get_id(): string { return 'down'; }
+	public function get_label(): string { return 'Down'; }
+	public function test_connection(): bool|\WP_Error { return true; }
+	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error { return new \WP_Error( 'x', 'no' ); }
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error { return new \WP_Error( 'dxai_test_down', 'The provider is down.' ); }
+};
+add_filter( 'dxai_ui_copy_engine', static fn() => $down );
+$ww  = Team_Pages::build( $home_id, array( array( 'type' => 'service', 'title' => 'Storm Damage' ) ), true, array( 'recipe' => 'network', 'words' => 'write' ) );
+remove_all_filters( 'dxai_ui_copy_engine' );
+$wp  = ! is_wp_error( $ww ) && isset( $ww['pages'][0] ) ? $ww['pages'][0] : array();
+$wid = (int) ( $wp['id'] ?? 0 );
+if ( $wid > 0 ) {
+	$made[] = $wid;
+}
+$wc = (string) get_post_field( 'post_content', $wid );
+$expect( 'the page is made, and its own lines wait for a person (the AI did not answer)', $wid > 0 && ( $wp['words'] ?? '' ) === 'outline' && (int) ( $wp['places'] ?? 0 ) > 0, is_wp_error( $ww ) ? $ww->get_error_message() : wp_json_encode( $wp ) );
+$expect( '…each with the Home\'s words as its hint in the editor, never on the page', str_contains( $wc, '"placeholder":"Write for Storm Damage. The original says:' ) );
+$expect( 'the sections the site says the same way everywhere keep the Home\'s words, and the AI would not be shown them', count( (array) get_post_meta( $wid, DXAI_UI\Pages\Copy_Writer::KEEP, true ) ) >= 1 && ! str_contains( (string) wp_json_encode( DXAI_UI\Pages\Copy_Writer::inventory( $wid ) ), '"section":"Reviews"' ), (string) wp_json_encode( get_post_meta( $wid, DXAI_UI\Pages\Copy_Writer::KEEP, true ) ) );
+$expect( 'the plugin wrote the words: the page is not one a person edited, so it can be made again', $wid > 0 && Team_Pages::plan( $home_id, array( array( 'type' => 'service', 'title' => 'Storm Damage' ) ) )[0]['edited'] === false );
 
 $fin();
 

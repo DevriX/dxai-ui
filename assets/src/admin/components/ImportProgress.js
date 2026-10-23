@@ -158,7 +158,11 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 						</span>
 						<span>{ sprintf( /* translators: %d: pages created */ _n( '%d created', '%d created', p.created || 0, 'dxai-ui' ), p.created || 0 ) }</span>
 						{ p.ai !== false && (
-							<span>{ sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ) }</span>
+							<span>
+								{ ! p.engine || p.engine === 'design'
+									? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 )
+									: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ) }
+							</span>
 						) }
 						<span className={ p.errors ? 'is-bad' : '' }>{ sprintf( /* translators: %d: pages that failed */ _n( '%d error', '%d errors', p.errors || 0, 'dxai-ui' ), p.errors || 0 ) }</span>
 					</p>

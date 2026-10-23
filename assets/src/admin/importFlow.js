@@ -1283,6 +1283,8 @@ export function summaryCounts( saved ) {
 		crawled,
 		pages: main + extra + crawled,
 		restyled: Number( s.pages_restyled || 0 ),
+		// How they were built: 'design' (from the design's own sections, no AI) or an AI engine's id.
+		restyleEngine: String( s.restyle_engine || '' ),
 		errors: Array.isArray( s.crawl_errors ) ? s.crawl_errors.length : 0,
 		skipped: Array.isArray( s.pages_skipped ) ? s.pages_skipped.filter( ( p ) => p && p.reason !== 'home' ).length : 0,
 	};

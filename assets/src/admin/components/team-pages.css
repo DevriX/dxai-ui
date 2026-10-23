@@ -135,19 +135,19 @@
 }
 
 #dxai-ui-app .dxai-team__role--hero {
-	background: rgba(79, 193, 240, 0.22);
+	background: rgba(34, 113, 177, 0.22);
 	color: var(--dxai-accent);
 }
 
 #dxai-ui-app .dxai-team__role--faq,
 #dxai-ui-app .dxai-team__role--related {
 	background: rgba(255, 176, 58, 0.16);
-	color: var(--dxai-warn);
+	color: var(--dxai-warn-text);
 }
 
 #dxai-ui-app .dxai-team__role--cta {
 	background: rgba(95, 211, 155, 0.16);
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 #dxai-ui-app .dxai-team__role.is-missing {
@@ -405,7 +405,7 @@
 }
 
 #dxai-ui-app .dxai-team__gates > li.is-ok .dxai-team__gate-mark {
-	color: var(--dxai-ok);
+	color: var(--dxai-ok-text);
 }
 
 #dxai-ui-app .dxai-team__gates > li.is-bad {

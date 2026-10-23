@@ -1,0 +1,2351 @@
+{
+    "version": 1,
+    "learned": "2026-10-23T11:16:45+00:00",
+    "set": {
+        "sites": 24,
+        "kinds": {
+            "legal": 1,
+            "reviews": 1,
+            "other": 1,
+            "contact": 1,
+            "home": 1,
+            "location": 1,
+            "service": 1,
+            "faq": 0.958,
+            "areas-index": 0.958,
+            "about": 0.958,
+            "services-index": 0.917,
+            "blog-index": 0.708,
+            "careers": 0.292,
+            "financing-insurance": 0.125,
+            "thank-you": 0.042
+        },
+        "services": {
+            "n": 24,
+            "min": 1,
+            "p25": 6,
+            "median": 8,
+            "p75": 11,
+            "max": 16
+        },
+        "locations": {
+            "n": 24,
+            "min": 1,
+            "p25": 1,
+            "median": 2,
+            "p75": 4,
+            "max": 37
+        }
+    },
+    "kinds": {
+        "service": {
+            "recipe": [
+                "hero",
+                "trust",
+                "two-col",
+                "cards",
+                "process",
+                "cta",
+                "cards",
+                "reviews",
+                "cards",
+                "faq",
+                "form"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 0.261,
+                    "new": 0.739,
+                    "n": 23
+                },
+                "cards": {
+                    "same": 0.023,
+                    "shape": 0.226,
+                    "new": 0.752,
+                    "n": 133
+                },
+                "cta": {
+                    "same": 0.03,
+                    "shape": 0.273,
+                    "new": 0.697,
+                    "n": 66
+                },
+                "faq": {
+                    "same": 0,
+                    "shape": 0.015,
+                    "new": 0.985,
+                    "n": 66
+                },
+                "form": {
+                    "same": 0,
+                    "shape": 0.537,
+                    "new": 0.463,
+                    "n": 54
+                },
+                "hero": {
+                    "same": 0.013,
+                    "shape": 0.107,
+                    "new": 0.88,
+                    "n": 75
+                },
+                "other": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 22
+                },
+                "process": {
+                    "same": 0,
+                    "shape": 0.507,
+                    "new": 0.493,
+                    "n": 67
+                },
+                "related": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 13
+                },
+                "reviews": {
+                    "same": 0.167,
+                    "shape": 0.111,
+                    "new": 0.722,
+                    "n": 54
+                },
+                "text": {
+                    "same": 0.909,
+                    "shape": 0,
+                    "new": 0.091,
+                    "n": 11
+                },
+                "trust": {
+                    "same": 0.353,
+                    "shape": 0.157,
+                    "new": 0.49,
+                    "n": 51
+                },
+                "two-col": {
+                    "same": 0.108,
+                    "shape": 0.203,
+                    "new": 0.689,
+                    "n": 74
+                }
+            },
+            "pages": 192,
+            "sites": 24,
+            "sections": {
+                "n": 192,
+                "min": 1,
+                "p25": 11,
+                "median": 11,
+                "p75": 11,
+                "max": 12
+            },
+            "words": {
+                "n": 192,
+                "min": 446,
+                "p25": 1126,
+                "median": 1334,
+                "p75": 2156,
+                "max": 3258
+            },
+            "words_design": {
+                "n": 67,
+                "min": 446,
+                "p25": 2099,
+                "median": 2160,
+                "p75": 2610,
+                "max": 2868
+            },
+            "design": 0.349,
+            "roles": {
+                "hero": 1,
+                "faq": 0.984,
+                "cards": 0.943,
+                "cta": 0.932,
+                "process": 0.813,
+                "two-col": 0.802,
+                "reviews": 0.516,
+                "areas": 0.495,
+                "related": 0.453,
+                "trust": 0.448,
+                "form": 0.406,
+                "other": 0.37,
+                "text": 0.125,
+                "map": 0.026
+            },
+            "orders": {
+                "H2P2C22MSQA": 13,
+                "HTPC2M2RTSQA": 10,
+                "H2TPACXC2QF": 10,
+                "HCPC2RCQA": 10,
+                "H2P2C2AMSQA": 10,
+                "HT2CPACRCQF": 10
+            },
+            "last": {
+                "cta": 0.521,
+                "form": 0.406,
+                "other": 0.057,
+                "two-col": 0.005,
+                "faq": 0.005
+            },
+            "home": {
+                "same": 0.072,
+                "shape": 0.219,
+                "new": 0.709
+            },
+            "faq": {
+                "questions": {
+                    "n": 189,
+                    "min": 3,
+                    "p25": 5,
+                    "median": 6,
+                    "p75": 6,
+                    "max": 14
+                },
+                "words": {
+                    "n": 189,
+                    "min": 119,
+                    "p25": 222,
+                    "median": 268,
+                    "p75": 368,
+                    "max": 1424
+                }
+            }
+        },
+        "location": {
+            "recipe": [
+                "hero",
+                "cards",
+                "two-col",
+                "reviews",
+                "two-col",
+                "map",
+                "trust",
+                "faq",
+                "cta"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 0.25,
+                    "new": 0.75,
+                    "n": 8
+                },
+                "cards": {
+                    "same": 0.045,
+                    "shape": 0.364,
+                    "new": 0.591,
+                    "n": 22
+                },
+                "cta": {
+                    "same": 0.05,
+                    "shape": 0.3,
+                    "new": 0.65,
+                    "n": 20
+                },
+                "faq": {
+                    "same": 0,
+                    "shape": 0.05,
+                    "new": 0.95,
+                    "n": 20
+                },
+                "form": {
+                    "same": 0,
+                    "shape": 1,
+                    "new": 0,
+                    "n": 7
+                },
+                "hero": {
+                    "same": 0.138,
+                    "shape": 0,
+                    "new": 0.862,
+                    "n": 29
+                },
+                "map": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 18
+                },
+                "other": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 7
+                },
+                "reviews": {
+                    "same": 0.357,
+                    "shape": 0.071,
+                    "new": 0.571,
+                    "n": 14
+                },
+                "text": {
+                    "same": 0.125,
+                    "shape": 0.125,
+                    "new": 0.75,
+                    "n": 8
+                },
+                "trust": {
+                    "same": 0,
+                    "shape": 0.667,
+                    "new": 0.333,
+                    "n": 9
+                },
+                "two-col": {
+                    "same": 0.042,
+                    "shape": 0.042,
+                    "new": 0.917,
+                    "n": 24
+                }
+            },
+            "pages": 147,
+            "sites": 24,
+            "sections": {
+                "n": 147,
+                "min": 3,
+                "p25": 9,
+                "median": 11,
+                "p75": 12,
+                "max": 13
+            },
+            "words": {
+                "n": 147,
+                "min": 430,
+                "p25": 964,
+                "median": 1377,
+                "p75": 2383,
+                "max": 3514
+            },
+            "words_design": {
+                "n": 24,
+                "min": 430,
+                "p25": 792,
+                "median": 1264,
+                "p75": 2015,
+                "max": 2684
+            },
+            "design": 0.163,
+            "roles": {
+                "hero": 1,
+                "cards": 0.932,
+                "faq": 0.912,
+                "two-col": 0.891,
+                "cta": 0.707,
+                "other": 0.571,
+                "map": 0.469,
+                "trust": 0.435,
+                "reviews": 0.313,
+                "process": 0.313,
+                "related": 0.313,
+                "form": 0.306,
+                "areas": 0.218,
+                "text": 0.048
+            },
+            "orders": {
+                "HC2C2GCoFC2SQ": 17,
+                "HoCTC22oAQA": 15,
+                "HCCP22CC2QA": 11,
+                "HTCCG2RQo": 11,
+                "HC2RA": 9,
+                "HACAGPoFCASQ": 6
+            },
+            "last": {
+                "cta": 0.517,
+                "faq": 0.299,
+                "other": 0.082,
+                "two-col": 0.048,
+                "form": 0.048
+            },
+            "home": {
+                "same": 0.07,
+                "shape": 0.177,
+                "new": 0.753
+            },
+            "faq": {
+                "questions": {
+                    "n": 134,
+                    "min": 2,
+                    "p25": 6,
+                    "median": 6,
+                    "p75": 7,
+                    "max": 12
+                },
+                "words": {
+                    "n": 134,
+                    "min": 79,
+                    "p25": 230,
+                    "median": 298,
+                    "p75": 501,
+                    "max": 927
+                }
+            }
+        },
+        "legal": {
+            "recipe": [
+                "hero",
+                "text"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "hero": {
+                    "same": 0.12,
+                    "shape": 0,
+                    "new": 0.88,
+                    "n": 25
+                },
+                "text": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 9
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 6
+                }
+            },
+            "pages": 48,
+            "sites": 24,
+            "sections": {
+                "n": 48,
+                "min": 1,
+                "p25": 1,
+                "median": 2,
+                "p75": 2,
+                "max": 4
+            },
+            "words": {
+                "n": 48,
+                "min": 2,
+                "p25": 2,
+                "median": 427,
+                "p75": 1830,
+                "max": 1847
+            },
+            "words_design": {
+                "n": 22,
+                "min": 2,
+                "p25": 2,
+                "median": 427,
+                "p75": 1831,
+                "max": 1843
+            },
+            "design": 0.063,
+            "roles": {
+                "hero": 1,
+                "text": 0.458,
+                "two-col": 0.063
+            },
+            "orders": {
+                "H": 23,
+                "HX": 22,
+                "H2H2": 3
+            },
+            "last": {
+                "hero": 0.479,
+                "text": 0.458,
+                "two-col": 0.063
+            },
+            "home": {
+                "same": 0.075,
+                "shape": 0,
+                "new": 0.925
+            },
+            "faq": {
+                "questions": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                },
+                "words": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                }
+            }
+        },
+        "other": {
+            "recipe": [
+                "hero",
+                "two-col",
+                "hero",
+                "two-col"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "hero": {
+                    "same": 0.133,
+                    "shape": 0,
+                    "new": 0.867,
+                    "n": 15
+                },
+                "other": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "text": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 4
+                }
+            },
+            "pages": 40,
+            "sites": 24,
+            "sections": {
+                "n": 40,
+                "min": 1,
+                "p25": 1,
+                "median": 1,
+                "p75": 5,
+                "max": 12
+            },
+            "words": {
+                "n": 40,
+                "min": 53,
+                "p25": 62,
+                "median": 63,
+                "p75": 418,
+                "max": 2989
+            },
+            "words_design": {
+                "n": 13,
+                "min": 61,
+                "p25": 63,
+                "median": 63,
+                "p75": 66,
+                "max": 672
+            },
+            "design": 0.225,
+            "roles": {
+                "hero": 1,
+                "other": 0.225,
+                "two-col": 0.225,
+                "text": 0.175,
+                "process": 0.175,
+                "cta": 0.175,
+                "faq": 0.175,
+                "cards": 0.15,
+                "form": 0.125,
+                "map": 0.075,
+                "related": 0.075,
+                "reviews": 0.025,
+                "areas": 0.025,
+                "trust": 0.025
+            },
+            "orders": {
+                "H": 23,
+                "HX": 4,
+                "HXoXo": 3,
+                "H2CAGPoFC2SQ": 3,
+                "H2H2": 2,
+                "HA222ooP2CQA": 2
+            },
+            "last": {
+                "hero": 0.575,
+                "text": 0.1,
+                "faq": 0.1,
+                "other": 0.075,
+                "cta": 0.075
+            },
+            "home": {
+                "same": 0.087,
+                "shape": 0,
+                "new": 0.913
+            },
+            "faq": {
+                "questions": {
+                    "n": 7,
+                    "min": 5,
+                    "p25": 5,
+                    "median": 7,
+                    "p75": 7,
+                    "max": 7
+                },
+                "words": {
+                    "n": 7,
+                    "min": 198,
+                    "p25": 266,
+                    "median": 373,
+                    "p75": 619,
+                    "max": 691
+                }
+            }
+        },
+        "reviews": {
+            "recipe": [
+                "hero",
+                "reviews",
+                "two-col",
+                "form"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "cards": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "cta": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "form": {
+                    "same": 0,
+                    "shape": 0.333,
+                    "new": 0.667,
+                    "n": 6
+                },
+                "hero": {
+                    "same": 0.083,
+                    "shape": 0,
+                    "new": 0.917,
+                    "n": 12
+                },
+                "other": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "reviews": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 6
+                },
+                "text": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 9
+                }
+            },
+            "pages": 24,
+            "sites": 24,
+            "sections": {
+                "n": 24,
+                "min": 1,
+                "p25": 4,
+                "median": 4,
+                "p75": 4,
+                "max": 5
+            },
+            "words": {
+                "n": 24,
+                "min": 181,
+                "p25": 316,
+                "median": 483,
+                "p75": 1362,
+                "max": 3419
+            },
+            "words_design": {
+                "n": 11,
+                "min": 277,
+                "p25": 442,
+                "median": 1362,
+                "p75": 1509,
+                "max": 3419
+            },
+            "design": 0.458,
+            "roles": {
+                "hero": 1,
+                "two-col": 0.875,
+                "reviews": 0.542,
+                "cta": 0.458,
+                "form": 0.417,
+                "other": 0.167,
+                "text": 0.042,
+                "areas": 0.042,
+                "cards": 0.042
+            },
+            "orders": {
+                "HR2F": 7,
+                "HR2A": 3,
+                "H22A": 3,
+                "Ho2A": 2,
+                "Ho2F": 2,
+                "H2H2": 1
+            },
+            "last": {
+                "cta": 0.458,
+                "form": 0.417,
+                "two-col": 0.042,
+                "hero": 0.042,
+                "areas": 0.042
+            },
+            "home": {
+                "same": 0.025,
+                "shape": 0.05,
+                "new": 0.925
+            },
+            "faq": {
+                "questions": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                },
+                "words": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                }
+            }
+        },
+        "contact": {
+            "recipe": [
+                "hero",
+                "form",
+                "areas",
+                "faq"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 0.75,
+                    "new": 0.25,
+                    "n": 4
+                },
+                "cards": {
+                    "same": 0,
+                    "shape": 0.25,
+                    "new": 0.75,
+                    "n": 4
+                },
+                "faq": {
+                    "same": 0.25,
+                    "shape": 0.25,
+                    "new": 0.5,
+                    "n": 4
+                },
+                "form": {
+                    "same": 0,
+                    "shape": 0.8,
+                    "new": 0.2,
+                    "n": 5
+                },
+                "hero": {
+                    "same": 0.077,
+                    "shape": 0,
+                    "new": 0.923,
+                    "n": 13
+                },
+                "map": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "text": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "two-col": {
+                    "same": 0.333,
+                    "shape": 0,
+                    "new": 0.667,
+                    "n": 3
+                }
+            },
+            "pages": 24,
+            "sites": 24,
+            "sections": {
+                "n": 24,
+                "min": 2,
+                "p25": 3,
+                "median": 4,
+                "p75": 4,
+                "max": 5
+            },
+            "words": {
+                "n": 24,
+                "min": 310,
+                "p25": 1371,
+                "median": 1540,
+                "p75": 1663,
+                "max": 1827
+            },
+            "words_design": {
+                "n": 11,
+                "min": 310,
+                "p25": 1330,
+                "median": 1422,
+                "p75": 1663,
+                "max": 1673
+            },
+            "design": 0.458,
+            "roles": {
+                "hero": 1,
+                "areas": 0.542,
+                "faq": 0.375,
+                "two-col": 0.292,
+                "cta": 0.292,
+                "form": 0.292,
+                "cards": 0.208,
+                "text": 0.083,
+                "map": 0.083,
+                "trust": 0.042
+            },
+            "orders": {
+                "HM2": 2,
+                "HMA": 2,
+                "HFCQ": 2,
+                "HC": 2,
+                "HFMX": 1,
+                "H2H2": 1
+            },
+            "last": {
+                "faq": 0.375,
+                "cta": 0.167,
+                "two-col": 0.125,
+                "cards": 0.125,
+                "text": 0.083
+            },
+            "home": {
+                "same": 0.086,
+                "shape": 0.257,
+                "new": 0.657
+            },
+            "faq": {
+                "questions": {
+                    "n": 9,
+                    "min": 4,
+                    "p25": 4,
+                    "median": 6,
+                    "p75": 7,
+                    "max": 8
+                },
+                "words": {
+                    "n": 9,
+                    "min": 128,
+                    "p25": 183,
+                    "median": 231,
+                    "p75": 272,
+                    "max": 350
+                }
+            }
+        },
+        "about": {
+            "recipe": [
+                "hero",
+                "two-col",
+                "cta",
+                "two-col",
+                "cards",
+                "reviews",
+                "trust",
+                "form"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 1,
+                    "new": 0,
+                    "n": 3
+                },
+                "cards": {
+                    "same": 0.25,
+                    "shape": 0.333,
+                    "new": 0.417,
+                    "n": 12
+                },
+                "cta": {
+                    "same": 0,
+                    "shape": 0.154,
+                    "new": 0.846,
+                    "n": 13
+                },
+                "faq": {
+                    "same": 0,
+                    "shape": 0.333,
+                    "new": 0.667,
+                    "n": 6
+                },
+                "form": {
+                    "same": 0,
+                    "shape": 0.625,
+                    "new": 0.375,
+                    "n": 8
+                },
+                "hero": {
+                    "same": 0,
+                    "shape": 0.1,
+                    "new": 0.9,
+                    "n": 10
+                },
+                "other": {
+                    "same": 0.667,
+                    "shape": 0,
+                    "new": 0.333,
+                    "n": 3
+                },
+                "reviews": {
+                    "same": 0.4,
+                    "shape": 0.1,
+                    "new": 0.5,
+                    "n": 10
+                },
+                "text": {
+                    "same": 0.333,
+                    "shape": 0,
+                    "new": 0.667,
+                    "n": 3
+                },
+                "trust": {
+                    "same": 0.5,
+                    "shape": 0.25,
+                    "new": 0.25,
+                    "n": 8
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0.091,
+                    "new": 0.909,
+                    "n": 11
+                }
+            },
+            "pages": 23,
+            "sites": 23,
+            "sections": {
+                "n": 23,
+                "min": 1,
+                "p25": 8,
+                "median": 8,
+                "p75": 10,
+                "max": 12
+            },
+            "words": {
+                "n": 23,
+                "min": 523,
+                "p25": 1553,
+                "median": 1730,
+                "p75": 2106,
+                "max": 2462
+            },
+            "words_design": {
+                "n": 10,
+                "min": 523,
+                "p25": 1587,
+                "median": 1977,
+                "p75": 2335,
+                "max": 2462
+            },
+            "design": 0.435,
+            "roles": {
+                "hero": 1,
+                "cards": 0.87,
+                "form": 0.87,
+                "two-col": 0.783,
+                "cta": 0.739,
+                "reviews": 0.652,
+                "trust": 0.478,
+                "areas": 0.304,
+                "other": 0.261,
+                "faq": 0.217,
+                "text": 0.13,
+                "video": 0.043,
+                "map": 0.043
+            },
+            "orders": {
+                "HAC2CCRF": 2,
+                "HAC2C2F": 2,
+                "HAC2oTFA": 1,
+                "HAC2CV22RF": 1,
+                "HCC2MC2F": 1,
+                "HAC2RoXA": 1
+            },
+            "last": {
+                "form": 0.783,
+                "cta": 0.174,
+                "hero": 0.043
+            },
+            "home": {
+                "same": 0.161,
+                "shape": 0.241,
+                "new": 0.598
+            },
+            "faq": {
+                "questions": {
+                    "n": 5,
+                    "min": 5,
+                    "p25": 5,
+                    "median": 5,
+                    "p75": 6,
+                    "max": 8
+                },
+                "words": {
+                    "n": 5,
+                    "min": 149,
+                    "p25": 174,
+                    "median": 198,
+                    "p75": 248,
+                    "max": 326
+                }
+            }
+        },
+        "faq": {
+            "recipe": [
+                "hero",
+                "cta"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "areas": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "cta": {
+                    "same": 0.167,
+                    "shape": 0.167,
+                    "new": 0.667,
+                    "n": 6
+                },
+                "faq": {
+                    "same": 0,
+                    "shape": 0.5,
+                    "new": 0.5,
+                    "n": 2
+                },
+                "hero": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 8
+                }
+            },
+            "pages": 22,
+            "sites": 22,
+            "sections": {
+                "n": 22,
+                "min": 1,
+                "p25": 2,
+                "median": 2,
+                "p75": 2,
+                "max": 2
+            },
+            "words": {
+                "n": 22,
+                "min": 554,
+                "p25": 785,
+                "median": 1105,
+                "p75": 1517,
+                "max": 2592
+            },
+            "words_design": {
+                "n": 9,
+                "min": 725,
+                "p25": 1105,
+                "median": 1342,
+                "p75": 1517,
+                "max": 2330
+            },
+            "design": 0.409,
+            "roles": {
+                "hero": 0.909,
+                "cta": 0.727,
+                "faq": 0.136,
+                "trust": 0.045,
+                "areas": 0.045,
+                "other": 0.045
+            },
+            "orders": {
+                "HA": 14,
+                "QA": 2,
+                "HT": 1,
+                "H": 1,
+                "HQ": 1,
+                "HM": 1
+            },
+            "last": {
+                "cta": 0.727,
+                "hero": 0.091,
+                "trust": 0.045,
+                "faq": 0.045,
+                "areas": 0.045
+            },
+            "home": {
+                "same": 0.059,
+                "shape": 0.118,
+                "new": 0.824
+            },
+            "faq": {
+                "questions": {
+                    "n": 2,
+                    "min": 13,
+                    "p25": 13,
+                    "median": 14,
+                    "p75": 14,
+                    "max": 14
+                },
+                "words": {
+                    "n": 2,
+                    "min": 594,
+                    "p25": 594,
+                    "median": 1083,
+                    "p75": 1083,
+                    "max": 1083
+                }
+            }
+        },
+        "careers": {
+            "recipe": [
+                "hero",
+                "text",
+                "two-col",
+                "two-col"
+            ],
+            "recipe_from": "design",
+            "by_role": {
+                "cards": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "hero": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 3
+                },
+                "process": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "text": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "trust": {
+                    "same": 1,
+                    "shape": 0,
+                    "new": 0,
+                    "n": 1
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 3
+                }
+            },
+            "pages": 7,
+            "sites": 7,
+            "sections": {
+                "n": 7,
+                "min": 2,
+                "p25": 3,
+                "median": 3,
+                "p75": 5,
+                "max": 6
+            },
+            "words": {
+                "n": 7,
+                "min": 281,
+                "p25": 295,
+                "median": 361,
+                "p75": 814,
+                "max": 1851
+            },
+            "words_design": {
+                "n": 3,
+                "min": 318,
+                "p25": 318,
+                "median": 361,
+                "p75": 409,
+                "max": 409
+            },
+            "design": 0.429,
+            "roles": {
+                "hero": 1,
+                "cards": 0.714,
+                "two-col": 0.429,
+                "cta": 0.429,
+                "text": 0.286,
+                "form": 0.143,
+                "process": 0.143,
+                "trust": 0.143,
+                "reviews": 0.143
+            },
+            "orders": {
+                "HCA": 2,
+                "HF": 1,
+                "HX22": 1,
+                "HC2PT": 1,
+                "HCC2RA": 1,
+                "HXC": 1
+            },
+            "last": {
+                "cta": 0.429,
+                "form": 0.143,
+                "two-col": 0.143,
+                "trust": 0.143,
+                "cards": 0.143
+            },
+            "home": {
+                "same": 0.083,
+                "shape": 0,
+                "new": 0.917
+            },
+            "faq": {
+                "questions": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                },
+                "words": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                }
+            }
+        },
+        "financing-insurance": {
+            "recipe": [
+                "hero",
+                "cards",
+                "video",
+                "trust",
+                "form"
+            ],
+            "recipe_from": "all",
+            "by_role": {
+                "cards": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 2
+                },
+                "cta": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "faq": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "hero": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 3
+                },
+                "other": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "process": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "related": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "reviews": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "trust": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                },
+                "two-col": {
+                    "same": 0,
+                    "shape": 0,
+                    "new": 1,
+                    "n": 1
+                }
+            },
+            "pages": 3,
+            "sites": 3,
+            "sections": {
+                "n": 3,
+                "min": 3,
+                "p25": 3,
+                "median": 5,
+                "p75": 10,
+                "max": 10
+            },
+            "words": {
+                "n": 3,
+                "min": 445,
+                "p25": 445,
+                "median": 469,
+                "p75": 1309,
+                "max": 1309
+            },
+            "words_design": {
+                "n": 2,
+                "min": 445,
+                "p25": 445,
+                "median": 469,
+                "p75": 469,
+                "max": 469
+            },
+            "design": 0.667,
+            "roles": {
+                "hero": 1,
+                "cards": 0.667,
+                "trust": 0.667,
+                "reviews": 0.333,
+                "related": 0.333,
+                "faq": 0.333,
+                "cta": 0.333,
+                "other": 0.333,
+                "process": 0.333,
+                "two-col": 0.333,
+                "video": 0.333,
+                "form": 0.333
+            },
+            "orders": {
+                "HHCCRSTQAo": 1,
+                "HP2": 1,
+                "HCVTF": 1
+            },
+            "last": {
+                "other": 0.333,
+                "two-col": 0.333,
+                "form": 0.333
+            },
+            "home": {
+                "same": 0,
+                "shape": 0,
+                "new": 1
+            },
+            "faq": {
+                "questions": {
+                    "n": 1,
+                    "min": 4,
+                    "p25": 4,
+                    "median": 4,
+                    "p75": 4,
+                    "max": 4
+                },
+                "words": {
+                    "n": 1,
+                    "min": 172,
+                    "p25": 172,
+                    "median": 172,
+                    "p75": 172,
+                    "max": 172
+                }
+            }
+        },
+        "services-index": {
+            "recipe": [
+                "hero",
+                "trust",
+                "areas",
+                "two-col",
+                "two-col",
+                "other",
+                "cards",
+                "areas",
+                "faq",
+                "cta"
+            ],
+            "recipe_from": "all",
+            "by_role": [],
+            "pages": 2,
+            "sites": 2,
+            "sections": {
+                "n": 2,
+                "min": 7,
+                "p25": 7,
+                "median": 10,
+                "p75": 10,
+                "max": 10
+            },
+            "words": {
+                "n": 2,
+                "min": 1032,
+                "p25": 1032,
+                "median": 1872,
+                "p75": 1872,
+                "max": 1872
+            },
+            "words_design": {
+                "n": 0,
+                "min": 0,
+                "p25": 0,
+                "median": 0,
+                "p75": 0,
+                "max": 0
+            },
+            "design": 0,
+            "roles": {
+                "hero": 1,
+                "trust": 1,
+                "two-col": 1,
+                "cards": 1,
+                "areas": 0.5,
+                "other": 0.5,
+                "faq": 0.5,
+                "cta": 0.5,
+                "form": 0.5
+            },
+            "orders": {
+                "HTM22oCMQA": 1,
+                "HTC222F": 1
+            },
+            "last": {
+                "cta": 0.5,
+                "form": 0.5
+            },
+            "home": {
+                "same": 0,
+                "shape": 0,
+                "new": 0
+            },
+            "faq": {
+                "questions": {
+                    "n": 1,
+                    "min": 5,
+                    "p25": 5,
+                    "median": 5,
+                    "p75": 5,
+                    "max": 5
+                },
+                "words": {
+                    "n": 1,
+                    "min": 227,
+                    "p25": 227,
+                    "median": 227,
+                    "p75": 227,
+                    "max": 227
+                }
+            }
+        },
+        "areas-index": {
+            "recipe": [
+                "hero",
+                "trust",
+                "areas",
+                "two-col",
+                "map",
+                "two-col",
+                "areas",
+                "two-col",
+                "faq",
+                "cta"
+            ],
+            "recipe_from": "all",
+            "by_role": [],
+            "pages": 2,
+            "sites": 2,
+            "sections": {
+                "n": 2,
+                "min": 5,
+                "p25": 5,
+                "median": 10,
+                "p75": 10,
+                "max": 10
+            },
+            "words": {
+                "n": 2,
+                "min": 370,
+                "p25": 370,
+                "median": 889,
+                "p75": 889,
+                "max": 889
+            },
+            "words_design": {
+                "n": 0,
+                "min": 0,
+                "p25": 0,
+                "median": 0,
+                "p75": 0,
+                "max": 0
+            },
+            "design": 0,
+            "roles": {
+                "hero": 1,
+                "areas": 1,
+                "two-col": 1,
+                "cta": 1,
+                "trust": 0.5,
+                "map": 0.5,
+                "faq": 0.5
+            },
+            "orders": {
+                "HTM2G2M2QA": 1,
+                "HM22A": 1
+            },
+            "last": {
+                "cta": 1
+            },
+            "home": {
+                "same": 0,
+                "shape": 0,
+                "new": 0
+            },
+            "faq": {
+                "questions": {
+                    "n": 1,
+                    "min": 5,
+                    "p25": 5,
+                    "median": 5,
+                    "p75": 5,
+                    "max": 5
+                },
+                "words": {
+                    "n": 1,
+                    "min": 260,
+                    "p25": 260,
+                    "median": 260,
+                    "p75": 260,
+                    "max": 260
+                }
+            }
+        },
+        "blog-index": {
+            "recipe": [],
+            "recipe_from": "all",
+            "by_role": [],
+            "pages": 1,
+            "sites": 1,
+            "sections": {
+                "n": 1,
+                "min": 1,
+                "p25": 1,
+                "median": 1,
+                "p75": 1,
+                "max": 1
+            },
+            "words": {
+                "n": 1,
+                "min": 38,
+                "p25": 38,
+                "median": 38,
+                "p75": 38,
+                "max": 38
+            },
+            "words_design": {
+                "n": 0,
+                "min": 0,
+                "p25": 0,
+                "median": 0,
+                "p75": 0,
+                "max": 0
+            },
+            "design": 0,
+            "roles": {
+                "hero": 1
+            },
+            "orders": {
+                "H": 1
+            },
+            "last": {
+                "hero": 1
+            },
+            "home": {
+                "same": 0,
+                "shape": 0,
+                "new": 0
+            },
+            "faq": {
+                "questions": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                },
+                "words": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                }
+            }
+        },
+        "thank-you": {
+            "recipe": [],
+            "recipe_from": "all",
+            "by_role": [],
+            "pages": 1,
+            "sites": 1,
+            "sections": {
+                "n": 1,
+                "min": 1,
+                "p25": 1,
+                "median": 1,
+                "p75": 1,
+                "max": 1
+            },
+            "words": {
+                "n": 1,
+                "min": 73,
+                "p25": 73,
+                "median": 73,
+                "p75": 73,
+                "max": 73
+            },
+            "words_design": {
+                "n": 0,
+                "min": 0,
+                "p25": 0,
+                "median": 0,
+                "p75": 0,
+                "max": 0
+            },
+            "design": 0,
+            "roles": {
+                "hero": 1
+            },
+            "orders": {
+                "H": 1
+            },
+            "last": {
+                "hero": 1
+            },
+            "home": {
+                "same": 0,
+                "shape": 0,
+                "new": 0
+            },
+            "faq": {
+                "questions": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                },
+                "words": {
+                    "n": 0,
+                    "min": 0,
+                    "p25": 0,
+                    "median": 0,
+                    "p75": 0,
+                    "max": 0
+                }
+            }
+        }
+    },
+    "budgets": {
+        "service": {
+            "areas": {
+                "words": 114,
+                "n": 23
+            },
+            "cards": {
+                "words": 150,
+                "n": 133
+            },
+            "cta": {
+                "words": 30,
+                "n": 66
+            },
+            "faq": {
+                "words": 266,
+                "n": 66
+            },
+            "form": {
+                "words": 1154,
+                "n": 54
+            },
+            "hero": {
+                "words": 76,
+                "n": 75
+            },
+            "map": {
+                "words": 136,
+                "n": 5
+            },
+            "other": {
+                "words": 15,
+                "n": 22
+            },
+            "process": {
+                "words": 149,
+                "n": 67
+            },
+            "related": {
+                "words": 83,
+                "n": 13
+            },
+            "reviews": {
+                "words": 15,
+                "n": 54
+            },
+            "text": {
+                "words": 106,
+                "n": 26
+            },
+            "trust": {
+                "words": 12,
+                "n": 51
+            },
+            "two-col": {
+                "words": 101,
+                "n": 74
+            }
+        },
+        "location": {
+            "areas": {
+                "words": 79,
+                "n": 38
+            },
+            "cards": {
+                "words": 172,
+                "n": 22
+            },
+            "cta": {
+                "words": 25,
+                "n": 20
+            },
+            "faq": {
+                "words": 284,
+                "n": 20
+            },
+            "form": {
+                "words": 1155,
+                "n": 45
+            },
+            "hero": {
+                "words": 79,
+                "n": 29
+            },
+            "map": {
+                "words": 114,
+                "n": 18
+            },
+            "other": {
+                "words": 21,
+                "n": 104
+            },
+            "process": {
+                "words": 144,
+                "n": 46
+            },
+            "related": {
+                "words": 136,
+                "n": 46
+            },
+            "reviews": {
+                "words": 13,
+                "n": 14
+            },
+            "text": {
+                "words": 107,
+                "n": 8
+            },
+            "trust": {
+                "words": 26,
+                "n": 64
+            },
+            "two-col": {
+                "words": 66,
+                "n": 24
+            }
+        },
+        "legal": {
+            "hero": {
+                "words": 3,
+                "n": 25
+            },
+            "text": {
+                "words": 1818,
+                "n": 22
+            },
+            "two-col": {
+                "words": 66,
+                "n": 6
+            }
+        },
+        "other": {
+            "areas": {
+                "words": 87,
+                "n": 1
+            },
+            "cards": {
+                "words": 225,
+                "n": 10
+            },
+            "cta": {
+                "words": 29,
+                "n": 9
+            },
+            "faq": {
+                "words": 373,
+                "n": 7
+            },
+            "form": {
+                "words": 1155,
+                "n": 5
+            },
+            "hero": {
+                "words": 63,
+                "n": 15
+            },
+            "map": {
+                "words": 49,
+                "n": 3
+            },
+            "other": {
+                "words": 23,
+                "n": 14
+            },
+            "process": {
+                "words": 136,
+                "n": 8
+            },
+            "related": {
+                "words": 90,
+                "n": 3
+            },
+            "reviews": {
+                "words": 18,
+                "n": 1
+            },
+            "text": {
+                "words": 40,
+                "n": 10
+            },
+            "trust": {
+                "words": 38,
+                "n": 1
+            },
+            "two-col": {
+                "words": 100,
+                "n": 21
+            }
+        },
+        "reviews": {
+            "areas": {
+                "words": 125,
+                "n": 1
+            },
+            "cards": {
+                "words": 111,
+                "n": 1
+            },
+            "cta": {
+                "words": 33,
+                "n": 11
+            },
+            "form": {
+                "words": 1168,
+                "n": 10
+            },
+            "hero": {
+                "words": 37,
+                "n": 12
+            },
+            "other": {
+                "words": 19,
+                "n": 4
+            },
+            "reviews": {
+                "words": 17,
+                "n": 13
+            },
+            "text": {
+                "words": 101,
+                "n": 2
+            },
+            "two-col": {
+                "words": 142,
+                "n": 25
+            }
+        },
+        "contact": {
+            "areas": {
+                "words": 93,
+                "n": 14
+            },
+            "cards": {
+                "words": 133,
+                "n": 6
+            },
+            "cta": {
+                "words": 56,
+                "n": 7
+            },
+            "faq": {
+                "words": 231,
+                "n": 9
+            },
+            "form": {
+                "words": 1157,
+                "n": 7
+            },
+            "hero": {
+                "words": 136,
+                "n": 13
+            },
+            "map": {
+                "words": 152,
+                "n": 2
+            },
+            "text": {
+                "words": 89,
+                "n": 2
+            },
+            "trust": {
+                "words": 38,
+                "n": 1
+            },
+            "two-col": {
+                "words": 80,
+                "n": 8
+            }
+        },
+        "about": {
+            "areas": {
+                "words": 104,
+                "n": 7
+            },
+            "cards": {
+                "words": 178,
+                "n": 12
+            },
+            "cta": {
+                "words": 39,
+                "n": 13
+            },
+            "faq": {
+                "words": 198,
+                "n": 6
+            },
+            "form": {
+                "words": 1157,
+                "n": 20
+            },
+            "hero": {
+                "words": 55,
+                "n": 23
+            },
+            "map": {
+                "words": 137,
+                "n": 1
+            },
+            "other": {
+                "words": 19,
+                "n": 6
+            },
+            "reviews": {
+                "words": 16,
+                "n": 17
+            },
+            "text": {
+                "words": 133,
+                "n": 3
+            },
+            "trust": {
+                "words": 17,
+                "n": 11
+            },
+            "two-col": {
+                "words": 96,
+                "n": 32
+            },
+            "video": {
+                "words": 154,
+                "n": 1
+            }
+        },
+        "faq": {
+            "areas": {
+                "words": 15,
+                "n": 1
+            },
+            "cta": {
+                "words": 22,
+                "n": 16
+            },
+            "faq": {
+                "words": 594,
+                "n": 3
+            },
+            "hero": {
+                "words": 1067,
+                "n": 21
+            },
+            "other": {
+                "words": 19,
+                "n": 1
+            },
+            "trust": {
+                "words": 34,
+                "n": 1
+            }
+        },
+        "careers": {
+            "cards": {
+                "words": 168,
+                "n": 6
+            },
+            "cta": {
+                "words": 47,
+                "n": 3
+            },
+            "form": {
+                "words": 1849,
+                "n": 1
+            },
+            "hero": {
+                "words": 63,
+                "n": 7
+            },
+            "process": {
+                "words": 70,
+                "n": 1
+            },
+            "reviews": {
+                "words": 16,
+                "n": 1
+            },
+            "text": {
+                "words": 154,
+                "n": 2
+            },
+            "trust": {
+                "words": 32,
+                "n": 1
+            },
+            "two-col": {
+                "words": 112,
+                "n": 4
+            }
+        },
+        "financing-insurance": {
+            "cards": {
+                "words": 83,
+                "n": 3
+            },
+            "cta": {
+                "words": 23,
+                "n": 1
+            },
+            "faq": {
+                "words": 172,
+                "n": 1
+            },
+            "form": {
+                "words": 1141,
+                "n": 1
+            },
+            "hero": {
+                "words": 37,
+                "n": 4
+            },
+            "other": {
+                "words": 13,
+                "n": 1
+            },
+            "process": {
+                "words": 293,
+                "n": 1
+            },
+            "related": {
+                "words": 46,
+                "n": 1
+            },
+            "reviews": {
+                "words": 15,
+                "n": 1
+            },
+            "trust": {
+                "words": 32,
+                "n": 2
+            },
+            "two-col": {
+                "words": 94,
+                "n": 1
+            },
+            "video": {
+                "words": 33,
+                "n": 1
+            }
+        },
+        "services-index": {
+            "areas": {
+                "words": 161,
+                "n": 2
+            },
+            "cards": {
+                "words": 159,
+                "n": 2
+            },
+            "cta": {
+                "words": 41,
+                "n": 1
+            },
+            "faq": {
+                "words": 227,
+                "n": 1
+            },
+            "form": {
+                "words": 1426,
+                "n": 1
+            },
+            "hero": {
+                "words": 56,
+                "n": 2
+            },
+            "other": {
+                "words": 39,
+                "n": 1
+            },
+            "trust": {
+                "words": 16,
+                "n": 2
+            },
+            "two-col": {
+                "words": 104,
+                "n": 5
+            }
+        },
+        "areas-index": {
+            "areas": {
+                "words": 99,
+                "n": 3
+            },
+            "cta": {
+                "words": 41,
+                "n": 2
+            },
+            "faq": {
+                "words": 260,
+                "n": 1
+            },
+            "hero": {
+                "words": 32,
+                "n": 2
+            },
+            "map": {
+                "words": 71,
+                "n": 1
+            },
+            "trust": {
+                "words": 8,
+                "n": 1
+            },
+            "two-col": {
+                "words": 90,
+                "n": 5
+            }
+        },
+        "blog-index": {
+            "hero": {
+                "words": 38,
+                "n": 1
+            }
+        },
+        "thank-you": {
+            "hero": {
+                "words": 73,
+                "n": 1
+            }
+        }
+    },
+    "formulas": {
+        "location": [
+            {
+                "role": "cards",
+                "formula": "restoration services in {City}",
+                "pages": 15,
+                "sites": 3
+            },
+            {
+                "role": "cards",
+                "formula": "restoration services for {City} homes and businesses",
+                "pages": 5,
+                "sites": 5
+            },
+            {
+                "role": "hero",
+                "formula": "water, fire, and mold restoration in {City}",
+                "pages": 5,
+                "sites": 4
+            }
+        ],
+        "service": [
+            {
+                "role": "process",
+                "formula": "our {Service} process",
+                "pages": 50,
+                "sites": 10
+            },
+            {
+                "role": "faq",
+                "formula": "{Service} faqs",
+                "pages": 43,
+                "sites": 9
+            },
+            {
+                "role": "hero",
+                "formula": "{Service} services",
+                "pages": 6,
+                "sites": 4
+            },
+            {
+                "role": "process",
+                "formula": "our {Service} restoration process",
+                "pages": 5,
+                "sites": 5
+            }
+        ]
+    },
+    "questions": {
+        "fire": [
+            {
+                "q": "Can smoke damage affect areas that were not burned?",
+                "pages": 3,
+                "sites": 3
+            },
+            {
+                "q": "What does {Service} include?",
+                "pages": 3,
+                "sites": 3
+            },
+            {
+                "q": "What should I do immediately after a fire?",
+                "pages": 3,
+                "sites": 3
+            }
+        ],
+        "mold": [
+            {
+                "q": "Can I remove mold myself?",
+                "pages": 3,
+                "sites": 3
+            }
+        ],
+        "sewage": [
+            {
+                "q": "How long does {Service} take?",
+                "pages": 3,
+                "sites": 3
+            }
+        ],
+        "storm": [
+            {
+                "q": "How long does {Service} take?",
+                "pages": 3,
+                "sites": 3
+            }
+        ],
+        "water": [
+            {
+                "q": "How quickly should water damage be addressed?",
+                "pages": 6,
+                "sites": 6
+            },
+            {
+                "q": "How long does {Service} take?",
+                "pages": 9,
+                "sites": 5
+            },
+            {
+                "q": "Can water damage lead to mold?",
+                "pages": 5,
+                "sites": 3
+            },
+            {
+                "q": "Does homeowners insurance cover water damage?",
+                "pages": 3,
+                "sites": 3
+            },
+            {
+                "q": "What does {Service} include?",
+                "pages": 3,
+                "sites": 3
+            }
+        ]
+    },
+    "global": {
+        "reviews": 7,
+        "cta": 6,
+        "two-col": 3,
+        "form": 3,
+        "other": 3,
+        "trust": 2,
+        "areas": 2,
+        "cards": 1,
+        "text": 1
+    },
+    "kit": {
+        "builds": 1166,
+        "shared": 84
+    },
+    "sites": 25
+}

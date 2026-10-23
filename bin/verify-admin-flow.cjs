@@ -94,6 +94,46 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		return false;
 	};
 	const height = () => page.evaluate( () => document.documentElement.scrollHeight );
+	// The lines of words in the app that do not read on what they are drawn on (WCAG 2: 4.5:1, 3:1 for large or bold large type; a
+	// disabled control is exempt): the colour composited over the grounds behind it, as the browser draws them.
+	const unreadable = () => page.evaluate( () => {
+		const parse = ( c ) => { const m = c.match( /rgba?\(([^)]+)\)/ ); if ( ! m ) return null; const v = m[1].split( /[\s,/]+/ ).filter( Boolean ).map( Number ); return [ v[0], v[1], v[2], v.length > 3 ? v[3] : 1 ]; };
+		const lum = ( c ) => { const f = ( x ) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow( ( x + 0.055 ) / 1.055, 2.4 ); }; return 0.2126 * f( c[0] ) + 0.7152 * f( c[1] ) + 0.0722 * f( c[2] ); };
+		const over = ( t, u ) => [ t[0] * t[3] + u[0] * ( 1 - t[3] ), t[1] * t[3] + u[1] * ( 1 - t[3] ), t[2] * t[3] + u[2] * ( 1 - t[3] ), 1 ];
+		const ground = ( el ) => {
+			const st = [];
+			for ( let n = el; n && n.nodeType === 1; n = n.parentElement ) {
+				const cs = getComputedStyle( n );
+				if ( cs.backgroundImage && cs.backgroundImage !== 'none' && ! /gradient/.test( cs.backgroundImage ) ) return null;
+				const c = parse( cs.backgroundColor );
+				if ( c && c[3] > 0 ) { st.push( c ); if ( c[3] >= 0.99 ) break; }
+			}
+			let g = [ 255, 255, 255, 1 ];
+			for ( let i = st.length - 1; i >= 0; i-- ) g = over( st[ i ], g );
+			return g;
+		};
+		const app = document.getElementById( 'dxai-ui-app' );
+		const low = [];
+		for ( const el of app ? app.querySelectorAll( '*' ) : [] ) {
+			const own = [ ...el.childNodes ].filter( ( n ) => n.nodeType === 3 ).map( ( n ) => n.textContent ).join( '' ).replace( /\s+/g, ' ' ).trim();
+			if ( own.length < 2 ) continue;
+			const cs = getComputedStyle( el );
+			const r = el.getBoundingClientRect();
+			if ( r.width < 1 || r.height < 1 || cs.visibility === 'hidden' || el.closest( '[aria-hidden="true"], .screen-reader-text, [hidden], button:disabled, [aria-disabled="true"]' ) ) continue;
+			let op = 1;
+			for ( let n = el; n && n.nodeType === 1; n = n.parentElement ) op *= parseFloat( getComputedStyle( n ).opacity ) || 1;
+			const fg = parse( cs.color );
+			const g = ground( el );
+			if ( op === 0 || ! fg || ! g ) continue;
+			fg[3] = ( fg[3] ?? 1 ) * op;
+			const f = over( fg, g );
+			const ratio = ( Math.max( lum( f ), lum( g ) ) + 0.05 ) / ( Math.min( lum( f ), lum( g ) ) + 0.05 );
+			const size = parseFloat( cs.fontSize );
+			const need = size >= 24 || ( parseInt( cs.fontWeight, 10 ) >= 700 && size >= 18.66 ) ? 3 : 4.5;
+			if ( ratio < need ) low.push( Math.round( ratio * 100 ) / 100 + ':1 “' + own.slice( 0, 40 ) + '” ' + cs.color + ' on rgb(' + g.slice( 0, 3 ).map( Math.round ).join( ',' ) + ')' );
+		}
+		return [ ...new Set( low ) ];
+	} );
 	const shot = async ( name ) => {
 		if ( out ) {
 			await page.screenshot( { path: path.join( out, name + '.png' ), fullPage: true } );
@@ -107,6 +147,8 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		const title = await page.evaluate( () => ( document.querySelector( '#dxai-ui-app h1' ) || {} ).textContent || '' );
 		expect( what + ' opens (h1 "' + title.trim() + '", ' + h + ' px)', ok && title.trim() !== '', ok ? 'no title' : 'the app did not settle' );
 		expect( what + ': no error in the console', errors.length === 0, errors.join( ' | ' ) );
+		const low = await unreadable();
+		expect( what + ': every line of words reads on its ground (4.5:1, 3:1 large)', low.length === 0, low.slice( 0, 3 ).join( ' | ' ) );
 		if ( max ) {
 			expect( what + ': at most ' + max + ' px tall', h <= max, h + ' px' );
 		}
@@ -184,6 +226,8 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 			expect( 'tab ' + tab + ' opens in one click (' + h + ' px)', opened === 'opened', opened );
 			expect( 'tab ' + tab + ': no error in the console', errors.length === 0, errors.join( ' | ' ) );
 			expect( 'tab ' + tab + ': at most 4000 px tall', h <= 4000, h + ' px' );
+			const lowTab = await unreadable();
+			expect( 'tab ' + tab + ': every line of words reads on its ground', lowTab.length === 0, lowTab.slice( 0, 3 ).join( ' | ' ) );
 			await shot( 'design-' + tab );
 		}
 		// The browser's back button is the way back through the tabs.

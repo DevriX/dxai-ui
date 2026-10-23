@@ -280,7 +280,7 @@ final class Library_Style extends Style_Harmony {
 			self::$looks[ $key ] = array(
 				'card'    => self::card_of( $home ),
 				'eyebrow' => self::eyebrow_of( $blocks ),
-				'button'  => self::buttons_of( $blocks ),
+				'button'  => self::buttons_of( $blocks ) ?? self::link_buttons_of( $blocks, $home ),
 				'ground'  => self::grounds_of( $home ),
 				'head'    => self::head_of( $home ),
 				'faq'     => self::faq_of( $home ),
@@ -408,6 +408,103 @@ final class Library_Style extends Style_Harmony {
 	}
 
 	/**
+	 * The look of the Home's buttons when it draws them as links (a design kept as it was: `dxai-ui/link` with a fill of the
+	 * design's colours, `bg-dxai-accent text-dxai-ink`) and has no Button blocks of a style to go by: the fill and the text most of
+	 * its filled calls to action have, as the theme presets those colours follow (Theme_Binding). A button of a library section
+	 * keeps the theme's style and takes these two in its Colour panel, so it reads as the Home's buttons do. Null when the Home has
+	 * fewer than two alike, or its colours follow no preset.
+	 *
+	 * @param array<int, array<string, mixed>> $blocks
+	 * @return array{primary: array<string, mixed>, secondary: null}|null
+	 */
+	private static function link_buttons_of( array $blocks, int $home ): ?array {
+		$all  = array();
+		$walk = static function ( array $b ) use ( &$walk, &$all, $home ): void {
+			if ( self::is_chrome( $b ) ) {
+				return;
+			}
+			// A link of the design's: its link block, or a text or a box it drew as a link (a call with its icon: `<a>` of a tel: number).
+			$name = (string) ( $b['blockName'] ?? '' );
+			$link = $name === 'dxai-ui/link' || ( in_array( $name, array( 'dxai-ui/text', 'dxai-ui/box' ), true ) && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'a' );
+			if ( $link && Button::style_of( ' ' . (string) ( $b['attrs']['className'] ?? '' ) . ' ', (string) ( $b['attrs']['dxaiCss'] ?? '' ) ) === 'primary-button' ) {
+				$class = self::tokens( (string) ( $b['attrs']['className'] ?? '' ) );
+				$fill  = '';
+				$text  = '';
+				foreach ( $class as $t ) {
+					if ( $fill === '' && preg_match( '/^bg-dxai-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
+						$fill = Button::preset_for( 'token:' . $m[1], $home );
+					} elseif ( $text === '' && preg_match( '/^text-dxai-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
+						$text = Button::preset_for( 'token:' . $m[1], $home );
+					}
+				}
+				if ( $fill !== '' ) {
+					$all[] = array(
+						'key'   => $fill . '|' . $text,
+						'class' => array(),
+						'css'   => array(),
+						'fill'  => $fill,
+						'text'  => $text !== '' && \DXAI_UI\Theme\Capabilities::text_slug_ok( $text ) ? $text : '',
+					);
+				}
+			}
+			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
+				if ( is_array( $c ) && ! empty( $c['blockName'] ) ) {
+					$walk( $c );
+				}
+			}
+		};
+		foreach ( $blocks as $b ) {
+			if ( ! empty( $b['blockName'] ) ) {
+				$walk( $b );
+			}
+		}
+		$primary = self::dominant( $all, 2, true );
+		if ( $primary === null || (string) ( $primary['fill'] ?? '' ) === '' ) {
+			return null;
+		}
+
+		return array(
+			'primary'   => $primary,
+			'secondary' => null,
+		);
+	}
+
+	/**
+	 * A Button in its own style with the Home's fill and text in its Colour panel (the classes core's Button writes for them on its
+	 * link, in core's order), its own colours taken off first.
+	 *
+	 * @param array<string, mixed> $block A core/button.
+	 * @return array<string, mixed>
+	 */
+	private static function paint_button( array $block, string $fill, string $text ): array {
+		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+		unset( $attrs['backgroundColor'], $attrs['textColor'], $attrs['gradient'], $attrs['style']['color'], $attrs['style']['elements']['link'] );
+		if ( isset( $attrs['style']['elements'] ) && $attrs['style']['elements'] === array() ) {
+			unset( $attrs['style']['elements'] );
+		}
+		$attrs['backgroundColor'] = $fill;
+		if ( $text !== '' ) {
+			$attrs['textColor']                                       = $text;
+			$attrs['style']['elements']['link']['color']['text'] = 'var:preset|color|' . $text;
+		}
+		if ( isset( $attrs['style'] ) && $attrs['style'] === array() ) {
+			unset( $attrs['style'] );
+		}
+		$block['attrs'] = $attrs;
+		$block          = self::strip_anchor( $block, self::BUTTON_TAG_CLASS, '/^(?:color|background(?:-color)?|background-image)$/' );
+		$add            = ( $text !== '' ? ' has-' . $text . '-color' : '' ) . ' has-' . $fill . '-background-color' . ( $text !== '' ? ' has-text-color' : '' ) . ' has-background' . ( $text !== '' ? ' has-link-color' : '' );
+		$put            = static fn( string $html ): string => (string) preg_replace( '/(<a\b[^>]*\sclass="[^"]*?\bwp-block-button__link)\b/', '$1' . $add, $html, 1 );
+		$block['innerHTML'] = $put( (string) ( $block['innerHTML'] ?? '' ) );
+		foreach ( (array) ( $block['innerContent'] ?? array() ) as $k => $chunk ) {
+			if ( is_string( $chunk ) && str_contains( $chunk, 'wp-block-button__link' ) ) {
+				$block['innerContent'][ $k ] = $put( $chunk );
+			}
+		}
+
+		return $block;
+	}
+
+	/**
 	 * What a block's look of a kind is: the classes of it, and the declarations of it (its own CSS, and its own settings as declarations).
 	 *
 	 * @param array<string, mixed> $block
@@ -511,7 +608,10 @@ final class Library_Style extends Style_Harmony {
 			$block = self::put_look( $block, $look['eyebrow'], self::TYPE_CLASS, self::TYPE_PROP, self::TYPE_SETTINGS, '/^(?:has-text-color|has-[a-z0-9-]+-color|has-[a-z0-9-]+-font-size)$/' );
 		}
 		// A button drawn as a link (a card's "Learn more") is a link, not a button: it keeps its own look.
-		if ( $look['button'] !== null && $name === 'core/button' && preg_match( '/is-style-link|(^|\s)[a-z0-9-]*link-button(\s|$)/i', $class ) !== 1 ) {
+		if ( isset( $look['button']['primary']['fill'] ) && $name === 'core/button' && preg_match( '/is-style-link|(^|\s)[a-z0-9-]*link-button(\s|$)|secondary|outline|ghost/i', $class ) !== 1 ) {
+			// A Home that draws its buttons as links: the button keeps its style and wears the Home's fill and text (its Colour panel).
+			$block = self::paint_button( $block, (string) $look['button']['primary']['fill'], (string) $look['button']['primary']['text'] );
+		} elseif ( $look['button'] !== null && ! isset( $look['button']['primary']['fill'] ) && $name === 'core/button' && preg_match( '/is-style-link|(^|\s)[a-z0-9-]*link-button(\s|$)/i', $class ) !== 1 ) {
 			$kind  = preg_match( '/secondary|outline|ghost/i', $class ) === 1 && $look['button']['secondary'] !== null ? $look['button']['secondary'] : $look['button']['primary'];
 			// The button's own colours, padding and type go with its style: the Home's style draws it whole. (A button's settings write
 			// their classes and declarations on the link inside the wrapper, so the link's tag is cleaned as the wrapper's is.)

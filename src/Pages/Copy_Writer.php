@@ -25,7 +25,8 @@ use DXAI_UI\Theme\Capabilities;
  *  - nothing is saved until a person applies it, block by block if they want;
  *  - the page keeps its content from before, and reverting puts it back, unless the page was edited since.
  *
- * Only the words change: the blocks, their classes and their styles stay as they are.
+ * Only the words change: the blocks, their classes and their styles stay as they are. A section the site says the same
+ * way on its other pages (the reviews, the form, the call to action — KEEP, set by Network\Page_Copies) is not listed.
  */
 final class Copy_Writer {
 
@@ -34,6 +35,12 @@ final class Copy_Writer {
 
 	/** On a page: the hash of the content the copy wrote (a later edit is not undone). */
 	public const HASH = '_dxai_ui_copy_hash';
+
+	/** On a page: the sections whose words stay as they are, by the hash of their words (section_hash()). */
+	public const KEEP = '_dxai_ui_copy_keep';
+
+	/** @var array<string, bool> The KEEP of the page being walked. */
+	private static array $keep = array();
 
 	/** Blocks sent in one request. */
 	private const PER_CALL = 140;
@@ -66,6 +73,7 @@ final class Copy_Writer {
 		$blocks = parse_blocks( (string) get_post_field( 'post_content', $page_id ) );
 		$items  = array();
 		$n      = 0;
+		self::$keep = self::keep_of( $page_id );
 		self::walk(
 			$blocks,
 			static function ( array &$b, string $section, ?\stdClass $lock = null ) use ( &$items, &$n ): void {
@@ -96,7 +104,7 @@ final class Copy_Writer {
 	 * The request for the AI: the team's prompt, then the page's words as numbered blocks and how to answer.
 	 *
 	 * @param array<int, array{id:string, section:string, kind:string, html:string, text:string}> $items
-	 * @param array{topic?:string, reference?:string}|null                                          $override
+	 * @param array{topic?:string, reference?:string, notes?:string, reference_text?:string}|null      $override
 	 * @return array{system:string, user:string}
 	 */
 	public static function request( int $page_id, array $items, ?array $override = null, bool $facts = false, int $part = 1, int $parts = 1 ): array {
@@ -109,7 +117,13 @@ final class Copy_Writer {
 			),
 			$items
 		);
-		$user = Copy_Prompt::prompt( $page_id, $override, $facts )
+		// What the caller knows besides the prompt: how the team's sites write a page of this kind (Network\Page_Copies), and
+		// the words of the production page, which an AI answering here cannot open by itself.
+		$notes = trim( (string) ( $override['notes'] ?? '' ) );
+		$words = trim( (string) ( $override['reference_text'] ?? '' ) );
+		$user  = Copy_Prompt::prompt( $page_id, $override, $facts )
+			. ( $notes !== '' ? "\n\n" . $notes : '' )
+			. ( $words !== '' ? "\n\nThe production page's visible text, as read from it (take its facts and its content from here):\n" . $words : '' )
 			. "\n\n---\n"
 			. "You cannot open the page from here, so its visible text is listed below as numbered blocks: an id, the section it sits in, what kind of block it is, and its current text (the inline tags <strong>, <em> and <br> may appear in it).\n"
 			. "The cards that list this site's other pages, and the ways to reach the company, are facts of the site and are not listed here.\n"
@@ -127,7 +141,7 @@ final class Copy_Writer {
 	/**
 	 * Ask the engine and return what it proposes, without saving anything.
 	 *
-	 * @param array{topic?:string, reference?:string}|null $override
+	 * @param array{topic?:string, reference?:string, notes?:string, reference_text?:string}|null $override
 	 * @return array{engine:string, fingerprint:string, blocks:array<int, array<string, mixed>>, flags:array<int, string>, changed:int}|\WP_Error
 	 */
 	public static function propose( int $page_id, ?array $override = null, bool $facts = false ): array|\WP_Error {
@@ -196,6 +210,7 @@ final class Copy_Writer {
 		$blocks  = parse_blocks( $content );
 		$n       = 0;
 		$applied = 0;
+		self::$keep = self::keep_of( $page_id );
 		self::walk(
 			$blocks,
 			static function ( array &$b, string $section, ?\stdClass $lock = null ) use ( &$n, &$applied, $changes ): void {
@@ -393,6 +408,11 @@ final class Copy_Writer {
 				continue;
 			}
 			$sec = $section;
+			if ( $depth === $at && self::$keep !== array() && isset( self::$keep[ self::section_hash( $b ) ] ) ) {
+				// A section the site keeps word for word on its other pages.
+				$first = false;
+				continue;
+			}
 			if ( $depth === $at ) {
 				$name  = (string) ( $b['attrs']['metadata']['name'] ?? '' );
 				$sec   = $name !== '' ? $name : ucfirst( Section_Roles::of( $b, $first ) );
@@ -411,6 +431,28 @@ final class Copy_Writer {
 			}
 		}
 		unset( $b );
+	}
+
+	/**
+	 * A section's words as one hash: its markup without tags and block comments, the spaces made one, lowered.
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	public static function section_hash( array $b ): string {
+		$text = html_entity_decode( wp_strip_all_tags( serialize_block( $b ) ), ENT_QUOTES, 'UTF-8' );
+
+		return md5( mb_strtolower( trim( (string) preg_replace( '/\s+/u', ' ', $text ) ) ) );
+	}
+
+	/**
+	 * The sections of a page whose words stay as they are.
+	 *
+	 * @return array<string, bool>
+	 */
+	private static function keep_of( int $page_id ): array {
+		$keep = get_post_meta( $page_id, self::KEEP, true );
+
+		return is_array( $keep ) ? array_fill_keys( array_map( 'strval', $keep ), true ) : array();
 	}
 
 	/**
@@ -457,6 +499,17 @@ final class Copy_Writer {
 	 */
 	private static function leaf( array $b ): ?array {
 		$name = (string) ( $b['blockName'] ?? '' );
+		// A question of a FAQ: the details' summary (its answer is the blocks inside it).
+		if ( $name === 'core/details' && is_string( $b['innerContent'][0] ?? null ) && preg_match( '/^(.*?<summary\b[^>]*>)(.*?)(<\/summary>.*)$/s', (string) $b['innerContent'][0], $m ) === 1 ) {
+			return preg_match( '/\p{L}{2}/u', wp_strip_all_tags( $m[2] ) ) === 1 && preg_match( '/<(?:svg|img|script|style|iframe)\b/i', $m[2] ) !== 1
+				? array(
+					'kind'  => 'question',
+					'open'  => $m[1],
+					'inner' => $m[2],
+					'close' => $m[3],
+				)
+				: null;
+		}
 		if ( ! isset( self::leaves()[ $name ] ) || ! empty( $b['innerBlocks'] ) ) {
 			return null;
 		}
@@ -502,6 +555,17 @@ final class Copy_Writer {
 			return false;
 		}
 		$html                  = $leaf['open'] . $new . $leaf['close'];
+		if ( ( $b['blockName'] ?? '' ) === 'core/details' ) {
+			// Its summary is in the opening part of its markup; the rest is its answer's blocks.
+			$was                  = (string) $b['innerContent'][0];
+			$b['innerContent'][0] = $html;
+			$b['innerHTML']       = str_replace( $was, $html, (string) ( $b['innerHTML'] ?? '' ) );
+			if ( isset( $b['attrs']['summary'] ) ) {
+				$b['attrs']['summary'] = $new;
+			}
+
+			return true;
+		}
 		$b['innerContent'][0]  = $html;
 		$b['innerHTML']        = $html;
 		if ( ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && isset( $b['attrs']['text'] ) ) {
