@@ -264,7 +264,11 @@ while ( 'continue' === ( $saved['state'] ?? '' ) && $saves < 400 ) {
 		$steps_seen[ (string) $saved['tail']['step'] ] = true;
 	}
 }
-$expect( 'the save\'s answers name the finishing step that comes next, for the screen', count( $steps_seen ) >= 10 && isset( $steps_seen['document'] ), implode( ',', array_keys( $steps_seen ) ) );
+// Which steps a round ends before depends on the machine's speed (a fast one finishes the quick steps in the round before), so
+// the check is that every step named is a finishing step, in the save's own order, and that they reach the last one.
+$tail_steps = ( new ReflectionClassConstant( Structure_Repository::class, 'TAIL_STEPS' ) )->getValue();
+$named      = array_keys( $steps_seen );
+$expect( 'the save\'s answers name the finishing step that comes next, for the screen', count( $named ) >= 5 && array_values( array_intersect( $tail_steps, $named ) ) === $named && isset( $steps_seen['document'] ), implode( ',', $named ) );
 $page = (int) ( $saved['page']['id'] ?? 0 );
 $expect( "the save goes on by the token alone and answers as a save at once does after $saves rounds", 200 === $status && $page > 0 && ! isset( $saved['state'] ) && ! empty( $saved['structures']['extra_page_ids'] ), wp_json_encode( array_intersect_key( $saved, array_flip( array( 'state', 'code', 'message' ) ) ) ) );
 $expect( 'its pages are there, linked to each other', $page > 0 && str_contains( (string) get_post_field( 'post_content', $page ), (string) get_permalink( (int) ( $saved['structures']['extra_page_ids'][0] ?? 0 ) ) ) );
