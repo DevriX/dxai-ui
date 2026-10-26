@@ -290,15 +290,160 @@ final class Home_Kit {
 
 	/**
 	 * Whether a picture is an icon (the design's own small mark, drawn as a file of its own): not a picture that says something about
-	 * the card it is in, so another card may keep it.
+	 * the card it is in, so another card may keep it. A small picture the design hides from screen readers (H2O Away's 56 px service
+	 * marks, webp files) is one too: what it shows is said by the words beside it.
 	 *
 	 * @param array<string, mixed> $block
 	 */
 	public static function is_icon( array $block ): bool {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+		if ( preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', (string) ( $attrs['className'] ?? '' ) ) === 1
+			|| preg_match( '/\.svg(?:\?|$)/i', (string) ( $attrs['url'] ?? $attrs['src'] ?? '' ) ) === 1 ) {
+			return true;
+		}
+		$hidden = (string) ( $attrs['ariaHidden'] ?? ( $attrs['dxaiData']['aria-hidden'] ?? '' ) );
+		if ( $hidden !== 'true' ) {
+			return false;
+		}
+		// Its size as the design sets it: a w-/h- class in px, the width/height attributes, or its CSS.
+		$sizes = array();
+		if ( preg_match_all( '/(?:^|\s)(?:w|h|size)-(\d+)px(?:\s|$)/', (string) ( $attrs['className'] ?? '' ), $m ) ) {
+			$sizes = array_map( 'intval', $m[1] );
+		}
+		foreach ( array( 'width', 'height' ) as $key ) {
+			if ( is_numeric( $attrs[ $key ] ?? null ) ) {
+				$sizes[] = (int) $attrs[ $key ];
+			}
+		}
+		if ( preg_match_all( '/(?:^|;)\s*(?:width|height)\s*:\s*(\d+)px/i', (string) ( $attrs['dxaiCss'] ?? '' ), $m ) ) {
+			$sizes = array_merge( $sizes, array_map( 'intval', $m[1] ) );
+		}
 
-		return preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', (string) ( $attrs['className'] ?? '' ) ) === 1
-			|| preg_match( '/\.svg(?:\?|$)/i', (string) ( $attrs['url'] ?? $attrs['src'] ?? '' ) ) === 1;
+		return $sizes !== array() && max( $sizes ) <= 96;
+	}
+
+	/**
+	 * The services a set of cards marks with its icons (H2O Away's water, fire, mold and sewage): each by its name — the first word of
+	 * its card's heading that no other card's heading has (Water, Fire, Mold, Sewage). Empty when the cards have one mark for all (a
+	 * tick), fewer than two, or a mark whose card has no word of its own: such a mark does not say what a card is about.
+	 *
+	 * @param array<int, array<string, mixed>> $cards The cards, as blocks.
+	 * @return array<string, int> Name (stems()) => the key in $cards of the first card with that mark.
+	 */
+	public static function marks( array $cards ): array {
+		$heads = array();
+		foreach ( $cards as $k => $card ) {
+			$icon = self::icon_in( $card );
+			if ( $icon !== '' && ! isset( $heads[ $icon ] ) ) {
+				$heads[ $icon ] = array(
+					'card'  => (int) $k,
+					'words' => self::stems( self::title_of( $card ) ),
+				);
+			}
+		}
+		$out = array();
+		foreach ( $heads as $icon => $head ) {
+			$others = array();
+			foreach ( $heads as $other => $o ) {
+				if ( $other !== $icon ) {
+					$others = array_merge( $others, $o['words'] );
+				}
+			}
+			$own = array_values( array_diff( $head['words'], $others ) );
+			if ( $own === array() ) {
+				return array();
+			}
+			$out[ $own[0] ] = $head['card'];
+		}
+
+		return count( $out ) < 2 ? array() : $out;
+	}
+
+	/**
+	 * The card of the service a text names first (marks()), or null when it names none.
+	 *
+	 * @param array<string, int> $marks
+	 */
+	public static function marked( array $marks, string $text ): ?int {
+		foreach ( self::stems( $text ) as $word ) {
+			if ( isset( $marks[ $word ] ) ) {
+				return $marks[ $word ];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * A block without its icons.
+	 *
+	 * @param array<string, mixed> $b
+	 * @return array<string, mixed>
+	 */
+	public static function drop_icons( array $b ): array {
+		foreach ( array_reverse( array_keys( (array) ( $b['innerBlocks'] ?? array() ) ) ) as $i ) {
+			$inner = $b['innerBlocks'][ $i ];
+			if ( ! is_array( $inner ) ) {
+				continue;
+			}
+			if ( self::is_icon( $inner ) ) {
+				Block_Tree::drop( $b, (int) $i );
+				continue;
+			}
+			$b['innerBlocks'][ $i ] = self::drop_icons( $inner );
+		}
+
+		return $b;
+	}
+
+	/**
+	 * The file of the first icon in a block ('' when it has none).
+	 *
+	 * @param array<string, mixed> $b
+	 */
+	public static function icon_in( array $b ): string {
+		if ( self::is_icon( $b ) ) {
+			return (string) ( $b['attrs']['url'] ?? ( $b['attrs']['src'] ?? '' ) );
+		}
+		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $inner ) {
+			$icon = is_array( $inner ) ? self::icon_in( $inner ) : '';
+			if ( $icon !== '' ) {
+				return $icon;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Distinct words that say what a text is about: 4 letters or more, not the most common ones, cut to 5 letters so "sewage" and
+	 * "sewer", "remediation" and "remediate" meet. Markup and entities aside.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function stems( string $text ): array {
+		$stop  = array( 'with', 'your', 'from', 'that', 'this', 'have', 'will', 'more', 'they', 'their', 'when', 'what', 'about', 'services', 'service', 'into', 'over', 'every', 'after', 'just', 'than', 'then', 'them', 'were', 'been', 'also', 'here', 'home', 'homes' );
+		$text  = html_entity_decode( wp_strip_all_tags( $text ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$words = preg_split( '/[^\p{L}]+/u', mb_strtolower( $text ) ) ?: array();
+		$words = array_filter( $words, static fn( $w ) => mb_strlen( $w ) >= 4 && ! in_array( $w, $stop, true ) );
+		$words = array_map( static fn( $w ) => mb_substr( $w, 0, 5 ), $words );
+
+		return array_values( array_unique( $words ) );
+	}
+
+	/**
+	 * The words of a card's heading (its first heading).
+	 *
+	 * @param array<string, mixed> $card
+	 */
+	private static function title_of( array $card ): string {
+		foreach ( (array) Section_Library::analyze( $card, 0 )['slots'] as $slot ) {
+			if ( ( $slot['type'] ?? '' ) === 'heading' ) {
+				return (string) ( $slot['text'] ?? '' );
+			}
+		}
+
+		return '';
 	}
 
 	/**

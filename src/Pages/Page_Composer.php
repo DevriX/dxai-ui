@@ -1147,7 +1147,7 @@ final class Page_Composer {
 		$rep   = self::main_repeat( $a, $unit['kind'] );
 		$items = $this->items_for( $unit, $rep );
 		if ( $rep !== null ) {
-			$this->resize_matched( $block, $rep, $items, $templates );
+			$this->resize_matched( $block, $rep, $items, $templates, (string) ( $unit['heading'] ?? '' ) );
 			$this->fit_grid_hooks( $block, $rep['path'], count( $items ) );
 			$a   = Section_Library::analyze( $block, (int) $c['index'] );
 			$rep = self::main_repeat( $a, $unit['kind'] );
@@ -1404,7 +1404,7 @@ final class Page_Composer {
 	 * @param array<string, mixed>             $rep
 	 * @param array<int, array<string, mixed>> $items
 	 */
-	private function resize_matched( array &$block, array $rep, array $items, array $templates = array() ): void {
+	private function resize_matched( array &$block, array $rep, array $items, array $templates = array(), string $topic = '' ): void {
 		$parent = &Block_Tree::at( $block, $rep['path'] );
 		$idxs   = $rep['items'];
 		if ( $idxs === array() ) {
@@ -1440,12 +1440,68 @@ final class Page_Composer {
 			$taken[ $best ] = true;
 			$chosen[]       = $designs[ $best ]['block'];
 		}
+		$chosen = $this->by_icon( $designs, array_values( $items ), $chosen, $topic );
 		foreach ( array_reverse( $idxs ) as $i ) {
 			Block_Tree::drop( $parent, $i );
 		}
 		foreach ( $chosen as $k => $node ) {
 			Block_Tree::insert( $parent, $idxs[0] + $k, $node );
 		}
+	}
+
+	/**
+	 * Cards that carry the design's marks for its services (H2O Away's water, fire, mold and sewage icons): a card takes the mark of
+	 * the service its heading names; a card in one service's own section ("Types of Fire Damage") the mark of that service; a card
+	 * that names none shows no mark rather than another service's (Home_Kit::marks()). Cards with one mark for all, or marks that
+	 * name nothing, stay as chosen.
+	 *
+	 * @param array<int, array<string, mixed>> $designs Each design card (block, words).
+	 * @param array<int, array<string, mixed>> $items
+	 * @param array<int, array<string, mixed>> $chosen  The card each item takes, by its words.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function by_icon( array $designs, array $items, array $chosen, string $topic ): array {
+		$cards = array_column( $designs, 'block' );
+		$marks = Home_Kit::marks( $cards );
+		if ( $marks === array() ) {
+			return $chosen;
+		}
+		$theme = Home_Kit::marked( $marks, $topic );
+		foreach ( $items as $k => $item ) {
+			if ( ! isset( $chosen[ $k ] ) ) {
+				continue;
+			}
+			$card = Home_Kit::marked( $marks, (string) ( $item['heading'] ?? '' ) ) ?? $theme;
+			if ( $card !== null ) {
+				$chosen[ $k ] = $cards[ $card ];
+			} elseif ( (string) ( $item['image'] ?? '' ) === '' ) {
+				// An item with a picture of its own shows it in the mark's place (icon_to_picture()); one without shows none. The mark
+				// goes in sweep(), after the filling: until then the card has the shape of the others, and is filled as one of them.
+				$chosen[ $k ] = self::mark_icons( $chosen[ $k ] );
+			}
+		}
+
+		return $chosen;
+	}
+
+	/**
+	 * A card with its icons marked to go (sweep()).
+	 *
+	 * @param array<string, mixed> $b
+	 * @return array<string, mixed>
+	 */
+	private static function mark_icons( array $b ): array {
+		if ( Home_Kit::is_icon( $b ) ) {
+			$b['attrs']['__dxai_drop'] = true;
+			return $b;
+		}
+		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $i => $inner ) {
+			if ( is_array( $inner ) ) {
+				$b['innerBlocks'][ $i ] = self::mark_icons( $inner );
+			}
+		}
+
+		return $b;
 	}
 
 	/**
@@ -1525,13 +1581,7 @@ final class Page_Composer {
 	 * @return array<int, string>
 	 */
 	private static function words( string $text ): array {
-		$stop  = array( 'with', 'your', 'from', 'that', 'this', 'have', 'will', 'more', 'they', 'their', 'when', 'what', 'about', 'services', 'service', 'into', 'over', 'every', 'after', 'just', 'than', 'then', 'them', 'were', 'been', 'also', 'here', 'home', 'homes' );
-		$words = preg_split( '/[^\p{L}]+/u', mb_strtolower( $text ) ) ?: array();
-		$words = array_filter( $words, static fn( $w ) => mb_strlen( $w ) >= 4 && ! in_array( $w, $stop, true ) );
-		// Crude stems so "sewage"/"sewer", "remediation"/"remediate" meet.
-		$words = array_map( static fn( $w ) => mb_substr( $w, 0, 5 ), $words );
-
-		return array_values( array_unique( $words ) );
+		return Home_Kit::stems( $text );
 	}
 
 	/**
@@ -2171,6 +2221,19 @@ final class Page_Composer {
 		}
 		usort( $pictures, static fn( $x, $y ) => $y['near'] <=> $x['near'] );
 
+		// A photograph the design draws as the section's ground (in its CSS: H2O Away's hero) is a place for a picture too: the old
+		// page's own for this part — its ground, else its first picture — when nothing else of the section shows one.
+		if ( $backdrops === array() && $pictures === array() ) {
+			$ref = $bg !== '' ? $bg : (string) ( $queue[0] ?? '' );
+			if ( $ref !== '' && $this->css_photo( $block, $ref ) ) {
+				if ( $ref === $bg ) {
+					$bg = '';
+				} else {
+					array_shift( $queue );
+				}
+			}
+		}
+
 		foreach ( $backdrops as $k => $s ) {
 			$ref = '';
 			if ( $k === 0 && $bg !== '' ) {
@@ -2247,6 +2310,32 @@ final class Page_Composer {
 				}
 			}
 		}
+	}
+
+	/**
+	 * The old picture in place of the photograph a section draws as its ground in its CSS (`background-image:url(…)` on the
+	 * section's block), when it is large enough to stand behind the whole section: at least 1200 px wide (a smaller one, drawn
+	 * over the width of a screen, comes out soft — then the Home's photograph stays, and the old one may show elsewhere).
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private function css_photo( array &$block, string $ref ): bool {
+		$css = (string) ( $block['attrs']['dxaiCss'] ?? '' );
+		if ( ! isset( $this->pool[ $ref ] ) || preg_match( '/background(?:-image)?\s*:[^;]*?url\(\s*([\'"]?)([^\'")]+\.(?:jpe?g|png|webp|avif)(?:\?[^\'")]*)?)\1\s*\)/i', $css, $m ) !== 1 ) {
+			return false;
+		}
+		$w = (int) ( $this->pool[ $ref ]['w'] ?? 0 );
+		if ( $w > 0 && $w < 1200 ) {
+			return false;
+		}
+		$got = ( $this->images )( (string) $this->pool[ $ref ]['src'], 0.0, false );
+		if ( ! is_array( $got ) || empty( $got['url'] ) ) {
+			return false;
+		}
+		Block_Tree::set_css( $block, str_replace( $m[2], esc_url_raw( (string) $got['url'] ), $css ) );
+		$this->used_images[ $ref ] = true;
+
+		return true;
 	}
 
 	/**
@@ -2441,7 +2530,8 @@ final class Page_Composer {
 				return true;
 			}
 			if ( in_array( $name, array( 'dxai-ui/image', 'core/image' ), true ) || ( $name === 'dxai-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'img' ) ) {
-				return empty( $b['attrs']['__dxai_image'] );
+				// The design's own mark (an icon) stays with its card: the card was chosen for the words it says (resize_matched()).
+				return empty( $b['attrs']['__dxai_image'] ) && ! Home_Kit::is_icon( $b );
 			}
 			if ( $name === 'dxai-ui/html' && ! $keep_widgets && preg_match( '#<(form|input|select|textarea|button)\b#i', (string) $b['innerHTML'] ) ) {
 				return true;

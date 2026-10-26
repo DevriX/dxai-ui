@@ -227,5 +227,95 @@ $other_page = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze
 	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $other_old, 'https://old.example.test/about/' ) );
 $expect( 'a part under another heading does not take the Home\'s photograph', ! str_contains( wp_json_encode( $other_page['sections'] ), 'crew-truck.jpg' ) );
 
+echo "A photograph the Home draws as its hero's ground, in its CSS (H2O Away's hero, docs/PLAN-NETWORK-PAGES.md, 11.4)\n";
+$css_hero  = parse_blocks( '<!-- wp:group {"tagName":"section","className":"hero","dxaiCss":"background-image:url(\'https://example.test/home-hero.jpg\');background-size:cover"} --><section class="wp-block-group hero"><!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Water, Fire &amp; Mold Damage Restoration</h1><!-- /wp:heading --><!-- wp:paragraph --><p>On site in about 60 minutes, day or night, anywhere in Thurston County.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
+$hero_page = static function ( int $width ) use ( $css_hero, $why ): string {
+	$old = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p><img src="https://old.example.test/burned-kitchen.jpg" width="' . $width . '" height="1000" alt="A burned kitchen"/></section>'
+		. '<section><h2>Why Olympia calls us</h2><p>Our crews answer at night and reach you within the hour, every day of the year, with photos for your insurer.</p></section></main></body></html>';
+	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $css_hero, 0 ), DXAI_UI\Pages\Section_Library::analyze( $why, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
+
+	return (string) ( $out['sections'][0]['attrs']['dxaiCss'] ?? '' );
+};
+$big = $hero_page( 2000 );
+$expect( 'the old page\'s own photograph, large enough to stand behind the whole hero, takes its place', str_contains( $big, "url('https://old.example.test/burned-kitchen.jpg')" ) && str_contains( $big, 'background-size:cover' ), $big );
+$small = $hero_page( 940 );
+$expect( 'one too small for it (940 px) leaves the Home\'s', str_contains( $small, "url('https://example.test/home-hero.jpg')" ), $small );
+
+echo "The Home's marks for its services (H2O Away's 56 px icons, hidden from screen readers; 11.4)\n";
+$box  = static fn( string $src, string $class, bool $hidden = true ): array => array(
+	'blockName'    => 'dxai-ui/box',
+	'attrs'        => array_merge( array( 'tagName' => 'img', 'src' => $src, 'className' => $class ), $hidden ? array( 'ariaHidden' => 'true' ) : array() ),
+	'innerBlocks'  => array(),
+	'innerHTML'    => '',
+	'innerContent' => array(),
+);
+$is_icon = array( DXAI_UI\Pages\Home_Kit::class, 'is_icon' );
+$expect( 'a small picture the design hides from screen readers is an icon', $is_icon( $box( 'https://example.test/icons/fire.webp', 'w-56px h-56px' ) ) );
+$expect( '…a large one (a photograph laid behind, hidden too) is not, nor a small one screen readers read', ! $is_icon( $box( 'https://example.test/hero.jpg', 'w-600px h-400px' ) ) && ! $is_icon( $box( 'https://example.test/icons/fire.webp', 'w-56px h-56px', false ) ) );
+
+$service = static fn( string $icon, string $title, string $words ): string => '<!-- wp:group {"className":"card"} --><div class="wp-block-group card">'
+	. '<!-- wp:dxai-ui/box ' . wp_json_encode( array( 'tagName' => 'img', 'src' => 'https://example.test/icons/' . $icon . '.webp', 'ariaHidden' => 'true', 'className' => 'w-56px h-56px' ) ) . ' /-->'
+	. '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . $title . '</h3><!-- /wp:heading --><!-- wp:paragraph --><p>' . $words . '</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
+$services = parse_blocks(
+	'<!-- wp:group {"tagName":"section","className":"svc"} --><section class="wp-block-group svc"><!-- wp:heading --><h2 class="wp-block-heading">Restoration services in Olympia</h2><!-- /wp:heading --><!-- wp:group {"className":"grid"} --><div class="wp-block-group grid">'
+	. $service( 'water', 'Water Damage Restoration', 'Burst pipes and floods dried out by our own crews.' )
+	. $service( 'mold', 'Mold Testing &amp; Remediation', 'Tested, contained and removed for good.' )
+	. $service( 'fire', 'Fire &amp; Smoke Damage', 'Soot, smoke and the water used to fight the fire.' )
+	. '</div><!-- /wp:group --></section><!-- /wp:group -->'
+)[0];
+$marks_of = static function ( string $html ): array {
+	preg_match_all( '#icons\\\\?/(\w+)\.webp|<h3[^>]*>(.*?)</h3>#', $html, $m, PREG_SET_ORDER );
+	$out  = array();
+	$mark = '';
+	foreach ( $m as $hit ) {
+		if ( ( $hit[2] ?? '' ) === '' ) {
+			$mark = $hit[1];
+			continue;
+		}
+		$out[ html_entity_decode( wp_strip_all_tags( $hit[2] ) ) ] = $mark;
+		$mark                                 = '';
+	}
+
+	return $out;
+};
+$cards_page = static function ( string $h2, array $cards ) use ( $why, $services ): array {
+	$old = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p></section><section><h2>' . $h2 . '</h2><div>'
+		. implode( '', array_map( static fn( string $c ): string => '<div><h3>' . $c . '</h3><p>Our crews handle it from the first call to the last repair, with photos for your insurer.</p></div>', $cards ) )
+		. '</div></section></main></body></html>';
+	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $services, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
+
+	return array( implode( '', array_map( 'serialize_block', $out['sections'] ) ), $out['log'] );
+};
+list( $types_html, $types_log ) = $cards_page( 'Types of Fire Damage We Restore', array( 'Smoke &amp; Soot Cleanup', 'Emergency Board-Up', 'Water Damage After Firefighting' ) );
+$types = $marks_of( $types_html );
+$expect( 'in a section of one service ("Types of Fire Damage") its cards take that service\'s mark, one that names another service that one\'s', $types === array( 'Smoke & Soot Cleanup' => 'fire', 'Emergency Board-Up' => 'fire', 'Water Damage After Firefighting' => 'water' ), wp_json_encode( $types ) . ' ' . implode( ' | ', $types_log ) );
+list( $mixed_html, $mixed_log ) = $cards_page( 'What we restore', array( 'Mold Remediation', 'Biohazard Cleanup', 'Fire Damage Repair' ) );
+$mixed = $marks_of( $mixed_html );
+$expect( 'elsewhere a card takes the mark of the service it names, and one that names none shows no mark (not another service\'s)', $mixed === array( 'Mold Remediation' => 'mold', 'Biohazard Cleanup' => '', 'Fire Damage Repair' => 'fire' ), wp_json_encode( $mixed ) . ' ' . implode( ' | ', $mixed_log ) );
+$expect( '…and the card without a mark is filled like the others', substr_count( $mixed_html, 'with photos for your insurer' ) === 3, $mixed_html );
+
+echo "…and the same when a list of pages is poured into those cards (Section_Refill)\n";
+$svc_shape = DXAI_UI\Pages\Section_Library::analyze( $services, 0 );
+$svc_rep   = null;
+foreach ( $svc_shape['repeats'] as $r ) {
+	if ( $r['kind'] === 'card' ) {
+		$svc_rep = $r;
+	}
+}
+$poured = is_array( $svc_rep ) ? DXAI_UI\Pages\Section_Refill::cards(
+	$svc_shape,
+	$svc_rep,
+	'Related services',
+	array(
+		array( 'title' => 'Fire Damage Repair', 'text' => 'Soot and smoke cleaned from every room.', 'url' => 'https://example.test/fire/' ),
+		array( 'title' => 'Biohazard Cleanup', 'text' => 'Safe cleanup of what others will not touch.', 'url' => 'https://example.test/biohazard/' ),
+		array( 'title' => 'Water Damage Restoration', 'text' => 'Dried out by our own crews.', 'url' => 'https://example.test/water/' ),
+	)
+) : null;
+$poured_marks = is_array( $poured ) ? $marks_of( serialize_block( $poured ) ) : array();
+$expect( 'a page that is a service takes its mark; a page that is none shows none', $poured_marks === array( 'Fire Damage Repair' => 'fire', 'Biohazard Cleanup' => '', 'Water Damage Restoration' => 'water' ), wp_json_encode( $poured_marks ) );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

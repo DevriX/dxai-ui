@@ -85,7 +85,8 @@ final class Section_Refill {
 			}
 
 			// Which of the Home's cards each row takes; the cards are put in their places, the later ones go, and more are copied for a list.
-			$take   = $count === count( $orig_blocks ) ? self::templates( $orig_titles, $rows, $count ) : array();
+			$marks  = Home_Kit::marks( $orig_blocks );
+			$take   = $count === count( $orig_blocks ) ? self::templates( $orig_titles, $rows, $count, $marks ) : array();
 			$parent = &Block_Tree::at( $block, $path );
 			for ( $k = 0; $k < min( $n, $count ); $k++ ) {
 				if ( isset( $take[ $k ] ) ) {
@@ -126,6 +127,14 @@ final class Section_Refill {
 			foreach ( $rows as $k => $row ) {
 				self::fill( $block, array_merge( $path, array( (int) $set['items'][ $k ] ) ), $slots, $root, $row );
 			}
+			// A card for a page that is none of the services the Home marks with its icons shows no mark, rather than another service's.
+			foreach ( $marks !== array() ? $rows : array() as $k => $row ) {
+				if ( Home_Kit::marked( $marks, (string) $row['title'] ) === null ) {
+					$card = &Block_Tree::at( $block, array_merge( $path, array( (int) $set['items'][ $k ] ) ) );
+					$card = Home_Kit::drop_icons( $card );
+					unset( $card );
+				}
+			}
 			$h = &Block_Tree::at( $block, $head );
 			Block_Tree::set_content( $h, esc_html( $heading ) );
 			unset( $h );
@@ -143,20 +152,29 @@ final class Section_Refill {
 	}
 
 	/**
-	 * Which of the Home's cards each row takes: the card with the row's own title if the Home has one (its icon goes with it), and the
-	 * cards that are left, in order, for the others; a list longer than the Home's cards goes round again.
+	 * Which of the Home's cards each row takes: the card with the row's own title if the Home has one (its icon goes with it), else
+	 * the card of the service the row's title names when the Home marks its services with icons (Home_Kit::marks()), and the cards
+	 * that are left, in order, for the others; a list longer than the Home's cards goes round again.
 	 *
 	 * @param array<int, string>                $titles The Home's cards' titles, lower case.
 	 * @param array<int, array<string, string>> $rows
+	 * @param array<string, int>                $marks  Home_Kit::marks() of the Home's cards.
 	 * @return array<int, int> Row => the index of a card of the Home's.
 	 */
-	private static function templates( array $titles, array $rows, int $count ): array {
+	private static function templates( array $titles, array $rows, int $count, array $marks = array() ): array {
 		$use   = array();
 		$taken = array();
 		foreach ( $rows as $k => $row ) {
 			$j = array_search( mb_strtolower( (string) $row['title'] ), $titles, true );
 			if ( $j !== false && ! isset( $taken[ $j ] ) ) {
 				$use[ $k ]   = (int) $j;
+				$taken[ $j ] = true;
+			}
+		}
+		foreach ( $rows as $k => $row ) {
+			$j = isset( $use[ $k ] ) ? null : Home_Kit::marked( $marks, (string) $row['title'] );
+			if ( $j !== null ) {
+				$use[ $k ]   = $j;
 				$taken[ $j ] = true;
 			}
 		}
