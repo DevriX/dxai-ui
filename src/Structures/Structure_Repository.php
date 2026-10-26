@@ -345,7 +345,8 @@ final class Structure_Repository {
 					true,
 					$raw_css,
 					$tw_config,
-					$pattern_key
+					$pattern_key,
+					$this->static_html
 				);
 				if ( ! is_wp_error( $saved ) ) {
 					update_post_meta( (int) $saved['id'], '_dxai_ui_structure', 'header' );
@@ -404,7 +405,8 @@ final class Structure_Repository {
 					true,
 					$raw_css,
 					$tw_config,
-					$pattern_key
+					$pattern_key,
+					$this->static_html
 				);
 				if ( ! is_wp_error( $saved ) ) {
 					update_post_meta( (int) $saved['id'], '_dxai_ui_structure', 'footer' );
@@ -420,7 +422,8 @@ final class Structure_Repository {
 				true,
 				$raw_css,
 				$tw_config,
-				$pattern_key
+				$pattern_key,
+				$this->static_html
 			);
 			if ( ! is_wp_error( $saved ) ) {
 				update_post_meta( (int) $saved['id'], '_dxai_ui_structure', $type );

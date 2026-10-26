@@ -2,7 +2,8 @@
 /**
  * An import in rounds (WP Engine ends a request after 60 seconds): the archive's files added a round at a time, the pictures'
  * smaller sizes made afterwards, the save a round at a time — the same site as an import at once — and the whole flow through the
- * REST routes the import screen calls.
+ * REST routes the import screen calls; pages a crawl builds carry the Home's design names, and a design's synced patterns are
+ * compiled as its pages are.
  * Run: wp eval-file bin/verify-import-rounds.php
  *
  * Imports into the site and removes what it made (bin/verify-cleanup.php), also when it stops part-way. SKIP without GD.
@@ -326,6 +327,29 @@ delete_post_meta( $page, $names_meta );
 update_post_meta( $rebuilt, $names_meta, array( 'relative' ) );
 DXAI_UI\Pages\Site_Pages::finish( $crawl_state );
 $expect( 'a Home with no design names leaves the page none either', '' === get_post_meta( $rebuilt, $names_meta, true ) );
+
+// --- 6. A design's patterns ------------------------------------------------------------------------------------------------------
+echo "\n6. A design's synced patterns are compiled as its pages are\n";
+// A design that never ran under Tailwind: its pattern sheet has no preflight and no utility for a class its CSS never styles, and
+// the pattern is marked so for rendering (the isolate reset stays off). Charter's sections in the library carried both.
+$pattern_markup = '<!-- wp:paragraph {"className":"panel collapse in size-full"} --><p class="panel collapse in size-full">x</p><!-- /wp:paragraph -->';
+$pattern_css    = '.panel { color: red; }';
+$pattern_sheet  = static function ( array $saved ): string {
+	$file = DXAI_UI\Support\Upload_Paths::for_meta( (int) ( $saved['id'] ?? 0 ), '_dxai_ui_css_url' )['path'];
+
+	return $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
+};
+$patterns   = new DXAI_UI\Patterns\Pattern_Repository();
+$static_pat = $patterns->save( 'Rounds Static Section', $pattern_markup, $pattern_css, true, $pattern_css, '', '', true );
+$tw_pat     = $patterns->save( 'Rounds Tailwind Section', $pattern_markup, $pattern_css, true, $pattern_css, '', '', false );
+$static_css = is_array( $static_pat ) ? $pattern_sheet( $static_pat ) : '';
+$tw_css     = is_array( $tw_pat ) ? $pattern_sheet( $tw_pat ) : '';
+$expect( 'a static design\'s pattern: no utility for a class its CSS never styles (collapse, size-full), no preflight', $static_css !== '' && ! str_contains( $static_css, 'visibility:collapse' ) && ! str_contains( $static_css, 'height:100%' ) && ! str_contains( $static_css, 'border-collapse: collapse' ) && str_contains( $static_css, 'box-sizing: content-box' ), substr( $static_css, 0, 300 ) );
+$expect( 'and it is marked a static design, for rendering', is_array( $static_pat ) && '1' === get_post_meta( (int) $static_pat['id'], '_dxai_ui_static_html', true ) );
+// …and the import passes the flag: the sections it saved for this design (a Claude Design package) are marked too.
+$import_patterns = is_array( $first ) ? array_values( array_filter( array_map( 'intval', array_column( (array) ( $first['patterns'] ?? array() ), 'id' ) ) ) ) : array();
+$expect( 'the patterns the import saved for a Claude Design package are marked a static design (' . count( $import_patterns ) . ')', $import_patterns !== array() && array() === array_filter( $import_patterns, static fn( int $id ): bool => '1' !== get_post_meta( $id, '_dxai_ui_static_html', true ) ) );
+$expect( 'a Tailwind design\'s pattern keeps preflight and every utility in its markup, unmarked', str_contains( $tw_css, 'visibility:collapse' ) && str_contains( $tw_css, 'border-collapse: collapse' ) && is_array( $tw_pat ) && '' === get_post_meta( (int) $tw_pat['id'], '_dxai_ui_static_html', true ) );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -1847,7 +1847,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			 * the whole page to the library each time.
 			 */
 			$page_key = isset( $payload['page']['id'] ) ? (string) get_post_meta( (int) $payload['page']['id'], '_dxai_ui_page_key', true ) : '';
-			$saved    = ( new Pattern_Repository() )->save( $title, $markup, $css, $synced !== false, '', '', Pattern_Repository::key( $page_key, 'page', 1 ) );
+			$saved    = ( new Pattern_Repository() )->save( $title, $markup, $css, $synced !== false, '', '', Pattern_Repository::key( $page_key, 'page', 1 ), ! empty( $input['static_html'] ) );
 			if ( is_wp_error( $saved ) ) {
 				if ( $payload === array() ) {
 					return $saved;

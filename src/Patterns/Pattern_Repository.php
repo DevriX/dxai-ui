@@ -56,8 +56,13 @@ final class Pattern_Repository {
 	 *                    publish status left as it is. '' inserts a new
 	 *                    pattern, which is what every caller that passes only
 	 *                    the first six arguments still gets.
+	 * @param bool   $static_html A design that never ran under Tailwind (a Claude Design package, a static HTML site): its
+	 *                    pattern is compiled as its pages are — no preflight, no utility for a class its CSS never styles
+	 *                    (Tailwind_Purger::without_preflight()) — and marked so for rendering, where the mark keeps the
+	 *                    isolate reset off (Blocks\Assets). Charter Construction's sections in the library carried
+	 *                    `size-full { height: 100% }` and the whole preflight.
 	 */
-	public function save( string $title, string $markup, string $css = '', bool $synced = true, string $raw_css = '', string $tailwind_config = '', string $key = '' ): array|\WP_Error {
+	public function save( string $title, string $markup, string $css = '', bool $synced = true, string $raw_css = '', string $tailwind_config = '', string $key = '', bool $static_html = false ): array|\WP_Error {
 		$mapper = new Gutenberg_Mapper();
 		$valid  = $mapper->validate( $markup );
 		if ( is_wp_error( $valid ) ) {
@@ -122,6 +127,12 @@ final class Pattern_Repository {
 		}
 
 		$purger = new Tailwind_Purger();
+		if ( $static_html ) {
+			$purger->without_preflight();
+			update_post_meta( $id, '_dxai_ui_static_html', '1' );
+		} else {
+			delete_post_meta( $id, '_dxai_ui_static_html' );
+		}
 		$sheet  = $purger->compile( $wrapped, $css, $id, '', $raw_css, '', $tailwind_config );
 		$url    = $purger->persist( $id, $sheet );
 		if ( is_wp_error( $url ) ) {
