@@ -270,7 +270,7 @@ final class Library_Style extends Style_Harmony {
 	 * The look of the Home's cards, eyebrows and buttons: what most of them have, as classes and declarations the Home's own stylesheet
 	 * knows (its pages carry it). Null for a kind the Home has too few of, or no two alike.
 	 *
-	 * @return array{card: array<string, mixed>|null, eyebrow: array<string, mixed>|null, button: array<string, mixed>|null}
+	 * @return array{card: array<string, mixed>|null, eyebrow: array<string, mixed>|null, button: array<string, mixed>|null, ground: array{light: array<string, mixed>|null, cta: array<string, mixed>|null, dark: array<string, mixed>|null, white: array<string, mixed>|null}, head: array{left: bool, color: string}|null, faq: array<string, mixed>|null}
 	 */
 	public static function look( int $home ): array {
 		$content = (string) get_post_field( 'post_content', $home );
@@ -738,11 +738,12 @@ final class Library_Style extends Style_Harmony {
 	 * The Home's grounds: the light one its sections stand on between the white ones (the most common that is not white), the band of its
 	 * call to action, and the band of its other dark sections (its steps), the hero's left out. Null for one the Home has not.
 	 *
-	 * @return array{light: array<string, mixed>|null, cta: array<string, mixed>|null, dark: array<string, mixed>|null}
+	 * @return array{light: array<string, mixed>|null, cta: array<string, mixed>|null, dark: array<string, mixed>|null, white: array<string, mixed>|null}
 	 */
 	private static function grounds_of( int $home ): array {
 		$light = array();
 		$dark  = array();
+		$white = array();
 		$cta   = null;
 		foreach ( Section_Library::for_page( $home ) as $n => $component ) {
 			$root = (array) $component['block'];
@@ -763,6 +764,9 @@ final class Library_Style extends Style_Harmony {
 				}
 			} elseif ( Color_Math::distance( $hex, '#ffffff' ) >= 1.0 ) {
 				$light[] = $look;
+			} else {
+				// White by a class of its own (a design that paints its white sections): the class white is written with.
+				$white[] = $look;
 			}
 		}
 
@@ -770,6 +774,7 @@ final class Library_Style extends Style_Harmony {
 			'light' => self::dominant( $light, 1, true ),
 			'cta'   => $cta,
 			'dark'  => self::dominant( $dark, 1, true ),
+			'white' => self::dominant( $white, 1, true ),
 		);
 	}
 

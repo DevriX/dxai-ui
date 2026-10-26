@@ -94,6 +94,84 @@ final class Block_Tree {
 	}
 
 	/**
+	 * The rows of a block that is a list of claims written as one element: two or more child elements of one kind (the same tag
+	 * and class), each with a drawing of its own (an aria-hidden icon) beside its words — "✓ 4.9-star Google rating · ✓ We bill
+	 * your insurer". Null when the block is not one.
+	 *
+	 * @param array<string, mixed> $block
+	 * @return array{open:string, close:string, rows:array<int, string>}|null
+	 */
+	public static function rows( array $block ): ?array {
+		if ( ! empty( $block['innerBlocks'] ) ) {
+			return null;
+		}
+		$markup = trim( (string) ( $block['innerHTML'] ?? '' ) );
+		if ( preg_match( '#^<([a-zA-Z][\w-]*)\b[^>]*>#', $markup, $open ) !== 1 ) {
+			return null;
+		}
+		$close = '</' . $open[1] . '>';
+		if ( ! str_ends_with( strtolower( $markup ), strtolower( $close ) ) ) {
+			return null;
+		}
+		$nodes = self::split_top( substr( $markup, strlen( $open[0] ), -strlen( $close ) ) );
+		if ( $nodes === null ) {
+			return null;
+		}
+		$rows  = array();
+		$shape = null;
+		foreach ( $nodes as $n ) {
+			if ( $n['type'] === 'text' ) {
+				if ( trim( $n['html'] ) !== '' ) {
+					return null;
+				}
+				continue;
+			}
+			$class = preg_match( '#^<[^>]*\sclass="([^"]*)"#', $n['html'], $m ) === 1 ? $m[1] : '';
+			$kind  = $n['tag'] . '.' . $class;
+			$shape = $shape ?? $kind;
+			if ( $n['hidden'] || $kind !== $shape || preg_match( '#<[^>]*\baria-hidden="true"#', substr( $n['html'], 1 ) ) !== 1 ) {
+				return null;
+			}
+			$rows[] = $n['html'];
+		}
+
+		return count( $rows ) >= 2 ? array(
+			'open'  => $open[0],
+			'close' => $close,
+			'rows'  => $rows,
+		) : null;
+	}
+
+	/**
+	 * A list of claims (rows()) holding these lines, one row each: the first row's build, its icon kept, its words replaced; as
+	 * many rows as lines. False when the block is not such a list.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, string>   $lines
+	 */
+	public static function fill_rows( array &$block, array $lines ): bool {
+		$r = self::rows( $block );
+		if ( $r === null || $lines === array() ) {
+			return false;
+		}
+		$out = '';
+		foreach ( array_values( $lines ) as $line ) {
+			$row = self::replace_in_element( $r['rows'][0], $line );
+			if ( $row === null ) {
+				return false;
+			}
+			$out .= $row;
+		}
+		$html                  = (string) $block['innerHTML'];
+		$lead                  = substr( $html, 0, strlen( $html ) - strlen( ltrim( $html ) ) );
+		$tail                  = substr( $html, strlen( rtrim( $html ) ) );
+		$block['innerHTML']    = $lead . $r['open'] . $out . $r['close'] . $tail;
+		$block['innerContent'] = array( $block['innerHTML'] );
+
+		return true;
+	}
+
+	/**
 	 * The element string with its content replaced, or null when $markup is
 	 * not one element.
 	 */
@@ -183,7 +261,8 @@ final class Block_Tree {
 				'type'   => 'el',
 				'html'   => $el,
 				'tag'    => $tag,
-				'hidden' => (bool) preg_match( '#^<[^>]*\baria-hidden="true"#', $el ),
+				// aria-hidden="true", or written as the bare attribute (`aria-hidden=""`: a pulse drawn round a call button).
+				'hidden' => (bool) preg_match( '#^<[^>]*\baria-hidden(?:="(?:true)?"|(?=[\s/>]))#', $el ),
 			);
 			$pos     = $end;
 		}
@@ -246,6 +325,12 @@ final class Block_Tree {
 			$block['attrs']['url'] = $url;
 		}
 		if ( $text !== null && empty( $block['innerBlocks'] ) ) {
+			// A call button's pictograph ("📞 Call Now") is drawing: it stays before the new words while the link still calls (tel: to
+			// tel:, mailto: to mailto:) and the words bring none of their own.
+			if ( preg_match( '#^(tel|mailto):#i', $old, $o ) === 1 && stripos( $url, $o[1] . ':' ) === 0
+				&& preg_match( '/^(\p{So}\x{FE0F}?)\s/u', self::own_text( $block ), $icon ) === 1 && preg_match( '/^\s*\p{So}/u', $text ) !== 1 ) {
+				$text = $icon[1] . ' ' . $text;
+			}
 			if ( $name === 'core/button' ) {
 				// The words of a button are in the link inside its wrapper: the wrapper keeps the link.
 				$put = static fn( string $s ): string => (string) preg_replace_callback( '#(<a\b[^>]*>)(.*?)(</a>)#s', static fn( $m ) => $m[1] . esc_html( $text ) . $m[3], $s, 1 );

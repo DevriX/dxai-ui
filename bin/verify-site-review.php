@@ -233,6 +233,26 @@ if ( isset( $held_link ) && is_int( $about ) ) {
 	$expect( 'the address a held page answered with is the one it has published', (string) get_permalink( $about ) === $held_link, $held_link . ' vs ' . get_permalink( $about ) );
 }
 
+echo "Publishing is not a person's edit\n";
+Site_Review::hold();
+$kept_fresh  = $put( 'Storm Damage', '/storm-damage-' . $run . '/' );
+$kept_edited = $put( 'Roof Tarping', '/roof-tarping-' . $run . '/' );
+// A person saved the second one in the editor after the import wrote it: its last change is newer than the import's stamp.
+global $wpdb;
+update_post_meta( (int) $kept_edited, Site_From_Menu::IMPORTED_AT, '2000-01-01 00:00:00' );
+$wpdb->update( $wpdb->posts, array( 'post_modified_gmt' => gmdate( 'Y-m-d H:i:s' ) ), array( 'ID' => (int) $kept_edited ) );
+clean_post_cache( (int) $kept_edited );
+// The choice is made in a request of its own: the import's own writes of this request are no longer being stamped.
+$written = new ReflectionProperty( Site_From_Menu::class, 'written' );
+$written->setAccessible( true );
+$written->setValue( null, array() );
+$fresh_before = is_int( $kept_fresh ) && ! Site_From_Menu::edited_since_import( get_post( $kept_fresh ) );
+Site_Review::decide( $home, array( (int) $kept_fresh, (int) $kept_edited ), array() );
+clean_post_cache( (int) $kept_fresh );
+clean_post_cache( (int) $kept_edited );
+$expect( 'a page nobody edited is still one a later import rewrites once it is published', $fresh_before && get_post_status( (int) $kept_fresh ) === 'publish' && ! Site_From_Menu::edited_since_import( get_post( (int) $kept_fresh ) ) );
+$expect( '…and one a person edited is still theirs', get_post_status( (int) $kept_edited ) === 'publish' && Site_From_Menu::edited_since_import( get_post( (int) $kept_edited ) ) );
+
 echo "Links follow a page whose published address is not its draft's\n";
 // A draft made before the hold took slugs as WordPress gives drafts theirs: one the site's own page holds.
 $late  = $mine( $page( 'Late', 'draft', 0, 'review-taken-' . $run ), $home );

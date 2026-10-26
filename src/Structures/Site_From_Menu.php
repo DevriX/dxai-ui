@@ -776,7 +776,10 @@ final class Site_From_Menu {
 			$file                = \DXAI_UI\Support\Upload_Paths::for_meta( $home_id, '_dxai_ui_css_url' )['path'];
 			$sheets[ $home_id ] = $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
-		$out = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )->compose( $model );
+		// …and its grounds, so no two of the page's sections in a row stand on one.
+		$out = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )
+			->grounds( \DXAI_UI\Blocks\Native\Library_Style::look( $home_id )['ground'] )
+			->compose( $model );
 		$summary['compose_log'][ $path ] = $out['log'];
 		if ( $out['sections'] === array() ) {
 			return '';

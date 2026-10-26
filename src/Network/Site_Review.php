@@ -11,6 +11,7 @@ namespace DXAI_UI\Network;
 
 use DXAI_UI\Pages\Team_Pages;
 use DXAI_UI\Structures\Page_Scope;
+use DXAI_UI\Structures\Site_From_Menu;
 
 /**
  * A Home-only import makes the pages its menu names (from the old site, or from the Home's own sections). They are made
@@ -209,6 +210,17 @@ final class Site_Review {
 				$publish[] = $up;
 			}
 		}
+		/*
+		 * The design's pages nobody has edited since the import wrote them: publishing one, or a link in it following a page, is
+		 * not a person's edit, and a later import of the design rewrites them as before (Site_From_Menu keeps an edited page).
+		 */
+		$untouched = array();
+		foreach ( self::scope_ids( $home ) as $id ) {
+			$post = get_post( $id );
+			if ( $post instanceof \WP_Post && (string) get_post_meta( $id, Site_From_Menu::IMPORTED_AT, true ) !== '' && ! Site_From_Menu::edited_since_import( $post ) ) {
+				$untouched[] = $id;
+			}
+		}
 		$moved = array();
 		foreach ( $publish as $id ) {
 			if ( get_post_status( $id ) === 'publish' || ! current_user_can( 'publish_post', $id ) ) {
@@ -273,9 +285,35 @@ final class Site_Review {
 			}
 		}
 		self::relink( $home, $gone, true );
+		foreach ( $untouched as $id ) {
+			if ( get_post_status( $id ) === 'publish' || get_post_status( $id ) === 'draft' ) {
+				Site_From_Menu::mark_imported( $id );
+			}
+		}
 		self::release();
 
 		return $out;
+	}
+
+	/**
+	 * The pages of a design (its scope), the Home first.
+	 *
+	 * @return array<int, int>
+	 */
+	private static function scope_ids( int $home ): array {
+		$ids = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => array( 'publish', 'draft', 'pending', 'private' ),
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => Page_Scope::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'       => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'suppress_filters' => true,
+			)
+		);
+
+		return array_values( array_unique( array_merge( array( $home ), array_map( 'intval', $ids ) ) ) );
 	}
 
 	/**
@@ -291,18 +329,7 @@ final class Site_Review {
 			return;
 		}
 		uksort( $moved, static fn( string $a, string $b ): int => strlen( $b ) <=> strlen( $a ) );
-		$ids = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => array( 'publish', 'draft', 'pending', 'private' ),
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => Page_Scope::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'meta_value'       => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-				'suppress_filters' => true,
-			)
-		);
-		foreach ( array_unique( array_merge( array( $home ), array_map( 'intval', $ids ) ) ) as $id ) {
+		foreach ( self::scope_ids( $home ) as $id ) {
 			$content = (string) get_post_field( 'post_content', $id, 'raw' );
 			$updated = $whole
 				? (string) preg_replace_callback(

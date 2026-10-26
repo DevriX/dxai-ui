@@ -72,6 +72,21 @@ final class Page_Composer {
 	private bool $card_images = false;
 	/** The design's stylesheet (the Home's), read for the column counts its responsive grids are made for. */
 	private string $design_css;
+
+	/** @var array<int, string> The classes of the Home's light ground (grounds()). */
+	private array $light = array();
+
+	/** @var array<int, string> The classes of the Home's dark ground. */
+	private array $dark = array();
+
+	/** @var array<int, string> The class the Home writes its white sections with, when it has one. */
+	private array $white = array();
+
+	/** The ground of the section placed last (ground_of()), for choose(). */
+	private string $last_ground = '';
+
+	/** @var array<int, string> The ground of each of the Home's sections, by its index (ground_of()). */
+	private array $ground_at = array();
 	/** @var array<string, mixed>|null|false The library's plainest picture block, once looked up (false: none). */
 	private $picture = null;
 	/** The width the design keeps its running text to (a paragraph's max-width), once looked up. */
@@ -86,6 +101,116 @@ final class Page_Composer {
 		$this->library    = $library;
 		$this->images     = $images;
 		$this->design_css = $design_css;
+	}
+
+	/**
+	 * The Home's grounds (Library_Style::look()['ground']): its light one — a tint the section takes in place of white — and its dark
+	 * one, by their classes. Without them the sections keep the grounds they have.
+	 *
+	 * @param array<string, mixed>|null $grounds
+	 */
+	public function grounds( ?array $grounds ): self {
+		$this->light = array_values( array_map( 'strval', (array) ( $grounds['light']['class'] ?? array() ) ) );
+		$this->dark  = array_values( array_map( 'strval', (array) ( $grounds['dark']['class'] ?? array() ) ) );
+		$this->white = array_values( array_map( 'strval', (array) ( $grounds['white']['class'] ?? array() ) ) );
+
+		return $this;
+	}
+
+	/**
+	 * No two sections in a row on one ground (docs/PLAN-NETWORK-PAGES.md, 11.3): the second of two white sections takes the Home's
+	 * light ground, the second of two on the light ground goes white — the two grounds the Home's own light sections are on, so its
+	 * text reads as it does there. A dark section, a picture behind a section, a ground of its own: left as they are.
+	 *
+	 * @param array<int, array<string, mixed>> $sections
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function alternate_grounds( array $sections ): array {
+		if ( count( $this->light ) !== 1 ) {
+			return $sections;
+		}
+		$light = $this->light[0];
+		$white = count( $this->white ) === 1 ? $this->white[0] : '';
+		$prev  = '';
+		foreach ( $sections as $i => $section ) {
+			$now = $this->ground_of( $section );
+			if ( in_array( $now, array( 'white', 'light' ), true ) && $now === $prev ) {
+				$sections[ $i ] = $now === 'white' ? self::with_root_class( $section, $light, $white ) : self::with_root_class( $section, $white, $light );
+				$now            = $now === 'white' ? 'light' : 'white';
+				$this->log[]    = sprintf( 'section %d: on the %s ground after one on it already — takes the other', $i, $now === 'light' ? 'white' : 'light' );
+			}
+			$prev = $now;
+		}
+
+		return $sections;
+	}
+
+	/**
+	 * A section's ground: 'white' (none of its own, or the Home's white), 'light' and 'dark' (the Home's), or '' for any other (a
+	 * picture, a ground of its own).
+	 *
+	 * @param array<string, mixed> $section
+	 */
+	private function ground_of( array $section ): string {
+		$attrs = is_array( $section['attrs'] ?? null ) ? $section['attrs'] : array();
+		$class = preg_split( '/\s+/', trim( (string) ( $attrs['className'] ?? '' ) ) ) ?: array();
+		if ( array_intersect( $class, $this->light ) !== array() ) {
+			return 'light';
+		}
+		if ( array_intersect( $class, $this->dark ) !== array() ) {
+			return 'dark';
+		}
+		$class   = array_diff( $class, $this->white );
+		$painted = preg_grep( '/^(?:(?:sm|md|lg|xl|2xl)[:-])*(?:bg-|has-background|has-[a-z0-9-]+-background-color|has-[a-z0-9-]+-gradient-background)/', $class ) !== array()
+			|| isset( $attrs['backgroundColor'] ) || isset( $attrs['gradient'] ) || isset( $attrs['style']['color']['background'] ) || isset( $attrs['style']['color']['gradient'] ) || isset( $attrs['style']['background'] )
+			|| preg_match( '/(?:^|;)\s*background(?:-color|-image)?\s*:(?!\s*(?:none|transparent))/', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1
+			|| self::has_photo_backdrop( Section_Library::analyze( $section, 0 ) );
+
+		return $painted ? '' : 'white';
+	}
+
+	/**
+	 * The section with a class put on its root and one taken off (either may be none) — in its attributes and in its tag.
+	 *
+	 * @param array<string, mixed> $section
+	 * @return array<string, mixed>
+	 */
+	private static function with_root_class( array $section, string $add, string $remove ): array {
+		$edit = static function ( string $classes ) use ( $add, $remove ): string {
+			$list = array_values( array_filter( preg_split( '/\s+/', trim( $classes ) ) ?: array(), static fn( string $c ): bool => $c !== '' && $c !== $remove ) );
+			if ( $add !== '' && ! in_array( $add, $list, true ) ) {
+				$list[] = $add;
+			}
+
+			return implode( ' ', $list );
+		};
+		$section['attrs']['className'] = $edit( (string) ( $section['attrs']['className'] ?? '' ) );
+		if ( $section['attrs']['className'] === '' ) {
+			unset( $section['attrs']['className'] );
+		}
+		foreach ( (array) $section['innerContent'] as $k => $chunk ) {
+			if ( ! is_string( $chunk ) || trim( $chunk ) === '' ) {
+				continue;
+			}
+			$section['innerContent'][ $k ] = (string) preg_replace_callback(
+				'/^(\s*<[a-z][a-z0-9]*\b)([^>]*)(>)/i',
+				static function ( array $m ) use ( $edit ): string {
+					if ( preg_match( '/\sclass="([^"]*)"/', $m[2] ) === 1 ) {
+						$attr = (string) preg_replace_callback( '/\sclass="([^"]*)"/', static fn( array $c ): string => ' class="' . esc_attr( $edit( html_entity_decode( $c[1], ENT_QUOTES, 'UTF-8' ) ) ) . '"', $m[2], 1 );
+					} else {
+						$attr = ' class="' . esc_attr( $edit( '' ) ) . '"' . $m[2];
+					}
+
+					return $m[1] . $attr . $m[3];
+				},
+				$chunk,
+				1
+			);
+			break;
+		}
+		$section['innerHTML'] = implode( '', array_filter( (array) $section['innerContent'], 'is_string' ) );
+
+		return $section;
 	}
 
 	/**
@@ -147,7 +272,8 @@ final class Page_Composer {
 				continue;
 			}
 			if ( $block !== null ) {
-				$sections[]  = $block;
+				$sections[]        = $block;
+				$this->last_ground = $this->ground_of( $block );
 				$this->log[] = sprintf( 'unit %d %-12s → #%d %s%s', $n, $unit['kind'], $target['component']['index'], $target['component']['kind'], $target['component']['anchor'] !== '' ? ' #' . $target['component']['anchor'] : '' );
 			}
 		}
@@ -165,6 +291,7 @@ final class Page_Composer {
 		if ( $sections !== $composed ) {
 			$this->log[] = 'sections: tail put in the team\'s order';
 		}
+		$sections = $this->alternate_grounds( $sections );
 
 		return array(
 			'sections' => $sections,
@@ -794,6 +921,11 @@ final class Page_Composer {
 			if ( $items > 0 && $rep !== null && count( array_filter( $unit['items'], static fn( $i ) => ( $i['image'] ?? '' ) !== '' ) ) === $items ) {
 				$score += self::shows_picture( $rep['shape'] ) || self::leading_icon( $rep['shape'] ) ? 2 : 0;
 			}
+			// Of sections that fit as well, one on another ground than the section before it (two dark bands in a row read as one).
+			$this->ground_at[ $c['index'] ] = $this->ground_at[ $c['index'] ] ?? $this->ground_of( $c['block'] );
+			if ( $this->last_ground !== '' && $this->ground_at[ $c['index'] ] === $this->last_ground ) {
+				$score -= 2;
+			}
 			if ( $c['kind'] === 'cta' && str_word_count( Content_Extractor::plain( implode( ' ', $unit['paras'] ) ) ) > 45 ) {
 				$score -= 6;
 			}
@@ -973,6 +1105,21 @@ final class Page_Composer {
 			$a    = Section_Library::analyze( $block, (int) $c['index'] );
 			$keep = $a['panels'][0] ?? null;
 		}
+		/*
+		 * A last text slot that is a list of claims (rows, each with its icon: "✓ 4.9-star Google rating") takes the unit's
+		 * short lines left over as its rows, icon and all — not a copy of the whole list for every line, each with one line
+		 * and no icon, nor one line in place of the list.
+		 */
+		$rows = null;
+		if ( $keep !== null && $keep['texts'] !== array() ) {
+			$last = count( $keep['texts'] ) - 1;
+			$tail = array_values( array_slice( $unit['paras'], $last ) );
+			$long = array_filter( $tail, static fn( $p ): bool => str_word_count( Content_Extractor::plain( (string) $p ) ) > 25 );
+			if ( $tail !== array() && $long === array() && Block_Tree::rows( Block_Tree::at( $block, $keep['texts'][ $last ] ) ) !== null ) {
+				$rows          = $tail;
+				$unit['paras'] = array_merge( array_slice( $unit['paras'], 0, $last ), array( '' ) );
+			}
+		}
 		if ( $keep !== null ) {
 			$this->fit_texts( $block, $keep, count( $unit['paras'] ), $unit['paras'] );
 			$a    = Section_Library::analyze( $block, (int) $c['index'] );
@@ -995,6 +1142,10 @@ final class Page_Composer {
 				$this->set( $block, $keep['eyebrow'], $unit['eyebrow'] !== '' ? $unit['eyebrow'] : null );
 			}
 			foreach ( $keep['texts'] as $i => $path ) {
+				if ( $rows !== null && $i === count( $keep['texts'] ) - 1 ) {
+					$this->set_rows( $block, $path, $rows );
+					continue;
+				}
 				$this->set( $block, $path, $unit['paras'][ $i ] ?? null );
 			}
 			foreach ( $keep['lists'] as $path ) {
@@ -1021,6 +1172,14 @@ final class Page_Composer {
 			$this->card_images = false;
 		}
 		$this->fill_images( $block, $a, $unit );
+
+		// 6. The Home's row of figures the unit does not fill ("4.9 ★ · 800+ Google reviews · ~60 min on site") is the company's,
+		// the same on every page of the site: it stays as the Home has it, words and all (docs/PLAN-NETWORK-PAGES.md, 11.2).
+		foreach ( $a['repeats'] as $r ) {
+			if ( $r['kind'] === 'stat' && ( $rep === null || $r['path'] !== $rep['path'] ) ) {
+				$this->allow_all( Block_Tree::at( $block, $r['path'] ) );
+			}
+		}
 
 		// 7. Nothing of the design's own content may stay. The old page's form, wherever its unit went, stays.
 		self::mark_grids( $block );
@@ -1500,6 +1659,24 @@ final class Page_Composer {
 	}
 
 	/**
+	 * A list of claims (Block_Tree::rows()) written with the old page's lines, one row each; as one text when it cannot be.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, int>      $path
+	 * @param array<int, string>   $lines
+	 */
+	private function set_rows( array &$block, array $path, array $lines ): void {
+		$node = &Block_Tree::at( $block, $path );
+		if ( Block_Tree::fill_rows( $node, $lines ) ) {
+			// The list is one block: its words are what the sweep reads in it.
+			$this->allow( Block_Tree::own_text( $node ) );
+			return;
+		}
+		unset( $node );
+		$this->set( $block, $path, implode( ' ', $lines ) );
+	}
+
+	/**
 	 * Links inside the old page's text take the colour of the text around them, underlined.
 	 *
 	 * The design's text slots hold no links of their own, so nothing in its stylesheet colours one there, and
@@ -1538,6 +1715,8 @@ final class Page_Composer {
 		$node = &Block_Tree::at( $block, $path );
 		Block_Tree::set_link( $node, $btn['href'] !== '' ? $btn['href'] : '#', empty( $node['innerBlocks'] ) ? $btn['label'] : null );
 		$this->allow( $btn['label'] );
+		// …and as the link now reads (a call keeps its pictograph before the words: Block_Tree::set_link()).
+		$this->allow( Block_Tree::own_text( $node ) );
 	}
 
 	/**
@@ -2116,6 +2295,20 @@ final class Page_Composer {
 		}
 
 		return 0.0;
+	}
+
+	/**
+	 * Every line of a block and the blocks in it, as words the page may keep.
+	 *
+	 * @param array<string, mixed> $block
+	 */
+	private function allow_all( array $block ): void {
+		$this->allow( Block_Tree::own_text( $block ) );
+		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $inner ) {
+			if ( is_array( $inner ) ) {
+				$this->allow_all( $inner );
+			}
+		}
 	}
 
 	/** @param string $html */
