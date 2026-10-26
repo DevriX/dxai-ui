@@ -274,6 +274,36 @@ final class Page_Copies {
 	}
 
 	/**
+	 * The kind of a page that is not made yet, by its address and its title (a menu's item: "/service-areas/lacey-wa/", "Lacey"):
+	 * the page it sits under is the address above it.
+	 */
+	public static function kind_of_address( string $path, string $title ): string {
+		$parts  = array_values( array_filter( explode( '/', trim( $path, '/' ) ), static fn( string $p ): bool => $p !== '' ) );
+		$slug   = sanitize_title( (string) ( $parts[ count( $parts ) - 1 ] ?? '' ) );
+		$above  = count( $parts ) > 1 ? sanitize_title( (string) $parts[ count( $parts ) - 2 ] ) : '';
+		$parent = array(
+			'id'     => 2,
+			'slug'   => $above,
+			'title'  => ucwords( str_replace( '-', ' ', $above ) ),
+			'parent' => 0,
+		);
+		$kind   = Network_Model::kind_of(
+			array(
+				'id'     => 1,
+				'slug'   => $slug,
+				'title'  => $title,
+				'parent' => $above !== '' ? 2 : 0,
+			),
+			$above !== '' ? array( 2 => $parent ) : array()
+		);
+		if ( $kind === 'service' && preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)+-(?:' . self::STATES . ')$/', $slug ) === 1 ) {
+			return 'location';
+		}
+
+		return $kind;
+	}
+
+	/**
 	 * A page's kind, the way the network's pages are told apart (service, location, about…).
 	 */
 	public static function kind( int $page_id ): string {

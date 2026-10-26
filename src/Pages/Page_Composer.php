@@ -79,6 +79,9 @@ final class Page_Composer {
 	/** @var array<int, string> The classes of the Home's dark ground. */
 	private array $dark = array();
 
+	/** The kind of page this is (Network_Model::kind_of()): the Home's shared sections its kind has are added (Home_Frame). */
+	private string $kind = '';
+
 	/** Whether the words are written after (Slot_Writer): the places keep the Home's words to measure by, and none is swept. */
 	private bool $write = false;
 
@@ -126,6 +129,12 @@ final class Page_Composer {
 	 * written (Slot_Writer::WRITE), instead of taken off — the eyebrow over a title, a line under it. Slot_Writer takes the
 	 * marks off, and the places nothing was written for.
 	 */
+	public function kind( string $kind ): self {
+		$this->kind = $kind;
+
+		return $this;
+	}
+
 	public function write_slots( bool $on ): self {
 		$this->write = $on;
 
@@ -305,6 +314,10 @@ final class Page_Composer {
 		$sections = Page_Order::arrange( $sections );
 		if ( $sections !== $composed ) {
 			$this->log[] = 'sections: tail put in the team\'s order';
+		}
+		// The sections every page of its kind has, the site's own (badges, process, reviews, a call, the form), from the Home.
+		if ( $this->kind !== '' ) {
+			$sections = Home_Frame::complete( $sections, $this->library, $this->kind, $this->log );
 		}
 		$sections = $this->alternate_grounds( $sections );
 

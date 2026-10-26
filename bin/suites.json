@@ -34,6 +34,7 @@
 		{ "file": "verify-generated-zip.php", "group": "ci" },
 		{ "file": "verify-harmony.php", "group": "ci" },
 		{ "file": "verify-header-menus.php", "group": "ci" },
+		{ "file": "verify-home-frame.php", "group": "ci" },
 		{ "file": "verify-interactivity.php", "group": "ci" },
 		{ "file": "verify-islands.php", "group": "ci" },
 		{ "file": "verify-libraries.php", "group": "ci" },

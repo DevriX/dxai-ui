@@ -608,7 +608,7 @@ final class Site_From_Menu {
 		}
 
 		if ( $phase === 'restyle' && ! empty( $current['model'] ) ) {
-			$body = self::compose_body( (int) $setup['home_id'], (array) $current['model'], $run['summary'], $path );
+			$body = self::compose_body( (int) $setup['home_id'], (array) $current['model'], $run['summary'], $path, $label );
 			if ( $body === '' ) {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
@@ -669,7 +669,7 @@ final class Site_From_Menu {
 				if ( $html !== '' && $hid > 0 ) {
 					$model = ( new Content_Extractor() )->extract( $html, $url !== '' ? $url : home_url( $path ), array() );
 					if ( ! empty( $model['sections'] ) && is_array( $model['sections'] ) ) {
-						$composed = self::compose_body( $hid, $model, $run['summary'], $path );
+						$composed = self::compose_body( $hid, $model, $run['summary'], $path, $label );
 						if ( trim( $composed ) !== '' ) {
 							$body                                 = $composed;
 							$restyled                             = true;
@@ -766,7 +766,7 @@ final class Site_From_Menu {
 	 * @param array<string, mixed> $model   Content_Extractor::extract().
 	 * @param array<string, mixed> $summary The run's summary: the composer's log goes to compose_log.
 	 */
-	private static function compose_body( int $home_id, array $model, array &$summary, string $path ): string {
+	private static function compose_body( int $home_id, array $model, array &$summary, string $path, string $label = '' ): string {
 		static $libraries = array();
 		if ( ! isset( $libraries[ $home_id ] ) ) {
 			$libraries[ $home_id ] = Section_Library::for_page( $home_id );
@@ -783,6 +783,7 @@ final class Site_From_Menu {
 		$out    = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )
 			->grounds( \DXAI_UI\Blocks\Native\Library_Style::look( $home_id )['ground'] )
 			->write_slots( $engine !== null )
+			->kind( \DXAI_UI\Network\Page_Copies::kind_of_address( $path, $label !== '' ? $label : (string) ( $model['h1'][0] ?? '' ) ) )
 			->compose( $model );
 		$summary['compose_log'][ $path ] = $out['log'];
 		if ( $out['sections'] === array() ) {

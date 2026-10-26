@@ -68,7 +68,7 @@ Return install or keep; anything else keeps the resolved mode.
 
 _No comment above the call yet._
 
-- `src/Network/Page_Copies.php:795` — value and arguments: `null`, `$url`
+- `src/Network/Page_Copies.php:825` — value and arguments: `null`, `$url`
 
 ### dxai_ui_copy_engine
 
@@ -96,7 +96,7 @@ Whether a page built from an old site's page has its words written by the AI cho
 measure of its Home's sections. Default: when an AI is chosen and has a key.
 @param bool $write true.
 
-- `src/Structures/Site_From_Menu.php:821` — value and arguments: `true`
+- `src/Structures/Site_From_Menu.php:822` — value and arguments: `true`
 
 ### dxai_ui_default_template
 
@@ -336,7 +336,7 @@ a draft while a person looks at the whole site before it goes live (Network\Site
 @param int    $home_id The design's Home.
 
 - `src/Pages/Team_Pages.php:2033` — value and arguments: `'publish'`, `$home`
-- `src/Structures/Site_From_Menu.php:981` — value and arguments: `'publish'`, `$home_id`
+- `src/Structures/Site_From_Menu.php:982` — value and arguments: `'publish'`, `$home_id`
 
 ### dxai_ui_page_css_trim
 
