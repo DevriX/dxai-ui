@@ -637,3 +637,14 @@
 		max-height: 420px;
 	}
 }
+
+/* A page measured out of sight at a phone's and a tablet's width (QuickStart.js measureFit()): laid out, never seen. */
+.dxai-review__probe {
+	position: fixed;
+	top: 0;
+	left: -20000px;
+	height: 900px;
+	border: 0;
+	visibility: hidden;
+	pointer-events: none;
+}

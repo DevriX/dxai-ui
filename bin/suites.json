@@ -43,6 +43,7 @@
 		{ "file": "verify-native-blocks.php", "group": "ci" },
 		{ "file": "verify-network-model.php", "group": "ci", "note": "the research half (25 sites read again, page by page) runs only where .verify/network-research is (DXAI_NETWORK_RESEARCH); the rest always" },
 		{ "file": "verify-page-copies.php", "group": "ci" },
+		{ "file": "verify-page-gates.php", "group": "ci" },
 		{ "file": "verify-page-head.php", "group": "ci" },
 		{ "file": "verify-page-order.php", "group": "ci" },
 		{ "file": "verify-page-recipes.php", "group": "ci" },

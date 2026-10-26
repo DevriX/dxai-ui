@@ -250,6 +250,55 @@ const KIND_LABELS = {
 };
 const kindLabel = ( kind ) => KIND_LABELS[ kind ] || ( kind ? kind.charAt( 0 ).toUpperCase() + kind.slice( 1 ).replace( /-/g, ' ' ) : __( 'Page', 'dxai-ui' ) );
 
+/**
+ * How far a page runs wider than the screen at a phone's width (360 px) and a tablet's (768 px): the page loaded out of sight
+ * in a frame of that width (the same site, so it can be read), measured once it has laid out, the frame taken away after.
+ * Resolves { ok, over, at } — the most it runs over and at which width; ok false when the page could not be read in time.
+ *
+ * @param {string} url The page's address (a draft's preview).
+ * @return {Promise<{ok: boolean, over: number, at: number}>} What was measured.
+ */
+function measureFit( url ) {
+	return new Promise( ( resolve ) => {
+		const frame = document.createElement( 'iframe' );
+		frame.className = 'dxai-review__probe';
+		frame.setAttribute( 'aria-hidden', 'true' );
+		frame.tabIndex = -1;
+		frame.style.width = '360px';
+		let done = false;
+		const finish = ( out ) => {
+			if ( ! done ) {
+				done = true;
+				frame.remove();
+				resolve( out );
+			}
+		};
+		const timer = window.setTimeout( () => finish( { ok: false, over: 0, at: 0 } ), 45000 );
+		const over = () => {
+			const doc = frame.contentDocument;
+			return doc && doc.documentElement ? Math.max( 0, doc.documentElement.scrollWidth - doc.documentElement.clientWidth ) : 0;
+		};
+		frame.addEventListener( 'load', () => {
+			window.setTimeout( () => {
+				try {
+					const phone = over();
+					frame.style.width = '768px';
+					window.setTimeout( () => {
+						const tablet = over();
+						window.clearTimeout( timer );
+						finish( { ok: true, over: Math.max( phone, tablet ), at: phone >= tablet ? 360 : 768 } );
+					}, 600 );
+				} catch ( e ) {
+					window.clearTimeout( timer );
+					finish( { ok: false, over: 0, at: 0 } );
+				}
+			}, 1200 );
+		} );
+		frame.src = url;
+		document.body.appendChild( frame );
+	} );
+}
+
 /*
  * The whole site before its pages go live (docs/PLAN-NETWORK-PAGES.md, section 11, point 6): the Home and every page the
  * import made, each seen as it is (a live picture of its preview) with how it measures against the team's pages, and the
@@ -265,6 +314,8 @@ export function SiteReview( { home } ) {
 	// The one page drawn live beside the list (its id; 0: the Home), and at which width.
 	const [ shown, setShown ] = useState( 0 );
 	const [ width, setWidth ] = useState( 'desktop' );
+	// How far each page runs wider than a phone and a tablet (measured here, a page at a time: measureFit()).
+	const [ fits, setFits ] = useState( {} );
 
 	const load = () =>
 		apiFetch( { path: '/dxai-ui/v1/site-review?home=' + home } )
@@ -289,6 +340,32 @@ export function SiteReview( { home } ) {
 			}
 		} );
 	}, [ home ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Each page measured at a phone's width and a tablet's, one after the other, out of sight (docs/PLAN-NETWORK-PAGES.md, 11.5).
+	const ids = data ? ( data.pages || [] ).map( ( p ) => p.id + '@' + p.view ).join( ',' ) : '';
+	useEffect( () => {
+		if ( ! data ) {
+			return undefined;
+		}
+		let live = true;
+		( async () => {
+			for ( const p of data.pages || [] ) {
+				if ( ! live ) {
+					return;
+				}
+				if ( fits[ p.id ] ) {
+					continue;
+				}
+				const got = await measureFit( p.view );
+				if ( live ) {
+					setFits( ( f ) => ( { ...f, [ p.id ]: got } ) );
+				}
+			}
+		} )();
+		return () => {
+			live = false;
+		};
+	}, [ ids ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	if ( error && ! data ) {
 		return <Notice status="warning" isDismissible={ false }>{ error }</Notice>;
@@ -395,6 +472,11 @@ export function SiteReview( { home } ) {
 										<span className="dxai-review__tag">{ kindLabel( p.kind ) }</span>
 										{ p.home && <span className="dxai-review__tag is-live">{ __( 'Live', 'dxai-ui' ) }</span> }
 										{ ! p.home && p.status === 'publish' && <span className="dxai-review__tag is-live">{ __( 'On the site', 'dxai-ui' ) }</span> }
+										{ fits[ p.id ] && fits[ p.id ].ok && (
+											fits[ p.id ].over > 1
+												? <span className="dxai-review__tag is-check">{ sprintf( /* translators: 1: pixels, 2: screen width */ __( '%1$d px wider than a %2$d px screen', 'dxai-ui' ), fits[ p.id ].over, fits[ p.id ].at ) }</span>
+												: <span className="dxai-review__tag is-good">{ __( 'Fits phones', 'dxai-ui' ) }</span>
+										) }
 										{ open && p.quality && (
 											<span className={ 'dxai-review__tag ' + ( p.quality.grade === 'good' ? 'is-good' : 'is-check' ) }>
 												{ p.quality.grade === 'good' ? __( 'Like the team’s pages', 'dxai-ui' ) : __( 'Worth a look', 'dxai-ui' ) }
