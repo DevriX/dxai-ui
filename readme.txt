@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.43
+Stable tag: 0.4.0-beta.44
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,16 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.44 =
+* A design's archive is imported in rounds no request outlives, for hosts that end a request after 60 seconds (WP Engine): it is sent in pieces (no upload limit to raise), read, compiled and saved a round at a time, and the pictures' smaller sizes are made after the pages are saved. A 96-page site with 413 pictures imports with every request under 42 seconds.
+* A design that never ran under Tailwind (a Claude Design package, a static HTML site) gets no utility rule for a class name its own stylesheets never style: an open accordion panel marked `collapse in` stayed visible, a pasted answer's `text-base pb-10` no longer changed its text, and pictures marked `size-full` no longer got `height: 100%`.
+* A design's stylesheet rules that start at `body` or `html` (`body .card`) now apply on the page; they matched nothing before.
+* Pages built from the Home's sections (by the import and by DX › Site) carry the Home's design names: their sections keep their positioning (15 menu pages of one design scrolled sideways on phones).
+* Links between a design's pages are rewritten in one pass a page (a large site's save took a minute for its links alone).
+* The import opens on two clicks (drop the design, "Build my site"); the Home becomes the front page when the site has none; the pages made from the menu wait as drafts until the whole site has been seen and chosen (all, only the Home, or the ones ticked).
+* "Make the rest from this page" in the page editor: a finished page copied onto the other services and places, the shared sections kept word for word, each page's own lines written by the AI or left as outlines. Team pages are built in the order the team's sites use.
+* For developers: `dxai_ui_import_round_seconds` (how long a round of an import may run), `dxai_ui_new_page_status`, `dxai_ui_copies_old_page`; REST `upload-chunk`, `media-sizes`, `copies`, `front-page`, `site-review`.
 
 = 0.4.0-beta.43 =
 * A design of several pages (a Claude Design site) is imported as itself on every page: each page keeps its own root classes, so the rules the design wrote for that page apply (an imported About, Contact or Testimonials page lost its fonts, its panels, its review cards), and keeps the colours and fonts chosen on the design's Home ("keep the design's own").
