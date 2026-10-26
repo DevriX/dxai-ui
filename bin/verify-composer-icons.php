@@ -317,5 +317,100 @@ $poured = is_array( $svc_rep ) ? DXAI_UI\Pages\Section_Refill::cards(
 $poured_marks = is_array( $poured ) ? $marks_of( serialize_block( $poured ) ) : array();
 $expect( 'a page that is a service takes its mark; a page that is none shows none', $poured_marks === array( 'Fire Damage Repair' => 'fire', 'Biohazard Cleanup' => '', 'Water Damage Restoration' => 'water' ), wp_json_encode( $poured_marks ) );
 
+echo "Rows of two one after another take turns (11.3)\n";
+// The Home: two rows of a picture beside words, both with the picture on the left. The old page: three parts, each with its picture.
+$row_of  = static fn( string $class, string $h ): array => parse_blocks(
+	'<!-- wp:group {"tagName":"section","className":"' . $class . '"} --><section class="wp-block-group ' . $class . '"><!-- wp:group {"className":"cols d-grid"} --><div class="wp-block-group cols d-grid">'
+	. '<!-- wp:image {"className":"photo"} --><figure class="wp-block-image photo"><img src="https://example.test/' . $class . '.jpg" alt=""/></figure><!-- /wp:image -->'
+	. '<!-- wp:group {"className":"copy"} --><div class="wp-block-group copy"><!-- wp:heading --><h2 class="wp-block-heading">' . $h . '</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Third-generation contractors who live where they work, with crews on call at night.</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '</div><!-- /wp:group --></section><!-- /wp:group -->'
+)[0];
+$rows_old = '<html><body><main>' . implode(
+	'',
+	array_map(
+		static fn( string $h, string $pic ): string => '<section><h2>' . $h . '</h2><p>Smoke and soot travel through a property and settle on surfaces the fire never touched, so every room is cleaned and checked.</p><img src="https://old.example.test/' . $pic . '.jpg" width="1200" height="800" alt="' . $h . '"/></section>',
+		array( 'Fire damage cleanup', 'Smoke and soot removal', 'Odor removal' ),
+		array( 'kitchen', 'soot', 'odor' )
+	)
+) . '</main></body></html>';
+$sides_of = static function ( string $css ) use ( $row_of, $rows_old ): array {
+	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $row_of( 'built', 'Built in the South Puget Sound' ), 0 ), DXAI_UI\Pages\Section_Library::analyze( $row_of( 'crew', 'Our own crews' ), 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), $css ) )
+		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $rows_old, 'https://old.example.test/fire/' ) );
+	$sides = array();
+	foreach ( $out['sections'] as $s ) {
+		$row     = DXAI_UI\Pages\Section_Variants::picture_side( $s, array() );
+		$sides[] = $row === null ? '-' : $row['side'];
+	}
+
+	return array( $sides, $out );
+};
+list( $sides, $sides_out ) = $sides_of( '.cols{gap:44px}' );
+$expect( 'three rows in a row: the picture left, right, left', $sides === array( 'left', 'right', 'left' ), implode( ' ', $sides ) . ' ' . implode( ' | ', $sides_out['log'] ) );
+$second = serialize_block( $sides_out['sections'][1] );
+$expect( '…the second row only has its two sides changed: the words first, then the picture, each with its own classes', strpos( $second, 'class="wp-block-group copy"' ) < strpos( $second, 'class="wp-block-image photo"' ) && str_contains( $second, '<div class="wp-block-group cols d-grid">' ) && ! is_wp_error( DXAI_UI\Pages\Block_Tree::serialize_checked( array( $sides_out['sections'][1] ) ) ), $second );
+list( $placed ) = $sides_of( '.cols > .photo:first-child{border-radius:0 14px 14px 0}' );
+$expect( 'a design that styles the sides by their place keeps them where they are', $placed === array( 'left', 'left', 'left' ), implode( ' ', $placed ) );
+$ordered = $row_of( 'built', 'Built here' );
+$ordered['innerBlocks'][0]['innerBlocks'][0]['attrs']['className'] = 'photo md:order-last';
+$expect( 'a row whose sides the design moves itself (order) is not taken for one with the picture on the left', DXAI_UI\Pages\Section_Variants::picture_side( $ordered, array() ) === null && DXAI_UI\Pages\Section_Variants::picture_side( $row_of( 'built', 'Built here' ), array() ) !== null );
+// A section of badges, each a logo beside its caption in a row (H2O Away's certifications, on the Resources page): not a row of two.
+$badges = parse_blocks(
+	'<!-- wp:group {"tagName":"section","className":"badges"} --><section class="wp-block-group badges"><!-- wp:heading --><h2 class="wp-block-heading">Industry certifications</h2><!-- /wp:heading -->'
+	. '<!-- wp:group {"className":"badge d-flex items-center"} --><div class="wp-block-group badge d-flex items-center"><!-- wp:image {"className":"logo"} --><figure class="wp-block-image logo"><img src="https://example.test/bizrate.webp" alt=""/></figure><!-- /wp:image -->'
+	. '<!-- wp:paragraph --><p>BusinessRate Best of 2026 award for water damage restoration in Thurston County, Washington</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '</section><!-- /wp:group -->'
+)[0];
+$expect( 'a logo beside its caption is not a row of two (its words are not under the section\'s heading): it is never turned round', DXAI_UI\Pages\Section_Variants::picture_side( $badges, array() ) === null );
+list( $bare ) = $sides_of( '' );
+$expect( '…and so does a page without the design\'s stylesheet to tell', $bare === array( 'left', 'left', 'left' ), implode( ' ', $bare ) );
+
+echo "Cards fill their rows with the columns of another of the Home's grids (11.3)\n";
+// The Home, as H2O Away's: its boxes 1200 px wide with 24 px of padding at each side (inside or outside the width: the theme
+// decides), grids 20 px apart. Its services: columns of at least 250 px (4 in the box); its steps: 200 (5); its reviews: 280 (4 or
+// 3, as the padding falls); its rows of two: 320 (3).
+$grid_of = static function ( string $name, string $min, int $n, string $box = 'max-width:1200px;padding-left:24px;padding-right:24px' ): array {
+	$cards = '';
+	for ( $k = 1; $k <= $n; $k++ ) {
+		$cards .= '<!-- wp:group {"className":"card"} --><div class="wp-block-group card"><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . ucfirst( $name ) . ' ' . $k . '</h3><!-- /wp:heading --><!-- wp:paragraph --><p>Handled by our own crews from the first call to the last repair.</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
+	}
+	return parse_blocks(
+		'<!-- wp:group {"tagName":"section","className":"' . $name . '"} --><section class="wp-block-group ' . $name . '"><!-- wp:group ' . wp_json_encode( array( 'className' => 'box', 'dxaiCss' => $box ) ) . ' --><div class="wp-block-group box">'
+		. '<!-- wp:heading --><h2 class="wp-block-heading">Our ' . $name . '</h2><!-- /wp:heading -->'
+		. '<!-- wp:group {"className":"grid","dxaiCss":"grid-template-columns:repeat(auto-fit,minmax(' . $min . ',1fr));gap:20px"} --><div class="wp-block-group grid">' . $cards . '</div><!-- /wp:group -->'
+		. '</div><!-- /wp:group --></section><!-- /wp:group -->'
+	)[0];
+};
+$services_grid = $grid_of( 'services', '250px', 4 );
+$library_of    = static fn( array ...$sections ): array => array_map( static fn( array $s, int $i ): array => DXAI_UI\Pages\Section_Library::analyze( $s, $i ), $sections, array_keys( $sections ) );
+$full_rows     = new ReflectionMethod( Page_Composer::class, 'full_rows' );
+$full_rows->setAccessible( true );
+$columns_for = static function ( array $library, int $count, ?array $section = null ) use ( $full_rows, $services_grid ): string {
+	$composer = new Page_Composer( $library, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), '.card{padding:24px}' );
+	$block    = $section ?? $services_grid;
+	$path     = array( 0, 1 );
+	$full_rows->invokeArgs( $composer, array( &$block, $path, $count ) );
+	preg_match( '/minmax\(([^,]+),/', (string) ( DXAI_UI\Pages\Block_Tree::at( $block, $path )['attrs']['dxaiCss'] ?? '' ), $m );
+
+	return (string) ( $m[1] ?? '?' );
+};
+$home_a = $library_of( $services_grid, $grid_of( 'steps', '200px', 5 ), $grid_of( 'reviews', '280px', 3 ), $grid_of( 'rows', '320px', 2 ) );
+$expect( 'six cards in four columns take the Home\'s columns that lay three in the box (two full rows)', $columns_for( $home_a, 6 ) === '320px', $columns_for( $home_a, 6 ) );
+$expect( 'five take those that lay five (one full row)', $columns_for( $home_a, 5 ) === '200px', $columns_for( $home_a, 5 ) );
+$expect( 'eight, or three, fill their rows already and keep the grid\'s own; seven, which no grid of the Home makes whole, too', $columns_for( $home_a, 8 ) === '250px' && $columns_for( $home_a, 3 ) === '250px' && $columns_for( $home_a, 7 ) === '250px' );
+$home_b = $library_of( $services_grid, $grid_of( 'steps', '200px', 5 ), $grid_of( 'reviews', '280px', 3 ) );
+$expect( 'columns whose count the box\'s padding decides (280 px: four in 1200, three in 1152) are not taken', $columns_for( $home_b, 6 ) === '250px', $columns_for( $home_b, 6 ) );
+$columns = new ReflectionMethod( Page_Composer::class, 'columns' );
+$columns->setAccessible( true );
+$expect( 'a grid\'s columns are counted at both widths of its box: one count, or none', $columns->invoke( null, 'grid-template-columns:repeat(auto-fit,minmax(320px,1fr))', array( 1200.0, 1152.0 ), 20.0 ) === 3 && $columns->invoke( null, 'grid-template-columns:repeat(auto-fit,minmax(280px,1fr))', array( 1200.0, 1152.0 ), 20.0 ) === null && $columns->invoke( null, 'grid-template-columns:repeat(auto-fit,minmax(280px,1fr))', array( 1152.0, 1200.0 ), 20.0 ) === null );
+$expect( '…nor any in a box whose width cannot be read', $columns_for( $home_a, 6, $grid_of( 'services', '250px', 4, 'padding-left:24px' ) ) === '250px' );
+// On a page composed from an old one: six kinds of fire damage go into the Home's services.
+$six_old  = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p></section><section><h2>Types of Fire Damage We Restore</h2><div>'
+	. implode( '', array_map( static fn( string $c ): string => '<div><h3>' . $c . '</h3><p>Our crews handle it from the first call to the last repair, with photos for your insurer.</p></div>', array( 'Smoke', 'Soot', 'Odor', 'Board-up', 'Contents', 'Water' ) ) )
+	. '</div></section></main></body></html>';
+$six_page = ( new Page_Composer( array_merge( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ) ), $library_of( $services_grid, $grid_of( 'rows', '320px', 2 ) ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), '.card{padding:24px}' ) )
+	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $six_old, 'https://old.example.test/fire/' ) );
+$six_html = implode( '', array_map( 'serialize_block', $six_page['sections'] ) );
+$expect( '…and on a composed page the six cards, in the Home\'s services, are laid in three columns', substr_count( $six_html, '<h3' ) === 6 && str_contains( $six_html, 'minmax(320px,1fr));gap:20px' ) && str_contains( implode( ' | ', $six_page['log'] ), '6 cards in 4 columns leave a row of 2' ), implode( ' | ', $six_page['log'] ) );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -47,7 +47,16 @@ final class Section_Variants {
 		if ( (string) $sheet['path'] === '' || ! is_readable( (string) $sheet['path'] ) ) {
 			return null;
 		}
-		$css = (string) file_get_contents( (string) $sheet['path'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		return self::positional_in( (string) file_get_contents( (string) $sheet['path'] ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	}
+
+	/**
+	 * The classes a stylesheet styles by their place among their siblings (positional_classes()).
+	 *
+	 * @return array<string, true>
+	 */
+	public static function positional_in( string $css ): array {
 		$css = (string) preg_replace( '~/\*.*?\*/~s', '', $css );
 		$out = array();
 		if ( preg_match_all( '/([^{}]*:(?:first|last|only|nth|nth-last)-(?:child|of-type)[^{}]*)\{/', $css, $m ) ) {
@@ -240,11 +249,7 @@ final class Section_Variants {
 		if ( $found === null ) {
 			return null;
 		}
-		$parent = &Block_Tree::at( $block, $found );
-		$parent['innerBlocks'] = array_reverse( (array) $parent['innerBlocks'] );
-		unset( $parent );
-
-		return array( 'block' => $block, 'op' => 'flip' );
+		return array( 'block' => self::flipped( $block, $found ), 'op' => 'flip' );
 	}
 
 	/**
@@ -468,14 +473,58 @@ final class Section_Variants {
 	}
 
 	/**
+	 * Where a section has a row of two — its words, under its heading, on one side, a picture on the other (not a badge's logo beside
+	 * its caption) — and which side the picture is on as the page
+	 * shows it ('left' or 'right'); null when it has none, or when the design moves its sides by itself (`order`, `row-reverse`) or
+	 * styles them by their place.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<string, true>  $positional positional_classes().
+	 * @return array{path:array<int, int>, side:string}|null
+	 */
+	public static function picture_side( array $block, array $positional ): ?array {
+		$path = self::find_pair( $block, array(), $positional, true );
+		if ( $path === null ) {
+			return null;
+		}
+		$pair  = Block_Tree::at( $block, $path );
+		$moved = static fn( array $b ): bool => preg_match( '/(^|[\s:])order-|(^|\s)flex-row-reverse(\s|$)/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1
+			|| preg_match( '/(^|;)\s*order\s*:|row-reverse/', Block_Tree::css_of( $b ) ) === 1;
+		if ( $moved( $pair ) || $moved( (array) $pair['innerBlocks'][0] ) || $moved( (array) $pair['innerBlocks'][1] ) ) {
+			return null;
+		}
+
+		return array(
+			'path' => $path,
+			'side' => self::has_image( (array) $pair['innerBlocks'][0] ) ? 'left' : 'right',
+		);
+	}
+
+	/**
+	 * A section with the two sides of its row (picture_side()) changed.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, int>      $path
+	 * @return array<string, mixed>
+	 */
+	public static function flipped( array $block, array $path ): array {
+		$pair                = &Block_Tree::at( $block, $path );
+		$pair['innerBlocks'] = array_reverse( (array) $pair['innerBlocks'] );
+		unset( $pair );
+
+		return $block;
+	}
+
+	/**
 	 * The path of the container whose two children are a side of words and a side with a picture, laid out as a row.
 	 *
 	 * @param array<string, mixed>  $block
 	 * @param array<int, int>       $path
 	 * @param array<string, true>   $positional
+	 * @param bool                  $headed     Only a row whose words are the section's own: under its heading (h1 or h2), not a logo beside its caption.
 	 * @return array<int, int>|null
 	 */
-	private static function find_pair( array $block, array $path, array $positional ): ?array {
+	private static function find_pair( array $block, array $path, array $positional, bool $headed = false ): ?array {
 		$kids = array_values( (array) ( $block['innerBlocks'] ?? array() ) );
 		if ( count( $kids ) === 2 && in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/group', 'core/columns', 'dxai-ui/box' ), true ) ) {
 			$class = (string) ( $block['attrs']['className'] ?? '' );
@@ -485,12 +534,12 @@ final class Section_Variants {
 			$has   = static fn( array $b ): array => array( self::has_image( $b ), self::has_words( $b ) );
 			[ $a_img, $a_words ] = $has( (array) $kids[0] );
 			[ $b_img, $b_words ] = $has( (array) $kids[1] );
-			if ( $row && ! $col && ( ( $a_img && ! $a_words && $b_words ) || ( $b_img && ! $b_words && $a_words ) ) && ! self::positional( (array) $kids[0], $positional ) && ! self::positional( (array) $kids[1], $positional ) ) {
+			if ( $row && ! $col && ( ( $a_img && ! $a_words && $b_words ) || ( $b_img && ! $b_words && $a_words ) ) && ! self::positional( (array) $kids[0], $positional ) && ! self::positional( (array) $kids[1], $positional ) && ( ! $headed || self::has_heading( (array) ( $a_words ? $kids[0] : $kids[1] ) ) ) ) {
 				return $path;
 			}
 		}
 		foreach ( $kids as $i => $child ) {
-			$found = self::find_pair( (array) $child, array_merge( $path, array( (int) $i ) ), $positional );
+			$found = self::find_pair( (array) $child, array_merge( $path, array( (int) $i ) ), $positional, $headed );
 			if ( $found !== null ) {
 				return $found;
 			}
@@ -506,6 +555,20 @@ final class Section_Variants {
 		}
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
 			if ( self::has_image( (array) $c ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/** Whether a block has a section's heading in it (an h1 or an h2). @param array<string, mixed> $b */
+	private static function has_heading( array $b ): bool {
+		if ( ( $b['blockName'] ?? '' ) === 'core/heading' && (int) ( $b['attrs']['level'] ?? 2 ) <= 2 ) {
+			return true;
+		}
+		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $c ) {
+			if ( self::has_heading( (array) $c ) ) {
 				return true;
 			}
 		}

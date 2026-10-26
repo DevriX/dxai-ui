@@ -52,6 +52,9 @@ final class Page_Composer {
 	/** The space below a picture added at the top of a card that had no icon there. */
 	private const CARD_IMAGE_GAP = '18px';
 
+	/** Columns as many as fit, each at least so wide: `grid-template-columns:repeat(auto-fit,minmax(250px,1fr))`. */
+	private const AUTO_GRID = '/grid-template-columns\s*:\s*repeat\(\s*auto-(?:fit|fill)\s*,\s*minmax\([^()]*\)\s*\)/i';
+
 	/** @var array<int, array<string, mixed>> */
 	private array $library;
 	/** @var callable(string, float, bool): ?array */
@@ -93,6 +96,8 @@ final class Page_Composer {
 
 	/** @var array<int, string> The ground of each of the Home's sections, by its index (ground_of()). */
 	private array $ground_at = array();
+	/** @var array<int, string>|null The Home's grid templates that lay as many columns as fit, once read (home_grids()). */
+	private ?array $grids = null;
 	/** @var array<string, mixed>|null|false The library's plainest picture block, once looked up (false: none). */
 	private $picture = null;
 	/** The width the design keeps its running text to (a paragraph's max-width), once looked up. */
@@ -139,6 +144,38 @@ final class Page_Composer {
 		$this->write = $on;
 
 		return $this;
+	}
+
+	/**
+	 * Rows of two — words beside a picture — one right after another take turns (docs/PLAN-NETWORK-PAGES.md, 11.3): the second has
+	 * its picture on the other side from the first, as the Home's own two rows have. Only the two sides change places; the row is
+	 * the Home's as it is. Not when the design styles the sides by their place (`:first-child`…) or moves them itself (`order`), and
+	 * not without the design's stylesheet to tell.
+	 *
+	 * @param array<int, array<string, mixed>> $sections
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function alternate_sides( array $sections ): array {
+		if ( $this->design_css === '' ) {
+			return $sections;
+		}
+		$positional = Section_Variants::positional_in( $this->design_css );
+		$prev       = '';
+		foreach ( $sections as $i => $section ) {
+			$row = Section_Variants::picture_side( $section, $positional );
+			if ( $row === null ) {
+				$prev = '';
+				continue;
+			}
+			if ( $row['side'] === $prev ) {
+				$sections[ $i ] = Section_Variants::flipped( $section, $row['path'] );
+				$row['side']    = $prev === 'left' ? 'right' : 'left';
+				$this->log[]    = sprintf( 'section %d: its picture on the %s, as the row before it had — moved to the %s', $i, $prev, $row['side'] );
+			}
+			$prev = $row['side'];
+		}
+
+		return $sections;
 	}
 
 	/**
@@ -320,6 +357,7 @@ final class Page_Composer {
 			$sections = Home_Frame::complete( $sections, $this->library, $this->kind, $this->log );
 		}
 		$sections = $this->alternate_grounds( $sections );
+		$sections = $this->alternate_sides( $sections );
 
 		return array(
 			'sections' => $sections,
@@ -1149,6 +1187,7 @@ final class Page_Composer {
 		if ( $rep !== null ) {
 			$this->resize_matched( $block, $rep, $items, $templates, (string) ( $unit['heading'] ?? '' ) );
 			$this->fit_grid_hooks( $block, $rep['path'], count( $items ) );
+			$this->full_rows( $block, $rep['path'], count( $items ) );
 			$a   = Section_Library::analyze( $block, (int) $c['index'] );
 			$rep = self::main_repeat( $a, $unit['kind'] );
 		}
@@ -2701,6 +2740,127 @@ final class Page_Composer {
 			}
 		}
 		unset( $grid );
+	}
+
+	/**
+	 * Cards that would leave their last row part empty take the columns of another of the Home's grids (docs/PLAN-NETWORK-PAGES.md,
+	 * 11.3) — one that lays as many columns in this box as make whole rows of them: six cards in H2O Away's grid of four columns
+	 * (`minmax(250px,1fr)`) take the `minmax(320px,1fr)` its rows of two are laid with, three columns in the same 1200 px. The value
+	 * is the Home's own, so the look is the Home's. How many columns a grid lays is counted from the box's width and the gap, with the
+	 * box's padding inside and outside that width (the theme decides which): a grid whose count differs between the two is not taken.
+	 * Nothing changes when the cards fill their rows already, when the box's width cannot be read, or when no grid of the Home fits.
+	 *
+	 * @param array<string, mixed> $block
+	 * @param array<int, int>      $path The grid of the cards.
+	 */
+	private function full_rows( array &$block, array $path, int $count ): void {
+		$grid   = &Block_Tree::at( $block, $path );
+		$css    = (string) ( $grid['attrs']['dxaiCss'] ?? '' );
+		$widths = self::widths_of( $block, $path );
+		if ( $count < 3 || $widths === array() || preg_match( self::AUTO_GRID, $css, $own ) !== 1 ) {
+			unset( $grid );
+			return;
+		}
+		$gap  = preg_match( '/(?:^|;)(?:column-)?gap:([\d.]+)(px|rem)/', Block_Tree::css_of( $grid ), $g ) === 1 ? (float) $g[1] * ( $g[2] === 'rem' ? 16 : 1 ) : 0.0;
+		$now  = self::columns( $own[0], $widths, $gap );
+		$best = null;
+		if ( $now !== null && $count > $now && $count % $now !== 0 ) {
+			foreach ( $this->home_grids() as $columns ) {
+				$n = self::columns( $columns, $widths, $gap );
+				if ( $n === null || $n < 2 || $count % $n !== 0 || $columns === $own[0] ) {
+					continue;
+				}
+				$near = abs( $n - $now ) <=> ( $best === null ? PHP_INT_MAX : abs( $best[1] - $now ) );
+				if ( $near < 0 || ( $near === 0 && $best !== null && $n > $best[1] ) ) {
+					$best = array( $columns, $n );
+				}
+			}
+		}
+		if ( $best !== null ) {
+			Block_Tree::set_css( $grid, str_replace( $own[0], $best[0], $css ) );
+			$this->log[] = sprintf( 'grid %s: %d cards in %d columns leave a row of %d — the Home\'s %s lays %d', implode( '.', $path ), $count, $now, $count % (int) $now, $best[0], $best[1] );
+		}
+		unset( $grid );
+	}
+
+	/**
+	 * How many columns a grid template (AUTO_GRID) lays in a box, the same at each of its widths; null when they differ or it is not
+	 * one with a width in px or rem.
+	 *
+	 * @param array<int, float> $widths
+	 */
+	private static function columns( string $template, array $widths, float $gap ): ?int {
+		if ( preg_match( '/minmax\(\s*([\d.]+)(px|rem)\s*,/i', $template, $m ) !== 1 || (float) $m[1] <= 0 ) {
+			return null;
+		}
+		$min    = (float) $m[1] * ( strtolower( $m[2] ) === 'rem' ? 16 : 1 );
+		$counts = array_unique( array_map( static fn( float $w ): int => max( 1, (int) floor( ( $w + $gap ) / ( $min + $gap ) ) ), $widths ) );
+
+		return count( $counts ) === 1 ? (int) reset( $counts ) : null;
+	}
+
+	/**
+	 * Every grid template of the Home's that lays as many columns as fit (AUTO_GRID), once.
+	 *
+	 * @return array<int, string>
+	 */
+	private function home_grids(): array {
+		if ( $this->grids !== null ) {
+			return $this->grids;
+		}
+		$found = array();
+		$walk  = static function ( array $b ) use ( &$walk, &$found ): void {
+			if ( preg_match( self::AUTO_GRID, (string) ( $b['attrs']['dxaiCss'] ?? '' ), $m ) === 1 ) {
+				$found[ $m[0] ] = true;
+			}
+			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $inner ) {
+				if ( is_array( $inner ) ) {
+					$walk( $inner );
+				}
+			}
+		};
+		foreach ( $this->library as $component ) {
+			$walk( (array) $component['block'] );
+		}
+		$this->grids = array_keys( $found );
+
+		return $this->grids;
+	}
+
+	/**
+	 * The widths a grid is laid in at its widest: the max-width of the innermost box it is in (or its own), with that box's padding
+	 * and without it. Empty when no box sets one in px.
+	 *
+	 * @param array<string, mixed> $section
+	 * @param array<int, int>      $path
+	 * @return array<int, float>
+	 */
+	private static function widths_of( array $section, array $path ): array {
+		$chain = array( $section );
+		$node  = $section;
+		foreach ( $path as $step ) {
+			$node    = (array) ( $node['innerBlocks'][ $step ] ?? array() );
+			$chain[] = $node;
+		}
+		$width = 0.0;
+		$pad   = 0.0;
+		$last  = count( $chain ) - 1;
+		foreach ( $chain as $k => $b ) {
+			$css = Block_Tree::css_of( $b );
+			if ( preg_match( '/(?:^|;)max-width:([\d.]+)px/', $css, $m ) === 1 ) {
+				$width = (float) $m[1];
+				$pad   = 0.0;
+			}
+			if ( $width > 0 && $k < $last ) {
+				foreach ( array( 'left', 'right' ) as $side ) {
+					if ( preg_match( '/(?:^|;)padding-' . $side . ':([\d.]+)px/', $css, $p ) === 1 ) {
+						$pad += (float) $p[1];
+					}
+				}
+			}
+		}
+
+		return $width > 0 ? array_values( array_unique( array( $width, $width - $pad ) ) ) : array();
 	}
 
 	/** @param array<string, mixed> $b */
