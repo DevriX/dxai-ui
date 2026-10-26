@@ -79,6 +79,9 @@ final class Page_Composer {
 	/** @var array<int, string> The classes of the Home's dark ground. */
 	private array $dark = array();
 
+	/** Whether the words are written after (Slot_Writer): the places keep the Home's words to measure by, and none is swept. */
+	private bool $write = false;
+
 	/** @var array<int, string> The class the Home writes its white sections with, when it has one. */
 	private array $white = array();
 
@@ -113,6 +116,18 @@ final class Page_Composer {
 		$this->light = array_values( array_map( 'strval', (array) ( $grounds['light']['class'] ?? array() ) ) );
 		$this->dark  = array_values( array_map( 'strval', (array) ( $grounds['dark']['class'] ?? array() ) ) );
 		$this->white = array_values( array_map( 'strval', (array) ( $grounds['white']['class'] ?? array() ) ) );
+
+		return $this;
+	}
+
+	/**
+	 * The words are written after the page is composed (Slot_Writer, an AI): each text place keeps the Home's words it had, as
+	 * the measure of its length (Slot_Writer::WAS), and a place the old page has nothing for is kept with them, marked to be
+	 * written (Slot_Writer::WRITE), instead of taken off — the eyebrow over a title, a line under it. Slot_Writer takes the
+	 * marks off, and the places nothing was written for.
+	 */
+	public function write_slots( bool $on ): self {
+		$this->write = $on;
 
 		return $this;
 	}
@@ -1075,6 +1090,9 @@ final class Page_Composer {
 	 */
 	private function fill( array $c, int $panel, array $unit ): ?array {
 		$block = $c['block'];
+		if ( $this->write ) {
+			Slot_Writer::mark_was( $block );
+		}
 		if ( ( $this->used[ $c['index'] ] ?? 1 ) > 1 ) {
 			Block_Tree::strip_anchors( $block );
 		}
@@ -1227,7 +1245,13 @@ final class Page_Composer {
 			}
 		}
 
-		// 7. Nothing of the design's own content may stay. The old page's form, wherever its unit went, stays.
+		// 7. Nothing of the design's own content may stay. The old page's form, wherever its unit went, stays. With the words
+		// written after, a place that still holds the Home's words stays, to be written (Slot_Writer).
+		if ( $this->write ) {
+			foreach ( Slot_Writer::mark_write( $block, $this->allowed ) as $text ) {
+				$this->allowed[ $text ] = true;
+			}
+		}
 		self::mark_grids( $block );
 		$block = $this->sweep( $block, $unit['kind'] === 'form' || ! empty( $unit['form'] ) );
 		if ( self::is_empty( $block ) ) {

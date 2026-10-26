@@ -2086,6 +2086,7 @@ export default function ConvertWizard() {
 						crawlWanted={ crawlWanted }
 						crawlCount={ crawlCount }
 						pagesEngine={ pagesEngine }
+						aiName={ engine && engine.ready ? engine.name : '' }
 						chrome={ chromeChosen }
 						chromeNote={ facts.own
 							? __( 'The site keeps its own header and footer: its menus and widgets stay as they are.', 'dxai-ui' )

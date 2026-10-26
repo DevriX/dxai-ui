@@ -19,6 +19,7 @@ use DXAI_UI\Pages\Content_Extractor;
 use DXAI_UI\Pages\Image_Fit;
 use DXAI_UI\Pages\Page_Composer;
 use DXAI_UI\Pages\Section_Library;
+use DXAI_UI\Pages\Slot_Writer;
 use DXAI_UI\Theme\Blank_Template;
 
 final class Site_From_Menu {
@@ -776,9 +777,12 @@ final class Site_From_Menu {
 			$file                = \DXAI_UI\Support\Upload_Paths::for_meta( $home_id, '_dxai_ui_css_url' )['path'];
 			$sheets[ $home_id ] = $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
-		// …and its grounds, so no two of the page's sections in a row stand on one.
-		$out = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )
+		// …and its grounds, so no two of the page's sections in a row stand on one. With an AI, the words are written after, place
+		// by place in the Home's measure (Slot_Writer): the composer keeps every place for it.
+		$engine = self::words_engine();
+		$out    = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )
 			->grounds( \DXAI_UI\Blocks\Native\Library_Style::look( $home_id )['ground'] )
+			->write_slots( $engine !== null )
 			->compose( $model );
 		$summary['compose_log'][ $path ] = $out['log'];
 		if ( $out['sections'] === array() ) {
@@ -790,9 +794,36 @@ final class Site_From_Menu {
 			$summary['compose_log'][ $path ][] = 'only a title on the old page — not built';
 			return '';
 		}
+		if ( $engine !== null ) {
+			$topic   = (string) ( $model['h1'][0] ?? '' );
+			$written = Slot_Writer::write( $out['sections'], Slot_Writer::text_of( $model ), $topic !== '' ? $topic : trim( $path, '/' ), $home_id, $engine );
+			$out['sections']            = $written['sections'];
+			$summary['words'][ $path ]  = array_diff_key( $written, array( 'sections' => true ) );
+			$summary['words_engine']    = $engine->get_id();
+			$summary['compose_log'][ $path ][] = sprintf( 'words: %d written, %d shortened, %d places taken off%s', $written['written'], $written['shortened'], $written['dropped'], $written['error'] !== '' ? ' — ' . $written['error'] : '' );
+		}
 		$markup = Block_Tree::serialize_checked( $out['sections'] );
 
 		return is_wp_error( $markup ) ? '' : trim( $markup );
+	}
+
+	/**
+	 * The AI that writes the words of a page built from an old site's page (Slot_Writer): the one chosen in Settings, when it
+	 * has a key; null for none (the composer's own words, as before).
+	 */
+	private static function words_engine(): ?\DXAI_UI\Engines\LLM_Provider_Interface {
+		/**
+		 * Whether a page built from an old site's page has its words written by the AI chosen in Settings, place by place in the
+		 * measure of its Home's sections. Default: when an AI is chosen and has a key.
+		 *
+		 * @param bool $write true.
+		 */
+		if ( ! (bool) apply_filters( 'dxai_ui_crawl_words', true ) ) {
+			return null;
+		}
+		$engine = \DXAI_UI\Pages\Copy_Writer::engine();
+
+		return $engine instanceof \DXAI_UI\Engines\LLM_Provider_Interface ? $engine : null;
 	}
 
 	/**

@@ -54,7 +54,7 @@ export function QuickDrop( { canImport, refusal, onFile, onOther } ) {
 }
 
 /** The second screen: what is about to be done, in plain words, and one button. */
-export function QuickPlan( { plan, canCrawl, crawlWanted, crawlCount, pagesEngine, chrome, chromeNote, front, sections, onBuild, onChange, busy } ) {
+export function QuickPlan( { plan, canCrawl, crawlWanted, crawlCount, pagesEngine, aiName, chrome, chromeNote, front, sections, onBuild, onChange, busy } ) {
 	const lines = [];
 	lines.push( {
 		key: 'home',
@@ -79,7 +79,11 @@ export function QuickPlan( { plan, canCrawl, crawlWanted, crawlCount, pagesEngin
 					' — ' + ( plan.host
 						? sprintf( /* translators: %s: the old site's host */ __( 'with the words and pictures of their pages on %s, in the look of this Home', 'dxai-ui' ), plan.host )
 						: __( 'with the words and pictures of the old site’s pages, in the look of this Home', 'dxai-ui' ) ) +
-					( pagesEngine === 'ai' ? ' ' + __( '(written again by the AI chosen in Settings)', 'dxai-ui' ) : '' ) + '.',
+					( pagesEngine === 'ai' ? ' ' + __( '(written again by the AI chosen in Settings)', 'dxai-ui' ) : '' ) +
+					// The Home's sections, their words written place by place in the Home's measure (Slot_Writer).
+					( pagesEngine !== 'ai' && aiName
+						? '; ' + sprintf( /* translators: %s: the AI's name */ __( 'their words written by %s to the length each place has on the Home', 'dxai-ui' ), aiName )
+						: '' ) + '.',
 			} );
 		} else {
 			lines.push( {
