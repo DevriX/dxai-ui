@@ -431,7 +431,7 @@ export default function ConvertWizard() {
 	function quickBuild() {
 		const pages = !! ( plan && plan.hasMenu && ( crawlWanted || createMissingPages ) );
 		setMenuPagesDone( false );
-		( pages ? holdNewPages() : Promise.resolve() ).then( () => addToWordPress() );
+		( pages ? holdNewPages( file && file.name ) : Promise.resolve() ).then( () => addToWordPress() );
 	}
 
 	const stepIndex = useMemo( () => {

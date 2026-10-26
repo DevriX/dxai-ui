@@ -115,6 +115,16 @@ Site_Review::hold();
 $expect( 'held, it is a draft', apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'draft' && Site_Review::holding() );
 update_option( Site_Review::HOLD, time() - 1, false );
 $expect( 'a hold that ran out holds nothing', ! Site_Review::holding() && apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'publish' );
+// A hold for one archive: its design's pages are drafts, another import's are published (the screen that asked was closed).
+update_post_meta( $home, '_dxai_ui_source_zip', 'Held ' . $run . '.zip' );
+$other_home = $page( 'Other Home' );
+update_post_meta( $other_home, '_dxai_ui_source_zip', 'Other ' . $run . '.zip' );
+Site_Review::hold( 'Held ' . $run . '.zip' );
+$expect( 'held for an archive, its design\'s new pages are drafts', apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'draft' );
+$expect( '…and another design\'s, or a page of no design, are published', apply_filters( 'dxai_ui_new_page_status', 'publish', $other_home ) === 'publish' && apply_filters( 'dxai_ui_new_page_status', 'publish', 0 ) === 'publish' );
+update_option( Site_Review::HOLD, time() + 600, false );
+$expect( 'a hold written by the plugin before this (a bare time) still holds every design', apply_filters( 'dxai_ui_new_page_status', 'publish', $other_home ) === 'draft' );
+Site_Review::release();
 
 echo "Pages from the old site (Site_From_Menu)\n";
 $crawl = new Site_From_Menu();
@@ -296,6 +306,9 @@ $expect( 'GET lists the design', $ask( 'GET', array( 'home' => $home ) )->get_st
 $expect( 'a page that is not a design: 404', $ask( 'GET', array( 'home' => $other ) )->get_status() === 404 );
 $expect( 'an action it does not know: 400', $ask( 'POST', array( 'action' => 'publish-everything' ) )->get_status() === 400 );
 $expect( 'hold and release through the route', $ask( 'POST', array( 'action' => 'hold' ) )->get_status() === 200 && Site_Review::holding() && $ask( 'POST', array( 'action' => 'release' ) )->get_status() === 200 && ! Site_Review::holding() );
+$ask( 'POST', array( 'action' => 'hold', 'archive' => 'Held ' . $run . '.zip' ) );
+$expect( '…the route holds only the design of the archive it is given', Site_Review::holds_for( $home ) && ! Site_Review::holds_for( $other_home ) );
+Site_Review::release();
 $user = get_current_user_id();
 wp_set_current_user( 0 );
 $expect( 'a visitor may not look or choose', in_array( $ask( 'GET', array( 'home' => $home ) )->get_status(), array( 401, 403 ), true ) && in_array( $ask( 'POST', array( 'action' => 'hold' ) )->get_status(), array( 401, 403 ), true ) && ! Site_Review::holding() );

@@ -266,7 +266,7 @@ final class Page_Composer {
 				continue;
 			}
 			try {
-				$block = $this->fill( $target['component'], $target['panel'], $unit );
+				$block = $this->fill( $target['component'], $target['panel'], array_merge( $unit, array( 'same' => ! empty( $target['same'] ) ) ) );
 			} catch ( \Throwable $e ) {
 				$this->log[] = sprintf( 'unit %d (%s) into #%d failed: %s — left out', $n, $unit['kind'], $target['component']['index'], $e->getMessage() );
 				continue;
@@ -865,7 +865,7 @@ final class Page_Composer {
 	 * The design section (and its panel) that best shows a unit.
 	 *
 	 * @param array<string, mixed> $unit
-	 * @return array{component: array<string, mixed>, panel: int}|null
+	 * @return array{component: array<string, mixed>, panel: int, same: bool}|null
 	 */
 	private function choose( array $unit, bool $first ): ?array {
 		$fits = self::FITS[ $unit['kind'] ] ?? array( 'text' );
@@ -873,10 +873,13 @@ final class Page_Composer {
 		$top  = -INF;
 		foreach ( $this->library as $c ) {
 			$rank = array_search( $c['kind'], $fits, true );
-			if ( $rank === false ) {
+			// The Home was designed from the old site: a part of the old page under the heading of one of the Home's sections is shown
+			// the way the designer showed it there ("Built in the South Puget Sound": its words and a photograph, not a row of figures).
+			$same = self::same_heading( (string) $unit['heading'], self::heading_of( $c ) );
+			if ( $rank === false && ! $same ) {
 				continue;
 			}
-			$score = 10 - 3 * (int) $rank;
+			$score = 10 - 3 * ( $rank === false ? count( $fits ) : (int) $rank ) + ( $same ? 20 : 0 );
 			$score -= 4 * ( $this->used[ $c['index'] ] ?? 0 );
 			$panel  = 0;
 			if ( $unit['kind'] === 'list' ) {
@@ -931,7 +934,11 @@ final class Page_Composer {
 			}
 			if ( $score > $top ) {
 				$top  = $score;
-				$best = array( 'component' => $c, 'panel' => $panel );
+				$best = array(
+					'component' => $c,
+					'panel'     => $panel,
+					'same'      => $same,
+				);
 			}
 		}
 		if ( $best !== null ) {
@@ -939,6 +946,45 @@ final class Page_Composer {
 		}
 
 		return $best;
+	}
+
+	/**
+	 * The words of a section's heading, as the library read it (its first heading slot).
+	 *
+	 * @param array<string, mixed> $c
+	 */
+	private static function heading_of( array $c ): string {
+		foreach ( (array) ( $c['slots'] ?? array() ) as $slot ) {
+			if ( ( $slot['type'] ?? '' ) === 'heading' ) {
+				return (string) ( $slot['text'] ?? '' );
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Whether two headings say the same: the same words (case, punctuation and entities aside), or nearly — three in four of
+	 * the words of both, three words at least.
+	 */
+	private static function same_heading( string $a, string $b ): bool {
+		$words = static function ( string $h ): array {
+			$h = mb_strtolower( html_entity_decode( wp_strip_all_tags( $h ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+			$h = (string) preg_replace( '/[^\p{L}\p{N}+]+/u', ' ', $h );
+
+			return array_values( array_filter( explode( ' ', $h ), static fn( string $w ): bool => $w !== '' ) );
+		};
+		$x = $words( $a );
+		$y = $words( $b );
+		if ( count( $x ) < 3 || count( $y ) < 3 ) {
+			return false;
+		}
+		if ( $x === $y ) {
+			return true;
+		}
+		$both = count( array_intersect( array_unique( $x ), array_unique( $y ) ) );
+
+		return $both / max( 1, count( array_unique( array_merge( $x, $y ) ) ) ) >= 0.75;
 	}
 
 	/** @param array<string, mixed> $c */
@@ -2120,6 +2166,14 @@ final class Page_Composer {
 				continue;
 			}
 			$ref = (string) ( array_shift( $queue ) ?? '' );
+			// The Home's own section for this part (the same heading): its picture was chosen for these words, and stays when the old
+			// page has none of its own for it — the two columns stay two.
+			if ( $ref === '' && ! empty( $unit['same'] ) ) {
+				$node                          = &Block_Tree::at( $block, $s['path'] );
+				$node['attrs']['__dxai_image'] = true;
+				unset( $node );
+				continue;
+			}
 			// Another old picture of the page may fill a picture beside the text; a band across the section stays
 			// empty (and goes) rather than show a picture that belongs nowhere near it.
 			if ( $ref === '' && ! $reused && $s['near'] > 0 ) {

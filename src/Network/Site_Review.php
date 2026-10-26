@@ -31,7 +31,7 @@ final class Site_Review {
 	private const HOLD_MINUTES = 180;
 
 	public static function register(): void {
-		add_filter( 'dxai_ui_new_page_status', array( self::class, 'status' ) );
+		add_filter( 'dxai_ui_new_page_status', array( self::class, 'status' ), 10, 2 );
 		add_filter( 'page_link', array( self::class, 'draft_link' ), 10, 3 );
 		add_filter( 'wp_insert_post_data', array( self::class, 'draft_slug' ), 10, 2 );
 	}
@@ -64,16 +64,26 @@ final class Site_Review {
 			return $link;
 		}
 		$post = get_post( $id );
-		if ( ! $post instanceof \WP_Post || $post->post_status !== 'draft' || $post->post_name === '' || ! self::made_by_import( $id ) ) {
+		if ( ! $post instanceof \WP_Post || $post->post_status !== 'draft' || $post->post_name === '' || ! self::made_by_import( $id ) || ! self::holds_for( (int) get_post_meta( $id, Page_Scope::META, true ) ) ) {
 			return $link;
 		}
 
 		return get_page_link( $post, false, true );
 	}
 
-	/** The pages made from now on are drafts, until the person has chosen (or the hold runs out). */
-	public static function hold(): void {
-		update_option( self::HOLD, time() + self::HOLD_MINUTES * MINUTE_IN_SECONDS, false );
+	/**
+	 * The pages made from now on are drafts, until the person has chosen (or the hold runs out) — the pages of the design the
+	 * archive holds, when it is named: a screen closed before the choice leaves no other import's pages drafts.
+	 */
+	public static function hold( string $archive = '' ): void {
+		update_option(
+			self::HOLD,
+			array(
+				'until'   => time() + self::HOLD_MINUTES * MINUTE_IN_SECONDS,
+				'archive' => $archive,
+			),
+			false
+		);
 	}
 
 	/** New pages are published again as they are made. */
@@ -81,15 +91,41 @@ final class Site_Review {
 		delete_option( self::HOLD );
 	}
 
+	/**
+	 * The hold: until when, and for the design of which archive ('' for any).
+	 *
+	 * @return array{until: int, archive: string}
+	 */
+	private static function held(): array {
+		$held = get_option( self::HOLD, 0 );
+
+		return is_array( $held )
+			? array(
+				'until'   => (int) ( $held['until'] ?? 0 ),
+				'archive' => (string) ( $held['archive'] ?? '' ),
+			)
+			: array(
+				'until'   => (int) $held,
+				'archive' => '',
+			);
+	}
+
 	public static function holding(): bool {
-		return (int) get_option( self::HOLD, 0 ) > time();
+		return self::held()['until'] > time();
+	}
+
+	/** Whether the pages a design's Home makes are held: a hold for any design, or for the archive it was imported from. */
+	public static function holds_for( int $home ): bool {
+		$held = self::held();
+
+		return $held['until'] > time() && ( $held['archive'] === '' || ( $home > 0 && (string) get_post_meta( $home, '_dxai_ui_source_zip', true ) === $held['archive'] ) );
 	}
 
 	/**
-	 * The status of a page an import makes new: a draft while a person is to choose.
+	 * The status of a page an import makes new for a design's Home: a draft while a person is to choose.
 	 */
-	public static function status( string $status ): string {
-		return self::holding() ? 'draft' : $status;
+	public static function status( string $status, int $home = 0 ): string {
+		return self::holds_for( $home ) ? 'draft' : $status;
 	}
 
 	/**

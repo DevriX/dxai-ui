@@ -59,6 +59,12 @@ final class Site_Review_Controller {
 							'type'    => 'array',
 							'default' => array(),
 						),
+						// With hold: the archive whose design's pages are held (none: every import's).
+						'archive' => array(
+							'type'              => 'string',
+							'default'           => '',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
 					),
 				),
 			)
@@ -81,7 +87,7 @@ final class Site_Review_Controller {
 	public function change( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$action = (string) $request->get_param( 'action' );
 		if ( $action === 'hold' ) {
-			Site_Review::hold();
+			Site_Review::hold( (string) $request->get_param( 'archive' ) );
 
 			return rest_ensure_response( array( 'holding' => true ) );
 		}

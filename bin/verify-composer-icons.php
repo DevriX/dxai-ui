@@ -206,5 +206,26 @@ foreach ( $darks as $k => $is_dark ) {
 }
 $expect( 'of the Home\'s sections that fit as well, the next is one on another ground: no two dark bands in a row', count( $darks ) === 3 && ! $two_dark, wp_json_encode( $darks ) . ' ' . implode( ' | ', $dark_page['log'] ) );
 
+echo "A part of the old page with the heading of one of the Home's sections (H2O Away's Services page, 2026-10-26)\n";
+// The Home: a text section, and a text section beside a photograph under "Built in the South Puget Sound". The old page has that part,
+// with no picture of its own: it goes into the Home's own section for it, and the photograph the designer chose for it stays.
+$why   = parse_blocks( '<!-- wp:group {"tagName":"section","className":"why"} --><section class="wp-block-group why"><!-- wp:heading --><h2 class="wp-block-heading">Why Olympia calls us</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Our crews answer at night and reach you within the hour, every day of the year.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
+$built = parse_blocks(
+	'<!-- wp:group {"tagName":"section","className":"built"} --><section class="wp-block-group built"><!-- wp:group {"className":"cols"} --><div class="wp-block-group cols">'
+	. '<!-- wp:image {"className":"photo"} --><figure class="wp-block-image photo"><img src="https://example.test/crew-truck.jpg" alt="Our crew beside the truck"/></figure><!-- /wp:image -->'
+	. '<!-- wp:group {"className":"copy"} --><div class="wp-block-group copy"><!-- wp:heading --><h2 class="wp-block-heading">Built in the South Puget Sound, For the South Puget Sound</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Third-generation contractors who live where they work.</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
+	. '</div><!-- /wp:group --></section><!-- /wp:group -->'
+)[0];
+$built_old  = '<html><body><main><section><h1>Restoration services</h1><p>Water, fire and mold restoration for homes and businesses across Thurston County, day or night.</p></section><section><h2>Built in the South Puget Sound, for the South Puget Sound</h2><p>H2O Away was founded in Tumwater by a family of contractors, and every crew still lives within an hour of the homes it restores.</p></section></main></body></html>';
+$built_page = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $why, 1 ), DXAI_UI\Pages\Section_Library::analyze( $built, 2 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $built_old, 'https://old.example.test/services/' ) );
+$built_html = implode( '', array_map( 'serialize_block', $built_page['sections'] ) );
+$expect( 'it goes into the Home\'s section under the same heading, not the first one of its kind', str_contains( $built_html, 'class="wp-block-group built"' ) && str_contains( $built_html, 'every crew still lives within an hour' ), implode( ' | ', $built_page['log'] ) );
+$expect( '…and the photograph the Home shows there stays (the old page has none for it): its two columns stay two', str_contains( $built_html, 'crew-truck.jpg' ), $built_html );
+$other_old  = '<html><body><main><section><h1>About us</h1><p>Water, fire and mold restoration for homes and businesses across Thurston County, day or night.</p></section><section><h2>Our history in Thurston County</h2><p>H2O Away was founded in Tumwater by a family of contractors, and every crew still lives within an hour of the homes it restores.</p></section></main></body></html>';
+$other_page = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $built, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $other_old, 'https://old.example.test/about/' ) );
+$expect( 'a part under another heading does not take the Home\'s photograph', ! str_contains( wp_json_encode( $other_page['sections'] ), 'crew-truck.jpg' ) );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

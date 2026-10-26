@@ -216,9 +216,12 @@ export function MenuPagesRun( { home, onDone } ) {
 	);
 }
 
-/** The pages the import makes from now on are drafts, until the person has seen the whole site and chosen (Network\Site_Review). */
-export function holdNewPages() {
-	return apiFetch( { path: '/dxai-ui/v1/site-review', method: 'POST', data: { action: 'hold' } } ).catch( () => null );
+/**
+ * The pages the import of this archive makes from now on are drafts, until the person has seen the whole site and chosen
+ * (Network\Site_Review); another import's pages are not held.
+ */
+export function holdNewPages( archive ) {
+	return apiFetch( { path: '/dxai-ui/v1/site-review', method: 'POST', data: { action: 'hold', archive: archive || '' } } ).catch( () => null );
 }
 
 // The kinds the network's pages are told apart by (Network_Model::kind_of()); another kind is shown as its own words.
