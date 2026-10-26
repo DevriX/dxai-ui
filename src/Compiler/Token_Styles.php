@@ -74,8 +74,7 @@ final class Token_Styles {
 	 * @return array{colors:int, shadows:int, literals_before:int, literals_after:int}
 	 */
 	public static function tokenize_import( array $post_ids, int $page_id, array $pages, array $roles, array $palette = array(), array $derived = array() ): array {
-		$post_ids = array_values( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) );
-		$derived  = array_values( array_diff( array_unique( array_filter( array_map( 'intval', $derived ) ) ), $post_ids ) );
+		list( $post_ids, $derived ) = self::import_posts( $post_ids, $derived );
 
 		if ( ! isset( $palette['colors'] ) ) {
 			$palette = self::palette_for( $post_ids, $page_id, $roles );
@@ -97,39 +96,94 @@ final class Token_Styles {
 		 * has already written tokens and snapped anything invented, so this
 		 * pass catches only a literal that happens to match exactly.
 		 */
-		foreach ( array_merge( $post_ids, $derived ) as $id ) {
-			$content = (string) get_post_field( 'post_content', $id );
-			$summary['literals_before'] += self::count_literals( $content );
+		$counts                     = self::tokenize_posts( array_merge( $post_ids, $derived ), $palette );
+		$summary['literals_before'] = $counts['literals_before'];
+		$summary['literals_after']  = $counts['literals_after'];
+		self::tokenize_sheets( self::import_sheets( $page_id, $pages, $derived ), $palette, $roles );
+		self::store_palette( $page_id, $pages, $derived, $palette, $roles );
+
+		return $summary;
+	}
+
+	/**
+	 * The posts tokenize_import() rewrites: the design's own, each once, and the derived ones that are not among them.
+	 *
+	 * @param array<int, mixed> $post_ids
+	 * @param array<int, mixed> $derived
+	 * @return array{0: array<int, int>, 1: array<int, int>}
+	 */
+	public static function import_posts( array $post_ids, array $derived ): array {
+		$post_ids = array_values( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) );
+		$derived  = array_values( array_diff( array_unique( array_filter( array_map( 'intval', $derived ) ) ), $post_ids ) );
+
+		return array( $post_ids, $derived );
+	}
+
+	/**
+	 * tokenize_import()'s first step, for these posts (an import whose save runs in rounds takes them a slice at a time).
+	 *
+	 * @param array<int, int>      $post_ids
+	 * @param array<string, mixed> $palette  The import's (palette_for()).
+	 * @return array{literals_before:int, literals_after:int}
+	 */
+	public static function tokenize_posts( array $post_ids, array $palette ): array {
+		$counts = array(
+			'literals_before' => 0,
+			'literals_after'  => 0,
+		);
+		foreach ( $post_ids as $id ) {
+			$content = (string) get_post_field( 'post_content', (int) $id );
+			$counts['literals_before'] += self::count_literals( $content );
 			$rewritten = self::rewrite_markup( $content, $palette );
-			$summary['literals_after'] += self::count_literals( $rewritten );
+			$counts['literals_after'] += self::count_literals( $rewritten );
 			if ( $rewritten !== $content ) {
 				wp_update_post(
 					array(
-						'ID'           => $id,
+						'ID'           => (int) $id,
 						'post_content' => wp_slash( $rewritten ),
 					)
 				);
 			}
 		}
 
-		/*
-		 * Every stylesheet a page of this design loads, not just the home
-		 * page's. A crawled page loads `site-{home}.css`, which
-		 * Live_Content_Shell copies from the home sheet DURING the crawl — before
-		 * this pass — so it still held literals and no token definitions. The
-		 * crawled page's content references tokens, so on any design that is not
-		 * the site brand those references would have resolved to nothing and
-		 * the page would have lost its colours.
-		 */
+		return $counts;
+	}
+
+	/**
+	 * Every stylesheet a page of this design loads, not just the home
+	 * page's. A crawled page loads `site-{home}.css`, which
+	 * Live_Content_Shell copies from the home sheet DURING the crawl — before
+	 * this pass — so it still held literals and no token definitions. The
+	 * crawled page's content references tokens, so on any design that is not
+	 * the site brand those references would have resolved to nothing and
+	 * the page would have lost its colours.
+	 *
+	 * @param array<int, int> $pages
+	 * @param array<int, int> $derived
+	 * @return array<int, string> The sheets' paths, each once.
+	 */
+	public static function import_sheets( int $page_id, array $pages, array $derived ): array {
 		$sheets = array();
-		foreach ( array_merge( array( $page_id ), array_map( 'intval', $pages ), $derived ) as $id ) {
+		foreach ( array_merge( array( $page_id ), array_map( 'intval', $pages ), array_map( 'intval', $derived ) ) as $id ) {
 			$path = self::sheet_path( $id );
 			if ( $path !== '' ) {
 				$sheets[ $path ] = true;
 			}
 		}
+
+		return array_keys( $sheets );
+	}
+
+	/**
+	 * tokenize_import()'s second step, for these sheets (import_sheets(); in rounds a slice at a time).
+	 *
+	 * @param array<int, string>   $sheets
+	 * @param array<string, mixed> $palette
+	 * @param array<string, mixed> $roles
+	 */
+	public static function tokenize_sheets( array $sheets, array $palette, array $roles ): void {
 		$definitions = self::definitions_css( $palette, $roles, false );
-		foreach ( array_keys( $sheets ) as $path ) {
+		foreach ( $sheets as $path ) {
 			if ( ! is_readable( $path ) || ! is_writable( $path ) ) {
 				continue;
 			}
@@ -147,7 +201,17 @@ final class Token_Styles {
 				file_put_contents( $path, $css );
 			}
 		}
+	}
 
+	/**
+	 * tokenize_import()'s last step: the palette on every page of the design.
+	 *
+	 * @param array<int, int>      $pages
+	 * @param array<int, int>      $derived
+	 * @param array<string, mixed> $palette
+	 * @param array<string, mixed> $roles
+	 */
+	public static function store_palette( int $page_id, array $pages, array $derived, array $palette, array $roles ): void {
 		$stored = array(
 			'colors'  => $palette['colors'],
 			'shadows' => $palette['shadows'],
@@ -161,8 +225,6 @@ final class Token_Styles {
 				update_post_meta( $id, self::META, $stored );
 			}
 		}
-
-		return $summary;
 	}
 
 	/** Marks the token definitions appended to a stylesheet. */

@@ -25,9 +25,57 @@ final class Asset_Harvester {
 		'html', 'css', 'scss', 'less', 'js', 'jsx', 'ts', 'tsx', 'vue', 'mjs', 'cjs', 'md', 'txt', 'svg',
 	);
 
+	/** The round of an import read in rounds: when it started (microtime) and the seconds it may add files for; 0: no limit. */
+	private static float $round_start = 0.0;
+
+	private static float $round_budget = 0.0;
+
+	/**
+	 * The archive's files earlier rounds of an import in rounds added, by their path in the archive: what Sideloader answered for
+	 * each. Every round used to ask again for every file before it — its hash, its attachment, its file read back to compare — and
+	 * past 200 of Charter Construction's 472 files a 20-second round had time for three new ones.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private static array $carried = array();
+
+	/** Whether this request reads one import's archive with carry(): only then are the files carried used and recorded. */
+	private static bool $carrying = false;
+
+	/**
+	 * What earlier rounds of this import added (carried()), for this one to go on from; null ends it (the same paths in another
+	 * archive are other files).
+	 *
+	 * @param array<string, mixed>|null $carried
+	 */
+	public static function carry( ?array $carried ): void {
+		self::$carrying = null !== $carried;
+		self::$carried  = null !== $carried ? array_filter( $carried, 'is_array' ) : array();
+	}
+
+	/**
+	 * The archive's files added so far, by their path in the archive, for the next round (carry()).
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function carried(): array {
+		return self::$carried;
+	}
+
+	/**
+	 * Read archives in a round of $budget seconds (0: no round, no limit), for the import that reads its archive in rounds, counted
+	 * from $since (microtime; 0: now) — the request's start, so what the request did before (unpacking a 70 MB archive) is in it.
+	 */
+	public static function in_round( float $budget, float $since = 0.0 ): void {
+		self::$round_start  = $since > 0 ? $since : microtime( true );
+		self::$round_budget = max( 0.0, $budget );
+	}
+
 	/**
 	 * @param array<int, string> $files Relative paths inside $dir.
 	 * @return array<string, mixed>
+	 * @throws Harvest_Paused When the round (in_round()) is up with files left to add, or with half of it left for everything
+	 *                        else the read does after a round that added files.
 	 */
 	public function from_zip( string $dir, array $files ): array {
 		$index     = array();
@@ -102,19 +150,47 @@ final class Asset_Harvester {
 		}
 		unset( $named );
 
+		/*
+		 * An import read in rounds (Converter_Controller::process_source()) stops adding files when its round is up, and the next
+		 * round goes on: what this one added is in the media library and found by its content (Sideloader). Only once it has got
+		 * further — added a file, or, when the files are carried to the next round (carry()), looked one up — so every round gets
+		 * further than the one before, however long finding the earlier ones takes.
+		 */
+		$total  = count( $binaries );
+		$done   = 0;
+		$added  = Sideloader::added();
+		$looked = 0;
 		foreach ( $binaries as $rel => $abs ) {
+			if ( $this->round_up( 1.0 ) && self::moved( $added, $looked ) ) {
+				throw new Harvest_Paused( (int) $done, (int) $total );
+			}
+			++$done;
 			$key = $abs;
 			if ( isset( $seen[ $key ] ) ) {
 				$rewrites = $this->alias_rewrites( $rewrites, $rel, $seen[ $key ] );
 				continue;
 			}
-			$ingested = Sideloader::from_path( $abs, basename( $rel ), $rel );
+			$carried = self::$carrying ? ( self::$carried[ $rel ] ?? null ) : null;
+			if ( is_array( $carried ) && is_file( (string) ( $carried['path'] ?? '' ) ) ) {
+				$ingested = $carried;
+			} else {
+				$ingested = Sideloader::from_path( $abs, basename( $rel ), $rel );
+				++$looked;
+			}
 			if ( is_wp_error( $ingested ) ) {
 				continue;
 			}
-			$seen[ $key ] = $ingested['url'];
-			$assets[]     = $ingested;
-			$rewrites     = $this->alias_rewrites( $rewrites, $rel, $ingested['url'] );
+			if ( self::$carrying ) {
+				self::$carried[ $rel ] = $ingested;
+			}
+			$seen[ $key ]          = $ingested['url'];
+			$assets[]              = $ingested;
+			$rewrites              = $this->alias_rewrites( $rewrites, $rel, $ingested['url'] );
+		}
+		// The rest of the read (every page, its links to these files) in a round of its own when this one got further and has
+		// less than half of it left: 96 pages of Charter Construction take a third of a round on their own.
+		if ( $this->round_up( 0.5 ) && self::moved( $added, $looked ) ) {
+			throw new Harvest_Paused( (int) $total, (int) $total );
 		}
 
 		foreach ( $texts as $rel => $content ) {
@@ -609,9 +685,14 @@ final class Asset_Harvester {
 		 * once; the lookbehind keeps a basename from matching inside a path
 		 * it did not start — `/x/logo-white.png` is not `logo-white.png`.
 		 */
+		/*
+		 * Only the spellings this content holds: a design names its own files, and an alternation of every spelling of
+		 * every file of a large archive is more than PCRE compiles — Charter Construction's 520 files made a pattern "too
+		 * large", preg_replace_callback() failed, and every picture kept its archive path (a 404 on the site).
+		 */
 		$keys = array();
 		foreach ( $rewrites as $from => $to ) {
-			if ( $from === '' || $from === $to ) {
+			if ( $from === '' || $from === $to || ! str_contains( $content, (string) $from ) ) {
 				continue;
 			}
 			$keys[] = preg_quote( (string) $from, '#' );
@@ -619,14 +700,31 @@ final class Asset_Harvester {
 		if ( $keys === array() ) {
 			return $content;
 		}
-		$pattern = '#(?<![\w/])(?:' . implode( '|', $keys ) . ')#';
-		$out     = preg_replace_callback(
-			$pattern,
-			static fn( array $m ): string => (string) ( $rewrites[ $m[0] ] ?? $m[0] ),
-			$content
-		);
+		$replace = static function ( string $text, array $chunk ) use ( $rewrites ): ?string {
+			$out = preg_replace_callback(
+				'#(?<![\w/])(?:' . implode( '|', $chunk ) . ')#',
+				static fn( array $m ): string => (string) ( $rewrites[ $m[0] ] ?? $m[0] ),
+				$text
+			);
 
-		return is_string( $out ) ? $out : $content;
+			return is_string( $out ) ? $out : null;
+		};
+		/*
+		 * A long list (a stylesheet naming hundreds of files) goes in parts, longest spellings first, before PCRE has to refuse
+		 * it. A later, shorter spelling cannot match inside a URL an earlier part wrote, for the lookbehind: what precedes it
+		 * there is a slash.
+		 */
+		$size   = array_sum( array_map( static fn( string $k ): int => strlen( $k ), $keys ) );
+		$chunks = $size > 20000 ? array_chunk( $keys, 200 ) : array( $keys );
+		$out    = $content;
+		foreach ( $chunks as $chunk ) {
+			$next = $replace( $out, $chunk );
+			if ( $next !== null ) {
+				$out = $next;
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -898,5 +996,18 @@ final class Asset_Harvester {
 	private function is_lottie_file( string $path ): bool {
 		$head = Zip_Extractor::read_text( $path, 4000 );
 		return str_contains( $head, '"layers"' ) && ( str_contains( $head, '"v"' ) || str_contains( $head, '"nm"' ) );
+	}
+
+	/**
+	 * Whether this round got further than the last: it added a file (Sideloader counted more than $added when it began), or,
+	 * with the files carried to the next round (carry()), it looked one up ($looked).
+	 */
+	private static function moved( int $added, int $looked ): bool {
+		return Sideloader::added() > $added || ( self::$carrying && $looked > 0 );
+	}
+
+	/** Whether this share of the round (in_round()) is spent; never outside a round. */
+	private function round_up( float $share ): bool {
+		return self::$round_budget > 0 && microtime( true ) - self::$round_start >= self::$round_budget * $share;
 	}
 }

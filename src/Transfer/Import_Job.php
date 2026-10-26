@@ -37,8 +37,20 @@ final class Import_Job {
 
 	private const STATE = 'job.json';
 
+	/**
+	 * A design archive's import in rounds keeps its archive in a job folder too (API\Converter_Controller), and what its save is
+	 * given here between the save's rounds.
+	 */
+	public const SAVE_INPUT = 'save.json';
+
+	/** …and the design's other pages as its compile made them, which its save takes from here. */
+	public const COMPILED_PAGES = 'pages.json';
+
+	/** …and what its read made of the archive, which its compile takes from here. */
+	public const SOURCE = 'source.ser';
+
 	/** Files a job folder may hold; close() removes exactly these. */
-	private const FILES = array( self::ZIP, self::STATE, 'index.php', '.htaccess' );
+	private const FILES = array( self::ZIP, self::STATE, self::SAVE_INPUT, self::COMPILED_PAGES, self::SOURCE, 'index.php', '.htaccess' );
 
 	/**
 	 * Start a job: the package copied into a folder of its own.
@@ -142,6 +154,27 @@ final class Import_Job {
 	public static function save( array $job ): void {
 		$data = array_intersect_key( $job, array_flip( array( 'name', 'user', 'created', 'options', 'state' ) ) );
 		file_put_contents( (string) $job['dir'] . '/' . self::STATE, (string) wp_json_encode( $data ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+	}
+
+	/**
+	 * A piece of an archive sent in pieces added to the end of the job's archive (API\Converter_Controller::upload_chunk()).
+	 *
+	 * @param array<string, mixed> $job
+	 */
+	public static function append( array $job, string $piece ): bool {
+		// phpcs:disable WordPress.WP.AlternativeFunctions -- streamed: a piece is megabytes, and the archive grows to tens of them.
+		$from = is_readable( $piece ) ? fopen( $piece, 'rb' ) : false;
+		$to   = fopen( (string) $job['zip'], 'ab' );
+		$done = false !== $from && false !== $to && false !== stream_copy_to_stream( $from, $to );
+		if ( false !== $from ) {
+			fclose( $from );
+		}
+		if ( false !== $to ) {
+			fclose( $to );
+		}
+		// phpcs:enable WordPress.WP.AlternativeFunctions
+
+		return $done;
 	}
 
 	/**

@@ -158,7 +158,7 @@ echo "\n1. Who may call what\n";
 $tiers = array(
 	'public' => array( 'GET ', 'POST /forms/submit' ),
 	'editor' => array( 'GET /utility-rules' ),
-	'manage' => array( 'GET /settings', 'POST /settings', 'POST /settings/test', 'GET /patterns', 'GET /import-info', 'POST /refine-structure', 'GET /forms/entries', 'GET /forms/export', 'GET /design', 'GET /design/(?P<id>\d+)', 'GET /design/(?P<id>\d+)/variation', 'GET /design/(?P<id>\d+)/next', 'GET /libraries', 'POST /libraries', 'GET /libraries/(?P<slug>[a-z0-9-]+)', 'DELETE /libraries/(?P<slug>[a-z0-9-]+)', 'POST /libraries/(?P<slug>[a-z0-9-]+)/sources', 'POST /libraries/(?P<slug>[a-z0-9-]+)/build' ),
+	'manage' => array( 'GET /settings', 'POST /media-sizes', 'POST /settings', 'POST /settings/test', 'GET /patterns', 'GET /import-info', 'POST /refine-structure', 'GET /forms/entries', 'GET /forms/export', 'GET /design', 'GET /design/(?P<id>\d+)', 'GET /design/(?P<id>\d+)/variation', 'GET /design/(?P<id>\d+)/next', 'GET /libraries', 'POST /libraries', 'GET /libraries/(?P<slug>[a-z0-9-]+)', 'DELETE /libraries/(?P<slug>[a-z0-9-]+)', 'POST /libraries/(?P<slug>[a-z0-9-]+)/sources', 'POST /libraries/(?P<slug>[a-z0-9-]+)/build' ),
 );
 $tier_of = static function ( string $key ) use ( $tiers ): string {
 	foreach ( $tiers as $tier => $keys ) {
@@ -314,6 +314,12 @@ $cases = array(
 	'crawl-step: a job nobody started'                  => array( 'POST', '/crawl-step', array( 'job' => 'nope' ), null, 'error' ),
 	'crawl-status: a job nobody started'                => array( 'GET', '/crawl-status', array( 'job' => 'nope' ), null, 'error' ),
 	'save-status: a token nobody used'                  => array( 'GET', '/save-status', array( 'token' => 'nope' ), null, 'ok' ),
+	'process-source: a round of an archive nobody kept'  => array( 'POST', '/process-source', array( 'source_type' => 'auto-zip', 'rounds' => '1', 'stage' => str_repeat( '0', 32 ) ), null, 'error' ),
+	'generate-block: an archive nobody kept'            => array( 'POST', '/generate-block', array( 'source_type' => 'auto-zip', 'rounds' => '1', 'stage' => str_repeat( '0', 32 ), 'fidelity' => 'off' ), null, 'error' ),
+	'save-pattern: a round of a save nobody started'    => array( 'POST', '/save-pattern', array( 'rounds' => true, 'stage' => str_repeat( '0', 32 ), 'save_round' => 'continue' ), null, 'error' ),
+	'media-sizes: no picture waiting for its sizes'     => array( 'POST', '/media-sizes', array(), null, 'ok' ),
+	'upload-chunk: no piece of an archive'             => array( 'POST', '/upload-chunk', array( 'name' => 'a.zip', 'index' => 0, 'total' => 2, 'size' => 10 ), null, 'error' ),
+	'upload-chunk: a piece of an archive nobody sent'  => array( 'POST', '/upload-chunk', array( 'name' => 'a.zip', 'index' => 1, 'total' => 2, 'size' => 10, 'stage' => str_repeat( '0', 32 ) ), array( 'chunk' => $upload()['file'] ), 'error' ),
 	'settings/test: an engine nobody has'               => array( 'POST', '/settings/test', array( 'provider' => 'nonexistent' ), null, 'error' ),
 	'settings/test: Lovable, which has no API'          => array( 'POST', '/settings/test', array( 'provider' => 'lovable' ), null, 'error' ),
 	'forms/submit: the trap field filled (a bot)'       => array( 'POST', '/forms/submit', array( DXAI_UI\Blocks\Form_Block::HONEYPOT => 'x', 'email' => 'a@example.org' ), null, 'ok' ),

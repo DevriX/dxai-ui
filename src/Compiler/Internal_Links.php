@@ -155,31 +155,77 @@ final class Internal_Links {
 	 * follows the path on the page's address. Only the path alone used to be matched, and a link to a part of a page kept the
 	 * design's path, which no page of the site has.
 	 *
+	 * Each link is looked up once: the value of every `href="…"`, `href='…'`, `"url":"…"` and, JSON-escaped in a block's
+	 * attributes, `"url":"\/…"` and `href=\"\/…\"`, up to its first `#` or `?` — no path in the map has either (variants()). It
+	 * used to be a search of the whole markup for each of the map's spellings, thirteen times each: Charter Construction's 96 pages
+	 * make 1,000 spellings, and the link pass took 53 of the save's 418 seconds. The answer is the one that search gave
+	 * (bin/verify-internal-links.php holds the two to it); a page's address that is itself a design path is the one case the search
+	 * rewrote twice.
+	 *
 	 * @param array<string, string> $map
 	 */
 	private function rewrite_markup( string $markup, array $map ): string {
-		foreach ( $map as $path => $permalink ) {
-			$markup = str_replace( 'href="' . $path . '"', 'href="' . $permalink . '"', $markup );
-			$markup = str_replace( "href='" . $path . "'", 'href="' . $permalink . '"', $markup );
-			$markup = str_replace( '"url":"' . $path . '"', '"url":"' . $permalink . '"', $markup );
-			// JSON-escaped slashes sometimes appear in block comment attrs.
-			$esc_path = str_replace( '/', '\\/', $path );
-			$esc_perm = str_replace( '/', '\\/', $permalink );
-			if ( $esc_path !== $path ) {
-				$markup = str_replace( '"url":"' . $esc_path . '"', '"url":"' . $esc_perm . '"', $markup );
-				$markup = str_replace( 'href=\"' . $esc_path . '\"', 'href=\"' . $esc_perm . '\"', $markup );
-			}
-			foreach ( array( '#', '?' ) as $tail ) {
-				$markup = str_replace( 'href="' . $path . $tail, 'href="' . $permalink . $tail, $markup );
-				$markup = str_replace( "href='" . $path . $tail, "href='" . $permalink . $tail, $markup );
-				$markup = str_replace( '"url":"' . $path . $tail, '"url":"' . $permalink . $tail, $markup );
-				if ( $esc_path !== $path ) {
-					$markup = str_replace( '"url":"' . $esc_path . $tail, '"url":"' . $esc_perm . $tail, $markup );
-					$markup = str_replace( 'href=\"' . $esc_path . $tail, 'href=\"' . $esc_perm . $tail, $markup );
-				}
-			}
+		if ( $map === array() || ( ! str_contains( $markup, 'href=' ) && ! str_contains( $markup, '"url":"' ) ) ) {
+			return $markup;
 		}
+		/*
+		 * The value with its path swapped for the page's address, or null. Escaped: a JSON value whose slashes are all written
+		 * `\/`, matched as the path written so and answered the same way, as the search did for a path with a slash in it.
+		 */
+		$swap = static function ( string $value, bool $escaped ) use ( $map ): ?string {
+			$cut  = strcspn( $value, '#?' );
+			$path = substr( $value, 0, $cut );
+			if ( $escaped ) {
+				$plain = str_replace( '\\/', '/', $path );
+				if ( $plain === $path || str_replace( '/', '\\/', $plain ) !== $path || ! isset( $map[ $plain ] ) ) {
+					return null;
+				}
 
-		return $markup;
+				return str_replace( '/', '\\/', $map[ $plain ] ) . substr( $value, $cut );
+			}
+
+			return isset( $map[ $path ] ) ? $map[ $path ] . substr( $value, $cut ) : null;
+		};
+		$markup = (string) preg_replace_callback(
+			'/href="([^"]*)"/',
+			static function ( array $m ) use ( $swap ): string {
+				$to = $swap( $m[1], false );
+
+				return null === $to ? $m[0] : 'href="' . $to . '"';
+			},
+			$markup
+		);
+		// A whole value in single quotes came out in double ones; one with a part or a query after the path kept its quotes.
+		$markup = (string) preg_replace_callback(
+			"/href='([^']*)'/",
+			static function ( array $m ) use ( $swap ): string {
+				$to = $swap( $m[1], false );
+				if ( null === $to ) {
+					return $m[0];
+				}
+
+				return strcspn( $m[1], '#?' ) === strlen( $m[1] ) ? 'href="' . $to . '"' : "href='" . $to . "'";
+			},
+			$markup
+		);
+		$markup = (string) preg_replace_callback(
+			'/"url":"([^"]*)"/',
+			static function ( array $m ) use ( $swap ): string {
+				$to = $swap( $m[1], false ) ?? $swap( $m[1], true );
+
+				return null === $to ? $m[0] : '"url":"' . $to . '"';
+			},
+			$markup
+		);
+
+		return (string) preg_replace_callback(
+			'/href=\\\\"(.*?)\\\\"/',
+			static function ( array $m ) use ( $swap ): string {
+				$to = $swap( $m[1], true );
+
+				return null === $to ? $m[0] : 'href=\\"' . $to . '\\"';
+			},
+			$markup
+		);
 	}
 }

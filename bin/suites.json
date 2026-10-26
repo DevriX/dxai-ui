@@ -71,6 +71,9 @@
 		{ "file": "verify-video-facade.php", "group": "ci" },
 		{ "file": "verify-webp.php", "group": "ci" },
 		{ "file": "verify-image-quality.php", "group": "ci" },
+		{ "file": "verify-internal-links.php", "group": "ci" },
+		{ "file": "verify-css-scoper.php", "group": "ci" },
+		{ "file": "verify-import-rounds.php", "group": "ci" },
 
 		{ "file": "verify-block-library.php", "group": "local", "needs": "the American Restoration theme: the team's sections are made of its blocks" },
 		{ "file": "verify-library-style.php", "group": "local", "needs": "the American Restoration theme: the team's layouts are made of its blocks" },

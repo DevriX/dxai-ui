@@ -133,5 +133,37 @@ $expect( 'the font declarations reach the harvested CSS', str_contains( $css_out
 $expect( 'the stylesheet\'s url() points at the uploaded copies', str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dxai-ui/assets' ) );
 $expect( 'a Figma node gives its font, its link and its fill colour', count( $figma['fonts'] ?? array() ) >= 1 && count( $figma['links'] ?? array() ) >= 1 && count( $figma['tokens']['colors'] ?? array() ) >= 1 );
 $expect( 'pasted code gives its imported font and its link', (int) ( $paste['summary']['fonts'] ?? 0 ) >= 1 && (int) ( $paste['summary']['links'] ?? 0 ) >= 1 );
+/*
+ * A large archive (Charter Construction: 520 files, three spellings each): one alternation of every spelling was more than
+ * PCRE compiles, preg_replace_callback() failed with a warning and every picture kept its archive path. The rewrite must
+ * take a map that size, on a page naming a few of the files and on a stylesheet naming hundreds, replace each spelling
+ * once and warn about nothing.
+ */
+$map = array();
+for ( $i = 0; $i < 1600; $i++ ) {
+	$url = 'https://example.test/wp-content/uploads/2026/10/photo-' . $i . '.webp';
+	$map[ '/wp-content/uploads/2025/06/photo-' . $i . '.jpg' ] = $url;
+	$map[ 'wp-content/uploads/2025/06/photo-' . $i . '.jpg' ]  = $url;
+	$map[ 'photo-' . $i . '.jpg' ]                          = $url;
+}
+$rewrite  = new ReflectionMethod( DXAI_UI\Media\Asset_Harvester::class, 'apply_rewrites' );
+$warnings = 0;
+set_error_handler(
+	static function () use ( &$warnings ): bool {
+		++$warnings;
+
+		return true;
+	}
+);
+$page = $rewrite->invoke( new DXAI_UI\Media\Asset_Harvester(), '<img src="/wp-content/uploads/2025/06/photo-7.jpg"><img src="photo-12.jpg">', $map );
+$css  = '';
+for ( $i = 0; $i < 600; $i++ ) {
+	$css .= '.b' . $i . '{background:url(/wp-content/uploads/2025/06/photo-' . $i . '.jpg)}';
+}
+$sheet = $rewrite->invoke( new DXAI_UI\Media\Asset_Harvester(), $css, $map );
+restore_error_handler();
+$expect( 'a page naming 2 of 4800 spellings gets both uploaded URLs, each once', str_contains( (string) $page, 'src="https://example.test/wp-content/uploads/2026/10/photo-7.webp"' ) && str_contains( (string) $page, 'src="https://example.test/wp-content/uploads/2026/10/photo-12.webp"' ) && ! str_contains( (string) $page, '2026/10/https' ) );
+$expect( 'a stylesheet naming 600 files gets all 600 uploaded URLs, none left behind', substr_count( (string) $sheet, 'https://example.test/wp-content/uploads/2026/10/photo-' ) === 600 && ! str_contains( (string) $sheet, '2025/06' ) );
+$expect( 'and PHP warns about neither', 0 === $warnings );
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

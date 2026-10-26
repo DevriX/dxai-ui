@@ -35,9 +35,30 @@ final class Tailwind_Purger {
 	 */
 	private bool $preflight = true;
 
-	/** For a design that never ran under Tailwind. */
+	/**
+	 * For a design that never ran under Tailwind. Nor does it get a utility for a class name its own stylesheets never style
+	 * (compile()): in its author's browser such a name did nothing, whatever it looks like. Charter Construction (a WordPress
+	 * site as a Claude Design package) carried Bootstrap's `collapse in` on an open accordion panel — `visibility: collapse` hid
+	 * it —, a ChatGPT answer pasted with its `text-base pb-10` (the text 1px smaller, 40px under it) and WordPress's `size-full`
+	 * on its pictures (`height: 100%`).
+	 */
 	public function without_preflight(): void {
 		$this->preflight = false;
+	}
+
+	/**
+	 * The class names stylesheets style, their escapes undone (`.md\:flex` is `md:flex`): every class a selector names.
+	 *
+	 * @return array<string, true>
+	 */
+	private static function styled_classes( string $css ): array {
+		preg_match_all( '/\.(-?(?:[_a-zA-Z]|\\\\.)(?:\\\\.|[\w-])*)/', $css, $matches );
+		$out = array();
+		foreach ( $matches[1] as $name ) {
+			$out[ (string) preg_replace( '/\\\\(.)/s', '$1', $name ) ] = true;
+		}
+
+		return $out;
 	}
 
 	public function compile( string $markup, string $custom_css, int $pattern_id, string $browser_css = '', string $raw_design_css = '', string $wrapper_style = '', string $tailwind_config = '' ): string {
@@ -81,12 +102,16 @@ final class Tailwind_Purger {
 			$css .= $scope . ' :where([class*="wp-block-"]:not(button, input, select, textarea), .wp-block-image img) { box-sizing: content-box; }' . "\n";
 		}
 
+		// A design that never ran under Tailwind: utilities only for the names its own stylesheets style (without_preflight()).
+		$only = $this->preflight ? null : self::styled_classes( $raw_design_css . "\n" . $custom_css );
+
 		if ( ! self::engine_available() ) {
 			$css .= $this->preflight ? $this->scoped_preflight( $scope, $parts['scoped'] ) : '';
 			if ( $browser_css !== '' ) {
 				$css .= $this->scope_browser_sheet( $scope, $browser_css );
 			} else {
-				$css .= $this->utilities_from_classes( $scope, $this->extract_classes( $markup ) );
+				$classes = $this->extract_classes( $markup );
+				$css    .= $this->utilities_from_classes( $scope, null === $only ? $classes : array_values( array_filter( $classes, static fn( $c ): bool => isset( $only[ $c ] ) ) ) );
 			}
 			$css .= Motion_Runtime::css( $scope );
 
@@ -119,7 +144,7 @@ final class Tailwind_Purger {
 		 */
 		$utilities = $browser_css !== ''
 			? $this->scope_browser_sheet( $scope, $browser_css )
-			: ( new Tailwind\Engine( $theme ) )->compile( $markup, $scope );
+			: ( new Tailwind\Engine( $theme ) )->compile( $markup, $scope, $only );
 
 		$motion = Motion_Runtime::css( $scope );
 

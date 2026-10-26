@@ -244,6 +244,20 @@ final class Css_Scoper {
 				continue;
 			}
 			$part = self::spare_converted_paragraphs( $part );
+			/*
+			 * `body .x`, `html body .x`, `body > .x`: the document's own elements stand for the scope wrapper, as `body` alone does,
+			 * and what follows is inside it. Prefixed as it was, `.scope body .x` never matched — body is outside the scope — and
+			 * Charter Construction's `@media (max-width: 768px) { body .border_gray { margin-left: 20px } }` was lost on 32 pages.
+			 */
+			if ( preg_match( '/^(?:html|body)[\s>+~]/i', $part ) === 1 && preg_match( '/^(?:html\s*>?\s*)?(?:html|body)\s*([>+~]?)\s*(?=[^\s>+~])/i', $part, $lead ) === 1 ) {
+				$rest  = substr( $part, strlen( $lead[0] ) );
+				$out[] = $scope . ( $lead[1] !== '' ? ' ' . $lead[1] . ' ' : ' ' ) . $rest;
+				// The same-node form, as for any class selector below: the wrapper itself can carry the class.
+				if ( $lead[1] === '' && preg_match( '/^(?:\.|\[|:where\(|:is\(|:not\()/', $rest ) === 1 ) {
+					$out[] = $scope . $rest;
+				}
+				continue;
+			}
 			if ( str_starts_with( $part, $scope ) || str_starts_with( $part, ':root' ) || $part === 'html' || $part === 'body' ) {
 				if ( $part === ':root' || $part === 'html' || $part === 'body' ) {
 					$out[] = $scope;

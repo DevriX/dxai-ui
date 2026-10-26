@@ -82,7 +82,8 @@ final class Image_Quality {
 	 */
 	public static function fit( $id ): void {
 		$id = (int) $id;
-		if ( $id < 1 || self::RULE === get_post_meta( $id, self::META, true ) || ! self::on( $id ) ) {
+		// A picture whose sizes are still to be made (Pending_Sizes) is fitted once they are, not marked fitted with none.
+		if ( $id < 1 || self::RULE === get_post_meta( $id, self::META, true ) || ! self::on( $id ) || '' !== (string) get_post_meta( $id, Pending_Sizes::META, true ) ) {
 			return;
 		}
 		$meta = wp_get_attachment_metadata( $id );

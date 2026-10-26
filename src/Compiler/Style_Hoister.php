@@ -165,22 +165,45 @@ final class Style_Hoister {
 	 * @return array{posts:int, blocks:int, inner:int, presets:int, utilities:int}
 	 */
 	public static function hoist_import( array $post_ids, array $preset_slugs = array(), array $extra_markup = array() ): array {
-		$total    = array(
+		$ids = array_values( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) );
+
+		return self::hoist_posts( $ids, $preset_slugs, self::import_context( $ids, $extra_markup ) );
+	}
+
+	/**
+	 * hoist_import()'s first step: the design's names recorded on every post of the import, and the context its utilities are
+	 * chosen in — from all of them, before any is hoisted. An import whose save runs in rounds keeps it for hoist_posts().
+	 *
+	 * @param array<int, int>    $post_ids
+	 * @param array<int, string> $extra_markup
+	 * @return array{avoid: array<int, string>, avoid_props: array<int, string>, sheet_classes: array<int, string>}
+	 */
+	public static function import_context( array $post_ids, array $extra_markup = array() ): array {
+		$ids = array_values( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) );
+		self::remember_design_names( $ids, $extra_markup );
+
+		return self::utility_context( $ids, $extra_markup );
+	}
+
+	/**
+	 * hoist_import()'s second step, for these posts of the import (in rounds a slice at a time).
+	 *
+	 * @param array<int, int>      $post_ids
+	 * @param array<int, string>   $preset_slugs
+	 * @param array<string, mixed> $context      import_context() of the whole import.
+	 * @return array{posts:int, blocks:int, inner:int, presets:int, utilities:int}
+	 */
+	public static function hoist_posts( array $post_ids, array $preset_slugs, array $context ): array {
+		$total = array(
 			'posts'     => 0,
 			'blocks'    => 0,
 			'inner'     => 0,
 			'presets'   => 0,
 			'utilities' => 0,
 		);
-		$ids      = array_values( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) );
-		$contents = array();
-		foreach ( $ids as $id ) {
-			$contents[ $id ] = (string) get_post_field( 'post_content', $id );
-		}
-		self::remember_design_names( $ids, $extra_markup );
-		$context = self::utility_context( $ids, $extra_markup );
-		foreach ( $ids as $id ) {
-			$content = $contents[ $id ];
+		foreach ( $post_ids as $id ) {
+			$id      = (int) $id;
+			$content = (string) get_post_field( 'post_content', $id );
 			if ( $content === '' || ! str_contains( $content, 'style' ) ) {
 				continue;
 			}
@@ -334,6 +357,29 @@ final class Style_Hoister {
 		}
 
 		return $names;
+	}
+
+	/**
+	 * Give these posts the design names of another (its DESIGN_NAMES_META, or none when it has none): pages built from the Home's own
+	 * sections are the Home's design, and so are their names. Read from such a page's composed markup they would be every utility the
+	 * Home's hoist had placed there (relative, items-center, w-full, uppercase, …), names Style_Rules writes no utility rule for: H2O's
+	 * 15 menu pages lost them — sections unpositioned, their circles out of them, 167 px of sideways scroll at 390. A page rebuilt later
+	 * (Pages\Site_Pages) is given them again, so one an older import gave those names is put right.
+	 *
+	 * @param array<int, int> $post_ids
+	 */
+	public static function share_design_names( int $from, array $post_ids ): void {
+		$names = get_post_meta( $from, self::DESIGN_NAMES_META, true );
+		foreach ( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) as $id ) {
+			if ( $id === $from || get_post( $id ) === null ) {
+				continue;
+			}
+			if ( ! is_array( $names ) || $names === array() ) {
+				delete_post_meta( $id, self::DESIGN_NAMES_META );
+			} elseif ( get_post_meta( $id, self::DESIGN_NAMES_META, true ) !== $names ) {
+				update_post_meta( $id, self::DESIGN_NAMES_META, $names );
+			}
+		}
 	}
 
 	/**

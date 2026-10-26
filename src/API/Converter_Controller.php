@@ -27,17 +27,31 @@ use DXAI_UI\Connectors\Source_Document;
 use DXAI_UI\Connectors\Zip_Extractor;
 use DXAI_UI\Connectors\Zip_Router;
 use DXAI_UI\Engines\Engine_Factory;
+use DXAI_UI\Media\Asset_Harvester;
+use DXAI_UI\Media\Harvest_Paused;
+use DXAI_UI\Media\Pending_Sizes;
 use DXAI_UI\Patterns\Pattern_Repository;
 use DXAI_UI\Settings\Options;
 use DXAI_UI\Structures\Crawl_Job;
 use DXAI_UI\Structures\Live_Page_Restyler;
 use DXAI_UI\Structures\Structure_Repository;
 use DXAI_UI\Support\Logger;
+use DXAI_UI\Transfer\Import_Job;
 use DXAI_UI\Verification\Import_Audit;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class Converter_Controller extends \WP_REST_Controller {
+
+	/** The source types that read an uploaded archive, which an import in rounds keeps on the server between its requests. */
+	private const ARCHIVE_MODES = array( 'auto-zip', 'lovable-zip', 'generated-zip', 'claude-zip', 'dc-zip', 'figma-zip' );
+
+	/**
+	 * The archive this request reads when it was uploaded once and kept on the server (staged()), as $_FILES would give it.
+	 *
+	 * @var array{name:string, tmp_name:string, error:int, size:int}|null
+	 */
+	private ?array $staged = null;
 
 	public function __construct() {
 		$this->namespace = DXAI_UI_REST_NAMESPACE;
@@ -190,6 +204,29 @@ final class Converter_Controller extends \WP_REST_Controller {
 		 * it: the engine the menu crawl would use, the upload limit, and the
 		 * admin screens a finished import links to. Read-only.
 		 */
+		/*
+		 * The smaller sizes of the pictures an import in rounds added without them (Media\Pending_Sizes), as many as fit in a round;
+		 * the import screen asks after the save until none is left. Cron makes them otherwise.
+		 */
+		// An archive sent in pieces, one per request, for an import in rounds (upload_chunk()).
+		register_rest_route(
+			$this->namespace,
+			'/upload-chunk',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'upload_chunk' ),
+				'permission_callback' => array( $this, 'publish_permissions' ),
+			)
+		);
+		register_rest_route(
+			$this->namespace,
+			'/media-sizes',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'media_sizes' ),
+				'permission_callback' => array( $this, 'permissions' ),
+			)
+		);
 		register_rest_route(
 			$this->namespace,
 			'/import-info',
@@ -250,6 +287,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 			'engine'         => self::crawl_engine(),
 			// The web server's own limit — the CLI's php.ini is a different file.
 			'max_upload'     => (int) wp_max_upload_size(),
+			// The largest piece of an archive one request may carry (upload_chunk()): PHP's own limits, not the network's media limit.
+			'chunk_bytes'    => self::chunk_bytes(),
 			'max_pages'      => Site_Origin::MAX_PAGES,
 			/*
 			 * Whether this user may import at all. The import routes need
@@ -763,11 +802,113 @@ final class Converter_Controller extends \WP_REST_Controller {
 
 	public function process_source( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		self::admin_memory();
-		$source = $this->resolve_source( $request );
+		if ( ! self::in_rounds( $request ) ) {
+			$source = $this->resolve_source( $request );
+
+			return is_wp_error( $source ) ? $source : $this->source_response( $source, '' );
+		}
+		/*
+		 * In rounds. Reading an archive adds every picture and font it names to the media library, and WordPress cuts each
+		 * picture into every size the site registers: Charter Construction's 413 pictures took 20 minutes in this one request,
+		 * and WP Engine ends a request after 60 seconds. So the import screen uploads the archive once — it waits on the server
+		 * (staged()) — and asks again with its token while the answer says `continue`: each round adds files for
+		 * round_budget() seconds (Asset_Harvester::in_round()), without their sizes (Pending_Sizes, made after the save), and
+		 * the round that finds them all reads the design as before. generate-block and save-pattern read the same archive by
+		 * the same token instead of a second upload.
+		 */
+		$job = $this->staged( $request );
+		if ( is_wp_error( $job ) ) {
+			return $job;
+		}
+		if ( ! self::round_lock( (string) $job['token'] ) ) {
+			return self::round_busy( (string) $job['token'] );
+		}
+		ignore_user_abort( true );
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- disabled on some hosts.
+		}
+		// The round is counted from the request's start (WordPress's own timer): copying and unpacking the archive come out of it too.
+		Asset_Harvester::in_round( self::round_budget(), microtime( true ) - timer_float() );
+		// The files earlier rounds added are not looked for again (Asset_Harvester::carry()).
+		Asset_Harvester::carry( is_array( $job['state']['harvested'] ?? null ) ? $job['state']['harvested'] : array() );
+		try {
+			$source = Pending_Sizes::defer( fn() => $this->resolve_source( $request ) );
+		} catch ( Harvest_Paused $paused ) {
+			self::keep_harvested( $job );
+
+			return rest_ensure_response(
+				array(
+					'state'   => 'continue',
+					'stage'   => (string) $job['token'],
+					'harvest' => array(
+						'done'  => $paused->done,
+						'total' => $paused->total,
+					),
+				)
+			);
+		} finally {
+			Asset_Harvester::in_round( 0 );
+			self::round_unlock( (string) $job['token'] );
+		}
+		self::keep_harvested( $job );
+		Asset_Harvester::carry( null );
 		if ( is_wp_error( $source ) ) {
 			return $source;
 		}
+		self::keep_source( $job, $source );
 
+		return $this->source_response( $source, (string) $job['token'] );
+	}
+
+	/**
+	 * What the read made of the archive, kept beside it for the compile (kept_source()): as an array, never an object, so the
+	 * file can only ever be read back as data.
+	 *
+	 * @param array<string, mixed> $job The import's folder.
+	 */
+	private static function keep_source( array $job, Source_Document $source ): void {
+		// Serialized, not JSON: the design's files are any bytes. Read back as data only (kept_source()).
+		file_put_contents( (string) $job['dir'] . '/' . Import_Job::SOURCE, serialize( $source->to_array() ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+	}
+
+	/**
+	 * The read's answer an import in rounds kept (keep_source()), or null.
+	 *
+	 * @param array<string, mixed> $job The import's folder.
+	 */
+	private static function kept_source( array $job ): ?Source_Document {
+		$file = (string) $job['dir'] . '/' . Import_Job::SOURCE;
+		if ( ! is_readable( $file ) ) {
+			return null;
+		}
+		// This import's own file, and no object may come out of it.
+		$data = unserialize( (string) file_get_contents( $file ), array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_array( $data ) || ! isset( $data['kind'], $data['payload'] ) || ! is_array( $data['payload'] ) ) {
+			return null;
+		}
+
+		return new Source_Document(
+			(string) $data['kind'],
+			(string) ( $data['title'] ?? '' ),
+			$data['payload'],
+			is_array( $data['assets'] ?? null ) ? $data['assets'] : array(),
+			is_array( $data['logs'] ?? null ) ? $data['logs'] : array()
+		);
+	}
+
+	/**
+	 * The files of the archive added so far, kept with the import for its next round and its compile (Asset_Harvester::carried()).
+	 *
+	 * @param array<string, mixed> $job The import's folder.
+	 */
+	private static function keep_harvested( array $job ): void {
+		$job['state']              = is_array( $job['state'] ?? null ) ? $job['state'] : array();
+		$job['state']['harvested'] = Asset_Harvester::carried();
+		Import_Job::save( $job );
+	}
+
+	/** The read's answer: the source as the screen needs it, its log lines, and the token of the archive kept on the server. */
+	private function source_response( Source_Document $source, string $stage ): WP_REST_Response {
 		$logs = array_map(
 			static fn( string $message ) => Logger::entry( 'info', $message ),
 			$source->logs
@@ -775,16 +916,255 @@ final class Converter_Controller extends \WP_REST_Controller {
 		Logger::store( $logs );
 
 		return rest_ensure_response(
-			array(
-				'source' => $this->client_source( $source ),
-				'logs'   => $logs,
+			array_filter(
+				array(
+					'source' => $this->client_source( $source ),
+					'logs'   => $logs,
+					'state'  => 'done',
+					'stage'  => $stage,
+				),
+				static fn( $value ): bool => $value !== ''
 			)
 		);
 	}
 
+	/** The largest piece an archive is sent in: small enough for any host's request, few enough for a 70 MB archive. */
+	private const CHUNK_MAX = 8388608;
+
+	/** The largest archive sent in pieces: what Zip_Extractor would unpack of it anyway is less. */
+	private const ARCHIVE_MAX = 1073741824;
+
+	/**
+	 * The piece size for upload_chunk(): at most CHUNK_MAX, and four fifths of what PHP takes in one request (upload_max_filesize,
+	 * post_max_size) — not wp_max_upload_size(), which a network's media limit (1 MB on WP Engine) lowers for the media library.
+	 */
+	public static function chunk_bytes(): int {
+		$php = array_filter(
+			array(
+				(int) wp_convert_hr_to_bytes( (string) ini_get( 'upload_max_filesize' ) ),
+				(int) wp_convert_hr_to_bytes( (string) ini_get( 'post_max_size' ) ),
+			)
+		);
+
+		return (int) max( 262144, min( self::CHUNK_MAX, $php === array() ? self::CHUNK_MAX : (int) ( min( $php ) * 0.8 ) ) );
+	}
+
+	/**
+	 * /upload-chunk: an archive sent in pieces, one per request, appended in the import's folder (Transfer\Import_Job) — the first
+	 * piece starts it and answers its token (`stage`), the next ones name it. A host takes no request over its upload limit (WP
+	 * Engine: 50 MB, Charter Construction's archive is 68), and a 70 MB body alone took a third of a round to arrive and unpack.
+	 * Once all the pieces are there the read goes on by the token (process_source()). A piece sent again after its answer was lost
+	 * is not appended twice.
+	 */
+	public function upload_chunk( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		self::admin_memory();
+		$files = $request->get_file_params();
+		$part  = $files['chunk'] ?? null;
+		if ( ! is_array( $part ) ) {
+			return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dxai_ui_chunk', __( 'No piece of the archive came with the request.', 'dxai-ui' ), array( 'status' => 400 ) );
+		}
+		$refused = Zip_Extractor::upload_error( $part );
+		if ( null !== $refused ) {
+			return $refused;
+		}
+		$index = absint( $request->get_param( 'index' ) );
+		$total = absint( $request->get_param( 'total' ) );
+		$size  = absint( $request->get_param( 'size' ) );
+		$name  = wp_strip_all_tags( wp_basename( (string) $request->get_param( 'name' ) ) );
+		if ( $total < 1 || $index >= $total || $size < 1 || $size > self::ARCHIVE_MAX || ! str_ends_with( strtolower( $name ), '.zip' ) ) {
+			return new \WP_Error( 'dxai_ui_chunk', __( 'This piece does not belong to a .zip archive that can be sent in pieces.', 'dxai-ui' ), array( 'status' => 400 ) );
+		}
+		$token = strtolower( trim( (string) $request->get_param( 'stage' ) ) );
+		if ( $token === '' ) {
+			if ( 0 !== $index ) {
+				return new \WP_Error( 'dxai_ui_chunk', __( 'The archive\'s first piece is missing.', 'dxai-ui' ), array( 'status' => 409 ) );
+			}
+			$job = Import_Job::create(
+				(string) $part['tmp_name'],
+				$name,
+				array( 'design' => true ),
+				array(
+					'chunks' => array(
+						'received' => 1,
+						'total'    => $total,
+						'size'     => $size,
+					),
+				)
+			);
+			if ( is_wp_error( $job ) ) {
+				return $job;
+			}
+		} else {
+			$job = Import_Job::open( $token );
+			if ( is_wp_error( $job ) ) {
+				return $job;
+			}
+			if ( ! self::round_lock( (string) $job['token'] ) ) {
+				return self::round_busy( (string) $job['token'] );
+			}
+			try {
+				$chunks   = is_array( $job['state']['chunks'] ?? null ) ? $job['state']['chunks'] : array();
+				$received = (int) ( $chunks['received'] ?? 0 );
+				if ( $chunks === array() || (int) ( $chunks['total'] ?? 0 ) !== $total || (int) ( $chunks['size'] ?? 0 ) !== $size || $index > $received ) {
+					return new \WP_Error( 'dxai_ui_chunk', __( 'A piece of the archive is missing. Send the archive again.', 'dxai-ui' ), array( 'status' => 409 ) );
+				}
+				if ( $index === $received ) {
+					if ( ! Import_Job::append( $job, (string) $part['tmp_name'] ) ) {
+						return new \WP_Error( 'dxai_ui_chunk', __( 'The piece could not be added to the archive on the server.', 'dxai-ui' ), array( 'status' => 500 ) );
+					}
+					$job['state']['chunks']['received'] = $received + 1;
+					Import_Job::save( $job );
+				}
+			} finally {
+				self::round_unlock( (string) $job['token'] );
+			}
+		}
+		$received = (int) $job['state']['chunks']['received'];
+		$complete = $received >= $total;
+		clearstatcache( true, (string) $job['zip'] );
+		if ( $complete && (int) filesize( (string) $job['zip'] ) !== $size ) {
+			Import_Job::close( $job );
+
+			return new \WP_Error( 'dxai_ui_chunk', __( 'The archive arrived with a different size than it has. Send it again.', 'dxai-ui' ), array( 'status' => 422 ) );
+		}
+
+		return rest_ensure_response(
+			array(
+				'stage'    => (string) $job['token'],
+				'received' => $received,
+				'total'    => $total,
+				'complete' => $complete,
+			)
+		);
+	}
+
+	/** Seconds a round's lock holds: longer than a round runs, so an older lock belongs to a request the host ended. */
+	private const ROUND_LOCK_TTL = 180;
+
+	/**
+	 * One request at a time on the rounds of one import: a screen that gave up waiting for a round's answer asks for the next while
+	 * the first may still run, and two rounds at once would add the same files twice or write the same pages over each other.
+	 * False while another request holds it; a lock older than ROUND_LOCK_TTL is taken over.
+	 */
+	private static function round_lock( string $token ): bool {
+		$key = 'dxai_ui_round_lock_' . $token;
+		if ( add_option( $key, time(), '', false ) ) {
+			return true;
+		}
+		if ( (int) get_option( $key, 0 ) > time() - self::ROUND_LOCK_TTL ) {
+			return false;
+		}
+		update_option( $key, time(), false );
+
+		return true;
+	}
+
+	private static function round_unlock( string $token ): void {
+		delete_option( 'dxai_ui_round_lock_' . $token );
+	}
+
+	/** The answer while another request is on a round of this import: go on after it. */
+	private static function round_busy( string $token ): WP_REST_Response {
+		return rest_ensure_response(
+			array(
+				'state' => 'continue',
+				'stage' => $token,
+				'busy'  => true,
+			)
+		);
+	}
+
+	/**
+	 * /media-sizes: a round of the smaller sizes of the pictures an import in rounds added without them (Pending_Sizes).
+	 */
+	public function media_sizes(): WP_REST_Response {
+		ignore_user_abort( true );
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- disabled on some hosts.
+		}
+
+		return rest_ensure_response( Pending_Sizes::run( self::round_budget() ) );
+	}
+
+	/** Whether the screen asked for an import in rounds (`rounds`), for a source type that reads an archive. */
+	private static function in_rounds( WP_REST_Request $request ): bool {
+		return rest_sanitize_boolean( $request->get_param( 'rounds' ) )
+			&& in_array( sanitize_key( (string) $request->get_param( 'source_type' ) ), self::ARCHIVE_MODES, true );
+	}
+
+	/**
+	 * Seconds one round of an import in rounds adds files for: 20, a third of WP Engine's 60-second limit, like the steps of a
+	 * page package's import (Transfer\Page_Import::step_budget()). Filterable: `dxai_ui_import_round_seconds`.
+	 */
+	public static function round_budget(): float {
+		return max( 0.01, (float) apply_filters( 'dxai_ui_import_round_seconds', 20.0 ) );
+	}
+
+	/**
+	 * The archive of an import in rounds, kept on the server between its requests (Transfer\Import_Job: a folder of its own under
+	 * uploads/dxai-ui, behind deny rules, named by a random token, this user's only, removed after a day): the one this request
+	 * uploads, or the one its `stage` token names. Read from there by resolve_source().
+	 *
+	 * @return array<string, mixed>|\WP_Error The job.
+	 */
+	private function staged( WP_REST_Request $request ): array|\WP_Error {
+		$token = strtolower( trim( (string) $request->get_param( 'stage' ) ) );
+		if ( $token !== '' ) {
+			$job = Import_Job::open( $token );
+			// Sent in pieces (upload_chunk()): read only once the last one is there.
+			$chunks = is_array( $job ) && is_array( $job['state']['chunks'] ?? null ) ? $job['state']['chunks'] : array();
+			if ( $chunks !== array() && (int) ( $chunks['received'] ?? 0 ) < (int) ( $chunks['total'] ?? 0 ) ) {
+				return new \WP_Error( 'dxai_ui_chunk', __( 'Not all of the archive has arrived yet.', 'dxai-ui' ), array( 'status' => 409 ) );
+			}
+		} else {
+			$files = $request->get_file_params();
+			$zip   = $files['file'] ?? $files['zip'] ?? null;
+			if ( ! is_array( $zip ) ) {
+				return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dxai_ui_zip', __( 'Upload a design archive (.zip).', 'dxai-ui' ), array( 'status' => 400 ) );
+			}
+			$refused = Zip_Extractor::upload_error( $zip );
+			if ( null !== $refused ) {
+				return $refused;
+			}
+			// The name as uploaded, not sanitize_file_name()'d: it is half of each page's identity (Structure_Repository::$source_archive).
+			$job = Import_Job::create( (string) $zip['tmp_name'], wp_strip_all_tags( wp_basename( (string) $zip['name'] ) ), array( 'design' => true ), array() );
+		}
+		if ( is_wp_error( $job ) ) {
+			return $job;
+		}
+		$this->staged = array(
+			'name'     => (string) $job['name'],
+			'tmp_name' => (string) $job['zip'],
+			'error'    => UPLOAD_ERR_OK,
+			'size'     => (int) filesize( (string) $job['zip'] ),
+		);
+
+		return $job;
+	}
+
 	public function generate_block( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		self::admin_memory();
-		$source = $this->resolve_source( $request );
+		// An import in rounds compiles the archive its read kept on the server (process_source()), not a second upload of it.
+		if ( (string) $request->get_param( 'stage' ) !== '' ) {
+			$job = $this->staged( $request );
+			if ( is_wp_error( $job ) ) {
+				return $job;
+			}
+		}
+		// What the read's last round made of the archive, kept beside it (keep_source()): reading it all again took 33 of the
+		// compile's 51 seconds on Charter Construction.
+		$source = isset( $job ) ? self::kept_source( $job ) : null;
+		if ( null === $source ) {
+			if ( isset( $job ) ) {
+				// The read's files as its rounds added them: the compile reads the archive again without looking each one up.
+				Asset_Harvester::carry( is_array( $job['state']['harvested'] ?? null ) ? $job['state']['harvested'] : array() );
+			}
+			try {
+				$source = null !== $this->staged ? Pending_Sizes::defer( fn() => $this->resolve_source( $request ) ) : $this->resolve_source( $request );
+			} finally {
+				Asset_Harvester::carry( null );
+			}
+		}
 		if ( is_wp_error( $source ) ) {
 			return $source;
 		}
@@ -899,6 +1279,9 @@ final class Converter_Controller extends \WP_REST_Controller {
 				: 'Generated ' . $result['block_title']
 		);
 		Logger::store( $logs );
+		if ( isset( $job ) ) {
+			$result = self::keep_pages( $job, $result );
+		}
 
 		return rest_ensure_response(
 			array(
@@ -907,6 +1290,33 @@ final class Converter_Controller extends \WP_REST_Controller {
 				'logs'   => $logs,
 			)
 		);
+	}
+
+	/**
+	 * An import in rounds keeps the design's other pages beside its archive (Import_Job::COMPILED_PAGES) and sends the screen their
+	 * names only: it shows none of them, and the save takes them from there (save_round_locked()). Charter Construction's 95 pages
+	 * are 44 of the compile's 49 MB, which went to the browser and back in the save's request — a body over the 50 MB a host
+	 * accepts by default, and a 49 MB JSON for PHP to decode.
+	 *
+	 * @param array<string, mixed> $job    The import's folder.
+	 * @param array<string, mixed> $result The compile result.
+	 * @return array<string, mixed> The result the screen gets.
+	 */
+	private static function keep_pages( array $job, array $result ): array {
+		$pages = is_array( $result['pages'] ?? null ) ? $result['pages'] : array();
+		$file  = (string) $job['dir'] . '/' . Import_Job::COMPILED_PAGES;
+		$json  = $pages !== array() ? wp_json_encode( $pages ) : false;
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		if ( ! is_string( $json ) || false === file_put_contents( $file, $json ) ) {
+			return $result;
+		}
+		$result['pages']      = array_map(
+			static fn( $page ): array => is_array( $page ) ? array_intersect_key( $page, array_flip( array( 'slug', 'block_title', 'route', 'name' ) ) ) : array(),
+			array_values( $pages )
+		);
+		$result['pages_kept'] = count( $pages );
+
+		return $result;
 	}
 
 	/** A save's status record lives this long — long enough for any save to end and be asked about. */
@@ -937,7 +1347,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		self::admin_memory();
 		$token = self::save_token( (string) $request->get_param( 'import_token' ) );
 		if ( $token === '' ) {
-			return $this->save_now( $request );
+			return $this->save_step( $request );
 		}
 		$user = get_current_user_id();
 		self::put_save_status(
@@ -967,7 +1377,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		// reaching the lines below; the record must still say it stopped.
 		register_shutdown_function( array( self::class, 'save_interrupted' ), $token, $user );
 
-		$response = $this->save_now( $request );
+		$response = $this->save_step( $request );
 		if ( is_wp_error( $response ) ) {
 			$data = $response->get_error_data();
 			self::put_save_status(
@@ -984,6 +1394,21 @@ final class Converter_Controller extends \WP_REST_Controller {
 
 			return $response;
 		}
+		$answer = $response->get_data();
+		if ( is_array( $answer ) && 'continue' === ( $answer['state'] ?? '' ) ) {
+			// A round of a save in rounds: the next one goes on from here, and a screen that lost this answer is told so.
+			self::put_save_status(
+				$token,
+				$user,
+				array(
+					'state'    => 'continue',
+					'finished' => time(),
+					'payload'  => $answer,
+				)
+			);
+
+			return $response;
+		}
 		self::put_save_status(
 			$token,
 			$user,
@@ -992,11 +1417,102 @@ final class Converter_Controller extends \WP_REST_Controller {
 				'finished' => time(),
 				// The whole answer, so a wizard that lost it carries on as if
 				// it had arrived: page links, audit, chrome report, crawl job.
-				'payload'  => $response->get_data(),
+				'payload'  => $answer,
 			)
 		);
 
 		return $response;
+	}
+
+	/** The save as the screen asked for it: in rounds (save_in_rounds()), or at once (save_now()). */
+	private function save_step( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		return rest_sanitize_boolean( $request->get_param( 'rounds' ) ) && (string) $request->get_param( 'stage' ) !== ''
+			? $this->save_in_rounds( $request )
+			: $this->save_now( $request );
+	}
+
+	/**
+	 * One round of an import's save in rounds (Structure_Repository::save_round()). The first round's request carries the compile
+	 * result, as a save at once does; what save() is given (save_input()) is kept beside the archive (SAVE_INPUT in the import's
+	 * folder, Transfer\Import_Job), and each following round — `save_round: continue` and the same `stage` — reads it there with
+	 * the state the round before left. The answer is `state: continue` with the pages written so far, until the last round answers
+	 * as a save at once does (saved()); the import's folder goes then.
+	 */
+	private function save_in_rounds( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		$job = $this->staged( $request );
+		if ( is_wp_error( $job ) ) {
+			return $job;
+		}
+		$token = (string) $job['token'];
+		if ( ! self::round_lock( $token ) ) {
+			return self::round_busy( $token );
+		}
+		try {
+			return $this->save_round_locked( $request, $job );
+		} finally {
+			self::round_unlock( $token );
+		}
+	}
+
+	/**
+	 * save_in_rounds() with the import's lock held.
+	 *
+	 * @param array<string, mixed> $job The import's folder (Transfer\Import_Job).
+	 */
+	private function save_round_locked( WP_REST_Request $request, array $job ): WP_REST_Response|\WP_Error {
+		$kept  = (string) $job['dir'] . '/' . Import_Job::SAVE_INPUT;
+		$state = is_array( $job['state'] ?? null ) ? $job['state'] : array();
+		if ( 'continue' === (string) $request->get_param( 'save_round' ) ) {
+			$input = is_readable( $kept ) ? json_decode( (string) file_get_contents( $kept ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			if ( ! is_array( $input ) || ! is_array( $state['save'] ?? null ) ) {
+				return new \WP_Error( 'dxai_ui_save_rounds', __( 'The save was not found on the server to go on with. Save again: the pages written so far are updated in place.', 'dxai-ui' ), array( 'status' => 409 ) );
+			}
+		} else {
+			$input = $this->save_input( $request );
+			if ( $input['structures'] === array() ) {
+				return $this->save_now( $request );
+			}
+			// The design's other pages as the compile left them on the server (keep_pages()), not the names the screen got.
+			$compiled = (string) $job['dir'] . '/' . Import_Job::COMPILED_PAGES;
+			if ( is_readable( $compiled ) ) {
+				$pages          = json_decode( (string) file_get_contents( $compiled ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				$input['pages'] = is_array( $pages ) ? $pages : $input['pages'];
+			}
+			$encoded = wp_json_encode( $input );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			if ( ! is_string( $encoded ) || false === file_put_contents( $kept, $encoded ) ) {
+				return new \WP_Error( 'dxai_ui_save_rounds', __( 'The save could not be kept on the server between its steps (wp-content/uploads is not writable).', 'dxai-ui' ), array( 'status' => 500 ) );
+			}
+			$state = array_merge(
+				$state,
+				array(
+					'save'   => array(),
+					'synced' => filter_var( $request->get_param( 'synced' ), FILTER_VALIDATE_BOOLEAN ),
+				)
+			);
+		}
+		$round = ( new Structure_Repository() )->save_round( $input, (array) $state['save'], self::round_budget() );
+		if ( is_wp_error( $round ) ) {
+			return $round;
+		}
+		if ( empty( $round['done'] ) ) {
+			$state['save'] = $round;
+			$job['state']  = $state;
+			Import_Job::save( $job );
+
+			return rest_ensure_response(
+				array(
+					'state' => 'continue',
+					'stage' => (string) $job['token'],
+					'pages' => is_array( $round['pages'] ?? null ) ? $round['pages'] : array(),
+					// Which of the finishing steps comes next, once every page is written (the screen's progress).
+					'tail'  => is_array( $round['tail'] ?? null ) ? $round['tail'] : null,
+				)
+			);
+		}
+		Import_Job::close( $job );
+
+		return $this->saved( $input, (array) $round['created'], (bool) ( $state['synced'] ?? true ) );
 	}
 
 	/**
@@ -1087,11 +1603,28 @@ final class Converter_Controller extends \WP_REST_Controller {
 	}
 
 	private function save_now( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
+		$input   = $this->save_input( $request );
+		$created = null;
+		if ( $input['structures'] !== array() ) {
+			$created = ( new Structure_Repository() )->save( $input );
+			if ( is_wp_error( $created ) ) {
+				return $created;
+			}
+		}
+
+		return $this->saved( $input, $created, filter_var( $request->get_param( 'synced' ), FILTER_VALIDATE_BOOLEAN ) );
+	}
+
+	/**
+	 * What an import's save is given (Structure_Repository::save()): the compile result the screen posts, read field by field.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function save_input( WP_REST_Request $request ): array {
 		$title  = sanitize_text_field( (string) $request->get_param( 'block_title' ) );
 		$markup = (string) $request->get_param( 'gutenberg_markup' );
 		$css    = (string) $request->get_param( 'custom_css' );
 		$js     = (string) $request->get_param( 'custom_js' );
-		$synced = filter_var( $request->get_param( 'synced' ), FILTER_VALIDATE_BOOLEAN );
 		$raw    = $request->get_param( 'structures' );
 		$structures = is_array( $raw ) ? $raw : array();
 		$scope  = sanitize_key( (string) $request->get_param( 'scope' ) );
@@ -1102,133 +1635,141 @@ final class Converter_Controller extends \WP_REST_Controller {
 			$title = __( 'DX UI Pattern', 'dxai-ui' );
 		}
 
+		return array(
+			'block_title'      => $title,
+			'gutenberg_markup' => $markup,
+			'compiler'         => sanitize_key( (string) $request->get_param( 'compiler' ) ),
+			'custom_css'       => $css,
+			'custom_js'        => $js,
+			'compiled_css'     => $compiled,
+			'scope'            => $scope,
+			'structures'       => $structures,
+			'design_assets'    => is_array( $request->get_param( 'design_assets' ) ) ? $request->get_param( 'design_assets' ) : array(),
+			'pages'            => is_array( $request->get_param( 'pages' ) ) ? $request->get_param( 'pages' ) : array(),
+			'wrapper_class'    => (string) $request->get_param( 'wrapper_class' ),
+			'design_css_raw'   => (string) $request->get_param( 'design_css_raw' ),
+			'slug'             => (string) $request->get_param( 'slug' ),
+			/*
+			 * Three fields Structure_Repository::save() reads that this
+			 * endpoint used to drop, which is why the same ZIP imported
+			 * through the admin came out different from the same ZIP
+			 * imported on the command line.
+			 *
+			 * `static_html` is the Claude Design flag: without it the
+			 * page takes Tailwind's Preflight and frontend-isolate.css,
+			 * neither of which the design ever ran under, so its
+			 * paragraph margins and box-sizing change.
+			 * `tailwind_config` is a v3 design's whole theme — the
+			 * Lovable template keeps its colours, radii, fonts and
+			 * keyframes there, and the engine has none of them without
+			 * it. `wrapper_style` is the inline style on the page root.
+			 *
+			 * The wizard already posts the compile result whole, so all
+			 * three were arriving in the request and being ignored here.
+			 */
+			'static_html'      => filter_var( $request->get_param( 'static_html' ), FILTER_VALIDATE_BOOLEAN ),
+			'tailwind_config'  => (string) $request->get_param( 'tailwind_config' ),
+			'wrapper_style'    => (string) $request->get_param( 'wrapper_style' ),
+			'source_html'      => (string) $request->get_param( 'source_html' ),
+			/*
+			 * What the conversion could not do, kept with the conversion.
+			 *
+			 * All four are computed during the compile, travel in the
+			 * generate-block response, get rendered once by the wizard
+			 * and were then dropped here — so a saved page carried no
+			 * record of its own fidelity and the only way to ask was to
+			 * convert the ZIP again. `unevaluated` is every expression
+			 * the compiler gave up on, `islands` is the markup that
+			 * stayed raw HTML by element, `unresolved_utilities` are
+			 * Tailwind classes with no rule, and `fidelity_score` is the
+			 * per-structure score. The command-line path already passes
+			 * the whole compile result, so it stored them and the admin
+			 * path did not: the same import produced two different
+			 * records depending on where it was started.
+			 */
+			'unevaluated'      => is_array( $request->get_param( 'unevaluated' ) ) ? $request->get_param( 'unevaluated' ) : array(),
+			'islands'          => is_array( $request->get_param( 'islands' ) ) ? $request->get_param( 'islands' ) : array(),
+			'unresolved_utilities' => is_array( $request->get_param( 'unresolved_utilities' ) ) ? $request->get_param( 'unresolved_utilities' ) : array(),
+			'fidelity_score'   => is_array( $request->get_param( 'fidelity_score' ) ) ? $request->get_param( 'fidelity_score' ) : null,
+			/*
+			 * And the counts only the design's own code could give.
+			 *
+			 * Design_Coverage reads `source_signals` to count lucide
+			 * icons, JSX handlers, framer-motion elements, Radix
+			 * components and scroll-driven state against what reached
+			 * the page — and the archive is long gone by the time this
+			 * request arrives, so the compiler counted them and put
+			 * them in its result. Dropped here, five coverage rows read
+			 * "unknown" on every admin import while the same ZIP on the
+			 * command line reported them: the fifth field of exactly
+			 * the same kind as the four above.
+			 */
+			'source_signals'   => is_array( $request->get_param( 'source_signals' ) ) ? $request->get_param( 'source_signals' ) : array(),
+			// What only the source could say, for the design's document (Design\Document_Builder): see Source_Compiler::compile().
+			'source_kind'      => sanitize_key( (string) $request->get_param( 'source_kind' ) ),
+			'source_stack'     => sanitize_text_field( (string) $request->get_param( 'source_stack' ) ),
+			'source_hash'      => preg_match( '/^[0-9a-f]{40}$/', (string) $request->get_param( 'source_hash' ) ) === 1 ? (string) $request->get_param( 'source_hash' ) : '',
+			'dc_breakpoint'    => (int) $request->get_param( 'dc_breakpoint' ),
+			// Per-request override of the copy/dynamic choice; absent,
+			// the saved setting applies.
+			'structure_mode'   => is_array( $request->get_param( 'structure_mode' ) )
+				? Rewrite_Policy::sanitize( $request->get_param( 'structure_mode' ) )
+				: null,
+			'create_missing_pages' => filter_var( $request->get_param( 'create_missing_pages' ), FILTER_VALIDATE_BOOLEAN ),
+			// The wizard drives the crawl through /crawl-step; an older
+			// caller that does not ask gets the synchronous crawl.
+			'defer_crawl'      => filter_var( $request->get_param( 'defer_crawl' ), FILTER_VALIDATE_BOOLEAN ),
+			// How the menu pages are built: 'design' (the Home's own sections
+			// with each old page's text and pictures, no AI) unless 'ai' is
+			// asked for; and which of them, when the person chose (paths).
+			'pages_engine'     => 'ai' === $request->get_param( 'pages_engine' ) ? 'ai' : 'design',
+			'pages_only'       => array_values( array_filter( array_map( static fn( $p ) => \DXAI_UI\Connectors\Site_Origin::path_of( rawurldecode( (string) $p ) ), array_filter( (array) ( $request->get_param( 'pages_only' ) ?? array() ), 'is_scalar' ) ), static fn( $p ) => $p !== '' && $p !== '/' ) ),
+			// The old site's address, when the person typed it (the design's links did not show it).
+			'pages_origin'     => \DXAI_UI\Connectors\Site_Origin::normalize( (string) $request->get_param( 'pages_origin' ) ),
+			/*
+			 * Two more fields save() reads that this endpoint dropped.
+			 *
+			 * `source_name` is the uploaded archive's file name, and it is
+			 * half of every page's identity (archive#slug) and the key of
+			 * the design's header and footer. Without it an admin import —
+			 * the only kind a real site has — fell back to identifying
+			 * pages by slug and parts by title, so three designs with a
+			 * `jobs.$slug` route overwrote one page, and seven designs
+			 * titled "DevriX" shared one header. `seo_title` is the
+			 * design's full <title>: without it the home page was named
+			 * and titled differently than the same ZIP imported on the
+			 * command line. Both arrive in the request already; the
+			 * wizard posts the compile result whole.
+			 */
+			// wp_basename(), not basename(): it splits on "\" on every OS and
+			// does not depend on the locale for a multibyte file name.
+			'source_name'      => wp_strip_all_tags( wp_basename( (string) $request->get_param( 'source_name' ) ) ),
+			'seo_title'        => sanitize_text_field( (string) $request->get_param( 'seo_title' ) ),
+			/*
+			 * The header and footer choice the import screen asks:
+			 * `install` (Appearance > Menus and Widgets become this
+			 * design's), `keep` (the site's stay untouched; the
+			 * design's are template parts), or '' — automatic
+			 * (Chrome_Choice::resolve()). Anything else is automatic.
+			 */
+					'chrome'           => \DXAI_UI\Chrome\Chrome_Choice::normalize( $request->get_param( 'chrome' ) ),
+		);
+	}
+
+	/**
+	 * The save's answer: what save() made (null when the screen sent no structures), and the whole page as a pattern.
+	 *
+	 * @param array<string, mixed>      $input   save_input()'s.
+	 * @param array<string, mixed>|null $created Structure_Repository::save()'s answer.
+	 */
+	private function saved( array $input, ?array $created, bool $synced ): WP_REST_Response|\WP_Error {
+		$title   = (string) $input['block_title'];
+		$markup  = (string) $input['gutenberg_markup'];
+		$css     = (string) $input['custom_css'];
+		$scope   = (string) $input['scope'];
 		$payload = array();
 
-		if ( $structures !== array() ) {
-			$created = ( new Structure_Repository() )->save(
-				array(
-					'block_title'      => $title,
-					'gutenberg_markup' => $markup,
-					'compiler'         => sanitize_key( (string) $request->get_param( 'compiler' ) ),
-					'custom_css'       => $css,
-					'custom_js'        => $js,
-					'compiled_css'     => $compiled,
-					'scope'            => $scope,
-					'structures'       => $structures,
-					'design_assets'    => is_array( $request->get_param( 'design_assets' ) ) ? $request->get_param( 'design_assets' ) : array(),
-					'pages'            => is_array( $request->get_param( 'pages' ) ) ? $request->get_param( 'pages' ) : array(),
-					'wrapper_class'    => (string) $request->get_param( 'wrapper_class' ),
-					'design_css_raw'   => (string) $request->get_param( 'design_css_raw' ),
-					'slug'             => (string) $request->get_param( 'slug' ),
-					/*
-					 * Three fields Structure_Repository::save() reads that this
-					 * endpoint used to drop, which is why the same ZIP imported
-					 * through the admin came out different from the same ZIP
-					 * imported on the command line.
-					 *
-					 * `static_html` is the Claude Design flag: without it the
-					 * page takes Tailwind's Preflight and frontend-isolate.css,
-					 * neither of which the design ever ran under, so its
-					 * paragraph margins and box-sizing change.
-					 * `tailwind_config` is a v3 design's whole theme — the
-					 * Lovable template keeps its colours, radii, fonts and
-					 * keyframes there, and the engine has none of them without
-					 * it. `wrapper_style` is the inline style on the page root.
-					 *
-					 * The wizard already posts the compile result whole, so all
-					 * three were arriving in the request and being ignored here.
-					 */
-					'static_html'      => filter_var( $request->get_param( 'static_html' ), FILTER_VALIDATE_BOOLEAN ),
-					'tailwind_config'  => (string) $request->get_param( 'tailwind_config' ),
-					'wrapper_style'    => (string) $request->get_param( 'wrapper_style' ),
-					'source_html'      => (string) $request->get_param( 'source_html' ),
-					/*
-					 * What the conversion could not do, kept with the conversion.
-					 *
-					 * All four are computed during the compile, travel in the
-					 * generate-block response, get rendered once by the wizard
-					 * and were then dropped here — so a saved page carried no
-					 * record of its own fidelity and the only way to ask was to
-					 * convert the ZIP again. `unevaluated` is every expression
-					 * the compiler gave up on, `islands` is the markup that
-					 * stayed raw HTML by element, `unresolved_utilities` are
-					 * Tailwind classes with no rule, and `fidelity_score` is the
-					 * per-structure score. The command-line path already passes
-					 * the whole compile result, so it stored them and the admin
-					 * path did not: the same import produced two different
-					 * records depending on where it was started.
-					 */
-					'unevaluated'      => is_array( $request->get_param( 'unevaluated' ) ) ? $request->get_param( 'unevaluated' ) : array(),
-					'islands'          => is_array( $request->get_param( 'islands' ) ) ? $request->get_param( 'islands' ) : array(),
-					'unresolved_utilities' => is_array( $request->get_param( 'unresolved_utilities' ) ) ? $request->get_param( 'unresolved_utilities' ) : array(),
-					'fidelity_score'   => is_array( $request->get_param( 'fidelity_score' ) ) ? $request->get_param( 'fidelity_score' ) : null,
-					/*
-					 * And the counts only the design's own code could give.
-					 *
-					 * Design_Coverage reads `source_signals` to count lucide
-					 * icons, JSX handlers, framer-motion elements, Radix
-					 * components and scroll-driven state against what reached
-					 * the page — and the archive is long gone by the time this
-					 * request arrives, so the compiler counted them and put
-					 * them in its result. Dropped here, five coverage rows read
-					 * "unknown" on every admin import while the same ZIP on the
-					 * command line reported them: the fifth field of exactly
-					 * the same kind as the four above.
-					 */
-					'source_signals'   => is_array( $request->get_param( 'source_signals' ) ) ? $request->get_param( 'source_signals' ) : array(),
-					// What only the source could say, for the design's document (Design\Document_Builder): see Source_Compiler::compile().
-					'source_kind'      => sanitize_key( (string) $request->get_param( 'source_kind' ) ),
-					'source_stack'     => sanitize_text_field( (string) $request->get_param( 'source_stack' ) ),
-					'source_hash'      => preg_match( '/^[0-9a-f]{40}$/', (string) $request->get_param( 'source_hash' ) ) === 1 ? (string) $request->get_param( 'source_hash' ) : '',
-					'dc_breakpoint'    => (int) $request->get_param( 'dc_breakpoint' ),
-					// Per-request override of the copy/dynamic choice; absent,
-					// the saved setting applies.
-					'structure_mode'   => is_array( $request->get_param( 'structure_mode' ) )
-						? Rewrite_Policy::sanitize( $request->get_param( 'structure_mode' ) )
-						: null,
-					'create_missing_pages' => filter_var( $request->get_param( 'create_missing_pages' ), FILTER_VALIDATE_BOOLEAN ),
-					// The wizard drives the crawl through /crawl-step; an older
-					// caller that does not ask gets the synchronous crawl.
-					'defer_crawl'      => filter_var( $request->get_param( 'defer_crawl' ), FILTER_VALIDATE_BOOLEAN ),
-					// How the menu pages are built: 'design' (the Home's own sections
-					// with each old page's text and pictures, no AI) unless 'ai' is
-					// asked for; and which of them, when the person chose (paths).
-					'pages_engine'     => 'ai' === $request->get_param( 'pages_engine' ) ? 'ai' : 'design',
-					'pages_only'       => array_values( array_filter( array_map( static fn( $p ) => \DXAI_UI\Connectors\Site_Origin::path_of( rawurldecode( (string) $p ) ), array_filter( (array) ( $request->get_param( 'pages_only' ) ?? array() ), 'is_scalar' ) ), static fn( $p ) => $p !== '' && $p !== '/' ) ),
-					// The old site's address, when the person typed it (the design's links did not show it).
-					'pages_origin'     => \DXAI_UI\Connectors\Site_Origin::normalize( (string) $request->get_param( 'pages_origin' ) ),
-					/*
-					 * Two more fields save() reads that this endpoint dropped.
-					 *
-					 * `source_name` is the uploaded archive's file name, and it is
-					 * half of every page's identity (archive#slug) and the key of
-					 * the design's header and footer. Without it an admin import —
-					 * the only kind a real site has — fell back to identifying
-					 * pages by slug and parts by title, so three designs with a
-					 * `jobs.$slug` route overwrote one page, and seven designs
-					 * titled "DevriX" shared one header. `seo_title` is the
-					 * design's full <title>: without it the home page was named
-					 * and titled differently than the same ZIP imported on the
-					 * command line. Both arrive in the request already; the
-					 * wizard posts the compile result whole.
-					 */
-					// wp_basename(), not basename(): it splits on "\" on every OS and
-					// does not depend on the locale for a multibyte file name.
-					'source_name'      => wp_strip_all_tags( wp_basename( (string) $request->get_param( 'source_name' ) ) ),
-					'seo_title'        => sanitize_text_field( (string) $request->get_param( 'seo_title' ) ),
-					/*
-					 * The header and footer choice the import screen asks:
-					 * `install` (Appearance > Menus and Widgets become this
-					 * design's), `keep` (the site's stay untouched; the
-					 * design's are template parts), or '' — automatic
-					 * (Chrome_Choice::resolve()). Anything else is automatic.
-					 */
-					'chrome'           => \DXAI_UI\Chrome\Chrome_Choice::normalize( $request->get_param( 'chrome' ) ),
-				)
-			);
-			if ( is_wp_error( $created ) ) {
-				return $created;
-			}
+		if ( null !== $created ) {
 			$payload['structures'] = $created;
 			$payload['scope']      = $scope;
 			$payload['pages_created'] = is_array( $created['pages_created'] ?? null ) ? self::page_links( $created['pages_created'] ) : array();
@@ -1552,7 +2093,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		 * `source_type` is gone too and the request would read as a code
 		 * paste with no code. Say what happened instead.
 		 */
-		if ( array() === $request->get_file_params() ) {
+		if ( null === $this->staged && array() === $request->get_file_params() ) {
 			$too_big = Zip_Extractor::upload_error( null );
 			if ( null !== $too_big ) {
 				return $too_big;
@@ -1565,7 +2106,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		}
 
 		$files = $request->get_file_params();
-		$zip   = $files['file'] ?? $files['zip'] ?? null;
+		$zip   = $this->staged ?? $files['file'] ?? $files['zip'] ?? null;
 
 		return match ( $mode ) {
 			'figma-api'     => ( new Figma_Connector() )->fetch_from_api(

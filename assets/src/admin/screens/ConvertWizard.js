@@ -108,6 +108,13 @@ const SAVE_STUCK_MS = 10 * 60 * 1000;
 
 /* A save-status "unknown" this many times in a row means no save is recorded. */
 const SAVE_UNKNOWN_CHECKS = 3;
+/* A round of an import in rounds whose answer is lost is sent again this many times in a row before the import stops. */
+const ROUND_RETRIES = 5;
+/*
+ * A round still "running" this long was ended by the host without a word (WP Engine stops a request after 60 seconds, PHP's
+ * shutdown does not run): the save goes on from the last round that finished.
+ */
+const ROUND_STUCK_MS = 150 * 1000;
 
 /* Status reads that may fail in a row before the screen gives up asking. */
 const SAVE_STATUS_MISSES = 5;
@@ -267,6 +274,10 @@ export default function ConvertWizard() {
 	const crawlStop = useRef( null );
 	// The pending /save-status read, while a save's lost answer is looked for.
 	const saveWatch = useRef( 0 );
+	// The token of the archive an import in rounds keeps on the server (formBody()).
+	const stageRef = useRef( '' );
+	// Rounds of a save gone on with in a row after the host ended them without an answer (watchSave()).
+	const roundResumes = useRef( 0 );
 	const crawlSeen = useRef( -1 );
 	const crawlLast = useRef( null );
 	const progressHeading = useRef( null );
@@ -457,7 +468,12 @@ export default function ConvertWizard() {
 		return id !== 'review' && p && p.started && p.ended ? sum + ( p.ended - p.started ) : sum;
 	}, 0 ), [ progress ] );
 
-	function formBody( chunkIndex ) {
+	/*
+	 * An archive is imported in rounds (Converter_Controller::process_source()): uploaded once, kept on the server under a token
+	 * (`stage`), and every later request — the next round of the read, the compile, the save — names the token instead of sending
+	 * the archive again. A host such as WP Engine ends a request after 60 seconds, and a large design's read and save take minutes.
+	 */
+	function formBody( chunkIndex, stage ) {
 		const data = new window.FormData();
 		data.append( 'source_type', sourceType( path, file ) );
 		data.append( 'figma_url', figmaUrl );
@@ -465,7 +481,12 @@ export default function ConvertWizard() {
 		data.append( 'code', code );
 		data.append( 'css', css );
 		if ( file ) {
-			data.append( 'file', file );
+			data.append( 'rounds', '1' );
+			if ( stage ) {
+				data.append( 'stage', stage );
+			} else {
+				data.append( 'file', file );
+			}
 		}
 		if ( typeof chunkIndex === 'number' ) {
 			data.append( 'chunk', String( chunkIndex ) );
@@ -581,6 +602,63 @@ export default function ConvertWizard() {
 		};
 	}
 
+	/*
+	 * The archive in pieces (Converter_Controller::upload_chunk()), each well under what the host takes in one request: WP Engine
+	 * refuses a body over 50 MB, and Charter Construction's archive is 68. Sent one after the other; a piece whose answer is lost
+	 * is sent again (the server keeps it once). Answers the token the archive waits under.
+	 */
+	async function sendInPieces( token ) {
+		const size = Math.max( 262144, Math.min( Number( info.chunk_bytes ), 8388608 ) );
+		const total = Math.max( 1, Math.ceil( file.size / size ) );
+		const pause = ( ms ) => new Promise( ( resolve ) => window.setTimeout( resolve, ms ) );
+		let stage = '';
+		for ( let index = 0; index < total; index++ ) {
+			const data = new window.FormData();
+			data.append( 'chunk', file.slice( index * size, Math.min( file.size, ( index + 1 ) * size ) ), file.name );
+			data.append( 'name', file.name );
+			data.append( 'index', String( index ) );
+			data.append( 'total', String( total ) );
+			data.append( 'size', String( file.size ) );
+			if ( stage ) {
+				data.append( 'stage', stage );
+			}
+			let lost = 0;
+			for ( ;; ) {
+				if ( token !== runToken.current ) {
+					return '';
+				}
+				try {
+					const res = await postForm( 'upload-chunk', data, ( evt ) => {
+						if ( token !== runToken.current || ! evt.total || evt.sent ) {
+							return;
+						}
+						const sent = Math.min( file.size, index * size + evt.loaded );
+						const text = sprintf(
+							/* translators: 1: bytes sent, 2: file size */
+							__( '%1$s of %2$s uploaded', 'dxai-ui' ),
+							formatBytes( sent ),
+							formatBytes( file.size )
+						);
+						dispatch( { type: 'detail', id: 'read', detail: __( 'Uploading the archive — ', 'dxai-ui' ) + text, meter: { value: sent, max: file.size, text } } );
+					} );
+					if ( res && res.busy ) {
+						await pause( 5000 );
+						continue;
+					}
+					stage = ( res && res.stage ) || stage;
+					break;
+				} catch ( err ) {
+					if ( ! lostAnswer( err ) || ++lost > ROUND_RETRIES ) {
+						throw err;
+					}
+					await pause( 2000 * lost );
+				}
+			}
+		}
+		dispatch( { type: 'detail', id: 'read', meter: null, detail: __( 'Uploaded. The server is unpacking the archive and reading what is in it…', 'dxai-ui' ) } );
+		return stage;
+	}
+
 	function startConvert() {
 		runToken.current += 1;
 		const token = runToken.current;
@@ -612,10 +690,52 @@ export default function ConvertWizard() {
 		}
 		dispatch( { type: 'start', id: 'read', detail: readDetail } );
 
-		postForm( 'process-source', formBody(), uploadWatcher( 'read', token ) )
-			.then( async ( res ) => {
+		stageRef.current = '';
+		// An archive goes in pieces when the server takes them (sendInPieces()); the read then starts from the token they got.
+		const pieces = Boolean( file ) && Number( info.chunk_bytes || 0 ) > 0;
+		( pieces
+			? sendInPieces( token ).then( ( stage ) => postForm( 'process-source', formBody( undefined, stage ) ) )
+			: postForm( 'process-source', formBody(), uploadWatcher( 'read', token ) ) )
+			.then( async ( first ) => {
+				let res = first;
+				// The read in rounds: each adds the design's files to the media library for a while; the last reads the design.
+				let lost = 0;
+				while ( token === runToken.current && res && res.state === 'continue' && res.stage ) {
+					stageRef.current = res.stage;
+					if ( res.busy ) {
+						// A round this screen gave up waiting for is still adding files: the next one starts after it.
+						await new Promise( ( resolve ) => window.setTimeout( resolve, 5000 ) );
+					}
+					const files = res.harvest || {};
+					const text = sprintf(
+						/* translators: 1: files added so far, 2: files the design names */
+						__( '%1$d of %2$d files', 'dxai-ui' ),
+						files.done || 0,
+						files.total || 0
+					);
+					dispatch( {
+						type: 'detail',
+						id: 'read',
+						detail: __( 'Adding the design’s pictures and fonts to the media library — ', 'dxai-ui' ) + text,
+						meter: { value: files.done || 0, max: files.total || 1, text },
+					} );
+					try {
+						res = await postForm( 'process-source', formBody( undefined, res.stage ) );
+						lost = 0;
+					} catch ( err ) {
+						// A round the host cut off: what it added is kept, and the same round goes on from there — after a pause
+						// that grows, so a server restarting its PHP workers (a 502 at once) is given the time to.
+						if ( ! lostAnswer( err ) || ++lost > ROUND_RETRIES ) {
+							throw err;
+						}
+						await new Promise( ( resolve ) => window.setTimeout( resolve, 2000 * lost ) );
+					}
+				}
 				if ( token !== runToken.current ) {
 					return 'stale';
+				}
+				if ( res.stage ) {
+					stageRef.current = res.stage;
 				}
 				if ( res.logs ) {
 					setLogs( res.logs );
@@ -646,7 +766,7 @@ export default function ConvertWizard() {
 					detail: file ? __( 'Sending the archive to the compiler…', 'dxai-ui' ) : __( 'Compiling the design into blocks…', 'dxai-ui' ),
 				} );
 				let generated = null;
-				let last = await postForm( 'generate-block', formBody(), uploadWatcher( 'compile', token ) );
+				let last = await postForm( 'generate-block', formBody( undefined, stageRef.current ), uploadWatcher( 'compile', token ) );
 				generated = last.result || null;
 				while (
 					token === runToken.current &&
@@ -675,7 +795,7 @@ export default function ConvertWizard() {
 							generated.chunk.total
 						) },
 					} );
-					last = await postForm( 'generate-block', formBody( generated.chunk.index + 1 ) );
+					last = await postForm( 'generate-block', formBody( generated.chunk.index + 1, stageRef.current ) );
 					generated = mergeGeneration( generated, last.result );
 				}
 				if ( token !== runToken.current ) {
@@ -797,6 +917,7 @@ export default function ConvertWizard() {
 		// One token per attempt: /save-status says how THIS save ended if its
 		// answer is lost (Converter_Controller::save_pattern()).
 		const attempt = importToken();
+		roundResumes.current = 0;
 		/*
 		 * No browser-side Tailwind build.
 		 *
@@ -838,11 +959,13 @@ export default function ConvertWizard() {
 				// design's page and the site's menus and widgets are not touched.
 				// Not sent to a server that offers no choice.
 				...( asked ? { chrome: asked } : {} ),
+				// In rounds, by the archive's token: the server keeps what this request sends and answers `continue` until done.
+				...( stageRef.current ? { rounds: true, stage: stageRef.current } : {} ),
 			},
 		} )
 			.then( ( res ) => {
 				if ( token === runToken.current ) {
-					onSaved( res, crawlOn, '' );
+					saveRounds( res, { attempt, crawlOn } );
 				}
 			} )
 			.catch( ( err ) => {
@@ -859,6 +982,111 @@ export default function ConvertWizard() {
 				}
 				failSave( err, { attempt, cause: err, crawlOn, saveState: 'failed' } );
 			} );
+	}
+
+	/*
+	 * A save in rounds (Structure_Repository::save_round()): while the answer says `continue`, the next round is asked for with
+	 * the same attempt token, and the save's row says how far it got — the pages written, then the finishing steps. A round whose
+	 * answer is lost is looked for through /save-status like a whole save (watchSave()), and the rounds go on from what it
+	 * recorded. Then the pictures' smaller sizes (Pending_Sizes), and the save's answer as a save at once gives it.
+	 */
+	function saveRounds( res, { attempt, crawlOn } ) {
+		const token = runToken.current;
+		if ( token !== runToken.current ) {
+			return;
+		}
+		if ( ! res || res.state !== 'continue' ) {
+			onSaved( res, crawlOn, '' );
+			// The pages are there; the pictures' smaller sizes are made after, without holding the result back (cron makes
+			// whatever is left when this screen is closed).
+			if ( stageRef.current ) {
+				makeSizes( token );
+			}
+			return;
+		}
+		dispatch( {
+			type: 'detail',
+			id: 'save',
+			...( res.pages || res.tail ? roundProgress( res ) : { detail: __( 'Going on with the save from where it stopped…', 'dxai-ui' ) } ),
+		} );
+		const send = () => apiFetch( {
+			path: '/dxai-ui/v1/save-pattern',
+			method: 'POST',
+			data: { rounds: true, stage: stageRef.current, save_round: 'continue', import_token: attempt },
+		} )
+			.then( ( next ) => {
+				roundResumes.current = 0;
+				saveRounds( next, { attempt, crawlOn } );
+			} )
+			.catch( ( err ) => {
+				if ( token !== runToken.current ) {
+					return;
+				}
+				if ( lostAnswer( err ) || fatalAnswer( err ) ) {
+					watchSave( { attempt, cause: err, crawlOn, reopen: false, rounds: true } );
+					return;
+				}
+				failSave( err, { attempt, cause: err, crawlOn, saveState: 'failed' } );
+			} );
+		// Another request is still on a round of this save (one the screen gave up waiting for): the next is asked for after it.
+		if ( res.busy ) {
+			saveWatch.current = window.setTimeout( send, 5000 );
+			return;
+		}
+		send();
+	}
+
+	/** Where a save in rounds is, for its row: the pages written, then the finishing steps. */
+	function roundProgress( res ) {
+		const pages = res.pages || {};
+		const tail = res.tail || null;
+		if ( tail && tail.of ) {
+			const text = sprintf(
+				/* translators: 1: step, 2: steps */
+				__( 'step %1$d of %2$d', 'dxai-ui' ),
+				tail.at || 0,
+				tail.of
+			);
+			return {
+				detail: sprintf(
+					/* translators: %s: how far, e.g. "step 4 of 13" */
+					__( 'All pages written. Linking them, turning colours into the design’s tokens, moving styles into classes — %s', 'dxai-ui' ),
+					text
+				),
+				meter: { value: tail.at || 0, max: tail.of, text },
+			};
+		}
+		const text = sprintf(
+			/* translators: 1: pages written, 2: pages */
+			__( '%1$d of %2$d pages', 'dxai-ui' ),
+			pages.written || 0,
+			pages.of || 0
+		);
+		return {
+			detail: __( 'Writing the pages — ', 'dxai-ui' ) + text,
+			meter: { value: pages.written || 0, max: pages.of || 1, text },
+		};
+	}
+
+	/*
+	 * The smaller sizes of the pictures the read added without them (Pending_Sizes), a round at a time, while the save's row says
+	 * how many are left. Never a failure of the import: what is not made here, cron makes.
+	 */
+	function makeSizes( token ) {
+		let lost = 0;
+		const round = () => apiFetch( { path: '/dxai-ui/v1/media-sizes', method: 'POST' } )
+			.then( ( res ) => {
+				lost = 0;
+				const left = Number( res?.left || 0 );
+				if ( token !== runToken.current || left < 1 || Number( res?.made || 0 ) < 1 ) {
+					return null;
+				}
+				return round();
+			} )
+			.catch( ( err ) => ( lostAnswer( err ) && ++lost <= ROUND_RETRIES && token === runToken.current
+				? new Promise( ( resolve ) => window.setTimeout( resolve, 2000 * lost ) ).then( round )
+				: null ) );
+		return round();
 	}
 
 	/** The save answered — directly, or through /save-status after its answer was lost. */
@@ -928,7 +1156,7 @@ export default function ConvertWizard() {
 	 * to "the answer was lost" — and then, for an import that builds the menu
 	 * pages, it offers to check again before it offers to save again.
 	 */
-	function watchSave( { attempt, cause, crawlOn, reopen, limit } ) {
+	function watchSave( { attempt, cause, crawlOn, reopen, limit, rounds } ) {
 		const token = runToken.current;
 		const patience = limit || SAVE_STUCK_MS;
 		const why = lostWhy( cause );
@@ -969,8 +1197,26 @@ export default function ConvertWizard() {
 					}
 					misses = 0;
 					const state = rec && rec.state;
+					// A save in rounds goes on: from the round whose answer was lost, or — the host ended a round without a word,
+					// or the request never reached WordPress — from the last round that finished.
+					const resume = ( payload ) => {
+					// The same round ended by the host again and again is a step this host cannot finish: said, not retried for ever.
+					if ( ! payload && ++roundResumes.current > ROUND_RETRIES ) {
+						failSave( cause, { attempt, cause, crawlOn, saveState: 'stuck' } );
+						return;
+					}
+					saveRounds( payload || { state: 'continue' }, { attempt, crawlOn } );
+				};
 					if ( state === 'done' && rec.payload && typeof rec.payload === 'object' ) {
+						if ( rounds ) {
+							resume( rec.payload );
+							return;
+						}
 						onSaved( rec.payload, crawlOn, __( 'The connection was cut before WordPress answered, but the save finished — this screen asked WordPress for the result.', 'dxai-ui' ) );
+						return;
+					}
+					if ( rounds && state === 'continue' && rec.payload && typeof rec.payload === 'object' ) {
+						resume( rec.payload );
 						return;
 					}
 					if ( state === 'failed' ) {
@@ -988,6 +1234,10 @@ export default function ConvertWizard() {
 					if ( state === 'running' ) {
 						unknowns = 0;
 						const age = Math.max( 0, ( Number( rec.now ) || 0 ) - ( Number( rec.started ) || 0 ) ) * 1000;
+						if ( rounds && age > ROUND_STUCK_MS ) {
+							resume();
+							return;
+						}
 						if ( age > patience ) {
 							failSave(
 								{
@@ -1014,6 +1264,10 @@ export default function ConvertWizard() {
 					}
 					unknowns += 1;
 					if ( unknowns >= SAVE_UNKNOWN_CHECKS ) {
+						if ( rounds ) {
+							resume();
+							return;
+						}
 						failSave( cause, { attempt, cause, crawlOn, saveState: 'unknown' } );
 						return;
 					}
@@ -1503,7 +1757,8 @@ export default function ConvertWizard() {
 	}
 
 	const activeLine = engine && engine.active && engine.active.id ? engineLine( engine.active ) : __( 'the active engine', 'dxai-ui' );
-	const tooBig = file && info.max_upload > 0 && file.size > info.max_upload;
+	// Sent in pieces, an archive is never one upload: the host's limit matters only to a server that does not take pieces.
+	const tooBig = file && ! ( Number( info.chunk_bytes || 0 ) > 0 ) && info.max_upload > 0 && file.size > info.max_upload;
 	const crawlCount = chosenPaths.length;
 
 	return (

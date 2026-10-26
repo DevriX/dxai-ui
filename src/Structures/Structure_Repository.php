@@ -45,6 +45,135 @@ final class Structure_Repository {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public function save( array $result ): array|\WP_Error {
+		$run = $this->save_head( $result );
+		if ( is_wp_error( $run ) ) {
+			return $run;
+		}
+		foreach ( self::route_pages( $result ) as $extra ) {
+			$this->save_route( $run, $extra );
+		}
+
+		return $this->save_tail( $result, $run );
+	}
+
+	/**
+	 * save() in rounds, for an import that runs in steps (Converter_Controller::save_pattern() with `rounds`): WP Engine ends a
+	 * request after 60 seconds, and Charter Construction's 96 pages took 7 minutes to save in one (each page 3 seconds, then two
+	 * minutes of passes over all of them). Each call goes on from where the one before stopped and stops once $budget seconds are
+	 * spent: after the Home (save_head()), after at least one more of the design's pages (save_route()), or between the tail's
+	 * steps (tail_steps(): its passes over every post a post at a time). The same writes as save(), in the same order; what the
+	 * next call needs is in the state it answers.
+	 *
+	 * @param array<string, mixed> $result As save() takes it — the same in every round.
+	 * @param array<string, mixed> $state  What the rounds before this one did; [] for the first.
+	 * @return array<string, mixed>|\WP_Error The state to go on with (`done` false, `pages`: written and of), or `done` true with
+	 *                                        `created`, save()'s answer.
+	 */
+	public function save_round( array $result, array $state, float $budget ): array|\WP_Error {
+		$start   = microtime( true );
+		$pages   = self::route_pages( $result );
+		$written = false;
+		if ( ! is_array( $state['run'] ?? null ) ) {
+			$run = $this->save_head( $result );
+			if ( is_wp_error( $run ) ) {
+				return $run;
+			}
+			$state   = array(
+				'run'   => $run,
+				'next'  => 0,
+				'props' => $this->props(),
+			);
+			$written = true;
+		} else {
+			$this->restore_props( (array) ( $state['props'] ?? array() ), (string) ( $state['run']['wrapper_class'] ?? '' ) );
+		}
+		// Stopped for the next round: where, for the screen — the pages written, and which of the tail's steps is next.
+		$paused = function ( array $state ) use ( $pages ): array {
+			$step = (int) ( $state['run']['tail']['step'] ?? 0 );
+
+			return array_merge(
+				$state,
+				array(
+					'props' => $this->props(),
+					'done'  => false,
+					'pages' => array(
+						'written' => 1 + (int) $state['next'],
+						'of'      => 1 + count( $pages ),
+					),
+					'tail'  => is_array( $state['run']['tail'] ?? null ) ? array(
+						'step' => self::TAIL_STEPS[ $step ] ?? '',
+						'at'   => $step + 1,
+						'of'   => count( self::TAIL_STEPS ),
+					) : null,
+				)
+			);
+		};
+		while ( (int) $state['next'] < count( $pages ) ) {
+			if ( $written && microtime( true ) - $start >= $budget ) {
+				return $paused( $state );
+			}
+			$this->save_route( $state['run'], $pages[ (int) $state['next'] ] );
+			$state['next'] = (int) $state['next'] + 1;
+			$written       = true;
+		}
+		if ( $written && microtime( true ) - $start >= $budget ) {
+			return $paused( $state );
+		}
+		if ( ! $this->tail_steps( $result, $state['run'], $start + $budget, ! $written ) ) {
+			return $paused( $state );
+		}
+
+		return array(
+			'done'    => true,
+			'created' => (array) $state['run']['created'],
+		);
+	}
+
+	/**
+	 * What save_head() set on this repository that the later rounds of save_round() read.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function props(): array {
+		return array(
+			'inject_nav'       => $this->inject_nav,
+			'static_html'      => $this->static_html,
+			'source_archive'   => $this->source_archive,
+			'previous_home_id' => $this->previous_home_id,
+			'owner'            => $this->owner,
+			'adopt_legacy'     => $this->adopt_legacy,
+			'crawl_origin'     => $this->crawl_origin,
+			'seo_title'        => $this->seo_title,
+			'chrome_source'    => $this->chrome_source,
+		);
+	}
+
+	/**
+	 * props() as a round before set them, and the design's root classes for the scoper, as save_head() set them.
+	 *
+	 * @param array<string, mixed> $props
+	 */
+	private function restore_props( array $props, string $wrapper_class ): void {
+		$this->inject_nav       = (bool) ( $props['inject_nav'] ?? false );
+		$this->static_html      = (bool) ( $props['static_html'] ?? false );
+		$this->source_archive   = (string) ( $props['source_archive'] ?? '' );
+		$this->previous_home_id = (int) ( $props['previous_home_id'] ?? 0 );
+		$this->owner            = (string) ( $props['owner'] ?? '' );
+		$this->adopt_legacy     = (bool) ( $props['adopt_legacy'] ?? false );
+		$this->crawl_origin     = (string) ( $props['crawl_origin'] ?? '' );
+		$this->seo_title        = (string) ( $props['seo_title'] ?? '' );
+		$this->chrome_source    = (string) ( $props['chrome_source'] ?? '' );
+		Css_Scoper::set_root_classes( $wrapper_class );
+	}
+
+	/**
+	 * save() up to and with the design's Home: its sections, header and footer, the page itself. What the route pages and the
+	 * tail go on with is answered as one array, the run (save_round() keeps it between rounds).
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @return array<string, mixed>|\WP_Error The run.
+	 */
+	private function save_head( array $result ): array|\WP_Error {
 		/*
 		 * The same rule the REST routes apply (Converter_Controller::
 		 * publish_permissions()), here too because not every caller is a REST
@@ -411,54 +540,441 @@ final class Structure_Repository {
 			'/' => $page_id,
 		);
 
-		foreach ( is_array( $result['pages'] ?? null ) ? $result['pages'] : array() as $extra ) {
-			if ( ! is_array( $extra ) ) {
-				continue;
-			}
-			$extra_markup = (string) ( $extra['gutenberg_markup'] ?? '' );
-			$extra_raw    = sanitize_text_field( (string) ( $extra['block_title'] ?? '' ) );
-			if ( $extra_markup === '' || $extra_raw === '' ) {
-				continue;
-			}
-			/*
-			 * A route page is named after itself and carries its own SEO title.
-			 * It used to take its raw <title> as the page name ("Pricing |
-			 * DevriX" in the page list and in every menu built from titles), and
-			 * save_page() wrote the HOME page's SEO title onto it, so every route
-			 * of a design printed the home page's <title>. The home value is put
-			 * back afterwards for anything later in this import that reads it.
-			 */
-			$extra_title     = \DXAI_UI\Support\Page_Title::for_page( $extra_raw, $extra_raw );
-			$extra_slug      = (string) ( $extra['slug'] ?? '' );
-			$home_seo        = $this->seo_title;
-			$this->seo_title = ( str_contains( $extra_raw, '|' ) || strlen( $extra_raw ) > 60 ) ? $extra_raw : '';
-			/*
-			 * Its own root classes, not the Home's: a Claude Design route page's root is `dxg-root dxg-page-about …` and the
-			 * design's rules for that page ask for them. With the Home's, Gemini Restoration's About lost every rule written
-			 * for it (`:where(.dxg-page-about) …`): its fonts, its amber panel, its active menu item.
-			 */
-			$extra_wrapper   = $this->class_list( (string) ( $extra['wrapper_class'] ?? '' ) );
-			$extra_id        = $this->save_page( $extra_title, $extra_markup, $css, $js, $design, $compiled, $extra_wrapper !== '' ? $extra_wrapper : $wrapper_class, $raw_css, $extra_slug, '', '', $tw_config );
-			$this->seo_title = $home_seo;
-			if ( ! is_wp_error( $extra_id ) ) {
-				$created['extra_page_ids'][] = $extra_id;
-				update_post_meta( (int) $extra_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
-				update_post_meta(
-					(int) $extra_id,
-					\DXAI_UI\Chrome\Page_Chrome::MODE_META,
-					$install_chrome ? \DXAI_UI\Chrome\Chrome_Choice::INSTALL : \DXAI_UI\Chrome\Chrome_Choice::KEEP
-				);
-				$link_pages[]                = array(
-					'id'    => $extra_id,
-					'paths' => $this->link_paths( $extra_slug, $extra_title ),
-				);
-				$extra_path = Site_Origin::path_of( $extra_slug );
-				if ( $extra_path !== '' && $extra_path !== '/' ) {
-					$path_map[ $extra_path ] = (int) $extra_id;
-				}
+		return array(
+			'created'        => $created,
+			'link_pages'     => $link_pages,
+			'path_map'       => $path_map,
+			'page_id'        => $page_id,
+			'home_slug'      => $home_slug,
+			'title'          => $title,
+			'scope'          => $scope,
+			'css'            => $css,
+			'js'             => $js,
+			'design'         => $design,
+			'compiled'       => $compiled,
+			'wrapper_class'  => $wrapper_class,
+			'raw_css'        => $raw_css,
+			'tw_config'      => $tw_config,
+			'part_key'       => $part_key,
+			'install_chrome' => $install_chrome,
+			'chrome_mode'    => $chrome_mode,
+			'primary_tree'   => $primary_tree,
+			'footer_tree'    => $footer_tree,
+			'primary_items'  => $primary_items,
+			'footer_items'   => $footer_items,
+			'full_source'    => $full_source,
+			'structures'     => $structures,
+			'previous_parts' => $previous_parts,
+			'nav_pending'    => $nav_pending,
+		);
+	}
+
+	/**
+	 * The design's other pages (its routes), in the order save() writes them.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @return array<int, mixed>
+	 */
+	private static function route_pages( array $result ): array {
+		return is_array( $result['pages'] ?? null ) ? array_values( $result['pages'] ) : array();
+	}
+
+	/**
+	 * One of the design's other pages, written as save() writes them; the run records it.
+	 *
+	 * @param array<string, mixed> $run   save_head()'s run.
+	 * @param mixed                $extra The page, from the import's `pages`.
+	 */
+	private function save_route( array &$run, mixed $extra ): void {
+		$css            = (string) $run['css'];
+		$js             = (string) $run['js'];
+		$design         = (array) $run['design'];
+		$compiled       = (string) $run['compiled'];
+		$wrapper_class  = (string) $run['wrapper_class'];
+		$raw_css        = (string) $run['raw_css'];
+		$tw_config      = (string) $run['tw_config'];
+		$part_key       = (string) $run['part_key'];
+		$install_chrome = (bool) $run['install_chrome'];
+		if ( ! is_array( $extra ) ) {
+			return;
+		}
+		$extra_markup = (string) ( $extra['gutenberg_markup'] ?? '' );
+		$extra_raw    = sanitize_text_field( (string) ( $extra['block_title'] ?? '' ) );
+		if ( $extra_markup === '' || $extra_raw === '' ) {
+			return;
+		}
+		/*
+		 * A route page is named after itself and carries its own SEO title.
+		 * It used to take its raw <title> as the page name ("Pricing |
+		 * DevriX" in the page list and in every menu built from titles), and
+		 * save_page() wrote the HOME page's SEO title onto it, so every route
+		 * of a design printed the home page's <title>. The home value is put
+		 * back afterwards for anything later in this import that reads it.
+		 */
+		$extra_title     = \DXAI_UI\Support\Page_Title::for_page( $extra_raw, $extra_raw );
+		$extra_slug      = (string) ( $extra['slug'] ?? '' );
+		$home_seo        = $this->seo_title;
+		$this->seo_title = ( str_contains( $extra_raw, '|' ) || strlen( $extra_raw ) > 60 ) ? $extra_raw : '';
+		/*
+		 * Its own root classes, not the Home's: a Claude Design route page's root is `dxg-root dxg-page-about …` and the
+		 * design's rules for that page ask for them. With the Home's, Gemini Restoration's About lost every rule written
+		 * for it (`:where(.dxg-page-about) …`): its fonts, its amber panel, its active menu item.
+		 */
+		$extra_wrapper   = $this->class_list( (string) ( $extra['wrapper_class'] ?? '' ) );
+		$extra_id        = $this->save_page( $extra_title, $extra_markup, $css, $js, $design, $compiled, $extra_wrapper !== '' ? $extra_wrapper : $wrapper_class, $raw_css, $extra_slug, '', '', $tw_config );
+		$this->seo_title = $home_seo;
+		if ( ! is_wp_error( $extra_id ) ) {
+			$run['created']['extra_page_ids'][] = $extra_id;
+			update_post_meta( (int) $extra_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
+			update_post_meta(
+				(int) $extra_id,
+				\DXAI_UI\Chrome\Page_Chrome::MODE_META,
+				$install_chrome ? \DXAI_UI\Chrome\Chrome_Choice::INSTALL : \DXAI_UI\Chrome\Chrome_Choice::KEEP
+			);
+			$run['link_pages'][]         = array(
+				'id'    => $extra_id,
+				'paths' => $this->link_paths( $extra_slug, $extra_title ),
+			);
+			$extra_path = Site_Origin::path_of( $extra_slug );
+			if ( $extra_path !== '' && $extra_path !== '/' ) {
+				$run['path_map'][ $extra_path ] = (int) $extra_id;
 			}
 		}
+	}
 
+	/**
+	 * save() after the pages are written: links, colour tokens, the styles hoisted, native blocks, audits, the header and footer
+	 * installed, menus, the conversion record and the design's document — tail_steps() run to the end.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @param array<string, mixed> $run    save_head()'s run, with every route page in it.
+	 * @return array<string, mixed> save()'s answer.
+	 */
+	private function save_tail( array $result, array $run ): array {
+		$this->tail_steps( $result, $run, 0.0 );
+
+		return (array) $run['created'];
+	}
+
+	/** The tail's steps, in the order save() runs them (tail_step()). */
+	private const TAIL_STEPS = array( 'pre', 'links', 'retire', 'tokens', 'sheets', 'palette', 'context', 'hoist', 'after', 'audit', 'chrome', 'conversion', 'document' );
+
+	/**
+	 * The tail's steps that work on the whole design at once (its palette, its hoisting context, the header and footer, the
+	 * conversion record, the design's document): each starts a round of its own. Begun late in a round, two of them took
+	 * Charter Construction's last round to 78 seconds.
+	 */
+	private const TAIL_ALONE = array( 'pre', 'context', 'chrome', 'conversion', 'document' );
+
+	/**
+	 * The tail a step at a time, from where $run['tail'] says it stopped, until $deadline (microtime; 0: no limit) — one step at
+	 * least. The passes over every post of the design (colour tokens into the posts, then into their stylesheets, the styles
+	 * hoisted, the audits) go a post or a sheet at a time, with what they share computed once before them (the palette, the
+	 * hoisting context) and kept in the run: Charter Construction's 96 pages spent 18 and 27 seconds in two of them. A step on the
+	 * whole design (TAIL_ALONE) waits for a round of its own.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @param array<string, mixed> $run    save_head()'s run; its `created` is save()'s answer once the tail is done.
+	 * @param bool                 $fresh  Nothing else was done in this request before.
+	 * @return bool Whether the tail is done.
+	 */
+	private function tail_steps( array $result, array &$run, float $deadline, bool $fresh = true ): bool {
+		$tail = is_array( $run['tail'] ?? null ) ? $run['tail'] : array(
+			'step' => 0,
+			'at'   => 0,
+		);
+		$did  = ! $fresh;
+		while ( (int) $tail['step'] < count( self::TAIL_STEPS ) ) {
+			$alone = 0 === (int) $tail['at'] && in_array( self::TAIL_STEPS[ (int) $tail['step'] ], self::TAIL_ALONE, true );
+			if ( $did && $deadline > 0 && ( $alone || microtime( true ) >= $deadline ) ) {
+				$run['tail'] = $tail;
+
+				return false;
+			}
+			if ( $this->tail_step( self::TAIL_STEPS[ (int) $tail['step'] ], $result, $run, $tail ) ) {
+				$tail['step'] = (int) $tail['step'] + 1;
+				$tail['at']   = 0;
+			}
+			$did = true;
+		}
+		$run['tail'] = $tail;
+
+		return true;
+	}
+
+	/**
+	 * One step of the tail, or one post or sheet of a pass over them.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @param array<string, mixed> $run    The run.
+	 * @param array<string, mixed> $tail   What the steps before kept for the ones after.
+	 * @return bool Whether the step is finished (false: call it again for its next post or sheet).
+	 */
+	private function tail_step( string $step, array $result, array &$run, array &$tail ): bool {
+		$page_id = (int) $run['page_id'];
+		$title   = (string) $run['title'];
+		switch ( $step ) {
+			case 'pre':
+				$this->tail_pre( $result, $run, $tail );
+
+				return true;
+
+			case 'links':
+				// Rewrite hrefs in Home, crawled pages, header/footer template parts,
+				// and any synced header/footer patterns that still carry design URLs.
+				$this->rewrite_links( (array) $run['link_pages'], (array) $run['created'] );
+
+				return true;
+
+			case 'retire':
+				$part_key                         = (string) $run['part_key'];
+				$run['created']['parts_retired'] = $this->retire_parts(
+					(array) $run['previous_parts'],
+					array(
+						Template_Part_Factory::slug( 'header', $part_key ),
+						Template_Part_Factory::slug( 'footer', $part_key ),
+					)
+				);
+
+				return true;
+
+			case 'tokens':
+				/*
+				 * Every literal colour and shadow this design wrote becomes a token —
+				 * `background:#F2A34A` becomes `background:var(--dxai-accent)` — across
+				 * the page, its extra route pages, its sections and its header and
+				 * footer, and in its compiled stylesheet. See Token_Styles.
+				 *
+				 * Here, at the end, because it needs the whole design at once: the
+				 * header, footer and sections are saved before save_page() compiles the
+				 * stylesheet, so the full palette is only knowable once all of them
+				 * exist. And after the link rewrite, so the content it reads is the
+				 * content that will be served.
+				 *
+				 * It uses the palette computed before the crawl, so the tokens the
+				 * restyler wrote into crawled pages are the ones defined here. Crawled
+				 * pages are rewritten too, but only as `derived` pages: they never add a
+				 * colour to the palette, so nothing the restyler invented can become
+				 * part of the brand. Token_Styles::tokenize_import(), a post at a time.
+				 */
+				if ( ! isset( $tail['tokens'] ) ) {
+					$palette           = (array) $tail['palette'];
+					$lists             = \DXAI_UI\Compiler\Token_Styles::import_posts( (array) $tail['design_posts'], (array) $tail['crawled'] );
+					$tail['tokens']    = array(
+						'colors'          => count( (array) ( $palette['colors'] ?? array() ) ),
+						'shadows'         => count( (array) ( $palette['shadows'] ?? array() ) ),
+						'literals_before' => 0,
+						'literals_after'  => 0,
+					);
+					$tail['tokens_on'] = ( $palette['colors'] ?? array() ) !== array() || ( $palette['shadows'] ?? array() ) !== array();
+					$tail['posts']     = array_merge( $lists[0], $lists[1] );
+					$tail['derived']   = $lists[1];
+				}
+				$posts = (array) $tail['posts'];
+				if ( empty( $tail['tokens_on'] ) || (int) $tail['at'] >= count( $posts ) ) {
+					return true;
+				}
+				$counts                             = \DXAI_UI\Compiler\Token_Styles::tokenize_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['palette'] );
+				$tail['tokens']['literals_before'] += $counts['literals_before'];
+				$tail['tokens']['literals_after']  += $counts['literals_after'];
+				$tail['at']                         = (int) $tail['at'] + 1;
+
+				return (int) $tail['at'] >= count( $posts );
+
+			case 'sheets':
+				if ( empty( $tail['tokens_on'] ) ) {
+					return true;
+				}
+				if ( ! isset( $tail['sheets'] ) ) {
+					$tail['sheets'] = \DXAI_UI\Compiler\Token_Styles::import_sheets( $page_id, (array) $tail['route_pages'], (array) $tail['derived'] );
+				}
+				$sheets = (array) $tail['sheets'];
+				if ( (int) $tail['at'] < count( $sheets ) ) {
+					\DXAI_UI\Compiler\Token_Styles::tokenize_sheets( array( (string) $sheets[ (int) $tail['at'] ] ), (array) $tail['palette'], (array) $tail['roles'] );
+					$tail['at'] = (int) $tail['at'] + 1;
+				}
+
+				return (int) $tail['at'] >= count( $sheets );
+
+			case 'palette':
+				if ( ! empty( $tail['tokens_on'] ) ) {
+					\DXAI_UI\Compiler\Token_Styles::store_palette( $page_id, (array) $tail['route_pages'], (array) $tail['derived'], (array) $tail['palette'], (array) $tail['roles'] );
+				}
+				$run['created']['tokens'] = $tail['tokens'];
+				unset( $tail['posts'], $tail['sheets'] );
+				// The brand's presets are built from the palette just stored; the
+				// theme.json cache has to forget the version built without it.
+				\DXAI_UI\Theme\Design_Theme_Json::flush();
+
+				return true;
+
+			case 'context':
+				/*
+				 * And then no inline styles: every block's CSS (tokens and all) moves
+				 * from style="" to a dxs- class and the block's dxaiCss attribute, and
+				 * a text colour that is a site preset becomes core's colour setting.
+				 * See Style_Hoister. After tokenising, so what moves is already
+				 * written in tokens. Style_Hoister::hoist_import(), a post at a time.
+				 */
+				$tail['hoist']   = array_values( array_unique( array_filter( array_map( 'intval', array_merge( (array) $tail['design_posts'], (array) $tail['crawled'] ) ) ) ) );
+				$tail['context'] = \DXAI_UI\Compiler\Style_Hoister::import_context( $tail['hoist'] );
+				$tail['presets'] = self::preset_slugs( $page_id );
+				$tail['hoisted'] = array(
+					'posts'     => 0,
+					'blocks'    => 0,
+					'inner'     => 0,
+					'presets'   => 0,
+					'utilities' => 0,
+				);
+
+				return true;
+
+			case 'hoist':
+				$posts = (array) $tail['hoist'];
+				if ( (int) $tail['at'] < count( $posts ) ) {
+					$done = \DXAI_UI\Compiler\Style_Hoister::hoist_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['presets'], (array) $tail['context'] );
+					foreach ( $done as $key => $count ) {
+						$tail['hoisted'][ $key ] = (int) ( $tail['hoisted'][ $key ] ?? 0 ) + (int) $count;
+					}
+					$tail['at'] = (int) $tail['at'] + 1;
+				}
+				if ( (int) $tail['at'] < count( $posts ) ) {
+					return false;
+				}
+				$run['created']['hoisted'] = $tail['hoisted'];
+				unset( $tail['hoist'], $tail['context'] );
+
+				return true;
+
+			case 'after':
+				// The design's colours fitted to the active theme's, from its first view (Theme_Binding).
+				\DXAI_UI\Theme\Theme_Binding::after_import( (int) $page_id );
+				// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
+				\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
+				\DXAI_UI\Media\Font_Host::after_import( (int) $page_id );
+				// A design imported again comes back with its own links to its old site: the pages built from that site are where they lead.
+				\DXAI_UI\Pages\Site_Pages::relink( (int) $page_id );
+
+				return true;
+
+			case 'audit':
+				/*
+				 * Audit every page this import wrote, here rather than in the REST
+				 * controller.
+				 *
+				 * The controller used to run Import_Audit itself, which meant a page
+				 * imported on the command line was never audited at all and a
+				 * multi-route import carried an audit only on its first page. Auditing
+				 * where the pages are written is what makes the two import paths report
+				 * the same thing — and the link rewrite above has already run, so what
+				 * is measured is the page as it will be served.
+				 */
+				/*
+				 * The archive each page came from is recorded by save_page() itself,
+				 * atomically with the page, because it is half of that page's identity
+				 * — see existing_page(). Before that it was written by nothing but
+				 * bin/purge-and-import-real-zips.php, so a page imported through
+				 * wp-admin could never be paired with its design and a corpus run
+				 * reported eight pages as "no recorded source ZIP": honest, but it
+				 * means those pages shipped unmeasured.
+				 */
+				// A page at a time: 96 pages are a step longer than a round.
+				$audited = array_values( (array) $run['link_pages'] );
+				if ( (int) $tail['at'] < count( $audited ) ) {
+					$audit_id = (int) ( $audited[ (int) $tail['at'] ]['id'] ?? 0 );
+					if ( $audit_id > 0 ) {
+						$audit = ( new Import_Audit() )->page( $audit_id );
+						update_post_meta( $audit_id, Import_Audit::META, $audit );
+						if ( $audit_id === $page_id ) {
+							$run['created']['audit'] = $audit;
+						}
+					}
+					$tail['at'] = (int) $tail['at'] + 1;
+				}
+
+				return (int) $tail['at'] >= count( $audited );
+
+			case 'chrome':
+				$this->tail_chrome( $result, $run, $tail );
+
+				return true;
+
+			case 'conversion':
+				$created                   = (array) $run['created'];
+				$result['scope']           = (string) $run['scope'];
+				$conversion                = $this->save_conversion( $title, $result, $created );
+				$created['conversion_id'] = $conversion;
+				if ( ! empty( $created['crawl_job'] ) ) {
+					$chrome_mode = (array) $run['chrome_mode'];
+					/*
+					 * What the crawl's finishing pass rebinds and re-links. The parts
+					 * the blocks replaced are still published — they are retired once
+					 * the crawl has re-linked them and the chrome is rebuilt from them
+					 * (finish_crawl()); the footer's content as installed is kept too,
+					 * in case its part is gone by then.
+					 */
+					Crawl_Job::update_tail(
+						(string) $created['crawl_job'],
+						array(
+							'conversion' => (int) $conversion,
+							'chrome'     => array(
+								'mode'          => (string) $chrome_mode['mode'],
+								'reason'        => (string) $chrome_mode['reason'],
+								'header'        => ( $created['chrome']['header']['block_markup'] ?? '' ) !== '',
+								'footer'        => ( $created['chrome']['footer']['block_markup'] ?? '' ) !== '',
+								'header_part'   => (int) ( $created['chrome_parts']['header'] ?? 0 ),
+								'footer_part'   => (int) ( $created['chrome_parts']['footer'] ?? 0 ),
+								'header_markup' => ( $created['chrome']['header']['block_markup'] ?? '' ) !== '' ? (string) $tail['header_installed_from'] : '',
+								'footer_markup' => ( $created['chrome']['footer']['block_markup'] ?? '' ) !== '' ? (string) $tail['footer_installed_from'] : '',
+							),
+							'header_id'  => (int) $created['header_id'],
+							'footer_id'  => (int) $created['footer_id'],
+						)
+					);
+				}
+				$run['created'] = $created;
+
+				return true;
+
+			case 'document':
+				// The design's document (the Design IR, docs/PLAN-ARCHITECTURE.md): what this import read and made, as one record on the
+				// Home. Never a failure of the import: a document that cannot be built leaves a note on the Home instead.
+				$result['scope']               = (string) $run['scope'];
+				$document                      = \DXAI_UI\Design\Document_Store::record( $result, (array) $run['created'] );
+				$run['created']['document'] = $document?->summary();
+
+				return true;
+		}
+
+		return true;
+	}
+
+	/**
+	 * The tail's first step: the design's paths and its posts, the palette (computed once, kept for the token steps), and the crawl
+	 * of the pages its menu names, planned or run.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @param array<string, mixed> $run    The run: `created`, `link_pages` and `path_map` grow here.
+	 * @param array<string, mixed> $tail   Gets what the later steps read.
+	 */
+	private function tail_pre( array $result, array &$run, array &$tail ): void {
+		$created       = (array) $run['created'];
+		$link_pages    = (array) $run['link_pages'];
+		$path_map      = (array) $run['path_map'];
+		$page_id       = (int) $run['page_id'];
+		$home_slug     = (string) $run['home_slug'];
+		$title         = (string) $run['title'];
+		$scope         = (string) $run['scope'];
+		$css           = (string) $run['css'];
+		$wrapper_class = (string) $run['wrapper_class'];
+		$raw_css       = (string) $run['raw_css'];
+		$part_key      = (string) $run['part_key'];
+		$primary_tree  = (array) $run['primary_tree'];
+		$footer_tree   = (array) $run['footer_tree'];
+		$primary_items = (array) $run['primary_items'];
+		$footer_items  = (array) $run['footer_items'];
+		$full_source   = (string) $run['full_source'];
+		$structures    = (array) $run['structures'];
 		$path_map['/'] = $page_id;
 		$home_path     = Site_Origin::path_of( $home_slug );
 		if ( $home_path !== '' && $home_path !== '/' ) {
@@ -637,101 +1153,43 @@ final class Structure_Repository {
 		foreach ( (array) ( $known_pages['unedited'] ?? array() ) as $known_id ) {
 			Site_From_Menu::mark_imported( (int) $known_id );
 		}
+		$run['created']    = $created;
+		$run['link_pages'] = $link_pages;
+		$run['path_map']   = $path_map;
+		$tail['home_path']    = $home_path;
+		$tail['design_posts'] = $design_posts;
+		$tail['route_pages']  = $route_pages;
+		$tail['roles']        = $roles;
+		$tail['palette']      = $palette;
+		$tail['crawled']      = $crawled;
+		$tail['create_missing'] = $create_missing;
+		$tail['deferred']       = $deferred;
+		$tail['known_paths']    = ( $known_pages['path_map'] ?? array() ) !== array();
+	}
 
-		// Rewrite hrefs in Home, crawled pages, header/footer template parts,
-		// and any synced header/footer patterns that still carry design URLs.
-		$this->rewrite_links( $link_pages, $created );
-
-		$created['parts_retired'] = $this->retire_parts(
-			$previous_parts,
-			array(
-				Template_Part_Factory::slug( 'header', $part_key ),
-				Template_Part_Factory::slug( 'footer', $part_key ),
-			)
-		);
-
-		/*
-		 * Every literal colour and shadow this design wrote becomes a token —
-		 * `background:#F2A34A` becomes `background:var(--dxai-accent)` — across
-		 * the page, its extra route pages, its sections and its header and
-		 * footer, and in its compiled stylesheet. See Token_Styles.
-		 *
-		 * Here, at the end, because it needs the whole design at once: the
-		 * header, footer and sections are saved before save_page() compiles the
-		 * stylesheet, so the full palette is only knowable once all of them
-		 * exist. And after the link rewrite, so the content it reads is the
-		 * content that will be served.
-		 *
-		 * It uses the palette computed before the crawl, so the tokens the
-		 * restyler wrote into crawled pages are the ones defined here. Crawled
-		 * pages are rewritten too, but only as `derived` pages: they never add a
-		 * colour to the palette, so nothing the restyler invented can become
-		 * part of the brand.
-		 */
-		$created['tokens'] = \DXAI_UI\Compiler\Token_Styles::tokenize_import(
-			$design_posts,
-			(int) $page_id,
-			$route_pages,
-			$roles,
-			$palette,
-			$crawled
-		);
-		// The brand's presets are built from the palette just stored; the
-		// theme.json cache has to forget the version built without it.
-		\DXAI_UI\Theme\Design_Theme_Json::flush();
-
-		/*
-		 * And then no inline styles: every block's CSS (tokens and all) moves
-		 * from style="" to a dxs- class and the block's dxaiCss attribute, and
-		 * a text colour that is a site preset becomes core's colour setting.
-		 * See Style_Hoister. After tokenising, so what moves is already
-		 * written in tokens.
-		 */
-		$created['hoisted'] = \DXAI_UI\Compiler\Style_Hoister::hoist_import(
-			array_merge( $design_posts, $crawled ),
-			self::preset_slugs( (int) $page_id )
-		);
-		// The design's colours fitted to the active theme's, from its first view (Theme_Binding).
-		\DXAI_UI\Theme\Theme_Binding::after_import( (int) $page_id );
-		// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
-		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
-		\DXAI_UI\Media\Font_Host::after_import( (int) $page_id );
-		// A design imported again comes back with its own links to its old site: the pages built from that site are where they lead.
-		\DXAI_UI\Pages\Site_Pages::relink( (int) $page_id );
-
-		/*
-		 * Audit every page this import wrote, here rather than in the REST
-		 * controller.
-		 *
-		 * The controller used to run Import_Audit itself, which meant a page
-		 * imported on the command line was never audited at all and a
-		 * multi-route import carried an audit only on its first page. Auditing
-		 * where the pages are written is what makes the two import paths report
-		 * the same thing — and the link rewrite above has already run, so what
-		 * is measured is the page as it will be served.
-		 */
-		/*
-		 * The archive each page came from is recorded by save_page() itself,
-		 * atomically with the page, because it is half of that page's identity
-		 * — see existing_page(). Before that it was written by nothing but
-		 * bin/purge-and-import-real-zips.php, so a page imported through
-		 * wp-admin could never be paired with its design and a corpus run
-		 * reported eight pages as "no recorded source ZIP": honest, but it
-		 * means those pages shipped unmeasured.
-		 */
-		$auditor = new Import_Audit();
-		foreach ( $link_pages as $audited ) {
-			$audit_id = (int) ( $audited['id'] ?? 0 );
-			if ( $audit_id <= 0 ) {
-				continue;
-			}
-			$audit = $auditor->page( $audit_id );
-			update_post_meta( $audit_id, Import_Audit::META, $audit );
-			if ( $audit_id === $page_id ) {
-				$created['audit'] = $audit;
-			}
-		}
-
+	/**
+	 * The coverage report, then the header and footer: installed from the parts as they are now, or kept; the fonts a design that
+	 * becomes the site's template brings, and the menus of an area that kept its part.
+	 *
+	 * @param array<string, mixed> $result As save() takes it.
+	 * @param array<string, mixed> $run    The run.
+	 * @param array<string, mixed> $tail   Gets the parts' content as installed, for the conversion step.
+	 */
+	private function tail_chrome( array $result, array &$run, array &$tail ): void {
+		$created        = (array) $run['created'];
+		$path_map       = (array) $run['path_map'];
+		$page_id        = (int) $run['page_id'];
+		$title          = (string) $run['title'];
+		$part_key       = (string) $run['part_key'];
+		$install_chrome = (bool) $run['install_chrome'];
+		$chrome_mode    = (array) $run['chrome_mode'];
+		$primary_tree   = (array) $run['primary_tree'];
+		$footer_tree    = (array) $run['footer_tree'];
+		$primary_items  = (array) $run['primary_items'];
+		$footer_items   = (array) $run['footer_items'];
+		$nav_pending    = (array) $run['nav_pending'];
+		$create_missing = ! empty( $tail['create_missing'] );
+		$deferred       = ! empty( $tail['deferred'] );
 		/*
 		 * And the coverage report: every dimension of the design counted on
 		 * both sides — keyframes, animation declarations, design tokens, fonts,
@@ -781,7 +1239,7 @@ final class Structure_Repository {
 				// pages to bind them to — this request's crawl, or the earlier
 				// crawl a deferred one will update. Otherwise the header keeps
 				// the design's own URLs, as its part had them.
-				( $crawl_pages !== array() || ( $known_pages['path_map'] ?? array() ) !== array() ) ? $path_map : array(),
+				( $crawl_pages !== array() || ! empty( $tail['known_paths'] ) ) ? $path_map : array(),
 				$this->crawl_origin,
 				$deferred
 			)
@@ -813,43 +1271,9 @@ final class Structure_Repository {
 				$this->save_menu_flat( $created, $title, array_values( array_intersect( $kept_parts, array_keys( $nav_pending ) ) ), $primary_items, $footer_items );
 			}
 		}
-
-		$result['scope'] = $scope;
-		$conversion = $this->save_conversion( $title, $result, $created );
-		$created['conversion_id'] = $conversion;
-		if ( ! empty( $created['crawl_job'] ) ) {
-			/*
-			 * What the crawl's finishing pass rebinds and re-links. The parts
-			 * the blocks replaced are still published — they are retired once
-			 * the crawl has re-linked them and the chrome is rebuilt from them
-			 * (finish_crawl()); the footer's content as installed is kept too,
-			 * in case its part is gone by then.
-			 */
-			Crawl_Job::update_tail(
-				(string) $created['crawl_job'],
-				array(
-					'conversion' => (int) $conversion,
-					'chrome'     => array(
-						'mode'          => (string) $chrome_mode['mode'],
-						'reason'        => (string) $chrome_mode['reason'],
-						'header'        => ( $created['chrome']['header']['block_markup'] ?? '' ) !== '',
-						'footer'        => ( $created['chrome']['footer']['block_markup'] ?? '' ) !== '',
-						'header_part'   => (int) ( $created['chrome_parts']['header'] ?? 0 ),
-						'footer_part'   => (int) ( $created['chrome_parts']['footer'] ?? 0 ),
-						'header_markup' => ( $created['chrome']['header']['block_markup'] ?? '' ) !== '' ? $header_installed_from : '',
-						'footer_markup' => ( $created['chrome']['footer']['block_markup'] ?? '' ) !== '' ? $footer_installed_from : '',
-					),
-					'header_id'  => (int) $created['header_id'],
-					'footer_id'  => (int) $created['footer_id'],
-				)
-			);
-		}
-		// The design's document (the Design IR, docs/PLAN-ARCHITECTURE.md): what this import read and made, as one record on the
-		// Home. Never a failure of the import: a document that cannot be built leaves a note on the Home instead.
-		$document            = \DXAI_UI\Design\Document_Store::record( $result, $created );
-		$created['document'] = $document?->summary();
-
-		return $created;
+		$run['created']                = $created;
+		$tail['header_installed_from'] = $header_installed_from;
+		$tail['footer_installed_from'] = $footer_installed_from;
 	}
 
 	/**
@@ -1815,6 +2239,8 @@ final class Structure_Repository {
 			$chrome_markup[] = \DXAI_UI\Chrome\Site_Footer_Block::markup();
 		}
 		\DXAI_UI\Compiler\Style_Hoister::hoist_import( $crawled, self::preset_slugs( $page_id ), array_values( array_filter( $chrome_markup ) ) );
+		// Built from the Home's own sections, a crawled page is the Home's design, and its design names are the Home's.
+		\DXAI_UI\Compiler\Style_Hoister::share_design_names( $page_id, $crawled );
 		// The pages built from the old site count for the design's colour use too.
 		\DXAI_UI\Theme\Theme_Binding::after_import( $page_id );
 		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $page_id );

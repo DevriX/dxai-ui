@@ -68,13 +68,18 @@ final class Engine {
 
 	/**
 	 * Compile every utility found in the markup into CSS scoped to $scope.
+	 *
+	 * @param array<string, true>|null $only The class names that may become utilities (keys); null: every one.
 	 */
-	public function compile( string $markup, string $scope ): string {
+	public function compile( string $markup, string $scope, ?array $only = null ): string {
 		$this->unresolved = array();
 		$rules            = array();
 		$index            = 0;
 
 		foreach ( self::extract_classes( $markup ) as $class ) {
+			if ( null !== $only && ! isset( $only[ $class ] ) ) {
+				continue;
+			}
 			$candidate = Candidate::parse( $class );
 			if ( ! $candidate instanceof Candidate ) {
 				continue;

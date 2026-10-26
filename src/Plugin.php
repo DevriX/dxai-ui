@@ -103,6 +103,8 @@ final class Plugin {
 		( new \DXAI_UI\Media\Image_Sizes() )->register();
 		// The sizes of a design's photographs, when the request that imported them ran long, written by cron (T5.1).
 		( new \DXAI_UI\Media\Image_Quality() )->register();
+		// …and the sizes of the pictures an import in rounds added without them, by cron when no import screen makes them.
+		( new \DXAI_UI\Media\Pending_Sizes() )->register();
 		// A design's web fonts asked for once its page has loaded, drawn in their fallback faces until then (T5.2).
 		( new \DXAI_UI\Media\Late_Fonts() )->register();
 		// The plugin's small stylesheets written into the page, as WordPress writes its own (T5.3).

@@ -56,6 +56,14 @@ final class Sideloader {
 	 */
 	private const FETCH_TTL = 15 * MINUTE_IN_SECONDS;
 
+	/** Files this request added to the media library or uploads (not found there already). */
+	private static int $added = 0;
+
+	/** How many files this request has added so far: a round of an import read in rounds compares it (Asset_Harvester). */
+	public static function added(): int {
+		return self::$added;
+	}
+
 	/**
 	 * @return array{path:string, url:string, id:int, kind:string, mime:string, original:string, filename:string}|\WP_Error
 	 */
@@ -224,6 +232,7 @@ final class Sideloader {
 			if ( is_wp_error( $stored ) ) {
 				return $id;
 			}
+			++self::$added;
 			if ( '' !== $hash ) {
 				self::$by_hash[ self::memo_key( $hash ) ] = $stored;
 			}
@@ -231,6 +240,7 @@ final class Sideloader {
 			return $stored;
 		}
 
+		++self::$added;
 		$attachment = array(
 			'id'       => (int) $id,
 			'url'      => (string) wp_get_attachment_url( (int) $id ),
@@ -254,8 +264,13 @@ final class Sideloader {
 		} elseif ( $webp ) {
 			update_post_meta( (int) $id, Webp::KEPT_META, '1' );
 		}
-		// Its sizes, written by WordPress at its own quality, as light as Lighthouse asks of a photograph.
-		Image_Quality::fit_or_queue( (int) $id );
+		// Its sizes, written by WordPress at its own quality, as light as Lighthouse asks of a photograph — or, by an import that
+		// runs in steps, made after it (Pending_Sizes).
+		if ( Pending_Sizes::deferring() ) {
+			Pending_Sizes::mark( (int) $id );
+		} else {
+			Image_Quality::fit_or_queue( (int) $id );
+		}
 
 		return $attachment;
 	}

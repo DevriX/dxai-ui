@@ -1,10 +1,10 @@
 # Hooks
 
-The filters and actions DX fires, from the code: 66 filters, 1 action. Each says what the comment above its call says, the values it passes (the first is the value a filter returns) and where it is called.
+The filters and actions DX fires, from the code: 67 filters, 1 action. Each says what the comment above its call says, the values it passes (the first is the value a filter returns) and where it is called.
 
 This file is written by `node bin/hooks-doc.cjs`; CI fails when it is not what the code says (`--check`). To document a hook, write the comment above the line that fires it.
 
-**Filters:** [`dxai_ui_accessible_markup`](#dxai_ui_accessible_markup) · [`dxai_ui_adopt_brand`](#dxai_ui_adopt_brand) · [`dxai_ui_arrange_sections`](#dxai_ui_arrange_sections) · [`dxai_ui_block_library_facts`](#dxai_ui_block_library_facts) · [`dxai_ui_block_library_themes`](#dxai_ui_block_library_themes) · [`dxai_ui_chrome_mode`](#dxai_ui_chrome_mode) · [`dxai_ui_copies_old_page`](#dxai_ui_copies_old_page) · [`dxai_ui_copy_engine`](#dxai_ui_copy_engine) · [`dxai_ui_crawl_use_ai`](#dxai_ui_crawl_use_ai) · [`dxai_ui_default_template`](#dxai_ui_default_template) · [`dxai_ui_design_system`](#dxai_ui_design_system) · [`dxai_ui_dx_themes`](#dxai_ui_dx_themes) · [`dxai_ui_fence_theme`](#dxai_ui_fence_theme) · [`dxai_ui_font_fallbacks`](#dxai_ui_font_fallbacks) · [`dxai_ui_fonts_on_import`](#dxai_ui_fonts_on_import) · [`dxai_ui_footer_holders`](#dxai_ui_footer_holders) · [`dxai_ui_harmony`](#dxai_ui_harmony) · [`dxai_ui_harvest_unreferenced`](#dxai_ui_harvest_unreferenced) · [`dxai_ui_image_quality`](#dxai_ui_image_quality) · [`dxai_ui_image_sizes`](#dxai_ui_image_sizes) · [`dxai_ui_inline_styles`](#dxai_ui_inline_styles) · [`dxai_ui_install_chrome`](#dxai_ui_install_chrome) · [`dxai_ui_interactivity`](#dxai_ui_interactivity) · [`dxai_ui_late_fonts`](#dxai_ui_late_fonts) · [`dxai_ui_lazy_below`](#dxai_ui_lazy_below) · [`dxai_ui_lcp_preload`](#dxai_ui_lcp_preload) · [`dxai_ui_legible_text`](#dxai_ui_legible_text) · [`dxai_ui_menu_pages_hosts`](#dxai_ui_menu_pages_hosts) · [`dxai_ui_menu_pages_live`](#dxai_ui_menu_pages_live) · [`dxai_ui_meta_description`](#dxai_ui_meta_description) · [`dxai_ui_native_blocks_on_import`](#dxai_ui_native_blocks_on_import) · [`dxai_ui_native_converters`](#dxai_ui_native_converters) · [`dxai_ui_network_activation_sites`](#dxai_ui_network_activation_sites) · [`dxai_ui_new_page_status`](#dxai_ui_new_page_status) · [`dxai_ui_page_css_trim`](#dxai_ui_page_css_trim) · [`dxai_ui_pages_engine`](#dxai_ui_pages_engine) · [`dxai_ui_picture_sizes`](#dxai_ui_picture_sizes) · [`dxai_ui_restyle_engine`](#dxai_ui_restyle_engine) · [`dxai_ui_seo_plugin`](#dxai_ui_seo_plugin) · [`dxai_ui_site_links`](#dxai_ui_site_links) · [`dxai_ui_style_rules_markup`](#dxai_ui_style_rules_markup) · [`dxai_ui_team_library`](#dxai_ui_team_library) · [`dxai_ui_template`](#dxai_ui_template) · [`dxai_ui_template_fonts_choice`](#dxai_ui_template_fonts_choice) · [`dxai_ui_template_fonts_live`](#dxai_ui_template_fonts_live) · [`dxai_ui_templates`](#dxai_ui_templates) · [`dxai_ui_theme_color_mode`](#dxai_ui_theme_color_mode) · [`dxai_ui_theme_components`](#dxai_ui_theme_components) · [`dxai_ui_theme_fonts`](#dxai_ui_theme_fonts) · [`dxai_ui_theme_fonts_follow`](#dxai_ui_theme_fonts_follow) · [`dxai_ui_theme_has_block_library`](#dxai_ui_theme_has_block_library) · [`dxai_ui_theme_has_youtube_facade`](#dxai_ui_theme_has_youtube_facade) · [`dxai_ui_theme_option`](#dxai_ui_theme_option) · [`dxai_ui_transfer_font_hosts`](#dxai_ui_transfer_font_hosts) · [`dxai_ui_transfer_step_seconds`](#dxai_ui_transfer_step_seconds) · [`dxai_ui_trim_min_bytes`](#dxai_ui_trim_min_bytes) · [`dxai_ui_trim_theme_css`](#dxai_ui_trim_theme_css) · [`dxai_ui_trusted_proxies`](#dxai_ui_trusted_proxies) · [`dxai_ui_update_channel`](#dxai_ui_update_channel) · [`dxai_ui_update_checkout`](#dxai_ui_update_checkout) · [`dxai_ui_update_repository`](#dxai_ui_update_repository) · [`dxai_ui_use_dx_picture`](#dxai_ui_use_dx_picture) · [`dxai_ui_video_hidden_embeds`](#dxai_ui_video_hidden_embeds) · [`dxai_ui_webp`](#dxai_ui_webp) · [`dxai_ui_zip_limits`](#dxai_ui_zip_limits) · [`dxai_ui_zip_work_root`](#dxai_ui_zip_work_root)
+**Filters:** [`dxai_ui_accessible_markup`](#dxai_ui_accessible_markup) · [`dxai_ui_adopt_brand`](#dxai_ui_adopt_brand) · [`dxai_ui_arrange_sections`](#dxai_ui_arrange_sections) · [`dxai_ui_block_library_facts`](#dxai_ui_block_library_facts) · [`dxai_ui_block_library_themes`](#dxai_ui_block_library_themes) · [`dxai_ui_chrome_mode`](#dxai_ui_chrome_mode) · [`dxai_ui_copies_old_page`](#dxai_ui_copies_old_page) · [`dxai_ui_copy_engine`](#dxai_ui_copy_engine) · [`dxai_ui_crawl_use_ai`](#dxai_ui_crawl_use_ai) · [`dxai_ui_default_template`](#dxai_ui_default_template) · [`dxai_ui_design_system`](#dxai_ui_design_system) · [`dxai_ui_dx_themes`](#dxai_ui_dx_themes) · [`dxai_ui_fence_theme`](#dxai_ui_fence_theme) · [`dxai_ui_font_fallbacks`](#dxai_ui_font_fallbacks) · [`dxai_ui_fonts_on_import`](#dxai_ui_fonts_on_import) · [`dxai_ui_footer_holders`](#dxai_ui_footer_holders) · [`dxai_ui_harmony`](#dxai_ui_harmony) · [`dxai_ui_harvest_unreferenced`](#dxai_ui_harvest_unreferenced) · [`dxai_ui_image_quality`](#dxai_ui_image_quality) · [`dxai_ui_image_sizes`](#dxai_ui_image_sizes) · [`dxai_ui_import_round_seconds`](#dxai_ui_import_round_seconds) · [`dxai_ui_inline_styles`](#dxai_ui_inline_styles) · [`dxai_ui_install_chrome`](#dxai_ui_install_chrome) · [`dxai_ui_interactivity`](#dxai_ui_interactivity) · [`dxai_ui_late_fonts`](#dxai_ui_late_fonts) · [`dxai_ui_lazy_below`](#dxai_ui_lazy_below) · [`dxai_ui_lcp_preload`](#dxai_ui_lcp_preload) · [`dxai_ui_legible_text`](#dxai_ui_legible_text) · [`dxai_ui_menu_pages_hosts`](#dxai_ui_menu_pages_hosts) · [`dxai_ui_menu_pages_live`](#dxai_ui_menu_pages_live) · [`dxai_ui_meta_description`](#dxai_ui_meta_description) · [`dxai_ui_native_blocks_on_import`](#dxai_ui_native_blocks_on_import) · [`dxai_ui_native_converters`](#dxai_ui_native_converters) · [`dxai_ui_network_activation_sites`](#dxai_ui_network_activation_sites) · [`dxai_ui_new_page_status`](#dxai_ui_new_page_status) · [`dxai_ui_page_css_trim`](#dxai_ui_page_css_trim) · [`dxai_ui_pages_engine`](#dxai_ui_pages_engine) · [`dxai_ui_picture_sizes`](#dxai_ui_picture_sizes) · [`dxai_ui_restyle_engine`](#dxai_ui_restyle_engine) · [`dxai_ui_seo_plugin`](#dxai_ui_seo_plugin) · [`dxai_ui_site_links`](#dxai_ui_site_links) · [`dxai_ui_style_rules_markup`](#dxai_ui_style_rules_markup) · [`dxai_ui_team_library`](#dxai_ui_team_library) · [`dxai_ui_template`](#dxai_ui_template) · [`dxai_ui_template_fonts_choice`](#dxai_ui_template_fonts_choice) · [`dxai_ui_template_fonts_live`](#dxai_ui_template_fonts_live) · [`dxai_ui_templates`](#dxai_ui_templates) · [`dxai_ui_theme_color_mode`](#dxai_ui_theme_color_mode) · [`dxai_ui_theme_components`](#dxai_ui_theme_components) · [`dxai_ui_theme_fonts`](#dxai_ui_theme_fonts) · [`dxai_ui_theme_fonts_follow`](#dxai_ui_theme_fonts_follow) · [`dxai_ui_theme_has_block_library`](#dxai_ui_theme_has_block_library) · [`dxai_ui_theme_has_youtube_facade`](#dxai_ui_theme_has_youtube_facade) · [`dxai_ui_theme_option`](#dxai_ui_theme_option) · [`dxai_ui_transfer_font_hosts`](#dxai_ui_transfer_font_hosts) · [`dxai_ui_transfer_step_seconds`](#dxai_ui_transfer_step_seconds) · [`dxai_ui_trim_min_bytes`](#dxai_ui_trim_min_bytes) · [`dxai_ui_trim_theme_css`](#dxai_ui_trim_theme_css) · [`dxai_ui_trusted_proxies`](#dxai_ui_trusted_proxies) · [`dxai_ui_update_channel`](#dxai_ui_update_channel) · [`dxai_ui_update_checkout`](#dxai_ui_update_checkout) · [`dxai_ui_update_repository`](#dxai_ui_update_repository) · [`dxai_ui_use_dx_picture`](#dxai_ui_use_dx_picture) · [`dxai_ui_video_hidden_embeds`](#dxai_ui_video_hidden_embeds) · [`dxai_ui_webp`](#dxai_ui_webp) · [`dxai_ui_zip_limits`](#dxai_ui_zip_limits) · [`dxai_ui_zip_work_root`](#dxai_ui_zip_work_root)
 
 **Actions:** [`dxai_ui_theme_colors_changed`](#dxai_ui_theme_colors_changed)
 
@@ -87,7 +87,7 @@ deterministic pass alone. Filterable, so a site can turn the
 paid calls off for the crawl, and so the crawl can be tested
 end to end without spending anyone's credit.
 
-- `src/API/Converter_Controller.php:349` — value and arguments: `true`, `0`
+- `src/API/Converter_Controller.php:388` — value and arguments: `true`, `0`
 - `src/Structures/Site_From_Menu.php:284` — value and arguments: `! is_wp_error( $restyler->engine() )`, `$home_id`
 
 ### dxai_ui_default_template
@@ -148,7 +148,7 @@ Nothing but those pages is written.
 @param array<string, mixed> $record  The stored footer they show.
 @param int                  $page_id The page of the design being imported.
 
-- `src/Structures/Structure_Repository.php:1050` — value and arguments: `$holders`, `$record`, `$page_id`
+- `src/Structures/Structure_Repository.php:1474` — value and arguments: `$holders`, `$record`, `$page_id`
 
 ### dxai_ui_harmony
 
@@ -175,7 +175,7 @@ name (as written or URL-encoded) appears in any of the design's text
 files; the `dxai_ui_harvest_unreferenced` filter brings back the old
 upload-everything behaviour for a design that builds paths at run time.
 
-- `src/Media/Asset_Harvester.php:92` — value and arguments: `false`
+- `src/Media/Asset_Harvester.php:140` — value and arguments: `false`
 
 ### dxai_ui_image_quality
 
@@ -184,7 +184,7 @@ meets Lighthouse's 1/6 of a byte a pixel, when WordPress's quality is over it.
 @param bool $on Whether they are.
 @param int  $id The attachment; 0 for a file written before it is one (the WebP of a JPEG, a crop for a slot).
 
-- `src/Media/Image_Quality.php:253` — value and arguments: `true`, `$id`
+- `src/Media/Image_Quality.php:254` — value and arguments: `true`, `$id`
 
 ### dxai_ui_image_sizes
 
@@ -194,6 +194,13 @@ srcset and sizes.
 @param int  $id The page.
 
 - `src/Media/Image_Sizes.php:102` — value and arguments: `$id > 0 && Page_Meta::is_design_page( $id )`, `$id`
+
+### dxai_ui_import_round_seconds
+
+Seconds one round of an import in rounds adds files for: 20, a third of WP Engine's 60-second limit, like the steps of a
+page package's import (Transfer\Page_Import::step_budget()). Filterable: `dxai_ui_import_round_seconds`.
+
+- `src/API/Converter_Controller.php:1100` — value and arguments: `20.0`
 
 ### dxai_ui_inline_styles
 
@@ -307,8 +314,8 @@ Converters, in the order they run.
 
 `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 
-- `src/Plugin.php:219` — value and arguments: `500`
-- `src/Plugin.php:331` — value and arguments: `500`
+- `src/Plugin.php:221` — value and arguments: `500`
+- `src/Plugin.php:333` — value and arguments: `500`
 - `src/Support/Runtime.php:95` — value and arguments: `500`
 
 ### dxai_ui_new_page_status

@@ -473,6 +473,9 @@ final class Site_Pages {
 		$links = new Internal_Links();
 		$links->rewrite_posts( $targets );
 
+		// The pages this run wrote are the Home's design, with the Home's design names (Style_Hoister::share_design_names()).
+		\DXAI_UI\Compiler\Style_Hoister::share_design_names( $home_id, array_column( (array) ( $summary['pages_created'] ?? array() ), 'id' ) );
+
 		// Menu items that are custom links to an old page become links to its new page; links to a section of the
 		// Home ("#about") open it from every page, not only from the Home.
 		$home_url = (string) get_permalink( $home_id );
