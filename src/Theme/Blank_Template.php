@@ -9,12 +9,18 @@ declare(strict_types=1);
 
 namespace DXAI_UI\Theme;
 
+use DXAI_UI\Structures\Page_Scope;
+
 /**
- * Two page templates, both a blank canvas (the theme draws nothing around the page, `body.dxai-ui-blank`):
+ * How a design's page is drawn: a blank canvas (the theme draws nothing around the page, `body.dxai-ui-blank`), with the design's header
+ * and footer around it. Three templates draw one:
  *
- *  - `dxai-template.php`, the DX template: the template itself draws the design's header, built from Appearance > Menus, and its footer,
- *    built from Appearance > Widgets, around the page's content (Template_Chrome). The page stores its body only. This is what a
- *    design's pages are given at import.
+ *  - the theme's Default template: what a design's pages are given at import, the way the team keeps every page of a site. Around a page
+ *    of its own the theme draws its header and footer; around a design's page the plugin draws the design's, exactly as the DX template
+ *    does (draws_default()): the header the design drew, filled from Appearance > Menus, and its footer around Appearance > Widgets. A theme
+ *    draws its own header from the same menus, but in its own markup: on American Restoration the menus were the design's and the header
+ *    was the theme's, which is not the design one to one.
+ *  - `dxai-template.php`, the DX template: the same drawing, chosen by name. The pages of imports from 0.4.0-beta.32 to beta.44 carry it.
  *  - `dxai-blank.php`, DX Blank: the header and the footer are put into the page's content as it renders (Page_Chrome). Every site
  *    imported before the DX template has pages on it, and they render exactly as they did.
  */
@@ -26,8 +32,11 @@ final class Blank_Template {
 	/** The DX template: the chrome is drawn by the template (Template_Chrome). */
 	public const TEMPLATE = 'dxai-template.php';
 
+	/** The theme's Default template, as `_wp_page_template` stores it. A design's page on it is drawn as on the DX template. */
+	public const DEFAULT = 'default';
+
 	/**
-	 * The two canvas templates.
+	 * The two canvas template files.
 	 *
 	 * @return array<int, string>
 	 */
@@ -35,24 +44,85 @@ final class Blank_Template {
 		return array( self::SLUG, self::TEMPLATE );
 	}
 
-	/** Whether a template slug is one of the canvas templates. */
+	/** Whether a template slug is one of the canvas template files. */
 	public static function is_canvas_slug( string $slug ): bool {
 		return in_array( $slug, self::slugs(), true );
 	}
 
-	/** Whether a page renders on one of the canvas templates. */
+	/** Whether a page renders on a canvas: one of the canvas templates, or a design's page on the Default template. */
 	public static function is_canvas( int $post_id ): bool {
-		return $post_id > 0 && self::is_canvas_slug( (string) get_page_template_slug( $post_id ) );
+		return $post_id > 0 && ( self::is_canvas_slug( (string) get_page_template_slug( $post_id ) ) || self::draws_default( $post_id ) );
 	}
 
 	/**
-	 * The template a design's pages are given when they are made: the DX template. `dxai_ui_default_template` can name DX Blank for a
-	 * site that wants its chrome in the content.
+	 * Whether a page is a design's own: a page the import made (its Home or a page of the design's site), or one made from it later. A
+	 * theme page that holds blocks copied from a design is not: it is the theme's, and the theme draws it (Design_Attach).
+	 */
+	public static function is_design_page( int $post_id ): bool {
+		return $post_id > 0
+			&& ( (int) get_post_meta( $post_id, Page_Scope::META, true ) > 0 || (string) get_post_meta( $post_id, '_dxai_ui_generated_page', true ) === '1' );
+	}
+
+	/**
+	 * Whether a page on the theme's Default template is drawn as the DX template draws it: a design's page.
+	 */
+	public static function draws_default( int $post_id ): bool {
+		if ( $post_id < 1 || 'page' !== get_post_type( $post_id ) || (string) get_page_template_slug( $post_id ) !== '' || ! self::is_design_page( $post_id ) ) {
+			return false;
+		}
+
+		return self::default_draws( $post_id );
+	}
+
+	/**
+	 * Whether the Default template draws a design's page with the design's header and footer (the default), or leaves it to the theme.
+	 */
+	private static function default_draws( int $post_id ): bool {
+		/**
+		 * Whether a design's page on the theme's Default template is drawn as the DX template draws it — the design's header from
+		 * Appearance > Menus, its footer around Appearance > Widgets, the theme's own header and footer and its style sheets left out —
+		 * or by the theme, as any page of its own. With false, a design's pages are given the DX template at import instead.
+		 *
+		 * @param bool $draws   Draw it as the design (default true).
+		 * @param int  $post_id The page, 0 when the import asks which template to give a new page.
+		 */
+		return (bool) apply_filters( 'dxai_ui_default_template_draws_design', true, $post_id );
+	}
+
+	/**
+	 * The template values that draw a page as the design: the canvas templates, and the Default template ('' and 'default', as the editor
+	 * and the meta name it) for a design's page. The editor's canvas follows the template picked in the inspector with it.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function drawn_slugs( int $post_id ): array {
+		$slugs = self::slugs();
+		if ( 'page' === get_post_type( $post_id ) && self::is_design_page( $post_id ) && self::default_draws( $post_id ) ) {
+			$slugs[] = '';
+			$slugs[] = self::DEFAULT;
+		}
+
+		return $slugs;
+	}
+
+	/**
+	 * The template a design's pages are given when they are made: the theme's Default template. `dxai_ui_default_template` can name the
+	 * DX template or DX Blank for a site that wants a page to say which template draws it; a site that keeps the Default template for
+	 * the theme (`dxai_ui_default_template_draws_design` false) gets the DX template.
 	 */
 	public static function default_slug(): string {
-		$slug = apply_filters( 'dxai_ui_default_template', self::TEMPLATE );
+		$fallback = self::default_draws( 0 ) ? self::DEFAULT : self::TEMPLATE;
+		/**
+		 * The template a design's pages are given when they are made.
+		 *
+		 * @param string $slug 'default' (the theme's Default template), 'dxai-template.php' or 'dxai-blank.php'.
+		 */
+		$slug = apply_filters( 'dxai_ui_default_template', $fallback );
+		if ( self::DEFAULT === $slug && ! self::default_draws( 0 ) ) {
+			return self::TEMPLATE;
+		}
 
-		return is_string( $slug ) && self::is_canvas_slug( $slug ) ? $slug : self::TEMPLATE;
+		return is_string( $slug ) && ( self::DEFAULT === $slug || self::is_canvas_slug( $slug ) ) ? $slug : $fallback;
 	}
 
 	public function register(): void {
@@ -77,9 +147,14 @@ final class Blank_Template {
 			return $template;
 		}
 
-		$slug = (string) get_page_template_slug();
+		$post_id = (int) get_queried_object_id();
+		$slug    = (string) get_page_template_slug( $post_id );
 		if ( ! self::is_canvas_slug( $slug ) ) {
-			return $template;
+			if ( ! self::draws_default( $post_id ) ) {
+				return $template;
+			}
+			// A design's page on the Default template: the DX template draws it.
+			$slug = self::TEMPLATE;
 		}
 
 		$path = DXAI_UI_DIR . 'templates/' . $slug;
@@ -88,7 +163,7 @@ final class Blank_Template {
 	}
 
 	public function enqueue_canvas(): void {
-		if ( ! is_singular() || ! self::is_canvas_slug( (string) get_page_template_slug() ) ) {
+		if ( ! is_singular() || ! self::is_canvas( (int) get_queried_object_id() ) ) {
 			return;
 		}
 

@@ -885,7 +885,7 @@ final class Design_Blocks {
 			'blank'         => \DXAI_UI\Theme\Blank_Template::is_canvas( $post_id ),
 			'blankTemplate' => \DXAI_UI\Theme\Blank_Template::SLUG,
 			// Both canvas templates render the page the same way (DX Blank and the DX template): the canvas follows the edited one.
-			'blankTemplates' => \DXAI_UI\Theme\Blank_Template::slugs(),
+			'blankTemplates' => \DXAI_UI\Theme\Blank_Template::drawn_slugs( $post_id ),
 			'static'        => (bool) get_post_meta( $post_id, '_dxai_ui_static_html', true ),
 			'tokens'        => wp_get_global_stylesheet( array( 'variables', 'presets' ) ),
 			// Assets::drop_theme_styles() dequeues every stylesheet served

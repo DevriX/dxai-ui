@@ -58,9 +58,8 @@ $body     = $group( 'section', 'py-0', $css_body );
 $page = static function ( string $title, string $content, int $scope, bool $blank = true ) use ( &$made ): int {
 	$id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => wp_slash( $content ) ) );
 	$made[] = $id;
-	if ( $blank ) {
-		update_post_meta( $id, '_wp_page_template', 'dxai-blank.php' );
-	}
+	// Not on DX Blank: on a template of the theme's own (a design's page on the Default template is drawn as the design since beta.45).
+	update_post_meta( $id, '_wp_page_template', $blank ? 'dxai-blank.php' : 'page.php' );
 	update_post_meta( $id, '_dxai_ui_scope_id', $scope > 0 ? $scope : $id );
 	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
 
@@ -90,7 +89,10 @@ $expect( 'a page with a header of its own is given the footer only', count( $add
 $both = Page_Chrome::rules_markup( array( 'x' ), $bare );
 $expect( 'a page with neither is given both, after what was there', count( $both ) === 3 && $both[0] === 'x' && str_contains( $both[1], 'h-58px' ) && str_contains( $both[2], 'mb-4-5' ), (string) count( $both ) );
 $expect( 'the Home itself is given nothing: it has them in its content', Page_Chrome::rules_markup( array(), $home ) === array() );
-$expect( 'a page that is not on the blank template is left alone', Page_Chrome::rules_markup( array( 'x' ), $plain ) === array( 'x' ) );
+$expect( 'a page on a template of the theme\'s own is left alone', Page_Chrome::rules_markup( array( 'x' ), $plain ) === array( 'x' ) );
+update_post_meta( $plain, '_wp_page_template', 'default' );
+$expect( '…and the same page on the theme\'s Default template is the design\'s, and given what it lacks', count( Page_Chrome::rules_markup( array( 'x' ), $plain ) ) === 3 );
+update_post_meta( $plain, '_wp_page_template', 'page.php' );
 $expect( 'a value that is not a list of markup comes back as it was', Page_Chrome::rules_markup( 'x', $bare ) === 'x' && Page_Chrome::rules_markup( array(), 0 ) === array() );
 
 echo "\nA header kept as a template part, with the skip link and the box that holds its place left in the page\n";

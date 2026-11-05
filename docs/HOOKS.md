@@ -1,10 +1,10 @@
 # Hooks
 
-The filters and actions DX fires, from the code: 68 filters, 1 action. Each says what the comment above its call says, the values it passes (the first is the value a filter returns) and where it is called.
+The filters and actions DX fires, from the code: 70 filters, 1 action. Each says what the comment above its call says, the values it passes (the first is the value a filter returns) and where it is called.
 
 This file is written by `node bin/hooks-doc.cjs`; CI fails when it is not what the code says (`--check`). To document a hook, write the comment above the line that fires it.
 
-**Filters:** [`dxai_ui_accessible_markup`](#dxai_ui_accessible_markup) · [`dxai_ui_adopt_brand`](#dxai_ui_adopt_brand) · [`dxai_ui_arrange_sections`](#dxai_ui_arrange_sections) · [`dxai_ui_block_library_facts`](#dxai_ui_block_library_facts) · [`dxai_ui_block_library_themes`](#dxai_ui_block_library_themes) · [`dxai_ui_chrome_mode`](#dxai_ui_chrome_mode) · [`dxai_ui_copies_old_page`](#dxai_ui_copies_old_page) · [`dxai_ui_copy_engine`](#dxai_ui_copy_engine) · [`dxai_ui_crawl_use_ai`](#dxai_ui_crawl_use_ai) · [`dxai_ui_crawl_words`](#dxai_ui_crawl_words) · [`dxai_ui_default_template`](#dxai_ui_default_template) · [`dxai_ui_design_system`](#dxai_ui_design_system) · [`dxai_ui_dx_themes`](#dxai_ui_dx_themes) · [`dxai_ui_fence_theme`](#dxai_ui_fence_theme) · [`dxai_ui_font_fallbacks`](#dxai_ui_font_fallbacks) · [`dxai_ui_fonts_on_import`](#dxai_ui_fonts_on_import) · [`dxai_ui_footer_holders`](#dxai_ui_footer_holders) · [`dxai_ui_harmony`](#dxai_ui_harmony) · [`dxai_ui_harvest_unreferenced`](#dxai_ui_harvest_unreferenced) · [`dxai_ui_image_quality`](#dxai_ui_image_quality) · [`dxai_ui_image_sizes`](#dxai_ui_image_sizes) · [`dxai_ui_import_round_seconds`](#dxai_ui_import_round_seconds) · [`dxai_ui_inline_styles`](#dxai_ui_inline_styles) · [`dxai_ui_install_chrome`](#dxai_ui_install_chrome) · [`dxai_ui_interactivity`](#dxai_ui_interactivity) · [`dxai_ui_late_fonts`](#dxai_ui_late_fonts) · [`dxai_ui_lazy_below`](#dxai_ui_lazy_below) · [`dxai_ui_lcp_preload`](#dxai_ui_lcp_preload) · [`dxai_ui_legible_text`](#dxai_ui_legible_text) · [`dxai_ui_menu_pages_hosts`](#dxai_ui_menu_pages_hosts) · [`dxai_ui_menu_pages_live`](#dxai_ui_menu_pages_live) · [`dxai_ui_meta_description`](#dxai_ui_meta_description) · [`dxai_ui_native_blocks_on_import`](#dxai_ui_native_blocks_on_import) · [`dxai_ui_native_converters`](#dxai_ui_native_converters) · [`dxai_ui_network_activation_sites`](#dxai_ui_network_activation_sites) · [`dxai_ui_new_page_status`](#dxai_ui_new_page_status) · [`dxai_ui_page_css_trim`](#dxai_ui_page_css_trim) · [`dxai_ui_pages_engine`](#dxai_ui_pages_engine) · [`dxai_ui_picture_sizes`](#dxai_ui_picture_sizes) · [`dxai_ui_restyle_engine`](#dxai_ui_restyle_engine) · [`dxai_ui_seo_plugin`](#dxai_ui_seo_plugin) · [`dxai_ui_site_links`](#dxai_ui_site_links) · [`dxai_ui_style_rules_markup`](#dxai_ui_style_rules_markup) · [`dxai_ui_team_library`](#dxai_ui_team_library) · [`dxai_ui_template`](#dxai_ui_template) · [`dxai_ui_template_fonts_choice`](#dxai_ui_template_fonts_choice) · [`dxai_ui_template_fonts_live`](#dxai_ui_template_fonts_live) · [`dxai_ui_templates`](#dxai_ui_templates) · [`dxai_ui_theme_color_mode`](#dxai_ui_theme_color_mode) · [`dxai_ui_theme_components`](#dxai_ui_theme_components) · [`dxai_ui_theme_fonts`](#dxai_ui_theme_fonts) · [`dxai_ui_theme_fonts_follow`](#dxai_ui_theme_fonts_follow) · [`dxai_ui_theme_has_block_library`](#dxai_ui_theme_has_block_library) · [`dxai_ui_theme_has_youtube_facade`](#dxai_ui_theme_has_youtube_facade) · [`dxai_ui_theme_option`](#dxai_ui_theme_option) · [`dxai_ui_transfer_font_hosts`](#dxai_ui_transfer_font_hosts) · [`dxai_ui_transfer_step_seconds`](#dxai_ui_transfer_step_seconds) · [`dxai_ui_trim_min_bytes`](#dxai_ui_trim_min_bytes) · [`dxai_ui_trim_theme_css`](#dxai_ui_trim_theme_css) · [`dxai_ui_trusted_proxies`](#dxai_ui_trusted_proxies) · [`dxai_ui_update_channel`](#dxai_ui_update_channel) · [`dxai_ui_update_checkout`](#dxai_ui_update_checkout) · [`dxai_ui_update_repository`](#dxai_ui_update_repository) · [`dxai_ui_use_dx_picture`](#dxai_ui_use_dx_picture) · [`dxai_ui_video_hidden_embeds`](#dxai_ui_video_hidden_embeds) · [`dxai_ui_webp`](#dxai_ui_webp) · [`dxai_ui_zip_limits`](#dxai_ui_zip_limits) · [`dxai_ui_zip_work_root`](#dxai_ui_zip_work_root)
+**Filters:** [`dxai_ui_accessible_markup`](#dxai_ui_accessible_markup) · [`dxai_ui_adopt_brand`](#dxai_ui_adopt_brand) · [`dxai_ui_arrange_sections`](#dxai_ui_arrange_sections) · [`dxai_ui_block_library_facts`](#dxai_ui_block_library_facts) · [`dxai_ui_block_library_themes`](#dxai_ui_block_library_themes) · [`dxai_ui_chrome_mode`](#dxai_ui_chrome_mode) · [`dxai_ui_copies_old_page`](#dxai_ui_copies_old_page) · [`dxai_ui_copy_engine`](#dxai_ui_copy_engine) · [`dxai_ui_crawl_use_ai`](#dxai_ui_crawl_use_ai) · [`dxai_ui_crawl_words`](#dxai_ui_crawl_words) · [`dxai_ui_default_template`](#dxai_ui_default_template) · [`dxai_ui_default_template_draws_design`](#dxai_ui_default_template_draws_design) · [`dxai_ui_design_system`](#dxai_ui_design_system) · [`dxai_ui_dx_themes`](#dxai_ui_dx_themes) · [`dxai_ui_fence_theme`](#dxai_ui_fence_theme) · [`dxai_ui_fold_wrappers`](#dxai_ui_fold_wrappers) · [`dxai_ui_font_fallbacks`](#dxai_ui_font_fallbacks) · [`dxai_ui_fonts_on_import`](#dxai_ui_fonts_on_import) · [`dxai_ui_footer_holders`](#dxai_ui_footer_holders) · [`dxai_ui_harmony`](#dxai_ui_harmony) · [`dxai_ui_harvest_unreferenced`](#dxai_ui_harvest_unreferenced) · [`dxai_ui_image_quality`](#dxai_ui_image_quality) · [`dxai_ui_image_sizes`](#dxai_ui_image_sizes) · [`dxai_ui_import_round_seconds`](#dxai_ui_import_round_seconds) · [`dxai_ui_inline_styles`](#dxai_ui_inline_styles) · [`dxai_ui_install_chrome`](#dxai_ui_install_chrome) · [`dxai_ui_interactivity`](#dxai_ui_interactivity) · [`dxai_ui_late_fonts`](#dxai_ui_late_fonts) · [`dxai_ui_lazy_below`](#dxai_ui_lazy_below) · [`dxai_ui_lcp_preload`](#dxai_ui_lcp_preload) · [`dxai_ui_legible_text`](#dxai_ui_legible_text) · [`dxai_ui_menu_pages_hosts`](#dxai_ui_menu_pages_hosts) · [`dxai_ui_menu_pages_live`](#dxai_ui_menu_pages_live) · [`dxai_ui_meta_description`](#dxai_ui_meta_description) · [`dxai_ui_native_blocks_on_import`](#dxai_ui_native_blocks_on_import) · [`dxai_ui_native_converters`](#dxai_ui_native_converters) · [`dxai_ui_network_activation_sites`](#dxai_ui_network_activation_sites) · [`dxai_ui_new_page_status`](#dxai_ui_new_page_status) · [`dxai_ui_page_css_trim`](#dxai_ui_page_css_trim) · [`dxai_ui_pages_engine`](#dxai_ui_pages_engine) · [`dxai_ui_picture_sizes`](#dxai_ui_picture_sizes) · [`dxai_ui_restyle_engine`](#dxai_ui_restyle_engine) · [`dxai_ui_seo_plugin`](#dxai_ui_seo_plugin) · [`dxai_ui_site_links`](#dxai_ui_site_links) · [`dxai_ui_style_rules_markup`](#dxai_ui_style_rules_markup) · [`dxai_ui_team_library`](#dxai_ui_team_library) · [`dxai_ui_template`](#dxai_ui_template) · [`dxai_ui_template_fonts_choice`](#dxai_ui_template_fonts_choice) · [`dxai_ui_template_fonts_live`](#dxai_ui_template_fonts_live) · [`dxai_ui_templates`](#dxai_ui_templates) · [`dxai_ui_theme_color_mode`](#dxai_ui_theme_color_mode) · [`dxai_ui_theme_components`](#dxai_ui_theme_components) · [`dxai_ui_theme_fonts`](#dxai_ui_theme_fonts) · [`dxai_ui_theme_fonts_follow`](#dxai_ui_theme_fonts_follow) · [`dxai_ui_theme_has_block_library`](#dxai_ui_theme_has_block_library) · [`dxai_ui_theme_has_youtube_facade`](#dxai_ui_theme_has_youtube_facade) · [`dxai_ui_theme_option`](#dxai_ui_theme_option) · [`dxai_ui_transfer_font_hosts`](#dxai_ui_transfer_font_hosts) · [`dxai_ui_transfer_step_seconds`](#dxai_ui_transfer_step_seconds) · [`dxai_ui_trim_min_bytes`](#dxai_ui_trim_min_bytes) · [`dxai_ui_trim_theme_css`](#dxai_ui_trim_theme_css) · [`dxai_ui_trusted_proxies`](#dxai_ui_trusted_proxies) · [`dxai_ui_update_channel`](#dxai_ui_update_channel) · [`dxai_ui_update_checkout`](#dxai_ui_update_checkout) · [`dxai_ui_update_repository`](#dxai_ui_update_repository) · [`dxai_ui_use_dx_picture`](#dxai_ui_use_dx_picture) · [`dxai_ui_video_hidden_embeds`](#dxai_ui_video_hidden_embeds) · [`dxai_ui_webp`](#dxai_ui_webp) · [`dxai_ui_zip_limits`](#dxai_ui_zip_limits) · [`dxai_ui_zip_work_root`](#dxai_ui_zip_work_root)
 
 **Actions:** [`dxai_ui_theme_colors_changed`](#dxai_ui_theme_colors_changed)
 
@@ -100,10 +100,20 @@ measure of its Home's sections. Default: when an AI is chosen and has a key.
 
 ### dxai_ui_default_template
 
-The template a design's pages are given when they are made: the DX template. `dxai_ui_default_template` can name DX Blank for a
-site that wants its chrome in the content.
+The template a design's pages are given when they are made.
+@param string $slug 'default' (the theme's Default template), 'dxai-template.php' or 'dxai-blank.php'.
 
-- `src/Theme/Blank_Template.php:53` — value and arguments: `self::TEMPLATE`
+- `src/Theme/Blank_Template.php:120` — value and arguments: `$fallback`
+
+### dxai_ui_default_template_draws_design
+
+Whether a design's page on the theme's Default template is drawn as the DX template draws it — the design's header from
+Appearance > Menus, its footer around Appearance > Widgets, the theme's own header and footer and its style sheets left out —
+or by the theme, as any page of its own. With false, a design's pages are given the DX template at import instead.
+@param bool $draws   Draw it as the design (default true).
+@param int  $post_id The page, 0 when the import asks which template to give a new page.
+
+- `src/Theme/Blank_Template.php:89` — value and arguments: `true`, `$post_id`
 
 ### dxai_ui_design_system
 
@@ -131,6 +141,15 @@ A page can say so itself (custom field _dxai_ui_fence_theme: 1 fences, 0 does no
 - `src/Theme/Theme_Fence.php:100` — value and arguments: `$own === '1'`, `$post_id`
 - `src/Theme/Theme_Fence.php:105` — value and arguments: `$default`, `$post_id`
 
+### dxai_ui_fold_wrappers
+
+Whether a design's page opens in the editor with its wrapper groups folded into the blocks they hold (the default), or with
+every wrapper as a block of its own.
+@param bool $fold    Fold them (default true for a design's page).
+@param int  $post_id The page.
+
+- `src/Blocks/Wrap_Fold.php:66` — value and arguments: `Blank_Template::is_design_page( $post_id )`, `$post_id`
+
 ### dxai_ui_font_fallbacks
 
 Whether the template's fonts are printed with a fallback face of their size (a local font with their line height and average
@@ -156,7 +175,7 @@ Nothing but those pages is written.
 @param array<string, mixed> $record  The stored footer they show.
 @param int                  $page_id The page of the design being imported.
 
-- `src/Structures/Structure_Repository.php:1477` — value and arguments: `$holders`, `$record`, `$page_id`
+- `src/Structures/Structure_Repository.php:1484` — value and arguments: `$holders`, `$record`, `$page_id`
 
 ### dxai_ui_harmony
 
@@ -322,8 +341,8 @@ Converters, in the order they run.
 
 `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 
-- `src/Plugin.php:221` — value and arguments: `500`
-- `src/Plugin.php:333` — value and arguments: `500`
+- `src/Plugin.php:223` — value and arguments: `500`
+- `src/Plugin.php:335` — value and arguments: `500`
 - `src/Support/Runtime.php:95` — value and arguments: `500`
 
 ### dxai_ui_new_page_status

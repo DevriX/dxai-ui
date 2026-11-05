@@ -1316,9 +1316,10 @@ final class Structure_Repository {
 	 * @return array{header?:array<string, mixed>, footer?:array<string, mixed>} install() answers.
 	 */
 	private function install_chrome( array &$created, int $page_id, string $title, string $part_key, array $pages, array $path_map, string $origin, bool $deferred ): array {
-		$report = array();
-		$blocks = array();
-		$areas  = array(
+		$report  = array();
+		$blocks  = array();
+		$sources = array();
+		$areas   = array(
 			'header' => (int) ( $created['header_id'] ?? 0 ),
 			'footer' => (int) ( $created['footer_id'] ?? 0 ),
 		);
@@ -1379,7 +1380,8 @@ final class Structure_Repository {
 			$answer          = is_array( $answer ) ? $answer : array( 'block_markup' => '' );
 			$report[ $area ] = $answer;
 			if ( is_string( $answer['block_markup'] ?? null ) && $answer['block_markup'] !== '' ) {
-				$blocks[ $area ] = $answer['block_markup'];
+				$blocks[ $area ]  = $answer['block_markup'];
+				$sources[ $area ] = $markup;
 			}
 		}
 		if ( $blocks === array() ) {
@@ -1405,6 +1407,11 @@ final class Structure_Repository {
 					)
 				);
 			}
+		}
+
+		// The design's other pages that draw the same header or footer in their content: drawn with the site's, as the Home is.
+		foreach ( array_unique( array_map( 'intval', array_merge( (array) ( $created['extra_page_ids'] ?? array() ), $pages ) ) ) as $pid ) {
+			\DXAI_UI\Chrome\Page_Chrome::adopt_site_chrome( $pid, $page_id, $sources );
 		}
 
 		$created['chrome_parts'] = array();

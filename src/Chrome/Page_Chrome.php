@@ -42,6 +42,14 @@ final class Page_Chrome {
 	public const PART_KEY_META = '_dxai_ui_part_key';
 	public const MODE_META     = '_dxai_ui_chrome';
 
+	/**
+	 * On a page of a design's site whose own copy of the design's header or footer the import took out (adopt_site_chrome()): the
+	 * design's Home, whose header (from Menus) and footer (around Widgets) the page is drawn with, and, per area, the page's own
+	 * numbers for the design's interactive elements in it (dxai-dc-N for the page's dxai-dc-M), so its own state script and state
+	 * rules drive the menu as they drove its copy.
+	 */
+	public const SITE_CHROME_META = '_dxai_ui_site_chrome';
+
 	/** Where the page's own content is, between the header and footer added as it is drawn: DX Blank makes it the page's <main>. */
 	public const MAIN_OPEN  = '<!--dxai-ui:main-->';
 	public const MAIN_CLOSE = '<!--/dxai-ui:main-->';
@@ -204,6 +212,11 @@ final class Page_Chrome {
 		if ( self::mode_of( $post_id ) !== Chrome_Choice::KEEP && $scope > 0 && Header_Template::scoped( $scope ) !== null ) {
 			return Site_Header_Block::MARKUP;
 		}
+		// A page of the design's site whose copy of the header the import took out: its Home's header, from Menus.
+		$home = self::adopted( $post_id, 'header' );
+		if ( $home > 0 && Header_Template::scoped( $home ) !== null ) {
+			return Site_Header_Block::MARKUP;
+		}
 
 		return self::part_markup( 'header', $post_id );
 	}
@@ -218,8 +231,173 @@ final class Page_Chrome {
 		if ( self::mode_of( $post_id ) !== Chrome_Choice::KEEP && $footer !== array() && $scope > 0 && Site_Footer_Block::scope( $footer ) === $scope ) {
 			return Site_Footer_Block::MARKUP;
 		}
+		// A page of the design's site whose copy of the footer the import took out: its Home's footer, around Widgets.
+		$home = self::adopted( $post_id, 'footer' );
+		if ( $home > 0 && $footer !== array() && Site_Footer_Block::scope( $footer ) === $home ) {
+			return Site_Footer_Block::MARKUP;
+		}
 
 		return self::part_markup( 'footer', $post_id );
+	}
+
+	/**
+	 * The Home whose header or footer a page of its design's site is drawn with (SITE_CHROME_META), 0 when the page keeps its own.
+	 */
+	public static function adopted( int $post_id, string $area = '' ): int {
+		$meta = $post_id > 0 ? get_post_meta( $post_id, self::SITE_CHROME_META, true ) : '';
+		if ( ! is_array( $meta ) || ( $area !== '' && ! isset( $meta[ $area ] ) ) ) {
+			return 0;
+		}
+
+		return max( 0, (int) ( $meta['home'] ?? 0 ) );
+	}
+
+	/**
+	 * A page of a multi-page design draws the design's header and footer in its own content, as every page of the design did: a Claude
+	 * Design site's pages each import the header and footer component (Gemini Restoration's 12 pages beside the Home). The import puts
+	 * the Home's into Appearance > Menus and Widgets; a copy left in a page would keep the design's links and words there, and a change
+	 * in Menus would reach the Home only. So a page's copy is taken out when it is the very header or footer installed from the Home —
+	 * the same markup, but for the numbers of the design's interactive elements, which each page counts for itself — and the page is
+	 * drawn with the site's, as the Home is (header_markup(), footer_markup()). A copy that differs (a page that draws another header)
+	 * stays where it is, and nothing is drawn twice.
+	 *
+	 * @param array<string, string> $sources area => the markup the Home's header or footer was installed from.
+	 * @return array<int, string> The areas taken out.
+	 */
+	public static function adopt_site_chrome( int $post_id, int $home, array $sources ): array {
+		if ( $post_id < 1 || $home < 1 || $post_id === $home ) {
+			return array();
+		}
+		$content = (string) get_post_field( 'post_content', $post_id );
+		$blocks  = parse_blocks( $content );
+		$have    = Section_Library::chrome_blocks( $blocks );
+		$meta    = array( 'home' => $home );
+		$drop    = array();
+		foreach ( array( 'header', 'footer' ) as $area ) {
+			$source = (string) ( $sources[ $area ] ?? '' );
+			if ( $source === '' ) {
+				continue;
+			}
+			// The area's own element among the blocks the reader found there (the skip link and the islands around a header stay).
+			foreach ( $have[ $area ] as $i ) {
+				$tag = strtolower( (string) ( $blocks[ $i ]['attrs']['tagName'] ?? '' ) );
+				if ( $tag !== $area ) {
+					continue;
+				}
+				$ids = self::same_chrome( serialize_block( $blocks[ $i ] ), $source );
+				if ( null !== $ids ) {
+					$meta[ $area ] = $ids;
+					$drop[]        = $i;
+				}
+				break;
+			}
+		}
+		if ( $drop === array() ) {
+			return array();
+		}
+		$keep = array();
+		foreach ( $blocks as $i => $block ) {
+			if ( ! in_array( $i, $drop, true ) ) {
+				$keep[] = $block;
+			}
+		}
+		$kses = (bool) has_filter( 'content_save_pre', 'wp_filter_post_kses' );
+		if ( $kses ) {
+			kses_remove_filters();
+		}
+		try {
+			wp_update_post(
+				array(
+					'ID'           => $post_id,
+					'post_content' => wp_slash( trim( serialize_blocks( $keep ) ) ),
+				)
+			);
+		} finally {
+			if ( $kses ) {
+				kses_init_filters();
+			}
+		}
+		update_post_meta( $post_id, self::SITE_CHROME_META, $meta );
+
+		return array_values( array_diff( array_keys( $meta ), array( 'home' ) ) );
+	}
+
+	/**
+	 * Whether a page's header or footer is the one installed from the Home: the same saved markup once the block delimiters (a name the
+	 * List View shows, a block the native pass turned into another of the same element) and the classes WordPress adds to a block's
+	 * element are set aside, and the design's interactive elements renumbered. The page's numbers for the Home's, or null.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private static function same_chrome( string $mine, string $source ): ?array {
+		$a = self::chrome_shape( $mine );
+		$b = self::chrome_shape( $source );
+		if ( $a['shape'] === '' || $a['shape'] !== $b['shape'] || count( $a['ids'] ) !== count( $b['ids'] ) ) {
+			return null;
+		}
+		$map = array();
+		foreach ( $b['ids'] as $n => $id ) {
+			if ( $id !== $a['ids'][ $n ] ) {
+				$map[ $id ] = $a['ids'][ $n ];
+			}
+		}
+
+		return $map;
+	}
+
+	/**
+	 * @return array{shape:string, ids:array<int, string>}
+	 */
+	private static function chrome_shape( string $markup ): array {
+		// A block with no saved markup (a picture drawn at render) is compared by its attributes: its self-closing delimiter stays.
+		$html = (string) preg_replace( '#<!--\s+/?wp:[a-z0-9/_-]+(?:\s+\{(?:(?!-->).)*\})?\s+-->#s', '', $markup );
+		$ids  = array();
+		if ( preg_match_all( '/\bdxai-dc-\d+\b/', $html, $m ) ) {
+			foreach ( $m[0] as $id ) {
+				if ( ! in_array( $id, $ids, true ) ) {
+					$ids[] = $id;
+				}
+			}
+		}
+		$html = (string) preg_replace( '/\bdxai-dc-\d+\b/', 'dxai-dc-#', $html );
+		$html = (string) preg_replace_callback(
+			'/\bclass="([^"]*)"/',
+			static function ( array $m ): string {
+				$names = preg_split( '/\s+/', trim( $m[1] ) ) ?: array();
+				$names = array_filter( $names, static fn( string $c ): bool => $c !== '' && preg_match( '/^(?:wp-block-[\w-]+|amr-span|is-layout-[\w-]+|wp-container-[\w-]+)$/', $c ) !== 1 );
+
+				return 'class="' . implode( ' ', $names ) . '"';
+			},
+			$html
+		);
+
+		return array(
+			'shape' => trim( (string) preg_replace( '/\s+/', ' ', $html ) ),
+			'ids'   => $ids,
+		);
+	}
+
+	/**
+	 * The header or footer drawn on a page of the design's site, in the page's own numbers for the design's interactive elements
+	 * (adopt_site_chrome()).
+	 */
+	public static function own_ids( int $post_id, string $html ): string {
+		$meta = $post_id > 0 ? get_post_meta( $post_id, self::SITE_CHROME_META, true ) : '';
+		if ( ! is_array( $meta ) ) {
+			return $html;
+		}
+		$map = array();
+		foreach ( array( 'header', 'footer' ) as $area ) {
+			foreach ( is_array( $meta[ $area ] ?? null ) ? $meta[ $area ] : array() as $from => $to ) {
+				$map[ (string) $from ] = (string) $to;
+			}
+		}
+		if ( $map === array() ) {
+			return $html;
+		}
+		$out = preg_replace_callback( '/\bdxai-dc-\d+\b/', static fn( array $m ): string => $map[ $m[0] ] ?? $m[0], $html );
+
+		return is_string( $out ) ? $out : $html;
 	}
 
 	public static function part_key_for( int $post_id ): string {

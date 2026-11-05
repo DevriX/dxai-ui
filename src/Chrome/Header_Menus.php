@@ -708,6 +708,10 @@ final class Header_Menus {
 		if ( $url === '' || str_starts_with( $url, '#' ) || ! preg_match( '#^https?://#i', $url ) ) {
 			return false;
 		}
+		if ( str_contains( $url, '?' ) ) {
+			// A link by query (`?page_id=12`, a site without pretty permalinks): which post it opens, not its path, which is the site's own.
+			return $queried > 0 && is_singular() && url_to_postid( $url ) === $queried;
+		}
 		global $wp;
 		$here = home_url( $wp instanceof \WP ? (string) $wp->request : '' );
 		$norm = static fn( string $u ): string => untrailingslashit( (string) strtok( set_url_scheme( $u, 'http' ), '#?' ) );

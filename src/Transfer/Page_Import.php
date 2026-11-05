@@ -2278,7 +2278,7 @@ final class Page_Import {
 		self::set_meta( $page_id, $meta, array( '_dxai_ui_css_url', '_dxai_ui_js_url', '_dxai_ui_audit' ) );
 
 		$template = (string) ( $page['template'] ?? '' );
-		if ( in_array( $template, Package::TEMPLATES, true ) ) {
+		if ( in_array( $template, Package::TEMPLATES, true ) || $template === 'default' ) {
 			update_post_meta( $page_id, '_wp_page_template', $template );
 		} elseif ( $template !== '' && $template !== 'default' ) {
 			/* translators: %s: template file. */

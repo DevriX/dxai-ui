@@ -119,7 +119,11 @@ final class Header_Template {
 	 * @return array<string, mixed>|null
 	 */
 	public static function for_post( int $post_id ): ?array {
-		return self::for_scope( $post_id > 0 ? (int) get_post_meta( $post_id, \DXAI_UI\Structures\Page_Scope::META, true ) : 0 );
+		$scope = $post_id > 0 ? (int) get_post_meta( $post_id, \DXAI_UI\Structures\Page_Scope::META, true ) : 0;
+		// A page of a design's site drawn with its Home's header (Page_Chrome::adopt_site_chrome()): that Home's, whichever is the site's.
+		$home = null === self::scoped( $scope ) ? Page_Chrome::adopted( $post_id, 'header' ) : 0;
+
+		return $home > 0 && null !== self::scoped( $home ) ? self::scoped( $home ) : self::for_scope( $scope );
 	}
 
 	/**
@@ -1594,6 +1598,19 @@ final class Header_Template {
 			}
 
 			return null;
+		}
+		/*
+		 * A list item whose link is a block of its own before its nested list: Elementor's nav menu as Gemini Restoration draws it, an
+		 * HTML block holding the parent's <a href="#"> and its arrow, then the sub-menu. That link is the trigger, the list the panel.
+		 */
+		if ( 'li' === $root['name'] ) {
+			$real = array_values( array_filter( array_keys( $kids ), static fn( int $i ): bool => self::kind( $kids[ $i ] ) !== 'none' ) );
+			if ( count( $real ) === 2 && self::kind( $kids[ $real[0] ] ) === 'link' && 'ul' === ( self::root_tag( $kids[ $real[1] ] )['name'] ?? '' ) && self::link_count( $kids[ $real[1] ] ) >= 1 ) {
+				return array(
+					'trigger' => array( $real[0] ),
+					'panel'   => array( $real[1] ),
+				);
+			}
 		}
 
 		$marked  = str_contains( (string) ( $root['attrs']['class'] ?? '' ), 'dxai-toggle-' ) || isset( $root['attrs']['data-dxai-hover'] );

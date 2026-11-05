@@ -341,7 +341,8 @@ final class Template_Chrome {
 	 * made the header and the footer part of the content under DX Blank (wptexturize, the image attributes), in the same order.
 	 */
 	private static function drawn( string $markup, int $scope ): string {
-		$html = (string) apply_filters( 'the_content', $markup );
+		// A page of the design's site drawn with its Home's header and footer: in the page's own numbers for their interactive elements.
+		$html = Page_Chrome::own_ids( self::$post, (string) apply_filters( 'the_content', $markup ) );
 		if ( $scope < 1 ) {
 			return $html;
 		}

@@ -64,6 +64,8 @@ final class Plugin {
 		( new \DXAI_UI\Blocks\Library_View() )->register();
 		// A design's states as Interactivity API directives (the `interactivity` setting; on unless turned off).
 		( new \DXAI_UI\Blocks\Interactivity() )->register();
+		// A design's page in the editor without its wrapper groups: folded when the editor opens it, unfolded when it saves.
+		( new \DXAI_UI\Blocks\Wrap_Fold() )->register();
 		// …and the same sections in the editor's inserter, made for the site they are inserted on.
 		( new \DXAI_UI\Pages\Library_Patterns() )->register();
 		( new Blank_Template() )->register();

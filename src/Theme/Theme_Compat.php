@@ -126,7 +126,7 @@ final class Theme_Compat {
 
 	/** Whether the current request renders a converted page. */
 	public static function is_converted_page(): bool {
-		return is_singular() && Blank_Template::is_canvas_slug( (string) get_page_template_slug() );
+		return is_singular() && Blank_Template::is_canvas( (int) get_queried_object_id() );
 	}
 
 	/**

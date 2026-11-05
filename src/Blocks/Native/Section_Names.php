@@ -68,6 +68,13 @@ final class Section_Names extends Converter {
 	/**
 	 * @param array<string, mixed> $block
 	 */
+	public static function for_section( array $block ): string {
+		return ( $block['blockName'] ?? '' ) === 'core/group' && ( $block['innerBlocks'] ?? array() ) !== array() ? self::name( $block ) : '';
+	}
+
+	/**
+	 * @param array<string, mixed> $block
+	 */
 	private static function name( array $block ): string {
 		$attrs = $block['attrs'];
 		$tag   = (string) ( $attrs['tagName'] ?? 'div' );

@@ -265,8 +265,12 @@ final class Site_Footer_Block {
 	 * @return mixed
 	 */
 	public static function enter_content( $content ) {
-		$post             = get_post();
-		self::$contexts[] = $post instanceof \WP_Post ? (int) get_post_meta( $post->ID, Page_Scope::META, true ) : 0;
+		$post = get_post();
+		$id   = $post instanceof \WP_Post ? (int) $post->ID : 0;
+		// A page of a design's site drawn with its Home's footer (Page_Chrome::adopt_site_chrome()) carries the footer's rules in its own
+		// sheet, as its copy had them: the footer is drawn there as on its own design's page, not framed in its design.
+		$home             = Page_Chrome::adopted( $id, 'footer' );
+		self::$contexts[] = $home > 0 ? $home : ( $id > 0 ? (int) get_post_meta( $id, Page_Scope::META, true ) : 0 );
 
 		return $content;
 	}

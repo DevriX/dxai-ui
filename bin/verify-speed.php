@@ -145,6 +145,8 @@ $fences = static function () use ( $copy ): bool {
 update_post_meta( $src, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
 $expect( 'a copy of a design whose page shows without the theme\'s CSS is fenced', $fences() === true );
 update_post_meta( $src, '_wp_page_template', 'default' );
+$expect( '…and so is one whose page is on the theme\'s Default template, which draws a design\'s page without the theme as well', $fences() === true );
+update_post_meta( $src, '_wp_page_template', 'page.php' );
 $expect( 'a copy of a design whose page is a page of the theme is not (it matches that page)', $fences() === false );
 update_post_meta( $copy, '_dxai_ui_fence_theme', '1' );
 $expect( 'the page\'s own custom field decides over the source', $fences() === true );

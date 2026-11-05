@@ -302,6 +302,89 @@
 		}, 'dxaiUiCanvasDesignAttrs' )
 	);
 
+	/*
+	 * A design's wrappers, folded into the block they hold when the editor
+	 * opened the page (Wrap_Fold): the List View shows the heading, not the
+	 * four groups around it. The canvas draws those groups' elements around
+	 * the block again — their tag, classes, id, ARIA and data attributes, as
+	 * the front end renders them — so the design's CSS reaches the block as
+	 * there (`.gem-element-7a3257c .gem-heading-title`, a flex item, a padded
+	 * box). A section lifted to the top of the page carries the page's frame
+	 * (metadata.dxaiFrame), drawn the same way, outside the section's own
+	 * wrappers. Nothing of this is saved: the page is unfolded on the server
+	 * when the editor saves it.
+	 */
+	const dxaiWrapShapes = new Map();
+
+	function dxaiWrapShape( wrap ) {
+		const open = wrap && typeof wrap.open === 'string' ? wrap.open : '';
+		if ( dxaiWrapShapes.has( open ) ) {
+			return dxaiWrapShapes.get( open );
+		}
+		let shape = null;
+		if ( /^\s*<[a-zA-Z][a-zA-Z0-9-]*[\s>]/.test( open ) ) {
+			const doc = new window.DOMParser().parseFromString( '<template>' + open + ( typeof wrap.close === 'string' ? wrap.close : '' ) + '</template>', 'text/html' );
+			const template = doc.querySelector( 'template' );
+			const node = template && template.content ? template.content.firstElementChild : null;
+			if ( node ) {
+				const props = {};
+				Array.prototype.forEach.call( node.attributes, function ( attr ) {
+					const name = attr.name;
+					if ( name === 'style' || /^on/i.test( name ) ) {
+						return;
+					}
+					if ( name === 'class' ) {
+						props.className = attr.value;
+					} else if ( name === 'for' ) {
+						props.htmlFor = attr.value;
+					} else if ( name === 'tabindex' ) {
+						props.tabIndex = attr.value;
+					} else {
+						props[ name ] = attr.value;
+					}
+				} );
+				// What WordPress adds to a group's element when it renders one with no layout of its own.
+				if ( wrap.name === 'core/group' && ! ( wrap.attrs && wrap.attrs.layout ) ) {
+					props.className = dxaiJoin( props.className, 'is-layout-flow wp-block-group-is-layout-flow' );
+				}
+				// The canvas's copy of the design's id rules selects on data-dxai-id (dxaiTwinDesignIds()).
+				if ( props.id ) {
+					props[ 'data-dxai-id' ] = props.id;
+				}
+				shape = { tag: node.tagName.toLowerCase(), props: props };
+			}
+		}
+		dxaiWrapShapes.set( open, shape );
+
+		return shape;
+	}
+
+	addFilter(
+		'editor.BlockListBlock',
+		'dxai-ui/folded-wrappers',
+		createHigherOrderComponent( function ( BlockListBlock ) {
+			return function ( props ) {
+				const meta = props.attributes && props.attributes.metadata;
+				const wraps = [];
+				if ( meta && meta.dxaiFrame && Array.isArray( meta.dxaiFrame.wraps ) ) {
+					Array.prototype.push.apply( wraps, meta.dxaiFrame.wraps );
+				}
+				if ( meta && Array.isArray( meta.dxaiWrap ) ) {
+					Array.prototype.push.apply( wraps, meta.dxaiWrap );
+				}
+				let out = el( BlockListBlock, props );
+				for ( let i = wraps.length - 1; i >= 0; i-- ) {
+					const shape = dxaiWrapShape( wraps[ i ] );
+					if ( shape ) {
+						out = el( shape.tag, shape.props, out );
+					}
+				}
+
+				return out;
+			};
+		}, 'dxaiUiFoldedWrappers' )
+	);
+
 	// A block's own CSS, editable. It is kept out of the markup (save()
 	// writes a dxs- class for it), so this field is where it lives. Editing
 	// a block still on its old inline style moves that style here.
