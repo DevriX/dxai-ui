@@ -278,13 +278,17 @@ final class Page_Quality {
 			$text = trim( html_entity_decode( wp_strip_all_tags( $html ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
 			return $text === '' && preg_match( '/<(?:img|svg|iframe|video)\b/i', $html ) !== 1 && ! isset( $b['attrs']['placeholder'] ) ? 1 : 0;
 		}
-		if ( in_array( $name, array( 'core/image', 'dx/picture' ), true ) ) {
-			// core/image keeps its file in `url` and `id`, the DX Picture in `imageUrl` and `imageId`.
-			$src = (string) ( $b['attrs']['url'] ?? ( $b['attrs']['imageUrl'] ?? '' ) );
+		// A theme's picture block (the DX Picture on a DX theme) keeps its file where its adapter says (Capabilities::picture_shape()).
+		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( $name );
+		if ( 'core/image' === $name || $shape !== array() ) {
+			// core/image keeps its file in `url` and `id`.
+			$url_key = is_string( $shape['url'] ?? null ) ? $shape['url'] : 'url';
+			$id_key  = is_string( $shape['id'] ?? null ) ? $shape['id'] : 'id';
+			$src     = (string) ( $b['attrs'][ $url_key ] ?? '' );
 			if ( $src === '' && preg_match( '/<img\b[^>]*\bsrc="([^"]+)"/i', $html, $m ) === 1 ) {
 				$src = $m[1];
 			}
-			return $src === '' && (int) ( $b['attrs']['id'] ?? ( $b['attrs']['imageId'] ?? 0 ) ) < 1 ? 1 : 0;
+			return $src === '' && (int) ( $b['attrs'][ $id_key ] ?? 0 ) < 1 ? 1 : 0;
 		}
 
 		return 0;
