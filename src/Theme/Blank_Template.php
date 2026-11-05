@@ -122,7 +122,8 @@ final class Blank_Template {
 			return self::TEMPLATE;
 		}
 
-		return is_string( $slug ) && ( self::DEFAULT === $slug || self::is_canvas_slug( $slug ) ) ? $slug : $fallback;
+		// Whatever a filter returns: only one of the three is taken.
+		return in_array( $slug, array( self::DEFAULT, self::SLUG, self::TEMPLATE ), true ) ? $slug : $fallback;
 	}
 
 	public function register(): void {

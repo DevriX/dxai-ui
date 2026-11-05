@@ -502,7 +502,8 @@ final class Wrap_Fold {
 	private static function wraps_of( array $block ): array {
 		$meta = $block['attrs']['metadata'] ?? null;
 
-		return is_array( $meta ) && is_array( $meta[ self::KEY ] ?? null ) ? array_values( $meta[ self::KEY ] ) : array();
+		// Only records: what the editor sends back is read as data, and anything else in the list is not a wrapper.
+		return is_array( $meta ) && is_array( $meta[ self::KEY ] ?? null ) ? array_values( array_filter( $meta[ self::KEY ], 'is_array' ) ) : array();
 	}
 
 	/**
@@ -582,7 +583,7 @@ final class Wrap_Fold {
 		unset( $meta[ self::KEY ] );
 		foreach ( $wraps as $wrap ) {
 			// The name it was given for a wrapper, unless someone renamed it since.
-			if ( is_array( $wrap ) && ! empty( $wrap['named'] ) && ( $meta['name'] ?? null ) === self::record_name( $wrap ) ) {
+			if ( ! empty( $wrap['named'] ) && ( $meta['name'] ?? null ) === self::record_name( $wrap ) ) {
 				unset( $meta['name'] );
 			}
 		}
@@ -593,7 +594,7 @@ final class Wrap_Fold {
 		}
 		for ( $i = count( $wraps ) - 1; $i >= 0; $i-- ) {
 			$wrap = $wraps[ $i ];
-			if ( ! is_array( $wrap ) || ! in_array( (string) ( $wrap['name'] ?? '' ), self::WRAPPERS, true ) ) {
+			if ( ! in_array( (string) ( $wrap['name'] ?? '' ), self::WRAPPERS, true ) ) {
 				continue;
 			}
 			$open  = (string) ( $wrap['open'] ?? '' );
