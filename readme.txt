@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.44
+Stable tag: 0.4.0-beta.45
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,16 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.45 =
+* A design's pages are given the theme's Default template, and on it they look as the design: the design's header, from Appearance › Menus, and its footer, around Appearance › Widgets, drawn around the page as the DX template draws them. A page of the theme's own on the Default template stays the theme's.
+* Every page of a multi-page design draws the header and the footer the import installed: the copy each page carried is taken out when it is the same header or footer, so a change in Menus or Widgets reaches every page. The phone menu and the dropdowns work on each page as before.
+* A header built like Elementor's nav menu (a parent that is a link block with its sub-menu after it) becomes a menu in Appearance › Menus instead of staying as the design drew it.
+* The editor opens a design's page without its wrapper groups: a group around a single block is folded into it, the page's sections stand at the top of the List View with names, and saving writes the page back as it was. A page converted from Elementor shows about half as many blocks, half as deep; the canvas and the front end do not change.
+* Pages built from an old site (DX › Site): sections every page of its kind has on the team's network, the Home's own words where they are shared, the AI chosen in Settings for the rest, the Home's figures, photographs and service marks, alternating sides and full rows of cards; every page measured against its Home (build, rules, empty places, length, phone) before it goes live.
+* A design's synced patterns are compiled as its pages are: a design that never ran under Tailwind gets no preflight and no utility rule for a class its own CSS never styles.
+* A menu link by query (?page_id=12) marks only its own page as the current one.
+* For developers: `dxai_ui_default_template_draws_design`, `dxai_ui_fold_wrappers`; `dxai_ui_default_template` now defaults to `default`.
 
 = 0.4.0-beta.44 =
 * A design's archive is imported in rounds no request outlives, for hosts that end a request after 60 seconds (WP Engine): it is sent in pieces (no upload limit to raise), read, compiled and saved a round at a time, and the pictures' smaller sizes are made after the pages are saved. A 96-page site with 413 pictures imports with every request under 42 seconds.
