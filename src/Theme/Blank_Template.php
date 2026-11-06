@@ -12,17 +12,19 @@ namespace DXAI_UI\Theme;
 use DXAI_UI\Structures\Page_Scope;
 
 /**
- * How a design's page is drawn: a blank canvas (the theme draws nothing around the page, `body.dxai-ui-blank`), with the design's header
- * and footer around it. Three templates draw one:
+ * How a design's page is drawn. On the plugin's two canvas templates the theme draws nothing around the page (`body.dxai-ui-blank`) and the
+ * design's own header and footer are drawn around it:
  *
- *  - the theme's Default template: what a design's pages are given at import, the way the team keeps every page of a site. Around a page
- *    of its own the theme draws its header and footer; around a design's page the plugin draws the design's, exactly as the DX template
- *    does (draws_default()): the header the design drew, filled from Appearance > Menus, and its footer around Appearance > Widgets. A theme
- *    draws its own header from the same menus, but in its own markup: on American Restoration the menus were the design's and the header
- *    was the theme's, which is not the design one to one.
- *  - `dxai-template.php`, the DX template: the same drawing, chosen by name. The pages of imports from 0.4.0-beta.32 to beta.44 carry it.
+ *  - `dxai-template.php`, the DX template: what a design's pages are given at import. The template draws the design's header, filled from
+ *    Appearance > Menus, and its footer, around Appearance > Widgets (Template_Chrome).
  *  - `dxai-blank.php`, DX Blank: the header and the footer are put into the page's content as it renders (Page_Chrome). Every site
  *    imported before the DX template has pages on it, and they render exactly as they did.
+ *
+ * On a template of the theme's own — its Default template — the theme draws the page: its header and footer, the team's on its other
+ * sites, from the same Menus and Widgets, and the design's sections between them, kept off the theme's CSS (Theme_Fence) so they look as
+ * on the canvas. 0.4.0-beta.45 drew a design's page on the Default template as the DX template does; that took the theme's header and
+ * footer off pages the team had moved to the Default template for them, and it is off again unless a site asks for it
+ * (`dxai_ui_default_template_draws_design`).
  */
 final class Blank_Template {
 
@@ -75,18 +77,18 @@ final class Blank_Template {
 	}
 
 	/**
-	 * Whether the Default template draws a design's page with the design's header and footer (the default), or leaves it to the theme.
+	 * Whether the Default template draws a design's page with the design's header and footer, or leaves it to the theme (the default).
 	 */
 	private static function default_draws( int $post_id ): bool {
 		/**
 		 * Whether a design's page on the theme's Default template is drawn as the DX template draws it — the design's header from
 		 * Appearance > Menus, its footer around Appearance > Widgets, the theme's own header and footer and its style sheets left out —
-		 * or by the theme, as any page of its own. With false, a design's pages are given the DX template at import instead.
+		 * or by the theme, as any page of its own (the default: the theme's header and footer, the design's sections kept off its CSS).
 		 *
-		 * @param bool $draws   Draw it as the design (default true).
+		 * @param bool $draws   Draw it as the design (default false).
 		 * @param int  $post_id The page, 0 when the import asks which template to give a new page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_default_template_draws_design', true, $post_id );
+		return (bool) apply_filters( 'dxai_ui_default_template_draws_design', false, $post_id );
 	}
 
 	/**
@@ -106,24 +108,20 @@ final class Blank_Template {
 	}
 
 	/**
-	 * The template a design's pages are given when they are made: the theme's Default template. `dxai_ui_default_template` can name the
-	 * DX template or DX Blank for a site that wants a page to say which template draws it; a site that keeps the Default template for
-	 * the theme (`dxai_ui_default_template_draws_design` false) gets the DX template.
+	 * The template a design's pages are given when they are made: the DX template. `dxai_ui_default_template` can name DX Blank, or the
+	 * theme's Default template ('default') for a site whose pages show the theme's header and footer.
 	 */
 	public static function default_slug(): string {
-		$fallback = self::default_draws( 0 ) ? self::DEFAULT : self::TEMPLATE;
 		/**
 		 * The template a design's pages are given when they are made.
 		 *
-		 * @param string $slug 'default' (the theme's Default template), 'dxai-template.php' or 'dxai-blank.php'.
+		 * @param string $slug 'dxai-template.php' (the default), 'dxai-blank.php', or 'default' (the theme's Default template: the theme's
+		 *                     header and footer, the design's sections kept off its CSS).
 		 */
-		$slug = apply_filters( 'dxai_ui_default_template', $fallback );
-		if ( self::DEFAULT === $slug && ! self::default_draws( 0 ) ) {
-			return self::TEMPLATE;
-		}
+		$slug = apply_filters( 'dxai_ui_default_template', self::TEMPLATE );
 
 		// Whatever a filter returns: only one of the three is taken.
-		return in_array( $slug, array( self::DEFAULT, self::SLUG, self::TEMPLATE ), true ) ? $slug : $fallback;
+		return in_array( $slug, array( self::DEFAULT, self::SLUG, self::TEMPLATE ), true ) ? $slug : self::TEMPLATE;
 	}
 
 	public function register(): void {

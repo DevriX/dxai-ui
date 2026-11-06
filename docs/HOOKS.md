@@ -101,19 +101,20 @@ measure of its Home's sections. Default: when an AI is chosen and has a key.
 ### dxai_ui_default_template
 
 The template a design's pages are given when they are made.
-@param string $slug 'default' (the theme's Default template), 'dxai-template.php' or 'dxai-blank.php'.
+@param string $slug 'dxai-template.php' (the default), 'dxai-blank.php', or 'default' (the theme's Default template: the theme's
+                    header and footer, the design's sections kept off its CSS).
 
-- `src/Theme/Blank_Template.php:120` — value and arguments: `$fallback`
+- `src/Theme/Blank_Template.php:121` — value and arguments: `self::TEMPLATE`
 
 ### dxai_ui_default_template_draws_design
 
 Whether a design's page on the theme's Default template is drawn as the DX template draws it — the design's header from
 Appearance > Menus, its footer around Appearance > Widgets, the theme's own header and footer and its style sheets left out —
-or by the theme, as any page of its own. With false, a design's pages are given the DX template at import instead.
-@param bool $draws   Draw it as the design (default true).
+or by the theme, as any page of its own (the default: the theme's header and footer, the design's sections kept off its CSS).
+@param bool $draws   Draw it as the design (default false).
 @param int  $post_id The page, 0 when the import asks which template to give a new page.
 
-- `src/Theme/Blank_Template.php:89` — value and arguments: `true`, `$post_id`
+- `src/Theme/Blank_Template.php:91` — value and arguments: `false`, `$post_id`
 
 ### dxai_ui_design_system
 
@@ -138,8 +139,10 @@ of its own (Base_Theme), is on the list: it has the same locations and the same 
 
 A page can say so itself (custom field _dxai_ui_fence_theme: 1 fences, 0 does not).
 
-- `src/Theme/Theme_Fence.php:100` — value and arguments: `$own === '1'`, `$post_id`
-- `src/Theme/Theme_Fence.php:105` — value and arguments: `$default`, `$post_id`
+- `src/Theme/Theme_Fence.php:112` — value and arguments: `$own === '1'`, `$post_id`
+- `src/Theme/Theme_Fence.php:118` — value and arguments: `$default`, `$post_id`
+- `src/Theme/Theme_Fence.php:131` — value and arguments: `$own === '1'`, `$post_id`
+- `src/Theme/Theme_Fence.php:134` — value and arguments: `'' !== (string) get_post_meta( $post_id, '_dxai_ui_static_html', true )`, `$post_id`
 
 ### dxai_ui_fold_wrappers
 

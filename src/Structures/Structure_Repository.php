@@ -2640,6 +2640,9 @@ final class Structure_Repository {
 			'post_content' => wp_slash( $content ),
 			'meta_input'   => array(
 				'_dxai_ui_generated_page' => '1',
+				// Made for the blank canvas: drawn by the theme's own template (a person's choice), its body is kept off the theme's CSS
+				// (Theme_Fence), so it looks as it does on the canvas.
+				'_dxai_ui_fence_theme'    => '1',
 			),
 		);
 
@@ -2685,7 +2688,12 @@ final class Structure_Repository {
 		 * root utility classes from it — but it is not what is saved.
 		 */
 		$wrapped = $mapper->wrap_scope( $content, $id, $extra );
-		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
+		// A page someone moved to a template of the theme's own (the Default template, to show the theme's header and footer) stays
+		// there: a re-import rewrites its content, not where it is drawn. A new page, or one on a canvas template, is given the default.
+		$template = (string) get_post_meta( $id, '_wp_page_template', true );
+		if ( null === $existing || $template === '' || Blank_Template::is_canvas_slug( $template ) ) {
+			update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
+		}
 		update_post_meta( $id, '_dxai_ui_wrapper_class', $extra );
 		update_post_meta( $id, Page_Scope::META, $id );
 		/*

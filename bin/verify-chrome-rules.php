@@ -91,7 +91,7 @@ $expect( 'a page with neither is given both, after what was there', count( $both
 $expect( 'the Home itself is given nothing: it has them in its content', Page_Chrome::rules_markup( array(), $home ) === array() );
 $expect( 'a page on a template of the theme\'s own is left alone', Page_Chrome::rules_markup( array( 'x' ), $plain ) === array( 'x' ) );
 update_post_meta( $plain, '_wp_page_template', 'default' );
-$expect( '…and the same page on the theme\'s Default template is the design\'s, and given what it lacks', count( Page_Chrome::rules_markup( array( 'x' ), $plain ) ) === 3 );
+$expect( '…and so is the same page on the theme\'s Default template, which the theme draws with its own header and footer', Page_Chrome::rules_markup( array( 'x' ), $plain ) === array( 'x' ) );
 update_post_meta( $plain, '_wp_page_template', 'page.php' );
 $expect( 'a value that is not a list of markup comes back as it was', Page_Chrome::rules_markup( 'x', $bare ) === 'x' && Page_Chrome::rules_markup( array(), 0 ) === array() );
 

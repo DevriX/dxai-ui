@@ -41,6 +41,14 @@ use DXAI_UI\Support\Upload_Paths;
  * with a flex or constrained layout) depend on it, and a copy is left unfenced: the same CSS, the same result,
  * pixel for pixel (fences() decides by the template of the design's source page).
  *
+ * A design's own page that the theme draws — moved to the theme's Default template so the theme's header and footer show around it, the
+ * way the team keeps its other sites — is fenced the same way: the theme's header and footer keep the theme's CSS, the design's sections
+ * keep their own, as on the canvas (Gemini Restoration's About on American Restoration's template: 20px of the theme's block gap under
+ * every block, 22px text at 16px, the page 465px taller). Its default follows what the page was made for: a page the import saved since
+ * 0.4.0-beta.46 says so itself (the custom field), and a static design (a copy of a site, a Claude Design package) never ran under a
+ * theme's stylesheet. A page the team built under the theme's CSS keeps it. The theme's own blocks among the design's (its Span, its
+ * Picture) keep their block styles there, as on the canvas.
+ *
  * The custom field `_dxai_ui_fence_theme` (1 or 0) of a page, or the filter `dxai_ui_fence_theme` (bool, post id), sets it for a page.
  */
 final class Theme_Fence {
@@ -76,7 +84,7 @@ final class Theme_Fence {
 		add_action( 'wp_print_footer_scripts', array( self::class, 'apply' ), 9 );
 	}
 
-	/** Whether this request is an ordinary page showing a design it does not carry itself, from a design page of the blank canvas. */
+	/** Whether the theme's CSS is fenced off the design on this request: a page of the theme showing a design (fences()). */
 	public static function applies(): bool {
 		if ( ! is_singular() || Theme_Compat::is_converted_page() ) {
 			return false;
@@ -86,23 +94,55 @@ final class Theme_Fence {
 	}
 
 	/**
-	 * Whether a page's copied sections are fenced off the theme's CSS: they are when the design they come from is
-	 * shown without it (its source page is on the blank canvas), and are not when its source page is a page of the
-	 * theme, which the copies then match.
+	 * Whether the theme's CSS is fenced off the design on a page of the theme. A design's own page the theme draws is, when it was made
+	 * for the canvas (fences_own()). A page's copied sections are when the design they come from is shown without it (its source page is
+	 * on the blank canvas, or is a design's page the theme draws fenced), and are not when its source page is a page of the theme, which
+	 * the copies then match.
 	 */
 	public static function fences( int $post_id ): bool {
-		if ( $post_id < 1 || ! Design_Attach::attached( $post_id ) ) {
+		if ( $post_id < 1 ) {
 			return false;
+		}
+		if ( ! Design_Attach::attached( $post_id ) ) {
+			return self::draws_own_design( $post_id ) && self::fences_own( $post_id );
 		}
 		// A page can say so itself (custom field _dxai_ui_fence_theme: 1 fences, 0 does not).
 		$own = (string) get_post_meta( $post_id, '_dxai_ui_fence_theme', true );
 		if ( $own === '1' || $own === '0' ) {
 			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
 		}
+		// A copy looks like its source page.
 		$source  = Design_Attach::source_for( $post_id );
-		$default = Blank_Template::is_canvas( $source );
+		$default = Blank_Template::is_canvas( $source ) || ( self::draws_own_design( $source ) && self::fences_own( $source ) );
 
 		return (bool) apply_filters( 'dxai_ui_fence_theme', $default, $post_id );
+	}
+
+	/**
+	 * Whether a design's own page is fenced whenever the theme draws it, whichever template it is on now (its custom field, else whether
+	 * it is a static design): the editor's canvas follows the template picked in the inspector with it.
+	 */
+	public static function fences_own( int $post_id ): bool {
+		if ( $post_id < 1 || Design_Attach::attached( $post_id ) || ! Blank_Template::is_design_page( $post_id ) || '' === (string) get_post_meta( $post_id, '_dxai_ui_css_url', true ) ) {
+			return false;
+		}
+		$own = (string) get_post_meta( $post_id, '_dxai_ui_fence_theme', true );
+		if ( $own === '1' || $own === '0' ) {
+			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
+		}
+
+		return (bool) apply_filters( 'dxai_ui_fence_theme', '' !== (string) get_post_meta( $post_id, '_dxai_ui_static_html', true ), $post_id );
+	}
+
+	/**
+	 * Whether a design's own page is drawn by the theme: it carries its design (its sheet), and its template is one of the theme's, not
+	 * the plugin's canvas.
+	 */
+	public static function draws_own_design( int $post_id ): bool {
+		return $post_id > 0
+			&& Blank_Template::is_design_page( $post_id )
+			&& ! Blank_Template::is_canvas( $post_id )
+			&& '' !== (string) get_post_meta( $post_id, '_dxai_ui_css_url', true );
 	}
 
 	/** Wrap each of the theme's callbacks on the style hooks, to record what it registers and adds. */
@@ -144,9 +184,11 @@ final class Theme_Fence {
 		}
 		$styles = wp_styles();
 		$roots  = array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) );
+		// On a design's own page the theme's blocks among the design's keep their block styles, as the canvas keeps them (Assets).
+		$blocks = self::draws_own_design( (int) get_queried_object_id() ) ? array_flip( \DXAI_UI\Blocks\Design_Blocks::theme_block_style_handles() ) : array();
 		foreach ( self::needed( $styles ) as $handle ) {
 			$style = $styles->registered[ $handle ] ?? null;
-			if ( ! $style instanceof \_WP_Dependency || str_starts_with( $handle, 'dxai-ui' ) ) {
+			if ( ! $style instanceof \_WP_Dependency || str_starts_with( $handle, 'dxai-ui' ) || isset( $blocks[ $handle ] ) ) {
 				continue;
 			}
 			$src   = is_string( $style->src ) ? $style->src : '';

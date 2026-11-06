@@ -101,7 +101,7 @@ echo "The templates\n";
 $templates = apply_filters( 'theme_page_templates', array(), null, null, 'page' );
 $expect( 'both canvas templates are page templates', isset( $templates[ Blank_Template::TEMPLATE ], $templates[ Blank_Template::SLUG ] ), wp_json_encode( $templates ) );
 $expect( 'DX Blank is named as what it is now: the template of earlier imports', str_contains( (string) $templates[ Blank_Template::SLUG ], 'earlier' ) );
-$expect( 'a design\'s pages are given the theme\'s Default template', Blank_Template::default_slug() === Blank_Template::DEFAULT );
+$expect( 'a design\'s pages are given the DX template', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
 add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::SLUG );
 $expect( '…unless the site says DX Blank', Blank_Template::default_slug() === Blank_Template::SLUG );
 remove_all_filters( 'dxai_ui_default_template' );
@@ -109,14 +109,11 @@ add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::TEMPLATE 
 $expect( '…or the DX template', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
 remove_all_filters( 'dxai_ui_default_template' );
 add_filter( 'dxai_ui_default_template', static fn() => 'page.php' );
-$expect( '…and a name that is no canvas template is not taken', Blank_Template::default_slug() === Blank_Template::DEFAULT );
+$expect( '…and a name that is no canvas template is not taken', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
 remove_all_filters( 'dxai_ui_default_template' );
-add_filter( 'dxai_ui_default_template_draws_design', '__return_false' );
-$expect( 'a site that keeps the Default template for the theme gives a design\'s pages the DX template', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
 add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::DEFAULT );
-$expect( '…even when it names the Default template, which would not draw them', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
+$expect( '…or the theme\'s Default template, where a site names it', Blank_Template::default_slug() === Blank_Template::DEFAULT );
 remove_all_filters( 'dxai_ui_default_template' );
-remove_all_filters( 'dxai_ui_default_template_draws_design' );
 $expect( 'the template file ships', is_readable( DXAI_UI_DIR . 'templates/' . Blank_Template::TEMPLATE ) && is_readable( DXAI_UI_DIR . 'templates/' . Blank_Template::SLUG ) );
 $expect( 'both slugs are canvas templates, no other is', Blank_Template::is_canvas_slug( Blank_Template::SLUG ) && Blank_Template::is_canvas_slug( Blank_Template::TEMPLATE ) && ! Blank_Template::is_canvas_slug( 'page.php' ) && ! Blank_Template::is_canvas_slug( '' ) );
 
@@ -276,9 +273,11 @@ $expect( '…and on the front end the same call writes them', $written() === $gr
 remove_all_filters( 'pre_option_' . Header_Template::OPTION );
 \DXAI_UI\Chrome\Site_Header_Block::forget();
 
-echo "\nA design's page on the theme's Default template is drawn as on the DX template\n";
+echo "\nA design's page on the theme's Default template is the theme's, unless the site asks for the design's drawing\n";
 $default_page = $page( 'DX template fixture page on the Default template', $lead_home . "\n\n" . $body, $home_tpl, Blank_Template::DEFAULT );
-$expect( 'it is a canvas page', Blank_Template::is_canvas( $default_page ) && Blank_Template::draws_default( $default_page ) );
+$expect( 'by default it is the theme\'s: no canvas, and its Default template is not one the editor draws as the design', ! Blank_Template::is_canvas( $default_page ) && ! in_array( '', Blank_Template::drawn_slugs( $default_page ), true ) );
+add_filter( 'dxai_ui_default_template_draws_design', '__return_true' );
+$expect( 'where the site asks, it is a canvas page', Blank_Template::is_canvas( $default_page ) && Blank_Template::draws_default( $default_page ) );
 $expect( '…and its Default template is one the editor\'s canvas draws as the design', in_array( '', Blank_Template::drawn_slugs( $default_page ), true ) && in_array( 'default', Blank_Template::drawn_slugs( $default_page ), true ) );
 $expect( 'it is drawn exactly as the same page on the DX template', $same( $norm( $drawn( $default_page ) ), $default_page ) === $same( $norm( $drawn( $sub_tpl ) ), $sub_tpl ), substr( $norm( $drawn( $default_page ) ), 0, 200 ) );
 $GLOBALS['wp_query']                 = new WP_Query( array( 'page_id' => $default_page ) ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
@@ -291,9 +290,8 @@ $expect( 'a page of the theme\'s own on the Default template is the theme\'s', !
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $plain_default ) ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query']; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 $expect( '…and its request keeps the theme\'s template', ( new Blank_Template() )->include_template( '/theme/page.php' ) === '/theme/page.php' );
-add_filter( 'dxai_ui_default_template_draws_design', '__return_false' );
-$expect( 'a site that says so leaves a design\'s page on the Default template to the theme', ! Blank_Template::is_canvas( $default_page ) );
 remove_all_filters( 'dxai_ui_default_template_draws_design' );
+$expect( 'without the site\'s word, a design\'s page on the Default template is left to the theme', ! Blank_Template::is_canvas( $default_page ) );
 wp_reset_query();
 
 echo "\nThe template only draws a page of its own\n";

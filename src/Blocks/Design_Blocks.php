@@ -882,10 +882,11 @@ final class Design_Blocks {
 
 		return array(
 			'converted'     => true,
-			'blank'         => \DXAI_UI\Theme\Blank_Template::is_canvas( $post_id ),
+			// A design's page the theme draws with its sections fenced off its CSS shows them in the canvas as the canvas pages do.
+			'blank'         => \DXAI_UI\Theme\Blank_Template::is_canvas( $post_id ) || ( \DXAI_UI\Theme\Theme_Fence::draws_own_design( $post_id ) && \DXAI_UI\Theme\Theme_Fence::fences( $post_id ) ),
 			'blankTemplate' => \DXAI_UI\Theme\Blank_Template::SLUG,
 			// Both canvas templates render the page the same way (DX Blank and the DX template): the canvas follows the edited one.
-			'blankTemplates' => \DXAI_UI\Theme\Blank_Template::drawn_slugs( $post_id ),
+			'blankTemplates' => self::blank_templates( $post_id ),
 			'static'        => (bool) get_post_meta( $post_id, '_dxai_ui_static_html', true ),
 			'tokens'        => wp_get_global_stylesheet( array( 'variables', 'presets' ) ),
 			// Assets::drop_theme_styles() dequeues every stylesheet served
@@ -900,12 +901,27 @@ final class Design_Blocks {
 	}
 
 	/**
-	 * The handles of the styles that the blocks of the theme (and its parent) register — their front-end and editor styles — as their
-	 * ids appear in the canvas (`<handle>-css`).
+	 * The templates on which the editor's canvas shows a page's sections without the theme's CSS: the canvas templates, and every
+	 * template of the theme for a design's page that is fenced off the theme's CSS where the theme draws it (Theme_Fence::fences_own()).
 	 *
 	 * @return array<int, string>
 	 */
-	private static function theme_block_style_handles(): array {
+	private static function blank_templates( int $post_id ): array {
+		$slugs = \DXAI_UI\Theme\Blank_Template::drawn_slugs( $post_id );
+		if ( ! \DXAI_UI\Theme\Theme_Fence::fences_own( $post_id ) ) {
+			return $slugs;
+		}
+
+		return array_values( array_unique( array_merge( $slugs, array( '', \DXAI_UI\Theme\Blank_Template::DEFAULT ), array_map( 'strval', array_keys( wp_get_theme()->get_page_templates( null, 'page' ) ) ) ) ) );
+	}
+
+	/**
+	 * The handles of the styles that the blocks of the theme (and its parent) register — their front-end and editor styles — as their
+	 * ids appear in the canvas (`<handle>-css`). Theme_Fence leaves them on a design's page the theme draws, as the canvas does.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function theme_block_style_handles(): array {
 		$roots = array_values( array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) ) );
 		if ( $roots === array() ) {
 			return array();

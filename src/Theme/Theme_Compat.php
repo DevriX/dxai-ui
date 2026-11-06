@@ -228,7 +228,7 @@ final class Theme_Compat {
 	 * @return mixed
 	 */
 	public function no_delay( $delay ) {
-		return self::is_converted_page() ? false : $delay;
+		return self::shows_design() ? false : $delay;
 	}
 
 	/**
@@ -236,6 +236,20 @@ final class Theme_Compat {
 	 * @return mixed
 	 */
 	public function skip_lazy( $skip ) {
-		return self::is_converted_page() ? true : $skip;
+		return self::shows_design() ? true : $skip;
+	}
+
+	/**
+	 * Whether the current request shows a design's page as the design: on the canvas, or drawn by the theme with its sections fenced off
+	 * the theme's CSS (Theme_Fence). The theme's modules that would change the design's own behaviour stand down on both: its scripts
+	 * (menus, reveals, sliders) are not held back, its pictures keep their own loading (a slide out of view to the side was never loaded).
+	 */
+	public static function shows_design(): bool {
+		if ( self::is_converted_page() ) {
+			return true;
+		}
+		$id = is_singular() ? (int) get_queried_object_id() : 0;
+
+		return $id > 0 && Theme_Fence::draws_own_design( $id ) && Theme_Fence::fences( $id );
 	}
 }

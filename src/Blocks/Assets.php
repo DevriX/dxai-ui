@@ -159,6 +159,11 @@ final class Assets {
 		if ( ! $id || get_post_meta( $id, '_dxai_ui_css_url', true ) === '' ) {
 			return;
 		}
+		// The theme draws the page around the design (its own template): its header and footer need its sheet, which is fenced off the
+		// design's sections instead (Theme_Fence).
+		if ( \DXAI_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) && \DXAI_UI\Theme\Theme_Fence::fences( (int) $id ) ) {
+			return;
+		}
 		$roots = array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) );
 		foreach ( wp_styles()->registered as $handle => $style ) {
 			$src = is_string( $style->src ?? null ) ? $style->src : '';
@@ -412,7 +417,8 @@ final class Assets {
 		$css      = Upload_Paths::for_meta( $src, '_dxai_ui_css_url' );
 		$js       = Upload_Paths::for_meta( $src, '_dxai_ui_js_url' );
 		$fonts    = get_post_meta( $src, '_dxai_ui_font_urls', true );
-		$attached = $src !== (int) $id && ! \DXAI_UI\Theme\Theme_Compat::is_converted_page();
+		// A page of the theme showing a design: one holding blocks copied from a design page, or a design's own page the theme draws.
+		$attached = ( $src !== (int) $id || \DXAI_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) ) && ! \DXAI_UI\Theme\Theme_Compat::is_converted_page();
 		// The theme's own components among the copied blocks (its FAQ) keep their rules inside the design's sections, as on the page they came from.
 		if ( \DXAI_UI\Theme\Theme_Fence::applies() ) {
 			\DXAI_UI\Theme\Theme_Components::enqueue( $content, $css['path'] );
