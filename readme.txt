@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.45
+Stable tag: 0.4.0-beta.46
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.46 =
+* A design's page on the theme's Default template shows the theme's header and footer again (from Appearance › Menus and Widgets, as the team's other sites do), as before beta.45. Beta.45 drew the design's own header and footer there; a site that wants that asks for it (`dxai_ui_default_template_draws_design`). A design's pages are given the DX template at import again.
+* A design's page moved to a template of the theme's keeps its look: the theme's styles stay for its header and footer and no longer reach the design's sections (no block gap under every block, no smaller text). It works on pages imported and edited before, with no new import: a static design (a Claude Design package, a copy of a site) and every page imported from now on; a page the team built under the theme's styles keeps them.
+* On such a page the theme's script delay and image lazy loading leave the design alone, as on the DX template: its menus, reveals and sliders work at once.
+* The editor shows such a page as the visitor sees it, whichever of the theme's templates it is on.
+* A re-import leaves a page on the template someone moved it to.
 
 = 0.4.0-beta.45 =
 * A design's pages are given the theme's Default template, and on it they look as the design: the design's header, from Appearance › Menus, and its footer, around Appearance › Widgets, drawn around the page as the DX template draws them. A page of the theme's own on the Default template stays the theme's.
