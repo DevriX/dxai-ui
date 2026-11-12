@@ -133,7 +133,7 @@ and footer from the menu locations and widget areas an install writes (`primary-
 `dxai_ui_dx_themes` adds a theme to the list or takes one off it. DX Base, the theme this plugin carries for a site that has none
 of its own (Base_Theme), is on the list: it has the same locations and the same areas.
 
-- `src/Theme/Theme_Compat.php:58` — value and arguments: `array_merge( Adapters\Amr_Adapter::SLUGS, array( Base_Theme::SLUG ) )`
+- `src/Theme/Theme_Compat.php:60` — value and arguments: `array_merge( Adapters\Amr_Adapter::SLUGS, array( Base_Theme::SLUG ) )`
 
 ### dxai_ui_fence_theme
 
@@ -252,7 +252,7 @@ own header and footer as template parts on its pages instead, and the
 site's menus and widgets stay as they are. `dxai_ui_install_chrome`
 overrides the answer.
 
-- `src/Theme/Theme_Compat.php:124` — value and arguments: `$default`
+- `src/Theme/Theme_Compat.php:126` — value and arguments: `$default`
 
 ### dxai_ui_interactivity
 

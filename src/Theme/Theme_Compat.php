@@ -24,7 +24,9 @@ namespace DXAI_UI\Theme;
  *  - Its DelayScripts module holds every script back for visitors until the
  *    first interaction or 5 s, so the design's dropdowns, sticky header and
  *    reveals did nothing at first. `dx_delay_scripts_should_delay` answers
- *    false on a converted page.
+ *    false for the plugin's own scripts on a page that shows a design
+ *    (own_script()); the rest — tag managers, analytics, review widgets,
+ *    forms, the theme's bundle — waits as on every other page of the site.
  *  - Its LazyLoadImages module forces loading="lazy" on every <img>, the logo
  *    and the hero included. `dx_lazy_load_skip_image` keeps the design's own
  *    loading attributes on a converted page.
@@ -80,7 +82,7 @@ final class Theme_Compat {
 		// After the main query, before any theme enqueue runs.
 		add_action( 'template_redirect', array( $this, 'detach_theme' ), 0 );
 		add_action( 'wp_head', array( $this, 'print_title' ), 1 );
-		add_filter( 'dx_delay_scripts_should_delay', array( $this, 'no_delay' ), 10, 1 );
+		add_filter( 'dx_delay_scripts_should_delay', array( $this, 'no_delay' ), 10, 4 );
 		add_filter( 'dx_lazy_load_skip_image', array( $this, 'skip_lazy' ), 10, 1 );
 		add_action( 'wp_footer', array( $this, 'print_block_supports' ), 2 );
 	}
@@ -224,11 +226,91 @@ final class Theme_Compat {
 	}
 
 	/**
+	 * The DelayScripts module asks this for every script of the page, with its src, its inline code and its whole tag. On a page that shows
+	 * a design the plugin's own scripts run at once (the design's menus, sticky header, sliders, reveals), and so does what they need; every
+	 * other script waits for the first interaction or the module's timer, as on every other page of the site. Answering false for every
+	 * script there (up to 0.4.0-beta.46) ran the tag manager, the analytics and the review and form scripts during the load: Master
+	 * Restoration's Home scored 65 on PageSpeed, its hero picture painted at 8.6 s; 94 in the lab once they waited. A module that asks
+	 * without the script (an older theme) gets the old answer, false: there is nothing to tell apart, and nothing of the design waits.
+	 *
 	 * @param mixed $delay
+	 * @param mixed $src
+	 * @param mixed $inner
+	 * @param mixed $tag
 	 * @return mixed
 	 */
-	public function no_delay( $delay ) {
-		return self::shows_design() ? false : $delay;
+	public function no_delay( $delay, $src = null, $inner = null, $tag = null ) {
+		if ( ! self::shows_design() ) {
+			return $delay;
+		}
+		if ( ! is_string( $src ) ) {
+			return false;
+		}
+
+		return self::own_script( $src, is_string( $tag ) ? $tag : '' ) ? false : $delay;
+	}
+
+	/**
+	 * Whether a script of the page is the plugin's or one the plugin's scripts need: a file in its folder or in its folder in uploads (a
+	 * design's page script), a tag WordPress printed for a handle the plugin's scripts depend on (`<handle>-js` and its `-before`,
+	 * `-after`, `-extra` and `-translations` data), or a tag of its own (an id that starts with dxai-ui: its handles, its modules, its
+	 * inline scripts).
+	 */
+	public static function own_script( string $src, string $tag ): bool {
+		if ( $src !== '' ) {
+			// By the path alone: a network site on its own domain, or a CDN in front, changes the host and keeps the path.
+			$path    = (string) wp_parse_url( $src, PHP_URL_PATH );
+			$uploads = wp_upload_dir( null, false );
+			foreach ( array( DXAI_UI_URL, trailingslashit( (string) $uploads['baseurl'] ) . \DXAI_UI\Support\Upload_Paths::DIR . '/' ) as $base ) {
+				$own = (string) wp_parse_url( $base, PHP_URL_PATH );
+				if ( strlen( $own ) > 1 && str_starts_with( $path, $own ) ) {
+					return true;
+				}
+			}
+		}
+		if ( preg_match( '/\sid\s*=\s*(["\'])(.*?)\1/i', $tag, $m ) !== 1 ) {
+			return false;
+		}
+		$id = (string) $m[2];
+		if ( str_starts_with( $id, 'dxai-ui' ) ) {
+			return true;
+		}
+		$handle = (string) preg_replace( '/-js(?:-(?:before|after|extra|translations))?$/', '', $id );
+
+		return $handle !== $id && in_array( $handle, self::needed_handles(), true );
+	}
+
+	/**
+	 * The script handles the plugin's own scripts on this page depend on, all the way down (its own not listed).
+	 *
+	 * @return array<int, string>
+	 */
+	private static function needed_handles(): array {
+		$scripts = wp_scripts();
+		$need    = array();
+		$walk    = static function ( string $handle, int $depth ) use ( &$walk, &$need, $scripts ): void {
+			$dep = $scripts->registered[ $handle ] ?? null;
+			if ( ! $dep instanceof \_WP_Dependency || $depth > 8 ) {
+				return;
+			}
+			foreach ( (array) $dep->deps as $name ) {
+				$name = (string) $name;
+				if ( ! in_array( $name, $need, true ) ) {
+					$need[] = $name;
+					$walk( $name, $depth + 1 );
+				}
+			}
+		};
+		foreach ( array_unique( array_merge( (array) $scripts->done, (array) $scripts->queue ) ) as $handle ) {
+			$handle = (string) $handle;
+			$dep    = $scripts->registered[ $handle ] ?? null;
+			$src    = $dep instanceof \_WP_Dependency && is_string( $dep->src ) ? $dep->src : '';
+			if ( str_starts_with( $handle, 'dxai-ui' ) || ( $src !== '' && self::own_script( $src, '' ) ) ) {
+				$walk( $handle, 0 );
+			}
+		}
+
+		return $need;
 	}
 
 	/**

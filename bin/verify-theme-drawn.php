@@ -10,7 +10,9 @@
  * instead, which is not what the team moved them there for. Checked here: the Default template is the theme's (beta.45's drawing only on
  * a site that asks for it); a design's own page the theme draws is fenced off the theme's CSS when it was made for the canvas (a static
  * design, or a page the import saved), and keeps the theme's stylesheet for the header and footer; a page the team built under the theme's
- * CSS keeps it; a copy of a design page follows its source; and a re-import leaves a page on the template someone moved it to.
+ * CSS keeps it; a copy of a design page follows its source; and a re-import leaves a page on the template someone moved it to. On such a
+ * page the theme's DelayScripts module holds back every script but the plugin's own and what they need, as on any page of the site (the
+ * tag manager and analytics ran during the load there up to 0.4.0-beta.46: Master Restoration's Home scored 65 on PageSpeed).
  *
  * Makes pages (and imports the small Claude Design fixture under a name of its own) and removes them. Exit code 1 when a check fails.
  *
@@ -131,8 +133,29 @@ update_post_meta( $static, '_dxai_ui_fence_theme', '' );
 $visit( $static );
 $expect( 'the request fences the theme\'s styles there', Theme_Fence::applies() );
 $expect( '…and a DX theme\'s modules stand down as on the canvas: the design\'s scripts are not held back, its pictures keep their own loading', false === apply_filters( 'dx_delay_scripts_should_delay', true ) && true === apply_filters( 'dx_lazy_load_skip_image', false, '<img src="x.jpg">' ) );
+// DelayScripts asks for each script with its src, its inline code and its whole tag (dx-modules/src/Modules/DelayScripts/Module.php).
+$delay  = static fn( string $src, string $tag, string $inner = '' ): bool => true === apply_filters( 'dx_delay_scripts_should_delay', true, $src, $inner, $tag );
+$own_js = Upload_Paths::url( Upload_Paths::DIR . '/pattern-theme-drawn-fixture.js' );
+$gtm    = "(function(w,d,s,l,i){w[l]=w[l]||[];var j=d.createElement(s);j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i;d.head.appendChild(j);})(window,document,'script','dataLayer','GTM-FIXTURE');";
+$expect( '…the design\'s page script, its file in the plugin\'s uploads folder, runs at once', ! $delay( $own_js, '<script defer src="' . esc_url( $own_js ) . '"></script>' ) );
+$expect( '…so does a file in the plugin\'s folder', ! $delay( DXAI_UI_URL . 'assets/js/rail.js', '<script src="' . esc_url( DXAI_UI_URL . 'assets/js/rail.js' ) . '"></script>' ) );
+$sibling = (string) preg_replace( '#/[^/]+/?$#', '/' . basename( untrailingslashit( DXAI_UI_URL ) ) . '-addon/', untrailingslashit( DXAI_UI_URL ) ) . 'view.js';
+$expect( '…but not a file of another plugin whose folder only starts with the same name', $delay( $sibling, '<script src="' . esc_url( $sibling ) . '"></script>' ), $sibling );
+$expect( '…nor a file elsewhere that only has the plugin\'s name in its address', $delay( 'https://cdn.example.test/assets/dxai-ui/widget.js', '<script src="https://cdn.example.test/assets/dxai-ui/widget.js"></script>' ) );
+$expect( '…and the plugin\'s inline scripts run at once (its handles\' data, its own printed scripts)', ! $delay( '', '<script id="dxai-ui-backgrounds">', '(function(){})();' ) && ! $delay( '', '<script id="dxai-ui-page-1-js-before">', 'window.dxaiLucideUrl="x";' ) );
+wp_register_script( 'theme-drawn-fixture-need', 'https://example.test/need.js', array(), '1', true );
+wp_register_script( 'dxai-ui-theme-drawn-fixture', DXAI_UI_URL . 'assets/js/rail.js', array( 'theme-drawn-fixture-need' ), '1', true );
+wp_enqueue_script( 'dxai-ui-theme-drawn-fixture' );
+$expect( '…and so does a script one of the plugin\'s scripts depends on, with its data', ! $delay( 'https://example.test/need.js', '<script id="theme-drawn-fixture-need-js" src="https://example.test/need.js"></script>' ) && ! $delay( '', '<script id="theme-drawn-fixture-need-js-extra">', 'var need = {};' ) );
+wp_dequeue_script( 'dxai-ui-theme-drawn-fixture' );
+wp_deregister_script( 'dxai-ui-theme-drawn-fixture' );
+wp_deregister_script( 'theme-drawn-fixture-need' );
+$expect( '…once nothing of the plugin\'s needs it, that script waits like the others', $delay( 'https://example.test/need.js', '<script id="theme-drawn-fixture-need-js" src="https://example.test/need.js"></script>' ) );
+$expect( 'the tag manager waits for the first interaction, as on every page of the site', $delay( '', '<script>', $gtm ) && $delay( 'https://www.googletagmanager.com/gtm.js?id=GTM-FIXTURE', '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-FIXTURE"></script>' ) );
+$expect( '…and so do another plugin\'s scripts and jQuery', $delay( 'https://example.test/wp-content/plugins/gravityforms/js/gravityforms.min.js', '<script id="gform_gravityforms-js" defer src="https://example.test/wp-content/plugins/gravityforms/js/gravityforms.min.js"></script>' ) && $delay( includes_url( 'js/jquery/jquery.min.js' ), '<script id="jquery-core-js" src="' . esc_url( includes_url( 'js/jquery/jquery.min.js' ) ) . '"></script>' ) );
+$expect( 'a module that asks without the script (an older theme) holds nothing back there, as before', false === apply_filters( 'dx_delay_scripts_should_delay', true ) );
 $visit( $team );
-$expect( '…while on a page the team built under the theme they work as on any of its pages', true === apply_filters( 'dx_delay_scripts_should_delay', true ) );
+$expect( '…while on a page the team built under the theme they work as on any of its pages', true === apply_filters( 'dx_delay_scripts_should_delay', true ) && $delay( $own_js, '' ) && $delay( '', '<script>', $gtm ) );
 $visit( $canvas );
 $expect( '…and not on a canvas page, which goes without them', ! Theme_Fence::applies() );
 
