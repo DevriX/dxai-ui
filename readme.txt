@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.4.0-beta.46
+Stable tag: 0.4.0-beta.47
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,10 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.4.0-beta.47 =
+* A design's page drawn by a DX theme no longer runs the site's tag manager, analytics, review widget, form scripts and jQuery while it opens. The theme's script delay holds them until the visitor's first touch, scroll or key press, or five seconds, as it does on every other page of the site; the plugin's own scripts (the design's menus, sticky header, sliders and reveals) and what they need still run at once. Up to beta.46 the plugin let every script on such a page through. Master Restoration's Home scored 65 on mobile PageSpeed with its hero picture painted at 8.6 s; with the scripts held back the same page measures 94 in the lab (the picture at 2.5 s, 40 ms of blocking time). A theme whose script delay does not say which script it asks about holds nothing back there, as before.
+* For developers: `verify-theme-drawn` checks which scripts wait and which run (32 checks, each proved by putting its bug back: 9 mutations).
 
 = 0.4.0-beta.46 =
 * A design's page on the theme's Default template shows the theme's header and footer again (from Appearance › Menus and Widgets, as the team's other sites do), as before beta.45. Beta.45 drew the design's own header and footer there; a site that wants that asks for it (`dxai_ui_default_template_draws_design`). A design's pages are given the DX template at import again.
