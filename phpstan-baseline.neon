@@ -139,49 +139,49 @@ parameters:
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false, splitting\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''span''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false, splitting\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''span''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{svgAttrs\: array\{type\: ''array'', default\: array\{\}\}, svgInner\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{svgAttrs\: array\{type\: ''array'', default\: array\{\}\}, svgInner\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''div''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, elType\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''div''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, elType\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, alt\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, width\: array\{type\: ''string'', default\: ''''\}, height\: array\{type\: ''string'', default\: ''''\}, loading\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, alt\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, width\: array\{type\: ''string'', default\: ''''\}, height\: array\{type\: ''string'', default\: ''''\}, loading\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, html\: false, customCSS\: false, anchor\: false\}, attributes\: array\{content\: array\{type\: ''string'', source\: ''html''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: false, customClassName\: false, html\: false, customCSS\: false, anchor\: false\}, attributes\: array\{content\: array\{type\: ''string'', source\: ''html''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false, anchor\: true\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, text\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, tagName\: array\{type\: ''string'', default\: ''a''\}, suffix\: array\{type\: ''string'', default\: ''''\}, suffixClass\: array\{type\: ''string'', default\: ''''\}, ariaLabel\: array\{type\: ''string'', default\: ''''\}, role\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: true, html\: false, anchor\: true\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, text\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, tagName\: array\{type\: ''string'', default\: ''a''\}, suffix\: array\{type\: ''string'', default\: ''''\}, suffixClass\: array\{type\: ''string'', default\: ''''\}, ariaLabel\: array\{type\: ''string'', default\: ''''\}, role\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{num\: array\{type\: ''string'', default\: ''''\}, question\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: true, html\: false\}, attributes\: array\{num\: array\{type\: ''string'', default\: ''''\}, question\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{value\: array\{type\: ''string'', default\: ''''\}, suffix\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''rv\-num''\}, srClass\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dx\-ui\-blocks\-editor'', supports\: array\{className\: true, html\: false\}, attributes\: array\{value\: array\{type\: ''string'', default\: ''''\}, suffix\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''rv\-num''\}, srClass\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
@@ -205,7 +205,7 @@ parameters:
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxui\-ui\-blocks…'', view_script\: ''dxui\-ui\-form\-view'', style\: ''dxui\-ui\-dynamic'', render_callback\: array\{\$this\(DX_UI\\Blocks\\Form_Block\), ''render''\}, attributes\: array\{fields\: array\{type\: ''array'', default\: array\{\}\}, submitLabel\: array\{type\: ''string'', default\: ''Send''\}, successMessage\: array\{type\: ''string'', default\: ''Thank you\.''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dx\-ui\-blocks\-editor'', view_script\: ''dx\-ui\-form\-view'', style\: ''dx\-ui\-dynamic'', render_callback\: array\{\$this\(DX_UI\\Blocks\\Form_Block\), ''render''\}, attributes\: array\{fields\: array\{type\: ''array'', default\: array\{\}\}, submitLabel\: array\{type\: ''string'', default\: ''Send''\}, successMessage\: array\{type\: ''string'', default\: ''Thank you\.''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Form_Block.php
@@ -337,7 +337,7 @@ parameters:
 			path: src/Blocks/Pattern_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxui\-ui\-blocks…'', view_script\: ''dxui\-ui\-slider\-view'', style\: ''dxui\-ui\-dynamic'', supports\: array\{className\: true, html\: false, align\: array\{''wide'', ''full''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dx\-ui\-blocks\-editor'', view_script\: ''dx\-ui\-slider\-view'', style\: ''dx\-ui\-dynamic'', supports\: array\{className\: true, html\: false, align\: array\{''wide'', ''full''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Slider_Block.php
@@ -499,13 +499,13 @@ parameters:
 			path: src/Chrome/Site_Footer_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', keywords\: array\{''footer'', ''widgets''\}, editor_script_handles\: array\{''dxui\-ui\-site\-footer…''\}, render_callback\: array\{''DX_UI\\\\Chrome\\\\Site_Footer_Block'', ''render''\}, supports\: array\{html\: false, className\: false, customClassName\: false, reusable\: false, multiple\: false\}, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', keywords\: array\{''footer'', ''widgets''\}, editor_script_handles\: array\{''dx\-ui\-site\-footer…''\}, render_callback\: array\{''DX_UI\\\\Chrome\\\\Site_Footer_Block'', ''render''\}, supports\: array\{html\: false, className\: false, customClassName\: false, reusable\: false, multiple\: false\}, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Chrome/Site_Footer_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', icon\: ''menu'', keywords\: array\{''header'', ''menu'', ''navigation'', ''logo''\}, editor_script\: ''dxui\-ui\-site\-header…'', render_callback\: array\{\$this\(DX_UI\\Chrome\\Site_Header_Block\), ''render''\}, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', icon\: ''menu'', keywords\: array\{''header'', ''menu'', ''navigation'', ''logo''\}, editor_script\: ''dx\-ui\-site\-header…'', render_callback\: array\{\$this\(DX_UI\\Chrome\\Site_Header_Block\), ''render''\}, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Chrome/Site_Header_Block.php
@@ -1651,91 +1651,7 @@ parameters:
 			path: src/Pages/Section_Library.php
 
 		-
-			message: '#^Call to function is_array\(\) with null will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 2
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Empty array passed to foreach\.$#'
-			identifier: foreach.emptyArray
-			count: 2
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^If condition is always false\.$#'
-			identifier: if.alwaysFalse
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Left side of && is always false\.$#'
-			identifier: booleanAnd.leftAlwaysFalse
-			count: 3
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Left side of \|\| is always false\.$#'
-			identifier: booleanOr.leftAlwaysFalse
-			count: 2
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Negated boolean expression is always true\.$#'
-			identifier: booleanNot.alwaysTrue
-			count: 6
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''home'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''image'' on \*NEVER\* in isset\(\) always exists and is not nullable\.$#'
-			identifier: isset.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''item'' does not exist on array\{type\: string, title\: string\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
 			message: '#^Offset ''item'' on array\{type\: string, title\: string, slug\: string, shuffle\: int, recipe\: int, locks\: array\<int, array\<string, mixed\>\>\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''item'' on array\{type\: string, title\: string\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''lib'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''locks'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''locks'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''n'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: src/Pages/Team_Pages.php
@@ -1777,51 +1693,9 @@ parameters:
 			path: src/Pages/Team_Pages.php
 
 		-
-			message: '#^Offset ''path'' on array\{type\: string, title\: string\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''plan'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''recipe'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''seed_of'' on array\{pool\?\: array\<int, array\<string, mixed\>\>, positional\?\: array\<string, true\>\|null, kit\?\: array\<string, mixed\>, facts\?\: array\<string, mixed\>, rows\?\: array\<int, array\<string, string\>\>, heading\?\: string, list\?\: bool\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''shuffle'' on array\{type\: string, title\: string\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''team'' on null in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
 			message: '#^Offset ''title'' on array\{type\: string, title\: string, slug\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset ''title'' on array\{type\: string, title\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
 			path: src/Pages/Team_Pages.php
 
 		-
@@ -1831,63 +1705,15 @@ parameters:
 			path: src/Pages/Team_Pages.php
 
 		-
-			message: '#^Offset ''type'' on array\{type\: string, title\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset \*NEVER\* on list\<string\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
 			message: '#^Offset int on array\{\} on left side of \?\? does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: src/Pages/Team_Pages.php
 
 		-
-			message: '#^Offset int\<0, max\> on array\{\} in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 3
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Offset int\<0, max\> on array\{\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Parameter \#1 \$array \(array\{\}\) to function array_values is empty, call has no effect\.$#'
-			identifier: arrayValues.empty
-			count: 3
-			path: src/Pages/Team_Pages.php
-
-		-
 			message: '#^Result of && is always false\.$#'
 			identifier: booleanAnd.alwaysFalse
-			count: 22
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
-			identifier: notIdentical.alwaysFalse
-			count: 19
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 5
-			path: src/Pages/Team_Pages.php
-
-		-
-			message: '#^Ternary operator condition is always false\.$#'
-			identifier: ternary.alwaysFalse
-			count: 8
+			count: 2
 			path: src/Pages/Team_Pages.php
 
 		-
@@ -2197,12 +2023,6 @@ parameters:
 			path: src/Structures/Site_From_Menu.php
 
 		-
-			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Structures/Structure_Repository.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 2
@@ -2224,12 +2044,6 @@ parameters:
 			message: '#^Instanceof between WP_Post and WP_Post will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 4
-			path: src/Structures/Structure_Repository.php
-
-		-
-			message: '#^Offset ''paths'' on array\{id\: int, paths\: array\<int, string\>\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
 			path: src/Structures/Structure_Repository.php
 
 		-

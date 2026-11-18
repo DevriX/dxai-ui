@@ -293,7 +293,7 @@ final class Legacy_Migration {
 			$active[] = $new;
 		}
 		sort( $active );
-		update_option( 'active_plugins', array_values( $active ) );
+		update_option( 'active_plugins', $active );
 	}
 
 	/** The old loader would boot the old plugin from its folder (or its bundled copy) on every request. */
@@ -457,9 +457,6 @@ final class Legacy_Migration {
 	/** Scheduled events of the old hooks, rescheduled under the new ones with their arguments renamed. */
 	private static function migrate_cron(): void {
 		$crons = _get_cron_array();
-		if ( ! is_array( $crons ) ) {
-			return;
-		}
 		$changed = false;
 		foreach ( $crons as $time => $hooks ) {
 			foreach ( (array) $hooks as $hook => $events ) {
@@ -468,7 +465,7 @@ final class Legacy_Migration {
 				}
 				$new_hook = self::rename( (string) $hook );
 				foreach ( (array) $events as $event ) {
-					$args = (array) self::rename_value( (array) ( $event['args'] ?? array() ) );
+					$args = (array) self::rename_value( (array) $event['args'] );
 					$crons[ $time ][ $new_hook ][ md5( serialize( $args ) ) ] = array_merge( $event, array( 'args' => $args ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 				}
 				unset( $crons[ $time ][ $hook ] );
@@ -662,7 +659,7 @@ final class Legacy_Migration {
 	 * @return array<string, mixed>
 	 */
 	public static function hide_old_plugin( $plugins ) {
-		if ( is_array( $plugins ) && is_array( get_site_option( self::CLEANUP_OPTION ) ) ) {
+		if ( is_array( get_site_option( self::CLEANUP_OPTION ) ) ) {
 			unset( $plugins[ self::OLD_PLUGIN ] );
 		}
 		return $plugins;

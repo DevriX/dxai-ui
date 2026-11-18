@@ -76,8 +76,14 @@ jobs:
     timeout-minutes: 45
     env:
       WP_ENV: npx --yes @wordpress/env@11.16.0
+    # Checked out as dx-ui/: wp-env mounts the plugin under its folder's name, and the repository's own name is not the plugin's.
+    defaults:
+      run:
+        working-directory: dx-ui
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: dx-ui
 
       - uses: actions/setup-node@v4
         with:
@@ -112,5 +118,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: suites-report
-          path: suites.json
+          path: dx-ui/suites.json
           if-no-files-found: ignore
