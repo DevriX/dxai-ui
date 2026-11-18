@@ -51,6 +51,13 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 
 == Changelog ==
 
+= 0.5.0-beta.1 =
+* The plugin is now `dx-ui`: its folder, file names, classes, blocks, CSS classes and custom properties, settings, uploads folder (`uploads/dx-ui/`) and page slugs no longer carry the old `dxai` prefix. `dxai-ui` became `dx-ui` and every other `dxai` became `dxui` (`dxui-lib-card`, `--dxui-brand`).
+* Upgrading a site built with an earlier version: upload this ZIP in Plugins › Add New and activate it. Activation moves the site over at once: the old plugin is deactivated wherever it was active and this one activated in its place (every site of a network), the old must-use runtime is removed, every stored name is renamed (settings, page content, blocks, templates, widgets, menus, scheduled jobs), the pages' stylesheets, scripts and fonts are copied to `uploads/dx-ui/`, and a page whose address carried the prefix is redirected from its old address. The old plugin folder and the old uploads stay for seven days for pages a page cache still serves, then are removed. Purge the page cache after activating.
+* This version is not offered by Dashboard › Updates to a site running an earlier one (the folder name changed): upload it. Later versions update as before.
+* `wp-config.php` constants under the old names (`DXAI_UI_SECRETS_KEY`, `DXAI_UI_DISABLE_RUNTIME`) keep working. Code of a theme or snippet that uses the old filters or classes needs the new names; the DX Base theme is refreshed by the upgrade.
+* For developers: tested on two sites built with beta.47 (29 pages): every page renders the same after the upgrade, no style class lost its rule, nothing named `dxai` is left in the database, uploads or the pages' HTML.
+
 = 0.4.0-beta.47 =
 * A design's page drawn by a DX theme no longer runs the site's tag manager, analytics, review widget, form scripts and jQuery while it opens. The theme's script delay holds them until the visitor's first touch, scroll or key press, or five seconds, as it does on every other page of the site; the plugin's own scripts (the design's menus, sticky header, sliders and reveals) and what they need still run at once. Up to beta.46 the plugin let every script on such a page through. Master Restoration's Home scored 65 on mobile PageSpeed with its hero picture painted at 8.6 s; with the scripts held back the same page measures 94 in the lab (the picture at 2.5 s, 40 ms of blocking time). A theme whose script delay does not say which script it asks about holds nothing back there, as before.
 * For developers: `verify-theme-drawn` checks which scripts wait and which run (32 checks, each proved by putting its bug back: 9 mutations).
