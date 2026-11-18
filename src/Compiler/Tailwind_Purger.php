@@ -1,13 +1,13 @@
 <?php
 /**
- * Isolates Tailwind utilities under .dxai-ui without a global Preflight.
+ * Isolates Tailwind utilities under .dx-ui without a global Preflight.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Tailwind_Purger {
 
@@ -62,7 +62,7 @@ final class Tailwind_Purger {
 	}
 
 	public function compile( string $markup, string $custom_css, int $pattern_id, string $browser_css = '', string $raw_design_css = '', string $wrapper_style = '', string $tailwind_config = '' ): string {
-		$scope = '.dxai-ui.dxai-ui--' . $pattern_id;
+		$scope = '.dx-ui.dx-ui--' . $pattern_id;
 		$parts = $this->split_global_css( $custom_css );
 
 		// @import and @font-face cannot be nested under a scope.
@@ -89,7 +89,7 @@ final class Tailwind_Purger {
 		 * Form controls are left out. The browser does not size them the
 		 * content-box way — its own sheet makes a <button> (and select, and the
 		 * button-like inputs) border-box — so the design measured them
-		 * border-box, and forcing content-box on a `wp-block-dxai-ui-link`
+		 * border-box, and forcing content-box on a `wp-block-dx-ui-link`
 		 * button added its padding and border on top: H2O's 46px menu button
 		 * rendered 60×50, and a `min-height:48px` submit button 78px tall
 		 * instead of 52px. Leaving them out restores whatever the browser gives
@@ -250,7 +250,7 @@ final class Tailwind_Purger {
 	 */
 	public function unresolved( string $markup, string $raw_design_css ): array {
 		$engine = new Tailwind\Engine( Tailwind\Theme::from_css( $raw_design_css ) );
-		$engine->compile( $markup, '.dxai-ui' );
+		$engine->compile( $markup, '.dx-ui' );
 		$authored = self::authored_classes( $raw_design_css );
 		$out      = array();
 		foreach ( $engine->unresolved() as $class ) {
@@ -288,7 +288,7 @@ final class Tailwind_Purger {
 	}
 
 	/**
-	 * Isolate browser-compiled Tailwind with CSS nesting so utilities stay under .dxai-ui.
+	 * Isolate browser-compiled Tailwind with CSS nesting so utilities stay under .dx-ui.
 	 */
 	private function scope_browser_sheet( string $scope, string $sheet ): string {
 		$sheet = trim( self::closes_no_style( $sheet ) );
@@ -300,35 +300,35 @@ final class Tailwind_Purger {
 	}
 
 	/**
-	 * Write the sheet to uploads/dxai-ui/pattern-{id}.css.
+	 * Write the sheet to uploads/dx-ui/pattern-{id}.css.
 	 *
 	 * Returns the sheet's absolute URL as it resolves right now, for callers
 	 * that print or fetch it (bin/recompile-gtm-css.php echoes it). That URL
 	 * is not what gets stored: a writer passes it through
-	 * Upload_Paths::for_storage() and keeps `dxai-ui/pattern-{id}.css`, so the
+	 * Upload_Paths::for_storage() and keeps `dx-ui/pattern-{id}.css`, so the
 	 * page still finds its sheet after the site changes address. See
 	 * Upload_Paths for what the stored absolute URL used to break.
 	 */
 	public function persist( int $pattern_id, string $css ): string|\WP_Error {
 		$upload = wp_upload_dir();
 		if ( ! empty( $upload['error'] ) ) {
-			return new \WP_Error( 'dxai_ui_css', (string) $upload['error'], array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_css', (string) $upload['error'], array( 'status' => 500 ) );
 		}
 
-		$dir = trailingslashit( $upload['basedir'] ) . \DXAI_UI\Support\Upload_Paths::DIR;
+		$dir = trailingslashit( $upload['basedir'] ) . \DX_UI\Support\Upload_Paths::DIR;
 		wp_mkdir_p( $dir );
 		$path = $dir . '/pattern-' . $pattern_id . '.css';
 
 		$written = file_put_contents( $path, $css ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === $written ) {
-			return new \WP_Error( 'dxai_ui_css', __( 'Unable to write isolated CSS.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_css', __( 'Unable to write isolated CSS.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
-		return \DXAI_UI\Support\Upload_Paths::url( \DXAI_UI\Support\Upload_Paths::DIR . '/pattern-' . $pattern_id . '.css' );
+		return \DX_UI\Support\Upload_Paths::url( \DX_UI\Support\Upload_Paths::DIR . '/pattern-' . $pattern_id . '.css' );
 	}
 
 	/**
-	 * Write the behaviour script to uploads/dxai-ui/pattern-{id}.js. Returns
+	 * Write the behaviour script to uploads/dx-ui/pattern-{id}.js. Returns
 	 * its current absolute URL; writers store Upload_Paths::for_storage() of
 	 * it, for the reason given on persist().
 	 */
@@ -336,18 +336,18 @@ final class Tailwind_Purger {
 		$js = preg_replace( '#</script#i', '<\\/script', $js ) ?? $js;
 		$upload = wp_upload_dir();
 		if ( ! empty( $upload['error'] ) ) {
-			return new \WP_Error( 'dxai_ui_js', (string) $upload['error'], array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_js', (string) $upload['error'], array( 'status' => 500 ) );
 		}
 
-		$dir = trailingslashit( $upload['basedir'] ) . \DXAI_UI\Support\Upload_Paths::DIR;
+		$dir = trailingslashit( $upload['basedir'] ) . \DX_UI\Support\Upload_Paths::DIR;
 		wp_mkdir_p( $dir );
 		$path = $dir . '/pattern-' . $pattern_id . '.js';
 		$written = file_put_contents( $path, $js ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === $written ) {
-			return new \WP_Error( 'dxai_ui_js', __( 'Unable to write isolated JavaScript.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_js', __( 'Unable to write isolated JavaScript.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
-		return \DXAI_UI\Support\Upload_Paths::url( \DXAI_UI\Support\Upload_Paths::DIR . '/pattern-' . $pattern_id . '.js' );
+		return \DX_UI\Support\Upload_Paths::url( \DX_UI\Support\Upload_Paths::DIR . '/pattern-' . $pattern_id . '.js' );
 	}
 
 	/**
@@ -359,14 +359,14 @@ final class Tailwind_Purger {
 		// The two arms of a class ternary, for the reason given in
 		// Tailwind\Engine::extract_classes(): a utility only a state change
 		// adds still has to have a rule.
-		preg_match_all( '/data-dxai-o(?:n|ff)="([^"]+)"/', $markup, $projected );
-		preg_match_all( '/"dxai-o(?:n|ff)":"([^"]+)"/', $markup, $projected_json );
+		preg_match_all( '/data-dxui-o(?:n|ff)="([^"]+)"/', $markup, $projected );
+		preg_match_all( '/"dxui-o(?:n|ff)":"([^"]+)"/', $markup, $projected_json );
 
 		$tokens = array();
 		foreach ( array_merge( $quoted[1] ?? array(), $json[1] ?? array(), $projected[1] ?? array(), $projected_json[1] ?? array() ) as $chunk ) {
 			foreach ( preg_split( '/\s+/', html_entity_decode( $chunk, ENT_QUOTES ) ) as $token ) {
 				$token = trim( $token );
-				if ( $token === '' || str_starts_with( $token, 'wp-block' ) || str_starts_with( $token, 'dxai-ui' ) ) {
+				if ( $token === '' || str_starts_with( $token, 'wp-block' ) || str_starts_with( $token, 'dx-ui' ) ) {
 					continue;
 				}
 				$tokens[] = $token;

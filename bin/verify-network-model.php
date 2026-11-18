@@ -10,16 +10,16 @@
  * also when a check dies half-way).
  *
  * When the research's crawl is on this machine (.verify/network-research/data and report.json, gitignored) the plugin
- * reads its 25 sites again and must give the research's numbers page by page (DXAI_NETWORK_RESEARCH names another folder);
+ * reads its 25 sites again and must give the research's numbers page by page (DXUI_NETWORK_RESEARCH names another folder);
  * elsewhere that part says so and the rest runs.
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Network\Network_Model;
-use DXAI_UI\Network\Page_Reader;
-use DXAI_UI\Network\Site_Source;
+use DX_UI\Network\Network_Model;
+use DX_UI\Network\Page_Reader;
+use DX_UI\Network\Site_Source;
 
 $fail   = 0;
 $pass   = 0;
@@ -90,7 +90,7 @@ $site      = static fn( string $key, string $co, array $pages ): array => array(
 	'posts' => 0,
 	'pages' => array_merge(
 		array(
-			array( 'id' => 10, 'slug' => 'home', 'link' => 'https://' . $key . '/', 'title' => 'Home', 'parent' => 0, 'modified' => '', 'html' => '<div class="dxai-ui">' . substr( $home_html, 5 ) ),
+			array( 'id' => 10, 'slug' => 'home', 'link' => 'https://' . $key . '/', 'title' => 'Home', 'parent' => 0, 'modified' => '', 'html' => '<div class="dx-ui">' . substr( $home_html, 5 ) ),
 			array( 'id' => 11, 'slug' => 'services', 'link' => 'https://' . $key . '/services/', 'title' => 'Services', 'parent' => 0, 'modified' => '', 'html' => '' ),
 		),
 		$pages
@@ -163,7 +163,7 @@ $put();
 if ( $prev === null ) {
 	$shipped = Network_Model::get();
 	$expect( 'with nothing learned here, the model the plugin ships is the one worked with (25 sites)', is_array( $shipped ) && (int) ( $shipped['sites'] ?? 0 ) === 25 && isset( $shipped['kinds']['service']['recipe'] ), is_array( $shipped ) ? (string) ( $shipped['sites'] ?? '' ) : 'none' );
-	$text = (string) file_get_contents( DXAI_UI_DIR . Network_Model::SHIPPED ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	$text = (string) file_get_contents( DX_UI_DIR . Network_Model::SHIPPED ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	$expect( '…and it names no site: no address, nothing site by site, no formula or question fewer than 3 sites use', preg_match( '#https?://|wpengine|\.com\b|\.net\b#i', $text ) !== 1 && ! isset( $shipped['sources'] ) && ! isset( $shipped['twins'] ) && array_filter( array_merge( ...array_values( (array) $shipped['formulas'] ) ), static fn( array $f ): bool => $f['sites'] < 3 ) === array() );
 }
 $share = Network_Model::shareable( $model );
@@ -190,7 +190,7 @@ $expect( 'a subsite is read only on a network (none here)', is_multisite() || ( 
 $clean();
 
 echo "\nThe research's 25 sites, read again by the plugin\n";
-$dir    = (string) ( getenv( 'DXAI_NETWORK_RESEARCH' ) ?: dirname( __DIR__ ) . '/.verify/network-research' );
+$dir    = (string) ( getenv( 'DXUI_NETWORK_RESEARCH' ) ?: dirname( __DIR__ ) . '/.verify/network-research' );
 $report = is_readable( $dir . '/report.json' ) ? json_decode( (string) file_get_contents( $dir . '/report.json' ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 if ( ! is_array( $report ) || ! is_dir( $dir . '/data' ) ) {
 	echo "  (the research's crawl is not on this machine: this part runs where .verify/network-research is)\n";

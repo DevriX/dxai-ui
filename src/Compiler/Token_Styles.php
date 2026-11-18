@@ -2,17 +2,17 @@
 /**
  * Replace a converted design's literal colours and shadows with tokens.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Theme\Design_Theme_Json;
+use DX_UI\Theme\Design_Theme_Json;
 
 /**
- * Turns `background:#F2A34A` into `background:var(--dxai-accent)` — in the
+ * Turns `background:#F2A34A` into `background:var(--dxui-accent)` — in the
  * page's block markup, in its template parts and sections, and in its compiled
  * stylesheet — and defines those tokens.
  *
@@ -24,7 +24,7 @@ use DXAI_UI\Theme\Design_Theme_Json;
  * token refers to the preset — so changing Accent in Site Editor > Styles
  * recolours every CTA on every page of that design.
  *
- * WHY `--dxai-*` in the content and not `--wp--preset--*` directly. A site can
+ * WHY `--dxui-*` in the content and not `--wp--preset--*` directly. A site can
  * hold more than one imported design — this development site holds nineteen —
  * and only one of them is the brand. Content that pointed straight at
  * `--wp--preset--color--accent` would repaint every other design in the
@@ -41,27 +41,27 @@ use DXAI_UI\Theme\Design_Theme_Json;
  * BLOCK VALIDITY is the constraint that decides the shape of this class.
  * WordPress re-runs a block's save() and compares its output with the stored
  * HTML byte for byte. Measured on H2O, colours live in exactly two attributes —
- * `dxaiStyle` (dxai-ui/box, dxai-ui/text, dxai-ui/image, core/paragraph,
- * core/group, core/heading) and the string `style` of dxai-ui/link — and every
+ * `dxuiStyle` (dx-ui/box, dx-ui/text, dx-ui/image, core/paragraph,
+ * core/group, core/heading) and the string `style` of dx-ui/link — and every
  * one of those save()s writes the attribute verbatim into the element's
  * `style=""`. So the same function rewrites the attribute and the rendered
  * `style=""`, and save() reproduces the stored HTML. Everything else sourced
- * from the markup (dxai-ui/text's content, dxai-ui/html's payload) is rewritten
+ * from the markup (dx-ui/text's content, dx-ui/html's payload) is rewritten
  * in the markup itself, which is where save() reads it from.
  *
- * dxai-ui/svg is left alone: SVG presentation attributes (`fill="#fff"`) do not
+ * dx-ui/svg is left alone: SVG presentation attributes (`fill="#fff"`) do not
  * accept var(), and its payload travels in an attribute of its own.
  */
 final class Token_Styles {
 
 	/** Post meta holding the palette a page's content was tokenised against. */
-	public const META = '_dxai_ui_palette';
+	public const META = '_dx_ui_palette';
 
 	/** Blocks whose markup must never be touched. See the class comment. */
-	private const SKIP_BLOCKS = array( 'dxai-ui/svg' );
+	private const SKIP_BLOCKS = array( 'dx-ui/svg' );
 
 	/** Attributes that carry a CSS declaration list as a string. */
-	private const STYLE_ATTRS = array( 'dxaiStyle', 'style', 'dxaiCss' );
+	private const STYLE_ATTRS = array( 'dxuiStyle', 'style', 'dxuiCss' );
 
 	/**
 	 * Tokenise everything one import wrote: pages, patterns, template parts,
@@ -228,7 +228,7 @@ final class Token_Styles {
 	}
 
 	/** Marks the token definitions appended to a stylesheet. */
-	private const DEFINITIONS_MARK = '/* dxai-ui: design tokens */';
+	private const DEFINITIONS_MARK = '/* dx-ui: design tokens */';
 
 	/**
 	 * The palette of one design, from its OWN posts and its home stylesheet.
@@ -265,7 +265,7 @@ final class Token_Styles {
 		 *
 		 * So the design's token SHARES the literal's preset: `--rv-green` is
 		 * re-pointed at the same `--wp--preset--color--{slug}` the literal's
-		 * `--dxai-{slug}` is. The literal's slug wins because it carries the
+		 * `--dxui-{slug}` is. The literal's slug wins because it carries the
 		 * role name ("Accent", "Brand") a person recognises in Styles, and
 		 * because the content already written in its name stays exactly as it
 		 * was verified. Exact matches only, on a hex/rgb token — an `oklch()`
@@ -312,17 +312,17 @@ final class Token_Styles {
 	public static function brand_css( int $post_id ): string {
 		// A design that follows the active theme's colours is fitted to them (Theme_Binding); otherwise the design
 		// that is the site's brand points its tokens at its own presets, as below.
-		$follow = \DXAI_UI\Theme\Theme_Binding::css( $post_id );
+		$follow = \DX_UI\Theme\Theme_Binding::css( $post_id );
 		$css    = $follow !== '' ? $follow : self::adopt_css( $post_id );
 
 		// Text that nearly reads on its backgrounds, in the nearest colour that does (Legible_Text).
-		$css .= \DXAI_UI\Theme\Legible_Text::css( $post_id );
+		$css .= \DX_UI\Theme\Legible_Text::css( $post_id );
 
 		// Theme classes swapped into the design's content, anchored to their tokens (Theme_Class_Swap).
-		$css .= \DXAI_UI\Theme\Theme_Class_Swap::css( $post_id );
+		$css .= \DX_UI\Theme\Theme_Class_Swap::css( $post_id );
 
 		// A theme that lets the site choose its fonts draws the design in them (Theme_Fonts).
-		return $css . \DXAI_UI\Theme\Theme_Fonts::css( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) );
+		return $css . \DX_UI\Theme\Theme_Fonts::css( \DX_UI\Theme\Theme_Binding::home_of( $post_id ) );
 	}
 
 	/** The brand design's tokens pointed at the presets it registered (Design_Theme_Json). */
@@ -334,7 +334,7 @@ final class Token_Styles {
 		if ( ! is_array( $stored ) || ! is_array( $stored['colors'] ?? null ) ) {
 			return '';
 		}
-		$tokens = \DXAI_UI\Compiler\Design_Tokens::for_page( $post_id );
+		$tokens = \DX_UI\Compiler\Design_Tokens::for_page( $post_id );
 		// A slug the theme already had keeps the design's own colour: Design_Theme_Json never replaces a theme preset, so
 		// pointing at it drew the THEME's colour. Gemini Restoration's amber `accent` buttons turned American Restoration's
 		// orange `accent` (#E64804), and its `surface`/`border` the theme's.
@@ -360,7 +360,7 @@ final class Token_Styles {
 		 * reads them — `.bg-primary` through `--color-primary` included — then
 		 * follows Styles, with nothing in the markup rewritten.
 		 *
-		 * `.dxai-ui.dxai-ui` is (0,2,0), the same as the `.dxai-ui.dxai-ui--{id}`
+		 * `.dx-ui.dx-ui` is (0,2,0), the same as the `.dx-ui.dx-ui--{id}`
 		 * the scoper writes in place of the design's `:root`, and this rule is
 		 * added after the design's sheet, so it wins. A `.dark` variant is
 		 * (0,3,0) and keeps the design's own dark values.
@@ -381,7 +381,7 @@ final class Token_Styles {
 			$lines[] = $name . ':var(--wp--preset--color--' . $slug . ')';
 		}
 		if ( $lines !== array() ) {
-			$css .= ':root,.dxai-ui.dxai-ui{' . implode( ';', $lines ) . '}';
+			$css .= ':root,.dx-ui.dx-ui{' . implode( ';', $lines ) . '}';
 		}
 
 		return $css;
@@ -431,17 +431,17 @@ final class Token_Styles {
 		$design = get_option( Design_Theme_Json::OPTION );
 		$source = is_array( $design ) ? (string) ( $design['source'] ?? '' ) : '';
 
-		return $source !== '' && (string) get_post_meta( $post_id, '_dxai_ui_source_zip', true ) === $source;
+		return $source !== '' && (string) get_post_meta( $post_id, '_dx_ui_source_zip', true ) === $source;
 	}
 
 	/**
-	 * `:root, .dxai-ui.dxai-ui { --dxai-…: … }` for a palette.
+	 * `:root, .dx-ui.dx-ui { --dxui-…: … }` for a palette.
 	 *
-	 * `.dxai-ui.dxai-ui` repeats the class on purpose. It matches every
+	 * `.dx-ui.dx-ui` repeats the class on purpose. It matches every
 	 * converted page's wrapper — including a crawled page, which is wrapped in
 	 * its HOME page's scope, so a selector naming the page's own id matched
 	 * nothing there — and at (0,2,0) it is as specific as the older
-	 * `.dxai-ui.dxai-ui--{id}` block Design_Tokens used to bake into sheets, so
+	 * `.dx-ui.dx-ui--{id}` block Design_Tokens used to bake into sheets, so
 	 * a definition emitted after it wins until a re-import removes the old one.
 	 *
 	 * @param array{colors:array<string, array<string, mixed>>, shadows:array<string, array<string, mixed>>} $palette
@@ -458,7 +458,7 @@ final class Token_Styles {
 			}
 			$slugs[ $slug ] = true;
 			$value          = $presets && ! empty( $row['preset'] ) ? 'var(--wp--preset--color--' . $slug . ')' : (string) $row['value'];
-			$lines[]        = '--dxai-' . $slug . ':' . $value;
+			$lines[]        = '--dxui-' . $slug . ':' . $value;
 		}
 		foreach ( $palette['shadows'] as $row ) {
 			$slug = (string) ( $row['slug'] ?? '' );
@@ -467,14 +467,14 @@ final class Token_Styles {
 			}
 			$slugs[ $slug ] = true;
 			$value          = $presets ? 'var(--wp--preset--shadow--' . $slug . ')' : (string) $row['value'];
-			$lines[]        = '--dxai-' . $slug . ':' . $value;
+			$lines[]        = '--dxui-' . $slug . ':' . $value;
 		}
 
 		/*
 		 * The role names Design_Tokens has always emitted, which dynamic.css
 		 * (forms) and Live_Content_Shell (crawled-page prose) read:
-		 * --dxai-brand, --dxai-accent, --dxai-ink, --dxai-muted, --dxai-surface,
-		 * --dxai-border, --dxai-danger, --dxai-button-fg. Each is an ALIAS of the
+		 * --dxui-brand, --dxui-accent, --dxui-ink, --dxui-muted, --dxui-surface,
+		 * --dxui-border, --dxui-danger, --dxui-button-fg. Each is an ALIAS of the
 		 * palette token holding that colour, so a form follows the same token
 		 * the page does. One whose own name IS a palette slug is already
 		 * defined above — aliasing it to itself would be a cycle, and a cycle
@@ -500,24 +500,24 @@ final class Token_Styles {
 				continue;
 			}
 			$lines[] = isset( $palette['colors'][ $key ]['slug'] )
-				? '--dxai-' . $name . ':var(--dxai-' . $palette['colors'][ $key ]['slug'] . ')'
-				: '--dxai-' . $name . ':' . $key;
+				? '--dxui-' . $name . ':var(--dxui-' . $palette['colors'][ $key ]['slug'] . ')'
+				: '--dxui-' . $name . ':' . $key;
 		}
 
 		$radius = (string) ( $roles['radius'] ?? '' );
 		if ( preg_match( '/^\d+(?:\.\d+)?(?:px|rem|em|%)$/', $radius ) === 1 ) {
-			$lines[] = '--dxai-radius:' . ( $presets ? 'var(--wp--custom--radius--base,' . $radius . ')' : $radius );
+			$lines[] = '--dxui-radius:' . ( $presets ? 'var(--wp--custom--radius--base,' . $radius . ')' : $radius );
 		}
 		$font = trim( (string) ( $roles['font'] ?? '' ) );
 		if ( $font !== '' && strtolower( $font ) !== 'inherit' && preg_match( '/^[A-Za-z0-9 ,\'"._-]{1,120}$/', $font ) === 1 ) {
-			$lines[] = '--dxai-font:' . ( $presets ? 'var(--wp--preset--font-family--brand,' . $font . ')' : $font );
+			$lines[] = '--dxui-font:' . ( $presets ? 'var(--wp--preset--font-family--brand,' . $font . ')' : $font );
 		}
 
 		if ( $lines === array() ) {
 			return '';
 		}
 
-		return ':root,.dxai-ui.dxai-ui{' . implode( ';', $lines ) . '}';
+		return ':root,.dx-ui.dx-ui{' . implode( ';', $lines ) . '}';
 	}
 
 	/**
@@ -678,7 +678,7 @@ final class Token_Styles {
 			 * In a stylesheet, a custom property's DEFINITION is the design's own
 			 * token (`--rv-green: #64c040`) and stays a literal value: it is what
 			 * brand_css() re-points at a preset for the brand, and what every
-			 * other design keeps. Rewriting it into `var(--dxai-…)` would chain
+			 * other design keeps. Rewriting it into `var(--dxui-…)` would chain
 			 * one token through another for nothing.
 			 */
 			if ( $skip_custom && str_starts_with( $property, '--' ) ) {
@@ -696,9 +696,9 @@ final class Token_Styles {
 
 	private static function rewrite_value( string $property, string $value, array $palette ): string {
 		// A custom property of the plugin's own, or core's, is a definition —
-		// rewriting `--dxai-accent:#F2A34A` into a reference to itself would be
+		// rewriting `--dxui-accent:#F2A34A` into a reference to itself would be
 		// a cycle, which invalidates it.
-		if ( str_starts_with( $property, '--dxai-' ) || str_starts_with( $property, '--wp--' ) ) {
+		if ( str_starts_with( $property, '--dxui-' ) || str_starts_with( $property, '--wp--' ) ) {
 			return $value;
 		}
 		if ( Design_Palette::is_shadow_property( $property ) ) {
@@ -708,7 +708,7 @@ final class Token_Styles {
 			if ( $key !== '' && isset( $palette['shadows'][ $key ]['slug'] ) ) {
 				$lead = preg_match( '/^\s*/', $value, $ws ) === 1 ? $ws[0] : '';
 
-				return $lead . 'var(--dxai-' . $palette['shadows'][ $key ]['slug'] . ')' . ( $important ? ' !important' : '' );
+				return $lead . 'var(--dxui-' . $palette['shadows'][ $key ]['slug'] . ')' . ( $important ? ' !important' : '' );
 			}
 
 			return $value;
@@ -728,7 +728,7 @@ final class Token_Styles {
 				static function ( array $m ) use ( $palette ): string {
 					$key = Design_Palette::color_key( $m[0] );
 					if ( isset( $palette['colors'][ $key ]['slug'] ) ) {
-						return 'var(--dxai-' . $palette['colors'][ $key ]['slug'] . ')';
+						return 'var(--dxui-' . $palette['colors'][ $key ]['slug'] . ')';
 					}
 					// snap_markup(): an invented solid colour becomes its nearest
 					// brand token. A translucent one stays as written — its alpha
@@ -737,7 +737,7 @@ final class Token_Styles {
 					if ( ! empty( $palette['snap'] ) ) {
 						$slug = self::nearest_slug( $key, $palette );
 						if ( $slug !== '' ) {
-							return 'var(--dxai-' . $slug . ')';
+							return 'var(--dxui-' . $slug . ')';
 						}
 					}
 
@@ -804,7 +804,7 @@ final class Token_Styles {
 	 * An `@property` block holds descriptors, not declarations, and its
 	 * `initial-value` must be computationally independent: Tailwind v4's
 	 * `--tw-shadow { syntax:"*"; initial-value: 0 0 #0000 }` written as
-	 * `0 0 var(--dxai-…)` makes the browser drop the whole registration, and
+	 * `0 0 var(--dxui-…)` makes the browser drop the whole registration, and
 	 * every `shadow-*`, `ring-*` and gradient utility built on it with it.
 	 */
 	public static function rewrite_css( string $css, array $palette ): string {
@@ -849,36 +849,36 @@ final class Token_Styles {
 	 */
 	/**
 	 * A declaration list with its text colours on their own channel: in a foreground property (`color`, `fill`,
-	 * `stroke` and the like) each `var(--dxai-T)` becomes `var(--dxai-T--fg,var(--dxai-T))`.
+	 * `stroke` and the like) each `var(--dxui-T)` becomes `var(--dxui-T--fg,var(--dxui-T))`.
 	 *
 	 * The design has one token per colour, but on a theme a token can follow one theme colour as a background and
 	 * keep its own as text (Theme_Binding: Semper's yellow buttons turn the theme's orange, while its yellow
-	 * headings on dark bands stay yellow — orange there is unreadable). With `--dxai-T--fg` unset the value is
+	 * headings on dark bands stay yellow — orange there is unreadable). With `--dxui-T--fg` unset the value is
 	 * exactly what it was, so this is applied to every rule written, bound or not. Already channelled references
 	 * are left alone.
 	 */
 	public static function fg_channel( string $decls ): string {
-		if ( ! str_contains( $decls, 'var(--dxai-' ) ) {
+		if ( ! str_contains( $decls, 'var(--dxui-' ) ) {
 			return $decls;
 		}
 
 		return (string) preg_replace_callback(
 			'/(^|[;{\s])((?:-webkit-text-fill-|text-decoration-|text-emphasis-|caret-|column-rule-)?color|fill|stroke)(\s*:\s*)([^;{}]*)/i',
-			static fn( array $m ): string => $m[1] . $m[2] . $m[3] . (string) preg_replace( '/(?<!--fg,)var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/i', 'var(--dxai-$1--fg,var(--dxai-$1))', $m[4] ),
+			static fn( array $m ): string => $m[1] . $m[2] . $m[3] . (string) preg_replace( '/(?<!--fg,)var\(\s*--dxui-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/i', 'var(--dxui-$1--fg,var(--dxui-$1))', $m[4] ),
 			$decls
 		);
 	}
 
 	/** The marker a channelled design sheet starts with (channelize_css()). */
-	public const CHANNELS_MARK = '/* dxai-ui: channels v1 */';
+	public const CHANNELS_MARK = '/* dx-ui: channels v1 */';
 
 	/**
 	 * A design stylesheet with fg_channel() applied to every rule body, once: a sheet that starts with
-	 * CHANNELS_MARK is returned as it is. The token definitions (`--dxai-*:` declarations) are not foreground
+	 * CHANNELS_MARK is returned as it is. The token definitions (`--dxui-*:` declarations) are not foreground
 	 * properties and are never touched.
 	 */
 	public static function channelize_css( string $css ): string {
-		if ( str_starts_with( ltrim( $css ), self::CHANNELS_MARK ) || ! str_contains( $css, 'var(--dxai-' ) ) {
+		if ( str_starts_with( ltrim( $css ), self::CHANNELS_MARK ) || ! str_contains( $css, 'var(--dxui-' ) ) {
 			return $css;
 		}
 
@@ -910,7 +910,7 @@ final class Token_Styles {
 		foreach ( Design_Palette::style_values( $markup ) as $value ) {
 			$n += count( Design_Palette::colors_in( $value ) );
 		}
-		if ( preg_match_all( '/"(?:dxaiStyle|style)":"((?:[^"\\\\]|\\\\.)*)"/', $markup, $m ) ) {
+		if ( preg_match_all( '/"(?:dxuiStyle|style)":"((?:[^"\\\\]|\\\\.)*)"/', $markup, $m ) ) {
 			foreach ( $m[1] as $value ) {
 				$n += count( Design_Palette::colors_in( (string) json_decode( '"' . $value . '"' ) ) );
 			}
@@ -928,6 +928,6 @@ final class Token_Styles {
 	 * sheet, and the design lost its colours without a word. See Upload_Paths.
 	 */
 	private static function sheet_path( int $page_id ): string {
-		return \DXAI_UI\Support\Upload_Paths::for_meta( $page_id, '_dxai_ui_css_url' )['path'];
+		return \DX_UI\Support\Upload_Paths::for_meta( $page_id, '_dx_ui_css_url' )['path'];
 	}
 }

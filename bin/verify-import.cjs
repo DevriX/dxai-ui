@@ -83,7 +83,7 @@
  *   --no-chrome-repeat  skip the chrome stage's second, in-place install
  *   --skip-import verify what is already on the site, importing nothing
  *   --title-prefix  put this in front of every imported page's title (and so
- *                 its slug), e.g. "DXAI TEST ": a test run then writes pages
+ *                 its slug), e.g. "DXUI TEST ": a test run then writes pages
  *                 of its own instead of updating the real imports of the same
  *                 archives, and trashes them at the end
  *   --keep-pages  a test run leaves its pages published at the end
@@ -176,7 +176,7 @@ const puppeteer = require(${JSON.stringify(path.join(repo, 'node_modules', 'pupp
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /*
- * Keyboard access to the hover menus: every visible [data-dxai-hover="enter"]
+ * Keyboard access to the hover menus: every visible [data-dxui-hover="enter"]
  * element (a dropdown the design opens on mouseenter) is reached with a real
  * Tab, and must open; Tab walks into its panel with the panel staying open;
  * focus leaving the menu closes it; Escape inside it closes it and puts focus
@@ -198,7 +198,7 @@ async function keyboardPass(page, url) {
     const spots = [[2, 898], [1270, 898], [640, 898], [2, 450]];
     for (const [x, y] of spots) {
       const el = document.elementFromPoint(x, y);
-      if (!el || !el.closest('[data-dxai-hover]')) { return [x, y]; }
+      if (!el || !el.closest('[data-dxui-hover]')) { return [x, y]; }
     }
     return [2, 898];
   });
@@ -211,15 +211,15 @@ async function keyboardPass(page, url) {
       return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
     };
     const focusable = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
-    window.__dxaiKb = [...document.querySelectorAll('[data-dxai-hover="enter"]')].filter(vis).map((w) => {
-      const panel = w.querySelector("[class*='dxai-on-']");
+    window.__dxuiKb = [...document.querySelectorAll('[data-dxui-hover="enter"]')].filter(vis).map((w) => {
+      const panel = w.querySelector("[class*='dxui-on-']");
       const trigger = [...w.querySelectorAll(focusable)].find((el) => vis(el) && !(panel && panel.contains(el))) || null;
       return { w, panel, trigger };
     });
-    return window.__dxaiKb.length;
+    return window.__dxuiKb.length;
   });
   const state = (i) => page.evaluate((i) => {
-    const m = window.__dxaiKb[i];
+    const m = window.__dxuiKb[i];
     const shown = (el) => {
       if (!el) { return false; }
       const s = getComputedStyle(el);
@@ -245,22 +245,22 @@ async function keyboardPass(page, url) {
    */
   const arrive = async (i) => {
     await page.evaluate((i) => {
-      const m = window.__dxaiKb[i];
+      const m = window.__dxuiKb[i];
       if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
       const from = document.createElement('span');
       from.tabIndex = 0;
-      from.id = 'dxai-kb-from';
+      from.id = 'dxui-kb-from';
       m.w.parentNode.insertBefore(from, m.w);
       from.focus();
     }, i);
     await sleep(150);
     await page.keyboard.press('Tab');
     await sleep(300);
-    await page.evaluate(() => { const from = document.getElementById('dxai-kb-from'); if (from) { from.remove(); } });
+    await page.evaluate(() => { const from = document.getElementById('dxui-kb-from'); if (from) { from.remove(); } });
     return state(i);
   };
   for (let i = 0; i < total; i++) {
-    const has = await page.evaluate((i) => ({ panel: !!window.__dxaiKb[i].panel, trigger: !!window.__dxaiKb[i].trigger }), i);
+    const has = await page.evaluate((i) => ({ panel: !!window.__dxuiKb[i].panel, trigger: !!window.__dxuiKb[i].trigger }), i);
     if (!has.panel || !has.trigger) { out.skipped++; continue; }
     out.menus++;
     let s = await arrive(i);
@@ -343,8 +343,8 @@ async function keyboardPass(page, url) {
       await new Promise((r) => setTimeout(r, 1500));
       const stats = await page.evaluate(async () => {
         document.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
-        const reveals = document.querySelectorAll('.dxai-reveal').length;
-        const lit = () => [...document.querySelectorAll('.dxai-reveal')]
+        const reveals = document.querySelectorAll('.dxui-reveal').length;
+        const lit = () => [...document.querySelectorAll('.dxui-reveal')]
           .filter((e) => e.classList.contains('is-in')).length;
         /*
          * Motion_Runtime sweeps on a throttled timer, so step down the page
@@ -394,7 +394,7 @@ async function keyboardPass(page, url) {
          *   anything when clicked. The Claude Design page read 13 of 27 driven
          *   and 14 of those 27 were its mobile menu; the radix probe had the
          *   same blind spot and threw outright on four pages;
-         * - the state TARGETS. dxai-on-*, dxai-off-* and dxai-cls-* are what
+         * - the state TARGETS. dxui-on-*, dxui-off-* and dxui-cls-* are what
          *   the runtime writes to, not what a person clicks — a label, a select
          *   and an H3 inside a form step were three of the five "inert"
          *   controls on the Arcus page;
@@ -411,12 +411,12 @@ async function keyboardPass(page, url) {
          * (No backticks in here: this whole probe is a template literal.)
          */
         const controls = [...document.querySelectorAll(
-          '[aria-expanded], [role="tab"], [role="button"], [class*="dxai-toggle-"]'
+          '[aria-expanded], [role="tab"], [role="button"], [class*="dxui-toggle-"]'
         )].filter((el) => {
           const box = el.getBoundingClientRect();
           if (box.width < 1 || box.height < 1) { return false; }
           const cls = String(el.className || '');
-          if (/dxai-(?:on|off|cls)-/.test(cls)) { return false; }
+          if (/dxui-(?:on|off|cls)-/.test(cls)) { return false; }
           /*
            * No links at all. A link's job is to go somewhere: navigation is
            * cancelled below so the sweep survives, and an in-page jump moves
@@ -479,7 +479,7 @@ async function keyboardPass(page, url) {
           controls: controls.length, responded, inert: inert.slice(0, 5),
           broken: imgs.filter((i) => i.complete && i.naturalWidth === 0).length,
           // Named, so a genuine failure is diagnosable instead of a number.
-          pending: [...document.querySelectorAll('.dxai-reveal')]
+          pending: [...document.querySelectorAll('.dxui-reveal')]
             .filter((e) => !e.classList.contains('is-in'))
             .slice(0, 4)
             .map((e) => (e.tagName + '.' + String(e.className).split(/\\s+/).slice(0, 3).join('.')).slice(0, 70)),
@@ -492,7 +492,7 @@ async function keyboardPass(page, url) {
         keyboard.failures.push('the keyboard pass threw: ' + String(e).slice(0, 80));
       }
       console.log(JSON.stringify({
-        slug: url.replace(/\\/$/, '').split('/').pop().replace(/^dxai-/, ''),
+        slug: url.replace(/\\/$/, '').split('/').pop().replace(/^dxui-/, ''),
         ...stats, keyboard, errors: errors.length, first: errors[0] || '',
       }));
     } catch (e) {
@@ -512,12 +512,12 @@ async function keyboardPass(page, url) {
  * the time of a run, against the runtime the plugin ships NOW
  * (Motion_Runtime::javascript(), written to the work directory by the pack):
  *
- * - the state machine: a JSX-style trigger, a <button data-dxai-hover=enter>
- *   whose wrapper carries data-dxai-hover=leave; and a Header_Renderer-style
+ * - the state machine: a JSX-style trigger, a <button data-dxui-hover=enter>
+ *   whose wrapper carries data-dxui-hover=leave; and a Header_Renderer-style
  *   dropdown holding a flyout (nested hover-self wrappers), where Escape
  *   closes the innermost menu first and hands focus to its trigger;
  * - the pre-machine path (no projection classes on the page): a hover-marked
- *   toggle, and a legacy dxai-toggle-open-- toggle with no hover marker,
+ *   toggle, and a legacy dxui-toggle-open-- toggle with no hover marker,
  *   whose old focus behaviour must stay exactly as it was.
  *
  * Mouse hover is checked too: it must behave as before. Two static pages in
@@ -534,21 +534,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = [];
 const check = (name, ok, detail) => { results.push({ name, ok: !!ok, detail: ok ? undefined : detail }); };
 const url = (file) => 'file:///' + file.split(path.sep).join('/');
-const css = '<style>.hidden{display:none}.dxai-ui [class*="dxai-on-"].hidden{display:none!important}a,button{display:inline-block;margin:4px;padding:4px}div{padding:4px}</style>';
-const page = (body) => '<!doctype html><html><head><meta charset="utf-8">' + css + '</head><body><a href="#top">Top</a><div class="dxai-ui">' + body + '</div><a href="#end">End</a><script src="' + url(runtime) + '"></script></body></html>';
+const css = '<style>.hidden{display:none}.dx-ui [class*="dxui-on-"].hidden{display:none!important}a,button{display:inline-block;margin:4px;padding:4px}div{padding:4px}</style>';
+const page = (body) => '<!doctype html><html><head><meta charset="utf-8">' + css + '</head><body><a href="#top">Top</a><div class="dx-ui">' + body + '</div><a href="#end">End</a><script src="' + url(runtime) + '"></script></body></html>';
 const M = page(
   '<nav>'
-  + '<div class="relative dxai-toggle-open" data-dxai-hover="leave" data-dxai-set="null" id="jsxwrap">'
-  + '<button class="dxai-toggle-open--svc" data-dxai-hover="enter" aria-expanded="false" id="svc">Services</button>'
-  + '<div class="dxai-on-open--svc hidden" id="svcpanel"><a href="#1">One</a><a href="#2">Two</a></div>'
+  + '<div class="relative dxui-toggle-open" data-dxui-hover="leave" data-dxui-set="null" id="jsxwrap">'
+  + '<button class="dxui-toggle-open--svc" data-dxui-hover="enter" aria-expanded="false" id="svc">Services</button>'
+  + '<div class="dxui-on-open--svc hidden" id="svcpanel"><a href="#1">One</a><a href="#2">Two</a></div>'
   + '</div>'
   + '<a href="#after" id="after">After</a>'
-  + '<div class="dxai-toggle-openMenu--company" aria-expanded="false" data-dxai-hover="enter" data-dxai-hover-self="1" id="co">'
+  + '<div class="dxui-toggle-openMenu--company" aria-expanded="false" data-dxui-hover="enter" data-dxui-hover-self="1" id="co">'
   + '<a href="#company" id="cotrig">Company</a>'
-  + '<div class="dxai-on-openMenu--company hidden" id="copanel">'
-  + '<div class="dxai-toggle-dxaiFly2--team dxai-hdr-flyout" aria-expanded="false" data-dxai-hover="enter" data-dxai-hover-self="1" id="fly">'
+  + '<div class="dxui-on-openMenu--company hidden" id="copanel">'
+  + '<div class="dxui-toggle-dxuiFly2--team dxui-hdr-flyout" aria-expanded="false" data-dxui-hover="enter" data-dxui-hover-self="1" id="fly">'
   + '<a href="#team" id="flytrig">Team</a>'
-  + '<div class="dxai-on-dxaiFly2--team hidden" id="flypanel"><a href="#leadership" id="lead">Leadership</a></div>'
+  + '<div class="dxui-on-dxuiFly2--team hidden" id="flypanel"><a href="#leadership" id="lead">Leadership</a></div>'
   + '</div>'
   + '<a href="#jobs" id="jobs">Jobs</a>'
   + '</div></div>'
@@ -557,14 +557,14 @@ const M = page(
 );
 const P = page(
   '<ul>'
-  + '<li class="relative"><button class="dxai-toggle-open--a" data-dxai-hover="enter" aria-expanded="false" id="a">A</button><a href="#in" id="in">In</a></li>'
+  + '<li class="relative"><button class="dxui-toggle-open--a" data-dxui-hover="enter" aria-expanded="false" id="a">A</button><a href="#in" id="in">In</a></li>'
   + '<li><a href="#next" id="next">Next</a></li>'
-  + '<li><button class="dxai-toggle-open--b" aria-expanded="false" id="b">B</button></li>'
+  + '<li><button class="dxui-toggle-open--b" aria-expanded="false" id="b">B</button></li>'
   + '<li><a href="#tail" id="tail">Tail</a></li>'
   + '</ul>'
 );
 (async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dxai-kbsynth-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dxui-kbsynth-'));
   fs.writeFileSync(path.join(dir, 'm.html'), M);
   fs.writeFileSync(path.join(dir, 'p.html'), P);
   const browser = await puppeteer.launch({ executablePath: chrome, headless: 'shell', args: ['--no-sandbox', '--allow-file-access-from-files'] });
@@ -590,7 +590,7 @@ const P = page(
     await tab.goto(url(path.join(dir, 'm.html')));
     await sleep(200);
     await tab.mouse.move(900, 650);
-    check('machine: the runtime ran', await tab.evaluate(() => !!document.querySelector('.dxai-ui.dxai-motion')));
+    check('machine: the runtime ran', await tab.evaluate(() => !!document.querySelector('.dx-ui.dxui-motion')));
     let s = await tabTo('svc');
     check('jsx: Tab to the trigger button opens its panel', s.active === 'svc' && s.svc, s);
     await key('Tab'); await key('Tab'); s = await st();
@@ -630,7 +630,7 @@ const P = page(
     await tab.goto(url(path.join(dir, 'p.html')));
     await sleep(200);
     await tab.mouse.move(900, 650);
-    check('pre-machine: the runtime ran, no projections', await tab.evaluate(() => !!document.querySelector('.dxai-ui.dxai-motion') && !document.querySelector("[class*='dxai-on-'],[class*='dxai-cls-'],[class*='dxai-off-']")));
+    check('pre-machine: the runtime ran, no projections', await tab.evaluate(() => !!document.querySelector('.dx-ui.dxui-motion') && !document.querySelector("[class*='dxui-on-'],[class*='dxui-cls-'],[class*='dxui-off-']")));
     s = await tabTo('a');
     check('pre-machine: Tab to the toggle opens it', s.active === 'a' && s.a === 'true', s);
     await key('Tab'); s = await st();
@@ -671,7 +671,7 @@ const P = page(
 const FOOTER_WIDGETS_PHP = String.raw`<?php
 // Written by bin/verify-import.cjs. Read-only: the block widgets placed in
 // the areas of the stored footer (Footer_Template::get()['slots']).
-$cls      = 'DXAI_UI\Chrome\Footer_Template';
+$cls      = 'DX_UI\Chrome\Footer_Template';
 $foot     = class_exists( $cls ) ? call_user_func( array( $cls, 'get' ) ) : array();
 $areas    = is_array( $foot ) && isset( $foot['slots'] ) && is_array( $foot['slots'] ) ? array_map( 'strval', array_keys( $foot['slots'] ) ) : array();
 $sidebars = wp_get_sidebars_widgets();
@@ -729,7 +729,7 @@ const puppeteer = require(${JSON.stringify(path.join(repo, 'node_modules', 'pupp
     await page.goto(editUrl, { waitUntil: 'domcontentloaded', timeout: 150000 });
     await page.waitForFunction(() => {
       const wp = window.wp;
-      return !!(wp && wp.blocks && wp.blocks.parse && wp.blocks.getBlockType && wp.blocks.getBlockType('dxai-ui/box')
+      return !!(wp && wp.blocks && wp.blocks.parse && wp.blocks.getBlockType && wp.blocks.getBlockType('dx-ui/box')
         && wp.data && wp.data.select('core/block-editor') && wp.data.select('core/block-editor').getBlocks().length);
     }, { timeout: 150000, polling: 500 });
     const res = await page.evaluate((list) => {
@@ -776,8 +776,8 @@ const puppeteer = require(${JSON.stringify(path.join(repo, 'node_modules', 'pupp
  * - Never a page the run did not import: a design that takes the widget
  *   areas gives the pages of the design whose footer they held their footer
  *   back (Structure_Repository::install_site_footer()); only pages of this
- *   run's archives may be among them (dxai_ui_footer_holders).
- * - The page ids are recorded on `_dxai_ui_source_zip`, as the old purge
+ *   run's archives may be among them (dx_ui_footer_holders).
+ * - The page ids are recorded on `_dx_ui_source_zip`, as the old purge
  *   script did, so every stage can pair a page with the archive it measures
  *   it against.
  */
@@ -793,14 +793,14 @@ $out    = array( 'name' => $name, 'ok' => false, 'requested' => $mode );
 $emit   = static function ( array $out ): void {
 	echo wp_json_encode( $out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ), "\n";
 };
-add_filter( 'dxai_ui_crawl_use_ai', '__return_false' );
+add_filter( 'dx_ui_crawl_use_ai', '__return_false' );
 add_filter(
-	'dxai_ui_footer_holders',
+	'dx_ui_footer_holders',
 	static function ( $holders ) use ( $run ) {
 		return array_values(
 			array_filter(
 				array_map( 'intval', (array) $holders ),
-				static fn( int $id ): bool => in_array( (string) get_post_meta( $id, '_dxai_ui_source_zip', true ), $run, true )
+				static fn( int $id ): bool => in_array( (string) get_post_meta( $id, '_dx_ui_source_zip', true ), $run, true )
 			)
 		);
 	},
@@ -841,14 +841,14 @@ if ( ! is_readable( $zip ) ) {
 	return;
 }
 $started = microtime( true );
-$doc     = DXAI_UI\Connectors\Zip_Router::import( array( 'tmp_name' => $zip, 'name' => $name ) );
+$doc     = DX_UI\Connectors\Zip_Router::import( array( 'tmp_name' => $zip, 'name' => $name ) );
 if ( is_wp_error( $doc ) ) {
 	$out['status']  = 'import_error';
 	$out['message'] = $doc->get_error_message();
 	$emit( $out );
 	return;
 }
-$compiler = new DXAI_UI\Compiler\Source_Compiler();
+$compiler = new DX_UI\Compiler\Source_Compiler();
 if ( ! $compiler->can_compile( $doc ) ) {
 	$out['status'] = 'cannot_compile';
 	$emit( $out );
@@ -874,7 +874,7 @@ if ( '' !== $prefix ) {
 		}
 	}
 }
-$saved = ( new DXAI_UI\Structures\Structure_Repository() )->save( $result );
+$saved = ( new DX_UI\Structures\Structure_Repository() )->save( $result );
 if ( is_wp_error( $saved ) ) {
 	$out['status']  = 'save_error';
 	$out['message'] = $saved->get_error_message();
@@ -884,7 +884,7 @@ if ( is_wp_error( $saved ) ) {
 $page_id  = (int) ( $saved['page_id'] ?? 0 );
 $page_ids = array_values( array_filter( array_merge( array( $page_id ), array_map( 'intval', (array) ( $saved['extra_page_ids'] ?? array() ) ) ) ) );
 foreach ( $page_ids as $one ) {
-	update_post_meta( $one, '_dxai_ui_source_zip', $name );
+	update_post_meta( $one, '_dx_ui_source_zip', $name );
 }
 $chrome  = array();
 $written = array();
@@ -942,7 +942,7 @@ $out['ok']         = $page_id > 0;
 $out['status']     = $page_id > 0 ? 'ok' : 'no_page';
 $out['page_id']    = $page_id;
 $out['page_ids']   = $page_ids;
-$out['page_key']   = (string) get_post_meta( $page_id, '_dxai_ui_page_key', true );
+$out['page_key']   = (string) get_post_meta( $page_id, '_dx_ui_page_key', true );
 $out['findings']   = array_map( static fn( $f ): string => (string) ( $f['check'] ?? '?' ), is_array( $audit['findings'] ?? null ) ? $audit['findings'] : array() );
 // Which choice save() made (Chrome_Choice::resolve()); null: this save() takes no choice.
 $out['mode']       = null === $ran ? null : array(
@@ -988,7 +988,7 @@ $styles = static fn( string $html ): int => (int) preg_match_all( '/<[a-zA-Z][^>
 $sig    = static function ( string $html ): array {
 	$doc = new DOMDocument();
 	libxml_use_internal_errors( true );
-	$doc->loadHTML( '<?xml encoding="utf-8"?><div id="dxai-check-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+	$doc->loadHTML( '<?xml encoding="utf-8"?><div id="dxui-check-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
 	libxml_clear_errors();
 	$out  = array();
 	$walk = static function ( DOMNode $node ) use ( &$walk, &$out ): void {
@@ -1015,7 +1015,7 @@ $sig    = static function ( string $html ): array {
 			}
 		}
 	};
-	$root = $doc->getElementById( 'dxai-check-root' );
+	$root = $doc->getElementById( 'dxui-check-root' );
 	if ( $root ) {
 		$walk( $root );
 	}
@@ -1040,13 +1040,13 @@ $describe = static function ( array $b ): array {
 		$part          = $live[0] ?? ( $parts[0] ?? null );
 		$row['status'] = $part ? (string) $part->post_status : 'missing';
 		$row['part']   = $part ? (int) $part->ID : 0;
-	} elseif ( 'dxai-ui/link' === $b['blockName'] ) {
+	} elseif ( 'dx-ui/link' === $b['blockName'] ) {
 		$row['url'] = (string) ( $b['attrs']['url'] ?? '' );
 	}
 	return $row;
 };
-$is_header = static fn( ?array $b ): bool => null !== $b && ( 'dxai-ui/site-header' === $b['blockName'] || ( 'core/template-part' === $b['blockName'] && 'header' === ( $b['attrs']['area'] ?? '' ) ) );
-$is_footer = static fn( ?array $b ): bool => null !== $b && ( 'dxai-ui/site-footer' === $b['blockName'] || ( 'core/template-part' === $b['blockName'] && 'footer' === ( $b['attrs']['area'] ?? '' ) ) );
+$is_header = static fn( ?array $b ): bool => null !== $b && ( 'dx-ui/site-header' === $b['blockName'] || ( 'core/template-part' === $b['blockName'] && 'header' === ( $b['attrs']['area'] ?? '' ) ) );
+$is_footer = static fn( ?array $b ): bool => null !== $b && ( 'dx-ui/site-footer' === $b['blockName'] || ( 'core/template-part' === $b['blockName'] && 'footer' === ( $b['attrs']['area'] ?? '' ) ) );
 $render    = static function ( int $id, string $markup ): string {
 	$post                    = get_post( $id );
 	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
@@ -1077,8 +1077,8 @@ $page_row = static function ( array $row ) use ( $sig, $styles, $describe, $is_h
 		'exists'        => true,
 		'status'        => (string) $post->post_status,
 		'title'         => (string) $post->post_title,
-		'scope'         => (int) get_post_meta( $id, DXAI_UI\Structures\Page_Scope::META, true ),
-		'crawled'       => '1' === (string) get_post_meta( $id, '_dxai_ui_from_live_menu', true ),
+		'scope'         => (int) get_post_meta( $id, DX_UI\Structures\Page_Scope::META, true ),
+		'crawled'       => '1' === (string) get_post_meta( $id, '_dx_ui_from_live_menu', true ),
 		'top'           => array_map( $describe, $top ),
 		'mid_count'     => count( $mid ),
 		'mid_md5'       => md5( serialize_blocks( $mid ) ),
@@ -1146,8 +1146,8 @@ if ( $home > 0 ) {
 			'fields'         => 'ids',
 			'post__not_in'   => array_map( static fn( $r ) => (int) ( $r['id'] ?? 0 ), (array) ( $in['pages'] ?? array() ) ),
 			'meta_query'     => array(
-				array( 'key' => DXAI_UI\Structures\Page_Scope::META, 'value' => (string) $home ),
-				array( 'key' => '_dxai_ui_from_live_menu', 'value' => '1' ),
+				array( 'key' => DX_UI\Structures\Page_Scope::META, 'value' => (string) $home ),
+				array( 'key' => '_dx_ui_from_live_menu', 'value' => '1' ),
 			),
 		)
 	);
@@ -1160,7 +1160,7 @@ $locations = array();
 foreach ( (array) get_nav_menu_locations() as $location => $menu_id ) {
 	$locations[ (string) $location ] = (int) $menu_id;
 }
-$spec  = $home > 0 && class_exists( 'DXAI_UI\Chrome\Header_Template' ) ? DXAI_UI\Chrome\Header_Template::for_post( $home ) : null;
+$spec  = $home > 0 && class_exists( 'DX_UI\Chrome\Header_Template' ) ? DX_UI\Chrome\Header_Template::for_post( $home ) : null;
 $menus = array();
 foreach ( ( is_array( $spec ) && is_array( $spec['menus'] ?? null ) ) ? $spec['menus'] : array() as $location => $menu_id ) {
 	$menu_id = (int) $menu_id;
@@ -1201,15 +1201,15 @@ foreach ( ( is_array( $spec ) && is_array( $spec['menus'] ?? null ) ) ? $spec['m
 		'id'       => $menu_id,
 		'exists'   => true,
 		'name'     => (string) $term->name,
-		'marked'   => (string) get_term_meta( $menu_id, DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ),
-		'owner'    => (string) get_term_meta( $menu_id, DXAI_UI\Structures\Navigation_Factory::OWNER_META, true ),
+		'marked'   => (string) get_term_meta( $menu_id, DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ),
+		'owner'    => (string) get_term_meta( $menu_id, DX_UI\Structures\Navigation_Factory::OWNER_META, true ),
 		'items'    => count( $items ),
 		'top'      => array_slice( $titles, 0, 12 ),
 		'invalid'  => $invalid,
 		'assigned' => ( $locations[ (string) $location ] ?? 0 ) === $menu_id,
 	);
 }
-$footer   = class_exists( 'DXAI_UI\Chrome\Footer_Template' ) ? DXAI_UI\Chrome\Footer_Template::get() : array();
+$footer   = class_exists( 'DX_UI\Chrome\Footer_Template' ) ? DX_UI\Chrome\Footer_Template::get() : array();
 $sidebars = wp_get_sidebars_widgets();
 $settings = get_option( 'widget_block', array() );
 $areas    = array();
@@ -1229,13 +1229,13 @@ foreach ( array_keys( (array) ( $footer['slots'] ?? array() ) ) as $area ) {
 echo wp_json_encode(
 	array(
 		'home'      => $home,
-		'page_key'  => $home > 0 ? (string) get_post_meta( $home, '_dxai_ui_page_key', true ) : '',
+		'page_key'  => $home > 0 ? (string) get_post_meta( $home, '_dx_ui_page_key', true ) : '',
 		'pages'     => $pages,
 		'crawled'   => $crawled,
 		'locations' => $locations,
 		'spec'      => is_array( $spec ) ? array(
-			'scope'   => DXAI_UI\Chrome\Header_Template::scope_of( $spec ),
-			'is_site' => DXAI_UI\Chrome\Header_Template::is_site( $spec ),
+			'scope'   => DX_UI\Chrome\Header_Template::scope_of( $spec ),
+			'is_site' => DX_UI\Chrome\Header_Template::is_site( $spec ),
 			'hash'    => (string) ( $spec['hash'] ?? '' ),
 			'owner'   => (string) ( $spec['source']['owner'] ?? '' ),
 			'style'   => $styles( (string) ( $spec['markup'] ?? '' ) ),
@@ -1271,7 +1271,7 @@ echo wp_json_encode(
  * there, marked as that location's header menu, and whether any of its
  * items points at a page that is gone (core's `_invalid`, which
  * wp_get_nav_menu_items() drops outside wp-admin, so the items are read
- * directly). Pages a crawl made for a home (`_dxai_ui_from_live_menu`) are
+ * directly). Pages a crawl made for a home (`_dx_ui_from_live_menu`) are
  * added, since they have to carry the same chrome as it.
  */
 const CHROME_PHP = String.raw`<?php
@@ -1310,7 +1310,7 @@ $menu  = static function ( int $menu_id ): array {
 		'id'       => $menu_id,
 		'exists'   => true,
 		'name'     => (string) $term->name,
-		'location' => (string) get_term_meta( $menu_id, DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ),
+		'location' => (string) get_term_meta( $menu_id, DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ),
 		'items'    => count( $items ),
 		'invalid'  => $invalid,
 	);
@@ -1354,9 +1354,9 @@ $row   = static function ( int $id, bool $crawled ) use ( $block, $menu ): array
 	$out = array(
 		'id'      => $id,
 		'title'   => (string) get_the_title( $id ),
-		'source'  => (string) get_post_meta( $id, '_dxai_ui_source_zip', true ),
-		'scope'   => (int) get_post_meta( $id, DXAI_UI\Structures\Page_Scope::META, true ),
-		'crawled' => $crawled || '1' === (string) get_post_meta( $id, '_dxai_ui_from_live_menu', true ),
+		'source'  => (string) get_post_meta( $id, '_dx_ui_source_zip', true ),
+		'scope'   => (int) get_post_meta( $id, DX_UI\Structures\Page_Scope::META, true ),
+		'crawled' => $crawled || '1' === (string) get_post_meta( $id, '_dx_ui_from_live_menu', true ),
 		'first'   => $block( $top[0] ?? null ),
 		'last'    => $block( $top ? $top[ count( $top ) - 1 ] : null ),
 		// style="" attributes in the page as saved.
@@ -1364,15 +1364,15 @@ $row   = static function ( int $id, bool $crawled ) use ( $block, $menu ): array
 	);
 	$conv = get_posts(
 		array(
-			'post_type'      => DXAI_UI\Content\Content_Types::CONVERSION,
+			'post_type'      => DX_UI\Content\Content_Types::CONVERSION,
 			'post_status'    => 'any',
 			'posts_per_page' => 1,
-			'meta_key'       => '_dxai_ui_page_id',
+			'meta_key'       => '_dx_ui_page_id',
 			'meta_value'     => (string) $id,
 		)
 	);
 	if ( $conv ) {
-		$record             = DXAI_UI\Structures\Conversion_Snapshot::decode( (string) $conv[0]->post_content );
+		$record             = DX_UI\Structures\Conversion_Snapshot::decode( (string) $conv[0]->post_content );
 		$chrome             = is_array( $record['created']['chrome'] ?? null ) ? $record['created']['chrome'] : null;
 		$out['conversion']  = array(
 			'id'     => (int) $conv[0]->ID,
@@ -1393,8 +1393,8 @@ $row   = static function ( int $id, bool $crawled ) use ( $block, $menu ): array
 				);
 			}
 		}
-		$site  = get_option( DXAI_UI\Chrome\Header_Template::OPTION );
-		$spec  = is_array( $site ) && DXAI_UI\Chrome\Header_Template::scope_of( $site ) === $id ? $site : get_option( DXAI_UI\Chrome\Header_Template::SCOPE_OPTION . $id );
+		$site  = get_option( DX_UI\Chrome\Header_Template::OPTION );
+		$spec  = is_array( $site ) && DX_UI\Chrome\Header_Template::scope_of( $site ) === $id ? $site : get_option( DX_UI\Chrome\Header_Template::SCOPE_OPTION . $id );
 		$menus = array();
 		foreach ( ( is_array( $spec ) && is_array( $spec['menus'] ?? null ) ) ? $spec['menus'] : array() as $location => $menu_id ) {
 			$menus[ (string) $location ] = $menu( (int) $menu_id );
@@ -1419,8 +1419,8 @@ foreach ( $homes as $home ) {
 			'fields'         => 'ids',
 			'post__not_in'   => $ids,
 			'meta_query'     => array(
-				array( 'key' => DXAI_UI\Structures\Page_Scope::META, 'value' => (string) $home ),
-				array( 'key' => '_dxai_ui_from_live_menu', 'value' => '1' ),
+				array( 'key' => DX_UI\Structures\Page_Scope::META, 'value' => (string) $home ),
+				array( 'key' => '_dx_ui_from_live_menu', 'value' => '1' ),
 			),
 		)
 	);
@@ -1434,7 +1434,7 @@ foreach ( (array) get_nav_menu_locations() as $location => $menu_id ) {
 		$locations[ $location ] = (int) $menu_id;
 	}
 }
-$footer   = get_option( DXAI_UI\Chrome\Footer_Template::OPTION );
+$footer   = get_option( DX_UI\Chrome\Footer_Template::OPTION );
 $footer   = is_array( $footer ) && is_array( $footer['slots'] ?? null ) ? $footer : array();
 $sidebars = wp_get_sidebars_widgets();
 $areas    = array();
@@ -1443,7 +1443,7 @@ foreach ( array_keys( $footer['slots'] ?? array() ) as $area ) {
 }
 echo wp_json_encode(
 	array(
-		'may_install' => class_exists( 'DXAI_UI\Theme\Theme_Compat' ) ? DXAI_UI\Theme\Theme_Compat::may_install_chrome() : false,
+		'may_install' => class_exists( 'DX_UI\Theme\Theme_Compat' ) ? DX_UI\Theme\Theme_Compat::may_install_chrome() : false,
 		'locations'   => $locations,
 		'footer'      => array(
 			'scope' => (int) ( $footer['scope'] ?? 0 ),
@@ -1480,7 +1480,7 @@ const CHROME_STATE_PHP = String.raw`<?php
 // Written by bin/verify-import.cjs.
 $mode    = (string) ( $args[0] ?? '' );
 $file    = (string) ( $args[1] ?? '' );
-$options = array( 'dxai_ui_site_header', 'dxai_ui_site_footer', 'dxai_ui_footer_widgets', 'dxai_ui_site_design', 'site_logo' );
+$options = array( 'dx_ui_site_header', 'dx_ui_site_footer', 'dx_ui_footer_widgets', 'dx_ui_site_design', 'site_logo' );
 $mods    = array( 'nav_menu_locations', 'custom_logo', 'sidebars_widgets' );
 $pack    = static fn( $value ): ?string => null === $value ? null : base64_encode( serialize( $value ) );
 $unpack  = static fn( string $value ) => unserialize( base64_decode( $value ), array( 'allowed_classes' => false ) );
@@ -1501,7 +1501,7 @@ if ( 'fingerprint' === $mode ) {
 	$state = $take();
 	$print = array();
 	foreach ( $state['options'] as $name => $value ) {
-		if ( 'dxai_ui_site_design' !== $name ) {
+		if ( 'dx_ui_site_design' !== $name ) {
 			$print[ $name ] = md5( (string) $value );
 		}
 	}
@@ -1622,7 +1622,7 @@ $in       = json_decode( (string) file_get_contents( (string) ( $args[0] ?? '' )
 $after    = (int) ( $in['after'] ?? 0 );
 $archives = array_values( array_filter( array_map( 'strval', (array) ( $in['archives'] ?? array() ) ) ) );
 $ids      = array_map( 'intval', (array) ( $in['ids'] ?? array() ) );
-$types    = array( 'page', 'wp_block', 'wp_template_part', 'wp_navigation', DXAI_UI\Content\Content_Types::CONVERSION );
+$types    = array( 'page', 'wp_block', 'wp_template_part', 'wp_navigation', DX_UI\Content\Content_Types::CONVERSION );
 if ( $after < 1 || $archives === array() ) {
 	echo wp_json_encode( array( 'error' => 'no run to clean up' ) ), "\n";
 	return;
@@ -1632,24 +1632,24 @@ $pages   = array_map(
 	'intval',
 	(array) $wpdb->get_col(
 		$wpdb->prepare(
-			"SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dxai_ui_source_zip' WHERE p.ID > %d AND p.post_type = 'page' AND m.meta_value IN ($in_list)",
+			"SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dx_ui_source_zip' WHERE p.ID > %d AND p.post_type = 'page' AND m.meta_value IN ($in_list)",
 			array_merge( array( $after ), $archives )
 		)
 	)
 );
-$pages   = array_values( array_unique( array_merge( $pages, array_values( array_filter( $ids, static fn( int $id ): bool => 'page' === get_post_type( $id ) && in_array( (string) get_post_meta( $id, '_dxai_ui_source_zip', true ), $archives, true ) ) ) ) ) );
+$pages   = array_values( array_unique( array_merge( $pages, array_values( array_filter( $ids, static fn( int $id ): bool => 'page' === get_post_type( $id ) && in_array( (string) get_post_meta( $id, '_dx_ui_source_zip', true ), $archives, true ) ) ) ) ) );
 if ( $pages !== array() ) {
 	$scoped = array_map(
 		'intval',
 		(array) $wpdb->get_col(
-			"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '" . esc_sql( DXAI_UI\Structures\Page_Scope::META ) . "' AND meta_value IN ('" . implode( "','", array_map( 'intval', $pages ) ) . "')"
+			"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '" . esc_sql( DX_UI\Structures\Page_Scope::META ) . "' AND meta_value IN ('" . implode( "','", array_map( 'intval', $pages ) ) . "')"
 		)
 	);
 	$pages  = array_values( array_unique( array_merge( $pages, array_filter( $scoped, static fn( int $id ): bool => $id > $after && 'page' === get_post_type( $id ) ) ) ) );
 }
 $all = array_merge( $pages, $ids );
 foreach ( $pages as $page ) {
-	foreach ( get_posts( array( 'post_type' => DXAI_UI\Content\Content_Types::CONVERSION, 'post_status' => 'any', 'posts_per_page' => 5, 'fields' => 'ids', 'meta_key' => '_dxai_ui_page_id', 'meta_value' => (string) $page ) ) as $conversion ) {
+	foreach ( get_posts( array( 'post_type' => DX_UI\Content\Content_Types::CONVERSION, 'post_status' => 'any', 'posts_per_page' => 5, 'fields' => 'ids', 'meta_key' => '_dx_ui_page_id', 'meta_value' => (string) $page ) ) as $conversion ) {
 		$all[]   = (int) $conversion;
 		$record  = json_decode( (string) get_post_field( 'post_content', (int) $conversion ), true );
 		$created = is_array( $record['created'] ?? null ) ? $record['created'] : array();
@@ -1679,7 +1679,7 @@ foreach ( array_values( array_unique( array_filter( $all ) ) ) as $id ) {
 	 * pattern, a navigation post of its conversion). A template part only when
 	 * it says it is one of these archives'.
 	 */
-	if ( $id <= $after && 'wp_template_part' === $type && ! in_array( (string) get_post_meta( $id, '_dxai_ui_source_zip', true ), $archives, true ) ) {
+	if ( $id <= $after && 'wp_template_part' === $type && ! in_array( (string) get_post_meta( $id, '_dx_ui_source_zip', true ), $archives, true ) ) {
 		++$skipped;
 		continue;
 	}
@@ -1789,7 +1789,7 @@ function readManifest() {
 /**
  * The ZIP whose design a page came from.
  *
- * Read from the `_dxai_ui_source_zip` the import records, never guessed: a
+ * Read from the `_dx_ui_source_zip` the import records, never guessed: a
  * design's title comes from its own content, so a title-to-filename heuristic
  * paired four of seven designs and reported the rest as passing unmeasured.
  */
@@ -1801,7 +1801,7 @@ function zipFor(page) {
 /** A design's name for a result line: its archive, without the test prefix. */
 const prefix = typeof args['title-prefix'] === 'string' ? args['title-prefix'] : '';
 function designLabel(source) {
-	return String(source || '').replace(/\.zip$/i, '').replace(/^DXAI TEST /, '');
+	return String(source || '').replace(/\.zip$/i, '').replace(/^DXUI TEST /, '');
 }
 function pageLabel(page) {
 	const title = String(page.title || page.id);
@@ -2065,7 +2065,7 @@ function stageChrome(info, opts) {
 			continue;
 		}
 		if (!info.may_install) {
-			const blocks = rows.filter((r) => r.first.name === 'dxai-ui/site-header' || r.last.name === 'dxai-ui/site-footer');
+			const blocks = rows.filter((r) => r.first.name === 'dx-ui/site-header' || r.last.name === 'dx-ui/site-footer');
 			if (blocks.length) {
 				problems.push(blocks.length + ' page(s) carry the header/footer block on a theme that renders its own header and footer');
 			}
@@ -2076,7 +2076,7 @@ function stageChrome(info, opts) {
 				problems.push('the conversion has no chrome report: imported before headers were built in Menus — re-import it');
 			} else if (H.installed) {
 				for (const r of rows) {
-					if (r.first.name !== 'dxai-ui/site-header') {
+					if (r.first.name !== 'dx-ui/site-header') {
 						problems.push(where(r) + ': the header is ' + describeBlock(r.first) + ', not the Menus header block');
 					}
 				}
@@ -2120,7 +2120,7 @@ function stageChrome(info, opts) {
 				if (H) { problems.push('the conversion has no footer report'); }
 			} else if (F.installed) {
 				for (const r of rows) {
-					if (r.last.name !== 'dxai-ui/site-footer') {
+					if (r.last.name !== 'dx-ui/site-footer') {
 						problems.push(where(r) + ': the footer is ' + describeBlock(r.last) + ', not the Widgets footer block');
 					}
 				}
@@ -2132,7 +2132,7 @@ function stageChrome(info, opts) {
 					} else {
 						notes.push('footer in Widgets, but the site\'s footer is now ' + whose + '\'s (one footer per site)');
 						for (const r of rows) {
-							if (r.last.name === 'dxai-ui/site-footer') { foreign[r.id] = whose; }
+							if (r.last.name === 'dx-ui/site-footer') { foreign[r.id] = whose; }
 						}
 					}
 				} else {
@@ -2552,7 +2552,7 @@ function stageWidgets(pages, info, label) {
 	console.log('\nfooter widgets (real editor)');
 	const read = wp(['eval-file', script('footer-widgets.php', FOOTER_WIDGETS_PHP)]);
 	const found = lastJson(read.out);
-	const wants_footer = info ? info.pages.filter((r) => r.last && r.last.name === 'dxai-ui/site-footer').length : 0;
+	const wants_footer = info ? info.pages.filter((r) => r.last && r.last.name === 'dx-ui/site-footer').length : 0;
 	if (!found) {
 		record(label, false, 'could not read the footer widget areas: ' + read.out.trim().slice(-200));
 		return;
@@ -2683,7 +2683,7 @@ function stageBehaviour(pages, suffix) {
 	 *
 	 * The sticky header that turns solid past a threshold: the design writes
 	 * `setSolid(window.scrollY > 24)`, the page carries
-	 * `data-dxai-scroll="solid:24"`, and until the compiler emitted that marker
+	 * `data-dxui-scroll="solid:24"`, and until the compiler emitted that marker
 	 * the header stayed transparent on ten of the nineteen designs in this
 	 * corpus. Geometry cannot see it — its design side is built by this same
 	 * compiler, so both sides were equally inert and agreed at 0px — and a
@@ -2761,9 +2761,9 @@ function stagesFor(pages, opts) {
  */
 const RUNTIME_PHP = String.raw`<?php
 // Written by bin/verify-import.cjs: the runtime a page's script carries.
-$js = DXAI_UI\Compiler\Motion_Runtime::javascript();
+$js = DX_UI\Compiler\Motion_Runtime::javascript();
 file_put_contents( (string) ( $args[0] ?? '' ), $js );
-echo wp_json_encode( array( 'bytes' => strlen( $js ), 'version' => method_exists( 'DXAI_UI\Compiler\Motion_Runtime', 'version' ) ? DXAI_UI\Compiler\Motion_Runtime::version() : '' ) ), "\n";
+echo wp_json_encode( array( 'bytes' => strlen( $js ), 'version' => method_exists( 'DX_UI\Compiler\Motion_Runtime', 'version' ) ? DX_UI\Compiler\Motion_Runtime::version() : '' ) ), "\n";
 `;
 
 function stageKeyboardSynthetic() {
@@ -2801,10 +2801,10 @@ function shape(row) {
 	if (!row || !row.top) { return '?'; }
 	const top = row.top;
 	const name = (b) => {
-		if (b.name === 'dxai-ui/site-header') { return 'site-header'; }
-		if (b.name === 'dxai-ui/site-footer') { return 'site-footer'; }
+		if (b.name === 'dx-ui/site-header') { return 'site-header'; }
+		if (b.name === 'dx-ui/site-footer') { return 'site-footer'; }
 		if (b.name === 'core/template-part') { return (b.area || 'part') + ' part'; }
-		if (b.name === 'dxai-ui/link' && /^#/.test(b.url || '')) { return 'skip'; }
+		if (b.name === 'dx-ui/link' && /^#/.test(b.url || '')) { return 'skip'; }
 		return '';
 	};
 	const head = [];
@@ -2879,13 +2879,13 @@ function stageChromeInstall(zip, ctx) {
 			const first = row.top[0] || {};
 			const last = row.top[row.top.length - 1] || {};
 			if (H.installed) {
-				if (first.name !== 'dxai-ui/site-header') { problems.push(row.id + ': the first block is ' + (first.name || 'nothing') + ', not dxai-ui/site-header'); }
+				if (first.name !== 'dx-ui/site-header') { problems.push(row.id + ': the first block is ' + (first.name || 'nothing') + ', not dx-ui/site-header'); }
 			} else if (H.error !== 'no_header') {
 				if (first.name !== 'core/template-part' || first.status !== 'publish') { problems.push(row.id + ': the refused header is ' + (first.name || 'nothing') + ' (' + (first.status || '') + '), not its published template part'); }
 				if (was.top && was.top[0] && first.slug !== was.top[0].slug) { problems.push(row.id + ': the kept header part is ' + first.slug + ', the design\'s was ' + was.top[0].slug); }
 			}
 			if (F.installed) {
-				if (last.name !== 'dxai-ui/site-footer') { problems.push(row.id + ': the last block is ' + (last.name || 'nothing') + ', not dxai-ui/site-footer'); }
+				if (last.name !== 'dx-ui/site-footer') { problems.push(row.id + ': the last block is ' + (last.name || 'nothing') + ', not dx-ui/site-footer'); }
 			} else if (F.error !== 'no_footer') {
 				if (last.name !== 'core/template-part' || last.status !== 'publish') { problems.push(row.id + ': the refused footer is ' + (last.name || 'nothing') + ', not its published template part'); }
 			}
@@ -2987,8 +2987,8 @@ function stageChromeInstall(zip, ctx) {
 		for (const row of after.crawled || []) {
 			const first = row.top[0] || {};
 			const last = row.top[row.top.length - 1] || {};
-			if (H.installed && first.name !== 'dxai-ui/site-header') { problems.push(row.id + ' starts with ' + (first.name || 'nothing')); }
-			if (F.installed && last.name !== 'dxai-ui/site-footer') { problems.push(row.id + ' ends with ' + (last.name || 'nothing')); }
+			if (H.installed && first.name !== 'dx-ui/site-header') { problems.push(row.id + ' starts with ' + (first.name || 'nothing')); }
+			if (F.installed && last.name !== 'dx-ui/site-footer') { problems.push(row.id + ' ends with ' + (last.name || 'nothing')); }
 		}
 		record('chrome crawled: ' + label, problems.length === 0, (after.crawled || []).length
 			? (problems.length ? problems.join('; ') : after.crawled.length + ' crawled page(s) carry the same blocks as the home')
@@ -3268,11 +3268,11 @@ if (wants('suites')) {
 		 * create_missing_pages, which crawls the live menu and restyles every
 		 * page it finds, overwriting the ones already there. Recognised by
 		 * what the file does, not by a list, so the next such check is caught
-		 * too; a file can also say so outright with @dxai-spends-model-credit.
+		 * too; a file can also say so outright with @dxui-spends-model-credit.
 		 */
 		if (!args['allow-llm']) {
 			const body = fs.readFileSync(path.join(repo, 'bin', file), 'utf8');
-			if (/@dxai-spends-model-credit|Live_Page_Restyler|\['create_missing_pages'\]\s*=\s*true/.test(body)) {
+			if (/@dxui-spends-model-credit|Live_Page_Restyler|\['create_missing_pages'\]\s*=\s*true/.test(body)) {
 				console.log('  skip ' + file.replace(/\.php$/, '').padEnd(31) + 'calls a paid model: pass --allow-llm to run it');
 				continue;
 			}
@@ -3291,7 +3291,7 @@ if (wants('suites')) {
 		const ours = out.split('\n')
 			.filter((l) => /\b(Warning|Notice|Deprecated|Fatal error|Uncaught)\b/.test(l))
 			// The full repo path, not its folder name: this checkout is called
-			// DXAI-UI and so is the Local site it runs against, so matching the
+			// DX-UI and so is the Local site it runs against, so matching the
 			// name alone blamed us for every core warning.
 			.filter((l) => l.replace(/\\/g, '/').toLowerCase().includes(here));
 		const bad = res.code !== 0 || /\b(FAIL|fail)\b/.test(out) || /\b(Fatal error|Uncaught)\b/.test(out) || ours.length > 0;

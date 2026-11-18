@@ -1,19 +1,19 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui network.
+ * WP-CLI: wp dx-ui network.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * The network as a teacher (Network_Model).
  *
- *   wp dxai-ui network learn [--url=<a,b,…>] [--from=<folder>] [--dry-run]
- *   wp dxai-ui network show  [--kind=<kind>] [--format=json]
+ *   wp dx-ui network learn [--url=<a,b,…>] [--from=<folder>] [--dry-run]
+ *   wp dx-ui network show  [--kind=<kind>] [--format=json]
  *
  * `learn` reads every other site of this multisite in place (nothing is sent anywhere), and the sites named with --url
  * through their public REST API, or a folder crawl.cjs saved with --from; the model is kept for the whole network.
@@ -23,7 +23,7 @@ final class Network_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui network',
+			'dx-ui network',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'Learn how the team builds the pages after the Home from the sites of the network (learn), and show it (show).',
@@ -134,7 +134,7 @@ final class Network_Cli {
 	private static function show( array $assoc ): void {
 		$model = Network_Model::get();
 		if ( $model === null ) {
-			\WP_CLI::error( 'Nothing learned yet: run `wp dxai-ui network learn`.' );
+			\WP_CLI::error( 'Nothing learned yet: run `wp dx-ui network learn`.' );
 		}
 		if ( ( $assoc['format'] ?? 'text' ) === 'json' ) {
 			\WP_CLI::line( (string) wp_json_encode( $model, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );

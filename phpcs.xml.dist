@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="DXAI-UI">
+<ruleset name="DX-UI">
 	<description>The gate CI holds the plugin to: security, prepared SQL, translations and PHP compatibility. The code keeps its own layout and comment style (no Yoda conditions, its own docblocks), so WordPress' formatting sniffs are not enforced; run `vendor/bin/phpcs --standard=WordPress` to see them.</description>
 
 	<file>./src</file>
-	<file>./dxai-ui.php</file>
+	<file>./dx-ui.php</file>
 	<file>./uninstall.php</file>
 	<file>./templates</file>
 	<file>./themes</file>
@@ -20,7 +20,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="dxai-ui"/>
+				<element value="dx-ui"/>
 				<element value="dx-base"/>
 			</property>
 		</properties>

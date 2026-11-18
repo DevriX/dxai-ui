@@ -1,26 +1,26 @@
-.dxai-libraries__table {
+.dxui-libraries__table {
 	margin: 4px 0 16px;
 }
 
-.dxai-libraries__table td,
-.dxai-libraries__table th {
+.dxui-libraries__table td,
+.dxui-libraries__table th {
 	vertical-align: middle;
 }
 
-.dxai-libraries__table .dxai-chip {
+.dxui-libraries__table .dxui-chip {
 	margin-left: 8px;
 }
 
-.dxai-libraries__actions {
+.dxui-libraries__actions {
 	white-space: nowrap;
 	text-align: right;
 }
 
-.dxai-libraries__actions > * {
+.dxui-libraries__actions > * {
 	margin-left: 6px;
 }
 
-.dxai-libraries__add {
+.dxui-libraries__add {
 	display: inline-block;
 	position: relative;
 	margin: 0;
@@ -30,7 +30,7 @@
 	cursor: pointer;
 }
 
-.dxai-libraries__add input[type="file"] {
+.dxui-libraries__add input[type="file"] {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -38,11 +38,11 @@
 	cursor: pointer;
 }
 
-.dxai-libraries__add input[type="file"]:focus-visible + span {
+.dxui-libraries__add input[type="file"]:focus-visible + span {
 	box-shadow: 0 0 0 2px #2271b1;
 }
 
-.dxai-libraries__open {
+.dxui-libraries__open {
 	margin: 0 0 20px;
 	padding: 16px;
 	border: 1px solid #dcdcde;
@@ -50,17 +50,17 @@
 	background: #f6f7f7;
 }
 
-.dxai-libraries__open h4,
-.dxai-libraries__new h4 {
+.dxui-libraries__open h4,
+.dxui-libraries__new h4 {
 	margin: 0 0 8px;
 	font-size: 14px;
 }
 
-.dxai-libraries__open table {
+.dxui-libraries__open table {
 	margin: 8px 0 12px;
 }
 
-.dxai-libraries__log {
+.dxui-libraries__log {
 	max-height: 260px;
 	overflow: auto;
 	padding: 10px 12px;
@@ -71,29 +71,29 @@
 	border-radius: 8px;
 }
 
-.dxai-libraries__new {
+.dxui-libraries__new {
 	max-width: 760px;
 	padding-top: 12px;
 	border-top: 1px solid #dcdcde;
 }
 
-.dxai-libraries__fields {
+.dxui-libraries__fields {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 12px 24px;
 	margin: 0 0 14px;
 }
 
-.dxai-libraries__fields > .components-base-control:nth-child(3) {
+.dxui-libraries__fields > .components-base-control:nth-child(3) {
 	grid-column: 1 / -1;
 }
 
 @media (max-width: 782px) {
-	.dxai-libraries__fields {
+	.dxui-libraries__fields {
 		grid-template-columns: 1fr;
 	}
 
-	.dxai-libraries__actions {
+	.dxui-libraries__actions {
 		white-space: normal;
 	}
 }

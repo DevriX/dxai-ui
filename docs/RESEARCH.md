@@ -1,4 +1,4 @@
-# DXAI-UI research notes
+# DX-UI research notes
 
 Research date: 2026-09-02. Multi-agent + Context.dev review of Local WP, Figma REST, LLM providers, Gutenberg patterns, Tailwind isolation, and Lovable export.
 
@@ -8,7 +8,7 @@ Research date: 2026-09-02. Multi-agent + Context.dev review of Local WP, Figma R
 - No official create-site CLI. Deprecated `@getflywheel/local-cli` cannot create sites and hardcodes a macOS GraphQL path.
 - Create via GUI or GraphQL `addSite` while Local is running (`%APPDATA%\Local\graphql-connection-info.json`).
 - Prefer PHP 8.2.29 + nginx + **MySQL** (MariaDB is slow on Windows).
-- Plugin attach with `mklink /J` into `wp-content/plugins/dxai-ui`.
+- Plugin attach with `mklink /J` into `wp-content/plugins/dx-ui`.
 
 ## Figma
 
@@ -37,7 +37,7 @@ Brief names (Claude 3.5/3.7, GPT-4o, Grok 3, DeepSeek R1) are legacy. Ship curre
 
 ## Tailwind isolation
 
-Compile a **per-pattern** scoped sheet at save time. Keep class strings 1:1. Disable global Preflight; emit utilities unlayered under `.dxai-ui`. Do not use Play CDN on the frontend.
+Compile a **per-pattern** scoped sheet at save time. Keep class strings 1:1. Disable global Preflight; emit utilities unlayered under `.dx-ui`. Do not use Play CDN on the frontend.
 
 ## Lovable
 

@@ -2,15 +2,15 @@
 /**
  * REST: native blocks in a design's pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * GET  /native-blocks  per design: which of the plugin's own blocks have a native counterpart on this site, how many
@@ -21,7 +21,7 @@ final class Native_Blocks_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/native-blocks',
 			array(
 				array(
@@ -78,7 +78,7 @@ final class Native_Blocks_Controller {
 	public function run( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = (int) $request->get_param( 'design' );
 		if ( ! Design_Attach::is_design( $home ) || ! current_user_can( 'edit_post', $home ) ) {
-			return new \WP_Error( 'dxai_ui_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$done = $request->get_param( 'action' ) === 'revert' ? Native_Blocks::revert( $home ) : Native_Blocks::apply( $home );
 

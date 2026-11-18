@@ -1,20 +1,20 @@
 <?php
 /**
- * Shared editor/view assets for dynamic DXAI blocks.
+ * Shared editor/view assets for dynamic DXUI blocks.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 final class Assets {
 
 	/**
-	 * File names this plugin writes per post into uploads/dxai-ui, and the
+	 * File names this plugin writes per post into uploads/dx-ui, and the
 	 * post id each is named after: `pattern-{id}.css` and `.js`
 	 * (Tailwind_Purger::persist(), persist_js()), `site-{id}.css`
 	 * (Live_Content_Shell::persist_site_css()).
@@ -60,7 +60,7 @@ final class Assets {
 	 * removing them.
 	 *
 	 * Deliberately narrow. Only names in OWNED_FILE, only directly inside
-	 * uploads/dxai-ui (the resolved directory is compared, so neither a
+	 * uploads/dx-ui (the resolved directory is compared, so neither a
 	 * stored `..` nor a symlink leads anywhere else), and never a file
 	 * another post still points at: every page crawled from a live site
 	 * stores its Home's `site-{home}.css` and `pattern-{home}.js`, and some
@@ -86,7 +86,7 @@ final class Assets {
 		}
 
 		$names = array( 'pattern-' . $post_id . '.css', 'pattern-' . $post_id . '.js', 'site-' . $post_id . '.css' );
-		foreach ( array( '_dxai_ui_css_url', '_dxai_ui_js_url' ) as $key ) {
+		foreach ( array( '_dx_ui_css_url', '_dx_ui_js_url' ) as $key ) {
 			$relative = Upload_Paths::for_meta( $post_id, $key )['relative'];
 			if ( $relative !== '' && dirname( $relative ) === Upload_Paths::DIR ) {
 				$names[] = basename( $relative );
@@ -118,7 +118,7 @@ final class Assets {
 	/**
 	 * Whether any post other than $post_id stores a location ending in this
 	 * file name. Matches both stored forms, relative and absolute, since the
-	 * absolute ones end in the same `dxai-ui/{name}`; the `dxai-ui/` prefix
+	 * absolute ones end in the same `dx-ui/{name}`; the `dx-ui/` prefix
 	 * keeps `pattern-12.css` from matching `pattern-112.css`. Trashed posts
 	 * count — they can be restored.
 	 */
@@ -129,7 +129,7 @@ final class Assets {
 
 		return (bool) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_dxai_ui_css_url','_dxai_ui_js_url') AND post_id <> %d AND ( meta_value LIKE %s OR meta_value LIKE %s ) LIMIT 1",
+				"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_dx_ui_css_url','_dx_ui_js_url') AND post_id <> %d AND ( meta_value LIKE %s OR meta_value LIKE %s ) LIMIT 1",
 				$post_id,
 				$like,
 				$like . '?%'
@@ -156,12 +156,12 @@ final class Assets {
 			return;
 		}
 		$id = get_the_ID();
-		if ( ! $id || get_post_meta( $id, '_dxai_ui_css_url', true ) === '' ) {
+		if ( ! $id || get_post_meta( $id, '_dx_ui_css_url', true ) === '' ) {
 			return;
 		}
 		// The theme draws the page around the design (its own template): its header and footer need its sheet, which is fenced off the
 		// design's sections instead (Theme_Fence).
-		if ( \DXAI_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) && \DXAI_UI\Theme\Theme_Fence::fences( (int) $id ) ) {
+		if ( \DX_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) && \DX_UI\Theme\Theme_Fence::fences( (int) $id ) ) {
 			return;
 		}
 		$roots = array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) );
@@ -177,7 +177,7 @@ final class Assets {
 	}
 
 	/**
-	 * A dxai template part renders without core's wrapper element.
+	 * A dxui template part renders without core's wrapper element.
 	 *
 	 * core/template-part wraps what it renders in `<header
 	 * class="wp-block-template-part">`. The design's header is a DIRECT child
@@ -193,7 +193,7 @@ final class Assets {
 	 */
 	public function unwrap_template_part( string $content, array $block ): string {
 		$slug = (string) ( $block['attrs']['slug'] ?? '' );
-		if ( ! str_starts_with( $slug, 'dxai-' ) ) {
+		if ( ! str_starts_with( $slug, 'dxui-' ) ) {
 			return $content;
 		}
 		if ( preg_match( '/^\s*<([a-z][a-z0-9]*)\b[^>]*\bclass="[^"]*\bwp-block-template-part\b[^"]*"[^>]*>([\s\S]*)<\/\1>\s*$/', $content, $m ) === 1 ) {
@@ -205,35 +205,35 @@ final class Assets {
 
 	public function register_assets(): void {
 		wp_register_style(
-			'dxai-ui-dynamic',
-			DXAI_UI_URL . 'assets/css/dynamic.css',
+			'dx-ui-dynamic',
+			DX_UI_URL . 'assets/css/dynamic.css',
 			array(),
-			(string) filemtime( DXAI_UI_DIR . 'assets/css/dynamic.css' )
+			(string) filemtime( DX_UI_DIR . 'assets/css/dynamic.css' )
 		);
 
-		if ( ! wp_style_is( 'dxai-ui-isolate', 'registered' ) ) {
+		if ( ! wp_style_is( 'dx-ui-isolate', 'registered' ) ) {
 			wp_register_style(
-				'dxai-ui-isolate',
-				DXAI_UI_URL . 'assets/css/frontend-isolate.css',
+				'dx-ui-isolate',
+				DX_UI_URL . 'assets/css/frontend-isolate.css',
 				array(),
-				DXAI_UI_VERSION
+				DX_UI_VERSION
 			);
 		}
 
 		wp_register_script(
-			'dxai-ui-blocks-editor',
-			DXAI_UI_URL . 'assets/js/blocks-editor.js',
+			'dx-ui-blocks-editor',
+			DX_UI_URL . 'assets/js/blocks-editor.js',
 			// wp-api-fetch: the live utility-class preview asks the
 			// utility-rules route; wp-notices: the snackbar shown when "Show
 			// template" is turned back to the page itself. Both are used
 			// lazily and guarded, and every block editor loads them anyway.
 			array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-hooks', 'wp-compose', 'wp-data', 'wp-dom-ready', 'wp-api-fetch', 'wp-notices' ),
-			(string) filemtime( DXAI_UI_DIR . 'assets/js/blocks-editor.js' ),
+			(string) filemtime( DX_UI_DIR . 'assets/js/blocks-editor.js' ),
 			true
 		);
 
 		wp_register_script(
-			'dxai-ui-lucide',
+			'dx-ui-lucide',
 			self::lucide_src(),
 			array(),
 			'0.544.0',
@@ -241,35 +241,35 @@ final class Assets {
 		);
 
 		wp_register_script(
-			'dxai-ui-slider-view',
-			DXAI_UI_URL . 'assets/js/slider-view.js',
+			'dx-ui-slider-view',
+			DX_UI_URL . 'assets/js/slider-view.js',
 			array(),
-			DXAI_UI_VERSION,
+			DX_UI_VERSION,
 			true
 		);
 
 		// The previous / next buttons of a row of cards that scrolls sideways (a design's reviews slider).
 		wp_register_script(
-			'dxai-ui-rail',
-			DXAI_UI_URL . 'assets/js/rail.js',
+			'dx-ui-rail',
+			DX_UI_URL . 'assets/js/rail.js',
 			array(),
-			(string) filemtime( DXAI_UI_DIR . 'assets/js/rail.js' ),
+			(string) filemtime( DX_UI_DIR . 'assets/js/rail.js' ),
 			true
 		);
 
 		wp_register_script(
-			'dxai-ui-form-view',
-			DXAI_UI_URL . 'assets/js/form-view.js',
+			'dx-ui-form-view',
+			DX_UI_URL . 'assets/js/form-view.js',
 			array(),
-			DXAI_UI_VERSION,
+			DX_UI_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'dxai-ui-form-view',
-			'dxaiUIForm',
+			'dx-ui-form-view',
+			'dxUIForm',
 			array(
-				'restUrl' => esc_url_raw( rest_url( DXAI_UI_REST_NAMESPACE . '/forms/submit' ) ),
+				'restUrl' => esc_url_raw( rest_url( DX_UI_REST_NAMESPACE . '/forms/submit' ) ),
 			)
 		);
 	}
@@ -298,7 +298,7 @@ final class Assets {
 			return;
 		}
 		$id = get_the_ID();
-		if ( ! $id || \DXAI_UI\Structures\Design_Attach::source_for( (int) $id ) === 0 ) {
+		if ( ! $id || \DX_UI\Structures\Design_Attach::source_for( (int) $id ) === 0 ) {
 			return;
 		}
 
@@ -384,18 +384,18 @@ final class Assets {
 		$content = (string) get_post_field( 'post_content', $id );
 		// A design page's header and footer are added around its content as it renders (Page_Chrome), so what they hold —
 		// a button in the theme's style, an icon — is part of the page for what it needs loaded.
-		$content = \DXAI_UI\Chrome\Page_Chrome::with_chrome( (int) $id, $content );
-		// Template-part refs expand at render — scan linked dxai parts for icons.
+		$content = \DX_UI\Chrome\Page_Chrome::with_chrome( (int) $id, $content );
+		// Template-part refs expand at render — scan linked dxui parts for icons.
 		$content .= $this->template_part_markup( $content );
 		// Buttons in the theme's button style: its rules, on the pages where the theme's stylesheet does not reach them
 		// (a design page drops it, and a page holding a design's sections keeps it out of them). Anywhere else the theme's
 		// own sheet is there, and a second copy would only weigh the page.
-		if ( ( \DXAI_UI\Theme\Theme_Compat::is_converted_page() || \DXAI_UI\Theme\Theme_Fence::applies() ) && \DXAI_UI\Theme\Theme_Buttons::used_in( $content ) ) {
-			\DXAI_UI\Theme\Theme_Buttons::enqueue();
+		if ( ( \DX_UI\Theme\Theme_Compat::is_converted_page() || \DX_UI\Theme\Theme_Fence::applies() ) && \DX_UI\Theme\Theme_Buttons::used_in( $content ) ) {
+			\DX_UI\Theme\Theme_Buttons::enqueue();
 		}
 		// A slider's buttons move its row of cards: what the design's own script did, which the page script does not carry.
 		if ( self::has_rail( $content ) ) {
-			wp_enqueue_script( 'dxai-ui-rail' );
+			wp_enqueue_script( 'dx-ui-rail' );
 		}
 		// The design's states driven by the Interactivity API, where the site asks for it: the store, before the head prints the import map.
 		if ( Interactivity::has_states( $content ) ) {
@@ -412,46 +412,46 @@ final class Assets {
 		 */
 		// The design this page shows: its own, or — an ordinary page holding blocks copied from a design page —
 		// that design's sheet, fonts and script (Design_Attach).
-		$src      = \DXAI_UI\Structures\Design_Attach::source_for( (int) $id );
+		$src      = \DX_UI\Structures\Design_Attach::source_for( (int) $id );
 		$src      = $src > 0 ? $src : (int) $id;
-		$css      = Upload_Paths::for_meta( $src, '_dxai_ui_css_url' );
-		$js       = Upload_Paths::for_meta( $src, '_dxai_ui_js_url' );
-		$fonts    = get_post_meta( $src, '_dxai_ui_font_urls', true );
+		$css      = Upload_Paths::for_meta( $src, '_dx_ui_css_url' );
+		$js       = Upload_Paths::for_meta( $src, '_dx_ui_js_url' );
+		$fonts    = get_post_meta( $src, '_dx_ui_font_urls', true );
 		// A page of the theme showing a design: one holding blocks copied from a design page, or a design's own page the theme draws.
-		$attached = ( $src !== (int) $id || \DXAI_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) ) && ! \DXAI_UI\Theme\Theme_Compat::is_converted_page();
+		$attached = ( $src !== (int) $id || \DX_UI\Theme\Theme_Fence::draws_own_design( (int) $id ) ) && ! \DX_UI\Theme\Theme_Compat::is_converted_page();
 		// The theme's own components among the copied blocks (its FAQ) keep their rules inside the design's sections, as on the page they came from.
-		if ( \DXAI_UI\Theme\Theme_Fence::applies() ) {
-			\DXAI_UI\Theme\Theme_Components::enqueue( $content, $css['path'] );
+		if ( \DX_UI\Theme\Theme_Fence::applies() ) {
+			\DX_UI\Theme\Theme_Components::enqueue( $content, $css['path'] );
 		}
 		// The fonts the design's sheet carries itself (Font_Host) need no link to Google; a sheet that still asks Google for them is copied by cron.
-		$carried = \DXAI_UI\Media\Font_Host::covered( $css['path'] );
+		$carried = \DX_UI\Media\Font_Host::covered( $css['path'] );
 		// A theme that lets the site choose its fonts draws the design in them (Theme_Fonts): its own are not loaded, and a
 		// sheet that still has them is put in the theme's by cron.
-		$theme_fonts = \DXAI_UI\Theme\Theme_Fonts::adopts( $src );
-		if ( $theme_fonts && in_array( \DXAI_UI\Media\Font_Host::design_state( $src ), array( 'local', 'partial', 'remote' ), true ) ) {
-			\DXAI_UI\Media\Font_Host::queue_design( $src );
+		$theme_fonts = \DX_UI\Theme\Theme_Fonts::adopts( $src );
+		if ( $theme_fonts && in_array( \DX_UI\Media\Font_Host::design_state( $src ), array( 'local', 'partial', 'remote' ), true ) ) {
+			\DX_UI\Media\Font_Host::queue_design( $src );
 		}
 		// Its fonts left the sheet for the theme's, and the theme no longer draws it (the fonts were changed, or the design keeps its own):
 		// until they are copied back, Google's stylesheets are linked as they were before the copy.
-		$restoring = ! $theme_fonts && $css['path'] !== '' && \DXAI_UI\Media\Font_Host::design_state( $src ) === 'theme';
+		$restoring = ! $theme_fonts && $css['path'] !== '' && \DX_UI\Media\Font_Host::design_state( $src ) === 'theme';
 		if ( $restoring ) {
 			$fonts   = array_values( array_unique( array_merge( is_array( $fonts ) ? array_map( 'strval', $fonts ) : array(), array_values( $carried ) ) ) );
 			$carried = array();
 		}
-		if ( ! $theme_fonts && $css['path'] !== '' && ( $restoring || \DXAI_UI\Media\Font_Host::needs_work( $css['path'], is_array( $fonts ) ? $fonts : array() ) ) ) {
-			\DXAI_UI\Media\Font_Host::queue_design( $src );
+		if ( ! $theme_fonts && $css['path'] !== '' && ( $restoring || \DX_UI\Media\Font_Host::needs_work( $css['path'], is_array( $fonts ) ? $fonts : array() ) ) ) {
+			\DX_UI\Media\Font_Host::queue_design( $src );
 		}
 		if ( ! $theme_fonts && is_array( $fonts ) ) {
 			foreach ( array_values( $fonts ) as $i => $font_url ) {
 				$font_url = $this->safe_font_url( (string) $font_url );
-				if ( $font_url === '' || isset( $carried[ \DXAI_UI\Media\Font_Host::key( $font_url ) ] ) ) {
+				if ( $font_url === '' || isset( $carried[ \DX_UI\Media\Font_Host::key( $font_url ) ] ) ) {
 					continue;
 				}
 				// On a page of the theme, the copy from uploads: a theme's font stripper would take Google's link.
 				if ( $attached ) {
 					$font_url = Attached_Styles::local_font_url( $font_url );
 				}
-				wp_enqueue_style( 'dxai-ui-font-' . $id . '-' . $i, $font_url, array(), null );
+				wp_enqueue_style( 'dx-ui-font-' . $id . '-' . $i, $font_url, array(), null );
 			}
 		}
 		if ( $css['url'] !== '' ) {
@@ -462,16 +462,16 @@ final class Assets {
 			 * H2O's layout is content-box throughout, and forcing border-box
 			 * on it changes every padded width.
 			 */
-			$deps = array( 'dxai-ui-dynamic' );
+			$deps = array( 'dx-ui-dynamic' );
 			// Sections copied into a page of the theme from a design page that shows without it: first what their design page gives them (Attached_Styles).
-			if ( $attached && \DXAI_UI\Theme\Theme_Fence::applies() ) {
+			if ( $attached && \DX_UI\Theme\Theme_Fence::applies() ) {
 				array_unshift( $deps, Attached_Styles::base( $src ) );
 			}
-			if ( ! get_post_meta( $src, '_dxai_ui_static_html', true ) ) {
-				wp_enqueue_style( 'dxai-ui-isolate' );
-				$deps[] = 'dxai-ui-isolate';
+			if ( ! get_post_meta( $src, '_dx_ui_static_html', true ) ) {
+				wp_enqueue_style( 'dx-ui-isolate' );
+				$deps[] = 'dx-ui-isolate';
 			}
-			wp_enqueue_style( 'dxai-ui-page-' . $id, $css['url'], $deps, $ver );
+			wp_enqueue_style( 'dx-ui-page-' . $id, $css['url'], $deps, $ver );
 
 			/*
 			 * For the design that is the site's brand, point its tokens at the
@@ -487,9 +487,9 @@ final class Assets {
 			 * brand's colours.
 			 */
 			// Its web font faces wait for the page to load (Late_Fonts); their fallback faces stay.
-			$brand = \DXAI_UI\Media\Late_Fonts::hold( \DXAI_UI\Compiler\Token_Styles::brand_css( $src ) );
+			$brand = \DX_UI\Media\Late_Fonts::hold( \DX_UI\Compiler\Token_Styles::brand_css( $src ) );
 			if ( $brand !== '' ) {
-				wp_add_inline_style( 'dxai-ui-page-' . $id, $brand );
+				wp_add_inline_style( 'dx-ui-page-' . $id, $brand );
 			}
 		}
 
@@ -497,11 +497,11 @@ final class Assets {
 		if ( $js['url'] !== '' ) {
 			$js_ver = Upload_Paths::version( $js['path'] );
 			$deps   = $lucide !== '' ? array( $lucide ) : array();
-			wp_enqueue_script( 'dxai-ui-page-' . $id, $js['url'], $deps, $js_ver, true );
+			wp_enqueue_script( 'dx-ui-page-' . $id, $js['url'], $deps, $js_ver, true );
 			/*
 			 * The page script loads the icon runtime itself when it meets a
 			 * `data-lucide` this scan did not see — one a pattern block or an
-			 * unscanned part renders — and it asks window.dxaiLucideUrl where
+			 * unscanned part renders — and it asks window.dxuiLucideUrl where
 			 * the runtime is. enqueue_lucide() sets that only when it found an
 			 * icon, and scripts persisted before this change fall back to the
 			 * jsDelivr CDN when it is unset: a remote script plugin review
@@ -509,7 +509,7 @@ final class Assets {
 			 * bundled copy's URL is always set ahead of the page script.
 			 */
 			if ( $lucide === '' ) {
-				wp_add_inline_script( 'dxai-ui-page-' . $id, 'window.dxaiLucideUrl=window.dxaiLucideUrl||' . wp_json_encode( self::lucide_src() ) . ';', 'before' );
+				wp_add_inline_script( 'dx-ui-page-' . $id, 'window.dxuiLucideUrl=window.dxuiLucideUrl||' . wp_json_encode( self::lucide_src() ) . ';', 'before' );
 			}
 		} elseif ( $lucide !== '' && str_contains( $content, 'data-lucide' ) ) {
 			// Icons still need createIcons() when there is no page JS blob.
@@ -563,14 +563,14 @@ final class Assets {
 	 */
 	private function template_part_markup( string $content ): string {
 		$out = '';
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Header_Block::NAME ) ) {
-			$spec = \DXAI_UI\Chrome\Header_Template::for_post( (int) get_the_ID() );
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Header_Block::NAME ) ) {
+			$spec = \DX_UI\Chrome\Header_Template::for_post( (int) get_the_ID() );
 			if ( null !== $spec ) {
 				$out .= "\n" . (string) ( $spec['markup'] ?? '' );
 			}
 		}
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Footer_Block::NAME ) ) {
-			$out .= "\n" . \DXAI_UI\Chrome\Site_Footer_Block::markup();
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Footer_Block::NAME ) ) {
+			$out .= "\n" . \DX_UI\Chrome\Site_Footer_Block::markup();
 		}
 		if ( ! preg_match_all( '/<!--\s*wp:template-part\s+(\{.*?\})\s*\/?-->/', $content, $matches ) ) {
 			return $out;
@@ -581,7 +581,7 @@ final class Assets {
 				continue;
 			}
 			$slug = sanitize_title( (string) $attrs['slug'] );
-			if ( $slug === '' || ! str_starts_with( $slug, 'dxai-' ) ) {
+			if ( $slug === '' || ! str_starts_with( $slug, 'dxui-' ) ) {
 				continue;
 			}
 			$parts = get_posts(
@@ -608,10 +608,10 @@ final class Assets {
 			return '';
 		}
 		$src = self::lucide_src();
-		wp_enqueue_script( 'dxai-ui-lucide' );
-		wp_add_inline_script( 'dxai-ui-lucide', 'window.dxaiLucideUrl=' . wp_json_encode( $src ) . ';', 'before' );
+		wp_enqueue_script( 'dx-ui-lucide' );
+		wp_add_inline_script( 'dx-ui-lucide', 'window.dxuiLucideUrl=' . wp_json_encode( $src ) . ';', 'before' );
 
-		return 'dxai-ui-lucide';
+		return 'dx-ui-lucide';
 	}
 
 	/**
@@ -633,6 +633,6 @@ final class Assets {
 	 * host refuses to load — the icons would be gone there either way.
 	 */
 	public static function lucide_src(): string {
-		return DXAI_UI_URL . 'assets/vendor/lucide.min.js';
+		return DX_UI_URL . 'assets/vendor/lucide.min.js';
 	}
 }

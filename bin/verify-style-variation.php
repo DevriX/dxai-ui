@@ -12,21 +12,21 @@
  * Against the small Claude Design fixture (.verify/dc-minimal.zip), imported under a name of its own and removed when the suite ends,
  * however it ends; the site's variation and brand design are put back as they were. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Connectors\Dc_Connector;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Design\Document_Store;
-use DXAI_UI\Design\Style_Variation;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Design_Theme_Json;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Connectors\Dc_Connector;
+use DX_UI\Content\Content_Types;
+use DX_UI\Design\Document_Store;
+use DX_UI\Design\Style_Variation;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Design_Theme_Json;
+use DX_UI\Theme\Theme_Palette;
 
 $fail   = 0;
 $pass   = 0;
@@ -70,14 +70,14 @@ $fin       = static function () use ( &$made, &$saved, $max_att, $variation, $br
 	}
 	$home = (int) ( $saved['page_id'] ?? 0 );
 	if ( $home > 0 ) {
-		$file = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] ?? '';
+		$file = Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'] ?? '';
 		if ( is_string( $file ) && $file !== '' && is_file( $file ) ) {
 			wp_delete_file( $file );
 		}
 		foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => Page_Scope::META, 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
-		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
+		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
 		$ids = array_merge(
@@ -89,7 +89,7 @@ $fin       = static function () use ( &$made, &$saved, $max_att, $variation, $br
 		foreach ( array_unique( array_filter( $ids ) ) as $id ) {
 			wp_delete_post( (int) $id, true );
 		}
-		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dxai_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dx_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		foreach ( $new as $id ) {
 			wp_delete_attachment( (int) $id, true );
 		}
@@ -107,7 +107,7 @@ $cap = Capabilities::report();
 $expect( 'the report says what a design needs to know of the theme: whether it is a DX theme, has a theme.json, draws the chrome, its picture block, its button styles, its palette, its sizes, its locations and areas', isset( $cap['theme']['slug'], $cap['theme']['dx'], $cap['theme']['theme_json'], $cap['draws_chrome'], $cap['picture_block'], $cap['button_styles'], $cap['palette'], $cap['layout']['content'], $cap['menu_locations'], $cap['widget_areas'], $cap['styles_writable'] ), wp_json_encode( array_keys( $cap ) ) );
 $expect( 'the picture block is the theme\'s own when it registers one, else core\'s', in_array( Capabilities::picture_block(), array( 'dx/picture', 'core/image' ), true ) && ( \WP_Block_Type_Registry::get_instance()->is_registered( 'dx/picture' ) ? 'dx/picture' : 'core/image' ) === Capabilities::picture_block() );
 $expect( 'the theme\'s palette is slug => hex', array() === array_filter( Capabilities::palette(), static fn( string $hex ): bool => $hex !== '' && preg_match( '/^#[0-9a-fA-F]{6}$/', $hex ) !== 1 ) );
-$expect( 'a team\'s theme is never written into: its styles folder is not writable to the plugin unless the theme is the plugin\'s own', Capabilities::styles_writable() === ( \DXAI_UI\Theme\Base_Theme::is_ours( wp_normalize_path( get_stylesheet_directory() ) ) && wp_is_file_mod_allowed( 'x' ) && Capabilities::has_theme_json() ), get_stylesheet() );
+$expect( 'a team\'s theme is never written into: its styles folder is not writable to the plugin unless the theme is the plugin\'s own', Capabilities::styles_writable() === ( \DX_UI\Theme\Base_Theme::is_ours( wp_normalize_path( get_stylesheet_directory() ) ) && wp_is_file_mod_allowed( 'x' ) && Capabilities::has_theme_json() ), get_stylesheet() );
 $expect( 'the variations a theme lists are its styles/*.json, by file', is_array( Capabilities::variations() ) );
 
 echo "\nThe fixture, imported under a name of its own\n";
@@ -121,7 +121,7 @@ $native                 = ( new Source_Compiler() )->compile( $source );
 $native['block_title']  = 'Style variation fixture ' . $run;
 $native['slug']         = '/svar-fixture-' . $run . '/';
 $native['source_name']  = 'svar-fixture-' . $run . '.zip';
-$native['chrome']       = \DXAI_UI\Chrome\Chrome_Choice::KEEP;
+$native['chrome']       = \DX_UI\Chrome\Chrome_Choice::KEEP;
 $brand_before           = get_option( Design_Theme_Json::OPTION );
 $created                = ( new Structure_Repository() )->save( $native );
 if ( is_wp_error( $created ) ) {
@@ -154,18 +154,18 @@ $expect( 'the slugs are the ones Design_Theme_Json registers for the brand desig
 } )() );
 $expect( 'each slug once', count( $palette ) === count( array_unique( array_column( $palette, 'slug' ) ) ) );
 $fonts = is_array( $v ) ? $v['settings']['typography']['fontFamilies'] : array();
-$expect( 'its fonts are the design\'s, the heading\'s and the body\'s first, by family', count( $fonts ) >= 1 && 'dxai-heading' === ( $fonts[0]['slug'] ?? '' ) && '' !== (string) ( $fonts[0]['name'] ?? '' ), wp_json_encode( $fonts ) );
+$expect( 'its fonts are the design\'s, the heading\'s and the body\'s first, by family', count( $fonts ) >= 1 && 'dxui-heading' === ( $fonts[0]['slug'] ?? '' ) && '' !== (string) ( $fonts[0]['name'] ?? '' ), wp_json_encode( $fonts ) );
 $expect( 'the styles make the design the site\'s: text in its body font, headings in its heading font, buttons in its brand, links in its accent', ( static function () use ( $v ): bool {
 	$s = is_array( $v ) ? $v['styles'] : array();
 
-	return 'var(--wp--preset--font-family--dxai-body)' === ( $s['typography']['fontFamily'] ?? '' )
-		&& 'var(--wp--preset--font-family--dxai-heading)' === ( $s['elements']['heading']['typography']['fontFamily'] ?? '' )
+	return 'var(--wp--preset--font-family--dxui-body)' === ( $s['typography']['fontFamily'] ?? '' )
+		&& 'var(--wp--preset--font-family--dxui-heading)' === ( $s['elements']['heading']['typography']['fontFamily'] ?? '' )
 		&& 'var(--wp--preset--color--brand)' === ( $s['elements']['button']['color']['background'] ?? '' )
 		&& 'var(--wp--preset--color--accent)' === ( $s['elements']['link']['color']['text'] ?? '' );
 } )(), wp_json_encode( is_array( $v ) ? $v['styles'] : null ) );
 $json = Style_Variation::json( $home );
-$expect( 'as JSON it decodes to the same, and the file is named after the design', is_string( $json ) && json_decode( $json, true ) === $v && str_starts_with( Style_Variation::file_name( $home ), 'dxai-style-variation-fixture' ) && str_ends_with( Style_Variation::file_name( $home ), '.json' ), Style_Variation::file_name( $home ) );
-$expect( 'a page that is no design\'s has none', is_wp_error( Style_Variation::build( $plain ) ) && 'dxai_ui_no_document' === Style_Variation::build( $plain )->get_error_code() );
+$expect( 'as JSON it decodes to the same, and the file is named after the design', is_string( $json ) && json_decode( $json, true ) === $v && str_starts_with( Style_Variation::file_name( $home ), 'dxui-style-variation-fixture' ) && str_ends_with( Style_Variation::file_name( $home ), '.json' ), Style_Variation::file_name( $home ) );
+$expect( 'a page that is no design\'s has none', is_wp_error( Style_Variation::build( $plain ) ) && 'dx_ui_no_document' === Style_Variation::build( $plain )->get_error_code() );
 $expect( 'the layout reader knows Tailwind\'s widths', ( static function (): bool {
 	$r = new ReflectionMethod( Style_Variation::class, 'px' );
 	$r->setAccessible( true );
@@ -181,12 +181,12 @@ $fetch = static function ( int $id ): string {
 };
 // The two blocks a brand change rewrites by design: the theme's global styles (presets and styles) and the plugin's own tokens block,
 // which for the brand design refers to the presets instead of writing the hex (Token_Styles::brand_css()) — the same colours either way.
-$without_global = static fn( string $html ): string => (string) preg_replace( '#<style id=[\'"](?:global-styles|dxai-ui-tokens)-inline-css[\'"][^>]*>.*?</style>#s', '', $html );
+$without_global = static fn( string $html ): string => (string) preg_replace( '#<style id=[\'"](?:global-styles|dx-ui-tokens)-inline-css[\'"][^>]*>.*?</style>#s', '', $html );
 $global_of      = static fn( string $html ): string => preg_match( '#<style id=[\'"]global-styles-inline-css[\'"][^>]*>(.*?)</style>#s', $html, $m ) === 1 ? $m[1] : '';
-$tokens_of      = static fn( string $html ): string => preg_match( '#<style id=[\'"]dxai-ui-tokens-inline-css[\'"][^>]*>(.*?)</style>#s', $html, $m ) === 1 ? $m[1] : '';
+$tokens_of      = static fn( string $html ): string => preg_match( '#<style id=[\'"]dx-ui-tokens-inline-css[\'"][^>]*>(.*?)</style>#s', $html, $m ) === 1 ? $m[1] : '';
 $home_before    = $fetch( $home );
 $plain_before   = $fetch( $plain );
-$expect( 'before: nothing of the design in the theme\'s global styles on a plain page', '' !== $plain_before && ! str_contains( $global_of( $plain_before ), '--wp--preset--font-family--dxai-heading' ) );
+$expect( 'before: nothing of the design in the theme\'s global styles on a plain page', '' !== $plain_before && ! str_contains( $global_of( $plain_before ), '--wp--preset--font-family--dxui-heading' ) );
 $applied = Style_Variation::apply( $home );
 $expect( 'apply() keeps the choice and makes the design the brand design', ! is_wp_error( $applied ) && Style_Variation::applied() === $home && (int) ( get_option( Design_Theme_Json::OPTION )['page_id'] ?? 0 ) === $home && true === $applied['applied'], is_wp_error( $applied ) ? $applied->get_error_message() : wp_json_encode( $applied ) );
 Design_Theme_Json::flush();
@@ -206,18 +206,18 @@ foreach ( (array) ( get_post_meta( $home, Token_Styles::META, true )['colors'] ?
 }
 $expect( 'the palette the plugin fits designs to leaves the brand design\'s own presets out, on this theme too (a design is never fitted to itself)', $registered !== array() && array() === array_intersect( $registered, $fitted ) && ( $fitted !== array() || count( $theme_slugs ) === count( $registered ) ), wp_json_encode( array( 'registered' => $registered, 'fitted' => $fitted ) ) );
 $families = array_column( (array) ( wp_get_global_settings( array( 'typography', 'fontFamilies' ) )['theme'] ?? array() ), 'slug' );
-$expect( '…and its fonts', in_array( 'dxai-heading', $families, true ) && in_array( 'dxai-body', $families, true ), wp_json_encode( $families ) );
+$expect( '…and its fonts', in_array( 'dxui-heading', $families, true ) && in_array( 'dxui-body', $families, true ), wp_json_encode( $families ) );
 $sheet = wp_get_global_stylesheet();
-$expect( 'the global stylesheet defines them', str_contains( $sheet, '--wp--preset--color--brand:' ) && str_contains( $sheet, '--wp--preset--font-family--dxai-heading:' ) );
+$expect( 'the global stylesheet defines them', str_contains( $sheet, '--wp--preset--color--brand:' ) && str_contains( $sheet, '--wp--preset--font-family--dxui-heading:' ) );
 $home_after  = $fetch( $home );
 $plain_after = $fetch( $plain );
-$expect( 'a plain page of the site is drawn in the design\'s look: the global styles carry the button in the brand and the heading font', str_contains( $global_of( $plain_after ), '--wp--preset--color--brand' ) && str_contains( $global_of( $plain_after ), 'var(--wp--preset--font-family--dxai-heading)' ), substr( $global_of( $plain_after ), 0, 200 ) );
+$expect( 'a plain page of the site is drawn in the design\'s look: the global styles carry the button in the brand and the heading font', str_contains( $global_of( $plain_after ), '--wp--preset--color--brand' ) && str_contains( $global_of( $plain_after ), 'var(--wp--preset--font-family--dxui-heading)' ), substr( $global_of( $plain_after ), 0, 200 ) );
 $expect( 'the design\'s own page is as it was, byte for byte but for the two blocks a brand change rewrites by design', $home_before !== '' && $without_global( $home_before ) === $without_global( $home_after ), (string) strlen( $without_global( $home_before ) ) . ' vs ' . strlen( $without_global( $home_after ) ) );
 // The slug exactly: the site's brand before the suite may have a `brand-green` of its own (a prefix match once failed this check for that).
 $expect( '…its tokens block now defines the design\'s presets and their classes (the same colours, changeable in one place)', str_contains( $tokens_of( $home_after ), '--wp--preset--color--brand:' ) && str_contains( $tokens_of( $home_after ), 'var(--wp--preset--color--brand)' ) && ! str_contains( $tokens_of( $home_before ), '--wp--preset--color--brand:' ), substr( $tokens_of( $home_after ), 0, 200 ) );
 // (The tokens block may point the design's own font token at the font preset — the same font; that is the brand mechanism, not a style.)
 $rest_of_home = $without_global( $home_after );
-$expect( '…and none of the variation\'s styles is on it: its own rules draw it', ! str_contains( $rest_of_home, 'var(--wp--preset--font-family--dxai-heading)' ) && ! preg_match( '#wp-element-button[^}]*var\(--wp--preset--color--brand\)#', $rest_of_home ) );
+$expect( '…and none of the variation\'s styles is on it: its own rules draw it', ! str_contains( $rest_of_home, 'var(--wp--preset--font-family--dxui-heading)' ) && ! preg_match( '#wp-element-button[^}]*var\(--wp--preset--color--brand\)#', $rest_of_home ) );
 Style_Variation::assume_page( $home );
 $probe = new WP_Theme_JSON_Data( array( 'version' => 3, 'settings' => array( 'color' => array( 'palette' => array( array( 'slug' => 'theme-own', 'name' => 'Own', 'color' => '#123456' ) ) ) ) ), 'theme' );
 $on_design = ( new Style_Variation() )->filter( $probe )->get_data();
@@ -243,12 +243,12 @@ if ( Capabilities::styles_writable() ) {
 		wp_delete_file( $written['path'] );
 	}
 } else {
-	$expect( 'the theme is a team\'s: nothing is written into it, and the answer says so', is_wp_error( $written ) && 'dxai_ui_variation_not_ours' === $written->get_error_code(), is_wp_error( $written ) ? '' : wp_json_encode( $written ) );
+	$expect( 'the theme is a team\'s: nothing is written into it, and the answer says so', is_wp_error( $written ) && 'dx_ui_variation_not_ours' === $written->get_error_code(), is_wp_error( $written ) ? '' : wp_json_encode( $written ) );
 }
-$tmp_dir = wp_normalize_path( get_temp_dir() ) . 'dxai-svar-' . $run;
+$tmp_dir = wp_normalize_path( get_temp_dir() ) . 'dxui-svar-' . $run;
 $to      = Style_Variation::write_to( $home, $tmp_dir );
 $expect( 'the writer writes the JSON as the file, where it is told to', ! is_wp_error( $to ) && is_file( $to['path'] ) && file_get_contents( $to['path'] ) === $json && basename( $to['path'] ) === Style_Variation::file_name( $home ), is_wp_error( $to ) ? $to->get_error_message() : '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-$ns   = DXAI_UI_REST_NAMESPACE;
+$ns   = DX_UI_REST_NAMESPACE;
 $rest = static function ( string $method, int $id, array $params = array() ) use ( $ns ): array {
 	$request = new WP_REST_Request( $method, '/' . $ns . '/design/' . $id . '/variation' );
 	foreach ( $params as $key => $value ) {
@@ -289,7 +289,7 @@ Style_Variation::clear();
 Design_Theme_Json::flush();
 $expect( 'clear(): the choice is gone; the brand design stays what it was made', 0 === Style_Variation::applied() && (int) ( get_option( Design_Theme_Json::OPTION )['page_id'] ?? 0 ) === $home );
 $families = array_column( (array) ( wp_get_global_settings( array( 'typography', 'fontFamilies' ) )['theme'] ?? array() ), 'slug' );
-$expect( '…and the design\'s fonts are out of theme.json again', ! in_array( 'dxai-heading', $families, true ) );
+$expect( '…and the design\'s fonts are out of theme.json again', ! in_array( 'dxui-heading', $families, true ) );
 wp_delete_post( $home, true );
 $expect( 'a design that is gone takes its variation with it', ( static function () use ( $home ): bool {
 	update_option( Style_Variation::OPTION, array( 'design' => $home, 'at' => 'x' ), false );

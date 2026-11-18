@@ -12,15 +12,15 @@
  *
  * usage: bin/wp-php.sh bin/zip-router.php [zip-dir]
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Connectors\Zip_Router;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Connectors\Zip_Router;
 
 $fails = 0;
 $ran   = 0;

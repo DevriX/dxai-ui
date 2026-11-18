@@ -2,12 +2,12 @@
 /**
  * Model-written block markup, made to match what each block's save() writes.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * The shapes a language model writes that the block editor refuses to open.
@@ -36,13 +36,13 @@ namespace DXAI_UI\Compiler;
  *     always writes;
  *   - a core/list whose `<li>` rows are raw HTML rather than core/list-item
  *     blocks (2), the pre-6.1 list shape;
- *   - a core/group root carrying `data-screen-label` with no `dxaiData`
+ *   - a core/group root carrying `data-screen-label` with no `dxuiData`
  *     attribute to hold it (1);
- *   - dxai-ui/form, a dynamic block whose save() returns null, stored with
+ *   - dx-ui/form, a dynamic block whose save() returns null, stored with
  *     markup inside it (2);
- *   - dxai-ui/image whose `alt` attribute and HTML alt disagree (1);
+ *   - dx-ui/image whose `alt` attribute and HTML alt disagree (1);
  *   - core/image (3), core/columns (1) and core/column (2) carrying
- *     `dxaiStyle`, which the editor registers only on paragraph, heading,
+ *     `dxuiStyle`, which the editor registers only on paragraph, heading,
  *     group, list and list-item — so for these three it is dropped on parse
  *     and save() writes none of that CSS.
  * The deprecation-less validator also flags the headings and the raw-`<li>`
@@ -62,7 +62,7 @@ namespace DXAI_UI\Compiler;
  * are served — a static block renders its stored HTML — and moves the
  * block's attributes to match it, or rewrites the HTML only into an
  * equivalent spelling. Equivalent means on the page these blocks are
- * actually served on: Site_From_Menu puts every crawled page on the DXAI
+ * actually served on: Site_From_Menu puts every crawled page on the DXUI
  * blank template, which dequeues the `global-styles` sheet and so every
  * base layout rule (`body .is-layout-flex { display: flex }` among them)
  * while still printing the palette's `.has-{slug}-color` classes. Where
@@ -79,8 +79,8 @@ final class Block_Normalizer {
 
 	/**
 	 * Blocks whose save() writes a raw payload. For core/html and
-	 * dxai-ui/html the payload IS the stored markup, so a comment in it is
-	 * content the block reproduces; dxai-ui/svg writes `svgInner` verbatim,
+	 * dx-ui/html the payload IS the stored markup, so a comment in it is
+	 * content the block reproduces; dx-ui/svg writes `svgInner` verbatim,
 	 * so a comment there is in the attribute as well, and removing only the
 	 * HTML copy would break a valid block. The rest keep their text as text.
 	 */
@@ -91,8 +91,8 @@ final class Block_Normalizer {
 		'core/code',
 		'core/preformatted',
 		'core/verse',
-		'dxai-ui/html',
-		'dxai-ui/svg',
+		'dx-ui/html',
+		'dx-ui/svg',
 	);
 
 	/** The class core's save() generates, and the root tags it can go on. */
@@ -103,15 +103,15 @@ final class Block_Normalizer {
 
 	/**
 	 * Dynamic blocks whose editor save() returns null (assets/js/blocks-editor.js
-	 * registers dxai-ui/form with `save: function () { return null; }`), so the
+	 * registers dx-ui/form with `save: function () { return null; }`), so the
 	 * only markup that validates is none at all.
 	 */
-	private const VOID_BLOCKS = array( 'dxai-ui/form' );
+	private const VOID_BLOCKS = array( 'dx-ui/form' );
 
 	/**
-	 * Blocks the editor gives a `dxaiData` attribute and whose save() writes
-	 * each `data-` key of it back onto the root (the dxai-ui/group-a11y and
-	 * dxai-ui/list-item-data filters in assets/js/blocks-editor.js).
+	 * Blocks the editor gives a `dxuiData` attribute and whose save() writes
+	 * each `data-` key of it back onto the root (the dx-ui/group-a11y and
+	 * dx-ui/list-item-data filters in assets/js/blocks-editor.js).
 	 */
 	private const DATA_BLOCKS = array( 'core/group', 'core/list', 'core/list-item' );
 
@@ -224,7 +224,7 @@ final class Block_Normalizer {
 		}
 
 		switch ( $name ) {
-			case 'dxai-ui/image':
+			case 'dx-ui/image':
 				return self::image_alt( $block, $changed );
 			case 'core/image':
 				return self::core_image( $block, $changed );
@@ -388,8 +388,8 @@ final class Block_Normalizer {
 	 * is laid out by, the first time anyone saved the page.
 	 *
 	 * Each row becomes the list-item block whose save() writes that same
-	 * `<li>`: its `style` as `dxaiStyle`, its `class` as `className`, its
-	 * `data-*` as `dxaiData` (all three registered on core/list-item by
+	 * `<li>`: its `style` as `dxuiStyle`, its `class` as `className`, its
+	 * `data-*` as `dxuiData` (all three registered on core/list-item by
 	 * assets/js/blocks-editor.js, and the shape Html_To_Blocks already writes),
 	 * its `id` read back by the anchor support. The row's HTML is kept
 	 * verbatim as the item's own markup and the whitespace between rows stays
@@ -475,7 +475,7 @@ final class Block_Normalizer {
 				return null;
 			}
 			if ( $name === 'style' ) {
-				$attrs['dxaiStyle'] = $value;
+				$attrs['dxuiStyle'] = $value;
 			} elseif ( $name === 'class' ) {
 				$attrs['className'] = trim( (string) preg_replace( '/\s+/', ' ', $value ) );
 			} else {
@@ -483,17 +483,17 @@ final class Block_Normalizer {
 			}
 		}
 		if ( $data !== array() ) {
-			$attrs['dxaiData'] = $data;
+			$attrs['dxuiData'] = $data;
 		}
 
 		return $attrs;
 	}
 
 	/**
-	 * A root's data-* attributes, kept in `dxaiData`.
+	 * A root's data-* attributes, kept in `dxuiData`.
 	 *
 	 * For core/group, core/list and core/list-item the editor registers
-	 * `dxaiData` and save() writes each `data-` key of it back onto the root,
+	 * `dxuiData` and save() writes each `data-` key of it back onto the root,
 	 * and nothing else writes a data attribute there. A root that carries
 	 * `data-screen-label` with no attribute to hold it therefore saves
 	 * without it, and one whose attribute names a key the HTML lacks saves
@@ -513,7 +513,7 @@ final class Block_Normalizer {
 		if ( ! $p->next_tag() ) {
 			return $block;
 		}
-		$data = is_array( $block['attrs']['dxaiData'] ?? null ) ? $block['attrs']['dxaiData'] : array();
+		$data = is_array( $block['attrs']['dxuiData'] ?? null ) ? $block['attrs']['dxuiData'] : array();
 		$want = array();
 		foreach ( $data as $key => $value ) {
 			if ( ! str_starts_with( (string) $key, 'data-' ) ) {
@@ -532,9 +532,9 @@ final class Block_Normalizer {
 			return $block;
 		}
 		if ( $want === array() ) {
-			unset( $block['attrs']['dxaiData'] );
+			unset( $block['attrs']['dxuiData'] );
 		} else {
-			$block['attrs']['dxaiData'] = $want;
+			$block['attrs']['dxuiData'] = $want;
 		}
 		$changed = true;
 
@@ -542,9 +542,9 @@ final class Block_Normalizer {
 	}
 
 	/**
-	 * dxai-ui/image's `alt` attribute, set to the alt its HTML carries.
+	 * dx-ui/image's `alt` attribute, set to the alt its HTML carries.
 	 *
-	 * save() writes the attribute (dxaiImageProps() in blocks-editor.js); the
+	 * save() writes the attribute (dxuiImageProps() in blocks-editor.js); the
 	 * block is static, so what visitors get is the stored HTML. The model wrote
 	 * two different texts — a long alt in the attribute, a short one in the
 	 * tag — and the one being served is the tag's, so that is the one kept.
@@ -591,13 +591,13 @@ final class Block_Normalizer {
 	/**
 	 * A dynamic block whose save() returns null, stored with no markup.
 	 *
-	 * dxai-ui/form's render callback (Form_Block::render()) builds the form
+	 * dx-ui/form's render callback (Form_Block::render()) builds the form
 	 * from `fields`, `submitLabel`, `successMessage` and `className`, and
 	 * unsets the stored content before it does anything — so the wrapper the
 	 * model wrote (`<div id="lead-form" style="…">`, a comment inside) has
 	 * never reached a visitor, and emptying it changes nothing on the front
 	 * end. Attributes the block type does not register (`formId`,
-	 * `dxaiStyle`) are read by nothing, on either side, and go with it; the
+	 * `dxuiStyle`) are read by nothing, on either side, and go with it; the
 	 * PHP and editor registrations list the same four, so the form itself
 	 * cannot be lost. When the block type is not registered yet (called
 	 * before `init`) every attribute is kept, since there is then nothing to
@@ -625,16 +625,16 @@ final class Block_Normalizer {
 	}
 
 	/**
-	 * core/image with `dxaiStyle` or an id its <img> does not claim, moved
+	 * core/image with `dxuiStyle` or an id its <img> does not claim, moved
 	 * onto core/image's own attributes.
 	 *
 	 * The shape measured, three times on one page:
 	 *
-	 *   {"id":1,"sizeSlug":"large","dxaiStyle":"margin:0;padding:0"}
+	 *   {"id":1,"sizeSlug":"large","dxuiStyle":"margin:0;padding:0"}
 	 *   <figure class="wp-block-image size-large" style="margin:0;padding:0">
 	 *     <img src="…" alt="…" style="width:100%;height:180px;object-fit:cover;display:block"/>
 	 *
-	 * The editor drops `dxaiStyle` (not registered for core/image), so save()
+	 * The editor drops `dxuiStyle` (not registered for core/image), so save()
 	 * wrote no figure style, a `wp-image-1` class the <img> does not have, and
 	 * no img style. Every declaration here has a registered home that renders
 	 * the same thing, which is why this moves them rather than deleting them:
@@ -684,7 +684,7 @@ final class Block_Normalizer {
 		}
 		$img_classes = self::classes( $p );
 		$fake_id     = $id > 0 && ! in_array( 'wp-image-' . $id, $img_classes, true );
-		if ( ! array_key_exists( 'dxaiStyle', $attrs ) && ! $fake_id ) {
+		if ( ! array_key_exists( 'dxuiStyle', $attrs ) && ! $fake_id ) {
 			return $block;
 		}
 		foreach ( array( 'style', 'borderColor', 'focalPoint', 'shadow' ) as $key ) {
@@ -762,7 +762,7 @@ final class Block_Normalizer {
 		}
 
 		// The attributes, as the HTML says they are.
-		unset( $attrs['dxaiStyle'] );
+		unset( $attrs['dxuiStyle'] );
 		if ( $fake_id ) {
 			unset( $attrs['id'] );
 		}
@@ -831,7 +831,7 @@ final class Block_Normalizer {
 	}
 
 	/**
-	 * core/columns with `dxaiStyle`, moved onto core/columns' own attributes.
+	 * core/columns with `dxuiStyle`, moved onto core/columns' own attributes.
 	 *
 	 * save() writes no style="" on core/columns at all, so the measured
 	 * `gap:32px;align-items:flex-start` made the block invalid. Both have a
@@ -858,7 +858,7 @@ final class Block_Normalizer {
 	 */
 	private static function columns( array $block, bool &$changed ): array {
 		$attrs = $block['attrs'];
-		if ( ! array_key_exists( 'dxaiStyle', $attrs ) || self::has_unmodeled( $attrs ) ) {
+		if ( ! array_key_exists( 'dxuiStyle', $attrs ) || self::has_unmodeled( $attrs ) ) {
 			return $block;
 		}
 		$n = self::root_index( $block );
@@ -895,7 +895,7 @@ final class Block_Normalizer {
 			return $block;
 		}
 
-		unset( $attrs['dxaiStyle'] );
+		unset( $attrs['dxuiStyle'] );
 		if ( $align !== null ) {
 			$attrs['verticalAlignment'] = $align;
 		}
@@ -916,7 +916,7 @@ final class Block_Normalizer {
 	}
 
 	/**
-	 * core/column with `dxaiStyle`, moved onto core/column's own supports.
+	 * core/column with `dxuiStyle`, moved onto core/column's own supports.
 	 *
 	 * save() writes `flex-basis` from `width` and nothing else of the CSS, so
 	 * the measured card column was invalid:
@@ -956,7 +956,7 @@ final class Block_Normalizer {
 	 */
 	private static function column( array $block, bool &$changed ): array {
 		$attrs = $block['attrs'];
-		if ( ! array_key_exists( 'dxaiStyle', $attrs ) || self::has_unmodeled( $attrs ) ) {
+		if ( ! array_key_exists( 'dxuiStyle', $attrs ) || self::has_unmodeled( $attrs ) ) {
 			return $block;
 		}
 		$n = self::root_index( $block );
@@ -1084,7 +1084,7 @@ final class Block_Normalizer {
 				$style['spacing']['padding'][ $side ] = $padding[ $side ];
 			}
 		}
-		unset( $attrs['dxaiStyle'] );
+		unset( $attrs['dxuiStyle'] );
 		if ( $style !== array() ) {
 			$attrs['style'] = $style;
 		}
@@ -1174,7 +1174,7 @@ final class Block_Normalizer {
 	 * Only a value core will print. wp_render_layout_support_flag() nulls a
 	 * gap that fails safecss's value test — anything with `(`, `\`, `&`,
 	 * `=`, `}` or `/*` — so `clamp(24px,3vw,40px)`, `calc()`, `min()`,
-	 * `max()` and `var(--dxai-…)` would come out as no gap at all, after the
+	 * `max()` and `var(--dxui-…)` would come out as no gap at all, after the
 	 * inline one was removed. Those stay inline (null: block unchanged). A
 	 * spacing preset is the exception: `var(--wp--preset--spacing--50)` is
 	 * written the way core stores it, `var:preset|spacing|50`, which passes.
@@ -1320,7 +1320,7 @@ final class Block_Normalizer {
 
 	/**
 	 * One colour value: hex, rgb()/hsl(), a custom property (the design
-	 * tokens are `var(--dxai-…)`), or a named colour. Never a keyword that
+	 * tokens are `var(--dxui-…)`), or a named colour. Never a keyword that
 	 * resets, and never anything with a space in it — `background:#fff url(…)`
 	 * is an image, not a colour.
 	 */

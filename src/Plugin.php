@@ -2,27 +2,27 @@
 /**
  * Plugin bootstrap.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI;
+namespace DX_UI;
 
-use DXAI_UI\Admin\Dashboard;
-use DXAI_UI\API\Rest_Registrar;
-use DXAI_UI\Blocks\Assets;
-use DXAI_UI\Blocks\Design_Blocks;
-use DXAI_UI\Blocks\Form_Block;
-use DXAI_UI\Blocks\Pattern_Block;
-use DXAI_UI\Blocks\Slider_Block;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Settings\Options;
-use DXAI_UI\Theme\Blank_Template;
-use DXAI_UI\Theme\Design_Theme_Json;
-use DXAI_UI\Theme\Part_Theme_Binding;
-use DXAI_UI\Support\Kses_Styles;
-use DXAI_UI\Support\Style_Repair;
+use DX_UI\Admin\Dashboard;
+use DX_UI\API\Rest_Registrar;
+use DX_UI\Blocks\Assets;
+use DX_UI\Blocks\Design_Blocks;
+use DX_UI\Blocks\Form_Block;
+use DX_UI\Blocks\Pattern_Block;
+use DX_UI\Blocks\Slider_Block;
+use DX_UI\Content\Content_Types;
+use DX_UI\Settings\Options;
+use DX_UI\Theme\Blank_Template;
+use DX_UI\Theme\Design_Theme_Json;
+use DX_UI\Theme\Part_Theme_Binding;
+use DX_UI\Support\Kses_Styles;
+use DX_UI\Support\Style_Repair;
 
 final class Plugin {
 
@@ -37,20 +37,20 @@ final class Plugin {
 	}
 
 	public function boot(): void {
-		load_plugin_textdomain( 'dxai-ui', false, dirname( plugin_basename( DXAI_UI_FILE ) ) . '/languages' );
+		load_plugin_textdomain( 'dx-ui', false, dirname( plugin_basename( DX_UI_FILE ) ) . '/languages' );
 
 		// Deactivated, but booted by the must-use runtime to keep converted pages
 		// rendering (Support\Runtime): the admin screens, imports, the crawl, the
 		// repair batch and export/import stay off; whatever draws a converted page
 		// and keeps its forms working boots as usual.
-		$render_only = \DXAI_UI\Support\Runtime::render_only();
+		$render_only = \DX_UI\Support\Runtime::render_only();
 
 		( new Options() )->register();
 		( new Content_Types() )->register();
 		if ( ! $render_only ) {
 			( new Dashboard() )->register();
-			( new \DXAI_UI\Network\Copies_Editor() )->register();
-			\DXAI_UI\Network\Site_Review::register();
+			( new \DX_UI\Network\Copies_Editor() )->register();
+			\DX_UI\Network\Site_Review::register();
 		}
 		( new Rest_Registrar() )->register();
 		( new Assets() )->register();
@@ -59,20 +59,20 @@ final class Plugin {
 		( new Form_Block() )->register();
 		( new Slider_Block() )->register();
 		// The script and styles of a YouTube facade, on the pages whose theme does not bring them (a converted page, another theme).
-		( new \DXAI_UI\Blocks\Youtube_Facade_View() )->register();
+		( new \DX_UI\Blocks\Youtube_Facade_View() )->register();
 		// The styles and script of the team's own sections (the library of the pages made from a Home), on the pages whose theme does not bring them.
-		( new \DXAI_UI\Blocks\Library_View() )->register();
+		( new \DX_UI\Blocks\Library_View() )->register();
 		// A design's states as Interactivity API directives (the `interactivity` setting; on unless turned off).
-		( new \DXAI_UI\Blocks\Interactivity() )->register();
+		( new \DX_UI\Blocks\Interactivity() )->register();
 		// A design's page in the editor without its wrapper groups: folded when the editor opens it, unfolded when it saves.
-		( new \DXAI_UI\Blocks\Wrap_Fold() )->register();
+		( new \DX_UI\Blocks\Wrap_Fold() )->register();
 		// …and the same sections in the editor's inserter, made for the site they are inserted on.
-		( new \DXAI_UI\Pages\Library_Patterns() )->register();
+		( new \DX_UI\Pages\Library_Patterns() )->register();
 		( new Blank_Template() )->register();
 		// The imported design's tokens as editable global-styles presets.
 		( new Design_Theme_Json() )->register();
 		// A design's tokens as a theme.json style variation, the site's when a person applies it (docs/PLAN-ARCHITECTURE.md, phase 2).
-		( new \DXAI_UI\Design\Style_Variation() )->register();
+		( new \DX_UI\Design\Style_Variation() )->register();
 		( new Part_Theme_Binding() )->register();
 		( new Kses_Styles() )->register();
 		if ( ! $render_only ) {
@@ -80,75 +80,75 @@ final class Plugin {
 		}
 		// The site-from-menu crawl as a stepped job (and its cron fallback).
 		if ( ! $render_only ) {
-			( new \DXAI_UI\Structures\Crawl_Job() )->register();
+			( new \DX_UI\Structures\Crawl_Job() )->register();
 		}
 		// The design's scope element around a page's top-level sections.
-		( new \DXAI_UI\Structures\Page_Scope() )->register();
+		( new \DX_UI\Structures\Page_Scope() )->register();
 		// The design an ordinary page shows when it holds blocks copied from a design page.
-		( new \DXAI_UI\Structures\Design_Attach() )->register();
+		( new \DX_UI\Structures\Design_Attach() )->register();
 		// …and on such a page of the theme: the theme's CSS kept off the copied sections, and what their design
 		// page gives them (the inherited-value reset, the canvas rules, tokens, the web fonts from uploads).
-		( new \DXAI_UI\Theme\Theme_Fence() )->register();
+		( new \DX_UI\Theme\Theme_Fence() )->register();
 		// A page of the design on a theme that prints its whole stylesheet inline: only the part the page can use.
-		( new \DXAI_UI\Theme\Theme_Trim() )->register();
+		( new \DX_UI\Theme\Theme_Trim() )->register();
 		// A design's pages described for search engines, unless an SEO plugin does it (T5.4 of docs/PLAN-PERFECT-PAGES.md).
-		( new \DXAI_UI\Seo\Page_Meta() )->register();
+		( new \DX_UI\Seo\Page_Meta() )->register();
 		// A design's links where the site is: under its folder on a network in folders, and to the Home's sections from the other pages.
-		( new \DXAI_UI\Chrome\Site_Links() )->register();
+		( new \DX_UI\Chrome\Site_Links() )->register();
 		// …and their markup as assistive technology reads it: no stray attributes, nothing hidden in the Tab order, names that hold their words (T5.5).
-		( new \DXAI_UI\Seo\Accessible_Markup() )->register();
+		( new \DX_UI\Seo\Accessible_Markup() )->register();
 		// The picture a design's page opens on (behind its first section), asked for with the HTML (T5.1).
-		( new \DXAI_UI\Media\Lcp_Preload() )->register();
+		( new \DX_UI\Media\Lcp_Preload() )->register();
 		// …and what is below its first screen lazy, with no picture there taking the high priority (T5.1).
-		( new \DXAI_UI\Media\Image_Loading() )->register();
+		( new \DX_UI\Media\Image_Loading() )->register();
 		// …and the pictures of its own blocks named after their attachment, so WordPress writes their sizes (T5.1).
-		( new \DXAI_UI\Media\Image_Sizes() )->register();
+		( new \DX_UI\Media\Image_Sizes() )->register();
 		// The sizes of a design's photographs, when the request that imported them ran long, written by cron (T5.1).
-		( new \DXAI_UI\Media\Image_Quality() )->register();
+		( new \DX_UI\Media\Image_Quality() )->register();
 		// …and the sizes of the pictures an import in rounds added without them, by cron when no import screen makes them.
-		( new \DXAI_UI\Media\Pending_Sizes() )->register();
+		( new \DX_UI\Media\Pending_Sizes() )->register();
 		// A design's web fonts asked for once its page has loaded, drawn in their fallback faces until then (T5.2).
-		( new \DXAI_UI\Media\Late_Fonts() )->register();
+		( new \DX_UI\Media\Late_Fonts() )->register();
 		// The plugin's small stylesheets written into the page, as WordPress writes its own (T5.3).
-		( new \DXAI_UI\Media\Inline_Styles() )->register();
+		( new \DX_UI\Media\Inline_Styles() )->register();
 		// The pages made for a design carry a key, so an import of another design never takes them.
 		if ( ! $render_only ) {
-			add_action( 'admin_init', array( \DXAI_UI\Pages\Team_Pages::class, 'upgrade' ), 42 );
+			add_action( 'admin_init', array( \DX_UI\Pages\Team_Pages::class, 'upgrade' ), 42 );
 			// … and wear the Home's header and footer as the Home has them: when the Home changes them, they change.
-			( new \DXAI_UI\Pages\Team_Chrome() )->register();
+			( new \DX_UI\Pages\Team_Chrome() )->register();
 		}
 		// A design's colours following the active theme's (the rule itself is applied in both modes, by Token_Styles).
 		if ( ! $render_only ) {
-			( new \DXAI_UI\Theme\Theme_Binding() )->register();
+			( new \DX_UI\Theme\Theme_Binding() )->register();
 		}
 		// A theme that lets the site choose its fonts: the design is drawn in them, and its own are put away (Theme_Fonts).
-		( new \DXAI_UI\Theme\Theme_Fonts() )->register();
+		( new \DX_UI\Theme\Theme_Fonts() )->register();
 		// A design installed as the site's template brings its fonts, hosted here: they stand in for the theme's choice (Template_Fonts).
-		( new \DXAI_UI\Theme\Template_Fonts() )->register();
+		( new \DX_UI\Theme\Template_Fonts() )->register();
 		// The DX Base theme the plugin carries, listed from the plugin when the themes folder cannot be written (Base_Theme).
-		( new \DXAI_UI\Theme\Base_Theme() )->register();
-		( new \DXAI_UI\Blocks\Attached_Styles() )->register();
+		( new \DX_UI\Theme\Base_Theme() )->register();
+		( new \DX_UI\Blocks\Attached_Styles() )->register();
 		// The design's web fonts from this site's uploads: the copy, and the cron that finishes it.
-		( new \DXAI_UI\Media\Font_Host() )->register();
+		( new \DX_UI\Media\Font_Host() )->register();
 		// "Edit header" / "Edit footer" in the admin bar on converted pages.
 		if ( ! $render_only ) {
-			( new \DXAI_UI\Admin\Part_Shortcuts() )->register();
+			( new \DX_UI\Admin\Part_Shortcuts() )->register();
 		}
 		// The rules for the dxs- classes that replace inline styles.
-		( new \DXAI_UI\Blocks\Style_Rules() )->register();
+		( new \DX_UI\Blocks\Style_Rules() )->register();
 		// Header from Appearance > Menus, footer from Appearance > Widgets.
-		( new \DXAI_UI\Chrome\Chrome() )->register();
+		( new \DX_UI\Chrome\Chrome() )->register();
 		// Converted pages on a classic theme (the DevriX themes): no theme CSS/JS, no script delay, a <title>.
-		( new \DXAI_UI\Theme\Theme_Compat() )->register();
+		( new \DX_UI\Theme\Theme_Compat() )->register();
 		// Export a page with its styles / import a package (Pages row action, admin-post, WP-CLI).
 		if ( ! $render_only ) {
-			( new \DXAI_UI\Transfer\Transfer_Admin() )->register();
+			( new \DX_UI\Transfer\Transfer_Admin() )->register();
 		}
 		// The must-use loader that does the above while the plugin is deactivated.
-		( new \DXAI_UI\Support\Runtime() )->register();
+		( new \DX_UI\Support\Runtime() )->register();
 		// New versions in Dashboard › Updates, from the plugin's GitHub releases (the header's Update URI).
 		if ( ! $render_only ) {
-			( new \DXAI_UI\Update\Github_Updater() )->register();
+			( new \DX_UI\Update\Github_Updater() )->register();
 		}
 		add_filter( 'pre_get_document_title', array( $this, 'document_title' ), 20 );
 	}
@@ -161,7 +161,7 @@ final class Plugin {
 		if ( ! is_singular() ) {
 			return $title;
 		}
-		$seo = (string) get_post_meta( (int) get_the_ID(), \DXAI_UI\Support\Page_Title::SEO_META, true );
+		$seo = (string) get_post_meta( (int) get_the_ID(), \DX_UI\Support\Page_Title::SEO_META, true );
 		return $seo !== '' ? $seo : $title;
 	}
 
@@ -170,7 +170,7 @@ final class Plugin {
 	 */
 	public static function activate( bool $network_wide = false ): void {
 		if ( version_compare( PHP_VERSION, '8.2.0', '<' ) ) {
-			self::refuse_activation( esc_html__( 'DX UI requires PHP 8.2 or higher.', 'dxai-ui' ), $network_wide );
+			self::refuse_activation( esc_html__( 'DX UI requires PHP 8.2 or higher.', 'dx-ui' ), $network_wide );
 			return;
 		}
 
@@ -178,7 +178,7 @@ final class Plugin {
 		// The oldest WordPress the plugin supports, as its header and readme say: 6.6 registers the
 		// react-jsx-runtime script the admin screens are built against.
 		if ( version_compare( (string) $wp_version, '6.6', '<' ) ) {
-			self::refuse_activation( esc_html__( 'DX UI requires WordPress 6.6 or higher.', 'dxai-ui' ), $network_wide );
+			self::refuse_activation( esc_html__( 'DX UI requires WordPress 6.6 or higher.', 'dx-ui' ), $network_wide );
 			return;
 		}
 
@@ -188,7 +188,7 @@ final class Plugin {
 				esc_html(
 					sprintf(
 						/* translators: %s: comma-separated PHP extension names. */
-						__( 'DX UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again.', 'dxai-ui' ),
+						__( 'DX UI needs these PHP extensions, which this server does not load: %s. Ask your host to enable them, then activate the plugin again.', 'dx-ui' ),
 						implode( ', ', $missing )
 					)
 				),
@@ -202,7 +202,7 @@ final class Plugin {
 		 *
 		 * Nothing here is a hard prerequisite of a site working, which is what
 		 * makes the bound safe: Options::get() merges the defaults over
-		 * whatever is stored, and Zip_Extractor writes uploads/dxai-ui/index.php
+		 * whatever is stored, and Zip_Extractor writes uploads/dx-ui/index.php
 		 * itself before it first unpacks there. So a site past the bound, or
 		 * one created after the network activation, behaves the same - it just
 		 * has no stored defaults row until its settings are saved. The bound
@@ -216,25 +216,25 @@ final class Plugin {
 		 * 'rewrite' => false (Content_Types::post_types()).
 		 */
 		if ( $network_wide && is_multisite() ) {
-			// `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
+			// `dx_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 			$sites = get_sites(
 				array(
 					'fields'     => 'ids',
-					'number'     => max( 1, (int) apply_filters( 'dxai_ui_network_activation_sites', 500 ) ),
+					'number'     => max( 1, (int) apply_filters( 'dx_ui_network_activation_sites', 500 ) ),
 					'network_id' => get_current_network_id(),
 				)
 			);
 			foreach ( $sites as $site_id ) {
 				switch_to_blog( (int) $site_id );
 				self::install_site();
-				\DXAI_UI\Support\Runtime::ensure( true );
+				\DX_UI\Support\Runtime::ensure( true );
 				restore_current_blog();
 			}
 			return;
 		}
 
 		self::install_site();
-		\DXAI_UI\Support\Runtime::ensure( true );
+		\DX_UI\Support\Runtime::ensure( true );
 
 		$types = new Content_Types();
 		$types->post_types();
@@ -257,7 +257,7 @@ final class Plugin {
 		if ( ! empty( $upload['error'] ) ) {
 			return;
 		}
-		$dir = trailingslashit( $upload['basedir'] ) . \DXAI_UI\Support\Upload_Paths::DIR;
+		$dir = trailingslashit( $upload['basedir'] ) . \DX_UI\Support\Upload_Paths::DIR;
 		wp_mkdir_p( $dir );
 		if ( is_dir( $dir ) && ! file_exists( $dir . '/index.php' ) ) {
 			file_put_contents( $dir . '/index.php', "<?php // Silence is golden.\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
@@ -306,17 +306,17 @@ final class Plugin {
 		if ( ! function_exists( 'deactivate_plugins' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		deactivate_plugins( plugin_basename( DXAI_UI_FILE ), false, $network_wide ? true : null );
+		deactivate_plugins( plugin_basename( DX_UI_FILE ), false, $network_wide ? true : null );
 		wp_die(
 			$message, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the caller.
-			esc_html__( 'DX UI could not be activated', 'dxai-ui' ),
+			esc_html__( 'DX UI could not be activated', 'dx-ui' ),
 			array( 'back_link' => true )
 		);
 	}
 
 	/**
 	 * Undo what runs on its own: the rewrite rules, and the crawl job's cron
-	 * fallback. Crawl_Job clears a job's `dxai_ui_crawl_tick` event when the
+	 * fallback. Crawl_Job clears a job's `dx_ui_crawl_tick` event when the
 	 * job finishes or is abandoned, and neither can happen once the plugin is
 	 * inactive - so on a host with DISABLE_WP_CRON and no system cron the
 	 * event would sit in the autoloaded `cron` option for good. A job left
@@ -328,21 +328,21 @@ final class Plugin {
 	 */
 	public static function deactivate( bool $network_wide = false ): void {
 		if ( $network_wide && is_multisite() ) {
-			// `dxai_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
+			// `dx_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 			$sites = get_sites(
 				array(
 					'fields'     => 'ids',
-					'number'     => max( 1, (int) apply_filters( 'dxai_ui_network_activation_sites', 500 ) ),
+					'number'     => max( 1, (int) apply_filters( 'dx_ui_network_activation_sites', 500 ) ),
 					'network_id' => get_current_network_id(),
 				)
 			);
 			foreach ( $sites as $site_id ) {
 				switch_to_blog( (int) $site_id );
-				wp_unschedule_hook( \DXAI_UI\Structures\Crawl_Job::CRON_HOOK );
+				wp_unschedule_hook( \DX_UI\Structures\Crawl_Job::CRON_HOOK );
 				restore_current_blog();
 			}
 		} else {
-			wp_unschedule_hook( \DXAI_UI\Structures\Crawl_Job::CRON_HOOK );
+			wp_unschedule_hook( \DX_UI\Structures\Crawl_Job::CRON_HOOK );
 		}
 		flush_rewrite_rules( false );
 	}

@@ -13,12 +13,12 @@
  * aria-hidden icon or check mark, the +/− of a disclosure) are kept byte for
  * byte, and only the content between them changes.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 final class Block_Tree {
 
@@ -88,7 +88,7 @@ final class Block_Tree {
 		$tail = substr( (string) $block['innerHTML'], strlen( rtrim( (string) $block['innerHTML'] ) ) );
 		$block['innerHTML']    = $lead . $new . $tail;
 		$block['innerContent'] = array( $block['innerHTML'] );
-		if ( ( $block['blockName'] ?? '' ) === 'dxai-ui/link' && array_key_exists( 'text', (array) $block['attrs'] ) ) {
+		if ( ( $block['blockName'] ?? '' ) === 'dx-ui/link' && array_key_exists( 'text', (array) $block['attrs'] ) ) {
 			$block['attrs']['text'] = html_entity_decode( wp_strip_all_tags( $html ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 		}
 	}
@@ -300,7 +300,7 @@ final class Block_Tree {
 	/**
 	 * Point a link block at $url, and when it has no inner blocks, give it $text.
 	 *
-	 * @param array<string, mixed> $block dxai-ui/link or core/button.
+	 * @param array<string, mixed> $block dx-ui/link or core/button.
 	 */
 	public static function set_link( array &$block, string $url, ?string $text = null ): void {
 		$name = (string) ( $block['blockName'] ?? '' );
@@ -321,7 +321,7 @@ final class Block_Tree {
 				break; // the opening <a> is in the first string
 			}
 		}
-		if ( $name === 'dxai-ui/link' || array_key_exists( 'url', (array) $block['attrs'] ) ) {
+		if ( $name === 'dx-ui/link' || array_key_exists( 'url', (array) $block['attrs'] ) ) {
 			$block['attrs']['url'] = $url;
 		}
 		if ( $text !== null && empty( $block['innerBlocks'] ) ) {
@@ -410,12 +410,12 @@ final class Block_Tree {
 	/**
 	 * Show another image in an image block: its url/src and alt, in the attributes and the markup.
 	 *
-	 * @param array<string, mixed> $block dxai-ui/image, core/image, the theme's dx/picture or a dxai-ui/box rendering an <img>.
+	 * @param array<string, mixed> $block dx-ui/image, core/image, the theme's dx/picture or a dx-ui/box rendering an <img>.
 	 */
 	public static function set_image( array &$block, string $url, string $alt, int $id = 0 ): void {
 		// A theme's picture block (DX Picture) is printed by the server from its attachment: the picture is another attachment, with its
 		// own size, in the attributes its adapter names (Capabilities::picture_shape()).
-		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $block['blockName'] ?? '' ) );
+		$shape = \DX_UI\Theme\Capabilities::picture_shape( (string) ( $block['blockName'] ?? '' ) );
 		if ( $shape !== array() ) {
 			if ( $id > 0 ) {
 				$block['attrs'][ $shape['id'] ]  = $id;
@@ -474,16 +474,16 @@ final class Block_Tree {
 		if ( array_key_exists( 'src', $attrs ) ) {
 			$block['attrs']['src'] = $url;
 		}
-		if ( ! $decor && ( array_key_exists( 'alt', $attrs ) || in_array( (string) ( $block['blockName'] ?? '' ), array( 'dxai-ui/image', 'dxai-ui/box' ), true ) ) ) {
+		if ( ! $decor && ( array_key_exists( 'alt', $attrs ) || in_array( (string) ( $block['blockName'] ?? '' ), array( 'dx-ui/image', 'dx-ui/box' ), true ) ) ) {
 			$block['attrs']['alt'] = $alt;
 		}
 	}
 
 	/**
-	 * What a block's own look is made of: its CSS (dxaiCss) and the declarations of its utility classes.
+	 * What a block's own look is made of: its CSS (dxuiCss) and the declarations of its utility classes.
 	 *
 	 * An import on a site with the DevriX theme writes much of a block's CSS as the theme's utility classes
-	 * (`absolute inset-0 w-full h-full object-fit-cover`) and keeps only the rest in dxaiCss, so a question like
+	 * (`absolute inset-0 w-full h-full object-fit-cover`) and keeps only the rest in dxuiCss, so a question like
 	 * "is this picture laid over its section?" has to read both. Lower-case, `!important` dropped, one space at
 	 * most between words and none around ":" and ";" — so `str_contains( $css, 'position:absolute' )` holds
 	 * whichever way the design wrote it.
@@ -491,11 +491,11 @@ final class Block_Tree {
 	 * @param array<string, mixed> $block
 	 */
 	public static function css_of( array $block ): string {
-		$css   = (string) ( $block['attrs']['dxaiCss'] ?? '' );
+		$css   = (string) ( $block['attrs']['dxuiCss'] ?? '' );
 		$names = preg_split( '/\s+/', (string) ( $block['attrs']['className'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
 		foreach ( $names as $name ) {
-			if ( \DXAI_UI\Compiler\Utility_Classes::is_utility( $name ) ) {
-				$css .= ';' . \DXAI_UI\Compiler\Utility_Classes::base_declarations( $name );
+			if ( \DX_UI\Compiler\Utility_Classes::is_utility( $name ) ) {
+				$css .= ';' . \DX_UI\Compiler\Utility_Classes::base_declarations( $name );
 			}
 		}
 		$css = strtolower( (string) preg_replace( '/\s*!important/i', '', $css ) );
@@ -505,15 +505,15 @@ final class Block_Tree {
 	}
 
 	/**
-	 * Give a block other CSS of its own (dxaiCss), and its element the dxs- class of that CSS, as the editor
+	 * Give a block other CSS of its own (dxuiCss), and its element the dxs- class of that CSS, as the editor
 	 * names it (Style_Hoister::css_class()), so the block stays valid and Style_Rules writes its rule.
 	 *
 	 * @param array<string, mixed> $block
 	 */
 	public static function set_css( array &$block, string $css ): void {
-		$old       = (string) ( $block['attrs']['dxaiCss'] ?? '' );
-		$old_class = $old !== '' ? \DXAI_UI\Compiler\Style_Hoister::css_class( $old ) : '';
-		$new_class = \DXAI_UI\Compiler\Style_Hoister::css_class( $css );
+		$old       = (string) ( $block['attrs']['dxuiCss'] ?? '' );
+		$old_class = $old !== '' ? \DX_UI\Compiler\Style_Hoister::css_class( $old ) : '';
+		$new_class = \DX_UI\Compiler\Style_Hoister::css_class( $css );
 		$swap      = static function ( $part ) use ( $old_class, $new_class ) {
 			if ( ! is_string( $part ) || $part === '' ) {
 				return $part;
@@ -536,7 +536,7 @@ final class Block_Tree {
 			}
 		}
 		$block['innerHTML']        = $swap( (string) $block['innerHTML'] );
-		$block['attrs']['dxaiCss'] = $css;
+		$block['attrs']['dxuiCss'] = $css;
 	}
 
 	/**
@@ -675,7 +675,7 @@ final class Block_Tree {
 			}
 		}
 		if ( $again !== $markup ) {
-			return new \WP_Error( 'dxai_ui_compose_roundtrip', __( 'The composed page does not parse back to the same blocks.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_compose_roundtrip', __( 'The composed page does not parse back to the same blocks.', 'dx-ui' ) );
 		}
 
 		return $markup;

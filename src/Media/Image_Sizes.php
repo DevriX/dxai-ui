@@ -2,23 +2,23 @@
 /**
  * The pictures of the plugin's own blocks get their sizes from WordPress, as an Image block's do.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Seo\Page_Meta;
+use DX_UI\Seo\Page_Meta;
 
 /**
  * WordPress gives a picture its width, height, `srcset` and `sizes` when it knows which attachment it is: the `wp-image-<id>` class an
- * Image block writes (wp_filter_content_tags()). A design's pictures in the plugin's own blocks (`dxai-ui/box` written as an <img>: a
+ * Image block writes (wp_filter_content_tags()). A design's pictures in the plugin's own blocks (`dx-ui/box` written as an <img>: a
  * hero's full-width background, a card's photo, an icon) carry only their address, so a phone loaded the whole file: Five Star's hero,
  * 2400 px wide, on a 412 px screen — "Properly size images", 539 KiB (docs/PLAN-PERFECT-PAGES.md, T5.1). On a design's page, a picture
  * without that class and without a srcset of its own, whose address is an attachment of this site (or one of its sizes), gets the
  * class while the block renders; WordPress does the rest when it filters the content, as for any Image block — and the width and
- * height it writes keep the room of a picture that loads lazily. `dxai_ui_image_sizes` turns it off.
+ * height it writes keep the room of a picture that loads lazily. `dx_ui_image_sizes` turns it off.
  */
 final class Image_Sizes {
 
@@ -99,6 +99,6 @@ final class Image_Sizes {
 		 * @param bool $on Whether the page is a design's.
 		 * @param int  $id The page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_image_sizes', $id > 0 && Page_Meta::is_design_page( $id ), $id );
+		return (bool) apply_filters( 'dx_ui_image_sizes', $id > 0 && Page_Meta::is_design_page( $id ), $id );
 	}
 }

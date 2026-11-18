@@ -8,27 +8,27 @@
  * The import's Sideloader hands the media library a WebP made of the file (Media\Webp): smaller, upright (a photograph's EXIF turn
  * applied), its sizes made from it, and the page, its CSS and the import's image map pointing at it. What is not converted: a file
  * the server cannot write as WebP, a GIF, an animated PNG, a file under 2 KB, a favicon or touch icon, a
- * WebP that would not be at most 90% of the file, and anything when `dxai_ui_webp` says no. A file stored before keeps its
+ * WebP that would not be at most 90% of the file, and anything when `dx_ui_webp` says no. A file stored before keeps its
  * attachment; the next import makes its WebP beside it and uses that.
  *
- * The pictures of the plugin's own blocks (a `dxai-ui/box` written as an <img>: Five Star's full-width hero, 2400 px on a phone) are
+ * The pictures of the plugin's own blocks (a `dx-ui/box` written as an <img>: Five Star's full-width hero, 2400 px on a phone) are
  * named after their attachment (Media\Image_Sizes), so WordPress writes their width, height, srcset and sizes as for an Image block.
  *
  * Makes its pictures in the temp folder, its attachments in the media library and a page, and deletes them, also when a check dies
  * half-way. Exit code 1 when a check fails, 77 when this server cannot write WebP.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Sideloader;
-use DXAI_UI\Media\Webp;
+use DX_UI\Media\Sideloader;
+use DX_UI\Media\Webp;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 require_once ABSPATH . 'wp-admin/includes/image.php';
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
+require DX_UI_DIR . 'bin/verify-cleanup.php';
 
 if ( ! wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
 	echo "SKIP  this server's image editor cannot write WebP\n";
@@ -47,7 +47,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$snapshot = dxai_verify_snapshot();
+$snapshot = dxui_verify_snapshot();
 $files    = array();
 $pages    = array();
 $cleaned  = false;
@@ -66,11 +66,11 @@ $clean    = static function () use ( &$files, &$pages, &$cleaned, $snapshot ): v
 			rmdir( $file );
 		}
 	}
-	dxai_verify_cleanup( $snapshot, false );
+	dxui_verify_cleanup( $snapshot, false );
 };
 register_shutdown_function( $clean );
 
-$dir = trailingslashit( get_temp_dir() ) . 'dxai-verify-webp-' . wp_generate_password( 6, false ) . '/';
+$dir = trailingslashit( get_temp_dir() ) . 'dxui-verify-webp-' . wp_generate_password( 6, false ) . '/';
 wp_mkdir_p( $dir );
 $files[] = $dir;
 
@@ -140,9 +140,9 @@ if ( 'WP_Image_Editor_GD' === $editor ) {
 } else {
 	$expect( 'a palette PNG under ' . $editor . ', which can encode one', Webp::wanted( $pal, 'palette.png' ) );
 }
-add_filter( 'dxai_ui_webp', '__return_false' );
+add_filter( 'dx_ui_webp', '__return_false' );
 $expect( 'nothing when the filter says no', ! Webp::wanted( $jpg, 'photo.jpg' ) );
-remove_filter( 'dxai_ui_webp', '__return_false' );
+remove_filter( 'dx_ui_webp', '__return_false' );
 
 echo "\nWhat a WebP is made of it\n";
 $made = Webp::make( $jpg, 'photo.jpg' );
@@ -161,9 +161,9 @@ if ( is_callable( 'exif_read_data' ) ) {
 } else {
 	echo "  n/a   the EXIF turn (this PHP has no exif extension, so WordPress cannot read it either)\n";
 }
-$before = glob( get_temp_dir() . 'dxai-webp-*' );
+$before = glob( get_temp_dir() . 'dxui-webp-*' );
 $none   = Webp::make( $checker, 'checker.png' );
-$after  = glob( get_temp_dir() . 'dxai-webp-*' );
+$after  = glob( get_temp_dir() . 'dxui-webp-*' );
 $expect( 'none when the WebP would be larger (a checkerboard: 2.4 KB as PNG), and its temporary file is gone', null === $none && count( (array) $before ) === count( (array) $after ), wp_json_encode( $none ) );
 
 echo "\nWhat the import stores\n";
@@ -187,9 +187,9 @@ $n     = $count();
 $again = Sideloader::from_path( $jpg, 'photo.jpg', 'src/assets/photo.jpg' );
 $expect( 'the same file met again is answered with the same WebP, and nothing is added', is_array( $again ) && $id === (int) $again['id'] && $n === $count() );
 
-add_filter( 'dxai_ui_webp', '__return_false' );
+add_filter( 'dx_ui_webp', '__return_false' );
 $old = Sideloader::from_path( $png, 'photo.png', 'src/assets/photo.png' );
-remove_filter( 'dxai_ui_webp', '__return_false' );
+remove_filter( 'dx_ui_webp', '__return_false' );
 $old_id = is_array( $old ) ? (int) $old['id'] : 0;
 $expect( 'with the filter saying no, a PNG is stored as it came', $old_id > 0 && 'image/png' === get_post_mime_type( $old_id ) );
 $new    = Sideloader::from_path( $png, 'photo.png', 'src/assets/photo.png' );
@@ -219,7 +219,7 @@ if ( true === $zip->open( $zip_path, ZipArchive::CREATE ) ) {
 	$zip->addFromString( 'crew.jpg', (string) file_get_contents( $write( $photo( 8 ), 'crew.jpg' ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	$zip->close();
 }
-$doc = ( new DXAI_UI\Connectors\Generated_Design_Connector() )->import_zip(
+$doc = ( new DX_UI\Connectors\Generated_Design_Connector() )->import_zip(
 	array(
 		'tmp_name' => $zip_path,
 		'name'     => 'verify-webp.zip',
@@ -234,7 +234,7 @@ $expect( 'the image map gives the WebP for crew.jpg', isset( $crew[0]['url'] ) &
 echo "\nThe pictures of the plugin's own blocks\n";
 $full   = $id > 0 ? (string) wp_get_attachment_url( $id ) : '';
 $medium = $id > 0 ? (string) ( wp_get_attachment_image_src( $id, 'medium' )[0] ?? '' ) : '';
-$box    = static fn( string $src, string $class, string $extra = '' ): string => '<!-- wp:dxai-ui/box {"tagName":"img","src":"' . esc_url( $src ) . '","className":"' . $class . '"} --><img src="' . esc_url( $src ) . '" alt="" class="' . $class . '"' . $extra . '/><!-- /wp:dxai-ui/box -->';
+$box    = static fn( string $src, string $class, string $extra = '' ): string => '<!-- wp:dx-ui/box {"tagName":"img","src":"' . esc_url( $src ) . '","className":"' . $class . '"} --><img src="' . esc_url( $src ) . '" alt="" class="' . $class . '"' . $extra . '/><!-- /wp:dx-ui/box -->';
 $scope  = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Image sizes fixture Home', 'post_content' => 'x' ) );
 $body   = $box( $full, 'w-full hero-shot' ) . $box( $medium, 'w-200px card-shot' ) . $box( 'https://example.test/uploads/elsewhere.jpg', 'w-full away-shot' ) . $box( $full, 'w-full own-set', ' srcset="' . esc_url( $full ) . ' 400w"' );
 $sized  = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Image sizes fixture', 'post_content' => $body ) );
@@ -245,7 +245,7 @@ foreach ( array( $scope, $sized, $plain ) as $p ) {
 	}
 }
 if ( ! is_wp_error( $scope ) && ! is_wp_error( $sized ) ) {
-	update_post_meta( (int) $sized, '_dxai_ui_scope_id', (string) $scope );
+	update_post_meta( (int) $sized, '_dx_ui_scope_id', (string) $scope );
 }
 $render = static function ( $page_id ): string {
 	if ( is_wp_error( $page_id ) || (int) $page_id < 1 ) {
@@ -266,9 +266,9 @@ $expect( '…also when it shows one of the attachment\'s sizes', $medium !== '' 
 $expect( 'a picture from another site is left as it is', '' !== $img_of( $html, 'away-shot' ) && ! str_contains( $img_of( $html, 'away-shot' ), 'wp-image-' ) );
 $expect( 'a picture with a srcset of its own is left as it is', '' !== $img_of( $html, 'own-set' ) && ! str_contains( $img_of( $html, 'own-set' ), 'wp-image-' ) );
 $expect( 'not on a page that is no design\'s', ! str_contains( $img_of( $render( $plain ), 'hero-shot' ), 'wp-image-' ) );
-add_filter( 'dxai_ui_image_sizes', '__return_false' );
+add_filter( 'dx_ui_image_sizes', '__return_false' );
 $off = $render( $sized );
-remove_filter( 'dxai_ui_image_sizes', '__return_false' );
+remove_filter( 'dx_ui_image_sizes', '__return_false' );
 $expect( 'nothing when the filter says no', '' !== $img_of( $off, 'hero-shot' ) && ! str_contains( $img_of( $off, 'hero-shot' ), 'wp-image-' ) );
 
 $clean();

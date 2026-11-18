@@ -2,16 +2,16 @@
 /**
  * Widths and paddings of a design's blocks within the site's design system.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Theme\Capabilities;
 
 /**
  * The plugin makes classes where the theme has none (`max-w-1280px` beside the theme's `max-w-1200px`), and a class of a width or a
@@ -20,7 +20,7 @@ use DXAI_UI\Theme\Capabilities;
  *
  *  - a `max-w-<n>px` class of the plugin's — wider than the widest the theme has, or off its 5px grid — becomes the theme's class of the
  *    nearest width it has;
- *  - a block's own CSS (`dxaiCss`) with such a width, or a padding side above the largest the theme has, is written again with the
+ *  - a block's own CSS (`dxuiCss`) with such a width, or a padding side above the largest the theme has, is written again with the
  *    fitted size (and its dxs- class, which is the hash of it, follows).
  *
  * Nothing else about a block changes. Declined: a block whose stored tag is not what its attributes say (someone edited it), and a
@@ -41,11 +41,11 @@ final class Sizes extends Converter {
 		'core/buttons',
 		'core/button',
 		'core/image',
-		'dxai-ui/box',
-		'dxai-ui/text',
-		'dxai-ui/link',
-		'dxai-ui/image',
-		'dxai-ui/svg',
+		'dx-ui/box',
+		'dx-ui/text',
+		'dx-ui/link',
+		'dx-ui/image',
+		'dx-ui/svg',
 	);
 
 	public function id(): string {
@@ -53,7 +53,7 @@ final class Sizes extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Widths and paddings within the site\'s design system', 'dxai-ui' );
+		return __( 'Widths and paddings within the site\'s design system', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -76,7 +76,7 @@ final class Sizes extends Converter {
 	public function convert( array $block, ?array $parent = null ): ?array {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$class = (string) ( $attrs['className'] ?? '' );
-		$css   = (string) ( $attrs['dxaiCss'] ?? '' );
+		$css   = (string) ( $attrs['dxuiCss'] ?? '' );
 		if ( $class === '' && $css === '' ) {
 			return null;
 		}
@@ -111,7 +111,7 @@ final class Sizes extends Converter {
 			$next['className'] = implode( ' ', array_values( array_unique( $new ) ) );
 		}
 		if ( $fitted !== $css ) {
-			$next['dxaiCss'] = $fitted;
+			$next['dxuiCss'] = $fitted;
 			$swap[ Style_Hoister::css_class( $css ) ] = $fitted === '' ? '' : Style_Hoister::css_class( $fitted );
 		}
 

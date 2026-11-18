@@ -2,20 +2,20 @@
 /**
  * What the DX template draws around a page: the design's header, its footer.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Blank_Template;
 
 /**
- * The DX template (`templates/dxai-template.php`) draws the page as a template does: the header, then the page's content, then the footer.
+ * The DX template (`templates/dxui-template.php`) draws the page as a template does: the header, then the page's content, then the footer.
  * The header is the design's own, filled from Appearance > Menus (Site_Header_Block); the footer is the design's frame around the
  * widgets of Appearance > Widgets (Site_Footer_Block). A page stores its body only — nothing of the chrome is in its content, so nothing
  * of it can be edited, moved or deleted by editing the page.
@@ -40,7 +40,7 @@ use DXAI_UI\Theme\Blank_Template;
 final class Template_Chrome {
 
 	/** On the design's page: the skip link and the header spacer as the import found them at the top of its Home. */
-	public const LEAD_META = '_dxai_ui_chrome_lead';
+	public const LEAD_META = '_dx_ui_chrome_lead';
 
 	/** The page being drawn, 0 outside open() … close(). */
 	private static int $post = 0;
@@ -63,7 +63,7 @@ final class Template_Chrome {
 		// The content the template asks for is the page's, less the blocks open() has drawn before the header. Before do_blocks (9).
 		add_filter( 'the_content', array( self::class, 'body' ), 7 );
 		// The skip link a page lost and the template draws from the import's copy needs its rule like any other block.
-		add_filter( 'dxai_ui_style_rules_markup', array( self::class, 'rules_markup' ), 10, 2 );
+		add_filter( 'dx_ui_style_rules_markup', array( self::class, 'rules_markup' ), 10, 2 );
 	}
 
 	/**
@@ -132,7 +132,7 @@ final class Template_Chrome {
 			self::$main = false;
 		}
 		if ( self::$footer !== '' ) {
-			echo \DXAI_UI\Media\Image_Loading::below( self::drawn( self::$footer, self::$footer_scope ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
+			echo \DX_UI\Media\Image_Loading::below( self::drawn( self::$footer, self::$footer_scope ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own block markup, rendered.
 		}
 		if ( self::$wrapped ) {
 			echo '</div>';
@@ -228,7 +228,7 @@ final class Template_Chrome {
 	public static function site_footer(): string {
 		$markup = self::site_chrome()['footer'];
 
-		return $markup === '' ? '' : \DXAI_UI\Media\Image_Loading::below( self::drawn( $markup, self::footer_scope( 0 ) ) );
+		return $markup === '' ? '' : \DX_UI\Media\Image_Loading::below( self::drawn( $markup, self::footer_scope( 0 ) ) );
 	}
 
 	/**
@@ -296,7 +296,7 @@ final class Template_Chrome {
 	/** The rules of blocks the template draws that no page's content carries: written with the page's styles, in the design's scope. */
 	private static function rules_for( string $markup, int $scope ): void {
 		if ( $markup !== '' && ! is_admin() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-			\DXAI_UI\Blocks\Style_Rules::attach_markup( $markup, $scope );
+			\DX_UI\Blocks\Style_Rules::attach_markup( $markup, $scope );
 		}
 	}
 

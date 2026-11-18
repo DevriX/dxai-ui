@@ -2,18 +2,18 @@
 /**
  * A picture: the theme's DX Picture, where it has one.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
  * An image of a design is a block of the team's own, DX Picture (`dx/picture`: a server-rendered `<picture>` with the right file for the
- * screen, an LCP switch and a sidebar to replace the image), not one the plugin makes. The plugin's own image block (`dxai-ui/image`) and the
+ * screen, an LCP switch and a sidebar to replace the image), not one the plugin makes. The plugin's own image block (`dx-ui/image`) and the
  * core Image it turns into when that says the same (Image) become it when this site has the block — the American Restoration theme registers
  * it — and the image is a media-library image, which the block needs (it prints nothing without an attachment).
  *
@@ -21,16 +21,16 @@ use DXAI_UI\Theme\Capabilities;
  * image that is not in the library, an SVG), or the plugin's own block when even that could not keep what the image carries. A decline is
  * always safe. It declines when:
  *
- *  - the image has CSS of its own (`dxaiCss`: a `dxs-` rule that rides the block's class, which a server-rendered block cannot write), a
+ *  - the image has CSS of its own (`dxuiCss`: a `dxs-` rule that rides the block's class, which a server-rendered block cannot write), a
  *    link, a caption or a size of its own (a native image's `width`, `aspectRatio`, `scale`: the block has no such attribute);
  *  - the design's stylesheet or the parent reaches the image by its position (`> img`, `space-y-*`): the block puts a figure and a
  *    picture around it, as core's Image does (Image::sheet_allows(), Image::spaces_children()).
  *
  * The block is written the way the team writes it (`<!-- wp:dx/picture {"imageId":19,"imageUrl":"…","imageWidth":1200,"imageHeight":630} /-->`)
- * with what the design needs on top: the design's classes on the figure, marked `dxai-part-img` so the rules written for the image reach the
+ * with what the design needs on top: the design's classes on the figure, marked `dxui-part-img` so the rules written for the image reach the
  * image inside it and the figure and the picture take no box (Style_Rules::part_base_css()), and the sizes: the block's own defaults crop the
  * picture to 4:5 on a phone (an LCP hero's choice), which would change the shape of every image of a design, so both screens get the
- * uncropped size (filter `dxai_ui_picture_sizes` to choose others).
+ * uncropped size (filter `dx_ui_picture_sizes` to choose others).
  */
 final class Picture extends Converter {
 
@@ -40,22 +40,22 @@ final class Picture extends Converter {
 	/** What the plugin's own image carries that this block can keep or does not need (WordPress writes srcset, sizes and the rest itself). */
 	private const KNOWN_OWN = array( 'url', 'alt', 'className', 'loading', 'decoding', 'width', 'height', 'srcset', 'sizes' );
 
-	public const MARKER = 'dxai-part-img';
+	public const MARKER = 'dxui-part-img';
 
 	public function id(): string {
 		return 'picture';
 	}
 
 	public function label(): string {
-		return __( 'Pictures → DX Picture', 'dxai-ui' );
+		return __( 'Pictures → DX Picture', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/image';
+		return 'dx-ui/image';
 	}
 
 	public function sources(): array {
-		return array( 'dxai-ui/image', 'core/image' );
+		return array( 'dx-ui/image', 'core/image' );
 	}
 
 	public function target(): string {
@@ -68,13 +68,13 @@ final class Picture extends Converter {
 		 *
 		 * @param bool $on The block is registered.
 		 */
-		return (bool) apply_filters( 'dxai_ui_use_dx_picture', parent::available() );
+		return (bool) apply_filters( 'dx_ui_use_dx_picture', parent::available() );
 	}
 
 	public function convert( array $block, ?array $parent = null ): ?array {
 		$name  = (string) ( $block['blockName'] ?? '' );
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		if ( ! in_array( $name, $this->sources(), true ) || ( $block['innerBlocks'] ?? array() ) !== array() || ! empty( $attrs['dxaiCss'] ) ) {
+		if ( ! in_array( $name, $this->sources(), true ) || ( $block['innerBlocks'] ?? array() ) !== array() || ! empty( $attrs['dxuiCss'] ) ) {
 			return null;
 		}
 		if ( Image::spaces_children( $parent ) || ! Image::sheet_allows() ) {
@@ -241,7 +241,7 @@ final class Picture extends Converter {
 		 * @param int                                  $attachment_id The image.
 		 */
 		$sizes = (array) apply_filters(
-			'dxai_ui_picture_sizes',
+			'dx_ui_picture_sizes',
 			array(
 				'desktop' => 'dx_pic_desktop_hero',
 				'mobile'  => 'dx_pic_desktop_hero',

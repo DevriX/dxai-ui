@@ -2,12 +2,12 @@
 /**
  * Encrypted option storage for API keys.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Security;
+namespace DX_UI\Security;
 
 final class Secret_Store {
 
@@ -17,8 +17,8 @@ final class Secret_Store {
 	 * @return non-empty-string
 	 */
 	private static function key(): string {
-		if ( defined( 'DXAI_UI_SECRETS_KEY' ) && is_string( DXAI_UI_SECRETS_KEY ) && DXAI_UI_SECRETS_KEY !== '' ) {
-			return substr( hash( 'sha256', DXAI_UI_SECRETS_KEY, true ), 0, SODIUM_CRYPTO_SECRETBOX_KEYBYTES );
+		if ( defined( 'DX_UI_SECRETS_KEY' ) && is_string( DX_UI_SECRETS_KEY ) && DX_UI_SECRETS_KEY !== '' ) {
+			return substr( hash( 'sha256', DX_UI_SECRETS_KEY, true ), 0, SODIUM_CRYPTO_SECRETBOX_KEYBYTES );
 		}
 
 		$material = ( defined( 'AUTH_KEY' ) ? AUTH_KEY : '' ) . ( defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : 'dxai-ui' );

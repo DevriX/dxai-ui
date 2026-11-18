@@ -16,7 +16,7 @@
  *   P8  address and links: the new page's path is the live one's; no link in its content leads to the old host;
  *   P5  (a part of it) the new page's text colours, backgrounds and font families are the new Home's;
  *   P9  (a part of it) at 390 px nothing makes the page scroll sideways.
- * Reads only. Chrome: $DXAI_CHROME, else the usual places. Exit code 0 (a measurement), 1 when --self-test fails.
+ * Reads only. Chrome: $DXUI_CHROME, else the usual places. Exit code 0 (a measurement), 1 when --self-test fails.
  */
 'use strict';
 
@@ -24,7 +24,7 @@ const fs = require( 'fs' );
 const path = require( 'path' );
 const puppeteer = require( 'puppeteer-core' );
 
-const CHROME = process.env.DXAI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
+const CHROME = process.env.DXUI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
 const args = process.argv.slice( 2 );
 const arg = ( name ) => { const i = args.indexOf( '--' + name ); return i >= 0 ? args[ i + 1 ] : ''; };
 
@@ -292,7 +292,7 @@ async function selfTest() {
 
 ( async () => {
 	if ( ! CHROME ) {
-		console.error( 'no Chrome found (set DXAI_CHROME)' );
+		console.error( 'no Chrome found (set DXUI_CHROME)' );
 		process.exit( 2 );
 	}
 	if ( args.includes( '--self-test' ) ) {

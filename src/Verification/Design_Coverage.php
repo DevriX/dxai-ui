@@ -2,12 +2,12 @@
 /**
  * Everything a design carries, counted on both sides of the conversion.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Verification;
+namespace DX_UI\Verification;
 
 /**
  * Did all of it come across?
@@ -41,7 +41,7 @@ namespace DXAI_UI\Verification;
  */
 final class Design_Coverage {
 
-	public const META = '_dxai_ui_coverage';
+	public const META = '_dx_ui_coverage';
 
 	/**
 	 * Tokens in the `animation` shorthand that are not keyframe names.
@@ -269,7 +269,7 @@ final class Design_Coverage {
 		);
 
 		$harvest_fonts = is_array( $harvest['fonts'] ?? null ) ? $harvest['fonts'] : array();
-		$page_fonts    = array_filter( (array) get_post_meta( $page_id, '_dxai_ui_font_urls', true ) );
+		$page_fonts    = array_filter( (array) get_post_meta( $page_id, '_dx_ui_font_urls', true ) );
 		$rows[]        = $this->row(
 			'font-stylesheets',
 			count( $harvest_fonts ),
@@ -396,24 +396,24 @@ final class Design_Coverage {
 		);
 
 		/*
-		 * Behaviour. The runtime reads markers off the markup — `data-dxai-*`
-		 * and the `dxai-toggle-*` / `dxai-on-*` / `dxai-cls-*` class families —
+		 * Behaviour. The runtime reads markers off the markup — `data-dxui-*`
+		 * and the `dxui-toggle-*` / `dxui-on-*` / `dxui-cls-*` class families —
 		 * so a marker in the design's rendered HTML that is missing from the
 		 * page is a behaviour that stopped working, exactly the loss a
 		 * screenshot cannot see.
 		 */
 		$rows[] = $this->row(
 			'behaviour-markers',
-			$this->count_all( '/data-dxai-[a-z-]+=/i', $design_html ),
-			$this->count_all( '/data-dxai-[a-z-]+=/i', $page_html ),
+			$this->count_all( '/data-dxui-[a-z-]+=/i', $design_html ),
+			$this->count_all( '/data-dxui-[a-z-]+=/i', $page_html ),
 			array(),
-			'`data-dxai-*` hooks the motion runtime reads'
+			'`data-dxui-*` hooks the motion runtime reads'
 		);
 
 		$rows[] = $this->row(
 			'state-classes',
-			$this->count_all( '/\bdxai-(?:toggle|on|off|cls)-[\w-]+/i', $design_html ),
-			$this->count_all( '/\bdxai-(?:toggle|on|off|cls)-[\w-]+/i', $page_html ),
+			$this->count_all( '/\bdxui-(?:toggle|on|off|cls)-[\w-]+/i', $design_html ),
+			$this->count_all( '/\bdxui-(?:toggle|on|off|cls)-[\w-]+/i', $page_html ),
 			array(),
 			'the state-machine class families'
 		);
@@ -422,7 +422,7 @@ final class Design_Coverage {
 		$rows[]   = $this->row(
 			'handlers',
 			$handlers,
-			$this->count_all( '/data-dxai-[a-z-]+=/i', $page_html ) + $this->count_all( '/\bdxai-(?:toggle|on|off|cls)-[\w-]+/i', $page_html ),
+			$this->count_all( '/data-dxui-[a-z-]+=/i', $page_html ) + $this->count_all( '/\bdxui-(?:toggle|on|off|cls)-[\w-]+/i', $page_html ),
 			array(),
 			$handlers === null
 				? 'unknown: no design sources and no counts carried in the compile result'
@@ -442,8 +442,8 @@ final class Design_Coverage {
 		 * behaviour markers at all means the whole mechanism is missing, which
 		 * is the failure a screenshot cannot show.
 		 */
-		$markers = $this->count_all( '/data-dxai-[a-z-]+=/i', $page_html )
-			+ $this->count_all( '/\bdxai-(?:toggle|on|off|cls)-[\w-]+/i', $page_html );
+		$markers = $this->count_all( '/data-dxui-[a-z-]+=/i', $page_html )
+			+ $this->count_all( '/\bdxui-(?:toggle|on|off|cls)-[\w-]+/i', $page_html );
 
 		$motion = isset( $signals['motion'] ) ? (int) $signals['motion'] : null;
 		$rows[] = $this->row(
@@ -470,7 +470,7 @@ final class Design_Coverage {
 		/*
 		 * State the design takes from the scroll position: the sticky header
 		 * that turns solid past a threshold, and every variant of it. The
-		 * runtime reads that from a `data-dxai-scroll="state:threshold"`
+		 * runtime reads that from a `data-dxui-scroll="state:threshold"`
 		 * marker, so a design that declares one and a page with none is a
 		 * behaviour that was dropped — silently, because the design side of the
 		 * pixel oracle is compiled by the same compiler and comes out equally
@@ -480,7 +480,7 @@ final class Design_Coverage {
 		$rows[] = $this->row(
 			'scroll-state',
 			$scroll === null ? null : ( $scroll > 0 ? 1 : 0 ),
-			$this->count_all( '/data-dxai-scroll=/i', $page_html ) > 0 ? 1 : 0,
+			$this->count_all( '/data-dxui-scroll=/i', $page_html ) > 0 ? 1 : 0,
 			array(),
 			$scroll === null
 				? 'unknown: no design sources and no counts carried in the compile result'
@@ -996,7 +996,7 @@ final class Design_Coverage {
 	/** The stylesheet bytes the page will actually serve. */
 	private function page_css( int $page_id ): string {
 		// Either stored form of the location — see Upload_Paths.
-		$file = \DXAI_UI\Support\Upload_Paths::for_meta( $page_id, '_dxai_ui_css_url' )['path'];
+		$file = \DX_UI\Support\Upload_Paths::for_meta( $page_id, '_dx_ui_css_url' )['path'];
 
 		return $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
 	}
@@ -1007,7 +1007,7 @@ final class Design_Coverage {
 	 * @param array<string, mixed> $result
 	 */
 	private function page_js( int $page_id, array $result ): string {
-		$file = \DXAI_UI\Support\Upload_Paths::for_meta( $page_id, '_dxai_ui_js_url' )['path'];
+		$file = \DX_UI\Support\Upload_Paths::for_meta( $page_id, '_dx_ui_js_url' )['path'];
 
 		return $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
 	}

@@ -8,15 +8,15 @@
  *
  * Imports into the site and removes what it made (bin/verify-cleanup.php), also when it stops part-way. SKIP without GD.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Zip_Router;
-use DXAI_UI\Media\Asset_Harvester;
-use DXAI_UI\Media\Harvest_Paused;
-use DXAI_UI\Media\Pending_Sizes;
-use DXAI_UI\Structures\Structure_Repository;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Zip_Router;
+use DX_UI\Media\Asset_Harvester;
+use DX_UI\Media\Harvest_Paused;
+use DX_UI\Media\Pending_Sizes;
+use DX_UI\Structures\Structure_Repository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,14 +26,14 @@ if ( ! function_exists( 'imagecreatetruecolor' ) || ! class_exists( ZipArchive::
 	exit( 77 );
 }
 
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
-$dxai_snapshot = dxai_verify_snapshot();
-$dir           = trailingslashit( get_temp_dir() ) . 'dxai-ui-verify-rounds-' . wp_generate_password( 8, false, false );
+require DX_UI_DIR . 'bin/verify-cleanup.php';
+$dxui_snapshot = dxui_verify_snapshot();
+$dir           = trailingslashit( get_temp_dir() ) . 'dx-ui-verify-rounds-' . wp_generate_password( 8, false, false );
 wp_mkdir_p( $dir );
 // Whatever happens below, the site is left as it was found.
 register_shutdown_function(
-	static function () use ( $dxai_snapshot, $dir ): void {
-		dxai_verify_cleanup( $dxai_snapshot );
+	static function () use ( $dxui_snapshot, $dir ): void {
+		dxui_verify_cleanup( $dxui_snapshot );
 		foreach ( (array) glob( $dir . '/*' ) as $file ) {
 			wp_delete_file( (string) $file );
 		}
@@ -127,14 +127,14 @@ for ( $round = 1; $round <= 40 && null === $doc; $round++ ) {
 }
 $added = array_values( array_diff( $attachments(), $before ) );
 $files = $pictures + 1;
-$expect( 'the read is done after its rounds', $doc instanceof DXAI_UI\Connectors\Source_Document, is_wp_error( $doc ) ? $doc->get_error_message() : '' );
+$expect( 'the read is done after its rounds', $doc instanceof DX_UI\Connectors\Source_Document, is_wp_error( $doc ) ? $doc->get_error_message() : '' );
 $expect( "each round added one file and stopped: $files files, $files rounds that stopped, then the one that read the design", count( $pauses ) === $files && end( $pauses ) === "$files/$files", implode( ' ', $pauses ) );
 $expect( 'every file is in the media library once', count( $added ) === $files, count( $added ) . ' attachments' );
 $waiting = array_values( array_filter( $added, static fn( int $id ): bool => '' !== (string) get_post_meta( $id, Pending_Sizes::META, true ) ) );
 $expect( "the $pictures pictures wait for their smaller sizes, the SVG does not", count( $waiting ) === $pictures, count( $waiting ) . ' waiting' );
 $expect( 'and none was cut into sizes yet', array() === array_filter( $waiting, static fn( int $id ): bool => ! empty( wp_get_attachment_metadata( $id )['sizes'] ?? array() ) ) );
 $at_once = Zip_Router::import( $file );
-$urls    = static fn( $d ): array => $d instanceof DXAI_UI\Connectors\Source_Document ? array_values( array_unique( array_map( 'strval', array_column( (array) ( $d->payload['harvest']['assets'] ?? $d->payload['harvest']['images'] ?? array() ), 'url' ) ) ) ) : array();
+$urls    = static fn( $d ): array => $d instanceof DX_UI\Connectors\Source_Document ? array_values( array_unique( array_map( 'strval', array_column( (array) ( $d->payload['harvest']['assets'] ?? $d->payload['harvest']['images'] ?? array() ), 'url' ) ) ) ) : array();
 $expect( 'the same archive read at once finds every file and names the same uploads', $urls( $doc ) !== array() && $urls( $doc ) === $urls( $at_once ) && $attachments() === array_merge( $before, $added ), wp_json_encode( array( $urls( $doc ), $urls( $at_once ) ) ) );
 $sizes = Pending_Sizes::run( 0 );
 $expect( 'the sizes are made afterwards, all of them', $sizes['made'] === $pictures && $sizes['left'] === 0 && Pending_Sizes::count() === 0, wp_json_encode( $sizes ) );
@@ -149,7 +149,7 @@ $result['source_name']          = 'Rounds Design.zip';
 // As the import screen posts it, and as the rounds keep it between requests.
 $input = json_decode( (string) wp_json_encode( $result ), true );
 $ids   = static fn( array $c ): array => array_values( array_filter( array_map( 'intval', array_merge( array( $c['page_id'] ?? 0 ), (array) ( $c['extra_page_ids'] ?? array() ), array( $c['header_id'] ?? 0, $c['footer_id'] ?? 0 ), array_column( (array) ( $c['patterns'] ?? array() ), 'id' ) ) ) ) );
-$sheet = new ReflectionMethod( DXAI_UI\Compiler\Token_Styles::class, 'sheet_path' );
+$sheet = new ReflectionMethod( DX_UI\Compiler\Token_Styles::class, 'sheet_path' );
 $sheet->setAccessible( true );
 // What a save leaves: each post of the design, its colour palette, its hoisted CSS, and each page's stylesheet.
 $capture = static function ( array $created ) use ( $ids, $sheet ): array {
@@ -161,9 +161,9 @@ $capture = static function ( array $created ) use ( $ids, $sheet ): array {
 			(string) wp_json_encode(
 				array(
 					$post ? $post->post_title . '|' . $post->post_name . '|' . $post->post_content : '',
-					get_post_meta( $id, DXAI_UI\Compiler\Token_Styles::META, true ),
-					get_post_meta( $id, DXAI_UI\Compiler\Style_Hoister::INNER_META, true ),
-					get_post_meta( $id, DXAI_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true ),
+					get_post_meta( $id, DX_UI\Compiler\Token_Styles::META, true ),
+					get_post_meta( $id, DX_UI\Compiler\Style_Hoister::INNER_META, true ),
+					get_post_meta( $id, DX_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true ),
 					$path !== '' && is_readable( $path ) ? md5_file( $path ) : '',
 				)
 			)
@@ -194,9 +194,9 @@ $expect( 'its answer reports the same pages, tokens and hoisting', $by_rounds !=
 // --- 3. Through the REST routes ---------------------------------------------------------------------------------------------------
 echo "\n3. The import screen's requests, in rounds\n";
 $short = static fn(): float => 0.000001;
-add_filter( 'dxai_ui_import_round_seconds', $short );
+add_filter( 'dx_ui_import_round_seconds', $short );
 $call = static function ( string $route, array $params, array $files = array() ) {
-	$request = new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/' . $route );
+	$request = new WP_REST_Request( 'POST', '/' . DX_UI_REST_NAMESPACE . '/' . $route );
 	foreach ( $params as $key => $value ) {
 		$request->set_param( $key, $value );
 	}
@@ -223,7 +223,7 @@ list( $s1, $p1 ) = $send( 1, $stage );
 list( $s2, $p2 ) = $send( 2, $stage );
 list( $s3, $p3 ) = $send( 1, $stage );
 $expect( 'the archive arrives in pieces under one token, complete with the last', 200 === $s0 && preg_match( '/^[a-f0-9]{32}$/', $stage ) === 1 && false === $p0['complete'] && 200 === $s1 && 2 === $p1['received'] && 200 === $s2 && true === $p2['complete'], wp_json_encode( array( $p0, $p1, $p2 ) ) );
-$job = DXAI_UI\Transfer\Import_Job::open( $stage );
+$job = DX_UI\Transfer\Import_Job::open( $stage );
 $expect( 'a piece sent again is not added twice: the archive is the one sent', 200 === $s3 && true === ( $p3['complete'] ?? null ) && is_array( $job ) && md5_file( (string) $job['zip'] ) === md5( $bytes ) );
 list( $status, $read ) = $call( 'process-source', array( 'source_type' => 'auto-zip', 'rounds' => '1', 'stage' => $stage ) );
 $reads = 1;
@@ -245,8 +245,8 @@ while ( 'continue' === ( $again['state'] ?? '' ) && $again_rounds < 30 ) {
 	list( $status, $again ) = $call( 'process-source', array( 'source_type' => 'auto-zip', 'rounds' => '1', 'stage' => (string) $again['stage'] ) );
 }
 $expect( "an archive whose files are all here is read in rounds too ($again_rounds), and adds nothing", 'done' === ( $again['state'] ?? '' ) && $again_rounds >= 4 && $attachments() === $before_again, wp_json_encode( array_intersect_key( $again, array_flip( array( 'state', 'code', 'message' ) ) ) ) );
-if ( isset( $again['stage'] ) && ! is_wp_error( DXAI_UI\Transfer\Import_Job::open( (string) $again['stage'] ) ) ) {
-	DXAI_UI\Transfer\Import_Job::close( DXAI_UI\Transfer\Import_Job::open( (string) $again['stage'] ) );
+if ( isset( $again['stage'] ) && ! is_wp_error( DX_UI\Transfer\Import_Job::open( (string) $again['stage'] ) ) ) {
+	DX_UI\Transfer\Import_Job::close( DX_UI\Transfer\Import_Job::open( (string) $again['stage'] ) );
 }
 list( $status, $compiled ) = $call( 'generate-block', array( 'source_type' => 'auto-zip', 'rounds' => '1', 'stage' => $stage, 'fidelity' => 'off' ) );
 $compile = (array) ( $compiled['result'] ?? array() );
@@ -256,7 +256,7 @@ $token = md5( wp_generate_password( 20, false, false ) );
 $saves = 1;
 list( $status, $saved ) = $call( 'save-pattern', array_merge( $compile, array( 'chrome' => 'keep', 'rounds' => true, 'stage' => $stage, 'import_token' => $token, 'synced' => true ) ) );
 $expect( 'the save\'s first round answers continue, with the pages written so far', 200 === $status && 'continue' === ( $saved['state'] ?? '' ) && isset( $saved['pages']['written'] ), wp_json_encode( array_intersect_key( $saved, array_flip( array( 'state', 'pages', 'code', 'message' ) ) ) ) );
-$record = get_transient( 'dxai_ui_save_' . md5( $token . '|' . get_current_user_id() ) );
+$record = get_transient( 'dx_ui_save_' . md5( $token . '|' . get_current_user_id() ) );
 $steps_seen = array();
 while ( 'continue' === ( $saved['state'] ?? '' ) && $saves < 400 ) {
 	++$saves;
@@ -273,7 +273,7 @@ $expect( 'the save\'s answers name the finishing step that comes next, for the s
 $page = (int) ( $saved['page']['id'] ?? 0 );
 $expect( "the save goes on by the token alone and answers as a save at once does after $saves rounds", 200 === $status && $page > 0 && ! isset( $saved['state'] ) && ! empty( $saved['structures']['extra_page_ids'] ), wp_json_encode( array_intersect_key( $saved, array_flip( array( 'state', 'code', 'message' ) ) ) ) );
 $expect( 'its pages are there, linked to each other', $page > 0 && str_contains( (string) get_post_field( 'post_content', $page ), (string) get_permalink( (int) ( $saved['structures']['extra_page_ids'][0] ?? 0 ) ) ) );
-$expect( 'the kept archive and the round lock are gone once it is done', is_wp_error( DXAI_UI\Transfer\Import_Job::open( $stage ) ) && false === get_option( 'dxai_ui_round_lock_' . $stage ) );
+$expect( 'the kept archive and the round lock are gone once it is done', is_wp_error( DX_UI\Transfer\Import_Job::open( $stage ) ) && false === get_option( 'dx_ui_round_lock_' . $stage ) );
 list( $status, $more ) = $call( 'save-pattern', array( 'rounds' => true, 'stage' => $stage, 'save_round' => 'continue', 'import_token' => $token ) );
 $expect( 'a round asked for after the end is refused, not run again', $status >= 400 );
 $made = 0;
@@ -285,13 +285,13 @@ for ( $i = 0; $i < 20; $i++ ) {
 	}
 }
 $expect( 'the pictures\' sizes are made by /media-sizes, a round at a time, until none is left', 200 === $status && 3 === $made && 0 === (int) ( $sizes['left'] ?? -1 ), wp_json_encode( $sizes ) );
-remove_filter( 'dxai_ui_import_round_seconds', $short );
+remove_filter( 'dx_ui_import_round_seconds', $short );
 
 // --- 5. Pages built from the Home's sections -----------------------------------------------------------------------------------
 echo "\n5. A page a crawl writes from the Home's sections carries the Home's design names\n";
 // Names an older import recorded on a crawled page: every utility the Home's hoist had placed in its sections, which then got no
 // utility rule (H2O's menu pages lost relative, items-center, … — 167 px of sideways scroll at 390). DX › Site rebuilds it.
-$names_meta = DXAI_UI\Compiler\Style_Hoister::DESIGN_NAMES_META;
+$names_meta = DX_UI\Compiler\Style_Hoister::DESIGN_NAMES_META;
 $rebuilt    = (int) wp_insert_post(
 	array(
 		'post_type'    => 'page',
@@ -300,7 +300,7 @@ $rebuilt    = (int) wp_insert_post(
 		'post_content' => '<!-- wp:paragraph --><p class="relative items-center">x</p><!-- /wp:paragraph -->',
 	)
 );
-update_post_meta( $rebuilt, DXAI_UI\Structures\Page_Scope::META, $page );
+update_post_meta( $rebuilt, DX_UI\Structures\Page_Scope::META, $page );
 update_post_meta( $rebuilt, $names_meta, array( 'items-center', 'relative', 'w-full' ) );
 $home_names = array( 'rounds-own-card', 'rounds-own-hero' );
 update_post_meta( $page, $names_meta, $home_names );
@@ -320,12 +320,12 @@ $crawl_state = array(
 		),
 	),
 );
-DXAI_UI\Pages\Site_Pages::finish( $crawl_state );
+DX_UI\Pages\Site_Pages::finish( $crawl_state );
 $expect( 'DX › Site\'s crawl gives a page it rebuilt the Home\'s design names, not the ones an older import left', get_post_meta( $rebuilt, $names_meta, true ) === $home_names, wp_json_encode( get_post_meta( $rebuilt, $names_meta, true ) ) );
 $expect( 'and leaves the Home\'s own as they were', get_post_meta( $page, $names_meta, true ) === $home_names );
 delete_post_meta( $page, $names_meta );
 update_post_meta( $rebuilt, $names_meta, array( 'relative' ) );
-DXAI_UI\Pages\Site_Pages::finish( $crawl_state );
+DX_UI\Pages\Site_Pages::finish( $crawl_state );
 $expect( 'a Home with no design names leaves the page none either', '' === get_post_meta( $rebuilt, $names_meta, true ) );
 
 // --- 6. A design's patterns ------------------------------------------------------------------------------------------------------
@@ -335,21 +335,21 @@ echo "\n6. A design's synced patterns are compiled as its pages are\n";
 $pattern_markup = '<!-- wp:paragraph {"className":"panel collapse in size-full"} --><p class="panel collapse in size-full">x</p><!-- /wp:paragraph -->';
 $pattern_css    = '.panel { color: red; }';
 $pattern_sheet  = static function ( array $saved ): string {
-	$file = DXAI_UI\Support\Upload_Paths::for_meta( (int) ( $saved['id'] ?? 0 ), '_dxai_ui_css_url' )['path'];
+	$file = DX_UI\Support\Upload_Paths::for_meta( (int) ( $saved['id'] ?? 0 ), '_dx_ui_css_url' )['path'];
 
 	return $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
 };
-$patterns   = new DXAI_UI\Patterns\Pattern_Repository();
+$patterns   = new DX_UI\Patterns\Pattern_Repository();
 $static_pat = $patterns->save( 'Rounds Static Section', $pattern_markup, $pattern_css, true, $pattern_css, '', '', true );
 $tw_pat     = $patterns->save( 'Rounds Tailwind Section', $pattern_markup, $pattern_css, true, $pattern_css, '', '', false );
 $static_css = is_array( $static_pat ) ? $pattern_sheet( $static_pat ) : '';
 $tw_css     = is_array( $tw_pat ) ? $pattern_sheet( $tw_pat ) : '';
 $expect( 'a static design\'s pattern: no utility for a class its CSS never styles (collapse, size-full), no preflight', $static_css !== '' && ! str_contains( $static_css, 'visibility:collapse' ) && ! str_contains( $static_css, 'height:100%' ) && ! str_contains( $static_css, 'border-collapse: collapse' ) && str_contains( $static_css, 'box-sizing: content-box' ), substr( $static_css, 0, 300 ) );
-$expect( 'and it is marked a static design, for rendering', is_array( $static_pat ) && '1' === get_post_meta( (int) $static_pat['id'], '_dxai_ui_static_html', true ) );
+$expect( 'and it is marked a static design, for rendering', is_array( $static_pat ) && '1' === get_post_meta( (int) $static_pat['id'], '_dx_ui_static_html', true ) );
 // …and the import passes the flag: the sections it saved for this design (a Claude Design package) are marked too.
 $import_patterns = is_array( $first ) ? array_values( array_filter( array_map( 'intval', array_column( (array) ( $first['patterns'] ?? array() ), 'id' ) ) ) ) : array();
-$expect( 'the patterns the import saved for a Claude Design package are marked a static design (' . count( $import_patterns ) . ')', $import_patterns !== array() && array() === array_filter( $import_patterns, static fn( int $id ): bool => '1' !== get_post_meta( $id, '_dxai_ui_static_html', true ) ) );
-$expect( 'a Tailwind design\'s pattern keeps preflight and every utility in its markup, unmarked', str_contains( $tw_css, 'visibility:collapse' ) && str_contains( $tw_css, 'border-collapse: collapse' ) && is_array( $tw_pat ) && '' === get_post_meta( (int) $tw_pat['id'], '_dxai_ui_static_html', true ) );
+$expect( 'the patterns the import saved for a Claude Design package are marked a static design (' . count( $import_patterns ) . ')', $import_patterns !== array() && array() === array_filter( $import_patterns, static fn( int $id ): bool => '1' !== get_post_meta( $id, '_dx_ui_static_html', true ) ) );
+$expect( 'a Tailwind design\'s pattern keeps preflight and every utility in its markup, unmarked', str_contains( $tw_css, 'visibility:collapse' ) && str_contains( $tw_css, 'border-collapse: collapse' ) && is_array( $tw_pat ) && '' === get_post_meta( (int) $tw_pat['id'], '_dx_ui_static_html', true ) );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

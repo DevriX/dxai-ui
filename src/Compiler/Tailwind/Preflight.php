@@ -2,12 +2,12 @@
 /**
  * Tailwind v4 Preflight, rewritten to live under one scope selector.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * Tailwind ships Preflight as bare `html`, `body` and `*` rules. A converted

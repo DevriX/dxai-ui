@@ -2,15 +2,15 @@
 /**
  * Puts back what KSES removed from converted pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Compiler\Block_Normalizer;
-use DXAI_UI\Structures\Site_From_Menu;
+use DX_UI\Compiler\Block_Normalizer;
+use DX_UI\Structures\Site_From_Menu;
 
 /**
  * Before Kses_Styles existed, a converted page saved by anything without
@@ -18,7 +18,7 @@ use DXAI_UI\Structures\Site_From_Menu;
  * multisite, an Editor on a site with DISALLOW_UNFILTERED_HTML — came back
  * with part of its design removed from the HTML: rgba() colours, text-wrap,
  * inset, box-sizing, iframes, form controls. Every block whose CSS is also
- * kept in its `dxaiStyle` attribute then opened as invalid in the editor,
+ * kept in its `dxuiStyle` attribute then opened as invalid in the editor,
  * because the attribute still held what the HTML had lost. On the install
  * this was measured on: 231 blocks over 16 pages, and one page that had lost
  * its map iframe and 19 form controls.
@@ -36,19 +36,19 @@ use DXAI_UI\Structures\Site_From_Menu;
  *     made since (a block added, moved or deleted) is never undone.
  *
  *  2. From the block's own attribute. Where the style="" in the HTML holds a
- *     subset of the declarations the block's `dxaiStyle` (or dxai-ui/link
+ *     subset of the declarations the block's `dxuiStyle` (or dx-ui/link
  *     `style`) attribute holds, the HTML is given the attribute's list —
  *     exactly what the editor's save() writes. A block whose HTML has a
  *     declaration the attribute lacks is left alone: that difference is not
  *     KSES's.
  *
  * And one that is not about KSES at all, for crawled pages only (posts with
- * `_dxai_ui_from_live_menu`):
+ * `_dx_ui_from_live_menu`):
  *
  *  3. Block_Normalizer. Those pages are model-written — Live_Page_Restyler
  *     stores the markup a language model returned — and the model writes
  *     block shapes whose save() does not reproduce the stored HTML (a
- *     comment inside a group, `dxaiStyle` on a core/image, a dynamic form
+ *     comment inside a group, `dxuiStyle` on a core/image, a dynamic form
  *     stored with markup): 15 invalid blocks on 6 of the 15 crawled pages of
  *     the development site. The restyler now normalises what it returns;
  *     this puts the pages it stored before that through the same pass. It
@@ -66,12 +66,12 @@ use DXAI_UI\Structures\Site_From_Menu;
  * place to another, and re-filtering the page would remove it again.
  *
  * Runs once by itself (a batch per admin page load, until every converted
- * post has been looked at), and on demand with `wp dxai-ui repair-styles`.
+ * post has been looked at), and on demand with `wp dx-ui repair-styles`.
  */
 final class Style_Repair {
 
 	/** Progress of the one-time pass: version, last post id looked at, done. */
-	public const OPTION = 'dxai_ui_style_repair';
+	public const OPTION = 'dx_ui_style_repair';
 
 	/**
 	 * Bump to run the first two repairs again over every converted post.
@@ -91,21 +91,21 @@ final class Style_Repair {
 	 * would otherwise stay invalid until someone ran the CLI command or paid
 	 * for a re-crawl.
 	 */
-	public const NORMALIZE_OPTION = 'dxai_ui_style_normalize';
+	public const NORMALIZE_OPTION = 'dx_ui_style_normalize';
 
 	public const NORMALIZE_VERSION = 1;
 
 	/** Posts per admin page load. */
 	private const BATCH = 10;
 
-	private const SKIP_BLOCKS = array( 'dxai-ui/svg' );
+	private const SKIP_BLOCKS = array( 'dx-ui/svg' );
 
-	private const STYLE_ATTRS = array( 'dxaiStyle', 'style' );
+	private const STYLE_ATTRS = array( 'dxuiStyle', 'style' );
 
 	public function register(): void {
 		add_action( 'admin_init', array( $this, 'maybe_run_batch' ) );
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
-			\WP_CLI::add_command( 'dxai-ui repair-styles', array( self::class, 'cli' ) );
+			\WP_CLI::add_command( 'dx-ui repair-styles', array( self::class, 'cli' ) );
 		}
 	}
 
@@ -165,7 +165,7 @@ final class Style_Repair {
 	}
 
 	/**
-	 * `wp dxai-ui repair-styles [--dry-run] [--ids=<id,id>]`
+	 * `wp dx-ui repair-styles [--dry-run] [--ids=<id,id>]`
 	 *
 	 * @param array<int, string>    $args
 	 * @param array<string, string> $assoc
@@ -206,7 +206,7 @@ final class Style_Repair {
 		global $wpdb;
 
 		$sql = "SELECT DISTINCT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
-			WHERE m.meta_key IN ('_dxai_ui_generated_page','_dxai_ui_generated','_dxai_ui_from_live_menu')
+			WHERE m.meta_key IN ('_dx_ui_generated_page','_dx_ui_generated','_dx_ui_from_live_menu')
 			AND p.post_type IN ('page','wp_template_part','wp_block') AND p.post_status NOT IN ('trash','auto-draft','inherit')
 			AND p.ID > %d ORDER BY p.ID ASC";
 		if ( $limit > 0 ) {
@@ -229,7 +229,7 @@ final class Style_Repair {
 			(array) $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT DISTINCT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
-					WHERE m.meta_key = '_dxai_ui_from_live_menu' AND p.post_type = 'page'
+					WHERE m.meta_key = '_dx_ui_from_live_menu' AND p.post_type = 'page'
 					AND p.post_status NOT IN ('trash','auto-draft','inherit')
 					AND p.ID > %d ORDER BY p.ID ASC LIMIT %d",
 					$after_id,
@@ -259,7 +259,7 @@ final class Style_Repair {
 		}
 		$content = (string) $post->post_content;
 		$blocks  = parse_blocks( $content );
-		$crawled = (bool) get_post_meta( $id, '_dxai_ui_from_live_menu', true );
+		$crawled = (bool) get_post_meta( $id, '_dx_ui_from_live_menu', true );
 
 		$source = 'normalize' === $steps ? null : self::trusted_revision( $post );
 		if ( $source instanceof \WP_Post ) {

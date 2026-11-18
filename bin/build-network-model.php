@@ -6,14 +6,14 @@
  *
  * Reads the sites crawl.cjs saved (Site_Source::folder), learns the model (Network_Model::learn) and writes what can be
  * shipped in a public repository (Network_Model::shareable): no addresses and nothing site by site, the formulas and
- * questions only when three sites or more use them. A site of a network learns its own with `wp dxai-ui network learn`,
+ * questions only when three sites or more use them. A site of a network learns its own with `wp dx-ui network learn`,
  * which wins over this one.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Network\Network_Model;
-use DXAI_UI\Network\Site_Source;
+use DX_UI\Network\Network_Model;
+use DX_UI\Network\Site_Source;
 
 $dir = (string) ( $args[0] ?? dirname( __DIR__ ) . '/.verify/network-research/data' );
 if ( ! is_dir( $dir ) ) {

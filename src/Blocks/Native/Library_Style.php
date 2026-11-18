@@ -2,19 +2,19 @@
 /**
  * The look of a design's Home, for the sections the library makes for its other pages.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Pages\Block_Library;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Roles;
-use DXAI_UI\Support\Color_Math;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Pages\Block_Library;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Roles;
+use DX_UI\Support\Color_Math;
 
 /**
  * A section of the library (Pages\Block_Library) is the team's own block, written with the team's own sizes: its title at 42px, 96px of
@@ -37,7 +37,7 @@ final class Library_Style extends Style_Harmony {
 	}
 
 	public function label(): string {
-		return __( 'The look of the Home, for the library\'s sections', 'dxai-ui' );
+		return __( 'The look of the Home, for the library\'s sections', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -62,7 +62,7 @@ final class Library_Style extends Style_Harmony {
 	 * @return array<string, mixed>
 	 */
 	public static function follow( array $section, int $home, string $role = '' ): array {
-		if ( $home < 1 || get_post_status( $home ) === false || ! (bool) apply_filters( 'dxai_ui_harmony', true, $home ) ) {
+		if ( $home < 1 || get_post_status( $home ) === false || ! (bool) apply_filters( 'dx_ui_harmony', true, $home ) ) {
 			return $section;
 		}
 
@@ -233,7 +233,7 @@ final class Library_Style extends Style_Harmony {
 			$put[] = 'padding-bottom:' . $dom['bottom'];
 		}
 		$class = implode( ' ', array_merge( array_values( array_diff( $tokens, $own ) ), $dom['mine_class'] ) );
-		$css   = Utility_Classes::fit_system( implode( ';', array_filter( array( trim( (string) ( $attrs['dxaiCss'] ?? '' ), '; ' ), implode( ';', $put ) ) ) ) );
+		$css   = Utility_Classes::fit_system( implode( ';', array_filter( array( trim( (string) ( $attrs['dxuiCss'] ?? '' ), '; ' ), implode( ';', $put ) ) ) ) );
 
 		return self::restyle( $section, $class, $css ) ?? $whole;
 	}
@@ -241,7 +241,7 @@ final class Library_Style extends Style_Harmony {
 	/* ------------------------------------------------------------------------------------------- the look of the Home */
 
 	/** The classes that are a box's look: its corners, its shadow, its border, its background, its padding. */
-	private const BOX_CLASS = '/^(?:(?:xs|sm|md|lg|xl|2xl)[:-])*(?:rounded(?:-|$)|shadow|dxai-sh-|border(?:-|$)|bg-|p[xytblr]?-)/';
+	private const BOX_CLASS = '/^(?:(?:xs|sm|md|lg|xl|2xl)[:-])*(?:rounded(?:-|$)|shadow|dxui-sh-|border(?:-|$)|bg-|p[xytblr]?-)/';
 	/** The declarations that are a box's look. */
 	private const BOX_PROP = '/^(?:border(?:-[a-z-]+)?|box-shadow|background(?:-[a-z-]+)?|padding(?:-[a-z]+)?)$/';
 	/** The classes that are a line's type: its size, weight, case, tracking, leading, colour. */
@@ -313,9 +313,9 @@ final class Library_Style extends Style_Harmony {
 					if ( is_array( $item ) ) {
 						$look = self::look_of( $item, self::BOX_CLASS, self::BOX_PROP );
 						// A card is a box (a ground, a border or a shadow: a row of icons with a little padding is none), and the class each
-						// card has for its own hover (`dxai-sh-26`, `dxai-sh-27`…) does not make eight cards of one look eight looks.
+						// card has for its own hover (`dxui-sh-26`, `dxui-sh-27`…) does not make eight cards of one look eight looks.
 						if ( $look['key'] !== '' && self::surface( $look ) ) {
-							$look['key'] = implode( ' ', array_filter( $look['class'], static fn( string $t ): bool => preg_match( '/^dxai-sh-\d+$/', $t ) !== 1 ) ) . '|' . implode( ';', $look['css'] );
+							$look['key'] = implode( ' ', array_filter( $look['class'], static fn( string $t ): bool => preg_match( '/^dxui-sh-\d+$/', $t ) !== 1 ) ) . '|' . implode( ';', $look['css'] );
 							$found[]     = $look;
 						}
 					}
@@ -341,7 +341,7 @@ final class Library_Style extends Style_Harmony {
 			$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
 			foreach ( $kids as $i => $c ) {
 				$next = $kids[ $i + 1 ] ?? null;
-				if ( ( in_array( (string) $c['blockName'], array( 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) $c['blockName'], 'span' ) ) &&is_array( $next ) && (string) $next['blockName'] === 'core/heading' && (int) ( $next['attrs']['level'] ?? 2 ) <= 2 ) {
+				if ( ( in_array( (string) $c['blockName'], array( 'core/paragraph', 'dx-ui/text' ), true ) || \DX_UI\Theme\Capabilities::is_block( (string) $c['blockName'], 'span' ) ) &&is_array( $next ) && (string) $next['blockName'] === 'core/heading' && (int) ( $next['attrs']['level'] ?? 2 ) <= 2 ) {
 					$n = str_word_count( trim( wp_strip_all_tags( (string) $c['innerHTML'] ) ) );
 					if ( $n >= 1 && $n <= 4 ) {
 						$look = self::look_of( $c, self::TYPE_CLASS, self::TYPE_PROP );
@@ -408,8 +408,8 @@ final class Library_Style extends Style_Harmony {
 	}
 
 	/**
-	 * The look of the Home's buttons when it draws them as links (a design kept as it was: `dxai-ui/link` with a fill of the
-	 * design's colours, `bg-dxai-accent text-dxai-ink`) and has no Button blocks of a style to go by: the fill and the text most of
+	 * The look of the Home's buttons when it draws them as links (a design kept as it was: `dx-ui/link` with a fill of the
+	 * design's colours, `bg-dxui-accent text-dxui-ink`) and has no Button blocks of a style to go by: the fill and the text most of
 	 * its filled calls to action have, as the theme presets those colours follow (Theme_Binding). A button of a library section
 	 * keeps the theme's style and takes these two in its Colour panel, so it reads as the Home's buttons do. Null when the Home has
 	 * fewer than two alike, or its colours follow no preset.
@@ -425,15 +425,15 @@ final class Library_Style extends Style_Harmony {
 			}
 			// A link of the design's: its link block, or a text or a box it drew as a link (a call with its icon: `<a>` of a tel: number).
 			$name = (string) ( $b['blockName'] ?? '' );
-			$link = $name === 'dxai-ui/link' || ( in_array( $name, array( 'dxai-ui/text', 'dxai-ui/box' ), true ) && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'a' );
-			if ( $link && Button::style_of( ' ' . (string) ( $b['attrs']['className'] ?? '' ) . ' ', (string) ( $b['attrs']['dxaiCss'] ?? '' ) ) === 'primary-button' ) {
+			$link = $name === 'dx-ui/link' || ( in_array( $name, array( 'dx-ui/text', 'dx-ui/box' ), true ) && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'a' );
+			if ( $link && Button::style_of( ' ' . (string) ( $b['attrs']['className'] ?? '' ) . ' ', (string) ( $b['attrs']['dxuiCss'] ?? '' ) ) === 'primary-button' ) {
 				$class = self::tokens( (string) ( $b['attrs']['className'] ?? '' ) );
 				$fill  = '';
 				$text  = '';
 				foreach ( $class as $t ) {
-					if ( $fill === '' && preg_match( '/^bg-dxai-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
+					if ( $fill === '' && preg_match( '/^bg-dxui-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
 						$fill = Button::preset_for( 'token:' . $m[1], $home );
-					} elseif ( $text === '' && preg_match( '/^text-dxai-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
+					} elseif ( $text === '' && preg_match( '/^text-dxui-([a-z0-9-]+)$/', $t, $m ) === 1 ) {
 						$text = Button::preset_for( 'token:' . $m[1], $home );
 					}
 				}
@@ -443,7 +443,7 @@ final class Library_Style extends Style_Harmony {
 						'class' => array(),
 						'css'   => array(),
 						'fill'  => $fill,
-						'text'  => $text !== '' && \DXAI_UI\Theme\Capabilities::text_slug_ok( $text ) ? $text : '',
+						'text'  => $text !== '' && \DX_UI\Theme\Capabilities::text_slug_ok( $text ) ? $text : '',
 					);
 				}
 			}
@@ -513,7 +513,7 @@ final class Library_Style extends Style_Harmony {
 	private static function look_of( array $block, string $class_re, string $prop_re ): array {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$class = array_values( array_filter( self::tokens( (string) ( $attrs['className'] ?? '' ) ), static fn( string $t ): bool => preg_match( $class_re, $t ) === 1 ) );
-		$css   = self::split_css( (string) ( $attrs['dxaiCss'] ?? '' ), static fn( string $p ): bool => preg_match( $prop_re, $p ) === 1 )['mine'];
+		$css   = self::split_css( (string) ( $attrs['dxuiCss'] ?? '' ), static fn( string $p ): bool => preg_match( $prop_re, $p ) === 1 )['mine'];
 		foreach ( self::settings_css( $attrs ) as $d ) {
 			if ( preg_match( $prop_re, (string) strstr( $d, ':', true ) ) === 1 ) {
 				$css[] = $d;
@@ -587,7 +587,7 @@ final class Library_Style extends Style_Harmony {
 
 	/**
 	 * The section's cards, eyebrows and buttons in the look the Home's have (look()): each marked block (the builder marks them:
-	 * `dxai-lib-card`, `dxai-lib-eyebrow`; a button is one by its block) has its own look of the kind taken off and the Home's put on. A
+	 * `dxui-lib-card`, `dxui-lib-eyebrow`; a button is one by its block) has its own look of the kind taken off and the Home's put on. A
 	 * question of a section of questions takes the look of the Home's questions (a line under each), not its cards'; a run of boxes the
 	 * builder did not mark (the steps of a section set as cards) takes the cards'.
 	 *
@@ -598,13 +598,13 @@ final class Library_Style extends Style_Harmony {
 		$class = (string) ( $block['attrs']['className'] ?? '' );
 		$name  = (string) ( $block['blockName'] ?? '' );
 		$faq   = $role === 'faq' && ( $look['faq'] ?? null ) !== null;
-		if ( $faq && preg_match( '/(^|\s)dxai-lib-card(\s|$)/', $class ) === 1 ) {
+		if ( $faq && preg_match( '/(^|\s)dxui-lib-card(\s|$)/', $class ) === 1 ) {
 			// A question keeps its own room (its padding): the Home's line under it, and no box of its own.
 			$block = self::put_look( $block, $look['faq'], self::LINE_CLASS, self::LINE_PROP, self::LINE_SETTINGS, self::BOX_TAG_CLASS );
-		} elseif ( $look['card'] !== null && preg_match( '/(^|\s)dxai-lib-card(\s|$)/', $class ) === 1 && ! self::is_chip( $block ) ) {
+		} elseif ( $look['card'] !== null && preg_match( '/(^|\s)dxui-lib-card(\s|$)/', $class ) === 1 && ! self::is_chip( $block ) ) {
 			$block = self::put_card( $block, $look['card'] );
 		}
-		if ( $look['eyebrow'] !== null && preg_match( '/(^|\s)dxai-lib-eyebrow(\s|$)/', $class ) === 1 ) {
+		if ( $look['eyebrow'] !== null && preg_match( '/(^|\s)dxui-lib-eyebrow(\s|$)/', $class ) === 1 ) {
 			$block = self::put_look( $block, $look['eyebrow'], self::TYPE_CLASS, self::TYPE_PROP, self::TYPE_SETTINGS, '/^(?:has-text-color|has-[a-z0-9-]+-color|has-[a-z0-9-]+-font-size)$/' );
 		}
 		// A button drawn as a link (a card's "Learn more") is a link, not a button: it keeps its own look.
@@ -635,7 +635,7 @@ final class Library_Style extends Style_Harmony {
 	/** The classes a box's settings write in its tag. */
 	private const BOX_TAG_CLASS = '/^(?:has-background|has-[a-z0-9-]+-background-color|has-border-color|has-[a-z0-9-]+-border-color)$/';
 	/** A box's look without its padding: what a question of a section of questions takes from the Home's (a line, no ground). */
-	private const LINE_CLASS    = '/^(?:(?:xs|sm|md|lg|xl|2xl)[:-])*(?:rounded(?:-|$)|shadow|[a-z]+-shadow$|dxai-sh-|border(?:-|$)|bg-)/';
+	private const LINE_CLASS    = '/^(?:(?:xs|sm|md|lg|xl|2xl)[:-])*(?:rounded(?:-|$)|shadow|[a-z]+-shadow$|dxui-sh-|border(?:-|$)|bg-)/';
 	private const LINE_PROP     = '/^(?:border(?:-[a-z-]+)?|box-shadow|background(?:-[a-z-]+)?)$/';
 	private const LINE_SETTINGS = array( 'style.border', 'style.shadow', 'backgroundColor', 'style.color.background' );
 
@@ -646,7 +646,7 @@ final class Library_Style extends Style_Harmony {
 	 */
 	private static function is_box( array $block ): bool {
 		$a = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		if ( (string) ( $block['blockName'] ?? '' ) !== 'core/group' || preg_match( '/(^|\s)dxai-lib-card(\s|$)/', (string) ( $a['className'] ?? '' ) ) === 1 ) {
+		if ( (string) ( $block['blockName'] ?? '' ) !== 'core/group' || preg_match( '/(^|\s)dxui-lib-card(\s|$)/', (string) ( $a['className'] ?? '' ) ) === 1 ) {
 			return false;
 		}
 		$ground = isset( $a['backgroundColor'] ) || isset( $a['style']['color']['background'] );
@@ -697,7 +697,7 @@ final class Library_Style extends Style_Harmony {
 		if ( ! $root && (string) ( $block['blockName'] ?? '' ) === 'core/group' && ( $block['attrs']['align'] ?? '' ) === 'full' && ! self::paints( $block ) ) {
 			$wide = true;
 			foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $child ) {
-				if ( is_array( $child ) && ( in_array( (string) ( $child['blockName'] ?? '' ), array( 'core/cover', 'core/image', 'core/video' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) ( $child['blockName'] ?? '' ), 'picture' ) ) ) {
+				if ( is_array( $child ) && ( in_array( (string) ( $child['blockName'] ?? '' ), array( 'core/cover', 'core/image', 'core/video' ), true ) || \DX_UI\Theme\Capabilities::is_block( (string) ( $child['blockName'] ?? '' ), 'picture' ) ) ) {
 					$wide = false;
 				}
 			}
@@ -966,7 +966,7 @@ final class Library_Style extends Style_Harmony {
 	 */
 	private static function title_path( array $block ): ?array {
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $i => $child ) {
-			if ( ! is_array( $child ) || isset( $child['attrs']['dxaiRepeat'] ) || preg_match( '/(^|\s)dxai-lib-card(\s|$)/', (string) ( $child['attrs']['className'] ?? '' ) ) === 1 ) {
+			if ( ! is_array( $child ) || isset( $child['attrs']['dxuiRepeat'] ) || preg_match( '/(^|\s)dxui-lib-card(\s|$)/', (string) ( $child['attrs']['className'] ?? '' ) ) === 1 ) {
 				continue;
 			}
 			if ( (string) ( $child['blockName'] ?? '' ) === 'core/heading' && (int) ( $child['attrs']['level'] ?? 2 ) === 2 ) {
@@ -1040,7 +1040,7 @@ final class Library_Style extends Style_Harmony {
 	/** @param array<string, mixed> $block A line of one to four words (a paragraph or a theme's label). */
 	private static function is_eyebrow( array $block ): bool {
 		$name = (string) ( $block['blockName'] ?? '' );
-		if ( ! in_array( $name, array( 'core/paragraph', 'dxai-ui/text' ), true ) && ! \DXAI_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
+		if ( ! in_array( $name, array( 'core/paragraph', 'dx-ui/text' ), true ) && ! \DX_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
 			return false;
 		}
 		$n = str_word_count( trim( wp_strip_all_tags( (string) ( $block['innerHTML'] ?? '' ) ) ) );
@@ -1065,7 +1065,7 @@ final class Library_Style extends Style_Harmony {
 			}
 		}
 
-		return preg_match( '/(?:^|;)\s*text-align\s*:\s*center/i', (string) ( $a['dxaiCss'] ?? '' ) ) === 1 || preg_match( '/^\s*<[a-z0-9]+\b[^>]*\bclass="[^"]*\bhas-text-align-center\b/i', (string) ( $block['innerHTML'] ?? '' ) ) === 1;
+		return preg_match( '/(?:^|;)\s*text-align\s*:\s*center/i', (string) ( $a['dxuiCss'] ?? '' ) ) === 1 || preg_match( '/^\s*<[a-z0-9]+\b[^>]*\bclass="[^"]*\bhas-text-align-center\b/i', (string) ( $block['innerHTML'] ?? '' ) ) === 1;
 	}
 
 	/**
@@ -1097,7 +1097,7 @@ final class Library_Style extends Style_Harmony {
 		}
 		$block['attrs'] = $attrs;
 		$split          = self::split_class( (string) ( $attrs['className'] ?? '' ), static fn( string $t ): bool => in_array( self::base( $t ), self::CENTRE_CLASS, true ) );
-		$css            = self::split_css( (string) ( $attrs['dxaiCss'] ?? '' ), static fn( string $p ): bool => $p === 'text-align' );
+		$css            = self::split_css( (string) ( $attrs['dxuiCss'] ?? '' ), static fn( string $p ): bool => $p === 'text-align' );
 		// What the alignment setting wrote in the tag: its class, and the declaration.
 		foreach ( (array) $block['innerContent'] as $k => $chunk ) {
 			if ( is_string( $chunk ) && trim( $chunk ) !== '' ) {
@@ -1173,7 +1173,7 @@ final class Library_Style extends Style_Harmony {
 			$kids = array_keys( array_filter( (array) ( $node['innerBlocks'] ?? array() ), static fn( $c ): bool => is_array( $c ) && ! empty( $c['blockName'] ) ) );
 			// (Boxes only: a picture alone in a card keeps its corners.)
 			$name = count( $kids ) === 1 ? (string) $node['innerBlocks'][ $kids[0] ]['blockName'] : '';
-			if ( ! in_array( $name, array( 'core/group', 'core/column' ), true ) && ! \DXAI_UI\Theme\Capabilities::is_block( $name, 'link_box' ) ) {
+			if ( ! in_array( $name, array( 'core/group', 'core/column' ), true ) && ! \DX_UI\Theme\Capabilities::is_block( $name, 'link_box' ) ) {
 				break;
 			}
 			$paths[] = array_merge( end( $paths ), array( (int) $kids[0] ) );
@@ -1333,7 +1333,7 @@ final class Library_Style extends Style_Harmony {
 		$block['attrs'] = $attrs;
 		$split = self::split_class( (string) ( $attrs['className'] ?? '' ), static fn( string $t ): bool => preg_match( $class_re, $t ) === 1 );
 		$class = implode( ' ', array_merge( $split['rest'], (array) $look['class'] ) );
-		$css   = self::split_css( (string) ( $attrs['dxaiCss'] ?? '' ), static fn( string $p ): bool => preg_match( $prop_re, $p ) === 1 );
+		$css   = self::split_css( (string) ( $attrs['dxuiCss'] ?? '' ), static fn( string $p ): bool => preg_match( $prop_re, $p ) === 1 );
 		$css   = implode( ';', array_merge( $css['rest'], (array) $look['css'] ) );
 		// What the settings wrote in the tag: the generated classes, and the inline declarations.
 		foreach ( (array) $block['innerContent'] as $k => $chunk ) {

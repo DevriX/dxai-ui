@@ -15,14 +15,14 @@
  *
  * Makes a Home and a few pages (and a template part) and removes them. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Style_Rules;
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Structures\Template_Part_Factory;
+use DX_UI\Blocks\Style_Rules;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Structures\Template_Part_Factory;
 
 $fail   = 0;
 $pass   = 0;
@@ -50,7 +50,7 @@ $css_head = 'background:#102030;padding-top:13px';
 $css_foot = 'background:#203040;padding-top:17px';
 $css_body = 'padding-top:19px;background:#304050';
 $para     = '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->';
-$group    = static fn( string $tag, string $class, string $css ): string => '<!-- wp:group {"tagName":"' . $tag . '","className":"' . $class . '","dxaiCss":"' . $css . '"} --><' . $tag . ' class="wp-block-group ' . $class . ' ' . Style_Hoister::css_class( $css ) . '">' . $para . '</' . $tag . '><!-- /wp:group -->';
+$group    = static fn( string $tag, string $class, string $css ): string => '<!-- wp:group {"tagName":"' . $tag . '","className":"' . $class . '","dxuiCss":"' . $css . '"} --><' . $tag . ' class="wp-block-group ' . $class . ' ' . Style_Hoister::css_class( $css ) . '">' . $para . '</' . $tag . '><!-- /wp:group -->';
 $header   = $group( 'header', 'h-58px px-6', $css_head );
 $footer   = $group( 'footer', 'mb-4-5 px-7', $css_foot );
 $body     = $group( 'section', 'py-0', $css_body );
@@ -59,9 +59,9 @@ $page = static function ( string $title, string $content, int $scope, bool $blan
 	$id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => wp_slash( $content ) ) );
 	$made[] = $id;
 	// Not on DX Blank: on a template of the theme's own (a design's page on the Default template is drawn as the design since beta.45).
-	update_post_meta( $id, '_wp_page_template', $blank ? 'dxai-blank.php' : 'page.php' );
-	update_post_meta( $id, '_dxai_ui_scope_id', $scope > 0 ? $scope : $id );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_wp_page_template', $blank ? 'dxui-blank.php' : 'page.php' );
+	update_post_meta( $id, '_dx_ui_scope_id', $scope > 0 ? $scope : $id );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 
 	return $id;
 };
@@ -101,8 +101,8 @@ echo "\nA header kept as a template part, with the skip link and the box that ho
 $key    = 'chrome-rules-' . substr( md5( (string) wp_rand() ), 0, 8 );
 $part   = ( new Template_Part_Factory() )->save( 'header', 'Chrome rules fixture header', $header, $key, array() );
 $made[] = (int) $part;
-$skip   = '<!-- wp:dxai-ui/link {"className":"skip"} --><a class="wp-block-dxai-ui-link skip" href="#main">Skip to content</a><!-- /wp:dxai-ui/link -->';
-$space  = '<!-- wp:dxai-ui/box {"className":"dxai-dc-1"} --><div class="dxai-dc-1" aria-hidden="true"></div><!-- /wp:dxai-ui/box -->';
+$skip   = '<!-- wp:dx-ui/link {"className":"skip"} --><a class="wp-block-dx-ui-link skip" href="#main">Skip to content</a><!-- /wp:dx-ui/link -->';
+$space  = '<!-- wp:dx-ui/box {"className":"dxui-dc-1"} --><div class="dxui-dc-1" aria-hidden="true"></div><!-- /wp:dx-ui/box -->';
 $lead   = $skip . "\n\n" . $space . "\n\n" . $body;
 $kept   = $page( 'Chrome rules fixture kept-part Home', $lead, 0 );
 update_post_meta( $kept, Page_Chrome::PART_KEY_META, $key );
@@ -117,17 +117,17 @@ $with = $read( $kept );
 $expect( 'a Home that keeps its header as a part is given it: a skip link and a box are not a header', str_contains( $with, 'wp:template-part' ) && str_contains( $with, $key ), substr( $with, 0, 200 ) );
 $expect(
 	'it goes where the design had it: the skip link first, then the box, then the header, then the sections',
-	false !== $at( $with, 'wp-block-dxai-ui-link' ) && $at( $with, 'wp-block-dxai-ui-link' ) < $at( $with, 'dxai-dc-1' ) && $at( $with, 'dxai-dc-1' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ),
-	wp_json_encode( array( $at( $with, 'wp-block-dxai-ui-link' ), $at( $with, 'dxai-dc-1' ), $at( $with, 'wp:template-part' ), $at( $with, 'py-0' ) ) )
+	false !== $at( $with, 'wp-block-dx-ui-link' ) && $at( $with, 'wp-block-dx-ui-link' ) < $at( $with, 'dxui-dc-1' ) && $at( $with, 'dxui-dc-1' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ),
+	wp_json_encode( array( $at( $with, 'wp-block-dx-ui-link' ), $at( $with, 'dxui-dc-1' ), $at( $with, 'wp:template-part' ), $at( $with, 'py-0' ) ) )
 );
-$expect( 'nothing else changes: the skip link, the box and the sections are each there once', 1 === substr_count( $with, 'Skip to content' ) && 1 === substr_count( $with, '<!-- wp:dxai-ui/box ' ) && 1 === substr_count( $with, '"tagName":"section"' ) );
+$expect( 'nothing else changes: the skip link, the box and the sections are each there once', 1 === substr_count( $with, 'Skip to content' ) && 1 === substr_count( $with, '<!-- wp:dx-ui/box ' ) && 1 === substr_count( $with, '"tagName":"section"' ) );
 
 $with = $read( $made_for );
 $expect( 'a page made for that Home (it carries the Home\'s skip link and box) is given the part, not a second skip link', str_contains( $with, 'wp:template-part' ) && 1 === substr_count( $with, 'Skip to content' ), (string) substr_count( $with, 'Skip to content' ) );
-$expect( '…after them as well', $at( $with, 'dxai-dc-1' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ) );
+$expect( '…after them as well', $at( $with, 'dxui-dc-1' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ) );
 
 $with = $read( $only );
-$expect( 'a skip link alone: the part goes right after it', str_contains( $with, 'wp:template-part' ) && $at( $with, 'wp-block-dxai-ui-link' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ) );
+$expect( 'a skip link alone: the part goes right after it', str_contains( $with, 'wp:template-part' ) && $at( $with, 'wp-block-dx-ui-link' ) < $at( $with, 'wp:template-part' ) && $at( $with, 'wp:template-part' ) < $at( $with, 'py-0' ) );
 
 $with = $read( $bar );
 $expect( 'a page that has a header of its own after the skip link is not given a second', 1 === substr_count( $with, '"tagName":"header"' ) && ! str_contains( $with, 'wp:template-part' ), (string) substr_count( $with, '"tagName":"header"' ) );
@@ -142,7 +142,7 @@ $expect( 'the skip link and the box are still read as what travels with a header
 $expect( 'but they are not a header', ! Section_Library::holds_header( $flat, $run ) );
 $flat = Section_Library::flatten( parse_blocks( $skip . "\n\n" . $space . "\n\n" . $header . "\n\n" . $body ) );
 $expect( 'a header after them is', Section_Library::holds_header( $flat, Section_Library::chrome_blocks( $flat )['header'] ) );
-$full = '<!-- wp:dxai-ui/box {"className":"dxai-dc-9"} --><div class="dxai-dc-9" aria-hidden="true"><!-- wp:paragraph --><p>Hidden words</p><!-- /wp:paragraph --></div><!-- /wp:dxai-ui/box -->';
+$full = '<!-- wp:dx-ui/box {"className":"dxui-dc-9"} --><div class="dxui-dc-9" aria-hidden="true"><!-- wp:paragraph --><p>Hidden words</p><!-- /wp:paragraph --></div><!-- /wp:dx-ui/box -->';
 list( $opening, $rest ) = Section_Library::split_lead( $skip . "\n\n" . $full . "\n\n" . $body );
 $expect( 'a box with something in it is not the box that holds a place: it is not taken along with the skip link', str_contains( $opening, 'Skip to content' ) && ! str_contains( $opening, 'Hidden words' ) && str_contains( $rest, 'Hidden words' ) && str_contains( $rest, 'py-0' ), substr( $opening, 0, 120 ) );
 list( $opening, $rest ) = Section_Library::split_lead( $body );

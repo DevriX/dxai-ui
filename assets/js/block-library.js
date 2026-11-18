@@ -2,13 +2,13 @@
  * The questions of the team's FAQ sections (Pages\Block_Library) on a page that does not have the theme's script: a click on a question
  * opens its answer and closes the others of the section. The same contract the theme's own script has — a group `faq-question` holding
  * its answer (`faq-answer`) and an arrow (`faq-arrow`); the answer that carries `faq-answer--default-open` is open to begin with — and
- * only for the library's sections (`.dxai-lib`), so it can never act on a question of a design.
+ * only for the library's sections (`.dxui-lib`), so it can never act on a question of a design.
  */
 ( function () {
 	'use strict';
 
 	var OPEN = 'is-open';
-	var SCOPE = '.dxai-lib';
+	var SCOPE = '.dxui-lib';
 	var QUESTION = SCOPE + ' .faq-question';
 
 	function reduced() {

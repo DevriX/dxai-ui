@@ -7,14 +7,14 @@
  *
  * Makes nothing. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Youtube_Facade_View;
-use DXAI_UI\Compiler\Html_To_Blocks;
-use DXAI_UI\Theme\Theme_Compat;
-use DXAI_UI\Compiler\Prompt_Builder;
-use DXAI_UI\Compiler\Video_Facade;
+use DX_UI\Blocks\Youtube_Facade_View;
+use DX_UI\Compiler\Html_To_Blocks;
+use DX_UI\Theme\Theme_Compat;
+use DX_UI\Compiler\Prompt_Builder;
+use DX_UI\Compiler\Video_Facade;
 
 $fail   = 0;
 $pass   = 0;
@@ -107,9 +107,9 @@ $expect( 'a title with quotes and tags is only text in the attribute', ! str_con
 $expect( 'a video with no title is called what it is', str_contains( Video_Facade::markup( $ID, '   ', true ), 'data-video-title="YouTube video"' ) );
 $off = Video_Facade::markup( $ID, 'x', false );
 $expect( 'without the hidden embeds a video is its two facades', count( array_filter( parse_blocks( $off ), static fn( $b ) => ! empty( $b['blockName'] ) ) ) === 2 && ! str_contains( $off, 'wp:embed' ) );
-add_filter( 'dxai_ui_video_hidden_embeds', '__return_false' );
+add_filter( 'dx_ui_video_hidden_embeds', '__return_false' );
 $expect( 'a WordPress that does not hide blocks (before 6.9) gets no embeds: they would be printed as live players', ! str_contains( Video_Facade::markup( $ID, 'x' ), 'wp:embed' ) && ! Video_Facade::hides_blocks() );
-remove_all_filters( 'dxai_ui_video_hidden_embeds' );
+remove_all_filters( 'dx_ui_video_hidden_embeds' );
 $expect( 'and this one hides them', Video_Facade::hides_blocks() === version_compare( get_bloginfo( 'version' ), '6.9', '>=' ) );
 
 echo "\nWhat the page prints\n";
@@ -154,7 +154,7 @@ $expect( 'and so is a page whose iframe is mixed with other markup (it cannot be
 
 echo "\nThe script and styles, where the theme does not bring them\n";
 $H = Youtube_Facade_View::HANDLE;
-$expect( 'the plugin has its own copy of the facade\'s script and styles, registered', file_exists( DXAI_UI_DIR . 'assets/js/youtube-facade.js' ) && file_exists( DXAI_UI_DIR . 'assets/css/youtube-facade.css' ) && wp_script_is( $H, 'registered' ) && wp_style_is( $H, 'registered' ) );
+$expect( 'the plugin has its own copy of the facade\'s script and styles, registered', file_exists( DX_UI_DIR . 'assets/js/youtube-facade.js' ) && file_exists( DX_UI_DIR . 'assets/css/youtube-facade.css' ) && wp_script_is( $H, 'registered' ) && wp_style_is( $H, 'registered' ) );
 $off = static function () use ( $H ): void {
 	wp_dequeue_script( $H );
 	wp_dequeue_style( $H );
@@ -162,7 +162,7 @@ $off = static function () use ( $H ): void {
 $on  = static fn(): bool => wp_script_is( $H, 'enqueued' ) && wp_style_is( $H, 'enqueued' );
 $facade_block = Video_Facade::markup( $ID, 'Roof repair tour', true );
 
-add_filter( 'dxai_ui_theme_has_youtube_facade', '__return_false' );
+add_filter( 'dx_ui_theme_has_youtube_facade', '__return_false' );
 $off();
 do_blocks( $facade_block );
 $expect( 'a page with a facade, on a theme that does not bring the script: both are printed (the script in the footer)', $on() && (int) wp_scripts()->get_data( $H, 'group' ) === 1 );
@@ -172,13 +172,13 @@ $expect( 'a page without a facade asks for nothing', ! wp_script_is( $H, 'enqueu
 $off();
 do_blocks( '<!-- wp:paragraph --><p>youtube-facade is only a word here</p><!-- /wp:paragraph -->' );
 $expect( 'and neither does a block that is not an HTML block', ! wp_script_is( $H, 'enqueued' ) );
-remove_all_filters( 'dxai_ui_theme_has_youtube_facade' );
+remove_all_filters( 'dx_ui_theme_has_youtube_facade' );
 
-add_filter( 'dxai_ui_theme_has_youtube_facade', '__return_true' );
+add_filter( 'dx_ui_theme_has_youtube_facade', '__return_true' );
 $off();
 do_blocks( $facade_block );
 $expect( 'on a page whose theme brings its own, nothing of the plugin\'s is printed', ! wp_script_is( $H, 'enqueued' ) && ! wp_style_is( $H, 'enqueued' ) );
-remove_all_filters( 'dxai_ui_theme_has_youtube_facade' );
+remove_all_filters( 'dx_ui_theme_has_youtube_facade' );
 
 $set_theme = static function ( string $name ): void {
 	add_filter( 'template', static fn() => $name, 99 );
@@ -195,7 +195,7 @@ remove_all_filters( 'stylesheet' );
 
 // A converted page: the theme's scripts are detached from it, so the plugin's are printed even on the American Restoration theme.
 $conv = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Video Page', 'post_content' => '' ) );
-update_post_meta( $conv, '_wp_page_template', \DXAI_UI\Theme\Blank_Template::SLUG );
+update_post_meta( $conv, '_wp_page_template', \DX_UI\Theme\Blank_Template::SLUG );
 global $wp_query, $wp_the_query, $post;
 $saved        = array( $wp_query, $wp_the_query, $post );
 $wp_query     = new WP_Query( array( 'page_id' => $conv, 'post_type' => 'page', 'post_status' => 'any' ) );
@@ -213,8 +213,8 @@ remove_all_filters( 'stylesheet' );
 [ $wp_query, $wp_the_query, $post ] = $saved;
 wp_delete_post( (int) $conv, true );
 
-$js  = (string) file_get_contents( DXAI_UI_DIR . 'assets/js/youtube-facade.js' );
-$css = (string) file_get_contents( DXAI_UI_DIR . 'assets/css/youtube-facade.css' );
+$js  = (string) file_get_contents( DX_UI_DIR . 'assets/js/youtube-facade.js' );
+$css = (string) file_get_contents( DX_UI_DIR . 'assets/css/youtube-facade.css' );
 $expect( 'the script loads the player from youtube-nocookie.com only when pressed, and builds the thumbnail and the play button the theme\'s does', str_contains( $js, 'youtube-nocookie.com/embed/' ) && str_contains( $js, 'youtube-facade__thumb' ) && str_contains( $js, 'youtube-facade__play' ) && str_contains( $js, "addEventListener( 'click'" ) && str_contains( $js, "'Enter'" ) );
 $expect( 'the styles show one facade on a phone and the other elsewhere, at 768px as the theme does', str_contains( $css, '.youtube-embed.mobile-show' ) && str_contains( $css, '.youtube-embed.mobile-hide' ) && str_contains( $css, 'max-width: 48rem' ) );
 

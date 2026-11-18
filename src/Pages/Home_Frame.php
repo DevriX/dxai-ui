@@ -2,15 +2,15 @@
 /**
  * The sections a page of the network has whatever it is about, taken from its Home as they are.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Network\Network_Model;
-use DXAI_UI\Network\Page_Reader;
+use DX_UI\Network\Network_Model;
+use DX_UI\Network\Page_Reader;
 
 /**
  * The team's pages of a kind are built in the same order (Network_Model::recipe(): a service is hero › badges › a text beside a

@@ -2,26 +2,26 @@
 /**
  * Block-theme template parts (header / footer) with revisions.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
 final class Template_Part_Factory {
 
 	/**
 	 * The slug a part of this area is saved and referenced under.
 	 *
-	 * Never a theme's own header/footer slug — always `dxai-` prefixed. One
+	 * Never a theme's own header/footer slug — always `dxui-` prefixed. One
 	 * function for both save() and reference_markup(), and for
 	 * Structure_Repository when it decides which old parts to retire, so the
 	 * three cannot disagree about a name.
 	 */
 	public static function slug( string $area, string $key = '' ): string {
 		$area = in_array( $area, array( 'header', 'footer' ), true ) ? $area : 'uncategorized';
-		$slug = 'dxai-' . $area;
+		$slug = 'dxui-' . $area;
 		// A key that is already a clean slug is used as it is: sanitize_title()
 		// is filterable, and a plugin hooked to it must not be able to make
 		// save() and reference_markup() disagree with an earlier import.
@@ -70,7 +70,7 @@ final class Template_Part_Factory {
 					'name'           => $slug,
 					'post_status'    => 'publish',
 					'posts_per_page' => 1,
-					'meta_key'       => '_dxai_ui_generated',
+					'meta_key'       => '_dx_ui_generated',
 					'meta_value'     => '1',
 				)
 			);
@@ -85,8 +85,8 @@ final class Template_Part_Factory {
 			'meta_input'   => array_merge(
 				array_map( 'strval', $meta ),
 				array(
-					'_dxai_ui_generated' => '1',
-					'_dxai_ui_area'      => $area,
+					'_dx_ui_generated' => '1',
+					'_dx_ui_area'      => $area,
 				)
 			),
 		);

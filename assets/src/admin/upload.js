@@ -23,7 +23,7 @@ function nonce() {
 	if ( window.wpApiSettings && window.wpApiSettings.nonce ) {
 		return window.wpApiSettings.nonce;
 	}
-	return ( window.dxaiUI && window.dxaiUI.nonce ) || '';
+	return ( window.dxUI && window.dxUI.nonce ) || '';
 }
 
 /*
@@ -55,15 +55,15 @@ function refreshNonce() {
 			if ( apiFetch.nonceMiddleware ) {
 				apiFetch.nonceMiddleware.nonce = fresh;
 			}
-			if ( window.dxaiUI ) {
-				window.dxaiUI.nonce = fresh;
+			if ( window.dxUI ) {
+				window.dxUI.nonce = fresh;
 			}
 			return fresh;
 		} );
 }
 
 /**
- * @param {string}   route      Route under dxai-ui/v1, e.g. "process-source".
+ * @param {string}   route      Route under dx-ui/v1, e.g. "process-source".
  * @param {FormData} body
  * @param {Function} onProgress Called with { loaded, total } while the body
  *                              uploads and { sent: true } once it has all gone.
@@ -82,9 +82,9 @@ export function postForm( route, body, onProgress ) {
 }
 
 function send( route, body, onProgress ) {
-	const root = window.dxaiUI && window.dxaiUI.restUrl;
+	const root = window.dxUI && window.dxUI.restUrl;
 	if ( ! root || typeof window.XMLHttpRequest !== 'function' ) {
-		return apiFetch( { path: '/dxai-ui/v1/' + route, method: 'POST', body } );
+		return apiFetch( { path: '/dx-ui/v1/' + route, method: 'POST', body } );
 	}
 
 	return new Promise( ( resolve, reject ) => {
@@ -105,12 +105,12 @@ function send( route, body, onProgress ) {
 		}
 		xhr.onerror = () => reject( {
 			code: 'fetch_error',
-			message: __( 'The connection to the server was lost before it answered.', 'dxai-ui' ),
+			message: __( 'The connection to the server was lost before it answered.', 'dx-ui' ),
 			data: { status: 0 },
 		} );
 		xhr.onabort = () => reject( {
 			code: 'fetch_error',
-			message: __( 'The request was cancelled.', 'dxai-ui' ),
+			message: __( 'The request was cancelled.', 'dx-ui' ),
 			data: { status: 0 },
 		} );
 		xhr.onload = () => {
@@ -124,7 +124,7 @@ function send( route, body, onProgress ) {
 				if ( json === null ) {
 					reject( {
 						code: 'invalid_json',
-						message: __( 'The response is not a valid JSON response.', 'dxai-ui' ),
+						message: __( 'The response is not a valid JSON response.', 'dx-ui' ),
 						data: { status: xhr.status },
 					} );
 					return;
@@ -140,7 +140,7 @@ function send( route, body, onProgress ) {
 				code: json === null && xhr.responseText ? 'invalid_json' : 'http_' + xhr.status,
 				message: sprintf(
 					/* translators: %d: HTTP status code */
-					__( 'The server answered HTTP %d.', 'dxai-ui' ),
+					__( 'The server answered HTTP %d.', 'dx-ui' ),
 					xhr.status
 				),
 				data: { status: xhr.status },

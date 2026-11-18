@@ -2,12 +2,12 @@
 /**
  * The text a conversion record keeps: what an import was given and what it made.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
 /**
  * Every save keeps its compile result and its own answer as one conversion
@@ -32,7 +32,7 @@ namespace DXAI_UI\Structures;
 final class Conversion_Snapshot {
 
 	/** What a compressed record starts with; the version is for a later format. */
-	public const PREFIX = 'dxai-gz1:';
+	public const PREFIX = 'dxui-gz1:';
 
 	/**
 	 * The record's text for this payload.

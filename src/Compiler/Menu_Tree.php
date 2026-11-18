@@ -2,12 +2,12 @@
 /**
  * Nested menu trees from designed header/footer HTML.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Menu_Tree {
 
@@ -76,11 +76,11 @@ final class Menu_Tree {
 
 		$dom  = new \DOMDocument( '1.0', 'UTF-8' );
 		$prev = libxml_use_internal_errors( true );
-		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxai-menu-root">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
+		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxui-menu-root">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 		libxml_use_internal_errors( $prev );
 
-		$root = $dom->getElementById( 'dxai-menu-root' );
+		$root = $dom->getElementById( 'dxui-menu-root' );
 		if ( ! $root instanceof \DOMElement ) {
 			return array();
 		}

@@ -2,16 +2,16 @@
 /**
  * Border, radius, outline and ring utilities.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind\Utilities;
+namespace DX_UI\Compiler\Tailwind\Utilities;
 
-use DXAI_UI\Compiler\Tailwind\Candidate;
-use DXAI_UI\Compiler\Tailwind\Theme;
-use DXAI_UI\Compiler\Tailwind\Utility_Module;
+use DX_UI\Compiler\Tailwind\Candidate;
+use DX_UI\Compiler\Tailwind\Theme;
+use DX_UI\Compiler\Tailwind\Utility_Module;
 
 /**
  * Owns `border-*` in all three of its senses (width, colour and style),

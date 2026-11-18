@@ -1,5 +1,5 @@
 /*
- * What a chosen .dxai.zip holds, read in the browser before anything is
+ * What a chosen .dxui.zip holds, read in the browser before anything is
  * uploaded: its manifest.json, found through the ZIP's central directory and
  * inflated with DecompressionStream. The import panel then says which page
  * and design this is (and from which site), whether it has a header and a
@@ -91,7 +91,7 @@ export async function readPackage( file ) {
 			return null;
 		}
 		const m = JSON.parse( text );
-		if ( ! m || typeof m !== 'object' || m.format !== 'dxai-ui-page' ) {
+		if ( ! m || typeof m !== 'object' || m.format !== 'dx-ui-page' ) {
 			return { invalid: true };
 		}
 		const page = m.page && typeof m.page === 'object' ? m.page : {};
@@ -105,8 +105,8 @@ export async function readPackage( file ) {
 			status: String( page.status || '' ),
 			siteUrl: String( source.site_url || '' ),
 			pageId: Number( source.page_id || 0 ) || 0,
-			pageKey: String( meta._dxai_ui_page_key || source.page_key || '' ),
-			archive: String( meta._dxai_ui_source_zip || '' ),
+			pageKey: String( meta._dx_ui_page_key || source.page_key || '' ),
+			archive: String( meta._dx_ui_source_zip || '' ),
 			header: modeOf( 'header' ),
 			footer: modeOf( 'footer' ),
 			media: count( m.media ),

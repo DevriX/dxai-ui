@@ -2,27 +2,27 @@
 /**
  * A design's colours following the active theme's.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Color_Usage;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Color_Usage;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Color_Math;
+use DX_UI\Support\Upload_Paths;
 
 /**
- * An imported design keeps its own colours in its own tokens (`--dxai-brand`,
- * `text-dxai-ink` …), and its content never names a theme colour, so it renders
+ * An imported design keeps its own colours in its own tokens (`--dxui-brand`,
+ * `text-dxui-ink` …), and its content never names a theme colour, so it renders
  * on any theme. On a theme with colour settings (Theme_Palette) the design is
  * fitted to them by a BINDING: which token follows which theme colour. It is
  * applied when the page is shown, as one rule of references —
  *
- *   --dxai-brand: var(--wp--preset--color--primary, #016bc4);
+ *   --dxui-brand: var(--wp--preset--color--primary, #016bc4);
  *
  * — so a later change of the theme's colours (american-restoration's Theme
  * Global Settings, Styles, theme.json) reaches every converted page on the next
@@ -58,7 +58,7 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Theme_Binding {
 
-	public const META = '_dxai_ui_theme_binding';
+	public const META = '_dx_ui_theme_binding';
 
 	/** Bumped when the stored shape or the emitted CSS changes. */
 	public const SCHEMA = 1;
@@ -85,7 +85,7 @@ final class Theme_Binding {
 	public static function home_of( int $post_id ): int {
 		$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
 		if ( $scope < 1 ) {
-			$scope = \DXAI_UI\Structures\Design_Attach::scope_for( $post_id );
+			$scope = \DX_UI\Structures\Design_Attach::scope_for( $post_id );
 		}
 
 		return $scope > 0 ? $scope : $post_id;
@@ -127,8 +127,8 @@ final class Theme_Binding {
 			return $memo[ $page ];
 		}
 		$home  = $page;
-		$route = (string) get_post_meta( $page, '_dxai_ui_source_route', true );
-		$zip   = (string) get_post_meta( $page, '_dxai_ui_source_zip', true );
+		$route = (string) get_post_meta( $page, '_dx_ui_source_route', true );
+		$zip   = (string) get_post_meta( $page, '_dx_ui_source_zip', true );
 		if ( $page > 0 && $route !== '' && $zip !== '' ) {
 			$ids   = get_posts(
 				array(
@@ -137,11 +137,11 @@ final class Theme_Binding {
 					'posts_per_page' => 200,
 					'fields'         => 'ids',
 					'no_found_rows'  => true,
-					'meta_key'       => '_dxai_ui_source_zip', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_key'       => '_dx_ui_source_zip', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 					'meta_value'     => $zip, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				)
 			);
-			$homes = array_values( array_filter( array_map( 'intval', $ids ), static fn( int $id ): bool => metadata_exists( 'post', $id, '_dxai_ui_source_route' ) && (string) get_post_meta( $id, '_dxai_ui_source_route', true ) === '' ) );
+			$homes = array_values( array_filter( array_map( 'intval', $ids ), static fn( int $id ): bool => metadata_exists( 'post', $id, '_dx_ui_source_route' ) && (string) get_post_meta( $id, '_dx_ui_source_route', true ) === '' ) );
 			if ( count( $homes ) === 1 ) {
 				$home = $homes[0];
 			}
@@ -166,8 +166,8 @@ final class Theme_Binding {
 	public static function default_mode( int $home ): string {
 		$mode = Theme_Palette::current()['has_palette'] && ! Theme_Compat::may_install_chrome() ? 'follow' : 'keep';
 
-		// `dxai_ui_theme_color_mode`: 'follow' (the design's colours bound to the theme's palette) or 'keep' (its own), for a Home and the palette.
-		return (string) apply_filters( 'dxai_ui_theme_color_mode', $mode, $home, Theme_Palette::current() );
+		// `dx_ui_theme_color_mode`: 'follow' (the design's colours bound to the theme's palette) or 'keep' (its own), for a Home and the palette.
+		return (string) apply_filters( 'dx_ui_theme_color_mode', $mode, $home, Theme_Palette::current() );
 	}
 
 	/**
@@ -208,8 +208,8 @@ final class Theme_Binding {
 		$all[ get_stylesheet() ] = $binding;
 		update_post_meta( $home, self::META, $all );
 		self::$css = array();
-		// `dxai_ui_theme_colors_changed`: a design's colours were bound to the theme anew (its Home given); what was drawn from the old binding is stale.
-		do_action( 'dxai_ui_theme_colors_changed', $home );
+		// `dx_ui_theme_colors_changed`: a design's colours were bound to the theme anew (its Home given); what was drawn from the old binding is stale.
+		do_action( 'dx_ui_theme_colors_changed', $home );
 
 		return $binding;
 	}
@@ -333,12 +333,12 @@ final class Theme_Binding {
 		if ( isset( self::$css[ $key ] ) ) {
 			return self::$css[ $key ];
 		}
-		$cached = get_transient( 'dxai_ui_binding_' . $key );
+		$cached = get_transient( 'dx_ui_binding_' . $key );
 		if ( is_string( $cached ) ) {
 			return self::$css[ $key ] = $cached;
 		}
 		$css = self::build_css( $home, $binding );
-		set_transient( 'dxai_ui_binding_' . $key, $css, DAY_IN_SECONDS );
+		set_transient( 'dx_ui_binding_' . $key, $css, DAY_IN_SECONDS );
 
 		return self::$css[ $key ] = $css;
 	}
@@ -391,7 +391,7 @@ final class Theme_Binding {
 		// The design's own rule only (the first): the rules for one background (scoped()) are not its text's value everywhere.
 		$css = self::css( $home );
 		$css = (string) strtok( $css, '}' );
-		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxai-([a-z0-9-]+?)--fg:([^;}]+)/', $css, $m, PREG_SET_ORDER ) ) {
+		if ( $binding !== null && ( $binding['mode'] ?? '' ) === 'follow' && preg_match_all( '/--dxui-([a-z0-9-]+?)--fg:([^;}]+)/', $css, $m, PREG_SET_ORDER ) ) {
 			foreach ( $m as $hit ) {
 				$value           = trim( $hit[2] );
 				$text[ $hit[1] ] = preg_match( '/,\s*(#[0-9a-f]{3,8})\)$/i', $value, $hex ) ? $hex[1] : $value;
@@ -420,19 +420,19 @@ final class Theme_Binding {
 		}
 		$decls = array();
 		foreach ( $bound as $token => $b ) {
-			$decls[] = '--dxai-' . $token . ':var(--wp--preset--color--' . $b['slug'] . ',' . $b['hex'] . ')';
+			$decls[] = '--dxui-' . $token . ':var(--wp--preset--color--' . $b['slug'] . ',' . $b['hex'] . ')';
 		}
 		$relative = array();
 		foreach ( $derived as $token => $d ) {
-			$decls[]    = '--dxai-' . $token . ':' . $d['hex'];
-			$relative[] = '--dxai-' . $token . ':' . $d['css'];
+			$decls[]    = '--dxui-' . $token . ':' . $d['hex'];
+			$relative[] = '--dxui-' . $token . ':' . $d['css'];
 		}
 		// Text colours: each chosen against the backgrounds it sits on.
 		$channels = self::text_channels( $binding, $design, $now, $bound );
 		foreach ( $channels as $token => $value ) {
-			$decls[] = '--dxai-' . $token . '--fg:' . $value;
+			$decls[] = '--dxui-' . $token . '--fg:' . $value;
 		}
-		$scope = '.dxai-ui.dxai-ui--' . $home;
+		$scope = '.dx-ui.dx-ui--' . $home;
 		$out   = $scope . '{' . implode( ';', $decls ) . '}';
 		// …and where one colour cannot read on all of them, a colour for each background, on what paints it.
 		foreach ( self::scoped( Color_Usage::pair_rows( (array) ( $binding['usage']['pairs'] ?? array() ) ), $design, $now, $channels, self::painters( $home, $binding ) ) as $rule ) {
@@ -570,7 +570,7 @@ final class Theme_Binding {
 			if ( $over === array() ) {
 				continue;
 			}
-			$usual = isset( $channels[ $token ] ) ? (string) $channels[ $token ] : 'var(--dxai-' . $token . ')';
+			$usual = isset( $channels[ $token ] ) ? (string) $channels[ $token ] : 'var(--dxui-' . $token . ')';
 			foreach ( array_keys( $grounds ) as $bg ) {
 				$selectors = (array) ( $painters[ $bg . '|' . $token ] ?? array() );
 				if ( $selectors === array() ) {
@@ -578,7 +578,7 @@ final class Theme_Binding {
 				}
 				$value = $over[ $bg ] ?? $usual;
 				$alone = array_values( array_filter( $selectors, static fn( $sel ) => (int) ( $under[ $bg ][ $sel ] ?? 0 ) === 1 ) );
-				$rules[] = ':is(' . implode( ',', $selectors ) . '){--dxai-' . $token . '--fg:' . $value . '}';
+				$rules[] = ':is(' . implode( ',', $selectors ) . '){--dxui-' . $token . '--fg:' . $value . '}';
 				if ( $alone !== array() ) {
 					$rules[] = ':is(' . implode( ',', $alone ) . '){color:' . $value . '}';
 				}
@@ -617,7 +617,7 @@ final class Theme_Binding {
 					$live = Color_Math::parse( $b['hex'] );
 					$out[ $token ] = array(
 						'hex' => sprintf( 'rgba(%d,%d,%d,%s)', (int) round( $live[0] ), (int) round( $live[1] ), (int) round( $live[2] ), rtrim( rtrim( number_format( $rgba[3], 3, '.', '' ), '0' ), '.' ) ),
-						'css' => 'color-mix(in srgb,var(--dxai-' . $anchor . ') ' . round( $rgba[3] * 100, 1 ) . '%,transparent)',
+						'css' => 'color-mix(in srgb,var(--dxui-' . $anchor . ') ' . round( $rgba[3] * 100, 1 ) . '%,transparent)',
 					);
 					continue 2;
 				}
@@ -632,7 +632,7 @@ final class Theme_Binding {
 					$ratio = $lch[1] / $alc[1];
 					$out[ $token ] = array(
 						'hex' => self::oklch_hex( max( 0.0, min( 1.0, $llc[0] + $dl ) ), $llc[1] * $ratio, $llc[2] + ( $lch[2] - $alc[2] ) ),
-						'css' => 'oklch(from var(--dxai-' . $anchor . ') calc(l ' . ( $dl >= 0 ? '+ ' : '- ' ) . round( abs( $dl ), 3 ) . ') calc(c * ' . round( $ratio, 3 ) . ') h)',
+						'css' => 'oklch(from var(--dxui-' . $anchor . ') calc(l ' . ( $dl >= 0 ? '+ ' : '- ' ) . round( abs( $dl ), 3 ) . ') calc(c * ' . round( $ratio, 3 ) . ') h)',
 					);
 					continue 2;
 				}
@@ -726,7 +726,7 @@ final class Theme_Binding {
 	 * channel of their own. Once per sheet; pixel-neutral until a channel is set.
 	 */
 	private static function channelize( int $home ): void {
-		$paths = array( Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] );
+		$paths = array( Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'] );
 		$site  = Upload_Paths::path( Upload_Paths::DIR . '/site-' . $home . '.css' );
 		if ( $site !== '' ) {
 			$paths[] = $site;
@@ -769,7 +769,7 @@ final class Theme_Binding {
 		if ( wp_doing_ajax() || ! current_user_can( 'manage_options' ) || ! Theme_Palette::current()['has_palette'] ) {
 			return;
 		}
-		foreach ( \DXAI_UI\Structures\Design_Attach::designs() as $page ) {
+		foreach ( \DX_UI\Structures\Design_Attach::designs() as $page ) {
 			if ( self::get( (int) $page->ID ) === null && is_array( get_post_meta( (int) $page->ID, Token_Styles::META, true ) ) ) {
 				self::apply( (int) $page->ID );
 				return;

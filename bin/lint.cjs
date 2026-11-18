@@ -5,9 +5,9 @@
  *
  *   node bin/lint.cjs [--php <php binary and its flags>]
  *
- * The PHP binary is `php` unless --php or DXAI_PHP says otherwise. Exit code 1 when a file does not parse.
+ * The PHP binary is `php` unless --php or DXUI_PHP says otherwise. Exit code 1 when a file does not parse.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 'use strict';
@@ -19,7 +19,7 @@ const { spawnSync } = require( 'child_process' );
 const ROOT = path.resolve( __dirname, '..' );
 const args = process.argv.slice( 2 );
 const at = args.indexOf( '--php' );
-const php = at >= 0 && at + 1 < args.length ? args[ at + 1 ] : process.env.DXAI_PHP || 'php';
+const php = at >= 0 && at + 1 < args.length ? args[ at + 1 ] : process.env.DXUI_PHP || 'php';
 const SKIP = new Set( [ 'node_modules', 'vendor', '.git', '.verify', '.claude', 'dist', 'build', '.phpstan-cache', 'fixtures' ] );
 
 const walk = ( dir, out = [] ) => {

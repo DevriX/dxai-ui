@@ -2,12 +2,12 @@
 /**
  * Small, exact edits to the HTML a header block saved.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
 /**
  * The header's blocks are static: what renders is the HTML they saved, so a

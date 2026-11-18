@@ -2,15 +2,15 @@
 /**
  * REST: page speed of the imported designs.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Support\Speed;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Support\Speed;
 
 /**
  * GET  /speed  per design: where its fonts come from (Speed::fonts()), and whether the theme's stylesheet is trimmed.
@@ -22,7 +22,7 @@ final class Speed_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/speed',
 			array(
 				array(
@@ -67,7 +67,7 @@ final class Speed_Controller {
 		}
 		$home = (int) $request->get_param( 'design' );
 		if ( ! Design_Attach::is_design( $home ) || ! current_user_can( 'edit_post', $home ) ) {
-			return new \WP_Error( 'dxai_ui_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		if ( $action === 'fonts-revert' ) {
 			$done = array( 'changed' => Speed::revert_fonts( $home ), 'complete' => true, 'note' => '' );

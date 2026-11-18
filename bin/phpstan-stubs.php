@@ -3,7 +3,7 @@
  * What the plugin calls in WP-CLI and in plugins a site may have (ACF), for PHPStan only (phpstan.neon.dist scans it; nothing
  * loads it). php-stubs/wp-cli-stubs wants WordPress stubs before 7.0, so the few methods are described here.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 // phpcs:ignoreFile

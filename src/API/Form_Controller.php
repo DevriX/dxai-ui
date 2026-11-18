@@ -2,22 +2,22 @@
 /**
  * Public form submission endpoint.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Structures\Structure_Repository;
+use DX_UI\Content\Content_Types;
+use DX_UI\Structures\Structure_Repository;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class Form_Controller extends \WP_REST_Controller {
 
 	public function __construct() {
-		$this->namespace = DXAI_UI_REST_NAMESPACE;
+		$this->namespace = DX_UI_REST_NAMESPACE;
 		$this->rest_base = 'forms';
 	}
 
@@ -34,7 +34,7 @@ final class Form_Controller extends \WP_REST_Controller {
 						'type'     => 'string',
 						'required' => false,
 					),
-					\DXAI_UI\Blocks\Form_Block::HONEYPOT => array(
+					\DX_UI\Blocks\Form_Block::HONEYPOT => array(
 						'type'     => 'string',
 						'required' => false,
 					),
@@ -78,7 +78,7 @@ final class Form_Controller extends \WP_REST_Controller {
 		 * A form rendered before the rename (a page cache still serving it)
 		 * sends no new trap, and there "website" is still the trap.
 		 */
-		$trap     = \DXAI_UI\Blocks\Form_Block::HONEYPOT;
+		$trap     = \DX_UI\Blocks\Form_Block::HONEYPOT;
 		$legacy   = ! $request->has_param( $trap );
 		$honeypot = trim( (string) $request->get_param( $legacy ? 'website' : $trap ) );
 		if ( $honeypot !== '' ) {
@@ -121,7 +121,7 @@ final class Form_Controller extends \WP_REST_Controller {
 
 		$title = sprintf(
 			/* translators: %s datetime */
-			__( 'Form entry %s', 'dxai-ui' ),
+			__( 'Form entry %s', 'dx-ui' ),
 			gmdate( 'Y-m-d H:i:s' )
 		);
 
@@ -139,7 +139,7 @@ final class Form_Controller extends \WP_REST_Controller {
 				 */
 				'post_content' => wp_slash( wp_json_encode( $safe, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) ?: '' ),
 				'meta_input'   => array(
-					'_dxai_ui_page_id' => $safe['page_id'] ?? 0,
+					'_dx_ui_page_id' => $safe['page_id'] ?? 0,
 				),
 			),
 			true
@@ -209,7 +209,7 @@ final class Form_Controller extends \WP_REST_Controller {
 
 		return rest_ensure_response(
 			array(
-				'filename' => 'dxai-form-entries.csv',
+				'filename' => 'dxui-form-entries.csv',
 				'csv'      => is_string( $csv ) ? $csv : '',
 			)
 		);
@@ -219,23 +219,23 @@ final class Form_Controller extends \WP_REST_Controller {
 		/*
 		 * The connecting address. X-Forwarded-For is only believed when the
 		 * connection comes from a proxy the site lists as trusted (the
-		 * dxai_ui_trusted_proxies filter): anyone can send the header, so
+		 * dx_ui_trusted_proxies filter): anyone can send the header, so
 		 * trusting it by default let a bot pick a fresh address per request
 		 * and never reach the limit.
 		 */
 		$ip      = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0.0.0.0';
-		$proxies = (array) apply_filters( 'dxai_ui_trusted_proxies', array() );
+		$proxies = (array) apply_filters( 'dx_ui_trusted_proxies', array() );
 		$fwd     = $request->get_header( 'x-forwarded-for' );
 		if ( is_string( $fwd ) && $fwd !== '' && in_array( $ip, $proxies, true ) ) {
 			$ip = sanitize_text_field( trim( explode( ',', $fwd )[0] ) );
 		}
 
-		$key   = 'dxai_ui_form_' . md5( $ip );
+		$key   = 'dx_ui_form_' . md5( $ip );
 		$count = (int) get_transient( $key );
 		if ( $count >= 8 ) {
 			return new \WP_Error(
-				'dxai_ui_form_rate',
-				__( 'Too many form submissions. Please wait a few minutes.', 'dxai-ui' ),
+				'dx_ui_form_rate',
+				__( 'Too many form submissions. Please wait a few minutes.', 'dx-ui' ),
 				array( 'status' => 429 )
 			);
 		}

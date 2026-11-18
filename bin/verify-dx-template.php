@@ -5,7 +5,7 @@
  *   bash bin/wp-php.sh bin/verify-dx-template.php        (or: wp eval-file bin/verify-dx-template.php --user=1)
  *
  * Until now a design's pages were on DX Blank, which puts the header and the footer into the page's content as it renders
- * (Page_Chrome), where the page's scope element wraps them with the rest. The DX template (`templates/dxai-template.php`,
+ * (Page_Chrome), where the page's scope element wraps them with the rest. The DX template (`templates/dxui-template.php`,
  * Template_Chrome) draws them as a template does — the header, the page, the footer — inside the same scope element and in the same
  * order, so the markup is the one DX Blank made and every rule scoped to the design, and the design's state machine, see the same page.
  * What the page stores is its body; a skip link or a header spacer that the content loses (the spacer is an empty block, and deleting it
@@ -13,15 +13,15 @@
  *
  * Makes a Home and a few pages and removes them. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Chrome\Template_Chrome;
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Chrome\Template_Chrome;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Blank_Template;
 
 $fail   = 0;
 $pass   = 0;
@@ -48,12 +48,12 @@ $css_head = 'background:#102030;padding-top:13px';
 $css_foot = 'background:#203040;padding-top:17px';
 $css_body = 'padding-top:19px;background:#304050';
 $para     = '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->';
-$group    = static fn( string $tag, string $class, string $css ): string => '<!-- wp:group {"tagName":"' . $tag . '","className":"' . $class . '","dxaiCss":"' . $css . '"} --><' . $tag . ' class="wp-block-group ' . $class . ' ' . Style_Hoister::css_class( $css ) . '">' . $para . '</' . $tag . '><!-- /wp:group -->';
+$group    = static fn( string $tag, string $class, string $css ): string => '<!-- wp:group {"tagName":"' . $tag . '","className":"' . $class . '","dxuiCss":"' . $css . '"} --><' . $tag . ' class="wp-block-group ' . $class . ' ' . Style_Hoister::css_class( $css ) . '">' . $para . '</' . $tag . '><!-- /wp:group -->';
 $header   = $group( 'header', 'h-58px px-6', $css_head );
 $footer   = $group( 'footer', 'mb-4-5 px-7', $css_foot );
 $body     = $group( 'section', 'py-0', $css_body );
-$skip     = '<!-- wp:dxai-ui/link {"className":"skip"} --><a class="wp-block-dxai-ui-link skip" href="#main">Skip to content</a><!-- /wp:dxai-ui/link -->';
-$space    = '<!-- wp:dxai-ui/box {"className":"dxai-dc-1","ariaHidden":"true"} --><div class="dxai-dc-1" aria-hidden="true"></div><!-- /wp:dxai-ui/box -->';
+$skip     = '<!-- wp:dx-ui/link {"className":"skip"} --><a class="wp-block-dx-ui-link skip" href="#main">Skip to content</a><!-- /wp:dx-ui/link -->';
+$space    = '<!-- wp:dx-ui/box {"className":"dxui-dc-1","ariaHidden":"true"} --><div class="dxui-dc-1" aria-hidden="true"></div><!-- /wp:dx-ui/box -->';
 
 $page = static function ( string $title, string $content, int $scope, string $template ) use ( &$made ): int {
 	$id     = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => wp_slash( $content ) ) );
@@ -61,12 +61,12 @@ $page = static function ( string $title, string $content, int $scope, string $te
 	if ( $template !== '' ) {
 		update_post_meta( $id, '_wp_page_template', $template );
 	}
-	update_post_meta( $id, '_dxai_ui_scope_id', $scope > 0 ? $scope : $id );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_scope_id', $scope > 0 ? $scope : $id );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 	// A converted page carries its own design (Design_Attach::resolve()): without it a page that holds the plugin's blocks is an ordinary page
 	// showing a design, which the scope element goes around block by block and not around the page.
-	update_post_meta( $id, '_dxai_ui_css_url', 'https://example.test/dx-template-fixture.css' );
-	\DXAI_UI\Structures\Design_Attach::forget( $id );
+	update_post_meta( $id, '_dx_ui_css_url', 'https://example.test/dx-template-fixture.css' );
+	\DX_UI\Structures\Design_Attach::forget( $id );
 
 	return $id;
 };
@@ -95,26 +95,26 @@ $drawn = static function ( int $id ): string {
 };
 $norm = static fn( string $html ): string => trim( (string) preg_replace( '/\s+/', ' ', (string) preg_replace( '/>\s+</', '><', $html ) ) );
 $at   = static fn( string $html, string $needle ) => strpos( $html, $needle );
-$same = static fn( string $html, int $id ): string => str_replace( 'dxai-ui--' . $id, 'dxai-ui--S', $html );
+$same = static fn( string $html, int $id ): string => str_replace( 'dx-ui--' . $id, 'dx-ui--S', $html );
 
 echo "The templates\n";
 $templates = apply_filters( 'theme_page_templates', array(), null, null, 'page' );
 $expect( 'both canvas templates are page templates', isset( $templates[ Blank_Template::TEMPLATE ], $templates[ Blank_Template::SLUG ] ), wp_json_encode( $templates ) );
 $expect( 'DX Blank is named as what it is now: the template of earlier imports', str_contains( (string) $templates[ Blank_Template::SLUG ], 'earlier' ) );
 $expect( 'a design\'s pages are given the DX template', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
-add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::SLUG );
+add_filter( 'dx_ui_default_template', static fn() => Blank_Template::SLUG );
 $expect( '…unless the site says DX Blank', Blank_Template::default_slug() === Blank_Template::SLUG );
-remove_all_filters( 'dxai_ui_default_template' );
-add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::TEMPLATE );
+remove_all_filters( 'dx_ui_default_template' );
+add_filter( 'dx_ui_default_template', static fn() => Blank_Template::TEMPLATE );
 $expect( '…or the DX template', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
-remove_all_filters( 'dxai_ui_default_template' );
-add_filter( 'dxai_ui_default_template', static fn() => 'page.php' );
+remove_all_filters( 'dx_ui_default_template' );
+add_filter( 'dx_ui_default_template', static fn() => 'page.php' );
 $expect( '…and a name that is no canvas template is not taken', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
-remove_all_filters( 'dxai_ui_default_template' );
-add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::DEFAULT );
+remove_all_filters( 'dx_ui_default_template' );
+add_filter( 'dx_ui_default_template', static fn() => Blank_Template::DEFAULT );
 $expect( '…or the theme\'s Default template, where a site names it', Blank_Template::default_slug() === Blank_Template::DEFAULT );
-remove_all_filters( 'dxai_ui_default_template' );
-$expect( 'the template file ships', is_readable( DXAI_UI_DIR . 'templates/' . Blank_Template::TEMPLATE ) && is_readable( DXAI_UI_DIR . 'templates/' . Blank_Template::SLUG ) );
+remove_all_filters( 'dx_ui_default_template' );
+$expect( 'the template file ships', is_readable( DX_UI_DIR . 'templates/' . Blank_Template::TEMPLATE ) && is_readable( DX_UI_DIR . 'templates/' . Blank_Template::SLUG ) );
 $expect( 'both slugs are canvas templates, no other is', Blank_Template::is_canvas_slug( Blank_Template::SLUG ) && Blank_Template::is_canvas_slug( Blank_Template::TEMPLATE ) && ! Blank_Template::is_canvas_slug( 'page.php' ) && ! Blank_Template::is_canvas_slug( '' ) );
 
 // The Home keeps the skip link, the spacer, its header and its footer in its content (the shape a Home has on a classic theme); the
@@ -131,22 +131,22 @@ echo "\nThe pages of earlier imports (DX Blank)\n";
 // DX Blank's page as its template draws it: the content Page_Chrome marked, made the page's <main> (Template_Chrome::in_main()).
 $legacy = Template_Chrome::in_main( $sub_blank, $through( $sub_blank ) );
 $expect( 'the chrome is still put into the content as it renders: the Home\'s header and footer around the page', str_contains( $legacy, 'h-58px' ) && str_contains( $legacy, 'mb-4-5' ) && str_contains( $legacy, 'py-0' ) );
-$expect( '…inside one scope element', 1 === substr_count( $legacy, 'wp-block-group alignfull dxai-ui' ), (string) substr_count( $legacy, 'wp-block-group alignfull dxai-ui' ) );
+$expect( '…inside one scope element', 1 === substr_count( $legacy, 'wp-block-group alignfull dx-ui' ), (string) substr_count( $legacy, 'wp-block-group alignfull dx-ui' ) );
 $expect( 'Page_Chrome adds it to DX Blank pages, as it did', Page_Chrome::applies_to( $sub_blank ) && Page_Chrome::applies_to( $home_blank ) );
 
 echo "\nThe DX template\n";
 $expect( 'the template draws the chrome, so the content is not given it as it renders', ! Page_Chrome::applies_to( $sub_tpl ) && Page_Chrome::composes( $sub_tpl ) && Page_Chrome::composes( $sub_blank ) );
 $outside = $through( $sub_tpl );
-$expect( 'the same page read outside the template (a REST preview, a feed) is its body in its scope element, with no header or footer added', ! str_contains( $outside, 'h-58px' ) && ! str_contains( $outside, 'mb-4-5' ) && str_contains( $outside, 'dxai-ui--' . $home_tpl ) && 1 === substr_count( $outside, 'wp-block-group alignfull dxai-ui' ), substr( $outside, 0, 160 ) );
+$expect( 'the same page read outside the template (a REST preview, a feed) is its body in its scope element, with no header or footer added', ! str_contains( $outside, 'h-58px' ) && ! str_contains( $outside, 'mb-4-5' ) && str_contains( $outside, 'dx-ui--' . $home_tpl ) && 1 === substr_count( $outside, 'wp-block-group alignfull dx-ui' ), substr( $outside, 0, 160 ) );
 $expect( 'its stored content is the body: nothing of the chrome is in it', ! str_contains( (string) get_post_field( 'post_content', $sub_tpl ), 'h-58px' ) && ! str_contains( (string) get_post_field( 'post_content', $sub_tpl ), 'mb-4-5' ) );
 
 $mine = $drawn( $sub_tpl );
 $expect( 'drawn by the template, the page is the markup DX Blank made, byte for byte once the scope ids are the same', $norm( $same( $mine, $home_tpl ) ) === $norm( $same( $legacy, $home_blank ) ), strlen( $mine ) . ' vs ' . strlen( $legacy ) );
-$expect( 'one scope element around it all', 1 === substr_count( $mine, 'wp-block-group alignfull dxai-ui' ) && str_ends_with( trim( $mine ), '</div>' ), (string) substr_count( $mine, 'wp-block-group alignfull dxai-ui' ) );
-$order = array( $at( $mine, 'Skip to content' ), $at( $mine, 'dxai-dc-1' ), $at( $mine, 'h-58px' ), $at( $mine, 'py-0' ), $at( $mine, 'mb-4-5' ) );
+$expect( 'one scope element around it all', 1 === substr_count( $mine, 'wp-block-group alignfull dx-ui' ) && str_ends_with( trim( $mine ), '</div>' ), (string) substr_count( $mine, 'wp-block-group alignfull dx-ui' ) );
+$order = array( $at( $mine, 'Skip to content' ), $at( $mine, 'dxui-dc-1' ), $at( $mine, 'h-58px' ), $at( $mine, 'py-0' ), $at( $mine, 'mb-4-5' ) );
 $expect( 'in the order of the page: the skip link, the spacer, the header, the content, the footer', ! in_array( false, $order, true ) && $order[0] < $order[1] && $order[1] < $order[2] && $order[2] < $order[3] && $order[3] < $order[4], wp_json_encode( $order ) );
-$expect( 'each of them once', 1 === substr_count( $mine, 'Skip to content' ) && 1 === substr_count( $mine, 'dxai-dc-1' ) && 1 === substr_count( $mine, 'h-58px' ) && 1 === substr_count( $mine, 'mb-4-5' ) );
-$expect( 'after the template is done the page is read as before: the scope element is the content\'s again', ! Template_Chrome::wraps( $sub_tpl ) && 1 === substr_count( $through( $sub_tpl ), 'wp-block-group alignfull dxai-ui' ) );
+$expect( 'each of them once', 1 === substr_count( $mine, 'Skip to content' ) && 1 === substr_count( $mine, 'dxui-dc-1' ) && 1 === substr_count( $mine, 'h-58px' ) && 1 === substr_count( $mine, 'mb-4-5' ) );
+$expect( 'after the template is done the page is read as before: the scope element is the content\'s again', ! Template_Chrome::wraps( $sub_tpl ) && 1 === substr_count( $through( $sub_tpl ), 'wp-block-group alignfull dx-ui' ) );
 
 $home_out = $drawn( $own_tpl );
 $expect( 'a Home that carries its own header and footer is not given a second', 1 === substr_count( $home_out, 'h-58px' ) && 1 === substr_count( $home_out, 'mb-4-5' ) && 1 === substr_count( $home_out, 'Skip to content' ), $home_out === '' ? 'empty' : '' );
@@ -158,12 +158,12 @@ echo "\nThe page's landmarks\n";
 $main_at  = $at( $mine, '<main' );
 $close_at = $at( $mine, '</main>' );
 $expect( 'the DX template: one <main>, with the page\'s content in it, the header before it and the footer after it', 1 === substr_count( $mine, '<main' ) && false !== $main_at && false !== $close_at && $at( $mine, 'h-58px' ) < $main_at && $main_at < $at( $mine, 'py-0' ) && $at( $mine, 'py-0' ) < $close_at && $close_at < $at( $mine, 'mb-4-5' ), wp_json_encode( array( $at( $mine, 'h-58px' ), $main_at, $at( $mine, 'py-0' ), $close_at, $at( $mine, 'mb-4-5' ) ) ) );
-$expect( '…the skip link and the spacer before the header, outside it too', $at( $mine, 'Skip to content' ) < $main_at && $at( $mine, 'dxai-dc-1' ) < $main_at );
-$expect( '…inside the scope element, which still holds it all', $at( $mine, 'wp-block-group alignfull dxai-ui' ) < $main_at && str_ends_with( trim( $mine ), '</div>' ) );
-$expect( 'DX Blank: the same — its header and footer outside the content\'s <main>, and no mark of where they were left', 1 === substr_count( $legacy, '<main' ) && $at( $legacy, 'h-58px' ) < $at( $legacy, '<main' ) && $at( $legacy, '</main>' ) < $at( $legacy, 'mb-4-5' ) && ! str_contains( $legacy, 'dxai-ui:main' ) );
+$expect( '…the skip link and the spacer before the header, outside it too', $at( $mine, 'Skip to content' ) < $main_at && $at( $mine, 'dxui-dc-1' ) < $main_at );
+$expect( '…inside the scope element, which still holds it all', $at( $mine, 'wp-block-group alignfull dx-ui' ) < $main_at && str_ends_with( trim( $mine ), '</div>' ) );
+$expect( 'DX Blank: the same — its header and footer outside the content\'s <main>, and no mark of where they were left', 1 === substr_count( $legacy, '<main' ) && $at( $legacy, 'h-58px' ) < $at( $legacy, '<main' ) && $at( $legacy, '</main>' ) < $at( $legacy, 'mb-4-5' ) && ! str_contains( $legacy, 'dx-ui:main' ) );
 $expect( 'a page given no header or footer is its <main> as it is, on either template', 1 === substr_count( $home_out, '<main' ) && 1 === substr_count( Template_Chrome::in_main( $own_blank, $through( $own_blank ) ), '<main' ) );
 $expect( 'the <main> is where a skip link goes (#main) when nothing on the page is; when something is, it has no id (an id is the page\'s once)', '<main id="main">' === Template_Chrome::main_open( '<p>Body</p>' ) && '<main>' === Template_Chrome::main_open( '<section id="main"><p>Hero</p></section>' ) && '<main>' === Template_Chrome::main_open( '<!-- wp:group {"anchor":"main"} -->' ) );
-$expect( 'what is exported is the page with its header and footer, with no mark in it (only a page drawn is marked)', ! str_contains( Page_Chrome::with_chrome( $sub_blank, (string) get_post_field( 'post_content', $sub_blank ) ), 'dxai-ui:main' ) );
+$expect( 'what is exported is the page with its header and footer, with no mark in it (only a page drawn is marked)', ! str_contains( Page_Chrome::with_chrome( $sub_blank, (string) get_post_field( 'post_content', $sub_blank ) ), 'dx-ui:main' ) );
 
 echo "\nWhat a page loses\n";
 // The import keeps the Home's skip link and spacer; the spacer is an empty block and an editor deletes it.
@@ -171,7 +171,7 @@ $expect( 'the import keeps the blocks that open the Home', ( function () use ( $
 	Template_Chrome::remember_lead( $own_tpl );
 	$kept = (string) get_post_meta( $own_tpl, Template_Chrome::LEAD_META, true );
 
-	return str_contains( $kept, 'Skip to content' ) && str_contains( $kept, 'dxai-dc-1' );
+	return str_contains( $kept, 'Skip to content' ) && str_contains( $kept, 'dxui-dc-1' );
 } )() );
 Template_Chrome::remember_lead( $own_tpl );
 update_post_meta( $home_tpl, Template_Chrome::LEAD_META, wp_slash( (string) get_post_meta( $own_tpl, Template_Chrome::LEAD_META, true ) ) );
@@ -181,21 +181,21 @@ $expect( 'a Home that does not open with them keeps nothing', '' === (string) ge
 
 $no_space = $page( 'DX template fixture page without the spacer', $skip . "\n\n" . $body, $home_tpl, Blank_Template::TEMPLATE );
 $out      = $drawn( $no_space );
-$expect( 'a page that lost the spacer is drawn with it, between the skip link and the header', 1 === substr_count( $out, 'dxai-dc-1' ) && $at( $out, 'Skip to content' ) < $at( $out, 'dxai-dc-1' ) && $at( $out, 'dxai-dc-1' ) < $at( $out, 'h-58px' ), wp_json_encode( array( $at( $out, 'Skip to content' ), $at( $out, 'dxai-dc-1' ), $at( $out, 'h-58px' ) ) ) );
+$expect( 'a page that lost the spacer is drawn with it, between the skip link and the header', 1 === substr_count( $out, 'dxui-dc-1' ) && $at( $out, 'Skip to content' ) < $at( $out, 'dxui-dc-1' ) && $at( $out, 'dxui-dc-1' ) < $at( $out, 'h-58px' ), wp_json_encode( array( $at( $out, 'Skip to content' ), $at( $out, 'dxui-dc-1' ), $at( $out, 'h-58px' ) ) ) );
 $expect( '…once, and the skip link it still had is its own', 1 === substr_count( $out, 'Skip to content' ) );
 $none = $page( 'DX template fixture page with neither', $body, $home_tpl, Blank_Template::TEMPLATE );
 $out  = $drawn( $none );
-$expect( 'a page that lost both is drawn with both', 1 === substr_count( $out, 'Skip to content' ) && 1 === substr_count( $out, 'dxai-dc-1' ) && $at( $out, 'dxai-dc-1' ) < $at( $out, 'h-58px' ) );
-$expect( 'the same page on DX Blank is not given what it lost: that template is as it was', ! str_contains( $through( $page( 'DX template fixture blank page without them', $body, $home_blank, Blank_Template::SLUG ) ), 'dxai-dc-1' ) );
+$expect( 'a page that lost both is drawn with both', 1 === substr_count( $out, 'Skip to content' ) && 1 === substr_count( $out, 'dxui-dc-1' ) && $at( $out, 'dxui-dc-1' ) < $at( $out, 'h-58px' ) );
+$expect( 'the same page on DX Blank is not given what it lost: that template is as it was', ! str_contains( $through( $page( 'DX template fixture blank page without them', $body, $home_blank, Blank_Template::SLUG ) ), 'dxui-dc-1' ) );
 $rules = Template_Chrome::rules_markup( array(), $no_space );
-$expect( 'the rule of what is put back is collected with the page\'s', 1 === count( $rules ) && str_contains( (string) $rules[0], 'dxai-dc-1' ) && str_contains( (string) $rules[0], 'Skip to content' ), wp_json_encode( $rules ) );
+$expect( 'the rule of what is put back is collected with the page\'s', 1 === count( $rules ) && str_contains( (string) $rules[0], 'dxui-dc-1' ) && str_contains( (string) $rules[0], 'Skip to content' ), wp_json_encode( $rules ) );
 $expect( 'a page that lost nothing adds no markup for its rules', array() === Template_Chrome::rules_markup( array(), $sub_tpl ) );
 $expect( 'a value that is not a list comes back as it was, and a page of no design is left alone', 'x' === Template_Chrome::rules_markup( 'x', $sub_tpl ) && array( 'x' ) === Template_Chrome::rules_markup( array( 'x' ), 0 ) );
 
 echo "\nA header built from Menus\n";
 // The install path: the design's header is the site header block, filled from the menus, and the page is given it.
 $stored = array_merge(
-	Header_Template::build( '<!-- wp:group {"tagName":"header","className":"h-58px"} --><header class="wp-block-group h-58px"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group"><!-- wp:dxai-ui/link {"url":"#a","text":"One"} --><a class="wp-block-dxai-ui-link" href="#a">One</a><!-- /wp:dxai-ui/link --><!-- wp:dxai-ui/link {"url":"#b","text":"Two"} --><a class="wp-block-dxai-ui-link" href="#b">Two</a><!-- /wp:dxai-ui/link --></nav><!-- /wp:group --></header><!-- /wp:group -->' ),
+	Header_Template::build( '<!-- wp:group {"tagName":"header","className":"h-58px"} --><header class="wp-block-group h-58px"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group"><!-- wp:dx-ui/link {"url":"#a","text":"One"} --><a class="wp-block-dx-ui-link" href="#a">One</a><!-- /wp:dx-ui/link --><!-- wp:dx-ui/link {"url":"#b","text":"Two"} --><a class="wp-block-dx-ui-link" href="#b">Two</a><!-- /wp:dx-ui/link --></nav><!-- /wp:group --></header><!-- /wp:group -->' ),
 	array( 'source' => array( 'scope_id' => 0 ) )
 );
 $menu_home = $page( 'DX template fixture installed Home', $lead_home . "\n\n" . $body, 0, Blank_Template::TEMPLATE );
@@ -204,58 +204,58 @@ $menu_blank = $page( 'DX template fixture installed page (blank)', $lead_home . 
 $stored['source']['scope_id'] = $menu_home;
 $stored['version']            = Header_Template::VERSION;
 add_filter( 'pre_option_' . Header_Template::OPTION, static fn() => $stored );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 update_post_meta( $menu_home, Page_Chrome::MODE_META, 'install' );
-$expect( 'the page is given the site header block (built from the menus)', str_contains( Page_Chrome::header_markup( $menu_page ), 'dxai-ui/site-header' ) );
+$expect( 'the page is given the site header block (built from the menus)', str_contains( Page_Chrome::header_markup( $menu_page ), 'dx-ui/site-header' ) );
 $with_menus = $drawn( $menu_page );
 $blank_menus = Template_Chrome::in_main( $menu_blank, $through( $menu_blank ) );
-$expect( 'the header the template draws is the menus\' own, in the page\'s scope element, before the content', 1 === substr_count( $with_menus, '<header' ) && str_contains( $with_menus, '>One<' ) && str_contains( $with_menus, '>Two<' ) && $at( $with_menus, '<header' ) < $at( $with_menus, 'py-0' ) && 1 === substr_count( $with_menus, 'wp-block-group alignfull dxai-ui' ), substr( $with_menus, 0, 200 ) );
+$expect( 'the header the template draws is the menus\' own, in the page\'s scope element, before the content', 1 === substr_count( $with_menus, '<header' ) && str_contains( $with_menus, '>One<' ) && str_contains( $with_menus, '>Two<' ) && $at( $with_menus, '<header' ) < $at( $with_menus, 'py-0' ) && 1 === substr_count( $with_menus, 'wp-block-group alignfull dx-ui' ), substr( $with_menus, 0, 200 ) );
 $expect( '…and the page DX Blank makes is the same markup', $norm( $same( $with_menus, $menu_home ) ) === $norm( $same( $blank_menus, $menu_home ) ) );
 // The quality measure (Team_Quality, bin/team-quality.cjs) takes what opens a page off before it reads the sections: it is told how many elements
 // that is. A header the template draws is one of them: left out of the count, it was read as a section, and a page whose title is a word of the
 // header's menu (a page made from the menu) was paired with the header.
-$q_menu = \DXAI_UI\Pages\Team_Quality::measure( $menu_home )['home']['chrome'];
+$q_menu = \DX_UI\Pages\Team_Quality::measure( $menu_home )['home']['chrome'];
 $expect( 'the quality measure counts what opens a page the template draws: the Home\'s skip link and spacer, and the header the menus made after them', 3 === $q_menu['header'], wp_json_encode( $q_menu ) );
-$q_own = \DXAI_UI\Pages\Team_Quality::measure( $own_tpl )['home']['chrome'];
+$q_own = \DX_UI\Pages\Team_Quality::measure( $own_tpl )['home']['chrome'];
 $expect( '…and not one more for a Home whose content holds its header: the skip link, the spacer and the header, and its footer', 3 === $q_own['header'] && 1 === $q_own['footer'], wp_json_encode( $q_own ) );
 remove_all_filters( 'pre_option_' . Header_Template::OPTION );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 
 echo "\nA page of no design on the template\n";
 $plain_id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'DX template fixture ordinary page', 'post_content' => wp_slash( $para ) ) );
 $made[]   = $plain_id;
 update_post_meta( $plain_id, '_wp_page_template', Blank_Template::TEMPLATE );
 add_filter( 'pre_option_' . Header_Template::OPTION, static fn() => array() );
-add_filter( 'pre_option_' . \DXAI_UI\Chrome\Footer_Template::OPTION, static fn() => array() );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+add_filter( 'pre_option_' . \DX_UI\Chrome\Footer_Template::OPTION, static fn() => array() );
+\DX_UI\Chrome\Site_Header_Block::forget();
 $plain_out = $drawn( $plain_id );
-$expect( 'with no site header or footer installed it is its content and nothing else: no scope element, no header', ! str_contains( $plain_out, 'dxai-ui--' ) && ! str_contains( $plain_out, '<header' ) && str_contains( $plain_out, 'Words' ), substr( $plain_out, 0, 120 ) );
+$expect( 'with no site header or footer installed it is its content and nothing else: no scope element, no header', ! str_contains( $plain_out, 'dx-ui--' ) && ! str_contains( $plain_out, '<header' ) && str_contains( $plain_out, 'Words' ), substr( $plain_out, 0, 120 ) );
 remove_all_filters( 'pre_option_' . Header_Template::OPTION );
-remove_all_filters( 'pre_option_' . \DXAI_UI\Chrome\Footer_Template::OPTION );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+remove_all_filters( 'pre_option_' . \DX_UI\Chrome\Footer_Template::OPTION );
+\DX_UI\Chrome\Site_Header_Block::forget();
 $stored['source']['scope_id'] = $menu_home;
 add_filter( 'pre_option_' . Header_Template::OPTION, static fn() => $stored );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 $plain_out = $drawn( $plain_id );
-$expect( 'with a site header installed it is drawn before the content, in the scope element of the design it came from', 1 === substr_count( $plain_out, '<header' ) && str_contains( $plain_out, 'dxai-ui--' . $menu_home ) && $at( $plain_out, '<header' ) < $at( $plain_out, 'Words' ), substr( $plain_out, 0, 200 ) );
-$expect( '…and nothing else when the design kept no opening blocks: it has none to lend', ! str_contains( $plain_out, 'Skip to content' ) && ! str_contains( $plain_out, 'dxai-dc-1' ) );
+$expect( 'with a site header installed it is drawn before the content, in the scope element of the design it came from', 1 === substr_count( $plain_out, '<header' ) && str_contains( $plain_out, 'dx-ui--' . $menu_home ) && $at( $plain_out, '<header' ) < $at( $plain_out, 'Words' ), substr( $plain_out, 0, 200 ) );
+$expect( '…and nothing else when the design kept no opening blocks: it has none to lend', ! str_contains( $plain_out, 'Skip to content' ) && ! str_contains( $plain_out, 'dxui-dc-1' ) );
 
 // A fixed header leaves its place to a box at the top of the page, which a page of no design does not carry: the design the header came
 // from lends the skip link and the spacer it kept, with their rules (the skip link is hidden by a rule of its own).
 $skip_css  = 'position:absolute;left:-9999px';
 $space_css = 'display:block;height:58px';
-$lend      = '<!-- wp:dxai-ui/link {"className":"skip","dxaiCss":"' . $skip_css . '"} --><a class="wp-block-dxai-ui-link skip ' . Style_Hoister::css_class( $skip_css ) . '" href="#main">Skip to content</a><!-- /wp:dxai-ui/link -->'
-	. "\n\n" . '<!-- wp:dxai-ui/box {"className":"dxai-dc-1","ariaHidden":"true","dxaiCss":"' . $space_css . '"} --><div class="dxai-dc-1 ' . Style_Hoister::css_class( $space_css ) . '" aria-hidden="true"></div><!-- /wp:dxai-ui/box -->';
+$lend      = '<!-- wp:dx-ui/link {"className":"skip","dxuiCss":"' . $skip_css . '"} --><a class="wp-block-dx-ui-link skip ' . Style_Hoister::css_class( $skip_css ) . '" href="#main">Skip to content</a><!-- /wp:dx-ui/link -->'
+	. "\n\n" . '<!-- wp:dx-ui/box {"className":"dxui-dc-1","ariaHidden":"true","dxuiCss":"' . $space_css . '"} --><div class="dxui-dc-1 ' . Style_Hoister::css_class( $space_css ) . '" aria-hidden="true"></div><!-- /wp:dx-ui/box -->';
 update_post_meta( $menu_home, Template_Chrome::LEAD_META, wp_slash( $lend ) );
-$inline       = static fn(): string => (string) implode( '', (array) ( wp_styles()->get_data( 'dxai-ui-rules', 'after' ) ?: array() ) );
+$inline       = static fn(): string => (string) implode( '', (array) ( wp_styles()->get_data( 'dx-ui-rules', 'after' ) ?: array() ) );
 $rules_before = $inline();
 $plain_out    = $drawn( $plain_id );
 $rules_after  = $inline();
-$expect( 'a page of no design is given the skip link and the spacer of the design the header came from, before the header, once each', 1 === substr_count( $plain_out, 'Skip to content' ) && 1 === substr_count( $plain_out, 'dxai-dc-1' ) && 1 === substr_count( $plain_out, '<header' ) && $at( $plain_out, 'Skip to content' ) < $at( $plain_out, 'dxai-dc-1' ) && $at( $plain_out, 'dxai-dc-1' ) < $at( $plain_out, '<header' ) && $at( $plain_out, '<header' ) < $at( $plain_out, 'Words' ), wp_json_encode( array( $at( $plain_out, 'Skip to content' ), $at( $plain_out, 'dxai-dc-1' ), $at( $plain_out, '<header' ), $at( $plain_out, 'Words' ) ) ) );
-$expect( '…in the scope element of that design, and the page\'s own words once', 1 === substr_count( $plain_out, 'dxai-ui--' . $menu_home ) && 1 === substr_count( $plain_out, 'Words' ), (string) substr_count( $plain_out, 'dxai-ui--' . $menu_home ) );
+$expect( 'a page of no design is given the skip link and the spacer of the design the header came from, before the header, once each', 1 === substr_count( $plain_out, 'Skip to content' ) && 1 === substr_count( $plain_out, 'dxui-dc-1' ) && 1 === substr_count( $plain_out, '<header' ) && $at( $plain_out, 'Skip to content' ) < $at( $plain_out, 'dxui-dc-1' ) && $at( $plain_out, 'dxui-dc-1' ) < $at( $plain_out, '<header' ) && $at( $plain_out, '<header' ) < $at( $plain_out, 'Words' ), wp_json_encode( array( $at( $plain_out, 'Skip to content' ), $at( $plain_out, 'dxui-dc-1' ), $at( $plain_out, '<header' ), $at( $plain_out, 'Words' ) ) ) );
+$expect( '…in the scope element of that design, and the page\'s own words once', 1 === substr_count( $plain_out, 'dx-ui--' . $menu_home ) && 1 === substr_count( $plain_out, 'Words' ), (string) substr_count( $plain_out, 'dx-ui--' . $menu_home ) );
 $expect( '…with their rules: the skip link is hidden and the spacer has its height', str_contains( $rules_after, 'left:-9999px' ) && str_contains( $rules_after, 'height:58px' ) && ! str_contains( $rules_before, 'left:-9999px' ), substr( $rules_after, 0, 160 ) );
 $site_top = Template_Chrome::site_header();
-$expect( 'a theme\'s header.php (DX Base) draws the same: the skip link and the spacer, then the header, in that design\'s scope element', 1 === substr_count( $site_top, 'Skip to content' ) && 1 === substr_count( $site_top, 'dxai-dc-1' ) && 1 === substr_count( $site_top, '<header' ) && $at( $site_top, 'dxai-dc-1' ) < $at( $site_top, '<header' ) && str_contains( $site_top, 'dxai-ui--' . $menu_home ), substr( $site_top, 0, 200 ) );
+$expect( 'a theme\'s header.php (DX Base) draws the same: the skip link and the spacer, then the header, in that design\'s scope element', 1 === substr_count( $site_top, 'Skip to content' ) && 1 === substr_count( $site_top, 'dxui-dc-1' ) && 1 === substr_count( $site_top, '<header' ) && $at( $site_top, 'dxui-dc-1' ) < $at( $site_top, '<header' ) && str_contains( $site_top, 'dx-ui--' . $menu_home ), substr( $site_top, 0, 200 ) );
 $expect( 'the page read outside the template (a REST preview, a feed) is its own content: nothing is lent to it', ! str_contains( $through( $plain_id ), 'Skip to content' ) && ! str_contains( $through( $plain_id ), '<header' ) );
 // In wp-admin the editor has its own styles: nothing is written for the lent blocks there.
 $GLOBALS['current_screen'] = new class() { // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
@@ -271,12 +271,12 @@ unset( $GLOBALS['current_screen'] );
 Template_Chrome::site_header();
 $expect( '…and on the front end the same call writes them', $written() === $grown + 1, $written() . ' vs ' . $grown );
 remove_all_filters( 'pre_option_' . Header_Template::OPTION );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 
 echo "\nA design's page on the theme's Default template is the theme's, unless the site asks for the design's drawing\n";
 $default_page = $page( 'DX template fixture page on the Default template', $lead_home . "\n\n" . $body, $home_tpl, Blank_Template::DEFAULT );
 $expect( 'by default it is the theme\'s: no canvas, and its Default template is not one the editor draws as the design', ! Blank_Template::is_canvas( $default_page ) && ! in_array( '', Blank_Template::drawn_slugs( $default_page ), true ) );
-add_filter( 'dxai_ui_default_template_draws_design', '__return_true' );
+add_filter( 'dx_ui_default_template_draws_design', '__return_true' );
 $expect( 'where the site asks, it is a canvas page', Blank_Template::is_canvas( $default_page ) && Blank_Template::draws_default( $default_page ) );
 $expect( '…and its Default template is one the editor\'s canvas draws as the design', in_array( '', Blank_Template::drawn_slugs( $default_page ), true ) && in_array( 'default', Blank_Template::drawn_slugs( $default_page ), true ) );
 $expect( 'it is drawn exactly as the same page on the DX template', $same( $norm( $drawn( $default_page ) ), $default_page ) === $same( $norm( $drawn( $sub_tpl ) ), $sub_tpl ), substr( $norm( $drawn( $default_page ) ), 0, 200 ) );
@@ -290,7 +290,7 @@ $expect( 'a page of the theme\'s own on the Default template is the theme\'s', !
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $plain_default ) ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query']; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 $expect( '…and its request keeps the theme\'s template', ( new Blank_Template() )->include_template( '/theme/page.php' ) === '/theme/page.php' );
-remove_all_filters( 'dxai_ui_default_template_draws_design' );
+remove_all_filters( 'dx_ui_default_template_draws_design' );
 $expect( 'without the site\'s word, a design\'s page on the Default template is left to the theme', ! Blank_Template::is_canvas( $default_page ) );
 wp_reset_query();
 

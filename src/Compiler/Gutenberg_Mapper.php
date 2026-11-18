@@ -2,12 +2,12 @@
 /**
  * Validates Gutenberg comment syntax.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Gutenberg_Mapper {
 
@@ -15,13 +15,13 @@ final class Gutenberg_Mapper {
 		$markup = trim( $markup );
 		if ( $markup === '' || ! str_contains( $markup, '<!-- wp:' ) ) {
 			return new \WP_Error(
-				'dxai_ui_markup',
-				__( 'Generated markup is not valid Gutenberg — the compiler produced no `<!-- wp:` blocks.', 'dxai-ui' ),
+				'dx_ui_markup',
+				__( 'Generated markup is not valid Gutenberg — the compiler produced no `<!-- wp:` blocks.', 'dx-ui' ),
 				array( 'status' => 422 )
 			);
 		}
 
-		if ( $require_group && ! str_contains( $markup, '<!-- wp:group' ) && ! str_contains( $markup, '<!-- wp:dxai-ui/' ) ) {
+		if ( $require_group && ! str_contains( $markup, '<!-- wp:group' ) && ! str_contains( $markup, '<!-- wp:dx-ui/' ) ) {
 			$markup = "<!-- wp:group {\"layout\":{\"type\":\"constrained\"}} -->\n<div class=\"wp-block-group\">\n{$markup}\n</div>\n<!-- /wp:group -->";
 		}
 
@@ -35,7 +35,7 @@ final class Gutenberg_Mapper {
 				}
 			}
 			if ( ! $has ) {
-				return new \WP_Error( 'dxai_ui_markup', __( 'WordPress could not parse the generated blocks.', 'dxai-ui' ), array( 'status' => 422 ) );
+				return new \WP_Error( 'dx_ui_markup', __( 'WordPress could not parse the generated blocks.', 'dx-ui' ), array( 'status' => 422 ) );
 			}
 		}
 
@@ -43,7 +43,7 @@ final class Gutenberg_Mapper {
 	}
 
 	public function wrap_scope( string $markup, int $pattern_id, string $extra_class = '' ): string {
-		$class  = trim( 'dxai-ui dxai-ui--' . $pattern_id . ' ' . $extra_class );
+		$class  = trim( 'dx-ui dx-ui--' . $pattern_id . ' ' . $extra_class );
 		$markup = trim( $markup );
 		if ( $markup === '' ) {
 			return $markup;
@@ -51,11 +51,11 @@ final class Gutenberg_Mapper {
 
 		// Only skip when the ROOT group already carries this scope.
 		// Inner body scopes must not prevent wrapping header/footer — otherwise
-		// Design.com mobile/desktop rules (.dxai-ui--N .dxai-dc-mobile) never match.
+		// Design.com mobile/desktop rules (.dx-ui--N .dxui-dc-mobile) never match.
 		if ( preg_match( '/^<!--\s*wp:group\s+(\{.*?\})\s+-->/s', $markup, $m ) ) {
 			$attrs = json_decode( $m[1], true );
 			$cn    = is_array( $attrs ) ? (string) ( $attrs['className'] ?? '' ) : '';
-			if ( str_contains( $cn, 'dxai-ui--' . $pattern_id ) ) {
+			if ( str_contains( $cn, 'dx-ui--' . $pattern_id ) ) {
 				return $markup;
 			}
 		}

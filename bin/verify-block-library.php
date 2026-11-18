@@ -22,15 +22,15 @@
  *
  * Makes a Home and its pages and removes them again (and the drawings it made). Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Library_View;
-use DXAI_UI\Pages\Block_Library;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Home_Kit;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Blocks\Library_View;
+use DX_UI\Pages\Block_Library;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Home_Kit;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
 
 $fail   = 0;
 $pass   = 0;
@@ -45,8 +45,8 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 };
 
 // The plugin's own library is what is checked: a library the site keeps in its uploads (named as its owner likes) is another suite's.
-$pin_built_in = static fn() => \DXAI_UI\Pages\Template::BUILT_IN;
-add_filter( 'dxai_ui_template', $pin_built_in, 5 );
+$pin_built_in = static fn() => \DX_UI\Pages\Template::BUILT_IN;
+add_filter( 'dx_ui_template', $pin_built_in, 5 );
 Block_Library::forget();
 $entries = Block_Library::entries();
 if ( $entries === array() ) {
@@ -81,7 +81,7 @@ $leaks = static function ( string $markup ) use ( $forbidden ): array {
 	return $out;
 };
 $known_tokens = array( 'company', 'company_short', 'phone', 'phone_url', 'email', 'address', 'region', 'title', 'contact_url', 'site_url', 'row', 'icon_url', 'icon_id', 't', 'image_url', 'image_id', 'image_alt', 'image_w', 'image_h' );
-$known_lists  = array_merge( array( 'places', 'services' ), array_keys( \DXAI_UI\Pages\Layouts::MAX ) );
+$known_lists  = array_merge( array( 'places', 'services' ), array_keys( \DX_UI\Pages\Layouts::MAX ) );
 $names_in     = static function ( string $markup ): array {
 	preg_match_all( '/\{\{\s*([a-z_]+)/i', $markup, $m );
 
@@ -97,7 +97,7 @@ $flat = static function ( array $block ) use ( &$flat ): array {
 };
 
 echo "The data\n";
-$doc = json_decode( (string) file_get_contents( DXAI_UI_DIR . 'data/block-library/library.json' ), true );
+$doc = json_decode( (string) file_get_contents( DX_UI_DIR . 'data/block-library/library.json' ), true );
 $expect( 'the index is version 1 and names the theme it is for', is_array( $doc ) && (int) ( $doc['version'] ?? 0 ) === 1 && in_array( 'american-restoration', (array) ( $doc['themes'] ?? array() ), true ) );
 $expect( 'there are sections, each with an id, a role, a label, what it needs and the pages it is for', count( $entries ) >= 6 && count( array_filter( $entries, static fn( $e ) => preg_match( '/^[a-z0-9-]{2,60}$/', (string) $e['id'] ) === 1 && (string) $e['role'] !== '' && (string) $e['label'] !== '' && is_array( $e['needs'] ) && ( (array) $e['pages'] !== array() || ( $e['source'] ?? '' ) === 'layout' ) ) ) === count( $entries ), (string) count( $entries ) );
 $roles = array_unique( array_map( static fn( $e ) => (string) $e['role'], $entries ) );
@@ -119,15 +119,15 @@ foreach ( $entries as $id => $e ) {
 	// A row's drawing is a token in a token ({{icon_url:{{row:icon|check}}}}: the row names it, the library draws it): one level deep, no more.
 	$once = (string) preg_replace( '/\{\{[^{}]*\}\}/', '', $markup );
 	$expect( "$id: every token is one the library fills, and is closed (" . implode( ' ', $tokens ) . ')', array_diff( $tokens, $known_tokens ) === array() && substr_count( $once, '{{' ) === preg_match_all( '/\{\{[^{}]*\}\}/', $once ) && ! str_contains( (string) preg_replace( '/\{\{[^{}]*\}\}/', '', $once ), '{{' ), implode( ',', array_diff( $tokens, $known_tokens ) ) );
-	preg_match_all( '/"(dxaiIf|dxaiRepeat|dxaiIcon)":"([^"]*)"/', $markup, $mk, PREG_SET_ORDER );
+	preg_match_all( '/"(dxuiIf|dxuiRepeat|dxuiIcon)":"([^"]*)"/', $markup, $mk, PREG_SET_ORDER );
 	$bad_marker = array();
 	foreach ( $mk as $m ) {
 		// A row's drawing ({{row:icon|check}}): the row names it, else the one after the bar; that one is shipped.
 		$drawing = preg_match( '/^\{\{row:icon\|([a-z0-9-]*)\}\}$/', $m[2], $dm ) === 1 ? $dm[1] : $m[2];
-		if ( $m[1] === 'dxaiIcon' && ( $drawing === '' || ! is_readable( DXAI_UI_DIR . 'data/block-library/icons/' . $drawing . '.svg' ) ) ) {
+		if ( $m[1] === 'dxuiIcon' && ( $drawing === '' || ! is_readable( DX_UI_DIR . 'data/block-library/icons/' . $drawing . '.svg' ) ) ) {
 			$bad_marker[] = 'no drawing ' . $m[2];
 		}
-		if ( $m[1] === 'dxaiRepeat' && ! in_array( $m[2], $known_lists, true ) ) {
+		if ( $m[1] === 'dxuiRepeat' && ! in_array( $m[2], $known_lists, true ) ) {
 			$bad_marker[] = 'a list ' . $m[2];
 		}
 	}
@@ -138,19 +138,19 @@ foreach ( $entries as $id => $e ) {
 	// content" there (the editor, not this suite, is the judge of that; this holds what it found).
 	$sized = array();
 	foreach ( $flat( $blocks[0] ?? array( 'blockName' => '', 'innerBlocks' => array() ) ) as $b ) {
-		if ( isset( $b['attrs']['dxaiIcon'] ) ) {
+		if ( isset( $b['attrs']['dxuiIcon'] ) ) {
 			$w      = (string) ( $b['attrs']['width'] ?? '' );
 			$h      = (string) ( $b['attrs']['height'] ?? '' );
 			$in     = static fn( string $prop ): bool => preg_match( '/<img[^>]*\sstyle="[^"]*(?<![\w-])' . $prop . ':/', (string) $b['innerHTML'] ) === 1;
 			// A size the team gave it (a width, a height, or both) is in the settings and in the markup alike; one they left to the file is in neither.
 			if ( ( $w !== '' && ! str_contains( (string) $b['innerHTML'], 'width:' . $w ) ) || ( $h !== '' && ! str_contains( (string) $b['innerHTML'], 'height:' . $h ) ) || ( $w === '' && $in( 'width' ) ) || ( $h === '' && $in( 'height' ) ) ) {
-				$sized[] = (string) $b['attrs']['dxaiIcon'];
+				$sized[] = (string) $b['attrs']['dxuiIcon'];
 			}
 		}
 	}
 	$expect( "$id: its drawings keep the size the team gave them, as block settings", $sized === array(), implode( ', ', $sized ) );
 }
-foreach ( glob( DXAI_UI_DIR . 'data/block-library/icons/*.svg' ) ?: array() as $svg ) {
+foreach ( glob( DX_UI_DIR . 'data/block-library/icons/*.svg' ) ?: array() as $svg ) {
 	$text = (string) file_get_contents( $svg );
 	$expect( basename( $svg ) . ': a drawing, with nothing that runs in it', preg_match( '/^\s*<svg\b/', $text ) === 1 && preg_match( '/<script|on[a-z]+=|javascript:|<foreignObject|href=/i', $text ) !== 1 );
 }
@@ -222,7 +222,7 @@ $rows_of  = static function ( string $list, int $n ) use ( $words_of ): array {
 
 	return $rows;
 };
-foreach ( \DXAI_UI\Pages\Layouts::MAX as $list => $max ) {
+foreach ( \DX_UI\Pages\Layouts::MAX as $list => $max ) {
 	if ( $list !== 'places' && $list !== 'services' ) {
 		$facts['lists'][ $list ] = $rows_of( $list, $max );
 	}
@@ -235,7 +235,7 @@ foreach ( array_keys( $entries ) as $id ) {
 		continue;
 	}
 	$markup = serialize_block( $block );
-	$expect( "$id: no token, no marker, no empty or unfilled address is left in it", ! str_contains( $markup, '{{' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon|dxaiCount|dxaiSlice/', $markup ) && ! preg_match( '/href=""|href="\{\{|"url":"\{\{/', $markup ), substr( (string) preg_replace( '/\s+/', ' ', $markup ), 0, 120 ) );
+	$expect( "$id: no token, no marker, no empty or unfilled address is left in it", ! str_contains( $markup, '{{' ) && ! preg_match( '/dxuiIf|dxuiRepeat|dxuiIcon|dxuiCount|dxuiSlice/', $markup ) && ! preg_match( '/href=""|href="\{\{|"url":"\{\{/', $markup ), substr( (string) preg_replace( '/\s+/', ' ', $markup ), 0, 120 ) );
 	$expect( "$id: it parses back to the same markup", ! is_wp_error( Block_Tree::serialize_checked( array( $block ) ) ) );
 	$text = html_entity_decode( wp_strip_all_tags( $markup ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 	if ( in_array( 'company', (array) $entries[ $id ]['tokens'], true ) ) {
@@ -297,14 +297,14 @@ $b   = Block_Library::section( 'cta', $facts, 'same seed', array(), '', $why );
 $expect( 'the same seed picks the same section', $a !== null && $b !== null && $a['id'] === $b['id'] );
 $c = Block_Library::section( 'cta', $facts, 'same seed', array( (string) $a['id'] ), '', $why );
 $expect( 'one the page has already is not taken again', $c !== null && $c['id'] !== $a['id'] );
-$force_generic = static fn() => \DXAI_UI\Pages\Template::GENERIC;
-add_filter( 'dxai_ui_template', $force_generic );
+$force_generic = static fn() => \DX_UI\Pages\Template::GENERIC;
+add_filter( 'dx_ui_template', $force_generic );
 $why = '';
 $gen = Block_Library::section( 'cta', $facts, 'x', array(), '', $why );
-$expect( 'a theme the sections are not made for has no template of its own and gets the generic library: the same sections, in core blocks', \DXAI_UI\Pages\Template::is_generic() && Block_Library::theme_ok() && ! Block_Library::template_ok() === false && $gen !== null && ! preg_match( '/<!-- wp:(?:amr|dx)\//', serialize_block( $gen['block'] ) ), $why );
-remove_filter( 'dxai_ui_template', $force_generic );
+$expect( 'a theme the sections are not made for has no template of its own and gets the generic library: the same sections, in core blocks', \DX_UI\Pages\Template::is_generic() && Block_Library::theme_ok() && ! Block_Library::template_ok() === false && $gen !== null && ! preg_match( '/<!-- wp:(?:amr|dx)\//', serialize_block( $gen['block'] ) ), $why );
+remove_filter( 'dx_ui_template', $force_generic );
 // (Or a library the site keeps for it: a stored one made for American Restoration comes before the built-in template.)
-$expect( 'the American Restoration theme (and any DX theme) has the built-in template, and is not generic', Block_Library::template_ok() && ( ( \DXAI_UI\Pages\Template::for_theme()['slug'] ?? '' ) === \DXAI_UI\Pages\Template::BUILT_IN || ( ! empty( \DXAI_UI\Pages\Template::for_theme()['stored'] ) && in_array( 'american-restoration', (array) \DXAI_UI\Pages\Template::for_theme()['themes'], true ) ) ) && ! \DXAI_UI\Pages\Template::is_generic(), json_encode( \DXAI_UI\Pages\Template::for_theme()['slug'] ?? null ) );
+$expect( 'the American Restoration theme (and any DX theme) has the built-in template, and is not generic', Block_Library::template_ok() && ( ( \DX_UI\Pages\Template::for_theme()['slug'] ?? '' ) === \DX_UI\Pages\Template::BUILT_IN || ( ! empty( \DX_UI\Pages\Template::for_theme()['stored'] ) && in_array( 'american-restoration', (array) \DX_UI\Pages\Template::for_theme()['themes'], true ) ) ) && ! \DX_UI\Pages\Template::is_generic(), json_encode( \DX_UI\Pages\Template::for_theme()['slug'] ?? null ) );
 $expect( 'the American Restoration theme is the one they are made for', Block_Library::theme_ok() === in_array( get_stylesheet(), array( 'american-restoration' ), true ) || in_array( get_template(), array( 'american-restoration' ), true ), get_stylesheet() );
 
 // A Home made for the purpose.
@@ -345,16 +345,16 @@ foreach ( array(
 	$made[]        = (int) $home_id;
 	$homes[ $key ] = (int) $home_id;
 	update_post_meta( $home_id, Page_Scope::META, $home_id );
-	update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
-	update_post_meta( $home_id, '_dxai_ui_css_url', 'dxai-ui/fixture-library-' . $key . '.css' );
+	update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
+	update_post_meta( $home_id, '_dx_ui_css_url', 'dx-ui/fixture-library-' . $key . '.css' );
 }
-$attachments_before = get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_svg_hash' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+$attachments_before = get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_svg_hash' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 $fin = static function () use ( &$made, $attachments_before ): void {
 	foreach ( array_reverse( $made ) as $id ) {
 		wp_delete_post( (int) $id, true );
 	}
 	// The drawings this run made (the ones that were there before are not its to remove).
-	foreach ( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_svg_hash' ) ) as $att ) { // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+	foreach ( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_svg_hash' ) ) as $att ) { // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 		if ( ! in_array( $att, $attachments_before, true ) ) {
 			wp_delete_attachment( (int) $att, true );
 		}
@@ -374,7 +374,7 @@ $av = Block_Library::availability( $homes['bare'] );
 $expect( 'a Home the library can serve is told so, with how many of its sections can be made for it', $av['code'] === 'ok' && $av['usable'] >= 3 && $av['sections'] === count( $entries ), wp_json_encode( $av ) );
 $expect( 'a Home that is another kind of company is told that is the reason', Block_Library::availability( $homes['other'] )['code'] === 'industry' );
 $ask = static function ( int $design ): array {
-	$req = new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$req = new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 	$req->set_param( 'design', $design );
 	$res = rest_do_request( $req );
 
@@ -382,16 +382,16 @@ $ask = static function ( int $design ): array {
 };
 $route = $ask( $homes['bare'] );
 $expect( 'the route the panel reads says the same: the library can be used', $route['status'] === 200 && ( $route['library']['code'] ?? '' ) === 'ok', wp_json_encode( $route ) );
-$force_generic = static fn() => \DXAI_UI\Pages\Template::GENERIC;
-add_filter( 'dxai_ui_template', $force_generic );
+$force_generic = static fn() => \DX_UI\Pages\Template::GENERIC;
+add_filter( 'dx_ui_template', $force_generic );
 $av_theme = Block_Library::availability( $homes['bare'] );
 $route    = $ask( $homes['bare'] );
 $expect( 'a site on another theme is told the library is in use in the generic library (no template for its theme), and so is the panel', $av_theme['code'] === 'ok' && ! empty( $av_theme['generic'] ) && $av_theme['template'] === 'generic' && $av_theme['theme'] !== '' && ( $route['library']['code'] ?? '' ) === 'ok' && ! empty( $route['library']['generic'] ) && ( $route['library']['theme'] ?? '' ) === $av_theme['theme'], wp_json_encode( array( $av_theme, $route ) ) );
-remove_filter( 'dxai_ui_template', $force_generic );
+remove_filter( 'dx_ui_template', $force_generic );
 $av_own = Block_Library::availability( $homes['bare'] );
-$expect( 'on its own theme the template is named', $av_own['template'] === \DXAI_UI\Pages\Template::BUILT_IN && empty( $av_own['generic'] ) && $av_own['template_label'] === 'American Restoration', wp_json_encode( $av_own ) );
-add_filter( 'dxai_ui_block_library_themes', '__return_empty_array' );
-remove_filter( 'dxai_ui_block_library_themes', '__return_empty_array' );
+$expect( 'on its own theme the template is named', $av_own['template'] === \DX_UI\Pages\Template::BUILT_IN && empty( $av_own['generic'] ) && $av_own['template_label'] === 'American Restoration', wp_json_encode( $av_own ) );
+add_filter( 'dx_ui_block_library_themes', '__return_empty_array' );
+remove_filter( 'dx_ui_block_library_themes', '__return_empty_array' );
 
 echo "\nThe pages made for a Home\n";
 $wanted = array(
@@ -425,23 +425,23 @@ $lib_places = static function ( array $plan ): array {
 	return $out;
 };
 $home_before = (string) get_post_field( 'post_content', $homes['bare'] );
-$svg_before  = count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_svg_hash' ) ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+$svg_before  = count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_svg_hash' ) ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 $plan_fill   = Team_Pages::plan( $homes['bare'], $wanted, array( 'library' => 'fill' ) );
 $used        = $lib_places( $plan_fill );
 $bare_places = $places_of( $plan_fill );
 $expect( 'where the Home has no questions, no steps and no call to action, the library has them (no place of the kind is the Home\'s, and there are some of its)', $count( $bare_places, array( 'faq', 'cta', 'process' ), 'home' ) + $count( $bare_places, array( 'faq', 'cta', 'process' ), 'new' ) === 0 && $count( $bare_places, array( 'faq' ), 'library' ) >= 3 && $count( $bare_places, array( 'cta' ), 'library' ) >= 3, implode( ' ', $used ) );
 $expect( 'every place of the plan names the library section it is, with its words', count( array_filter( $plan_fill, static fn( $p ) => count( array_filter( $p['strip'], static fn( $x ) => $x['source'] === 'library' && (string) $x['label'] !== '' && str_starts_with( (string) $x['ops'][0], 'lib:' ) && (int) $x['home'] === 0 ) ) > 0 ) ) === count( $plan_fill ) );
 $expect( 'the page of questions has the long page of them, or a short one, and not a service page', ! in_array( 'service:faq:lib:faq-page', $used, true ) && ! in_array( 'location:faq:lib:faq-page', $used, true ) );
-$expect( 'a plan makes nothing: no page, no drawing\'s file', count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_svg_hash' ) ) ) === $svg_before && get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => 5, 'meta_query' => array( array( 'key' => Team_Pages::META, 'compare' => 'EXISTS' ), array( 'key' => Page_Scope::META, 'value' => (string) $homes['bare'] ) ) ) ) === array() ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+$expect( 'a plan makes nothing: no page, no drawing\'s file', count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_svg_hash' ) ) ) === $svg_before && get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => 5, 'meta_query' => array( array( 'key' => Team_Pages::META, 'compare' => 'EXISTS' ), array( 'key' => Page_Scope::META, 'value' => (string) $homes['bare'] ) ) ) ) === array() ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 $expect( 'the same Home gets the same plan', $plan_fill === Team_Pages::plan( $homes['bare'], $wanted, array( 'library' => 'fill' ) ) );
 $expect( 'it is not used when it is turned off', $lib_places( Team_Pages::plan( $homes['bare'], $wanted, array( 'library' => 'off' ) ) ) === array() );
 $expect( 'nor in the plan that is only the Home\'s sections', $lib_places( Team_Pages::plan( $homes['bare'], $wanted, array( 'mode' => 'home' ) ) ) === array() );
 $expect( 'a Home that is another kind of company has none of it', $lib_places( Team_Pages::plan( $homes['other'], $wanted, array( 'library' => 'prefer' ) ) ) === array() );
-add_filter( 'dxai_ui_template', $force_generic );
+add_filter( 'dx_ui_template', $force_generic );
 $expect( 'on a theme the sections are not made for, the generic library is put in a plan when asked to prefer it (the pages are not left to the Home alone)', $lib_places( Team_Pages::plan( $homes['bare'], $wanted, array( 'library' => 'prefer' ) ) ) !== array() );
-remove_filter( 'dxai_ui_template', $force_generic );
-add_filter( 'dxai_ui_block_library_themes', '__return_empty_array' );
-remove_filter( 'dxai_ui_block_library_themes', '__return_empty_array' );
+remove_filter( 'dx_ui_template', $force_generic );
+add_filter( 'dx_ui_block_library_themes', '__return_empty_array' );
+remove_filter( 'dx_ui_block_library_themes', '__return_empty_array' );
 $full_fill   = $lib_places( Team_Pages::plan( $homes['full'], $wanted, array( 'library' => 'fill' ) ) );
 $full_prefer = $lib_places( Team_Pages::plan( $homes['full'], $wanted, array( 'library' => 'prefer' ) ) );
 $full_places = $places_of( Team_Pages::plan( $homes['full'], $wanted, array( 'library' => 'fill' ) ) );
@@ -482,56 +482,56 @@ foreach ( $out['pages'] as $p ) {
 	$made[] = (int) $p['id'];
 }
 $service = (string) get_post_field( 'post_content', (int) $out['pages'][0]['id'] );
-$expect( 'a page holds the library\'s sections, each marked as its own', Library_View::has_section( $service ) && substr_count( $service, 'dxai-lib' ) >= 3, (string) substr_count( $service, 'dxai-lib' ) );
-$expect( 'filled from the Home: its phone in the call, its name in the words, no token and no marker left', str_contains( $service, 'href="tel:+15550100101"' ) && str_contains( $service, 'Harborview Water and Fire' ) && ! str_contains( $service, '{{' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon/', $service ) );
+$expect( 'a page holds the library\'s sections, each marked as its own', Library_View::has_section( $service ) && substr_count( $service, 'dxui-lib' ) >= 3, (string) substr_count( $service, 'dxui-lib' ) );
+$expect( 'filled from the Home: its phone in the call, its name in the words, no token and no marker left', str_contains( $service, 'href="tel:+15550100101"' ) && str_contains( $service, 'Harborview Water and Fire' ) && ! str_contains( $service, '{{' ) && ! preg_match( '/dxuiIf|dxuiRepeat|dxuiIcon/', $service ) );
 $expect( 'and nothing of another company: no phone but the Home\'s, no name of the sites the sections came from', ! preg_match( '/\(\d{3}\) \d{3}-\d{4}/', $service ) || str_contains( $service, '(555) 010-0101' ) );
 $expect( 'the page parses back to the same markup', ! is_wp_error( Block_Tree::serialize_checked( array_values( array_filter( parse_blocks( $service ), static fn( $b ) => ! empty( $b['blockName'] ) ) ) ) ) );
-$expect( 'its drawings are files in the media library (the build makes them, the plan did not)', preg_match( '#<img src="[^"]+/dxai-ui/icons/[0-9a-f]+\.svg"#', $service ) === 1 || ! str_contains( $service, 'dxaiIcon' ), '' );
+$expect( 'its drawings are files in the media library (the build makes them, the plan did not)', preg_match( '#<img src="[^"]+/dx-ui/icons/[0-9a-f]+\.svg"#', $service ) === 1 || ! str_contains( $service, 'dxuiIcon' ), '' );
 $expect( 'the quality report counts the library\'s inline styles apart (blocks are valid, nothing foreign)', count( array_filter( $out['report'], static fn( $r ) => count( array_filter( $r['gates'], static fn( $g ) => in_array( $g['gate'], array( 'G7', 'G9' ), true ) && ! $g['ok'] ) ) > 0 ) ) === 0, wp_json_encode( array_map( static fn( $r ) => array_map( static fn( $g ) => $g['problems'], array_filter( $r['gates'], static fn( $g ) => ! $g['ok'] ) ), $out['report'] ) ) );
 
 echo "\nThe Home\n";
 $expect( 'the Home itself is not changed: its content is the same as before the pages were made', (string) get_post_field( 'post_content', $homes['bare'] ) === $home_before );
 $expect( 'no section of the library is on it', ! Library_View::has_section( (string) get_post_field( 'post_content', $homes['bare'] ) ) );
-$mutated = $home_before . '<!-- wp:group {"className":"dxai-lib"} --><div class="wp-block-group dxai-lib"></div><!-- /wp:group -->';
+$mutated = $home_before . '<!-- wp:group {"className":"dxui-lib"} --><div class="wp-block-group dxui-lib"></div><!-- /wp:group -->';
 $expect( 'a Home with a section of the library on it would be caught (the check is able to)', Library_View::has_section( $mutated ) && $mutated !== $home_before );
-$expect( 'and a class that only starts like the library\'s is not a section of it', ! Library_View::has_section( 'class="wp-block-group dxai-lib-tight"' ) && ! Library_View::has_section( 'class="my-dxai-lib"' ) && Library_View::has_section( 'class="a dxai-lib b"' ) );
+$expect( 'and a class that only starts like the library\'s is not a section of it', ! Library_View::has_section( 'class="wp-block-group dxui-lib-tight"' ) && ! Library_View::has_section( 'class="my-dxui-lib"' ) && Library_View::has_section( 'class="a dxui-lib b"' ) );
 
 echo "\nThe assets\n";
 $view = new Library_View();
-add_filter( 'dxai_ui_theme_has_block_library', '__return_false' );
+add_filter( 'dx_ui_theme_has_block_library', '__return_false' );
 wp_dequeue_style( Library_View::HANDLE );
 wp_dequeue_script( Library_View::HANDLE );
 $view->register_assets();
 $view->on_render( '<div class="wp-block-group relative">no section</div>' );
 $expect( 'a page with no section of the library asks for none of it', ! wp_style_is( Library_View::HANDLE, 'enqueued' ) && ! wp_script_is( Library_View::HANDLE, 'enqueued' ) );
-$view->on_render( '<div class="wp-block-group dxai-lib"><p class="faq-answer">x</p></div>' );
+$view->on_render( '<div class="wp-block-group dxui-lib"><p class="faq-answer">x</p></div>' );
 $expect( 'a section of the library asks for its styles, and the script when it holds questions', wp_style_is( Library_View::HANDLE, 'enqueued' ) && wp_script_is( Library_View::HANDLE, 'enqueued' ) );
 wp_dequeue_style( Library_View::HANDLE );
 wp_dequeue_script( Library_View::HANDLE );
-add_filter( 'dxai_ui_theme_has_block_library', '__return_true', 20 );
-$view->on_render( '<div class="wp-block-group dxai-lib"><p class="faq-answer">x</p></div>' );
+add_filter( 'dx_ui_theme_has_block_library', '__return_true', 20 );
+$view->on_render( '<div class="wp-block-group dxui-lib"><p class="faq-answer">x</p></div>' );
 $expect( 'a theme that brings them is left to', ! wp_style_is( Library_View::HANDLE, 'enqueued' ) && ! wp_script_is( Library_View::HANDLE, 'enqueued' ) );
-remove_filter( 'dxai_ui_theme_has_block_library', '__return_true', 20 );
-remove_filter( 'dxai_ui_theme_has_block_library', '__return_false' );
-$css = (string) file_get_contents( DXAI_UI_DIR . 'assets/css/block-library.css' );
-$expect( 'every rule of the styles is inside the library\'s class, so none can reach a design', preg_match_all( '/^[^\/@\s}][^{]*\{/m', $css, $sel ) > 5 && count( array_filter( $sel[0], static fn( $s ) => ! str_contains( $s, '.dxai-lib' ) ) ) === 0, implode( ' | ', array_filter( $sel[0], static fn( $s ) => ! str_contains( $s, '.dxai-lib' ) ) ) );
-$js = (string) file_get_contents( DXAI_UI_DIR . 'assets/js/block-library.js' );
-$expect( 'and the script acts only on the library\'s questions', str_contains( $js, "var SCOPE = '.dxai-lib'" ) && ! preg_match( "/querySelectorAll\\(\\s*'\\.faq-question/", $js ) );
+remove_filter( 'dx_ui_theme_has_block_library', '__return_true', 20 );
+remove_filter( 'dx_ui_theme_has_block_library', '__return_false' );
+$css = (string) file_get_contents( DX_UI_DIR . 'assets/css/block-library.css' );
+$expect( 'every rule of the styles is inside the library\'s class, so none can reach a design', preg_match_all( '/^[^\/@\s}][^{]*\{/m', $css, $sel ) > 5 && count( array_filter( $sel[0], static fn( $s ) => ! str_contains( $s, '.dxui-lib' ) ) ) === 0, implode( ' | ', array_filter( $sel[0], static fn( $s ) => ! str_contains( $s, '.dxui-lib' ) ) ) );
+$js = (string) file_get_contents( DX_UI_DIR . 'assets/js/block-library.js' );
+$expect( 'and the script acts only on the library\'s questions', str_contains( $js, "var SCOPE = '.dxui-lib'" ) && ! preg_match( "/querySelectorAll\\(\\s*'\\.faq-question/", $js ) );
 
 echo "\nThe editor\n";
 $patterns = WP_Block_Patterns_Registry::get_instance();
-$expect( 'the sections are patterns of a category of their own ("DX Library")', WP_Block_Pattern_Categories_Registry::get_instance()->is_registered( 'dxai-library' ) && ( WP_Block_Pattern_Categories_Registry::get_instance()->get_registered( 'dxai-library' )['label'] ?? '' ) === 'DX Library' );
+$expect( 'the sections are patterns of a category of their own ("DX Library")', WP_Block_Pattern_Categories_Registry::get_instance()->is_registered( 'dxui-library' ) && ( WP_Block_Pattern_Categories_Registry::get_instance()->get_registered( 'dxui-library' )['label'] ?? '' ) === 'DX Library' );
 foreach ( array_keys( $entries ) as $id ) {
 	// A layout (the team's arrangement, filled from a page's lists) is not in the inserter: it has no pattern file.
 	if ( ( $entries[ $id ]['source'] ?? '' ) === 'layout' ) {
 		continue;
 	}
-	$pattern = $patterns->get_registered( 'dxai-ui/library-' . $id );
+	$pattern = $patterns->get_registered( 'dx-ui/library-' . $id );
 	$content = is_array( $pattern ) ? (string) $pattern['content'] : '';
 	$parsed  = array_values( array_filter( parse_blocks( $content ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
-	$expect( "$id: a pattern, made for this site when it is asked for: one section, no token, no marker, an address on every link", $content !== '' && count( $parsed ) === 1 && Library_View::has_section( $content ) && ! str_contains( $content, '{{' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon|href=""/', $content ) && ! is_wp_error( Block_Tree::serialize_checked( $parsed ) ), $content === '' ? 'no pattern' : substr( (string) preg_replace( '/\s+/', ' ', $content ), 0, 100 ) );
+	$expect( "$id: a pattern, made for this site when it is asked for: one section, no token, no marker, an address on every link", $content !== '' && count( $parsed ) === 1 && Library_View::has_section( $content ) && ! str_contains( $content, '{{' ) && ! preg_match( '/dxuiIf|dxuiRepeat|dxuiIcon|href=""/', $content ) && ! is_wp_error( Block_Tree::serialize_checked( $parsed ) ), $content === '' ? 'no pattern' : substr( (string) preg_replace( '/\s+/', ' ', $content ), 0, 100 ) );
 }
-$cta = (string) ( $patterns->get_registered( 'dxai-ui/library-cta-call' )['content'] ?? '' );
+$cta = (string) ( $patterns->get_registered( 'dx-ui/library-cta-call' )['content'] ?? '' );
 $expect( 'a phone the site does not say is a placeholder to edit, never a number made up', preg_match( '/href="tel:\+?\d[\d ()-]*"/', $cta ) === 0 || str_contains( $cta, 'tel:' . preg_replace( '/[^\d+]/', '', (string) ( Block_Library::facts( 0, array( 'phone' => null, 'email' => '', 'address' => '' ) )['phone_url'] ?? '' ) ) ), '' );
 $expect( 'and the pattern is the team\'s block as it was written: no Home\'s look on it', ! str_contains( $cta, 'dxs-' ) );
 
@@ -547,7 +547,7 @@ $from_show = array_count_values( array_map( static fn( $e ) => preg_match( '/^te
 $expect( 'the team\'s own showcase pages (the Arcus and Archer exports) give layouts too, beside the live sites\', and no role is theirs alone', ( $from_show['arcusrestoration'] ?? 0 ) >= 3 && ( $from_show['archerrestorations'] ?? 0 ) >= 3 && ( $from_show['live'] ?? 0 ) >= 20 && count( array_filter( $lay_roles, static fn( $r ) => count( array_filter( $layouts, static fn( $e ) => (string) $e['role'] === $r && ! preg_match( '/^team#(arcusrestoration|archerrestorations)-/', (string) ( $e['from'] ?? '' ) ) ) ) === 0 && count( array_filter( $layouts, static fn( $e ) => (string) $e['role'] === $r ) ) > 1 ) ) === 0, json_encode( $from_show ) );
 // More rows than any layout shows: what is shown is as many as the team's section held, dealt across its columns, each row once.
 $many = $facts;
-foreach ( \DXAI_UI\Pages\Layouts::MAX as $list => $max ) {
+foreach ( \DX_UI\Pages\Layouts::MAX as $list => $max ) {
 	if ( $list !== 'places' && $list !== 'services' ) {
 		$many['lists'][ $list ] = $rows_of( $list, 9 );
 	}
@@ -577,10 +577,10 @@ $shape_of      = static function ( array $b ) use ( &$shape_of ): string {
 };
 $without_apart = static function ( array $b ) use ( &$without_apart, $shape_of ): array {
 	$kids  = (array) ( $b['innerBlocks'] ?? array() );
-	$rows  = array_map( $shape_of, array_filter( $kids, static fn( $c ) => isset( $c['attrs']['dxaiRepeat'] ) ) );
+	$rows  = array_map( $shape_of, array_filter( $kids, static fn( $c ) => isset( $c['attrs']['dxuiRepeat'] ) ) );
 	$keep  = array();
 	foreach ( $kids as $c ) {
-		if ( ! isset( $c['attrs']['dxaiRepeat'] ) && in_array( $shape_of( $c ), $rows, true ) && str_contains( serialize_block( $c ), '{{t:' ) ) {
+		if ( ! isset( $c['attrs']['dxuiRepeat'] ) && in_array( $shape_of( $c ), $rows, true ) && str_contains( serialize_block( $c ), '{{t:' ) ) {
 			continue;
 		}
 		$keep[] = $without_apart( $c );
@@ -595,10 +595,10 @@ foreach ( $layouts as $id => $e ) {
 	$lists  = array();
 	$marks  = array();
 	foreach ( $flat( $blocks[0] ?? array( 'blockName' => '', 'innerBlocks' => array() ) ) as $b ) {
-		if ( isset( $b['attrs']['dxaiRepeat'] ) ) {
-			$name  = (string) $b['attrs']['dxaiRepeat'];
-			$count = $b['attrs']['dxaiCount'] ?? null;
-			$slice = $b['attrs']['dxaiSlice'] ?? null;
+		if ( isset( $b['attrs']['dxuiRepeat'] ) ) {
+			$name  = (string) $b['attrs']['dxuiRepeat'];
+			$count = $b['attrs']['dxuiCount'] ?? null;
+			$slice = $b['attrs']['dxuiSlice'] ?? null;
 			if ( ! is_int( $count ) || $count < 1 || $count > 12 ) {
 				$marks[] = "$name without a count of one to twelve";
 			}
@@ -617,7 +617,7 @@ foreach ( $layouts as $id => $e ) {
 			$lists[ $name ] = ( $lists[ $name ] ?? 0 ) + min( $share, is_int( $count ) ? $count : 9 );
 		}
 	}
-	$expect( "$id: the section's class, a list with a count, a slice as [which column, of how many]", str_contains( (string) ( $blocks[0]['attrs']['className'] ?? '' ), 'dxai-lib' ) && $marks === array(), implode( '; ', $marks ) );
+	$expect( "$id: the section's class, a list with a count, a slice as [which column, of how many]", str_contains( (string) ( $blocks[0]['attrs']['className'] ?? '' ), 'dxui-lib' ) && $marks === array(), implode( '; ', $marks ) );
 	// A colour as a number is one brand's unless it is a grey; a picture laid under a section (positioned, faded, named a background) is the site's.
 	$tinted = array();
 	foreach ( $flat( $blocks[0] ?? array( 'blockName' => '', 'innerBlocks' => array() ) ) as $b ) {
@@ -692,7 +692,7 @@ foreach ( $layouts as $id => $e ) {
 	// A box with nothing in it (the frame of a site's own photograph or decoration) is not left in a layout.
 	$hollow = array();
 	foreach ( array_slice( $flat( $blocks[0] ?? array( 'blockName' => '', 'innerBlocks' => array() ) ), 1 ) as $b ) {
-		if ( in_array( (string) $b['blockName'], array( 'core/group', 'core/column', 'core/columns', 'core/cover', 'dxai-ui/box' ), true ) && (array) ( $b['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $b['innerHTML'] ) ) === '' ) {
+		if ( in_array( (string) $b['blockName'], array( 'core/group', 'core/column', 'core/columns', 'core/cover', 'dx-ui/box' ), true ) && (array) ( $b['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $b['innerHTML'] ) ) === '' ) {
 			$hollow[] = (string) $b['blockName'] . ' ' . (string) ( $b['attrs']['className'] ?? '' );
 		}
 	}
@@ -706,7 +706,7 @@ foreach ( $layouts as $id => $e ) {
 	}
 	$out  = serialize_block( $block );
 	$text = html_entity_decode( wp_strip_all_tags( $out ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-	$expect( "$id: no token or marker is left, and a picture's id is a number", ! str_contains( $out, '{{' ) && ! str_contains( $out, '[[' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon|dxaiCount|dxaiSlice/', $out ) && ! preg_match( '/"(id|imageId|mediaId)":"\d+"/', $out ) && ! is_wp_error( Block_Tree::serialize_checked( array( $block ) ) ) );
+	$expect( "$id: no token or marker is left, and a picture's id is a number", ! str_contains( $out, '{{' ) && ! str_contains( $out, '[[' ) && ! preg_match( '/dxuiIf|dxuiRepeat|dxuiIcon|dxuiCount|dxuiSlice/', $out ) && ! preg_match( '/"(id|imageId|mediaId)":"\d+"/', $out ) && ! is_wp_error( Block_Tree::serialize_checked( array( $block ) ) ) );
 	// The team's words a slot kept are the page's words, with its facts in them; a kept line claims nothing of one site.
 	// (A heading the team wrote for another list — "Our Restoration Services" over the Home's points — gives way to the page's own words:
 	// Block_Library::says_what_it_lists(); it is still held to claiming nothing of one site.)
@@ -714,7 +714,7 @@ foreach ( $layouts as $id => $e ) {
 	// (A badge set as a figure shows the Home's figure and its words, not the team's label: Block_Library::figures().)
 	$kept_from = (string) preg_replace( '#<!-- wp:paragraph [^>]*"fontSize":"(?:2[89]|[3-9]\d)px"[^>]*-->\s*<p[^>]*>\{\{t:p-s\}\}</p>\s*<!-- /wp:paragraph -->\s*<!-- wp:paragraph[^>]*-->\s*<p[^>]*>\{\{t:p-s\|[^}]*\}\}</p>#', '', $kept_from );
 	preg_match_all( '/\{\{t:([a-z0-9-]+)\|([^{}]*)\}\}/', $kept_from, $km_sets, PREG_SET_ORDER );
-	preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', $markup, $km_lists );
+	preg_match_all( '/"dxuiRepeat":"([a-z]+)"/', $markup, $km_lists );
 	$km_every = array_map( static fn( array $m ): string => $m[2], $km_sets );
 	$km       = array( 1 => array_values( array_map( static fn( array $m ): string => $m[2], array_filter( $km_sets, static fn( array $m ): bool => Block_Library::says_what_it_lists( $m[1], $m[2], array( 'section_lists' => array_values( array_unique( $km_lists[1] ) ) ) ) ) ) ) );
 	$kept_plain = array_values( array_filter( $km[1], static fn( string $d ): bool => ! str_contains( $d, '[[' ) ) );
@@ -740,7 +740,7 @@ foreach ( $layouts as $id => $e ) {
 		$expect( "$id: shows $want of the $name given, each once (as many as the team's section held, dealt across its columns)", count( $seen ) === $want && ( $twice_ok || $dup === array() ), count( $seen ) . ' shown' . ( $dup !== array() ? ', twice: ' . implode( ', ', $dup ) : '' ) );
 	}
 	if ( isset( $lists['logos'] ) ) {
-		$expect( "$id: a logo is marked as one (its size is held by the library's styles), with the row's picture", str_contains( $out, 'dxai-logo' ) && str_contains( $out, 'uploads/logo-Alpha.png' ) );
+		$expect( "$id: a logo is marked as one (its size is held by the library's styles), with the row's picture", str_contains( $out, 'dxui-logo' ) && str_contains( $out, 'uploads/logo-Alpha.png' ) );
 	}
 }
 $expect( 'some layouts deal their rows across columns', $dealt >= 3, (string) $dealt );
@@ -757,7 +757,7 @@ $words = array( 'h2-s', 'h3-s', 'p-s', 'p-m', 'p-l', 'li-s', 'label-s', 'button'
 $silent = array();
 foreach ( array( 'process', 'two-col', 'cards', 'reviews', 'faq', 'cta', 'trust', 'areas', 'related', 'content' ) as $role ) {
 	foreach ( $words as $slot ) {
-		if ( \DXAI_UI\Pages\Layouts::words( $slot, array_merge( $facts, array( 'role' => $role ) ), null ) === '' ) {
+		if ( \DX_UI\Pages\Layouts::words( $slot, array_merge( $facts, array( 'role' => $role ) ), null ) === '' ) {
 			$silent[] = "$role $slot";
 		}
 	}
@@ -765,28 +765,28 @@ foreach ( array( 'process', 'two-col', 'cards', 'reviews', 'faq', 'cta', 'trust'
 $expect( 'a layout\'s every slot for words has provisional words, for every role', $silent === array(), implode( ', ', $silent ) );
 $p_lines = '';
 for ( $i = 0; $i < 6; $i++ ) {
-	$p_lines .= ' ' . \DXAI_UI\Pages\Layouts::words( 'p-l', $facts, null );
+	$p_lines .= ' ' . \DX_UI\Pages\Layouts::words( 'p-l', $facts, null );
 }
-$expect( 'the call says the phone; the paragraphs name the company and the page; two places on a page do not start at the same line', \DXAI_UI\Pages\Layouts::words( 'call', $facts, null ) === 'Call (555) 010-2030' && str_contains( $p_lines, 'Smith & Sons "Pro" Restoration handles water damage' ) && \DXAI_UI\Pages\Layouts::words( 'p-s', array_merge( $facts, array( 'slot_seed' => '1' ) ), null ) !== \DXAI_UI\Pages\Layouts::words( 'p-s', array_merge( $facts, array( 'slot_seed' => '2' ) ), null ) );
+$expect( 'the call says the phone; the paragraphs name the company and the page; two places on a page do not start at the same line', \DX_UI\Pages\Layouts::words( 'call', $facts, null ) === 'Call (555) 010-2030' && str_contains( $p_lines, 'Smith & Sons "Pro" Restoration handles water damage' ) && \DX_UI\Pages\Layouts::words( 'p-s', array_merge( $facts, array( 'slot_seed' => '1' ) ), null ) !== \DX_UI\Pages\Layouts::words( 'p-s', array_merge( $facts, array( 'slot_seed' => '2' ) ), null ) );
 // What the words are about, by the kind of page: a place's page is about its service, in its place; a page about the company is about restoration.
-$pf_loc   = \DXAI_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'Water Damage in Tyler, TX', 'type' => 'location' ), 'reviews', 'seed|1', array() );
-$pf_about = \DXAI_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'About Us', 'type' => 'about' ), 'cta', 'seed|2', array() );
-$pf_svc   = \DXAI_UI\Pages\Layouts::page_facts( array_merge( $facts, array( 'places_home' => array( 'Longview, TX' ) ) ), array( 'title' => 'Mold Removal', 'type' => 'service' ), 'cta', 'seed|3', array() );
+$pf_loc   = \DX_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'Water Damage in Tyler, TX', 'type' => 'location' ), 'reviews', 'seed|1', array() );
+$pf_about = \DX_UI\Pages\Layouts::page_facts( $facts, array( 'title' => 'About Us', 'type' => 'about' ), 'cta', 'seed|2', array() );
+$pf_svc   = \DX_UI\Pages\Layouts::page_facts( array_merge( $facts, array( 'places_home' => array( 'Longview, TX' ) ) ), array( 'title' => 'Mold Removal', 'type' => 'service' ), 'cta', 'seed|3', array() );
 $expect( 'a place\'s page is about its service, in its place; a page about the company is about restoration, in the Home\'s first place; a page\'s title is never the place', ( $pf_loc['subject'] ?? '' ) === 'Water Damage' && ( $pf_loc['region'] ?? '' ) === 'Tyler, TX' && ( $pf_about['subject'] ?? '' ) === 'restoration' && ( $pf_about['region'] ?? '' ) === 'Tyler, TX' && ( $pf_svc['subject'] ?? '' ) === 'Mold Removal' && ( $pf_svc['region'] ?? '' ) === 'Longview, TX', json_encode( array( $pf_loc['subject'] ?? null, $pf_loc['region'] ?? null, $pf_about['subject'] ?? null, $pf_about['region'] ?? null, $pf_svc['region'] ?? null ) ) );
 // (A page says a sentence once, a paragraph is two of them at most: the company's line is in one of the page's paragraphs.)
 $about_p = '';
 for ( $i = 0; $i < 5; $i++ ) {
-	$about_p .= ' ' . \DXAI_UI\Pages\Layouts::words( 'p-l', array_merge( $pf_about, array( 'slot_seed' => (string) $i ) ), null );
+	$about_p .= ' ' . \DX_UI\Pages\Layouts::words( 'p-l', array_merge( $pf_about, array( 'slot_seed' => (string) $i ) ), null );
 }
-$expect( 'and the words say so: the place, not the page\'s title, and "restoration", not "about us"', str_contains( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ), 'in Tyler, TX trust' ) && str_contains( $about_p, 'restoration' ) && ! str_contains( mb_strtolower( \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) . \DXAI_UI\Pages\Layouts::words( 'p-l', $pf_about, null ) ), 'about us' ), \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ) . ' | ' . \DXAI_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) );
+$expect( 'and the words say so: the place, not the page\'s title, and "restoration", not "about us"', str_contains( \DX_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ), 'in Tyler, TX trust' ) && str_contains( $about_p, 'restoration' ) && ! str_contains( mb_strtolower( \DX_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) . \DX_UI\Pages\Layouts::words( 'p-l', $pf_about, null ) ), 'about us' ), \DX_UI\Pages\Layouts::words( 'h2-s', $pf_loc, null ) . ' | ' . \DX_UI\Pages\Layouts::words( 'h2-s', $pf_about, null ) );
 $planted_site = '<!-- wp:paragraph --><p>Why homeowners choose PacesGA for water damage.</p><!-- /wp:paragraph -->';
 $expect( 'the leak check is able to catch the name of a site the layouts came from', $leaks( $planted_site ) !== array(), implode( '; ', $leaks( $planted_site ) ) );
 
 echo "\nThe look of the Home on the layouts (Library_Style)\n";
 // A Home with a look of its own: its cards are one box (corners, shadow, border, background, padding), its eyebrows one line, its buttons
 // one style; a page made for it gets the layouts' cards, eyebrows and buttons in that look, and the Home itself is not touched.
-$look_card = static fn( string $t, string $d ): string => '<!-- wp:column {"className":"svc-card rounded-md px-6-5 d-flex flex-column pt-7 pb-6 shadow-dxai-shadow-2 bg-dxai-neutral-100","dxaiCss":"border:1px solid var(--dxai-surface)"} --><div class="wp-block-column svc-card rounded-md px-6-5 d-flex flex-column pt-7 pb-6 shadow-dxai-shadow-2 bg-dxai-neutral-100 dxs-look1">' . $heading( $t, 3 ) . $para( $d ) . '<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="#">Learn more</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:column -->';
-$look_eye  = static fn( string $t ): string => '<!-- wp:paragraph {"className":"mx-0 mt-0 mb-3-5 text-13 uppercase fw-900 ls-0-16em","style":{"color":{"text":"var(--dxai-red-49)"}}} --><p class="mx-0 mt-0 mb-3-5 text-13 uppercase fw-900 ls-0-16em has-text-color" style="color:var(--dxai-red-49)">' . $t . '</p><!-- /wp:paragraph -->';
+$look_card = static fn( string $t, string $d ): string => '<!-- wp:column {"className":"svc-card rounded-md px-6-5 d-flex flex-column pt-7 pb-6 shadow-dxui-shadow-2 bg-dxui-neutral-100","dxuiCss":"border:1px solid var(--dxui-surface)"} --><div class="wp-block-column svc-card rounded-md px-6-5 d-flex flex-column pt-7 pb-6 shadow-dxui-shadow-2 bg-dxui-neutral-100 dxs-look1">' . $heading( $t, 3 ) . $para( $d ) . '<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="#">Learn more</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:column -->';
+$look_eye  = static fn( string $t ): string => '<!-- wp:paragraph {"className":"mx-0 mt-0 mb-3-5 text-13 uppercase fw-900 ls-0-16em","style":{"color":{"text":"var(--dxui-red-49)"}}} --><p class="mx-0 mt-0 mb-3-5 text-13 uppercase fw-900 ls-0-16em has-text-color" style="color:var(--dxui-red-49)">' . $t . '</p><!-- /wp:paragraph -->';
 $look_home = $header
 	. $section( 'Hero Section', 'hero-x bg-dark', $inner( $heading( 'Restoration in Tyler', 1 ) . $para( $say ) . $button( 'Call now', 'tel:+15550100101' ) ) )
 	. $section( 'Services grid', 'svc-x', $inner( $look_eye( 'What we do' ) . $heading( 'Restoration Services We Provide' ) . $para( 'What we do.' ) . '<!-- wp:columns --><div class="wp-block-columns">' . $look_card( 'Water Damage', 'Extraction and drying.' ) . $look_card( 'Fire Damage', 'Soot and smoke.' ) . $look_card( 'Mold Removal', 'Containment.' ) . '</div><!-- /wp:columns -->' ) )
@@ -797,14 +797,14 @@ $look_home = $header
 $look_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Harborview Looked', 'post_content' => wp_slash( $look_home ) ) );
 $made[]  = (int) $look_id;
 update_post_meta( $look_id, Page_Scope::META, $look_id );
-update_post_meta( $look_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $look_id, '_dxai_ui_css_url', 'dxai-ui/fixture-library-look.css' );
-$look = \DXAI_UI\Blocks\Native\Library_Style::look( (int) $look_id );
-$expect( 'the Home\'s cards are read as one box: their corners, shadow, background, padding and border (the plain cards beside them say nothing, and do not outvote them)', is_array( $look['card'] ) && in_array( 'rounded-md', (array) $look['card']['class'], true ) && in_array( 'shadow-dxai-shadow-2', (array) $look['card']['class'], true ) && in_array( 'bg-dxai-neutral-100', (array) $look['card']['class'], true ) && in_array( 'border:1px solid var(--dxai-surface)', (array) $look['card']['css'], true ) && ! in_array( 'd-flex', (array) $look['card']['class'], true ), json_encode( $look['card'] ) );
-$expect( 'its eyebrows as one line: size, case, weight, tracking and colour', is_array( $look['eyebrow'] ) && in_array( 'text-13', (array) $look['eyebrow']['class'], true ) && in_array( 'uppercase', (array) $look['eyebrow']['class'], true ) && in_array( 'color:var(--dxai-red-49)', (array) $look['eyebrow']['css'], true ) && ! in_array( 'mx-0', (array) $look['eyebrow']['class'], true ), json_encode( $look['eyebrow'] ) );
+update_post_meta( $look_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $look_id, '_dx_ui_css_url', 'dx-ui/fixture-library-look.css' );
+$look = \DX_UI\Blocks\Native\Library_Style::look( (int) $look_id );
+$expect( 'the Home\'s cards are read as one box: their corners, shadow, background, padding and border (the plain cards beside them say nothing, and do not outvote them)', is_array( $look['card'] ) && in_array( 'rounded-md', (array) $look['card']['class'], true ) && in_array( 'shadow-dxui-shadow-2', (array) $look['card']['class'], true ) && in_array( 'bg-dxui-neutral-100', (array) $look['card']['class'], true ) && in_array( 'border:1px solid var(--dxui-surface)', (array) $look['card']['css'], true ) && ! in_array( 'd-flex', (array) $look['card']['class'], true ), json_encode( $look['card'] ) );
+$expect( 'its eyebrows as one line: size, case, weight, tracking and colour', is_array( $look['eyebrow'] ) && in_array( 'text-13', (array) $look['eyebrow']['class'], true ) && in_array( 'uppercase', (array) $look['eyebrow']['class'], true ) && in_array( 'color:var(--dxui-red-49)', (array) $look['eyebrow']['css'], true ) && ! in_array( 'mx-0', (array) $look['eyebrow']['class'], true ), json_encode( $look['eyebrow'] ) );
 $expect( 'its buttons as a first and a second style', is_array( $look['button'] ) && ( $look['button']['primary']['key'] ?? '' ) === 'is-style-primary-button' && ( $look['button']['secondary']['key'] ?? '' ) === 'is-style-secondary-button', json_encode( $look['button'] ) );
-$marked = array_values( array_filter( array_keys( $layouts ), static fn( $id ) => str_contains( Block_Library::markup( (string) $id ), 'dxai-lib-card' ) && str_contains( Block_Library::markup( (string) $id ), 'dxai-lib-eyebrow' ) ) );
-$expect( 'the builder marks the layouts\' cards and eyebrows for it', count( $marked ) >= 5 && count( array_filter( array_keys( $layouts ), static fn( $id ) => str_contains( Block_Library::markup( (string) $id ), 'dxai-lib-card' ) ) ) >= 15, (string) count( $marked ) );
+$marked = array_values( array_filter( array_keys( $layouts ), static fn( $id ) => str_contains( Block_Library::markup( (string) $id ), 'dxui-lib-card' ) && str_contains( Block_Library::markup( (string) $id ), 'dxui-lib-eyebrow' ) ) );
+$expect( 'the builder marks the layouts\' cards and eyebrows for it', count( $marked ) >= 5 && count( array_filter( array_keys( $layouts ), static fn( $id ) => str_contains( Block_Library::markup( (string) $id ), 'dxui-lib-card' ) ) ) >= 15, (string) count( $marked ) );
 $dressed = 0;
 $links   = 0;
 $undress = array();
@@ -817,15 +817,15 @@ foreach ( array_slice( $marked, 0, 6 ) as $id ) {
 	}
 	foreach ( $flat( $block ) as $b ) {
 		$cls = (string) ( $b['attrs']['className'] ?? '' );
-		if ( str_contains( $cls, 'dxai-lib-card' ) ) {
+		if ( str_contains( $cls, 'dxui-lib-card' ) ) {
 			++$dressed;
-			if ( ! str_contains( $cls, 'rounded-md' ) || ! str_contains( $cls, 'shadow-dxai-shadow-2' ) || isset( $b['attrs']['style']['border'] ) || isset( $b['attrs']['style']['shadow'] ) || isset( $b['attrs']['backgroundColor'] ) || isset( $b['attrs']['style']['color']['background'] ) || preg_match( '/has-background|has-[a-z0-9-]+-background-color/', (string) $b['innerHTML'] ) === 1 || ! str_contains( (string) $b['innerHTML'], 'rounded-md' ) || ! str_contains( (string) ( $b['attrs']['dxaiCss'] ?? '' ), 'border:1px solid var(--dxai-surface)' ) ) {
+			if ( ! str_contains( $cls, 'rounded-md' ) || ! str_contains( $cls, 'shadow-dxui-shadow-2' ) || isset( $b['attrs']['style']['border'] ) || isset( $b['attrs']['style']['shadow'] ) || isset( $b['attrs']['backgroundColor'] ) || isset( $b['attrs']['style']['color']['background'] ) || preg_match( '/has-background|has-[a-z0-9-]+-background-color/', (string) $b['innerHTML'] ) === 1 || ! str_contains( (string) $b['innerHTML'], 'rounded-md' ) || ! str_contains( (string) ( $b['attrs']['dxuiCss'] ?? '' ), 'border:1px solid var(--dxui-surface)' ) ) {
 				$undress[] = "$id card: $cls | " . json_encode( $b['attrs']['style'] ?? null ) . ' | ' . substr( (string) $b['innerHTML'], 0, 120 );
 			}
 		}
-		if ( str_contains( $cls, 'dxai-lib-eyebrow' ) ) {
+		if ( str_contains( $cls, 'dxui-lib-eyebrow' ) ) {
 			++$dressed;
-			if ( ! str_contains( $cls, 'uppercase' ) || ! str_contains( $cls, 'text-13' ) || isset( $b['attrs']['fontSize'] ) || isset( $b['attrs']['style']['typography'] ) || isset( $b['attrs']['textColor'] ) || ! str_contains( (string) ( $b['attrs']['dxaiCss'] ?? '' ), 'color:var(--dxai-red-49)' ) || preg_match( '/has-[a-z0-9-]+-font-size|has-[a-z0-9-]+-color/', (string) $b['innerHTML'] ) === 1 ) {
+			if ( ! str_contains( $cls, 'uppercase' ) || ! str_contains( $cls, 'text-13' ) || isset( $b['attrs']['fontSize'] ) || isset( $b['attrs']['style']['typography'] ) || isset( $b['attrs']['textColor'] ) || ! str_contains( (string) ( $b['attrs']['dxuiCss'] ?? '' ), 'color:var(--dxui-red-49)' ) || preg_match( '/has-[a-z0-9-]+-font-size|has-[a-z0-9-]+-color/', (string) $b['innerHTML'] ) === 1 ) {
 				$undress[] = "$id eyebrow: $cls | " . json_encode( $b['attrs'] ) . ' | ' . substr( (string) $b['innerHTML'], 0, 120 );
 			}
 		}
@@ -858,7 +858,7 @@ $why   = '';
 $plain = Block_Library::fill( (string) $marked[0], array_merge( $many, array( 'home' => (int) $homes['bare'] ) ), $why );
 $keeps = 0;
 foreach ( $plain !== null ? $flat( $plain ) : array() as $b ) {
-	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-lib-card' ) && ! str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'rounded-md' ) ) {
+	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxui-lib-card' ) && ! str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'rounded-md' ) ) {
 		++$keeps;
 	}
 }
@@ -873,10 +873,10 @@ $pf_item  = array( 'title' => 'Mold Removal', 'type' => 'service' );
 $pf_facts = array_merge( $facts, array( 'home' => 987654, 'title' => 'Mold Removal', 'kind' => 'service' ) );
 $offered  = 0;
 for ( $i = 1; $i <= 6; $i++ ) {
-	$pf = \DXAI_UI\Pages\Layouts::page_facts( $pf_facts, $pf_item, 'cards', "seed|$i", array( 'pool' => $pool ) );
+	$pf = \DX_UI\Pages\Layouts::page_facts( $pf_facts, $pf_item, 'cards', "seed|$i", array( 'pool' => $pool ) );
 	if ( (string) ( $pf['image_url:1'] ?? '' ) !== '' ) {
 		++$offered;
-		\DXAI_UI\Pages\Layouts::pictured( $pf, 1 ); // as a section that shows it would say
+		\DX_UI\Pages\Layouts::pictured( $pf, 1 ); // as a section that shows it would say
 	}
 }
 $expect( 'a page\'s sections are offered the Home\'s pictures four times, then none (the hero\'s is the Home\'s own)', $offered === 4, (string) $offered );
@@ -890,10 +890,10 @@ $expect( 'the points of a Home that are titles alone go to a section of cards th
 echo "\nThe generic library (a theme with no template of its own)\n";
 // Forced here, on the theme that has the template: every section the library makes comes out in core blocks, with the colours the
 // palette has for the roles, and nothing of the template's theme in it.
-add_filter( 'dxai_ui_template', $force_generic );
-$roles = \DXAI_UI\Pages\Template::palette_roles();
+add_filter( 'dx_ui_template', $force_generic );
+$roles = \DX_UI\Pages\Template::palette_roles();
 $expect( 'the theme\'s palette is read by role: a dark ground, a main colour, an accent and a light ground, the dark and the light apart', $roles['dark'] !== '' && $roles['main'] !== '' && $roles['accent'] !== '' && $roles['light'] !== '' && $roles['dark'] !== $roles['light'] && $roles['on_dark'] === $roles['light'], json_encode( $roles ) );
-$palette_now = \DXAI_UI\Theme\Capabilities::palette();
+$palette_now = \DX_UI\Theme\Capabilities::palette();
 $gen_bad     = array();
 $gen_n       = 0;
 foreach ( array_merge( array_keys( $layouts ), array( 'cta-call', 'cta-banner', 'faq-accordion', 'faq-accordion-intro', 'areas-places', 'process-steps' ) ) as $id ) {
@@ -930,7 +930,7 @@ $why = '';
 $rel = Block_Library::section( 'related', array_merge( $many, array( 'kind' => 'service' ) ), 'seed|generic', array(), '', $why );
 $rm  = $rel !== null ? serialize_block( $rel['block'] ) : '';
 $expect( 'a card that was the theme\'s box with a link is a group whose title is the link, to the row\'s page', $rel !== null && str_contains( $rm, 'href="https://example.test/related-Alpha/"' ) && ! str_contains( $rm, 'amr/link-box' ) && ! str_contains( $rm, 'amr-link-box' ), $why . ' ' . substr( preg_replace( '/\s+/', ' ', $rm ), 0, 160 ) );
-remove_filter( 'dxai_ui_template', $force_generic );
+remove_filter( 'dx_ui_template', $force_generic );
 
 echo "\nA page's words and colours, on any theme and any template\n";
 // The company's name: what is not the name at either end of the Home's title goes (a code someone put there, a page's word), never a word
@@ -943,7 +943,7 @@ $names_seen = array(
 	Block_Library::name_in( 'Acme Dry – Homepage', '' ),
 );
 $expect( 'the company is the name the Home\'s title gives, without a code or a page\'s word at either end, and never cut inside', $names_seen === array( 'H2O Away', 'Harborview Water and Fire', 'Acme Dry', 'H2O Away', 'Acme Dry' ), json_encode( $names_seen ) );
-$expect( 'a placeholder a design left to be filled in is not something the Home says (and a line that only sounds like one is)', \DXAI_UI\Pages\Layouts::placeholder( '“Paste a verbatim 5-star Google review here, word for word.”' ) && \DXAI_UI\Pages\Layouts::placeholder( 'Reviewer Name' ) && \DXAI_UI\Pages\Layouts::placeholder( 'Lorem ipsum dolor sit amet' ) && ! \DXAI_UI\Pages\Layouts::placeholder( 'They were at the house within the hour.' ) && ! \DXAI_UI\Pages\Layouts::placeholder( 'Our new office is coming soon' ) );
+$expect( 'a placeholder a design left to be filled in is not something the Home says (and a line that only sounds like one is)', \DX_UI\Pages\Layouts::placeholder( '“Paste a verbatim 5-star Google review here, word for word.”' ) && \DX_UI\Pages\Layouts::placeholder( 'Reviewer Name' ) && \DX_UI\Pages\Layouts::placeholder( 'Lorem ipsum dolor sit amet' ) && ! \DX_UI\Pages\Layouts::placeholder( 'They were at the house within the hour.' ) && ! \DX_UI\Pages\Layouts::placeholder( 'Our new office is coming soon' ) );
 
 // What a Home says, read the way designs write it: steps numbered in badges hidden from screen readers, points whose head is in bold,
 // a hero's pills and buttons that are not points, a placeholder the design left for reviews, a street address beside the figures.
@@ -957,9 +957,9 @@ $said_home = $section( 'Hero Section', 'hero-q', $heading( 'Water Damage Restora
 $said_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'BR12 Tyler Dry Pros', 'post_content' => wp_slash( $said_home ) ) );
 $made[]  = (int) $said_id;
 update_post_meta( $said_id, Page_Scope::META, $said_id );
-update_post_meta( $said_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $said_id, '_dxai_ui_css_url', 'dxai-ui/fixture-library-said.css' );
-$said = \DXAI_UI\Pages\Layouts::lists( (int) $said_id, \DXAI_UI\Pages\Section_Library::for_page( (int) $said_id ) );
+update_post_meta( $said_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $said_id, '_dx_ui_css_url', 'dx-ui/fixture-library-said.css' );
+$said = \DX_UI\Pages\Layouts::lists( (int) $said_id, \DX_UI\Pages\Section_Library::for_page( (int) $said_id ) );
 $expect( 'cards numbered one to four in badges (hidden from screen readers) are the Home\'s steps, in order, each with its words', count( $said['steps'] ) === 4 && array_column( $said['steps'], 'eyebrow' ) === array( '1', '2', '3', '4' ) && ( $said['steps'][1]['title'] ?? '' ) === 'On site within the hour' && str_starts_with( (string) ( $said['steps'][1]['text'] ?? '' ), 'Most crews' ), json_encode( array_map( static fn( $r ) => ( $r['eyebrow'] ?? '' ) . ' ' . $r['title'], $said['steps'] ) ) );
 $headed = array_values( array_filter( $said['items'], static fn( $r ) => (string) ( $r['text'] ?? '' ) !== '' ) );
 $expect( 'lines whose head is in bold are points with their words (the head without its full stop or colon), after a tick or not', array_column( $headed, 'title' ) === array( 'On site in about an hour', 'Three generations of claims experience', 'One project manager on every job' ) && str_starts_with( (string) $headed[0]['text'], 'When water is spreading' ) && str_starts_with( (string) $headed[2]['text'], 'one point of contact' ), json_encode( array_map( static fn( $r ) => $r['title'] . ' | ' . substr( (string) $r['text'], 0, 20 ), $said['items'] ) ) );
@@ -973,16 +973,16 @@ $expect( 'and its company is "Tyler Dry Pros": the code before the name in its t
 // A list is shown once on a page: the next section that lists it goes on from the rows the page has shown.
 $off_facts = array_merge( $facts, array( 'home' => 987655, 'title' => 'Offsets Page', 'kind' => 'service', 'lists' => array( 'items' => $rows_of( 'items', 5 ) ) ) );
 $off_item  = array( 'type' => 'service', 'title' => 'Offsets Page' );
-\DXAI_UI\Pages\Layouts::begin( 'Offsets Page', 'service' );
-$off_one = \DXAI_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'cards', 'off|1', array() );
+\DX_UI\Pages\Layouts::begin( 'Offsets Page', 'service' );
+$off_one = \DX_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'cards', 'off|1', array() );
 $why     = '';
 $off_sec = Block_Library::fill( 'layout-cards-1', $off_one, $why );
-$off_n   = \DXAI_UI\Pages\Layouts::shown( $off_one, 'items' );
-$off_two = \DXAI_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'two-col', 'off|2', array() );
+$off_n   = \DX_UI\Pages\Layouts::shown( $off_one, 'items' );
+$off_two = \DX_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'two-col', 'off|2', array() );
 $expect( 'a section that shows a list counts the rows it showed for its page, and the next section of the page is given the rows after them', $off_sec !== null && $off_n >= 1 && array_column( $off_two['lists']['items'], 'title' ) === array_slice( array_column( $rows_of( 'items', 5 ), 'title' ), $off_n ), json_encode( array( $why, $off_n, array_column( $off_two['lists']['items'], 'title' ) ) ) );
-\DXAI_UI\Pages\Layouts::begin( 'Offsets Page', 'service' );
-$off_new = \DXAI_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'cards', 'off|1', array() );
-$rel = \DXAI_UI\Pages\Layouts::page_facts( array_merge( $off_facts, array( 'region' => '' ) ), $off_item, 'related', 'off|3', array( 'rows' => array( array( 'title' => 'Services', 'url' => 'https://example.test/services/' ), array( 'title' => 'Mold Removal', 'text' => 'Containment and safe removal.', 'url' => 'https://example.test/mold/' ) ) ) );
+\DX_UI\Pages\Layouts::begin( 'Offsets Page', 'service' );
+$off_new = \DX_UI\Pages\Layouts::page_facts( $off_facts, $off_item, 'cards', 'off|1', array() );
+$rel = \DX_UI\Pages\Layouts::page_facts( array_merge( $off_facts, array( 'region' => '' ) ), $off_item, 'related', 'off|3', array( 'rows' => array( array( 'title' => 'Services', 'url' => 'https://example.test/services/' ), array( 'title' => 'Mold Removal', 'text' => 'Containment and safe removal.', 'url' => 'https://example.test/mold/' ) ) ) );
 $expect( 'a related page the Home says nothing about gets a line of its own (its card is not a title in an empty box); one it describes keeps its words', str_contains( (string) ( $rel['lists']['related'][0]['text'] ?? '' ), 'Services from' ) && ( $rel['lists']['related'][1]['text'] ?? '' ) === 'Containment and safe removal.', json_encode( array_column( (array) ( $rel['lists']['related'] ?? array() ), 'text' ) ) );
 $expect( 'and a page begun again (a build after a plan) starts from the first row', ( $off_new['lists']['items'][0]['title'] ?? '' ) === ( $rows_of( 'items', 1 )[0]['title'] ?? '-' ) );
 
@@ -1004,15 +1004,15 @@ $prov_out = serialize_block( $prov );
 $expect( 'a section keeps one paragraph of provisional words, and the team\'s own words beside it', substr_count( $prov_out, '<p>' ) === 2 && str_contains( $prov_out, 'We work with all insurance companies.' ) && substr_count( $prov_out, '<h2' ) === 1, (string) substr_count( $prov_out, '<p>' ) );
 
 // Every line readable on what it stands on, in this theme's colours: decided from the colours themselves, so it holds on any theme.
-$pal = \DXAI_UI\Theme\Capabilities::palette();
-foreach ( (array) ( \DXAI_UI\Theme\Theme_Palette::current()['anchors'] ?? array() ) as $slug => $hex ) {
+$pal = \DX_UI\Theme\Capabilities::palette();
+foreach ( (array) ( \DX_UI\Theme\Theme_Palette::current()['anchors'] ?? array() ) as $slug => $hex ) {
 	$pal[ $slug ] = $pal[ $slug ] ?? (string) $hex;
 }
-$dark_text = (string) ( \DXAI_UI\Pages\Template::palette_roles()['text'] ?? '' );
+$dark_text = (string) ( \DX_UI\Pages\Template::palette_roles()['text'] ?? '' );
 $cpara     = static fn( string $t, string $slug ): string => '<!-- wp:paragraph {"textColor":"' . $slug . '"} --><p class="has-' . $slug . '-color has-text-color">' . $t . '</p><!-- /wp:paragraph -->';
 $box       = static fn( string $bg, string $inner, string $class = '' ): string => '<!-- wp:group {' . ( $class !== '' ? '"className":"' . $class . '",' : '' ) . '"style":{"color":{"background":"' . $bg . '"}}} --><div class="wp-block-group' . ( $class !== '' ? ' ' . $class : '' ) . ' has-background" style="background-color:' . $bg . '">' . $inner . '</div><!-- /wp:group -->';
 $grounds   = $box( '#173764', $para( 'Plain words on dark' ) . $cpara( 'Unknown colour on dark', 'no-such-colour' ) . $box( '#ffffff0a', $para( 'Under a veil of white' ) ) )
-	. '<!-- wp:group {"className":"dxai-lib-card"} --><div class="wp-block-group dxai-lib-card">' . $box( '#26cbf8', $para( 'In a loud box' ) ) . $box( '#eaf2fb', $para( 'In a light tint' ) ) . '</div><!-- /wp:group -->'
+	. '<!-- wp:group {"className":"dxui-lib-card"} --><div class="wp-block-group dxui-lib-card">' . $box( '#26cbf8', $para( 'In a loud box' ) ) . $box( '#eaf2fb', $para( 'In a light tint' ) ) . '</div><!-- /wp:group -->'
 	. ( $dark_text !== '' ? $cpara( 'Dark words on the page', $dark_text ) : '' );
 $leg      = Block_Library::legible( parse_blocks( '<!-- wp:group --><div class="wp-block-group">' . $grounds . '</div><!-- /wp:group -->' )[0] );
 $by_words = array();
@@ -1025,7 +1025,7 @@ foreach ( $flat( $leg ) as $b ) {
 $reads = static function ( string $words, string $ground, float $at_least ) use ( $by_words, $pal ): bool {
 	$slug = (string) ( $by_words[ $words ]['attrs']['textColor'] ?? '' );
 
-	return $slug !== '' && isset( $pal[ $slug ] ) && \DXAI_UI\Support\Color_Math::contrast( (string) $pal[ $slug ], $ground ) >= $at_least && str_contains( (string) $by_words[ $words ]['innerHTML'], 'has-' . $slug . '-color' );
+	return $slug !== '' && isset( $pal[ $slug ] ) && \DX_UI\Support\Color_Math::contrast( (string) $pal[ $slug ], $ground ) >= $at_least && str_contains( (string) $by_words[ $words ]['innerHTML'], 'has-' . $slug . '-color' );
 };
 $expect( 'words with no colour of their own on a dark ground take a colour of this theme that reads there (4.5:1), in the setting and in the tag', $reads( 'Plain words on dark', '#173764', 4.5 ), json_encode( $by_words['Plain words on dark']['attrs'] ?? null ) );
 $expect( 'a colour the theme does not have, on a dark ground, gives way to one it has that reads', $reads( 'Unknown colour on dark', '#173764', 3.0 ) && ! str_contains( (string) ( $by_words['Unknown colour on dark']['innerHTML'] ?? '' ), 'no-such-colour' ), json_encode( $by_words['Unknown colour on dark']['attrs'] ?? null ) );
@@ -1049,37 +1049,37 @@ $expect( 'the section is still valid blocks after it', ! is_wp_error( Block_Tree
 // brand colour the design made light gives way, on a light ground, to a colour of the theme that reads and is still a colour.
 $chroma_slug = '';
 foreach ( $pal as $slug => $hex ) {
-	$rgb = \DXAI_UI\Support\Color_Math::parse( (string) $hex );
-	if ( $rgb !== null && \DXAI_UI\Support\Color_Math::oklch( $rgb )[1] > 0.1 && \DXAI_UI\Support\Color_Math::contrast( (string) $hex, '#ffffff' ) >= 3.0 ) {
+	$rgb = \DX_UI\Support\Color_Math::parse( (string) $hex );
+	if ( $rgb !== null && \DX_UI\Support\Color_Math::oklch( $rgb )[1] > 0.1 && \DX_UI\Support\Color_Math::contrast( (string) $hex, '#ffffff' ) >= 3.0 ) {
 		$chroma_slug = (string) $slug;
 		break;
 	}
 }
-update_post_meta( (int) $said_id, '_dxai_ui_palette', array( 'colors' => array( '#f2e6a0' => array( 'slug' => $chroma_slug, 'name' => 'Pale', 'value' => '#f2e6a0' ) ) ) );
+update_post_meta( (int) $said_id, '_dx_ui_palette', array( 'colors' => array( '#f2e6a0' => array( 'slug' => $chroma_slug, 'name' => 'Pale', 'value' => '#f2e6a0' ) ) ) );
 $scoped     = parse_blocks( '<!-- wp:group --><div class="wp-block-group">' . $cpara( 'In the design’s own colour', $chroma_slug ) . '<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"textColor":"' . $chroma_slug . '","backgroundColor":"white"} --><div class="wp-block-button"><a class="wp-block-button__link has-' . $chroma_slug . '-color has-white-background-color has-text-color has-background wp-element-button">Call now</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->' )[0];
 $on_theme   = Block_Library::legible( $scoped );
 $on_design  = Block_Library::legible( $scoped, (int) $said_id );
 $theme_slug = (string) ( $on_theme['innerBlocks'][0]['attrs']['textColor'] ?? '' );
 $scope_slug = (string) ( $on_design['innerBlocks'][0]['attrs']['textColor'] ?? '' );
-$scope_rgb  = \DXAI_UI\Support\Color_Math::parse( (string) ( $pal[ $scope_slug ] ?? '' ) );
+$scope_rgb  = \DX_UI\Support\Color_Math::parse( (string) ( $pal[ $scope_slug ] ?? '' ) );
 $scope_btn  = (array) ( $on_design['innerBlocks'][1]['innerBlocks'][0] ?? array() );
 $btn_slug   = (string) ( $scope_btn['attrs']['textColor'] ?? '' );
-$expect( 'and a button\'s own words on its own ground the same, written on its link (where a button\'s settings go)', $btn_slug !== '' && $btn_slug !== $chroma_slug && \DXAI_UI\Support\Color_Math::contrast( (string) ( $pal[ $btn_slug ] ?? '#ffffff' ), '#ffffff' ) >= 4.5 && preg_match( '/<a class="[^"]*has-' . preg_quote( $btn_slug, '/' ) . '-color/', (string) ( $scope_btn['innerHTML'] ?? '' ) ) === 1 && ! str_contains( (string) ( $scope_btn['innerHTML'] ?? '' ), 'has-' . $chroma_slug . '-color' ), json_encode( array( $btn_slug, substr( (string) ( $scope_btn['innerHTML'] ?? '' ), 0, 160 ) ) ) );
-$expect( 'on a page of a design that draws a theme colour lighter, words in it give way to a colour of the theme that reads (4.5:1) and is still a colour; on a page of the theme they keep it', $chroma_slug !== '' && $theme_slug === $chroma_slug && $scope_slug !== '' && $scope_slug !== $chroma_slug && $scope_rgb !== null && \DXAI_UI\Support\Color_Math::contrast( (string) $pal[ $scope_slug ], '#ffffff' ) >= 4.5 && \DXAI_UI\Support\Color_Math::oklch( $scope_rgb )[1] > 0.08, json_encode( array( $chroma_slug, $theme_slug, $scope_slug ) ) );
+$expect( 'and a button\'s own words on its own ground the same, written on its link (where a button\'s settings go)', $btn_slug !== '' && $btn_slug !== $chroma_slug && \DX_UI\Support\Color_Math::contrast( (string) ( $pal[ $btn_slug ] ?? '#ffffff' ), '#ffffff' ) >= 4.5 && preg_match( '/<a class="[^"]*has-' . preg_quote( $btn_slug, '/' ) . '-color/', (string) ( $scope_btn['innerHTML'] ?? '' ) ) === 1 && ! str_contains( (string) ( $scope_btn['innerHTML'] ?? '' ), 'has-' . $chroma_slug . '-color' ), json_encode( array( $btn_slug, substr( (string) ( $scope_btn['innerHTML'] ?? '' ), 0, 160 ) ) ) );
+$expect( 'on a page of a design that draws a theme colour lighter, words in it give way to a colour of the theme that reads (4.5:1) and is still a colour; on a page of the theme they keep it', $chroma_slug !== '' && $theme_slug === $chroma_slug && $scope_slug !== '' && $scope_slug !== $chroma_slug && $scope_rgb !== null && \DX_UI\Support\Color_Math::contrast( (string) $pal[ $scope_slug ], '#ffffff' ) >= 4.5 && \DX_UI\Support\Color_Math::oklch( $scope_rgb )[1] > 0.08, json_encode( array( $chroma_slug, $theme_slug, $scope_slug ) ) );
 // …but a design that follows the theme's colours draws the theme's: there the class is the theme's colour, and is judged as such
 // (Taylored Restoration's accent was teal in its palette, the page drew the theme's orange band, and an orange button vanished into it).
 // A colour the theme has not (the design's `on-accent`, white) is still the design's, which the plugin draws: white words on the
 // theme's accent band keep it when it reads there.
 $accent_now = (string) ( $pal['accent'] ?? '' );
-$own_only   = '' !== $accent_now && \DXAI_UI\Support\Color_Math::contrast( '#ffffff', $accent_now ) >= 3.0;
-update_post_meta( (int) $said_id, '_dxai_ui_palette', array( 'colors' => array( '#f2e6a0' => array( 'slug' => $chroma_slug, 'name' => 'Pale', 'value' => '#f2e6a0' ), '#ffffff' => array( 'slug' => 'dxtest-on-band', 'name' => 'On band', 'value' => '#ffffff' ) ) ) );
-update_post_meta( (int) $said_id, \DXAI_UI\Theme\Theme_Binding::META, array( get_stylesheet() => array( 'schema' => \DXAI_UI\Theme\Theme_Binding::SCHEMA, 'mode' => 'follow' ) ) );
+$own_only   = '' !== $accent_now && \DX_UI\Support\Color_Math::contrast( '#ffffff', $accent_now ) >= 3.0;
+update_post_meta( (int) $said_id, '_dx_ui_palette', array( 'colors' => array( '#f2e6a0' => array( 'slug' => $chroma_slug, 'name' => 'Pale', 'value' => '#f2e6a0' ), '#ffffff' => array( 'slug' => 'dxtest-on-band', 'name' => 'On band', 'value' => '#ffffff' ) ) ) );
+update_post_meta( (int) $said_id, \DX_UI\Theme\Theme_Binding::META, array( get_stylesheet() => array( 'schema' => \DX_UI\Theme\Theme_Binding::SCHEMA, 'mode' => 'follow' ) ) );
 $on_follow   = Block_Library::legible( $scoped, (int) $said_id );
 $follow_slug = (string) ( $on_follow['innerBlocks'][0]['attrs']['textColor'] ?? '' );
 $on_band_h   = Block_Library::legible( parse_blocks( '<!-- wp:group {"backgroundColor":"accent"} --><div class="wp-block-group has-accent-background-color has-background"><!-- wp:heading {"textColor":"dxtest-on-band"} --><h2 class="wp-block-heading has-dxtest-on-band-color has-text-color">Need help now?</h2><!-- /wp:heading --></div><!-- /wp:group -->' )[0], (int) $said_id );
-delete_post_meta( (int) $said_id, \DXAI_UI\Theme\Theme_Binding::META );
-$expect( 'on a page of a design that follows the theme\'s colours, a colour of the theme is the theme\'s: words in it are judged as on a page of the theme', ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] || ( $follow_slug === $theme_slug && $theme_slug !== $scope_slug ), json_encode( array( $theme_slug, $scope_slug, $follow_slug ) ) );
-$expect( '…and a colour only the design has is the design\'s: its white heading on the theme\'s accent band stays white', ! $own_only || ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] || ( $on_band_h['innerBlocks'][0]['attrs']['textColor'] ?? '' ) === 'dxtest-on-band', json_encode( array( $accent_now, $on_band_h['innerBlocks'][0]['attrs'] ?? null ) ) );
+delete_post_meta( (int) $said_id, \DX_UI\Theme\Theme_Binding::META );
+$expect( 'on a page of a design that follows the theme\'s colours, a colour of the theme is the theme\'s: words in it are judged as on a page of the theme', ! \DX_UI\Theme\Theme_Palette::current()['has_palette'] || ( $follow_slug === $theme_slug && $theme_slug !== $scope_slug ), json_encode( array( $theme_slug, $scope_slug, $follow_slug ) ) );
+$expect( '…and a colour only the design has is the design\'s: its white heading on the theme\'s accent band stays white', ! $own_only || ! \DX_UI\Theme\Theme_Palette::current()['has_palette'] || ( $on_band_h['innerBlocks'][0]['attrs']['textColor'] ?? '' ) === 'dxtest-on-band', json_encode( array( $accent_now, $on_band_h['innerBlocks'][0]['attrs'] ?? null ) ) );
 
 // The Home's own questions come first: a section that lists them over one that carries the team's questions.
 $faq_ids = array();
@@ -1090,14 +1090,14 @@ for ( $i = 1; $i <= 6; $i++ ) {
 		$faq_ids[] = (string) $made_faq['id'];
 	}
 }
-$expect( 'when the Home has its own questions, the page\'s questions section is one that lists them (never the team\'s own questions)', count( $faq_ids ) === 6 && count( array_filter( $faq_ids, static fn( $id ) => str_contains( Block_Library::markup( $id ), '"dxaiRepeat":"faq"' ) ) ) === 6, json_encode( $faq_ids ) );
+$expect( 'when the Home has its own questions, the page\'s questions section is one that lists them (never the team\'s own questions)', count( $faq_ids ) === 6 && count( array_filter( $faq_ids, static fn( $id ) => str_contains( Block_Library::markup( $id ), '"dxuiRepeat":"faq"' ) ) ) === 6, json_encode( $faq_ids ) );
 
 // The library's stylesheet: a box that is a link keeps the card's colours; a row of a flex box is spaced by its gap, not by the browser's
 // margins.
-$lib_css = (string) file_get_contents( DXAI_UI_DIR . 'assets/css/block-library.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+$lib_css = (string) file_get_contents( DX_UI_DIR . 'assets/css/block-library.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 $expect( 'the library\'s stylesheet keeps a box-link\'s words in the card\'s colours, and takes the browser\'s margins off a flex row\'s headings with no weight', preg_match( '/a\.wp-block-amr-link-box[^{]*\{[^}]*color:\s*inherit/s', $lib_css ) === 1 && preg_match( '/:where\([^)]*\.d-flex[^{]*>\s*:where\(h1[^{]*\{\s*margin-block:\s*0/s', $lib_css ) === 1 );
 
-remove_filter( 'dxai_ui_template', $pin_built_in, 5 );
+remove_filter( 'dx_ui_template', $pin_built_in, 5 );
 Block_Library::forget();
 echo "\nOn a theme with no template (Twenty Twenty-Five, when it is installed)\n";
 if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
@@ -1105,18 +1105,18 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 	$back      = static function () use ( $theme_was ): void {
 		if ( get_stylesheet() !== $theme_was ) {
 			switch_theme( $theme_was );
-			\DXAI_UI\Theme\Theme_Palette::reset();
-			\DXAI_UI\Theme\Theme_Buttons::reset();
+			\DX_UI\Theme\Theme_Palette::reset();
+			\DX_UI\Theme\Theme_Buttons::reset();
 		}
 	};
 	register_shutdown_function( $back );
 	switch_theme( 'twentytwentyfive' );
-	\DXAI_UI\Theme\Theme_Palette::reset();
-	\DXAI_UI\Theme\Theme_Buttons::reset();
-	$expect( 'the theme has no template of its own; the generic library is in use, and the library is on', \DXAI_UI\Pages\Template::for_theme() === null && \DXAI_UI\Pages\Template::is_generic() && Block_Library::theme_ok() && ! Block_Library::template_ok(), get_stylesheet() );
-	$expect( 'the roles the sections use have core blocks to be written in', \DXAI_UI\Theme\Capabilities::CORE_BLOCKS['link_box'] === 'core/group' && \DXAI_UI\Theme\Capabilities::CORE_BLOCKS['span'] === 'core/paragraph' && \DXAI_UI\Theme\Capabilities::CORE_BLOCKS['picture'] === 'core/image' );
-	$tt_roles = \DXAI_UI\Pages\Template::palette_roles();
-	$tt_pal   = \DXAI_UI\Theme\Capabilities::palette();
+	\DX_UI\Theme\Theme_Palette::reset();
+	\DX_UI\Theme\Theme_Buttons::reset();
+	$expect( 'the theme has no template of its own; the generic library is in use, and the library is on', \DX_UI\Pages\Template::for_theme() === null && \DX_UI\Pages\Template::is_generic() && Block_Library::theme_ok() && ! Block_Library::template_ok(), get_stylesheet() );
+	$expect( 'the roles the sections use have core blocks to be written in', \DX_UI\Theme\Capabilities::CORE_BLOCKS['link_box'] === 'core/group' && \DX_UI\Theme\Capabilities::CORE_BLOCKS['span'] === 'core/paragraph' && \DX_UI\Theme\Capabilities::CORE_BLOCKS['picture'] === 'core/image' );
+	$tt_roles = \DX_UI\Pages\Template::palette_roles();
+	$tt_pal   = \DX_UI\Theme\Capabilities::palette();
 	$expect( 'its palette is read by role (' . json_encode( $tt_roles ) . ')', $tt_roles['dark'] !== '' && $tt_roles['light'] !== '' && $tt_roles['main'] !== '' && isset( $tt_pal[ $tt_roles['dark'] ], $tt_pal[ $tt_roles['light'] ] ) );
 	$tt_bad = array();
 	$tt_n   = 0;

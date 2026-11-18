@@ -2,12 +2,12 @@
 /**
  * "Make the rest from this page" in the page editor and in the list of pages.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * The panel that makes the copies is in the editor of the page a person has just finished (assets/src/admin/editor/
@@ -17,7 +17,7 @@ namespace DXAI_UI\Network;
  */
 final class Copies_Editor {
 
-	public const HANDLE = 'dxai-ui-make-the-rest';
+	public const HANDLE = 'dx-ui-make-the-rest';
 
 	public function register(): void {
 		add_action( 'enqueue_block_editor_assets', array( $this, 'assets' ) );
@@ -34,19 +34,19 @@ final class Copies_Editor {
 		if ( ! $screen instanceof \WP_Screen || $screen->post_type !== 'page' || ! self::allowed() ) {
 			return;
 		}
-		$asset_file = DXAI_UI_DIR . 'assets/build/make-the-rest.asset.php';
-		$script     = DXAI_UI_DIR . 'assets/build/make-the-rest.js';
+		$asset_file = DX_UI_DIR . 'assets/build/make-the-rest.asset.php';
+		$script     = DX_UI_DIR . 'assets/build/make-the-rest.js';
 		// Built by `npm run build`; a copy without the build has no panel.
 		if ( is_readable( $asset_file ) && is_readable( $script ) ) {
 			$asset = include $asset_file;
 			wp_enqueue_script(
 				self::HANDLE,
-				DXAI_UI_URL . 'assets/build/make-the-rest.js',
+				DX_UI_URL . 'assets/build/make-the-rest.js',
 				is_array( $asset['dependencies'] ?? null ) ? $asset['dependencies'] : array( 'wp-plugins', 'wp-editor', 'wp-data', 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ),
-				is_string( $asset['version'] ?? null ) ? $asset['version'] : DXAI_UI_VERSION,
+				is_string( $asset['version'] ?? null ) ? $asset['version'] : DX_UI_VERSION,
 				true
 			);
-			wp_set_script_translations( self::HANDLE, 'dxai-ui', DXAI_UI_DIR . 'languages' );
+			wp_set_script_translations( self::HANDLE, 'dx-ui', DX_UI_DIR . 'languages' );
 		}
 	}
 
@@ -64,7 +64,7 @@ final class Copies_Editor {
 		if ( ! is_string( $edit ) || $edit === '' ) {
 			return $actions;
 		}
-		$actions['dxai_copies'] = '<a href="' . esc_url( add_query_arg( 'dxai-copies', '1', $edit ) ) . '">' . esc_html__( 'Make the rest from this page', 'dxai-ui' ) . '</a>';
+		$actions['dxui_copies'] = '<a href="' . esc_url( add_query_arg( 'dxui-copies', '1', $edit ) ) . '">' . esc_html__( 'Make the rest from this page', 'dx-ui' ) . '</a>';
 
 		return $actions;
 	}

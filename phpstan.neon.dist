@@ -8,7 +8,7 @@ parameters:
 	level: 5
 	paths:
 		- src
-		- dxai-ui.php
+		- dx-ui.php
 		- uninstall.php
 	bootstrapFiles:
 		- bin/phpstan-bootstrap.php
@@ -25,8 +25,8 @@ parameters:
 			path: src/Network/Copies_Editor.php
 	# Set in wp-config.php on a site, or not at all.
 	dynamicConstantNames:
-		- DXAI_UI_SECRETS_KEY
-		- DXAI_UI_RENDER_ONLY
+		- DX_UI_SECRETS_KEY
+		- DX_UI_RENDER_ONLY
 	tmpDir: .phpstan-cache
 	# The baseline was made on Windows and is read on Linux in CI: an entry that does not come up on one of them is not an error.
 	# Regenerate it (composer phpstan -- --generate-baseline phpstan-baseline.neon) when problems in it are fixed.

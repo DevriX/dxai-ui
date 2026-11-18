@@ -2,12 +2,12 @@
 /**
  * One kind of custom block that has a native counterpart.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
 /**
  * A converter turns one stored block into the native block that says the same
@@ -158,9 +158,9 @@ abstract class Converter {
 	/** The class list of a block as save() writes it after the ones the block itself generates. */
 	protected static function class_tail( array $attrs ): string {
 		$class = trim( (string) ( $attrs['className'] ?? '' ) );
-		$css   = $attrs['dxaiCss'] ?? '';
+		$css   = $attrs['dxuiCss'] ?? '';
 		if ( is_string( $css ) && trim( $css ) !== '' ) {
-			$class = trim( $class . ' ' . \DXAI_UI\Compiler\Style_Hoister::css_class( $css ) );
+			$class = trim( $class . ' ' . \DX_UI\Compiler\Style_Hoister::css_class( $css ) );
 		}
 
 		return $class;
@@ -173,17 +173,17 @@ abstract class Converter {
 			return true;
 		}
 
-		return preg_match( '/(?:^|;)\s*display\s*:/i', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1;
+		return preg_match( '/(?:^|;)\s*display\s*:/i', (string) ( $attrs['dxuiCss'] ?? '' ) ) === 1;
 	}
 
 	/** Whether the block's own classes or CSS say its text colour. */
 	protected static function states_color( array $attrs ): bool {
 		$class = ' ' . trim( (string) ( $attrs['className'] ?? '' ) ) . ' ';
-		if ( preg_match( '/\s(?:text-dxai-[a-z0-9-]+|has-[a-z0-9-]+-color|text-inherit|text-current)\s/', $class ) === 1 ) {
+		if ( preg_match( '/\s(?:text-dxui-[a-z0-9-]+|has-[a-z0-9-]+-color|text-inherit|text-current)\s/', $class ) === 1 ) {
 			return true;
 		}
 
-		return preg_match( '/(?:^|;)\s*color\s*:/i', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1;
+		return preg_match( '/(?:^|;)\s*color\s*:/i', (string) ( $attrs['dxuiCss'] ?? '' ) ) === 1;
 	}
 
 	/** Characters on which the editor's attribute escaper and PHP's write different bytes for the same value. */

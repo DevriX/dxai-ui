@@ -2,7 +2,7 @@
 /**
  * Dump GTM page markup sample.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,7 +18,7 @@ $c = $p->post_content;
 echo 'nav_blocks=' . substr_count( $c, 'wp:navigation' ) . PHP_EOL;
 echo 'header=' . ( str_contains( $c, 'rv-header' ) ? '1' : '0' ) . PHP_EOL;
 echo 'hero=' . ( str_contains( $c, 'rv-hero-full' ) ? '1' : '0' ) . PHP_EOL;
-echo 'faq=' . ( str_contains( $c, 'wp:dxai-ui/details' ) ? '1' : '0' ) . PHP_EOL;
+echo 'faq=' . ( str_contains( $c, 'wp:dx-ui/details' ) ? '1' : '0' ) . PHP_EOL;
 echo 'cta=' . ( str_contains( $c, 'rv-cta' ) ? '1' : '0' ) . PHP_EOL;
 echo 'tag_header=' . ( str_contains( $c, '"tagName":"header"' ) ? '1' : '0' ) . PHP_EOL;
 echo 'tag_section=' . substr_count( $c, '"tagName":"section"' ) . PHP_EOL;

@@ -2,26 +2,26 @@
 /**
  * Persist generated structures as native WordPress objects (with revisions).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
-use DXAI_UI\Compiler\Css_Scoper;
-use DXAI_UI\Compiler\Design_Html;
-use DXAI_UI\Compiler\Dynamic_Rewriter;
-use DXAI_UI\Compiler\Gutenberg_Mapper;
-use DXAI_UI\Compiler\Internal_Links;
-use DXAI_UI\Compiler\Rewrite_Policy;
-use DXAI_UI\Compiler\Tailwind_Purger;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Patterns\Pattern_Repository;
-use DXAI_UI\Theme\Blank_Template;
-use DXAI_UI\Verification\Design_Coverage;
-use DXAI_UI\Verification\Import_Audit;
+use DX_UI\Compiler\Css_Scoper;
+use DX_UI\Compiler\Design_Html;
+use DX_UI\Compiler\Dynamic_Rewriter;
+use DX_UI\Compiler\Gutenberg_Mapper;
+use DX_UI\Compiler\Internal_Links;
+use DX_UI\Compiler\Rewrite_Policy;
+use DX_UI\Compiler\Tailwind_Purger;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Content\Content_Types;
+use DX_UI\Patterns\Pattern_Repository;
+use DX_UI\Theme\Blank_Template;
+use DX_UI\Verification\Design_Coverage;
+use DX_UI\Verification\Import_Audit;
 
 final class Structure_Repository {
 
@@ -184,8 +184,8 @@ final class Structure_Repository {
 		 */
 		if ( ! current_user_can( 'unfiltered_html' ) ) {
 			return new \WP_Error(
-				'dxai_ui_unfiltered_html',
-				__( 'Importing a design publishes its HTML, CSS and JavaScript, so it must run as a user allowed to publish unfiltered HTML. From WP-CLI, add --user=<an administrator>.', 'dxai-ui' ),
+				'dx_ui_unfiltered_html',
+				__( 'Importing a design publishes its HTML, CSS and JavaScript, so it must run as a user allowed to publish unfiltered HTML. From WP-CLI, add --user=<an administrator>.', 'dx-ui' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -196,8 +196,8 @@ final class Structure_Repository {
 		}
 		$route = trim( (string) ( $result['slug'] ?? '' ), '/' );
 		$title = $route === ''
-			? \DXAI_UI\Support\Page_Title::for_home( $seo_title !== '' ? $seo_title : $raw_title )
-			: \DXAI_UI\Support\Page_Title::for_page( $raw_title, 'DXAI-UI' );
+			? \DX_UI\Support\Page_Title::for_home( $seo_title !== '' ? $seo_title : $raw_title )
+			: \DX_UI\Support\Page_Title::for_page( $raw_title, 'DX-UI' );
 		$this->seo_title = $seo_title !== '' ? $seo_title : ( str_contains( $raw_title, '|' ) ? $raw_title : '' );
 		$css        = (string) ( $result['custom_css'] ?? '' );
 		$js         = (string) ( $result['custom_js'] ?? '' );
@@ -250,7 +250,7 @@ final class Structure_Repository {
 		 * the automatic choice, as the site stands before anything below is
 		 * written (Chrome_Choice::resolve()).
 		 */
-		$chrome_mode = \DXAI_UI\Chrome\Chrome_Choice::resolve(
+		$chrome_mode = \DX_UI\Chrome\Chrome_Choice::resolve(
 			(string) ( $result['chrome'] ?? '' ),
 			array(
 				'scope'   => $scope,
@@ -259,7 +259,7 @@ final class Structure_Repository {
 				'page_id' => $this->previous_home_id,
 			)
 		);
-		$install_chrome = \DXAI_UI\Chrome\Chrome_Choice::INSTALL === $chrome_mode['mode'];
+		$install_chrome = \DX_UI\Chrome\Chrome_Choice::INSTALL === $chrome_mode['mode'];
 		$mapper     = new Gutenberg_Mapper();
 		$nav        = $this->navigation_factory();
 		$parts      = new Template_Part_Factory();
@@ -349,7 +349,7 @@ final class Structure_Repository {
 					$this->static_html
 				);
 				if ( ! is_wp_error( $saved ) ) {
-					update_post_meta( (int) $saved['id'], '_dxai_ui_structure', 'header' );
+					update_post_meta( (int) $saved['id'], '_dx_ui_structure', 'header' );
 					$created['patterns'][] = $saved;
 				}
 				continue;
@@ -363,7 +363,7 @@ final class Structure_Repository {
 				}
 				$nav_id = 0;
 				if ( $this->inject_nav ) {
-					$nav_id = $tree_follows ? 0 : $nav->save( $title . ' Primary', $primary_items, 'dxai-primary' );
+					$nav_id = $tree_follows ? 0 : $nav->save( $title . ' Primary', $primary_items, 'dxui-primary' );
 				} elseif ( ! $tree_follows ) {
 					$nav_pending['header'] = true;
 				}
@@ -386,7 +386,7 @@ final class Structure_Repository {
 					$footer_items = $structure['menu_items'];
 					$nav_id       = 0;
 					if ( $this->inject_nav ) {
-						$nav_id = $tree_follows ? 0 : $nav->save( $title . ' Footer', $footer_items, 'dxai-footer' );
+						$nav_id = $tree_follows ? 0 : $nav->save( $title . ' Footer', $footer_items, 'dxui-footer' );
 					} elseif ( ! $tree_follows ) {
 						$nav_pending['footer'] = true;
 					}
@@ -409,7 +409,7 @@ final class Structure_Repository {
 					$this->static_html
 				);
 				if ( ! is_wp_error( $saved ) ) {
-					update_post_meta( (int) $saved['id'], '_dxai_ui_structure', 'footer' );
+					update_post_meta( (int) $saved['id'], '_dx_ui_structure', 'footer' );
 					$created['patterns'][] = $saved;
 				}
 				continue;
@@ -426,7 +426,7 @@ final class Structure_Repository {
 				$this->static_html
 			);
 			if ( ! is_wp_error( $saved ) ) {
-				update_post_meta( (int) $saved['id'], '_dxai_ui_structure', $type );
+				update_post_meta( (int) $saved['id'], '_dx_ui_structure', $type );
 				$created['patterns'][] = $saved;
 			}
 			$body_parts[] = $markup;
@@ -436,7 +436,7 @@ final class Structure_Repository {
 			if ( ! $this->inject_nav ) {
 				$nav_pending['header'] = true;
 			} else {
-				$nav_id = $nav->save( $title . ' Primary', $primary_items, 'dxai-primary' );
+				$nav_id = $nav->save( $title . ' Primary', $primary_items, 'dxui-primary' );
 				if ( $nav_id ) {
 					$primary_nav                 = $nav_id;
 					$created['navigation_ids'][] = $nav_id;
@@ -458,8 +458,8 @@ final class Structure_Repository {
 		// Theme-global template parts (never theme header/footer slugs).
 		// Each part records the archive it belongs to, as pages do.
 		$part_meta = $this->source_archive === '' ? array() : array(
-			'_dxai_ui_source_zip' => $this->source_archive,
-			'_dxai_ui_part_key'   => $part_key,
+			'_dx_ui_source_zip' => $this->source_archive,
+			'_dx_ui_part_key'   => $part_key,
 		);
 		// The Site Editor lists parts by title, and seven designs of one brand
 		// would otherwise all read "DevriX Header".
@@ -489,7 +489,7 @@ final class Structure_Repository {
 		if ( $page_content === '' && ! empty( $result['gutenberg_markup'] ) ) {
 			$page_content = (string) $result['gutenberg_markup'];
 			// Strip chrome if the LLM/compiler dumped a whole-page blob.
-			$page_content = \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $page_content );
+			$page_content = \DX_UI\Chrome\Page_Chrome::strip_blocks( $page_content );
 		}
 
 		$full_source = trim( (string) ( $result['source_html'] ?? '' ) );
@@ -509,21 +509,21 @@ final class Structure_Repository {
 		 * and a person can change once in Site Editor > Styles. save_page() has
 		 * just resolved and stored them for this page. See Design_Theme_Json.
 		 */
-		\DXAI_UI\Theme\Design_Theme_Json::adopt( (int) $page_id, $this->source_archive );
-		update_post_meta( (int) $page_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
+		\DX_UI\Theme\Design_Theme_Json::adopt( (int) $page_id, $this->source_archive );
+		update_post_meta( (int) $page_id, \DX_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
 		update_post_meta(
 			(int) $page_id,
-			\DXAI_UI\Chrome\Page_Chrome::MODE_META,
-			$install_chrome ? \DXAI_UI\Chrome\Chrome_Choice::INSTALL : \DXAI_UI\Chrome\Chrome_Choice::KEEP
+			\DX_UI\Chrome\Page_Chrome::MODE_META,
+			$install_chrome ? \DX_UI\Chrome\Chrome_Choice::INSTALL : \DX_UI\Chrome\Chrome_Choice::KEEP
 		);
 		// Island tag histogram from Pass-1 — Library / audit read this meta.
 		$islands = is_array( $result['islands'] ?? null ) ? $result['islands'] : array();
 		if ( $islands !== array() ) {
 			arsort( $islands );
 			$created['islands'] = $islands;
-			update_post_meta( (int) $page_id, '_dxai_ui_islands', $islands );
+			update_post_meta( (int) $page_id, '_dx_ui_islands', $islands );
 		} else {
-			delete_post_meta( (int) $page_id, '_dxai_ui_islands' );
+			delete_post_meta( (int) $page_id, '_dx_ui_islands' );
 		}
 		$created['scope']          = $scope;
 		$created['extra_page_ids'] = array();
@@ -614,7 +614,7 @@ final class Structure_Repository {
 		 * of a design printed the home page's <title>. The home value is put
 		 * back afterwards for anything later in this import that reads it.
 		 */
-		$extra_title     = \DXAI_UI\Support\Page_Title::for_page( $extra_raw, $extra_raw );
+		$extra_title     = \DX_UI\Support\Page_Title::for_page( $extra_raw, $extra_raw );
 		$extra_slug      = (string) ( $extra['slug'] ?? '' );
 		$home_seo        = $this->seo_title;
 		$this->seo_title = ( str_contains( $extra_raw, '|' ) || strlen( $extra_raw ) > 60 ) ? $extra_raw : '';
@@ -628,11 +628,11 @@ final class Structure_Repository {
 		$this->seo_title = $home_seo;
 		if ( ! is_wp_error( $extra_id ) ) {
 			$run['created']['extra_page_ids'][] = $extra_id;
-			update_post_meta( (int) $extra_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
+			update_post_meta( (int) $extra_id, \DX_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
 			update_post_meta(
 				(int) $extra_id,
-				\DXAI_UI\Chrome\Page_Chrome::MODE_META,
-				$install_chrome ? \DXAI_UI\Chrome\Chrome_Choice::INSTALL : \DXAI_UI\Chrome\Chrome_Choice::KEEP
+				\DX_UI\Chrome\Page_Chrome::MODE_META,
+				$install_chrome ? \DX_UI\Chrome\Chrome_Choice::INSTALL : \DX_UI\Chrome\Chrome_Choice::KEEP
 			);
 			$run['link_pages'][]         = array(
 				'id'    => $extra_id,
@@ -744,7 +744,7 @@ final class Structure_Repository {
 			case 'tokens':
 				/*
 				 * Every literal colour and shadow this design wrote becomes a token —
-				 * `background:#F2A34A` becomes `background:var(--dxai-accent)` — across
+				 * `background:#F2A34A` becomes `background:var(--dxui-accent)` — across
 				 * the page, its extra route pages, its sections and its header and
 				 * footer, and in its compiled stylesheet. See Token_Styles.
 				 *
@@ -762,7 +762,7 @@ final class Structure_Repository {
 				 */
 				if ( ! isset( $tail['tokens'] ) ) {
 					$palette           = (array) $tail['palette'];
-					$lists             = \DXAI_UI\Compiler\Token_Styles::import_posts( (array) $tail['design_posts'], (array) $tail['crawled'] );
+					$lists             = \DX_UI\Compiler\Token_Styles::import_posts( (array) $tail['design_posts'], (array) $tail['crawled'] );
 					$tail['tokens']    = array(
 						'colors'          => count( (array) ( $palette['colors'] ?? array() ) ),
 						'shadows'         => count( (array) ( $palette['shadows'] ?? array() ) ),
@@ -777,7 +777,7 @@ final class Structure_Repository {
 				if ( empty( $tail['tokens_on'] ) || (int) $tail['at'] >= count( $posts ) ) {
 					return true;
 				}
-				$counts                             = \DXAI_UI\Compiler\Token_Styles::tokenize_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['palette'] );
+				$counts                             = \DX_UI\Compiler\Token_Styles::tokenize_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['palette'] );
 				$tail['tokens']['literals_before'] += $counts['literals_before'];
 				$tail['tokens']['literals_after']  += $counts['literals_after'];
 				$tail['at']                         = (int) $tail['at'] + 1;
@@ -789,11 +789,11 @@ final class Structure_Repository {
 					return true;
 				}
 				if ( ! isset( $tail['sheets'] ) ) {
-					$tail['sheets'] = \DXAI_UI\Compiler\Token_Styles::import_sheets( $page_id, (array) $tail['route_pages'], (array) $tail['derived'] );
+					$tail['sheets'] = \DX_UI\Compiler\Token_Styles::import_sheets( $page_id, (array) $tail['route_pages'], (array) $tail['derived'] );
 				}
 				$sheets = (array) $tail['sheets'];
 				if ( (int) $tail['at'] < count( $sheets ) ) {
-					\DXAI_UI\Compiler\Token_Styles::tokenize_sheets( array( (string) $sheets[ (int) $tail['at'] ] ), (array) $tail['palette'], (array) $tail['roles'] );
+					\DX_UI\Compiler\Token_Styles::tokenize_sheets( array( (string) $sheets[ (int) $tail['at'] ] ), (array) $tail['palette'], (array) $tail['roles'] );
 					$tail['at'] = (int) $tail['at'] + 1;
 				}
 
@@ -801,26 +801,26 @@ final class Structure_Repository {
 
 			case 'palette':
 				if ( ! empty( $tail['tokens_on'] ) ) {
-					\DXAI_UI\Compiler\Token_Styles::store_palette( $page_id, (array) $tail['route_pages'], (array) $tail['derived'], (array) $tail['palette'], (array) $tail['roles'] );
+					\DX_UI\Compiler\Token_Styles::store_palette( $page_id, (array) $tail['route_pages'], (array) $tail['derived'], (array) $tail['palette'], (array) $tail['roles'] );
 				}
 				$run['created']['tokens'] = $tail['tokens'];
 				unset( $tail['posts'], $tail['sheets'] );
 				// The brand's presets are built from the palette just stored; the
 				// theme.json cache has to forget the version built without it.
-				\DXAI_UI\Theme\Design_Theme_Json::flush();
+				\DX_UI\Theme\Design_Theme_Json::flush();
 
 				return true;
 
 			case 'context':
 				/*
 				 * And then no inline styles: every block's CSS (tokens and all) moves
-				 * from style="" to a dxs- class and the block's dxaiCss attribute, and
+				 * from style="" to a dxs- class and the block's dxuiCss attribute, and
 				 * a text colour that is a site preset becomes core's colour setting.
 				 * See Style_Hoister. After tokenising, so what moves is already
 				 * written in tokens. Style_Hoister::hoist_import(), a post at a time.
 				 */
 				$tail['hoist']   = array_values( array_unique( array_filter( array_map( 'intval', array_merge( (array) $tail['design_posts'], (array) $tail['crawled'] ) ) ) ) );
-				$tail['context'] = \DXAI_UI\Compiler\Style_Hoister::import_context( $tail['hoist'] );
+				$tail['context'] = \DX_UI\Compiler\Style_Hoister::import_context( $tail['hoist'] );
 				$tail['presets'] = self::preset_slugs( $page_id );
 				$tail['hoisted'] = array(
 					'posts'     => 0,
@@ -835,7 +835,7 @@ final class Structure_Repository {
 			case 'hoist':
 				$posts = (array) $tail['hoist'];
 				if ( (int) $tail['at'] < count( $posts ) ) {
-					$done = \DXAI_UI\Compiler\Style_Hoister::hoist_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['presets'], (array) $tail['context'] );
+					$done = \DX_UI\Compiler\Style_Hoister::hoist_posts( array( (int) $posts[ (int) $tail['at'] ] ), (array) $tail['presets'], (array) $tail['context'] );
 					foreach ( $done as $key => $count ) {
 						$tail['hoisted'][ $key ] = (int) ( $tail['hoisted'][ $key ] ?? 0 ) + (int) $count;
 					}
@@ -851,12 +851,12 @@ final class Structure_Repository {
 
 			case 'after':
 				// The design's colours fitted to the active theme's, from its first view (Theme_Binding).
-				\DXAI_UI\Theme\Theme_Binding::after_import( (int) $page_id );
+				\DX_UI\Theme\Theme_Binding::after_import( (int) $page_id );
 				// Native blocks in place of the plugin's own, wherever the site has them (Native_Blocks).
-				\DXAI_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
-				\DXAI_UI\Media\Font_Host::after_import( (int) $page_id );
+				\DX_UI\Blocks\Native\Native_Blocks::after_import( (int) $page_id );
+				\DX_UI\Media\Font_Host::after_import( (int) $page_id );
 				// A design imported again comes back with its own links to its old site: the pages built from that site are where they lead.
-				\DXAI_UI\Pages\Site_Pages::relink( (int) $page_id );
+				\DX_UI\Pages\Site_Pages::relink( (int) $page_id );
 
 				return true;
 
@@ -943,7 +943,7 @@ final class Structure_Repository {
 				// The design's document (the Design IR, docs/PLAN-ARCHITECTURE.md): what this import read and made, as one record on the
 				// Home. Never a failure of the import: a document that cannot be built leaves a note on the Home instead.
 				$result['scope']               = (string) $run['scope'];
-				$document                      = \DXAI_UI\Design\Document_Store::record( $result, (array) $run['created'] );
+				$document                      = \DX_UI\Design\Document_Store::record( $result, (array) $run['created'] );
 				$run['created']['document'] = $document?->summary();
 
 				return true;
@@ -1031,8 +1031,8 @@ final class Structure_Repository {
 			array( (int) $created['header_id'], (int) $created['footer_id'] )
 		);
 		$route_pages  = array_map( 'intval', (array) $created['extra_page_ids'] );
-		$roles        = \DXAI_UI\Compiler\Design_Tokens::for_page( (int) $page_id );
-		$palette      = \DXAI_UI\Compiler\Token_Styles::palette_for( $design_posts, (int) $page_id, $roles );
+		$roles        = \DX_UI\Compiler\Design_Tokens::for_page( (int) $page_id );
+		$palette      = \DX_UI\Compiler\Token_Styles::palette_for( $design_posts, (int) $page_id, $roles );
 		$crawled      = array();
 
 		$create_missing = ! empty( $result['create_missing_pages'] ) && $scope === 'site';
@@ -1249,11 +1249,11 @@ final class Structure_Repository {
 			: self::kept_chrome( $created, $chrome_mode );
 
 		// The skip link and the header spacer the Home opens with, kept so the DX template can draw them if the page loses them (Template_Chrome).
-		\DXAI_UI\Chrome\Template_Chrome::remember_lead( (int) $page_id );
+		\DX_UI\Chrome\Template_Chrome::remember_lead( (int) $page_id );
 
 		// A design that becomes the site's template brings its fonts, hosted on this site (Template_Fonts). Never a failure of the import:
 		// the answer says what was done, or why not.
-		$created['fonts'] = \DXAI_UI\Theme\Template_Fonts::for_import( (int) $page_id, $chrome_mode );
+		$created['fonts'] = \DX_UI\Theme\Template_Fonts::for_import( (int) $page_id, $chrome_mode );
 
 		/*
 		 * The wp_navigation posts, only for an area that kept its part (see
@@ -1334,7 +1334,7 @@ final class Structure_Repository {
 			$markup = (string) get_post_field( 'post_content', $part_id );
 			try {
 				$answer = 'header' === $area
-					? \DXAI_UI\Chrome\Header_Menus::install(
+					? \DX_UI\Chrome\Header_Menus::install(
 						$markup,
 						array(
 							'title'        => $title,
@@ -1371,8 +1371,8 @@ final class Structure_Repository {
 					'error'        => 'exception',
 					'message'      => sprintf(
 						/* translators: 1: "header" or "footer", 2: error message. */
-						__( 'The %1$s could not be built from the design, so it was kept as a template part: %2$s', 'dxai-ui' ),
-						'header' === $area ? __( 'header', 'dxai-ui' ) : __( 'footer', 'dxai-ui' ),
+						__( 'The %1$s could not be built from the design, so it was kept as a template part: %2$s', 'dx-ui' ),
+						'header' === $area ? __( 'header', 'dx-ui' ) : __( 'footer', 'dx-ui' ),
 						$e->getMessage()
 					),
 				);
@@ -1396,9 +1396,9 @@ final class Structure_Repository {
 				continue;
 			}
 			$was = (string) get_post_field( 'post_content', $pid );
-			$now = \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $was );
+			$now = \DX_UI\Chrome\Page_Chrome::strip_blocks( $was );
 			// After swap, install mode may have left stubs — strip those too so Page_Chrome owns chrome.
-			$now = \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $now );
+			$now = \DX_UI\Chrome\Page_Chrome::strip_blocks( $now );
 			if ( $now !== $was ) {
 				wp_update_post(
 					array(
@@ -1411,7 +1411,7 @@ final class Structure_Repository {
 
 		// The design's other pages that draw the same header or footer in their content: drawn with the site's, as the Home is.
 		foreach ( array_unique( array_map( 'intval', array_merge( (array) ( $created['extra_page_ids'] ?? array() ), $pages ) ) ) as $pid ) {
-			\DXAI_UI\Chrome\Page_Chrome::adopt_site_chrome( $pid, $page_id, $sources );
+			\DX_UI\Chrome\Page_Chrome::adopt_site_chrome( $pid, $page_id, $sources );
 		}
 
 		$created['chrome_parts'] = array();
@@ -1452,7 +1452,7 @@ final class Structure_Repository {
 	 *                              `error` and `message`.
 	 */
 	public static function install_site_footer( string $markup, array $context ): array {
-		if ( \DXAI_UI\Chrome\Footer_Template::build( $markup )['slots'] === array() ) {
+		if ( \DX_UI\Chrome\Footer_Template::build( $markup )['slots'] === array() ) {
 			return array(
 				'block_markup' => '',
 				'error'        => 'no_footer',
@@ -1466,12 +1466,12 @@ final class Structure_Repository {
 		if ( $part_key === '' ) {
 			$part_key = self::part_key( $source, (string) get_post_field( 'post_name', $page_id ), $title );
 		}
-		$record  = \DXAI_UI\Chrome\Footer_Template::get();
+		$record  = \DX_UI\Chrome\Footer_Template::get();
 		$own     = $record === array()
 			|| ( $page_id > 0 && (int) ( $record['scope'] ?? 0 ) === $page_id )
 			|| ( $page_id > 0 && (int) ( $record['page_id'] ?? 0 ) === $page_id )
 			|| ( $owner !== '' && (string) ( $record['owner'] ?? '' ) === $owner );
-		$holders = $own ? array() : array_values( array_diff( \DXAI_UI\Chrome\Footer_Widgets::holders( $record ), array( $page_id ) ) );
+		$holders = $own ? array() : array_values( array_diff( \DX_UI\Chrome\Footer_Widgets::holders( $record ), array( $page_id ) ) );
 		/**
 		 * The pages of the site's current footer design that a design taking
 		 * the widget areas gives their footer back to (as a template part).
@@ -1481,8 +1481,8 @@ final class Structure_Repository {
 		 * @param array<string, mixed> $record  The stored footer they show.
 		 * @param int                  $page_id The page of the design being imported.
 		 */
-		$holders = array_values( array_filter( array_map( 'intval', (array) apply_filters( 'dxai_ui_footer_holders', $holders, $record, $page_id ) ) ) );
-		$held_by = \DXAI_UI\Chrome\Footer_Widgets::source_of( $record );
+		$holders = array_values( array_filter( array_map( 'intval', (array) apply_filters( 'dx_ui_footer_holders', $holders, $record, $page_id ) ) ) );
+		$held_by = \DX_UI\Chrome\Footer_Widgets::source_of( $record );
 		$handed  = array();
 		if ( $holders !== array() ) {
 			$handed = self::hand_back_footer( $record, $holders );
@@ -1493,14 +1493,14 @@ final class Structure_Repository {
 					'held_by'      => $held_by,
 					'message'      => sprintf(
 						/* translators: 1: title of the design whose footer is the site's, 2: error message. */
-						__( 'The footer of “%1$s” in Appearance > Widgets could not be kept on its pages, so it stays there and this design keeps its footer as a template part: %2$s', 'dxai-ui' ),
+						__( 'The footer of “%1$s” in Appearance > Widgets could not be kept on its pages, so it stays there and this design keeps its footer as a template part: %2$s', 'dx-ui' ),
 						$held_by['title'] !== '' ? $held_by['title'] : $held_by['source'],
 						$handed->get_error_message()
 					),
 				);
 			}
 		}
-		$answer = \DXAI_UI\Chrome\Footer_Widgets::install(
+		$answer = \DX_UI\Chrome\Footer_Widgets::install(
 			$markup,
 			array(
 				'page_id'  => $page_id,
@@ -1546,8 +1546,8 @@ final class Structure_Repository {
 				'part_id'      => $part,
 				'reason'       => (string) ( $choice['reason'] ?? '' ),
 				'message'      => 'header' === $area
-					? __( 'The header is a template part on this design\'s pages; Appearance › Menus was not changed.', 'dxai-ui' )
-					: __( 'The footer is a template part on this design\'s pages; Appearance › Widgets was not changed.', 'dxai-ui' ),
+					? __( 'The header is a template part on this design\'s pages; Appearance › Menus was not changed.', 'dx-ui' )
+					: __( 'The footer is a template part on this design\'s pages; Appearance › Widgets was not changed.', 'dx-ui' ),
 			);
 		}
 
@@ -1573,9 +1573,9 @@ final class Structure_Repository {
 	 * @return array<string, mixed>|\WP_Error title, page_id, source, part_id, pages (the ids written).
 	 */
 	private static function hand_back_footer( array $record, array $holders ): array|\WP_Error {
-		$markup = \DXAI_UI\Chrome\Footer_Template::assemble();
+		$markup = \DX_UI\Chrome\Footer_Template::assemble();
 		if ( trim( $markup ) === '' ) {
-			return new \WP_Error( 'dxai_ui_footer_hand_back', __( 'The footer in Appearance > Widgets could not be read back.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_footer_hand_back', __( 'The footer in Appearance > Widgets could not be read back.', 'dx-ui' ) );
 		}
 		$source = (string) ( $record['source'] ?? '' );
 		$title  = (string) ( $record['title'] ?? '' );
@@ -1587,15 +1587,15 @@ final class Structure_Repository {
 			$key = self::part_key( $source, (string) get_post_field( 'post_name', $page ), $title );
 		}
 		$meta  = $source === '' ? array() : array(
-			'_dxai_ui_source_zip' => $source,
-			'_dxai_ui_part_key'   => $key,
+			'_dx_ui_source_zip' => $source,
+			'_dx_ui_part_key'   => $key,
 		);
 		$label = ( $source === '' ? $title : $title . ' (' . preg_replace( '/\.zip$/i', '', $source ) . ')' ) . ' Footer';
 		$parts = new Template_Part_Factory();
 		self::revive_part( 'footer', $key );
 		$part_id = $parts->save( 'footer', $label, $markup, $key, $meta );
 		if ( $part_id < 1 ) {
-			return new \WP_Error( 'dxai_ui_footer_hand_back', __( 'The footer\'s template part could not be written.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_footer_hand_back', __( 'The footer\'s template part could not be written.', 'dx-ui' ) );
 		}
 		$reference = $parts->reference_markup( 'footer', $key );
 		$written   = array();
@@ -1604,7 +1604,7 @@ final class Structure_Repository {
 			if ( ! $post instanceof \WP_Post ) {
 				continue;
 			}
-			$swapped = (string) preg_replace( '/<!--\s*wp:' . preg_quote( \DXAI_UI\Chrome\Site_Footer_Block::NAME, '/' ) . '(?:\s+\{.*?\})?\s*\/-->/', $reference, (string) $post->post_content );
+			$swapped = (string) preg_replace( '/<!--\s*wp:' . preg_quote( \DX_UI\Chrome\Site_Footer_Block::NAME, '/' ) . '(?:\s+\{.*?\})?\s*\/-->/', $reference, (string) $post->post_content );
 			if ( $swapped === (string) $post->post_content ) {
 				continue;
 			}
@@ -1649,8 +1649,8 @@ final class Structure_Repository {
 		$title = (string) ( $tail['title'] ?? '' );
 		$label = $this->source_archive === '' ? $title : $title . ' (' . preg_replace( '/\.zip$/i', '', $this->source_archive ) . ')';
 		$meta  = $this->source_archive === '' ? array() : array(
-			'_dxai_ui_source_zip' => $this->source_archive,
-			'_dxai_ui_part_key'   => $key,
+			'_dx_ui_source_zip' => $this->source_archive,
+			'_dx_ui_part_key'   => $key,
 		);
 
 		return ( new Template_Part_Factory() )->save( $area, $label . ( 'header' === $area ? ' Header' : ' Footer' ), $markup, $key, $meta );
@@ -1686,7 +1686,7 @@ final class Structure_Repository {
 		if ( ! $part instanceof \WP_Post || 'wp_template_part' !== $part->post_type || 'trash' === $part->post_status || ! self::can_trash() ) {
 			return false;
 		}
-		if ( '1' !== (string) get_post_meta( $part_id, '_dxai_ui_generated', true ) || $this->part_referrers( (string) $part->post_name ) !== array() ) {
+		if ( '1' !== (string) get_post_meta( $part_id, '_dx_ui_generated', true ) || $this->part_referrers( (string) $part->post_name ) !== array() ) {
 			return false;
 		}
 
@@ -1738,7 +1738,7 @@ final class Structure_Repository {
 	 * @deprecated 0.4.0 Use Page_Chrome::strip_blocks() — kept so older crawl workers do not fatal.
 	 */
 	public static function strip_chrome_blocks( string $markup ): string {
-		return \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $markup );
+		return \DX_UI\Chrome\Page_Chrome::strip_blocks( $markup );
 	}
 
 	/**
@@ -1767,7 +1767,7 @@ final class Structure_Repository {
 						'value' => $slug,
 					),
 					array(
-						'key'   => '_dxai_ui_generated',
+						'key'   => '_dx_ui_generated',
 						'value' => '1',
 					),
 				),
@@ -1851,7 +1851,7 @@ final class Structure_Repository {
 		if (
 			preg_match( '/<nav\b/i', $markup )
 			|| preg_match( '/<header\b/i', $markup )
-			|| str_contains( $markup, 'wp:dxai-ui/link' )
+			|| str_contains( $markup, 'wp:dx-ui/link' )
 			|| str_contains( $markup, 'wp:navigation' )
 			|| str_contains( $markup, '"tagName":"header"' )
 			|| str_contains( $markup, '"tagName":"nav"' )
@@ -1898,10 +1898,10 @@ final class Structure_Repository {
 	 * @return array<int, string>
 	 */
 	private static function preset_slugs( int $page_id ): array {
-		if ( ! \DXAI_UI\Compiler\Token_Styles::is_brand( $page_id ) ) {
+		if ( ! \DX_UI\Compiler\Token_Styles::is_brand( $page_id ) ) {
 			return array();
 		}
-		$stored = get_post_meta( $page_id, \DXAI_UI\Compiler\Token_Styles::META, true );
+		$stored = get_post_meta( $page_id, \DX_UI\Compiler\Token_Styles::META, true );
 		$slugs  = array();
 		foreach ( is_array( $stored['colors'] ?? null ) ? $stored['colors'] : array() as $row ) {
 			if ( is_array( $row ) && ! empty( $row['preset'] ) && ! empty( $row['slug'] ) ) {
@@ -1998,14 +1998,14 @@ final class Structure_Repository {
 		$nav = $this->navigation_factory();
 		if ( in_array( 'header', $areas, true ) && ( $primary_tree !== array() || $primary_items !== array() ) ) {
 			$tree   = $primary_tree !== array() ? $primary_tree : $this->tree_from_flat( $primary_items );
-			$nav_id = $nav->save_tree( $title . ' Primary', $tree, $path_map, 'dxai-primary', $origin );
+			$nav_id = $nav->save_tree( $title . ' Primary', $tree, $path_map, 'dxui-primary', $origin );
 			if ( $nav_id ) {
 				$created['navigation_ids'][] = $nav_id;
 			}
 		}
 		if ( in_array( 'footer', $areas, true ) && ( $footer_tree !== array() || $footer_items !== array() ) ) {
 			$tree   = $footer_tree !== array() ? $footer_tree : $this->tree_from_flat( $footer_items );
-			$nav_id = $nav->save_tree( $title . ' Footer', $tree, $path_map, 'dxai-footer', $origin );
+			$nav_id = $nav->save_tree( $title . ' Footer', $tree, $path_map, 'dxui-footer', $origin );
 			if ( $nav_id ) {
 				$created['navigation_ids'][] = $nav_id;
 			}
@@ -2024,13 +2024,13 @@ final class Structure_Repository {
 	private function save_menu_flat( array &$created, string $title, array $areas, array $primary_items, array $footer_items ): void {
 		$nav = $this->navigation_factory();
 		if ( in_array( 'header', $areas, true ) ) {
-			$nav_id = $nav->save( $title . ' Primary', $primary_items, 'dxai-primary' );
+			$nav_id = $nav->save( $title . ' Primary', $primary_items, 'dxui-primary' );
 			if ( $nav_id ) {
 				$created['navigation_ids'][] = $nav_id;
 			}
 		}
 		if ( in_array( 'footer', $areas, true ) && $footer_items !== array() ) {
-			$nav_id = $nav->save( $title . ' Footer', $footer_items, 'dxai-footer' );
+			$nav_id = $nav->save( $title . ' Footer', $footer_items, 'dxui-footer' );
 			if ( $nav_id ) {
 				$created['navigation_ids'][] = $nav_id;
 			}
@@ -2067,7 +2067,7 @@ final class Structure_Repository {
 			/*
 			 * Every pattern this import wrote, not only the header's and footer's: the sections it offers in the inserter
 			 * kept the design's links, and one inserted on a page later linked to `/contact` on a site whose Contact page
-			 * is `/dxai-contact/`.
+			 * is `/dxui-contact/`.
 			 */
 			$rewrite_ids[ $pid ] = true;
 		}
@@ -2185,7 +2185,7 @@ final class Structure_Repository {
 		$chrome_out = array();
 		if ( ! empty( $chrome['header'] ) ) {
 			try {
-				$chrome_out['header'] = \DXAI_UI\Chrome\Header_Menus::rebind(
+				$chrome_out['header'] = \DX_UI\Chrome\Header_Menus::rebind(
 					$path_map,
 					(string) ( $from_menu['origin'] ?? '' ),
 					$page_id,
@@ -2203,9 +2203,9 @@ final class Structure_Repository {
 			}
 		}
 		$footer_from = $footer_part > 0 ? (string) get_post_field( 'post_content', $footer_part ) : (string) ( $chrome['footer_markup'] ?? '' );
-		if ( ! empty( $chrome['footer'] ) && $footer_from !== '' && (int) ( \DXAI_UI\Chrome\Footer_Template::get()['scope'] ?? 0 ) === $page_id ) {
+		if ( ! empty( $chrome['footer'] ) && $footer_from !== '' && (int) ( \DX_UI\Chrome\Footer_Template::get()['scope'] ?? 0 ) === $page_id ) {
 			try {
-				$chrome_out['footer'] = \DXAI_UI\Chrome\Footer_Widgets::install(
+				$chrome_out['footer'] = \DX_UI\Chrome\Footer_Widgets::install(
 					$footer_from,
 					array(
 						'page_id'  => $page_id,
@@ -2225,7 +2225,7 @@ final class Structure_Repository {
 			}
 		}
 
-		$tokens = \DXAI_UI\Compiler\Token_Styles::tokenize_import(
+		$tokens = \DX_UI\Compiler\Token_Styles::tokenize_import(
 			(array) ( $tail['design_posts'] ?? array() ),
 			$page_id,
 			(array) ( $tail['route_pages'] ?? array() ),
@@ -2233,7 +2233,7 @@ final class Structure_Repository {
 			(array) ( $tail['palette'] ?? array() ),
 			$crawled
 		);
-		\DXAI_UI\Theme\Design_Theme_Json::flush();
+		\DX_UI\Theme\Design_Theme_Json::flush();
 		/*
 		 * Hoisted against the rest of the design: the crawled pages render
 		 * inside the Home's scope, next to its header and footer, so the class
@@ -2241,20 +2241,20 @@ final class Structure_Repository {
 		 * runs inside save() and every post is hoisted at once.
 		 */
 		$chrome_markup = array( (string) get_post_field( 'post_content', $page_id ) );
-		$header_spec   = \DXAI_UI\Chrome\Header_Template::scoped( $page_id );
+		$header_spec   = \DX_UI\Chrome\Header_Template::scoped( $page_id );
 		if ( null !== $header_spec ) {
 			$chrome_markup[] = (string) ( $header_spec['markup'] ?? '' );
 		}
-		if ( (int) ( \DXAI_UI\Chrome\Footer_Template::get()['page_id'] ?? 0 ) === $page_id ) {
-			$chrome_markup[] = \DXAI_UI\Chrome\Site_Footer_Block::markup();
+		if ( (int) ( \DX_UI\Chrome\Footer_Template::get()['page_id'] ?? 0 ) === $page_id ) {
+			$chrome_markup[] = \DX_UI\Chrome\Site_Footer_Block::markup();
 		}
-		\DXAI_UI\Compiler\Style_Hoister::hoist_import( $crawled, self::preset_slugs( $page_id ), array_values( array_filter( $chrome_markup ) ) );
+		\DX_UI\Compiler\Style_Hoister::hoist_import( $crawled, self::preset_slugs( $page_id ), array_values( array_filter( $chrome_markup ) ) );
 		// Built from the Home's own sections, a crawled page is the Home's design, and its design names are the Home's.
-		\DXAI_UI\Compiler\Style_Hoister::share_design_names( $page_id, $crawled );
+		\DX_UI\Compiler\Style_Hoister::share_design_names( $page_id, $crawled );
 		// The pages built from the old site count for the design's colour use too.
-		\DXAI_UI\Theme\Theme_Binding::after_import( $page_id );
-		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $page_id );
-		\DXAI_UI\Media\Font_Host::after_import( $page_id );
+		\DX_UI\Theme\Theme_Binding::after_import( $page_id );
+		\DX_UI\Blocks\Native\Native_Blocks::after_import( $page_id );
+		\DX_UI\Media\Font_Host::after_import( $page_id );
 
 		$auditor = new Import_Audit();
 		foreach ( $crawled as $audit_id ) {
@@ -2289,7 +2289,7 @@ final class Structure_Repository {
 		}
 		$conversion = (int) ( $tail['conversion'] ?? 0 );
 		if ( $conversion > 0 ) {
-			update_post_meta( $conversion, '_dxai_ui_crawl', $outcome );
+			update_post_meta( $conversion, '_dx_ui_crawl', $outcome );
 		}
 
 		return $outcome;
@@ -2303,12 +2303,12 @@ final class Structure_Repository {
 	public function restore( int $conversion_id, string $scope = '' ): array|\WP_Error {
 		$post = get_post( $conversion_id );
 		if ( ! $post instanceof \WP_Post || $post->post_type !== Content_Types::CONVERSION ) {
-			return new \WP_Error( 'dxai_ui_restore', __( 'Conversion snapshot not found.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_restore', __( 'Conversion snapshot not found.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		$payload = Conversion_Snapshot::decode( (string) $post->post_content );
 		if ( ! is_array( $payload ) ) {
-			return new \WP_Error( 'dxai_ui_restore', __( 'Conversion snapshot is not valid JSON.', 'dxai-ui' ), array( 'status' => 422 ) );
+			return new \WP_Error( 'dx_ui_restore', __( 'Conversion snapshot is not valid JSON.', 'dx-ui' ), array( 'status' => 422 ) );
 		}
 
 		$result = is_array( $payload['result'] ?? null ) ? $payload['result'] : array();
@@ -2323,13 +2323,13 @@ final class Structure_Repository {
 
 	/**
 	 * The key a design's header and footer template parts are saved under
-	 * (`dxai-header-{key}`, `dxai-footer-{key}`).
+	 * (`dxui-header-{key}`, `dxui-footer-{key}`).
 	 *
 	 * The archive, like a page's identity (see existing_page()). This used to
 	 * be the home slug or, for the usual home route `/`, the page title — and
 	 * Page_Title::for_home() names a home page after its brand. The seven
 	 * DevriX designs in the local corpus are all titled "DevriX", so they all
-	 * wrote `dxai-header-devrix`, and each import replaced the header and
+	 * wrote `dxui-header-devrix`, and each import replaced the header and
 	 * footer of the six before it: those pages showed another design's chrome
 	 * (20 nodes missing and 21 extra on each, per the design oracle). Any two
 	 * designs whose title falls back to "Home" collided the same way.
@@ -2343,7 +2343,7 @@ final class Structure_Repository {
 	 * the site locale (remove_accents() has per-locale rules), on whether intl
 	 * and mbstring are installed, and on any plugin filtering it — and which
 	 * percent-encodes a Cyrillic or CJK name into up to 200 bytes, more than
-	 * post_name holds once `dxai-header-` is prefixed. Instead: the ASCII
+	 * post_name holds once `dxui-header-` is prefixed. Instead: the ASCII
 	 * letters and digits of the name (strtolower is locale-independent on PHP
 	 * 8.2, which the plugin requires), at most 40 of them, plus 8 hex digits
 	 * of the name's md5. The hash keeps apart names that fold to the same
@@ -2395,7 +2395,7 @@ final class Structure_Repository {
 	private function collect_part_slugs( array $block, array &$slugs ): void {
 		if ( ( $block['blockName'] ?? '' ) === 'core/template-part' ) {
 			$slug = (string) ( $block['attrs']['slug'] ?? '' );
-			if ( str_starts_with( $slug, 'dxai-' ) ) {
+			if ( str_starts_with( $slug, 'dxui-' ) ) {
 				$slugs[] = $slug;
 			}
 		}
@@ -2436,7 +2436,7 @@ final class Structure_Repository {
 				continue;
 			}
 			foreach ( $previous as $old ) {
-				if ( $old === $new || ! str_starts_with( $old, 'dxai-' . $area . '-' ) ) {
+				if ( $old === $new || ! str_starts_with( $old, 'dxui-' . $area . '-' ) ) {
 					continue;
 				}
 				if ( array_diff( $this->part_referrers( $old ), array( $this->previous_home_id ) ) !== array() ) {
@@ -2470,7 +2470,7 @@ final class Structure_Repository {
 						'name'           => $slug,
 						'post_status'    => array( 'publish', 'draft', 'private' ),
 						'posts_per_page' => -1,
-						'meta_key'       => '_dxai_ui_generated',
+						'meta_key'       => '_dx_ui_generated',
 						'meta_value'     => '1',
 					)
 				),
@@ -2509,7 +2509,7 @@ final class Structure_Repository {
 	 * them.
 	 *
 	 * Another design's pages may still point at a part: while the DevriX
-	 * designs are re-imported one by one, `dxai-header-devrix` stays in use
+	 * designs are re-imported one by one, `dxui-header-devrix` stays in use
 	 * until the last of them has moved to its own key, and only then goes.
 	 * Trashed rather than deleted, so an edit someone made to it in the Site
 	 * Editor can still be restored.
@@ -2548,7 +2548,7 @@ final class Structure_Repository {
 		$trimmed        = trim( $preferred_slug, '/' );
 		$from_preferred = sanitize_title( str_replace( '/', '-', $trimmed ) );
 		$base           = $from_preferred !== '' ? $from_preferred : sanitize_title( $title );
-		$slug           = str_starts_with( $base, 'dxai-' ) ? $base : 'dxai-' . $base;
+		$slug           = str_starts_with( $base, 'dxui-' ) ? $base : 'dxui-' . $base;
 		$key            = $this->source_archive === '' ? '' : $this->source_archive . '#' . $slug;
 
 		return array( $slug, $key );
@@ -2560,9 +2560,9 @@ final class Structure_Repository {
 	/**
 	 * The page this import owns — its own, never another design's.
 	 *
-	 * Identity used to be the route slug alone: `dxai-` plus the route file's
+	 * Identity used to be the route slug alone: `dxui-` plus the route file's
 	 * name. Three designs in this corpus ship a `jobs.$slug.tsx` route, so all
-	 * three computed `dxai-jobs-slug`, and the second and third UPDATED the
+	 * three computed `dxui-jobs-slug`, and the second and third UPDATED the
 	 * first design's page instead of creating their own. Careers Page Builder
 	 * and Client Connect Hub ended up with no page at all — 18 archives in, 17
 	 * pages out, every one of them reporting status=ok. Silent whole-design
@@ -2583,7 +2583,7 @@ final class Structure_Repository {
 					'post_type'      => 'page',
 					'post_status'    => array( 'publish', 'draft' ),
 					'posts_per_page' => 1,
-					'meta_key'       => '_dxai_ui_page_key',
+					'meta_key'       => '_dx_ui_page_key',
 					'meta_value'     => $key,
 				)
 			);
@@ -2606,7 +2606,7 @@ final class Structure_Repository {
 
 		// A page made for a design's Home (the Library's "Pages in the team's style") is that design's, whatever its key says
 		// or lacks: an import of another design with the same address (/contact-us) must not take it.
-		if ( (string) get_post_meta( $at_slug[0]->ID, \DXAI_UI\Pages\Team_Pages::META, true ) !== '' ) {
+		if ( (string) get_post_meta( $at_slug[0]->ID, \DX_UI\Pages\Team_Pages::META, true ) !== '' ) {
 			return null;
 		}
 
@@ -2618,7 +2618,7 @@ final class Structure_Repository {
 		 * instead of growing a duplicate.
 		 */
 		if ( $key !== '' ) {
-			$holder = (string) get_post_meta( $at_slug[0]->ID, '_dxai_ui_page_key', true );
+			$holder = (string) get_post_meta( $at_slug[0]->ID, '_dx_ui_page_key', true );
 			if ( $holder !== '' && $holder !== $key ) {
 				return null;
 			}
@@ -2628,7 +2628,7 @@ final class Structure_Repository {
 	}
 
 	private function save_page( string $title, string $content, string $css, string $js, array $design = array(), string $compiled_css = '', string $wrapper_class = '', string $raw_css = '', string $preferred_slug = '', string $source_html = '', string $wrapper_style = '', string $tailwind_config = '' ): int|\WP_Error {
-		$content = \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $content );
+		$content = \DX_UI\Chrome\Page_Chrome::strip_blocks( $content );
 		list( $slug, $key ) = $this->page_identity( $preferred_slug, $title );
 		$existing           = $this->existing_page( $slug, $key );
 
@@ -2639,25 +2639,25 @@ final class Structure_Repository {
 			'post_name'    => $slug,
 			'post_content' => wp_slash( $content ),
 			'meta_input'   => array(
-				'_dxai_ui_generated_page' => '1',
+				'_dx_ui_generated_page' => '1',
 				// Made for the blank canvas: drawn by the theme's own template (a person's choice), its body is kept off the theme's CSS
 				// (Theme_Fence), so it looks as it does on the canvas.
-				'_dxai_ui_fence_theme'    => '1',
+				'_dx_ui_fence_theme'    => '1',
 			),
 		);
 
 		/*
 		 * Identity, written with the page rather than after it.
 		 *
-		 * `_dxai_ui_page_key` is archive + computed slug. It is stable across
+		 * `_dx_ui_page_key` is archive + computed slug. It is stable across
 		 * re-imports because it is derived from what the import read, not from
 		 * the post_name WordPress finally assigned — so a page that had to take
 		 * a suffixed slug is still found next time instead of spawning
 		 * `-3`, `-4`, … on every run.
 		 */
 		if ( $key !== '' ) {
-			$data['meta_input']['_dxai_ui_page_key']   = $key;
-			$data['meta_input']['_dxai_ui_source_zip'] = $this->source_archive;
+			$data['meta_input']['_dx_ui_page_key']   = $key;
+			$data['meta_input']['_dx_ui_source_zip'] = $this->source_archive;
 		}
 
 		if ( $existing instanceof \WP_Post ) {
@@ -2680,7 +2680,7 @@ final class Structure_Repository {
 		/*
 		 * The page's sections are stored as top-level blocks. They used to be
 		 * wrapped in one core/group carrying the design's scope class
-		 * (`dxai-ui dxai-ui--{id}`), so the editor showed the whole page as a
+		 * (`dx-ui dx-ui--{id}`), so the editor showed the whole page as a
 		 * single block to drill into. The scope element is now added around
 		 * the rendered content instead (Page_Scope), with the same classes, so
 		 * the front end is unchanged and the scoped stylesheet still matches.
@@ -2694,7 +2694,7 @@ final class Structure_Repository {
 		if ( null === $existing || $template === '' || Blank_Template::is_canvas_slug( $template ) ) {
 			update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
 		}
-		update_post_meta( $id, '_dxai_ui_wrapper_class', $extra );
+		update_post_meta( $id, '_dx_ui_wrapper_class', $extra );
 		update_post_meta( $id, Page_Scope::META, $id );
 		/*
 		 * Which route of the design this page is. A multi-route project makes
@@ -2703,22 +2703,22 @@ final class Structure_Repository {
 		 * oracle from the design's FIRST route whatever page it was measuring,
 		 * and the second and third pages could only be reported unmeasured.
 		 */
-		update_post_meta( $id, '_dxai_ui_source_route', trim( $preferred_slug, '/' ) );
-		delete_post_meta( $id, '_dxai_ui_canvas_html' );
+		update_post_meta( $id, '_dx_ui_source_route', trim( $preferred_slug, '/' ) );
+		delete_post_meta( $id, '_dx_ui_canvas_html' );
 
 		$purger = new Tailwind_Purger();
 		if ( $this->static_html ) {
 			$purger->without_preflight();
-			update_post_meta( $id, '_dxai_ui_static_html', '1' );
+			update_post_meta( $id, '_dx_ui_static_html', '1' );
 		} else {
-			delete_post_meta( $id, '_dxai_ui_static_html' );
+			delete_post_meta( $id, '_dx_ui_static_html' );
 		}
 		if ( $this->seo_title !== '' ) {
-			update_post_meta( $id, \DXAI_UI\Support\Page_Title::SEO_META, $this->seo_title );
+			update_post_meta( $id, \DX_UI\Support\Page_Title::SEO_META, $this->seo_title );
 		} else {
 			// Nothing left over from an earlier import (or from the home page's
 			// title, which route pages used to inherit).
-			delete_post_meta( $id, \DXAI_UI\Support\Page_Title::SEO_META );
+			delete_post_meta( $id, \DX_UI\Support\Page_Title::SEO_META );
 		}
 		// Compile against the full design HTML so every Tailwind token / utility
 		// from header + body + footer is kept — not only classes left on the page.
@@ -2728,17 +2728,17 @@ final class Structure_Repository {
 		$sheet       = $purger->compile( $compile_src, $css, $id, $compiled_css, $raw_css, $wrapper_style, $tailwind_config );
 		// A design whose stylesheet holds every page's rules (an Elementor site as a Claude Design package: 4.4 MB on each
 		// of its pages) keeps only what this page, its header and its footer can use.
-		$sheet  = \DXAI_UI\Compiler\Page_Css_Trim::apply( $sheet, $source_html !== '' ? $source_html : $this->chrome_source, $wrapped, $id );
+		$sheet  = \DX_UI\Compiler\Page_Css_Trim::apply( $sheet, $source_html !== '' ? $source_html : $this->chrome_source, $wrapped, $id );
 		$url    = $purger->persist( $id, $sheet );
-		// Stored relative to uploads (`dxai-ui/pattern-{id}.css`), never as the
+		// Stored relative to uploads (`dx-ui/pattern-{id}.css`), never as the
 		// absolute URL persist() returns — see Upload_Paths.
 		if ( ! is_wp_error( $url ) ) {
-			update_post_meta( $id, '_dxai_ui_css_url', \DXAI_UI\Support\Upload_Paths::for_storage( $url ) );
+			update_post_meta( $id, '_dx_ui_css_url', \DX_UI\Support\Upload_Paths::for_storage( $url ) );
 		}
 		if ( $js !== '' ) {
 			$js_url = $purger->persist_js( $id, $js );
 			if ( ! is_wp_error( $js_url ) && is_string( $js_url ) ) {
-				update_post_meta( $id, '_dxai_ui_js_url', \DXAI_UI\Support\Upload_Paths::for_storage( $js_url ) );
+				update_post_meta( $id, '_dx_ui_js_url', \DX_UI\Support\Upload_Paths::for_storage( $js_url ) );
 			}
 		}
 
@@ -2761,17 +2761,17 @@ final class Structure_Repository {
 				$font_urls[] = $font_url;
 			}
 		}
-		update_post_meta( $id, '_dxai_ui_font_urls', array_values( array_unique( $font_urls ) ) );
+		update_post_meta( $id, '_dx_ui_font_urls', array_values( array_unique( $font_urls ) ) );
 
-		$tokens = \DXAI_UI\Compiler\Design_Tokens::resolve(
+		$tokens = \DX_UI\Compiler\Design_Tokens::resolve(
 			$sheet,
 			$source_html !== '' ? $source_html : $wrapped,
 			is_array( $design['tokens'] ?? null ) ? $design['tokens'] : array()
 		);
-		\DXAI_UI\Compiler\Design_Tokens::persist( $id, $tokens );
+		\DX_UI\Compiler\Design_Tokens::persist( $id, $tokens );
 		/*
-		 * The `--dxai-*` definitions are no longer appended here. They used to
-		 * be — nine role values scoped to `.dxai-ui.dxai-ui--{id}` — and that
+		 * The `--dxui-*` definitions are no longer appended here. They used to
+		 * be — nine role values scoped to `.dx-ui.dx-ui--{id}` — and that
 		 * scope matched nothing on a crawled page, which is wrapped in its home
 		 * page's scope rather than its own. Token_Styles::tokenize_import() now
 		 * writes the whole palette into this sheet once the design is complete
@@ -2781,7 +2781,7 @@ final class Structure_Repository {
 
 		update_post_meta(
 			$id,
-			'_dxai_ui_design_assets',
+			'_dx_ui_design_assets',
 			wp_json_encode(
 				array(
 					'summary' => $design['summary'] ?? array(),
@@ -2813,7 +2813,7 @@ final class Structure_Repository {
 				'post_type'      => Content_Types::CONVERSION,
 				'posts_per_page' => 1,
 				'post_status'    => 'any',
-				'meta_key'       => '_dxai_ui_page_id',
+				'meta_key'       => '_dx_ui_page_id',
 				'meta_value'     => (string) $page_id,
 			)
 		);
@@ -2836,8 +2836,8 @@ final class Structure_Repository {
 			 */
 			'post_content' => wp_slash( $payload ),
 			'meta_input'   => array(
-				'_dxai_ui_generated' => '1',
-				'_dxai_ui_page_id'   => $page_id,
+				'_dx_ui_generated' => '1',
+				'_dx_ui_page_id'   => $page_id,
 			),
 		);
 
@@ -2876,7 +2876,7 @@ final class Structure_Repository {
 				'posts_per_page' => 30,
 				'meta_query'     => array(
 					array(
-						'key'   => '_dxai_ui_generated',
+						'key'   => '_dx_ui_generated',
 						'value' => '1',
 					),
 				),
@@ -2941,7 +2941,7 @@ final class Structure_Repository {
 				'date'    => get_date_from_gmt( $post->post_date_gmt, 'c' ),
 				'email'   => $email,
 				'message' => $message,
-				'page_id' => (int) get_post_meta( $post->ID, '_dxai_ui_page_id', true ),
+				'page_id' => (int) get_post_meta( $post->ID, '_dx_ui_page_id', true ),
 				'fields'  => $fields,
 			);
 		}
@@ -2960,7 +2960,7 @@ final class Structure_Repository {
 				'posts_per_page' => 30,
 				'meta_query'     => array(
 					array(
-						'key'   => '_dxai_ui_generated_page',
+						'key'   => '_dx_ui_generated_page',
 						'value' => '1',
 					),
 				),
@@ -3030,7 +3030,7 @@ final class Structure_Repository {
 		$from_title = sanitize_title( $title );
 		if ( $from_title !== '' ) {
 			$paths[] = '/' . $from_title;
-			$paths[] = '/dxai-' . $from_title;
+			$paths[] = '/dxui-' . $from_title;
 		}
 
 		return array_values( array_unique( $paths ) );

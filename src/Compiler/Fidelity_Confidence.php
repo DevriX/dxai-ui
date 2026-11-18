@@ -2,12 +2,12 @@
 /**
  * Score Pass-1 compiler output for fidelity gaps (source-agnostic).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Fidelity_Confidence {
 
@@ -136,11 +136,11 @@ final class Fidelity_Confidence {
 			$issues[] = 'blog_missing_query';
 			$score   -= 30;
 		}
-		if ( $type === 'form' && ! str_contains( $markup, 'wp:dxai-ui/form' ) && str_contains( $source, '<form' ) ) {
+		if ( $type === 'form' && ! str_contains( $markup, 'wp:dx-ui/form' ) && str_contains( $source, '<form' ) ) {
 			$issues[] = 'form_missing_block';
 			$score   -= 20;
 		}
-		if ( $type === 'slider' && ! str_contains( $markup, 'wp:dxai-ui/slider' ) ) {
+		if ( $type === 'slider' && ! str_contains( $markup, 'wp:dx-ui/slider' ) ) {
 			$issues[] = 'slider_missing_block';
 			$score   -= 15;
 		}
@@ -215,7 +215,7 @@ final class Fidelity_Confidence {
 					continue;
 				}
 				// Skip generic / WP / state noise.
-				if ( preg_match( '/^(wp-|is-|has-|aria-|data-|dxai-sh-)/', $token ) ) {
+				if ( preg_match( '/^(wp-|is-|has-|aria-|data-|dxui-sh-)/', $token ) ) {
 					continue;
 				}
 				$tokens[ $token ] = true;

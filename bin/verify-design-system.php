@@ -8,10 +8,10 @@
  * 1200 and a spacing scale that ends at 24.5 (98px). Where the theme has no class the plugin adds its own (`max-w-1280px`): a width the
  * site does not use anywhere else. Reads only; nothing is written. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Utility_Classes;
+use DX_UI\Compiler\Utility_Classes;
 
 $fail   = 0;
 $pass   = 0;
@@ -67,9 +67,9 @@ $expect( 'a class of an earlier import (max-w-1280px) still has its rule: the pa
 $expect( 'the plugin\'s other families are as before (a 58px height, a 14.5px size, a 900 weight)', Utility_Classes::family( 'h-58px' ) !== null && Utility_Classes::family( 'text-14-5' ) !== null && Utility_Classes::family( 'fw-900' ) !== null );
 
 echo "\nThe pass over a design imported before\n";
-$run  = static fn( string $content ) => \DXAI_UI\Blocks\Native\Native_Blocks::convert_content( $content, array( 'home' => 0, 'post' => 0 ) );
+$run  = static fn( string $content ) => \DX_UI\Blocks\Native\Native_Blocks::convert_content( $content, array( 'home' => 0, 'post' => 0 ) );
 $wrap = static fn( string $inner ) => '<!-- wp:group --><div class="wp-block-group">' . $inner . '</div><!-- /wp:group -->';
-$box  = static fn( string $class, string $extra = '', string $css = '' ) => '<!-- wp:group {"className":"' . $class . '"' . $extra . '} --><div class="wp-block-group ' . $class . ( $css !== '' ? ' ' . \DXAI_UI\Compiler\Style_Hoister::css_class( $css ) : '' ) . '"><!-- wp:paragraph --><p>x</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
+$box  = static fn( string $class, string $extra = '', string $css = '' ) => '<!-- wp:group {"className":"' . $class . '"' . $extra . '} --><div class="wp-block-group ' . $class . ( $css !== '' ? ' ' . \DX_UI\Compiler\Style_Hoister::css_class( $css ) : '' ) . '"><!-- wp:paragraph --><p>x</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
 // A group with a layout of its own is not one the Layout converter takes (it would turn a centred container into a constrained layout): these are about the classes.
 $lay = ',"layout":{"type":"default"}';
 $r = $run( $wrap( $box( 'max-w-1280px mx-auto px-6', $lay ) ) );
@@ -83,21 +83,21 @@ $expect( 'a centred container of 1280px that the Layout converter takes is a con
 $r = $run( $wrap( $box( 'max-w-1200px mx-auto px-6' ) ) );
 $expect( '…and one of the theme\'s own width is as before (1200px less its padding)', str_contains( $r['content'], '"contentSize":"1152px"' ), $r['content'] );
 $css = 'padding:110px 24px;color:red';
-$r   = $run( $wrap( $box( 'rounded', ',"dxaiCss":"' . $css . '"', $css ) ) );
+$r   = $run( $wrap( $box( 'rounded', ',"dxuiCss":"' . $css . '"', $css ) ) );
 $new = 'padding:98px 24px;color:red';
-$expect( 'a block\'s own padding above the scale is fitted, and its dxs- class follows (the class is the hash of the CSS)', str_contains( $r['content'], '"dxaiCss":"' . $new . '"' ) && str_contains( $r['content'], \DXAI_UI\Compiler\Style_Hoister::css_class( $new ) ) && ! str_contains( $r['content'], \DXAI_UI\Compiler\Style_Hoister::css_class( $css ) ), $r['content'] );
+$expect( 'a block\'s own padding above the scale is fitted, and its dxs- class follows (the class is the hash of the CSS)', str_contains( $r['content'], '"dxuiCss":"' . $new . '"' ) && str_contains( $r['content'], \DX_UI\Compiler\Style_Hoister::css_class( $new ) ) && ! str_contains( $r['content'], \DX_UI\Compiler\Style_Hoister::css_class( $css ) ), $r['content'] );
 $r = $run( $wrap( '<!-- wp:group {"className":"max-w-1280px"} --><div class="wp-block-group">x</div><!-- /wp:group -->' ) );
 $expect( 'a block whose tag does not carry the class its attributes name (it was edited) is left as it is', ( $r['counts']['sizes'] ?? 0 ) === 0 && str_contains( $r['content'], 'max-w-1280px' ) );
 $r = $run( $wrap( '<!-- wp:paragraph {"className":"max-w-1500px"} --><p class="max-w-1500px">x</p><!-- /wp:paragraph -->' ) );
 $expect( 'any block with a class list, a paragraph too', str_contains( $r['content'], '<p class="max-w-1200px">' ) && str_contains( $r['content'], '"className":"max-w-1200px"' ), $r['content'] );
 
 echo "\nSwitched off\n";
-add_filter( 'dxai_ui_design_system', '__return_null' );
+add_filter( 'dx_ui_design_system', '__return_null' );
 $expect( 'a site can opt out: the value is kept, and the plugin makes its own class', $fit( 'max-width:1280px' ) === 'max-width:1280px' && in_array( 'max-w-1280px', Utility_Classes::match( 'max-width:1280px' )['classes'], true ) );
-remove_filter( 'dxai_ui_design_system', '__return_null' );
-add_filter( 'dxai_ui_design_system', static fn( $s ) => array( 'max_width' => 1400, 'padding' => 120 ) );
+remove_filter( 'dx_ui_design_system', '__return_null' );
+add_filter( 'dx_ui_design_system', static fn( $s ) => array( 'max_width' => 1400, 'padding' => 120 ) );
 $expect( '…or set its own bounds', $fit( 'max-width:1500px;padding:130px 0' ) === 'max-width:1400px;padding:120px 0' );
-remove_all_filters( 'dxai_ui_design_system' );
+remove_all_filters( 'dx_ui_design_system' );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

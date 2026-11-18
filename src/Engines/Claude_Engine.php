@@ -2,15 +2,15 @@
 /**
  * Anthropic Claude engine.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
-use DXAI_UI\Compiler\Schema;
-use DXAI_UI\Http\Remote_Client;
+use DX_UI\Compiler\Schema;
+use DX_UI\Http\Remote_Client;
 
 final class Claude_Engine extends Abstract_Engine {
 
@@ -29,7 +29,7 @@ final class Claude_Engine extends Abstract_Engine {
 
 	public function test_connection(): bool|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'Anthropic API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'Anthropic API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$response = Remote_Client::post_json(
@@ -53,7 +53,7 @@ final class Claude_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Anthropic connection failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Anthropic connection failed.', 'dx-ui' ) );
 		}
 
 		return true;
@@ -61,7 +61,7 @@ final class Claude_Engine extends Abstract_Engine {
 
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'Anthropic API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'Anthropic API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$payload = array(
@@ -96,7 +96,7 @@ final class Claude_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Claude generation failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Claude generation failed.', 'dx-ui' ) );
 		}
 
 		$decoded = Remote_Client::decode_body( $response['body'] );
@@ -118,7 +118,7 @@ final class Claude_Engine extends Abstract_Engine {
 
 	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'Anthropic API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'Anthropic API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$response = Remote_Client::post_json(
 			'https://api.anthropic.com/v1/messages',
@@ -134,7 +134,7 @@ final class Claude_Engine extends Abstract_Engine {
 			return $response;
 		}
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Claude did not answer.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Claude did not answer.', 'dx-ui' ) );
 		}
 		$decoded = Remote_Client::decode_body( $response['body'] );
 		if ( is_wp_error( $decoded ) ) {

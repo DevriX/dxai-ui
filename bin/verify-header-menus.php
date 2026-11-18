@@ -16,14 +16,14 @@
  *
  * Writes nothing but three menus (the locations checks), which it removes. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Header_Html;
-use DXAI_UI\Chrome\Header_Menus;
-use DXAI_UI\Chrome\Header_Renderer;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Compiler\Html_To_Blocks;
+use DX_UI\Chrome\Header_Html;
+use DX_UI\Chrome\Header_Menus;
+use DX_UI\Chrome\Header_Renderer;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Compiler\Html_To_Blocks;
 
 $fail   = 0;
 $pass   = 0;
@@ -75,8 +75,8 @@ $names = static function ( string $markup ): array {
 };
 
 // A header the way Five Star writes its menu: a row is a trigger and a panel of columns, each link a title and a line under it.
-$mega = '<li class="relative"><button class="dxai-toggle-open--svc" type="button" aria-expanded="false" aria-haspopup="true" data-dxai-hover="enter">Services<svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" stroke="currentColor"/></svg></button>'
-	. '<div class="dxai-on-open--svc hidden">'
+$mega = '<li class="relative"><button class="dxui-toggle-open--svc" type="button" aria-expanded="false" aria-haspopup="true" data-dxui-hover="enter">Services<svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" stroke="currentColor"/></svg></button>'
+	. '<div class="dxui-on-open--svc hidden">'
 	. '<div><p>Emergency cleanup</p><ul>'
 	. '<li><a href="/service/water/"><span>Water Damage</span><span>Burst pipes, flooded basements</span></a></li>'
 	. '<li><a href="/service/fire/"><span>Fire Damage</span><span>Soot, odor, board-up</span></a></li>'
@@ -96,14 +96,14 @@ $n      = $names( $markup );
 $blob = false;
 $scan = static function ( array $blocks ) use ( &$scan, &$blob ): void {
 	foreach ( $blocks as $b ) {
-		if ( 'core/list-item' === ( $b['blockName'] ?? '' ) && str_contains( (string) $b['innerHTML'], 'dxai-on-open' ) ) {
+		if ( 'core/list-item' === ( $b['blockName'] ?? '' ) && str_contains( (string) $b['innerHTML'], 'dxui-on-open' ) ) {
 			$blob = true;
 		}
 		$scan( (array) ( $b['innerBlocks'] ?? array() ) );
 	}
 };
 $scan( parse_blocks( $markup ) );
-$expect( 'a header row that holds a trigger and a panel is blocks, not one list item\'s HTML', ! $blob && ( $n['dxai-ui/box'] ?? 0 ) >= 1, wp_json_encode( $n ) );
+$expect( 'a header row that holds a trigger and a panel is blocks, not one list item\'s HTML', ! $blob && ( $n['dx-ui/box'] ?? 0 ) >= 1, wp_json_encode( $n ) );
 $rows = array();
 foreach ( parse_blocks( $markup ) as $top ) {
 	$find = static function ( array $b ) use ( &$find, &$rows ): void {
@@ -122,7 +122,7 @@ $expect( 'the plain rows of the same list stay list items', 3 === count( $kinds 
 $expect( 'the structural row is the first one, a box (the trigger and the panel are its children)', 'core/list-item' !== ( $kinds[0] ?? '' ) && count( (array) ( $rows[0]['innerBlocks'] ?? array() ) ) >= 2, wp_json_encode( $kinds ) );
 
 $section = $convert( '<section><ul>' . $mega . $flat . '</ul></section>' );
-$expect( 'a list anywhere but a header\'s menu is converted as it was (a card grid in list items)', ( $names( $section )['core/list-item'] ?? 0 ) === 3 && ! isset( $names( $section )['dxai-ui/box'] ), wp_json_encode( $names( $section ) ) );
+$expect( 'a list anywhere but a header\'s menu is converted as it was (a card grid in list items)', ( $names( $section )['core/list-item'] ?? 0 ) === 3 && ! isset( $names( $section )['dx-ui/box'] ), wp_json_encode( $names( $section ) ) );
 $footer = $convert( '<footer><nav><ul>' . $mega . $flat . '</ul></nav></footer>' );
 $expect( 'a footer\'s link columns are not touched (their own reader takes them)', ( $names( $footer )['core/list-item'] ?? 0 ) === 3, wp_json_encode( $names( $footer ) ) );
 $simple = $convert( $bar( '<li><a href="#a">A</a></li><li><a href="#b"><span>B</span><span class="badge">new</span></a></li><li><a href="#c"><svg width="8" height="8"></svg>C</a></li>' ) );
@@ -157,20 +157,20 @@ $arrow = $read( '<a href="#z"><span>Contact</span><span aria-hidden="true">→</
 $expect( 'an arrow beside a label is not a description', 'Contact' === ( $arrow['label'] ?? '' ) && '' === (string) ( $arrow['description'] ?? '' ), wp_json_encode( $arrow ) );
 $styled = $read( '<a href="#z">Call <b>Now</b></a>' );
 $expect( 'a label with a styled word in it is one label', 'Call Now' === ( $styled['label'] ?? '' ) && '' === (string) ( $styled['description'] ?? '' ), wp_json_encode( $styled ) );
-$all = Header_Template::build( $convert( $bar( '<li><a href="#x">X</a></li><li><a href="#y">Y</a></li><li class="relative"><button class="dxai-toggle-open--m" type="button" data-dxai-hover="enter">More</button><div class="dxai-on-open--m hidden"><div><p>Group</p><ul><li><a href="#a">Alpha</a></li><li><a href="#b">Beta</a></li></ul></div><a href="/all/" data-dxai-set="null"><span>See all</span><span>→</span><span>Every service</span></a></div></li>' ) ) );
+$all = Header_Template::build( $convert( $bar( '<li><a href="#x">X</a></li><li><a href="#y">Y</a></li><li class="relative"><button class="dxui-toggle-open--m" type="button" data-dxui-hover="enter">More</button><div class="dxui-on-open--m hidden"><div><p>Group</p><ul><li><a href="#a">Alpha</a></li><li><a href="#b">Beta</a></li></ul></div><a href="/all/" data-dxui-set="null"><span>See all</span><span>→</span><span>Every service</span></a></div></li>' ) ) );
 $seeall = (array) ( $all['trees'][ Header_Template::NAV ][2]['children'][1] ?? array() );
 $expect( 'in a link of blocks the description is the next words, not an arrow between them', 'See all' === ( $seeall['label'] ?? '' ) && 'Every service' === ( $seeall['description'] ?? '' ), wp_json_encode( $seeall ) );
 $column = $read( '<a href="#z"><i class="icon"></i><div><span>Car Accidents</span><span>Auto collisions, hit and run</span></div></a>' );
 $expect( 'a title and a description in a column of their own beside an icon are told apart', 'Car Accidents' === ( $column['label'] ?? '' ) && 'Auto collisions, hit and run' === ( $column['description'] ?? '' ), wp_json_encode( $column ) );
 
 // A trigger the design never drew a panel for (a button in a list item) is still an item of the bar; in a panel, a run of words is bullet points.
-$trigger = Header_Template::build( $convert( $bar( '<li><a href="#a">A</a></li><li class="relative"><button class="dxai-toggle-open" type="button">Locations</button></li><li><a href="#b">B</a></li>' ) ) );
+$trigger = Header_Template::build( $convert( $bar( '<li><a href="#a">A</a></li><li class="relative"><button class="dxui-toggle-open" type="button">Locations</button></li><li><a href="#b">B</a></li>' ) ) );
 $expect( 'a trigger with no panel does not end the navigation: the items after it are read', array( 'A', 'Locations', 'B' ) === array_column( (array) ( $trigger['trees'][ Header_Template::NAV ] ?? array() ), 'label' ) && 0 === (int) ( $trigger['checks']['unread_links'] ?? -1 ), wp_json_encode( $trigger['trees'][ Header_Template::NAV ] ?? null ) );
 $promo = Header_Template::build(
 	$convert(
 		$bar(
 			'<li><a href="#a">A</a></li><li><a href="#b">B</a></li>'
-			. '<li class="relative"><button class="dxai-toggle-open--pa" type="button" data-dxai-hover="enter">Practice</button><div class="dxai-on-open--pa hidden">'
+			. '<li class="relative"><button class="dxui-toggle-open--pa" type="button" data-dxui-hover="enter">Practice</button><div class="dxui-on-open--pa hidden">'
 			. '<div><p>Auto</p><ul><li><a href="#c">Cars</a></li><li><a href="#t">Trucks</a></li></ul></div>'
 			. '<div><p>Other</p><ul><li><a href="#p">Premises</a></li><li><a href="#w">Wrongful</a></li></ul></div>'
 			. '<div><p>Estimate</p><ul><li>Personalized estimate</li><li>Backed by case data</li><li>Takes a minute</li></ul></div>'
@@ -189,7 +189,7 @@ $picture = serialize_blocks(
 			'attrs'        => array( 'tagName' => 'header' ),
 			'innerBlocks'  => array(
 				array(
-					'blockName'    => 'dxai-ui/box',
+					'blockName'    => 'dx-ui/box',
 					'attrs'        => array( 'tagName' => 'a', 'url' => '/', 'ariaLabel' => 'Acme home' ),
 					'innerBlocks'  => array(
 						array(
@@ -207,8 +207,8 @@ $picture = serialize_blocks(
 					'blockName'    => 'core/group',
 					'attrs'        => array( 'tagName' => 'nav' ),
 					'innerBlocks'  => array(
-						array( 'blockName' => 'dxai-ui/link', 'attrs' => array( 'url' => '#a', 'text' => 'One' ), 'innerBlocks' => array(), 'innerHTML' => '<a class="wp-block-dxai-ui-link" href="#a">One</a>', 'innerContent' => array( '<a class="wp-block-dxai-ui-link" href="#a">One</a>' ) ),
-						array( 'blockName' => 'dxai-ui/link', 'attrs' => array( 'url' => '#b', 'text' => 'Two' ), 'innerBlocks' => array(), 'innerHTML' => '<a class="wp-block-dxai-ui-link" href="#b">Two</a>', 'innerContent' => array( '<a class="wp-block-dxai-ui-link" href="#b">Two</a>' ) ),
+						array( 'blockName' => 'dx-ui/link', 'attrs' => array( 'url' => '#a', 'text' => 'One' ), 'innerBlocks' => array(), 'innerHTML' => '<a class="wp-block-dx-ui-link" href="#a">One</a>', 'innerContent' => array( '<a class="wp-block-dx-ui-link" href="#a">One</a>' ) ),
+						array( 'blockName' => 'dx-ui/link', 'attrs' => array( 'url' => '#b', 'text' => 'Two' ), 'innerBlocks' => array(), 'innerHTML' => '<a class="wp-block-dx-ui-link" href="#b">Two</a>', 'innerContent' => array( '<a class="wp-block-dx-ui-link" href="#b">Two</a>' ) ),
 					),
 					'innerHTML'    => '<nav class="wp-block-group"></nav>',
 					'innerContent' => array( '<nav class="wp-block-group">', null, null, '</nav>' ),
@@ -288,7 +288,7 @@ $edit[] = array(
 	),
 );
 $out = $render( $edit );
-preg_match_all( '/dxai-on-open--([A-Za-z0-9_-]+)/', $out, $states );
+preg_match_all( '/dxui-on-open--([A-Za-z0-9_-]+)/', $out, $states );
 $expect( 'a new dropdown has its panel with its links', str_contains( $out, '>Resources<' ) && str_contains( $out, '/insurance/' ) && str_contains( $out, '>We bill your carrier<' ) && str_contains( $out, '/blog/' ) );
 $expect( '…and a state of its own, so it never opens together with another', count( array_unique( $states[1] ) ) === 2 && in_array( 'svc', $states[1], true ), wp_json_encode( array_count_values( $states[1] ) ) );
 
@@ -314,7 +314,7 @@ $make_menu = static function ( string $name, string $for ) use ( &$made_menus ):
 	if ( $id > 0 ) {
 		$made_menus[] = $id;
 		if ( $for !== '' ) {
-			update_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, $for );
+			update_term_meta( $id, \DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, $for );
 		}
 	}
 

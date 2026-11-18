@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: DX UI 0.3.1\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/dxai-ui\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/dx-ui\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -12,33 +12,33 @@ msgstr ""
 "POT-Creation-Date: 2026-09-24T15:38:30+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: dxai-ui\n"
+"X-Domain: dx-ui\n"
 
 #. Plugin Name of the plugin
-#: dxai-ui.php
+#: dx-ui.php
 #: src/Admin/Dashboard.php:74
 #: src/Admin/Dashboard.php:75
 msgid "DX UI"
 msgstr ""
 
 #. Plugin URI of the plugin
-#: dxai-ui.php
-msgid "https://devrix.com/dxai-ui"
+#: dx-ui.php
+msgid "https://devrix.com/dx-ui"
 msgstr ""
 
 #. Description of the plugin
-#: dxai-ui.php
+#: dx-ui.php
 msgid "Convert Figma, Lovable, and generated frontend ZIPs into native Gutenberg structures using Claude, ChatGPT, Grok, or DeepSeek."
 msgstr ""
 
 #. Author of the plugin
-#: dxai-ui.php
+#: dx-ui.php
 #: assets/src/admin/Chrome.js:108
 msgid "DevriX"
 msgstr ""
 
 #. Author URI of the plugin
-#: dxai-ui.php
+#: dx-ui.php
 msgid "https://devrix.com"
 msgstr ""
 
@@ -474,7 +474,7 @@ msgstr ""
 #. translators: 1: entries in the archive, 2: the limit.
 #: src/Connectors/Zip_Extractor.php:1109
 #, php-format
-msgid "The ZIP archive holds %1$s entries, more than the %2$s this site accepts. Zip the project without node_modules, or raise the limit with the dxai_ui_zip_limits filter."
+msgid "The ZIP archive holds %1$s entries, more than the %2$s this site accepts. Zip the project without node_modules, or raise the limit with the dx_ui_zip_limits filter."
 msgstr ""
 
 #. translators: %s: the largest upload this site accepts, e.g. 64 MB.
@@ -498,7 +498,7 @@ msgstr ""
 #. translators: %s: the total limit.
 #: src/Connectors/Zip_Extractor.php:1141
 #, php-format
-msgid "The ZIP archive unpacks to more than %s. Remove large media from it, or raise the limit with the dxai_ui_zip_limits filter."
+msgid "The ZIP archive unpacks to more than %s. Remove large media from it, or raise the limit with the dx_ui_zip_limits filter."
 msgstr ""
 
 #. translators: %s: the entry name.

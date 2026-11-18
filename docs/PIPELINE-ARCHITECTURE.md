@@ -40,15 +40,15 @@ of attribute drift, because the two definitions then disagree.
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "dxai-ui/hero",
+  "name": "dx-ui/hero",
   "title": "Hero",
   "category": "design",
-  "textdomain": "dxai-ui",
+  "textdomain": "dx-ui",
   "attributes": {
     "tagName":   { "type": "string", "default": "section" },
     "className": { "type": "string", "default": "" },
-    "dxaiStyle": { "type": "string", "default": "" },
-    "dxaiData":  { "type": "object", "default": {} },
+    "dxuiStyle": { "type": "string", "default": "" },
+    "dxuiData":  { "type": "object", "default": {} },
     "heading":   { "type": "string", "source": "html", "selector": "h1" },
     "content":   { "type": "rich-text", "source": "rich-text", "selector": "p" }
   },
@@ -99,7 +99,7 @@ keeps the diff against the design readable.
 and inline styles for free. **For a pixel-perfect conversion pipeline every one of
 them must be off.** They are a drift engine:
 
-- `supports.className: true` appends `wp-block-dxai-ui-hero` to the saved markup. If
+- `supports.className: true` appends `wp-block-dx-ui-hero` to the saved markup. If
   a stylesheet ever targets that class, the design's box changes.
 - `supports.color`, `spacing`, `typography` let the inspector write `theme.json`
   values into a design that already specifies them. The user gets two sources of
@@ -123,7 +123,7 @@ import { useBlockProps, InspectorControls, BlockControls, RichText } from '@word
 import { PanelBody, TextControl, ToolbarGroup, ToolbarButton } from '@wordpress/components';
 
 export default function Edit( { attributes, setAttributes } ) {
-    const { tagName, className, dxaiStyle, content } = attributes;
+    const { tagName, className, dxuiStyle, content } = attributes;
 
     // useBlockProps MUST be spread onto the outermost rendered element. It supplies
     // the data-block id, the selected/hover classes, and the click handling that
@@ -131,7 +131,7 @@ export default function Edit( { attributes, setAttributes } ) {
     // selected by clicking it, which reads to the user as a broken block.
     const blockProps = useBlockProps( {
         className,                      // the design's classes, not a generated one
-        style: parseStyle( dxaiStyle ), // inline style the design authored
+        style: parseStyle( dxuiStyle ), // inline style the design authored
     } );
 
     return (
@@ -180,8 +180,8 @@ Three rules that are not obvious:
 
   ```jsx
   const inner = useInnerBlocksProps( blockProps, {
-      allowedBlocks: [ 'dxai-ui/text', 'core/heading', 'core/image' ],
-      template: [ [ 'core/heading', { level: 2 } ], [ 'dxai-ui/text' ] ],
+      allowedBlocks: [ 'dx-ui/text', 'core/heading', 'core/image' ],
+      template: [ [ 'core/heading', { level: 2 } ], [ 'dx-ui/text' ] ],
       templateLock: false,
       orientation: 'vertical',
   } );
@@ -218,11 +218,11 @@ attributes from the design; it is to declare them and emit them:
 
 ```jsx
 export default function save( { attributes } ) {
-    const { tagName: Tag, className, dxaiStyle, dxaiData, ariaExpanded, content } = attributes;
+    const { tagName: Tag, className, dxuiStyle, dxuiData, ariaExpanded, content } = attributes;
     const props = useBlockProps.save( {
         className,
-        style: parseStyle( dxaiStyle ),
-        ...dataAttrs( dxaiData ),                                  // data-*
+        style: parseStyle( dxuiStyle ),
+        ...dataAttrs( dxuiData ),                                  // data-*
         ...( ariaExpanded !== '' ? { 'aria-expanded': ariaExpanded } : {} ),
     } );
     return <RichText.Content { ...props } tagName={ Tag } value={ content } />;
@@ -307,7 +307,7 @@ Two implementations, and they are not equivalent for our purposes.
 ```php
 // render.php or save.js output
 <div
-  data-wp-interactive="dxai-ui/tabs"
+  data-wp-interactive="dx-ui/tabs"
   <?php echo wp_interactivity_data_wp_context( array( 'active' => 0 ) ); ?>
 >
   <button data-wp-on--click="actions.select" data-wp-bind--aria-selected="state.isActive">…</button>
@@ -318,7 +318,7 @@ Two implementations, and they are not equivalent for our purposes.
 ```js
 // view.js
 import { store, getContext } from '@wordpress/interactivity';
-store( 'dxai-ui/tabs', {
+store( 'dx-ui/tabs', {
     state: { get isActive() { return getContext().active === getContext().index; } },
     actions: { select() { getContext().active = getContext().index; } },
 } );
@@ -456,7 +456,7 @@ target:
 
 ```css
 /* .foo { … }  becomes: */
-.dxai-ui.dxai-ui--0.foo, .dxai-ui.dxai-ui--0 .foo { … }
+.dx-ui.dx-ui--0.foo, .dx-ui.dx-ui--0 .foo { … }
 ```
 
 For the admin specifically, `apiVersion: 3`'s iframe already contains the design.
@@ -472,9 +472,9 @@ specificity:
 
 ```css
 /* our reset, weakened so the design always wins */
-:where(.dxai-ui) :where(h1, h2, h3) { margin: 0; }
+:where(.dx-ui) :where(h1, h2, h3) { margin: 0; }
 /* the design's own rule, at its natural specificity */
-.dxai-ui .hero-title { margin: 0 0 12px; }
+.dx-ui .hero-title { margin: 0 0 12px; }
 ```
 
 Two failures worth recording: a `figure.wp-block-image > img` rule at specificity
@@ -525,14 +525,14 @@ machine over class names*, because the design's CSS already keys off class names
 │ `onClick={() => setOpen(!open)}`     → toggle('open')                   │
 │ `onClick={() => setTab(i)}`          → set('tab', i)   (i from scope)   │
 │ `onMouseEnter={() => setOpen(true)}` → set('open', true) on pointerenter│
-│ Record the OWNING element and give it a marker: dxai-toggle-open--0     │
+│ Record the OWNING element and give it a marker: dxui-toggle-open--0     │
 └─────────────────────────────────────────────────────────────────────────┘
 ┌ 3. discover projections ────────────────────────────────────────────────┐
 │ Every place the state reaches the DOM:                                  │
 │   className={cn(open && "is-open")}   → class `is-open` when open       │
 │   aria-expanded={open}                → attribute mirror                │
 │   {open && <Panel/>}                  → the panel exists; emit it and   │
-│                                         mark it dxai-on-open--0         │
+│                                         mark it dxui-on-open--0         │
 │   style={{ height: open ? h : 0 }}    → inline style projection         │
 │ CRITICAL: project the class the DESIGN keys on. Emitting aria-expanded  │
 │ when the design's CSS has no aria-expanded selector produces an inert   │
@@ -578,23 +578,23 @@ The emitted `view.js` is then an interpreter, roughly:
 
 ```js
 // view.js — one runtime, driven by the markers the compiler emitted
-document.querySelectorAll( '[data-dxai-scope]' ).forEach( ( scope ) => {
-    const state = JSON.parse( scope.dataset.dxaiState || '{}' );
+document.querySelectorAll( '[data-dxui-scope]' ).forEach( ( scope ) => {
+    const state = JSON.parse( scope.dataset.dxuiState || '{}' );
 
     const project = () => {
         for ( const [ key, value ] of Object.entries( state ) ) {
-            scope.querySelectorAll( `[class*="dxai-on-${ key }--"]` ).forEach( ( el ) => {
-                const want = el.className.match( new RegExp( `dxai-on-${ key }--([^\\s]+)` ) )[ 1 ];
+            scope.querySelectorAll( `[class*="dxui-on-${ key }--"]` ).forEach( ( el ) => {
+                const want = el.className.match( new RegExp( `dxui-on-${ key }--([^\\s]+)` ) )[ 1 ];
                 // Toggle the class the DESIGN keys on, read from the marker.
-                el.classList.toggle( el.dataset.dxaiClass || 'is-on', String( value ) === want );
+                el.classList.toggle( el.dataset.dxuiClass || 'is-on', String( value ) === want );
             } );
         }
     };
 
-    scope.querySelectorAll( '[class*="dxai-toggle-"]' ).forEach( ( el ) => {
+    scope.querySelectorAll( '[class*="dxui-toggle-"]' ).forEach( ( el ) => {
         el.addEventListener( 'click', ( e ) => {
-            const key = el.className.match( /dxai-toggle-([a-z0-9]+)/i )[ 1 ];
-            state[ key ] = typeof state[ key ] === 'boolean' ? ! state[ key ] : el.dataset.dxaiValue;
+            const key = el.className.match( /dxui-toggle-([a-z0-9]+)/i )[ 1 ];
+            state[ key ] = typeof state[ key ] === 'boolean' ? ! state[ key ] : el.dataset.dxuiValue;
             project();
         } );
     } );
@@ -625,7 +625,7 @@ so they cannot disagree. This is the structural answer to the
 ```js
 // spec.mjs — the single source of truth for one block
 export const spec = {
-  name: 'dxai-ui/hero',
+  name: 'dx-ui/hero',
   title: 'Hero',
   category: 'design',
   tag: { attribute: 'tagName', default: 'section' },
@@ -633,8 +633,8 @@ export const spec = {
   attributes: {
     tagName:      { type: 'string', default: 'section', emit: 'tag' },
     className:    { type: 'string', default: '',        emit: 'class' },
-    dxaiStyle:    { type: 'string', default: '',        emit: 'style' },
-    dxaiData:     { type: 'object', default: {},        emit: 'data' },
+    dxuiStyle:    { type: 'string', default: '',        emit: 'style' },
+    dxuiData:     { type: 'object', default: {},        emit: 'data' },
     ariaExpanded: { type: 'string', default: '',        emit: 'attr:aria-expanded' },
     content:      { type: 'rich-text', source: 'rich-text', emit: 'children' },
   },
@@ -666,7 +666,7 @@ function blockJson( spec ) {
     name: spec.name,
     title: spec.title,
     category: spec.category,
-    textdomain: 'dxai-ui',
+    textdomain: 'dx-ui',
     attributes,
     supports: spec.supports,
     editorScript: 'file:./index.js',
@@ -678,7 +678,7 @@ function blockJson( spec ) {
 const EMIT = {
   class: ( k ) => ( { js: `className: a.${ k }`, php: `'class' => $a['${ k }']` } ),
   style: ( k ) => ( { js: `style: parseStyle(a.${ k })`, php: `'style' => $a['${ k }']` } ),
-  data:  ( k ) => ( { js: `...dataAttrs(a.${ k })`, php: `...dxai_data_attrs($a['${ k }'])` } ),
+  data:  ( k ) => ( { js: `...dataAttrs(a.${ k })`, php: `...dxui_data_attrs($a['${ k }'])` } ),
 };
 
 function saveJs( spec ) {
@@ -712,7 +712,7 @@ register_block_type(
 \t'${ spec.name }',
 \tarray(
 \t\t'api_version'   => 3,
-\t\t'editor_script' => 'dxai-ui-blocks-editor',
+\t\t'editor_script' => 'dx-ui-blocks-editor',
 \t\t'attributes'    => array(
 ${ attrs }
 \t\t),
@@ -754,8 +754,8 @@ Two checks with different reach:
 | `block-parity` | both sides *declare* the same attributes | what `save()` does with them |
 | `editor-roundtrip.cjs` | the real editor opens every page with `invalid=0` | any attribute the corpus does not use |
 
-`dxai-ui/text` declares 11 attributes and the corpus exercises 6 — content 282,
-className 248, ariaHidden 23, tagName 14, dxaiStyle 8, attrOrder 7. So both
+`dx-ui/text` declares 11 attributes and the corpus exercises 6 — content 282,
+className 248, ariaHidden 23, tagName 14, dxuiStyle 8, attrOrder 7. So both
 checks can be green while a divergence sits in one of the other five. One did:
 the JS wrote `( a.tagName || 'span' ).toLowerCase()` with no validation while
 PHP validated against `/^[a-z][a-z0-9]*$/` and fell back, so a typo in the
@@ -774,9 +774,9 @@ browser round-trip.
 The block comment format is exact:
 
 ```html
-<!-- wp:dxai-ui/hero {"tagName":"section","className":"hero grid"} -->
+<!-- wp:dx-ui/hero {"tagName":"section","className":"hero grid"} -->
 <section class="hero grid">…</section>
-<!-- /wp:dxai-ui/hero -->
+<!-- /wp:dx-ui/hero -->
 ```
 
 Three rules that bite:
@@ -787,14 +787,14 @@ Three rules that bite:
 2. **Attributes with a `source` are NOT in the comment.** They live in the markup.
    Putting `content` in the JSON *and* the markup gives two sources of truth and the
    markup wins on load.
-3. **A void block has no closing comment:** `<!-- wp:dxai-ui/spacer /-->`.
+3. **A void block has no closing comment:** `<!-- wp:dx-ui/spacer /-->`.
 
 Never build this string by hand. Build the array and let WordPress serialize:
 
 ```php
 $blocks = array(
     array(
-        'blockName'    => 'dxai-ui/hero',
+        'blockName'    => 'dx-ui/hero',
         'attrs'        => array( 'tagName' => 'section', 'className' => 'hero grid' ),
         'innerBlocks'  => array(
             array(
@@ -830,7 +830,7 @@ if ( is_wp_error( $page_id ) ) {
 // and a verifier cannot build the right reference to compare against — we
 // guessed from the title once and it matched four designs of seven while
 // reporting the other three as passing.
-update_post_meta( $page_id, '_dxai_ui_source_zip', basename( $zip ) );
+update_post_meta( $page_id, '_dx_ui_source_zip', basename( $zip ) );
 ```
 
 **WP-CLI**, for scripted runs:
@@ -846,7 +846,7 @@ wp post create --post_type=page --post_status=publish --post_title="Hero demo" \
 curl -X POST https://example.com/wp-json/wp/v2/pages \
   -H 'Content-Type: application/json' \
   -u "$WP_USER:$WP_APP_PASSWORD" \
-  -d '{"title":"Hero demo","status":"publish","content":"<!-- wp:dxai-ui/hero {\"className\":\"hero grid\"} -->\n<section class=\"hero grid\"></section>\n<!-- /wp:dxai-ui/hero -->"}'
+  -d '{"title":"Hero demo","status":"publish","content":"<!-- wp:dx-ui/hero {\"className\":\"hero grid\"} -->\n<section class=\"hero grid\"></section>\n<!-- /wp:dx-ui/hero -->"}'
 ```
 
 REST applies `wp_kses` according to the authenticating user's capabilities. A
@@ -886,7 +886,7 @@ ZIP ─► extract ─► module graph ─► entry route
         │                      generate-block.mjs
         │                     (block.json/edit/save/php)
         ▼
-   serialize_blocks ─► wp_insert_post ─► _dxai_ui_source_zip
+   serialize_blocks ─► wp_insert_post ─► _dx_ui_source_zip
         │
         ▼
    VERIFY (all five, or the run does not count)
@@ -1088,7 +1088,7 @@ An AI patch is a *proposal*, and it enters the same gate as everything else:
 | Tailwind engine | 24,941 / 24,941 utilities agree with the real CLI, per-class |
 | CSS scoping | `:where()` ladder, both selector forms, `@property` trimmed to referenced vars |
 | Emission order | Natural sort + 33 measured cross-family exceptions |
-| Blocks registered | `dxai-ui/html`, `text`, `link`, `image`, `details`, `countup` |
+| Blocks registered | `dx-ui/html`, `text`, `link`, `image`, `details`, `countup` |
 | Editor/server declaration parity | **Built and gated.** `bin/block-parity.php` dumps `WP_Block_Type_Registry`; `bin/block-parity.cjs` executes the editor bundle against a stubbed `wp` and diffs what each side registers. Runs in the suite; 9 server / 8 editor blocks in agreement |
 | Block generation from a spec | **Not built, and deprioritised.** Part 3.1 existed to prevent PHP/JS drift; the parity gate above prevents the same failure at a fraction of the cost and without refactoring six working blocks. Its remaining value is making *new* blocks cheap |
 | Interactivity API | **Not adopted.** Vanilla runtime, class-projection model |
@@ -1097,6 +1097,6 @@ An AI patch is a *proposal*, and it enters the same gate as everything else:
 | Paint verification | Measured with four normalisations; advisory |
 | Behaviour verification | Every control clicked; 120/158 responded at last measurement |
 | Control coverage | `bin/control-audit.php` — handlers vs triggers vs targets vs aria, and the state classes each design's CSS really selects on. Standalone, not a per-import gate: it recompiles every ZIP |
-| Inline-run collapse | **Measured and scoped, in flight.** 156 containers hold 376 inline leaves; 103 of them hold exactly two — the `<span>icon</span><span>label</span>` shape split into siblings. Root cause is one line: `is_text_flow()` ends `return $has_text;`. Needs no new block — `dxai-ui/text` already carries `tagName` + `content(source:html)`. Scoped to the 112 containers whose every child has text; the other 44 hold a zero-text child and are gated on `registerFormatType` |
+| Inline-run collapse | **Measured and scoped, in flight.** 156 containers hold 376 inline leaves; 103 of them hold exactly two — the `<span>icon</span><span>label</span>` shape split into siblings. Root cause is one line: `is_text_flow()` ends `return $has_text;`. Needs no new block — `dx-ui/text` already carries `tagName` + `content(source:html)`. Scoped to the 112 containers whose every child has text; the other 44 hold a zero-text child and are gated on `registerFormatType` |
 | Inline styles vs kses | **Known gap.** 376 of 978 style attributes lose a declaration on a contributor-level save. Import is unaffected (admin has `unfiltered_html`) |
 | AI fallback | **Not built.** Part 4 is the design |

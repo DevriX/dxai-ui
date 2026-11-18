@@ -2,12 +2,12 @@
 /**
  * Editable Gutenberg slider (inner slides stay as blocks).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
 final class Slider_Block {
 
@@ -17,12 +17,12 @@ final class Slider_Block {
 
 	public function register_block(): void {
 		register_block_type(
-			'dxai-ui/slider',
+			'dx-ui/slider',
 			array(
 				'api_version'   => 3,
-				'editor_script' => 'dxai-ui-blocks-editor',
-				'view_script'   => 'dxai-ui-slider-view',
-				'style'         => 'dxai-ui-dynamic',
+				'editor_script' => 'dx-ui-blocks-editor',
+				'view_script'   => 'dx-ui-slider-view',
+				'style'         => 'dx-ui-dynamic',
 				'supports'      => array(
 					'className' => true,
 					'html'      => false,

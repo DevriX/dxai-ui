@@ -2,12 +2,12 @@
 /**
  * A package import that takes more than one request.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Transfer;
+namespace DX_UI\Transfer;
 
 /**
  * An import through the admin screen runs in steps when it would take longer
@@ -23,7 +23,7 @@ namespace DXAI_UI\Transfer;
  * row behind: its folder is removed after a day (sweep()), and importing the
  * package again starts over, with every file already added reused.
  *
- * The folder is under uploads/dxai-ui first — the one place every web server
+ * The folder is under uploads/dx-ui first — the one place every web server
  * of a multi-server host shares, where a system temp folder is each server's
  * own — behind deny rules and an index.php, under a 128-bit random name that
  * is the token; else under the system temp folder. Only this user may go on
@@ -31,7 +31,7 @@ namespace DXAI_UI\Transfer;
  */
 final class Import_Job {
 
-	private const PREFIX = 'dxai-ui-job-';
+	private const PREFIX = 'dx-ui-job-';
 
 	private const ZIP = 'package.zip';
 
@@ -99,7 +99,7 @@ final class Import_Job {
 			return $job;
 		}
 
-		return new \WP_Error( 'dxai_ui_transfer_job', __( 'The import could not be split into steps: neither wp-content/uploads nor the system temp folder can be written to.', 'dxai-ui' ), array( 'status' => 500 ) );
+		return new \WP_Error( 'dx_ui_transfer_job', __( 'The import could not be split into steps: neither wp-content/uploads nor the system temp folder can be written to.', 'dx-ui' ), array( 'status' => 500 ) );
 	}
 
 	/**
@@ -109,8 +109,8 @@ final class Import_Job {
 	 */
 	public static function open( string $token ): array|\WP_Error {
 		$gone = new \WP_Error(
-			'dxai_ui_transfer_job_gone',
-			__( 'This import is no longer waiting on the server (it finished, or it was left for more than a day). Import the package again: the files already added to the media library are reused, and the page is updated in place.', 'dxai-ui' ),
+			'dx_ui_transfer_job_gone',
+			__( 'This import is no longer waiting on the server (it finished, or it was left for more than a day). Import the package again: the files already added to the media library are reused, and the page is updated in place.', 'dx-ui' ),
 			array( 'status' => 404 )
 		);
 		if ( preg_match( '/^[a-f0-9]{32}$/', $token ) !== 1 ) {
@@ -129,7 +129,7 @@ final class Import_Job {
 				return $gone;
 			}
 			if ( (int) ( $job['user'] ?? 0 ) < 1 || (int) $job['user'] !== get_current_user_id() ) {
-				return new \WP_Error( 'dxai_ui_transfer_job_user', __( 'This import was started by another user; only they can go on with it.', 'dxai-ui' ), array( 'status' => 403 ) );
+				return new \WP_Error( 'dx_ui_transfer_job_user', __( 'This import was started by another user; only they can go on with it.', 'dx-ui' ), array( 'status' => 403 ) );
 			}
 			$job['token'] = $token;
 			$job['dir']   = $dir;
@@ -214,7 +214,7 @@ final class Import_Job {
 	}
 
 	/**
-	 * uploads/dxai-ui (shared by every web server of a host), then the system
+	 * uploads/dx-ui (shared by every web server of a host), then the system
 	 * temp folder.
 	 *
 	 * @return array<int, string>
@@ -223,7 +223,7 @@ final class Import_Job {
 		$roots   = array();
 		$uploads = wp_upload_dir( null, false );
 		if ( empty( $uploads['error'] ) && ! empty( $uploads['basedir'] ) ) {
-			$roots[] = untrailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . '/' . \DXAI_UI\Support\Upload_Paths::DIR;
+			$roots[] = untrailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . '/' . \DX_UI\Support\Upload_Paths::DIR;
 		}
 		$temp = get_temp_dir();
 		if ( is_string( $temp ) && $temp !== '' ) {

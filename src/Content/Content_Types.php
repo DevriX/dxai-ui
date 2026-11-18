@@ -2,17 +2,17 @@
 /**
  * Conversion and form-entry post types (revisions on conversions).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Content;
+namespace DX_UI\Content;
 
 final class Content_Types {
 
-	public const CONVERSION = 'dxai_conversion';
-	public const FORM_ENTRY = 'dxai_form_entry';
+	public const CONVERSION = 'dxui_conversion';
+	public const FORM_ENTRY = 'dxui_form_entry';
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'post_types' ) );
@@ -43,15 +43,15 @@ final class Content_Types {
 			self::CONVERSION,
 			array(
 				'labels'              => array(
-					'name'          => __( 'DX Conversions', 'dxai-ui' ),
-					'singular_name' => __( 'DX Conversion', 'dxai-ui' ),
+					'name'          => __( 'DX Conversions', 'dx-ui' ),
+					'singular_name' => __( 'DX Conversion', 'dx-ui' ),
 				),
 				'public'              => false,
 				'show_ui'             => true,
 				'show_in_menu'        => false,
 				/*
 				 * Not in the core REST API. It was, and core lets anyone read a
-				 * published item of a REST post type: /wp-json/wp/v2/dxai_conversion
+				 * published item of a REST post type: /wp-json/wp/v2/dxui_conversion
 				 * listed every design snapshot to anonymous visitors, and asking
 				 * for the content field ran multi-megabyte JSON through
 				 * the_content until PHP ran out of memory. The plugin reads and
@@ -70,8 +70,8 @@ final class Content_Types {
 			self::FORM_ENTRY,
 			array(
 				'labels'          => array(
-					'name'          => __( 'Form entries', 'dxai-ui' ),
-					'singular_name' => __( 'Form entry', 'dxai-ui' ),
+					'name'          => __( 'Form entries', 'dx-ui' ),
+					'singular_name' => __( 'Form entry', 'dx-ui' ),
 				),
 				'public'          => false,
 				'show_ui'         => true,
@@ -88,7 +88,7 @@ final class Content_Types {
 	/**
 	 * The menu locations a converted design's header reads.
 	 *
-	 * These were the plugin's own `dxai-primary` and `dxai-footer`, which no
+	 * These were the plugin's own `dxui-primary` and `dxui-footer`, which no
 	 * theme and no template rendered. The header is built from Appearance >
 	 * Menus now, from the DevriX theme's `primary-navigation` plus a top bar
 	 * and a buttons location (Header_Menus), and the footer lives in
@@ -96,6 +96,6 @@ final class Content_Types {
 	 * where they are; nothing deletes them.
 	 */
 	public function menus(): void {
-		\DXAI_UI\Chrome\Header_Menus::register_locations();
+		\DX_UI\Chrome\Header_Menus::register_locations();
 	}
 }

@@ -8,7 +8,7 @@
  * the phone's bandwidth with it (Five Star: LCP 3.5 s with WordPress's WebP quality, 86; docs/PLAN-PERFECT-PAGES.md, T5.1).
  * Media\Image_Quality writes a photograph (a lossy WebP without transparency) that is over the target again at the highest of 82,
  * 78, 74 that meets it, or at 74: the WebP the import makes of a JPEG, each size WordPress makes of it, the scaled copy of a large
- * one. Not a picture under the target, one with transparency, the design's own file, nor anything when `dxai_ui_image_quality`
+ * one. Not a picture under the target, one with transparency, the design's own file, nor anything when `dx_ui_image_quality`
  * says no. A request that has used half its time limit leaves the sizes to cron; a picture stored before is fitted when an import
  * meets it again.
  *
@@ -18,18 +18,18 @@
  * Makes its pictures in the temp folder and its attachments in the media library, and deletes them, also when a check dies
  * half-way. Exit code 1 when a check fails, 77 when this server cannot write WebP.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Image_Quality;
-use DXAI_UI\Media\Sideloader;
+use DX_UI\Media\Image_Quality;
+use DX_UI\Media\Sideloader;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 require_once ABSPATH . 'wp-admin/includes/image.php';
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
+require DX_UI_DIR . 'bin/verify-cleanup.php';
 
 if ( ! wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
 	echo "SKIP  this server's image editor cannot write WebP\n";
@@ -48,7 +48,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$snapshot  = dxai_verify_snapshot();
+$snapshot  = dxui_verify_snapshot();
 $files     = array();
 $cleaned   = false;
 $started   = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime( true );
@@ -68,11 +68,11 @@ $clean     = static function () use ( &$files, &$cleaned, $snapshot, $started, $
 			rmdir( $file );
 		}
 	}
-	dxai_verify_cleanup( $snapshot, false );
+	dxui_verify_cleanup( $snapshot, false );
 };
 register_shutdown_function( $clean );
 
-$dir = trailingslashit( get_temp_dir() ) . 'dxai-verify-quality-' . wp_generate_password( 6, false ) . '/';
+$dir = trailingslashit( get_temp_dir() ) . 'dxui-verify-quality-' . wp_generate_password( 6, false ) . '/';
 wp_mkdir_p( $dir );
 $files[] = $dir;
 
@@ -252,10 +252,10 @@ echo "\nOff, before, and late\n";
 $off   = static fn() => false;
 $fresh = $jpeg( $photo( 16, 40 ), 'fresh.jpg' );
 // A size of the theme's, registered square when the picture is stored and as a strip by the time it is met again.
-add_image_size( 'dxai-quality-test', 320, 320, true );
-add_filter( 'dxai_ui_image_quality', $off );
+add_image_size( 'dxui-quality-test', 320, 320, true );
+add_filter( 'dx_ui_image_quality', $off );
 $f_got = Sideloader::from_path( $fresh, 'fresh.jpg', 'src/assets/fresh.jpg' );
-remove_filter( 'dxai_ui_image_quality', $off );
+remove_filter( 'dx_ui_image_quality', $off );
 $f_id    = is_array( $f_got ) ? (int) $f_got['id'] : 0;
 $f_full  = $f_id > 0 ? (string) get_attached_file( $f_id ) : '';
 $at_86   = static function ( int $id ): bool {
@@ -276,15 +276,15 @@ $at_86   = static function ( int $id ): bool {
 	return true;
 };
 $expect( 'with the filter saying no: the WebP and its sizes at 86, and the attachment not marked', $f_id > 0 && (int) filesize( $f_full ) === $bytes_at( $fresh, null, 86, true ) && $at_86( $f_id ) && '' === get_post_meta( $f_id, Image_Quality::META, true ) );
-$strip_meta = $f_id > 0 ? (array) ( wp_get_attachment_metadata( $f_id )['sizes']['dxai-quality-test'] ?? array() ) : array();
+$strip_meta = $f_id > 0 ? (array) ( wp_get_attachment_metadata( $f_id )['sizes']['dxui-quality-test'] ?? array() ) : array();
 $strip_path = isset( $strip_meta['file'] ) ? dirname( $f_full ) . '/' . $strip_meta['file'] : '';
 $strip_sha  = '' !== $strip_path && is_file( $strip_path ) ? sha1_file( $strip_path ) : '';
-add_image_size( 'dxai-quality-test', 320, 200, true );
+add_image_size( 'dxui-quality-test', 320, 200, true );
 $again   = Sideloader::from_path( $fresh, 'fresh.jpg', 'src/assets/fresh.jpg' );
 $f_sizes = $f_id > 0 ? $sizes_of( $f_id ) : array();
-$changed = $f_sizes['dxai-quality-test'] ?? null;
-unset( $f_sizes['dxai-quality-test'] );
-remove_image_size( 'dxai-quality-test' );
+$changed = $f_sizes['dxui-quality-test'] ?? null;
+unset( $f_sizes['dxui-quality-test'] );
+remove_image_size( 'dxui-quality-test' );
 $expect( 'a picture stored before is fitted when an import meets it again (its sizes; the same attachment)', is_array( $again ) && $f_id === (int) $again['id'] && array() !== $f_sizes && array() === array_filter( $f_sizes, static fn( $s ) => $s['bytes'] !== $s['rule'] ) && Image_Quality::RULE === get_post_meta( $f_id, Image_Quality::META, true ), $show( $f_sizes ) );
 $expect( '…but not a size whose registration has changed since (WordPress made it square; now it would be a strip): its file and size kept', '' !== $strip_sha && sha1_file( $strip_path ) === $strip_sha && null !== $changed && $changed['dims'], wp_json_encode( array( $strip_meta, $changed ) ) );
 

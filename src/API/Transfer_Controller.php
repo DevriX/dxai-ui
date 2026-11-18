@@ -2,33 +2,33 @@
 /**
  * REST: export a converted page as a package, import a package.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Design\Design_Status;
-use DXAI_UI\Transfer\Import_Job;
-use DXAI_UI\Transfer\Package;
-use DXAI_UI\Transfer\Page_Export;
-use DXAI_UI\Transfer\Page_Import;
-use DXAI_UI\Transfer\Transfer_Admin;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Design\Design_Status;
+use DX_UI\Transfer\Import_Job;
+use DX_UI\Transfer\Package;
+use DX_UI\Transfer\Page_Export;
+use DX_UI\Transfer\Page_Import;
+use DX_UI\Transfer\Transfer_Admin;
 use WP_REST_Request;
 
 /**
- * - GET  /dxai-ui/v1/transfer/pages           the converted pages, with their export links,
+ * - GET  /dx-ui/v1/transfer/pages           the converted pages, with their export links,
  *                                             and what the import panel asks about this site;
- * - GET  /dxai-ui/v1/transfer/export/{id}     the page's package, as a download
+ * - GET  /dx-ui/v1/transfer/export/{id}     the page's package, as a download
  *                                             (`?format=json`: its listing instead, nothing sent);
- * - POST /dxai-ui/v1/transfer/import          multipart `package` (+ `chrome` keep|install|''
+ * - POST /dx-ui/v1/transfer/import          multipart `package` (+ `chrome` keep|install|''
  *                                             (automatic), `publish`, `dry_run`): imports it
  *                                             and answers what was made — or, when the media
  *                                             takes longer than one request may, 202 with
  *                                             status `continue` and a token;
- * - POST /dxai-ui/v1/transfer/import/continue `token`: the next step of that import.
+ * - POST /dx-ui/v1/transfer/import/continue `token`: the next step of that import.
  *
  * Every route has the import routes' permission (Converter_Controller::
  * publish_permissions(): manage_options and unfiltered_html), which says in
@@ -37,7 +37,7 @@ use WP_REST_Request;
 final class Transfer_Controller extends \WP_REST_Controller {
 
 	public function __construct() {
-		$this->namespace = DXAI_UI_REST_NAMESPACE;
+		$this->namespace = DX_UI_REST_NAMESPACE;
 		$this->rest_base = 'transfer';
 	}
 
@@ -135,7 +135,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 				'orderby'        => 'modified',
 				'order'          => 'DESC',
 				'no_found_rows'  => true,
-				'meta_key'       => '_dxai_ui_generated_page', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_dx_ui_generated_page', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
@@ -186,7 +186,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 	 * @return array<string, mixed>
 	 */
 	public static function chrome_info(): array {
-		if ( ! class_exists( \DXAI_UI\Chrome\Chrome_Choice::class ) ) {
+		if ( ! class_exists( \DX_UI\Chrome\Chrome_Choice::class ) ) {
 			$classic = ! ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() );
 
 			return array(
@@ -201,7 +201,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 				),
 			);
 		}
-		$info                 = \DXAI_UI\Chrome\Chrome_Choice::info( '', 'page' );
+		$info                 = \DX_UI\Chrome\Chrome_Choice::info( '', 'page' );
 		$info['chrome_owner'] = method_exists( Converter_Controller::class, 'chrome_owner' ) ? Converter_Controller::chrome_owner( $info['chrome_owner'] ) : $info['chrome_owner'];
 
 		return $info;
@@ -215,16 +215,16 @@ final class Transfer_Controller extends \WP_REST_Controller {
 	 * @return array<int, array{location:string, label:string, menu:string, menu_id:int}>
 	 */
 	private static function person_locations(): array {
-		if ( ! class_exists( \DXAI_UI\Chrome\Header_Menus::class ) || ! defined( \DXAI_UI\Structures\Navigation_Factory::class . '::HEADER_MENU_META' ) ) {
+		if ( ! class_exists( \DX_UI\Chrome\Header_Menus::class ) || ! defined( \DX_UI\Structures\Navigation_Factory::class . '::HEADER_MENU_META' ) ) {
 			return array();
 		}
 		$assigned = get_nav_menu_locations();
 		$labels   = get_registered_nav_menus();
 		$out      = array();
-		foreach ( \DXAI_UI\Chrome\Header_Menus::locations() as $location => $label ) {
+		foreach ( \DX_UI\Chrome\Header_Menus::locations() as $location => $label ) {
 			$id   = (int) ( $assigned[ $location ] ?? 0 );
 			$term = $id > 0 ? wp_get_nav_menu_object( $id ) : false;
-			if ( ! $term instanceof \WP_Term || '' !== (string) get_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
+			if ( ! $term instanceof \WP_Term || '' !== (string) get_term_meta( $id, \DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
 				continue;
 			}
 			$out[] = array(
@@ -273,7 +273,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 		Design_Status::exported( (int) $request['id'] );
 		Transfer_Admin::send( $built );
 
-		return new \WP_Error( 'dxai_ui_transfer', __( 'The package could not be sent.', 'dxai-ui' ), array( 'status' => 500 ) );
+		return new \WP_Error( 'dx_ui_transfer', __( 'The package could not be sent.', 'dx-ui' ), array( 'status' => 500 ) );
 	}
 
 	/**
@@ -287,7 +287,7 @@ final class Transfer_Controller extends \WP_REST_Controller {
 			return self::upload_refusal( $error );
 		}
 		if ( null === $file || empty( $file['tmp_name'] ) ) {
-			return new \WP_Error( 'dxai_ui_transfer', __( 'No package was uploaded. Choose a .dxai.zip file exported by DX UI.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_transfer', __( 'No package was uploaded. Choose a .dxui.zip file exported by DX UI.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$raised = Page_Import::unlimited();
 		$result = ( new Page_Import() )->run(
@@ -359,12 +359,12 @@ final class Transfer_Controller extends \WP_REST_Controller {
 		}
 
 		return new \WP_Error(
-			'dxai_ui_transfer_too_large',
+			'dx_ui_transfer_too_large',
 			sprintf(
 				/* translators: 1: the largest upload this server accepts, e.g. 64 MB, 2: who to run it as. */
-				__( 'This package is larger than this server accepts for an upload (%1$s). Import it from the command line instead, where no upload limit applies: copy the .dxai.zip file to the server (SFTP, or the host\'s file manager) and run `wp dxai-ui import <file> --user=%2$s`. On WP Engine, use its SSH Gateway.', 'dxai-ui' ),
+				__( 'This package is larger than this server accepts for an upload (%1$s). Import it from the command line instead, where no upload limit applies: copy the .dxui.zip file to the server (SFTP, or the host\'s file manager) and run `wp dx-ui import <file> --user=%2$s`. On WP Engine, use its SSH Gateway.', 'dx-ui' ),
 				size_format( wp_max_upload_size() ),
-				is_multisite() ? __( '<a Super Admin>', 'dxai-ui' ) : __( '<an administrator>', 'dxai-ui' )
+				is_multisite() ? __( '<a Super Admin>', 'dx-ui' ) : __( '<an administrator>', 'dx-ui' )
 			),
 			array( 'status' => 413 )
 		);

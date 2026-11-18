@@ -3,11 +3,11 @@
  * The guards on the container-collapse path, asserted at every depth.
  *
  * text_run() folds a container whose whole child list is one inline run into a
- * single dxai-ui/text. Three things must stop it, and none of the three
+ * single dx-ui/text. Three things must stop it, and none of the three
  * reasons is about depth:
  *
- *   - a tag that has a block of its own (`a` is dxai-ui/link, `img` is
- *     dxai-ui/image, `label` reaches group()) — folding it trades a typed
+ *   - a tag that has a block of its own (`a` is dx-ui/link, `img` is
+ *     dx-ui/image, `label` reaches group()) — folding it trades a typed
  *     editing surface for a string, and for a link hands the href to rich
  *     text's escaper;
  *   - an element with no text, which Gutenberg's rich text cannot hold and
@@ -34,7 +34,7 @@ if ( PHP_SAPI !== 'cli' ) {
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Html_To_Blocks;
+use DX_UI\Compiler\Html_To_Blocks;
 
 /**
  * Each case: the source HTML, and whether text_run() is allowed to fold it.
@@ -76,7 +76,7 @@ foreach ( $cases as [ $label, $html, $may_fold ] ) {
 	$blocks = parse_blocks( ( new Html_To_Blocks() )->convert( $html ) );
 	$row    = $blocks[0] ?? array();
 	$name   = (string) ( $row['blockName'] ?? '(none)' );
-	$folded = $name === 'dxai-ui/text';
+	$folded = $name === 'dx-ui/text';
 
 	if ( $folded === $may_fold ) {
 		printf( "%-22s %-16s ok\n", $label, $name );
@@ -87,7 +87,7 @@ foreach ( $cases as [ $label, $html, $may_fold ] ) {
 		"%-22s %-16s FAIL (expected %s)\n",
 		$label,
 		$name,
-		$may_fold ? 'a fold into dxai-ui/text' : 'the container to be kept'
+		$may_fold ? 'a fold into dx-ui/text' : 'the container to be kept'
 	);
 	if ( $folded ) {
 		$attrs = is_array( $row['attrs'] ?? null ) ? $row['attrs'] : array();

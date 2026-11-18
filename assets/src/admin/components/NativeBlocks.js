@@ -19,14 +19,14 @@ export default function NativeBlocks( { design: fixed = 0 } ) {
 	const [ note, setNote ] = useState( '' );
 
 	useEffect( () => {
-		apiFetch( { path: '/dxai-ui/v1/native-blocks' + ( fixed ? '?design=' + fixed : '' ) } )
+		apiFetch( { path: '/dx-ui/v1/native-blocks' + ( fixed ? '?design=' + fixed : '' ) } )
 			.then( ( res ) => {
 				setData( res );
 				if ( ! fixed && res.designs && res.designs.length ) {
 					setHome( res.designs[ 0 ].id );
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'The native blocks could not be read.', 'dxai-ui' ) ) );
+			.catch( ( e ) => setError( e.message || __( 'The native blocks could not be read.', 'dx-ui' ) ) );
 	}, [] );
 
 	// The note belongs to the design it was written for.
@@ -46,14 +46,14 @@ export default function NativeBlocks( { design: fixed = 0 } ) {
 	function run( action ) {
 		setBusy( true );
 		setNote( '' );
-		apiFetch( { path: '/dxai-ui/v1/native-blocks', method: 'POST', data: { design: home, action } } )
+		apiFetch( { path: '/dx-ui/v1/native-blocks', method: 'POST', data: { design: home, action } } )
 			.then( ( report ) => {
 				setData( { ...data, designs: data.designs.map( ( d ) => ( d.id === report.id ? report : d ) ) } );
 				if ( action === 'apply' ) {
 					setNote(
 						sprintf(
 							/* translators: 1: number of blocks, 2: number of pages. */
-							_n( '%1$d block is now a native block, in %2$d page.', '%1$d blocks are now native blocks, in %2$d pages.', report.done.blocks, 'dxai-ui' ),
+							_n( '%1$d block is now a native block, in %2$d page.', '%1$d blocks are now native blocks, in %2$d pages.', report.done.blocks, 'dx-ui' ),
 							report.done.blocks,
 							report.done.posts
 						)
@@ -62,29 +62,29 @@ export default function NativeBlocks( { design: fixed = 0 } ) {
 					setNote(
 						sprintf(
 							/* translators: 1: number of pages put back, 2: number of pages left as they are. */
-							__( 'Put back in %1$d pages. %2$d pages were edited since and stay as they are.', 'dxai-ui' ),
+							__( 'Put back in %1$d pages. %2$d pages were edited since and stay as they are.', 'dx-ui' ),
 							report.done.posts,
 							report.done.edited
 						)
 					);
 				} else {
-					setNote( __( 'The plugin’s own blocks are back.', 'dxai-ui' ) );
+					setNote( __( 'The plugin’s own blocks are back.', 'dx-ui' ) );
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'Could not change the blocks.', 'dxai-ui' ) ) )
+			.catch( ( e ) => setError( e.message || __( 'Could not change the blocks.', 'dx-ui' ) ) )
 			.finally( () => setBusy( false ) );
 	}
 
 	return (
-		<section className="dxai-section dxai-native-blocks" aria-labelledby="dxai-native-blocks-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-native-blocks" aria-labelledby="dxui-native-blocks-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your pages', 'dxai-ui' ) }</p>
-					<h3 id="dxai-native-blocks-title">{ __( 'Native blocks', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
+					<p className="dxui-section-kicker">{ __( 'Your pages', 'dx-ui' ) }</p>
+					<h3 id="dxui-native-blocks-title">{ __( 'Native blocks', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
 						{ sprintf(
 							/* translators: %s: theme name. */
-							__( 'Where WordPress or %s has a block that says the same thing, the page uses it instead of a DX block: you get its own controls, and the page looks the same. The same kind of heading and the sections of a page also get the same style and spacing, the Home’s.', 'dxai-ui' ),
+							__( 'Where WordPress or %s has a block that says the same thing, the page uses it instead of a DX block: you get its own controls, and the page looks the same. The same kind of heading and the sections of a page also get the same style and spacing, the Home’s.', 'dx-ui' ),
 							data.theme
 						) }
 					</p>
@@ -92,13 +92,13 @@ export default function NativeBlocks( { design: fixed = 0 } ) {
 			</div>
 			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
-					label={ __( 'Design', 'dxai-ui' ) }
+					label={ __( 'Design', 'dx-ui' ) }
 					value={ String( home ) }
 					options={ data.designs.map( ( d ) => ( { label: d.title, value: String( d.id ) } ) ) }
 					onChange={ ( v ) => setHome( Number( v ) ) }
 				/>
 			) }
-			<ul className="dxai-native-blocks__list">
+			<ul className="dxui-native-blocks__list">
 				{ design.converters.map( ( c ) => (
 					<li key={ c.id }>
 						<span>{ c.label }</span>
@@ -106,26 +106,26 @@ export default function NativeBlocks( { design: fixed = 0 } ) {
 					</li>
 				) ) }
 			</ul>
-			<p className="dxai-muted">
+			<p className="dxui-muted">
 				{ design.applied
-					? __( 'Put the DX blocks back to restore each page as it was before; a page you edited since is left as you made it.', 'dxai-ui' )
+					? __( 'Put the DX blocks back to restore each page as it was before; a page you edited since is left as you made it.', 'dx-ui' )
 					: sprintf(
 						/* translators: 1: number of blocks, 2: number of pages. */
-						_n( '%1$d block in %2$d page can be replaced. This can be undone.', '%1$d blocks in %2$d pages can be replaced. This can be undone.', design.blocks, 'dxai-ui' ),
+						_n( '%1$d block in %2$d page can be replaced. This can be undone.', '%1$d blocks in %2$d pages can be replaced. This can be undone.', design.blocks, 'dx-ui' ),
 						design.blocks,
 						design.posts
 					) }
 			</p>
 			{ note && <Notice status="success" isDismissible={ false }>{ note }</Notice> }
-			<div className="dxai-actions">
+			<div className="dxui-actions">
 				{ design.blocks > 0 && (
 					<Button variant="primary" onClick={ () => run( 'apply' ) } isBusy={ busy } disabled={ busy }>
-						{ __( 'Use native blocks', 'dxai-ui' ) }
+						{ __( 'Use native blocks', 'dx-ui' ) }
 					</Button>
 				) }
 				{ design.applied && (
 					<Button variant="secondary" onClick={ () => run( 'revert' ) } disabled={ busy }>
-						{ __( 'Put the DX blocks back', 'dxai-ui' ) }
+						{ __( 'Put the DX blocks back', 'dx-ui' ) }
 					</Button>
 				) }
 			</div>

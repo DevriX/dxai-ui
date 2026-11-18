@@ -16,19 +16,19 @@ import './site-pages.css';
  */
 
 const STATUS = {
-	new: __( 'Not imported', 'dxai-ui' ),
-	imported: __( 'Imported', 'dxai-ui' ),
-	edited: __( 'Imported — edited since', 'dxai-ui' ),
+	new: __( 'Not imported', 'dx-ui' ),
+	imported: __( 'Imported', 'dx-ui' ),
+	edited: __( 'Imported — edited since', 'dx-ui' ),
 };
 
 /** A site address without its scheme, as people write it. */
 const bare = ( url ) => url.replace( /^https?:\/\//, '' );
 
 const PHASE = {
-	fetch: __( 'Reading the old page', 'dxai-ui' ),
-	images: __( 'Copying its pictures', 'dxai-ui' ),
-	restyle: __( 'Arranging it in the design', 'dxai-ui' ),
-	save: __( 'Saving', 'dxai-ui' ),
+	fetch: __( 'Reading the old page', 'dx-ui' ),
+	images: __( 'Copying its pictures', 'dx-ui' ),
+	restyle: __( 'Arranging it in the design', 'dx-ui' ),
+	save: __( 'Saving', 'dx-ui' ),
 };
 
 export default function SitePages( { design: fixed = 0 } ) {
@@ -48,7 +48,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 
 	useEffect( () => {
 		live.current = true;
-		apiFetch( { path: '/dxai-ui/v1/site-pages/designs' } )
+		apiFetch( { path: '/dx-ui/v1/site-pages/designs' } )
 			.then( ( res ) => {
 				const list = res.designs || [];
 				setDesigns( list );
@@ -65,7 +65,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 	function load( id, origin = '' ) {
 		setListing( null );
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/site-pages?home=' + id + ( origin ? '&origin=' + encodeURIComponent( origin ) : '' ) } )
+		apiFetch( { path: '/dx-ui/v1/site-pages?home=' + id + ( origin ? '&origin=' + encodeURIComponent( origin ) : '' ) } )
 			.then( ( res ) => {
 				setListing( res );
 				setOriginInput( bare( res.origin || '' ) );
@@ -76,7 +76,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 				} );
 				setChosen( pick );
 			} )
-			.catch( ( err ) => setError( ( err && err.message ) || __( 'Could not read the design’s links.', 'dxai-ui' ) ) );
+			.catch( ( err ) => setError( ( err && err.message ) || __( 'Could not read the design’s links.', 'dx-ui' ) ) );
 	}
 
 	useEffect( () => {
@@ -94,7 +94,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 	const running = Boolean( progress && ! progress.done );
 
 	function step( job ) {
-		apiFetch( { path: '/dxai-ui/v1/crawl-step', method: 'POST', data: { job } } )
+		apiFetch( { path: '/dx-ui/v1/crawl-step', method: 'POST', data: { job } } )
 			.then( ( res ) => {
 				if ( ! live.current ) {
 					return;
@@ -108,7 +108,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 				setTimeout( () => step( job ), 400 );
 			} )
 			.catch( ( err ) => {
-				setError( ( err && err.message ) || __( 'The import stopped. Start it again — pages already built are kept and updated in place.', 'dxai-ui' ) );
+				setError( ( err && err.message ) || __( 'The import stopped. Start it again — pages already built are kept and updated in place.', 'dx-ui' ) );
 				setProgress( null );
 			} );
 	}
@@ -117,10 +117,10 @@ export default function SitePages( { design: fixed = 0 } ) {
 		setError( '' );
 		setResult( null );
 		setProgress( { index: 0, total: paths.length, phase: 'fetch', label: '' } );
-		apiFetch( { path: '/dxai-ui/v1/site-pages', method: 'POST', data: { home, paths, rebuild_edited: rebuildEdited } } )
+		apiFetch( { path: '/dx-ui/v1/site-pages', method: 'POST', data: { home, paths, rebuild_edited: rebuildEdited } } )
 			.then( ( res ) => step( res.job ) )
 			.catch( ( err ) => {
-				setError( ( err && err.message ) || __( 'Could not start the import.', 'dxai-ui' ) );
+				setError( ( err && err.message ) || __( 'Could not start the import.', 'dx-ui' ) );
 				setProgress( null );
 			} );
 	}
@@ -128,20 +128,20 @@ export default function SitePages( { design: fixed = 0 } ) {
 	const pct = progress && progress.total ? Math.round( ( 100 * Math.min( progress.index, progress.total ) ) / progress.total ) : 0;
 
 	return (
-		<section className="dxai-section dxai-site-pages" aria-labelledby="dxai-site-pages-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-site-pages" aria-labelledby="dxui-site-pages-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your old site', 'dxai-ui' ) }</p>
-					<h3 id="dxai-site-pages-title">{ __( 'Pages from your live site', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
-						{ __( 'Builds the pages your design links to, with each old page’s own text and pictures arranged in the design’s sections — no new styles, no AI. The menus and the footer then open the new pages.', 'dxai-ui' ) }
+					<p className="dxui-section-kicker">{ __( 'Your old site', 'dx-ui' ) }</p>
+					<h3 id="dxui-site-pages-title">{ __( 'Pages from your live site', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
+						{ __( 'Builds the pages your design links to, with each old page’s own text and pictures arranged in the design’s sections — no new styles, no AI. The menus and the footer then open the new pages.', 'dx-ui' ) }
 					</p>
 				</div>
 			</div>
 
 			{ ! fixed && designs.length > 1 && (
 				<SelectControl
-					label={ __( 'Design', 'dxai-ui' ) }
+					label={ __( 'Design', 'dx-ui' ) }
 					value={ String( home ) }
 					options={ designs.map( ( d ) => ( { value: String( d.id ), label: d.title } ) ) }
 					onChange={ ( v ) => setHome( Number( v ) ) }
@@ -153,10 +153,10 @@ export default function SitePages( { design: fixed = 0 } ) {
 			{ ! listing && ! error && <Spinner /> }
 
 			{ listing && (
-				<div className="dxai-site-pages__origin">
+				<div className="dxui-site-pages__origin">
 					{ editOrigin ? (
 						<form
-							className="dxai-site-pages__origin-form"
+							className="dxui-site-pages__origin-form"
 							onSubmit={ ( e ) => {
 								e.preventDefault();
 								if ( originInput.trim() ) {
@@ -165,55 +165,55 @@ export default function SitePages( { design: fixed = 0 } ) {
 							} }
 						>
 							<TextControl
-								label={ __( 'Old site address', 'dxai-ui' ) }
+								label={ __( 'Old site address', 'dx-ui' ) }
 								value={ originInput }
 								onChange={ setOriginInput }
 								placeholder="example.com"
 								help={ listing.origin
-									? __( 'The site whose pages are built here. Change it if the design’s links point somewhere else.', 'dxai-ui' )
-									: __( 'The design’s links do not show where the old site is. Type its address and its pages are listed from its own menus.', 'dxai-ui' ) }
+									? __( 'The site whose pages are built here. Change it if the design’s links point somewhere else.', 'dx-ui' )
+									: __( 'The design’s links do not show where the old site is. Type its address and its pages are listed from its own menus.', 'dx-ui' ) }
 								disabled={ running }
 							/>
 							<Button variant="secondary" type="submit" disabled={ running || ! originInput.trim() }>
-								{ __( 'Find its pages', 'dxai-ui' ) }
+								{ __( 'Find its pages', 'dx-ui' ) }
 							</Button>
 						</form>
 					) : (
 						<p>
-							{ __( 'Old site:', 'dxai-ui' ) } <strong>{ bare( listing.origin ) }</strong>{ ' ' }
-							<Button variant="link" onClick={ () => setEditOrigin( true ) } disabled={ running }>{ __( 'Change', 'dxai-ui' ) }</Button>
+							{ __( 'Old site:', 'dx-ui' ) } <strong>{ bare( listing.origin ) }</strong>{ ' ' }
+							<Button variant="link" onClick={ () => setEditOrigin( true ) } disabled={ running }>{ __( 'Change', 'dx-ui' ) }</Button>
 						</p>
 					) }
 				</div>
 			) }
 
 			{ listing && pages.length === 0 && listing.origin && (
-				<p className="dxai-muted">{ __( 'No pages found on that site: neither the design’s links nor the site’s own menus lead to one.', 'dxai-ui' ) }</p>
+				<p className="dxui-muted">{ __( 'No pages found on that site: neither the design’s links nor the site’s own menus lead to one.', 'dx-ui' ) }</p>
 			) }
 
 			{ listing && pages.length > 0 && (
-				<fieldset className="dxai-site-pages__list" disabled={ running }>
-					<legend className="dxai-site-pages__legend">
+				<fieldset className="dxui-site-pages__list" disabled={ running }>
+					<legend className="dxui-site-pages__legend">
 						{ sprintf(
 							/* translators: %s: the old site's address */
-							__( 'Pages on %s', 'dxai-ui' ),
+							__( 'Pages on %s', 'dx-ui' ),
 							bare( listing.origin )
 						) }
 					</legend>
-					<div className="dxai-site-pages__bulk">
+					<div className="dxui-site-pages__bulk">
 						<Button variant="link" onClick={ () => setChosen( Object.fromEntries( pages.map( ( p ) => [ p.path, true ] ) ) ) }>
-							{ __( 'Select all', 'dxai-ui' ) }
+							{ __( 'Select all', 'dx-ui' ) }
 						</Button>
 						<Button variant="link" onClick={ () => setChosen( Object.fromEntries( pages.map( ( p ) => [ p.path, p.status === 'new' ] ) ) ) }>
-							{ __( 'Only the ones not imported', 'dxai-ui' ) }
+							{ __( 'Only the ones not imported', 'dx-ui' ) }
 						</Button>
-						<Button variant="link" onClick={ () => setChosen( {} ) }>{ __( 'None', 'dxai-ui' ) }</Button>
+						<Button variant="link" onClick={ () => setChosen( {} ) }>{ __( 'None', 'dx-ui' ) }</Button>
 					</div>
 					<ul>
 						{ pages.map( ( p ) => {
-							const id = 'dxai-sp-' + p.path.replace( /[^a-z0-9]+/gi, '-' );
+							const id = 'dxui-sp-' + p.path.replace( /[^a-z0-9]+/gi, '-' );
 							return (
-								<li key={ p.path } className={ 'dxai-site-pages__row is-' + p.status }>
+								<li key={ p.path } className={ 'dxui-site-pages__row is-' + p.status }>
 									<input
 										type="checkbox"
 										id={ id }
@@ -223,28 +223,28 @@ export default function SitePages( { design: fixed = 0 } ) {
 									/>
 									<label htmlFor={ id }>
 										<strong>{ p.label }</strong>
-										<span className="dxai-site-pages__path">{ p.path }</span>
+										<span className="dxui-site-pages__path">{ p.path }</span>
 									</label>
-									<span id={ id + '-status' } className={ 'dxai-pill dxai-site-pages__status is-' + p.status }>{ STATUS[ p.status ] || p.status }</span>
-									<span className="dxai-site-pages__links">
-										{ p.view && <a href={ p.view }>{ __( 'View', 'dxai-ui' ) }</a> }
-										{ p.edit && <a href={ p.edit }>{ __( 'Edit', 'dxai-ui' ) }</a> }
+									<span id={ id + '-status' } className={ 'dxui-pill dxui-site-pages__status is-' + p.status }>{ STATUS[ p.status ] || p.status }</span>
+									<span className="dxui-site-pages__links">
+										{ p.view && <a href={ p.view }>{ __( 'View', 'dx-ui' ) }</a> }
+										{ p.edit && <a href={ p.edit }>{ __( 'Edit', 'dx-ui' ) }</a> }
 									</span>
 								</li>
 							);
 						} ) }
 					</ul>
 					{ pages.some( ( p ) => p.status !== 'new' && chosen[ p.path ] ) && (
-						<div className="dxai-site-pages__rebuild">
+						<div className="dxui-site-pages__rebuild">
 							<input
 								type="checkbox"
-								id="dxai-sp-rebuild-edited"
+								id="dxui-sp-rebuild-edited"
 								checked={ rebuildEdited }
 								onChange={ ( e ) => setRebuildEdited( e.target.checked ) }
 							/>
-							<label htmlFor="dxai-sp-rebuild-edited">
-								<strong>{ __( 'Also rebuild the pages edited since their import', 'dxai-ui' ) }</strong>
-								<span>{ __( 'Off: an edited page is kept exactly as it is. On: it is built again from the old site, and the edits made to it are replaced — the edited version stays in the page’s revisions when revisions are on.', 'dxai-ui' ) }</span>
+							<label htmlFor="dxui-sp-rebuild-edited">
+								<strong>{ __( 'Also rebuild the pages edited since their import', 'dx-ui' ) }</strong>
+								<span>{ __( 'Off: an edited page is kept exactly as it is. On: it is built again from the old site, and the edits made to it are replaced — the edited version stays in the page’s revisions when revisions are on.', 'dx-ui' ) }</span>
 							</label>
 						</div>
 					) }
@@ -252,31 +252,31 @@ export default function SitePages( { design: fixed = 0 } ) {
 			) }
 
 			{ listing && pages.length > 0 && (
-				<div className="dxai-actions">
-					<Button variant="primary" onClick={ start } disabled={ running || paths.length === 0 } aria-describedby="dxai-site-pages-progress">
+				<div className="dxui-actions">
+					<Button variant="primary" onClick={ start } disabled={ running || paths.length === 0 } aria-describedby="dxui-site-pages-progress">
 						{ running
-							? __( 'Importing…', 'dxai-ui' )
+							? __( 'Importing…', 'dx-ui' )
 							: sprintf(
 								/* translators: %d: number of pages */
-								_n( 'Import %d page', 'Import %d pages', paths.length, 'dxai-ui' ),
+								_n( 'Import %d page', 'Import %d pages', paths.length, 'dx-ui' ),
 								paths.length
 							) }
 					</Button>
 				</div>
 			) }
 
-			<div id="dxai-site-pages-progress" aria-live="polite">
+			<div id="dxui-site-pages-progress" aria-live="polite">
 				{ running && (
-					<div className="dxai-site-pages__progress">
-						<div className="dxai-site-pages__bar" role="progressbar" aria-valuemin={ 0 } aria-valuemax={ 100 } aria-valuenow={ pct } aria-label={ __( 'Pages done', 'dxai-ui' ) }>
+					<div className="dxui-site-pages__progress">
+						<div className="dxui-site-pages__bar" role="progressbar" aria-valuemin={ 0 } aria-valuemax={ 100 } aria-valuenow={ pct } aria-label={ __( 'Pages done', 'dx-ui' ) }>
 							<span style={ { width: pct + '%' } } />
 						</div>
 						<p>
 							{ progress.finishing
-								? __( 'Pointing the menus and the footer at the new pages…', 'dxai-ui' )
+								? __( 'Pointing the menus and the footer at the new pages…', 'dx-ui' )
 								: sprintf(
 									/* translators: 1: page number, 2: pages in total, 3: page name, 4: what happens now */
-									__( 'Page %1$d of %2$d · %3$s · %4$s', 'dxai-ui' ),
+									__( 'Page %1$d of %2$d · %3$s · %4$s', 'dx-ui' ),
 									Math.min( ( progress.index || 0 ) + 1, progress.total || 1 ),
 									progress.total || paths.length,
 									progress.label || '…',
@@ -290,7 +290,7 @@ export default function SitePages( { design: fixed = 0 } ) {
 						<p>
 							{ sprintf(
 								/* translators: 1: pages built, 2: menu items updated */
-								__( '%1$d pages built · %2$d menu links now open them.', 'dxai-ui' ),
+								__( '%1$d pages built · %2$d menu links now open them.', 'dx-ui' ),
 								( result.pages_created || [] ).length,
 								result.menus_updated || 0
 							) }
@@ -307,19 +307,19 @@ export default function SitePages( { design: fixed = 0 } ) {
 								<p>
 									{ sprintf(
 										/* translators: %d: pages kept as they are */
-										_n( '%d page was kept as it is:', '%d pages were kept as they are:', result.pages_skipped.length, 'dxai-ui' ),
+										_n( '%d page was kept as it is:', '%d pages were kept as they are:', result.pages_skipped.length, 'dx-ui' ),
 										result.pages_skipped.length
 									) }
 								</p>
 								<ul>
 									{ result.pages_skipped.map( ( s, i ) => (
 										<li key={ i }>
-											{ ( s.label || s.path ) + ' — ' + ( s.reason === 'edited' ? __( 'edited since its import', 'dxai-ui' ) : s.reason === 'home' ? __( 'it is the Home', 'dxai-ui' ) : ( s.reason || '' ) ) }
+											{ ( s.label || s.path ) + ' — ' + ( s.reason === 'edited' ? __( 'edited since its import', 'dx-ui' ) : s.reason === 'home' ? __( 'it is the Home', 'dx-ui' ) : ( s.reason || '' ) ) }
 										</li>
 									) ) }
 								</ul>
 								{ result.pages_skipped.some( ( s ) => s.reason === 'edited' ) && (
-									<p>{ __( 'To build them again anyway, tick “Also rebuild the pages edited since their import” and import them again.', 'dxai-ui' ) }</p>
+									<p>{ __( 'To build them again anyway, tick “Also rebuild the pages edited since their import” and import them again.', 'dx-ui' ) }</p>
 								) }
 							</>
 						) }

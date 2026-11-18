@@ -9,20 +9,20 @@ import './copy-prompt.css';
  * about, the page of the old site it was made after). It can be copied into any assistant, or the engine chosen in
  * Settings writes the words: they are listed block by block, and nothing is saved on the page until they are applied.
  */
-const base = '/dxai-ui/v1/copy';
+const base = '/dx-ui/v1/copy';
 
 const KIND = {
-	service: __( 'Service', 'dxai-ui' ),
-	location: __( 'Location', 'dxai-ui' ),
-	about: __( 'About', 'dxai-ui' ),
-	contact: __( 'Contact', 'dxai-ui' ),
-	faq: __( 'FAQ', 'dxai-ui' ),
-	testimonials: __( 'Reviews', 'dxai-ui' ),
-	areas: __( 'Areas', 'dxai-ui' ),
-	services: __( 'Services', 'dxai-ui' ),
-	privacy: __( 'Legal', 'dxai-ui' ),
-	sitemap: __( 'Sitemap', 'dxai-ui' ),
-	blog: __( 'Blog', 'dxai-ui' ),
+	service: __( 'Service', 'dx-ui' ),
+	location: __( 'Location', 'dx-ui' ),
+	about: __( 'About', 'dx-ui' ),
+	contact: __( 'Contact', 'dx-ui' ),
+	faq: __( 'FAQ', 'dx-ui' ),
+	testimonials: __( 'Reviews', 'dx-ui' ),
+	areas: __( 'Areas', 'dx-ui' ),
+	services: __( 'Services', 'dx-ui' ),
+	privacy: __( 'Legal', 'dx-ui' ),
+	sitemap: __( 'Sitemap', 'dx-ui' ),
+	blog: __( 'Blog', 'dx-ui' ),
 };
 
 /** Plain text of a line of copy (it may carry <strong> and <br>). */
@@ -86,8 +86,8 @@ function Row( { page, facts, engine, onChange } ) {
 		setError( '' );
 		loadPrompt()
 			.then( ( text ) => navigator.clipboard.writeText( text ) )
-			.then( () => setNote( __( 'The prompt is copied.', 'dxai-ui' ) ) )
-			.catch( ( e ) => setError( e.message || __( 'The prompt could not be copied. Open it and copy it by hand.', 'dxai-ui' ) ) )
+			.then( () => setNote( __( 'The prompt is copied.', 'dx-ui' ) ) )
+			.catch( ( e ) => setError( e.message || __( 'The prompt could not be copied. Open it and copy it by hand.', 'dx-ui' ) ) )
 			.finally( () => setBusy( '' ) );
 	}
 
@@ -124,7 +124,7 @@ function Row( { page, facts, engine, onChange } ) {
 		setError( '' );
 		call( 'apply', { changes: picked, fingerprint: proposal.fingerprint } )
 			.then( ( res ) => {
-				setNote( sprintf( /* translators: %d: number of blocks. */ _n( '%d block was rewritten.', '%d blocks were rewritten.', res.applied, 'dxai-ui' ), res.applied ) );
+				setNote( sprintf( /* translators: %d: number of blocks. */ _n( '%d block was rewritten.', '%d blocks were rewritten.', res.applied, 'dx-ui' ), res.applied ) );
 				setProposal( null );
 				setPrompt( res.prompt );
 				onChange( res );
@@ -138,7 +138,7 @@ function Row( { page, facts, engine, onChange } ) {
 		setError( '' );
 		call( 'revert' )
 			.then( ( res ) => {
-				setNote( __( 'The words are back as they were.', 'dxai-ui' ) );
+				setNote( __( 'The words are back as they were.', 'dx-ui' ) );
 				onChange( res );
 			} )
 			.catch( ( e ) => setError( e.message ) )
@@ -148,31 +148,31 @@ function Row( { page, facts, engine, onChange } ) {
 	const count = proposal ? Object.keys( picked ).length : 0;
 
 	return (
-		<li className="dxai-copy__page">
-			<div className="dxai-copy__head">
+		<li className="dxui-copy__page">
+			<div className="dxui-copy__head">
 				<strong>{ page.title }</strong>
-				<span className={ 'dxai-copy__kind dxai-copy__kind--' + page.kind }>{ KIND[ page.kind ] || page.kind }</span>
-				{ page.home && <span className="dxai-copy__kind">{ __( 'Home', 'dxai-ui' ) }</span> }
-				<span className="dxai-muted">{ sprintf( /* translators: %d: number of blocks. */ _n( '%d block of text', '%d blocks of text', page.blocks, 'dxai-ui' ), page.blocks ) }</span>
-				{ page.edit && <Button variant="link" href={ page.edit }>{ __( 'Edit', 'dxai-ui' ) }</Button> }
-				<Button className="dxai-copy__toggle" variant="secondary" size="small" onClick={ () => setShown( ! shown ) } aria-expanded={ shown }>
-					{ shown ? __( 'Close', 'dxai-ui' ) : __( 'Open', 'dxai-ui' ) }
+				<span className={ 'dxui-copy__kind dxui-copy__kind--' + page.kind }>{ KIND[ page.kind ] || page.kind }</span>
+				{ page.home && <span className="dxui-copy__kind">{ __( 'Home', 'dx-ui' ) }</span> }
+				<span className="dxui-muted">{ sprintf( /* translators: %d: number of blocks. */ _n( '%d block of text', '%d blocks of text', page.blocks, 'dx-ui' ), page.blocks ) }</span>
+				{ page.edit && <Button variant="link" href={ page.edit }>{ __( 'Edit', 'dx-ui' ) }</Button> }
+				<Button className="dxui-copy__toggle" variant="secondary" size="small" onClick={ () => setShown( ! shown ) } aria-expanded={ shown }>
+					{ shown ? __( 'Close', 'dx-ui' ) : __( 'Open', 'dx-ui' ) }
 				</Button>
 			</div>
 
 			{ shown && (
 			<>
-			<div className="dxai-copy__fields">
+			<div className="dxui-copy__fields">
 				<TextControl
-					label={ __( 'The page is about', 'dxai-ui' ) }
+					label={ __( 'The page is about', 'dx-ui' ) }
 					value={ topic }
 					onChange={ setTopic }
 					onBlur={ () => call( 'save' ).then( onChange ).catch( () => {} ) }
 					__nextHasNoMarginBottom
 				/>
 				<TextControl
-					label={ __( 'Page to take inspiration from', 'dxai-ui' ) }
-					help={ page.reference_guessed ? __( 'Worked out from the page address; check it.', 'dxai-ui' ) : undefined }
+					label={ __( 'Page to take inspiration from', 'dx-ui' ) }
+					help={ page.reference_guessed ? __( 'Worked out from the page address; check it.', 'dx-ui' ) : undefined }
 					value={ reference }
 					onChange={ setReference }
 					onBlur={ () => call( 'save' ).then( onChange ).catch( () => {} ) }
@@ -181,12 +181,12 @@ function Row( { page, facts, engine, onChange } ) {
 				/>
 			</div>
 
-			<div className="dxai-actions">
+			<div className="dxui-actions">
 				<Button variant="secondary" onClick={ copy } isBusy={ busy === 'copy' } disabled={ !! busy }>
-					{ __( 'Copy prompt', 'dxai-ui' ) }
+					{ __( 'Copy prompt', 'dx-ui' ) }
 				</Button>
 				<Button variant="tertiary" onClick={ showPrompt } disabled={ !! busy }>
-					{ open ? __( 'Hide prompt', 'dxai-ui' ) : __( 'Show prompt', 'dxai-ui' ) }
+					{ open ? __( 'Hide prompt', 'dx-ui' ) : __( 'Show prompt', 'dx-ui' ) }
 				</Button>
 				<Button
 					variant="primary"
@@ -195,14 +195,14 @@ function Row( { page, facts, engine, onChange } ) {
 					disabled={ !! busy || ! engine.ready || page.blocks === 0 }
 					title={ engine.ready ? undefined : engine.message }
 				>
-					{ busy === 'generate' ? __( 'Writing…', 'dxai-ui' ) : __( 'Write with AI', 'dxai-ui' ) }
+					{ busy === 'generate' ? __( 'Writing…', 'dx-ui' ) : __( 'Write with AI', 'dx-ui' ) }
 				</Button>
 				<Button variant="tertiary" onClick={ () => check( false ) } isBusy={ busy === 'check' } disabled={ !! busy }>
-					{ __( 'Check the page', 'dxai-ui' ) }
+					{ __( 'Check the page', 'dx-ui' ) }
 				</Button>
 				{ page.revert && (
 					<Button variant="link" isDestructive onClick={ revert } disabled={ !! busy }>
-						{ __( 'Put the old words back', 'dxai-ui' ) }
+						{ __( 'Put the old words back', 'dx-ui' ) }
 					</Button>
 				) }
 			</div>
@@ -212,7 +212,7 @@ function Row( { page, facts, engine, onChange } ) {
 
 			{ open && (
 				<TextareaControl
-					label={ __( 'Prompt', 'dxai-ui' ) }
+					label={ __( 'Prompt', 'dx-ui' ) }
 					value={ prompt }
 					readOnly
 					rows={ 16 }
@@ -222,12 +222,12 @@ function Row( { page, facts, engine, onChange } ) {
 			) }
 
 			{ review && (
-				<div className="dxai-copy__review">
+				<div className="dxui-copy__review">
 					{ review.checks.length === 0 ? (
-						<p className="dxai-muted">{ __( 'The checks found nothing to say about this page.', 'dxai-ui' ) }</p>
+						<p className="dxui-muted">{ __( 'The checks found nothing to say about this page.', 'dx-ui' ) }</p>
 					) : (
 						<Notice status="warning" isDismissible={ false }>
-							<strong>{ __( 'What the checks found', 'dxai-ui' ) }</strong>
+							<strong>{ __( 'What the checks found', 'dx-ui' ) }</strong>
 							<ul>
 								{ review.checks.map( ( n, i ) => <li key={ i }>{ n }</li> ) }
 							</ul>
@@ -235,14 +235,14 @@ function Row( { page, facts, engine, onChange } ) {
 					) }
 					{ review.notes && (
 						<Notice status="info" isDismissible={ false }>
-							<strong>{ __( 'Notes from the AI (nothing was changed)', 'dxai-ui' ) }</strong>
+							<strong>{ __( 'Notes from the AI (nothing was changed)', 'dx-ui' ) }</strong>
 							<ul>
 								{ review.notes.map( ( n, i ) => <li key={ i }>{ n }</li> ) }
 							</ul>
 						</Notice>
 					) }
 					{ ! review.notes && (
-						<div className="dxai-actions">
+						<div className="dxui-actions">
 							<Button
 								variant="secondary"
 								onClick={ () => check( true ) }
@@ -252,14 +252,14 @@ function Row( { page, facts, engine, onChange } ) {
 							>
 								{ sprintf(
 									/* translators: %s: number of tokens. */
-									__( 'Ask the AI for notes (one request, about %s tokens)', 'dxai-ui' ),
+									__( 'Ask the AI for notes (one request, about %s tokens)', 'dx-ui' ),
 									( review.estimate.tokens || 0 ).toLocaleString()
 								) }
 							</Button>
-							<span className="dxai-muted">
+							<span className="dxui-muted">
 								{ review.estimate.cost !== null && review.estimate.cost !== undefined
-									? sprintf( /* translators: %s: dollars. */ __( 'About US$%s.', 'dxai-ui' ), Number( review.estimate.cost ).toFixed( 3 ) )
-									: __( 'Set the price of a million tokens under "AI" in Pages in the team\'s style to see the cost in dollars.', 'dxai-ui' ) }
+									? sprintf( /* translators: %s: dollars. */ __( 'About US$%s.', 'dx-ui' ), Number( review.estimate.cost ).toFixed( 3 ) )
+									: __( 'Set the price of a million tokens under "AI" in Pages in the team\'s style to see the cost in dollars.', 'dx-ui' ) }
 							</span>
 						</div>
 					) }
@@ -267,24 +267,24 @@ function Row( { page, facts, engine, onChange } ) {
 			) }
 
 			{ proposal && (
-				<div className="dxai-copy__proposal">
-					<p className="dxai-muted">
+				<div className="dxui-copy__proposal">
+					<p className="dxui-muted">
 						{ sprintf(
 							/* translators: 1: engine name, 2: number of blocks. */
-							_n( '%1$s rewrote %2$d block. Nothing is saved until you apply it.', '%1$s rewrote %2$d blocks. Nothing is saved until you apply it.', proposal.changed, 'dxai-ui' ),
+							_n( '%1$s rewrote %2$d block. Nothing is saved until you apply it.', '%1$s rewrote %2$d blocks. Nothing is saved until you apply it.', proposal.changed, 'dx-ui' ),
 							engine.label || proposal.engine,
 							proposal.changed
 						) }
 					</p>
 					{ proposal.flags.length > 0 && (
 						<Notice status="warning" isDismissible={ false }>
-							<strong>{ __( 'Mismatches it noticed', 'dxai-ui' ) }</strong>
+							<strong>{ __( 'Mismatches it noticed', 'dx-ui' ) }</strong>
 							<ul>
 								{ proposal.flags.map( ( f, i ) => <li key={ i }>{ f }</li> ) }
 							</ul>
 						</Notice>
 					) }
-					<ul className="dxai-copy__blocks">
+					<ul className="dxui-copy__blocks">
 						{ proposal.blocks.filter( ( b ) => b.changed ).map( ( b ) => (
 							<li key={ b.id }>
 								<label>
@@ -301,19 +301,19 @@ function Row( { page, facts, engine, onChange } ) {
 											setPicked( next );
 										} }
 									/>
-									<span className="dxai-copy__where">{ b.section } · { b.kind }</span>
+									<span className="dxui-copy__where">{ b.section } · { b.kind }</span>
 								</label>
 								<del>{ plain( b.before ) }</del>
 								<ins>{ plain( b.after ) }</ins>
 							</li>
 						) ) }
 					</ul>
-					<div className="dxai-actions">
+					<div className="dxui-actions">
 						<Button variant="primary" onClick={ apply } isBusy={ busy === 'apply' } disabled={ !! busy || count === 0 }>
-							{ sprintf( /* translators: %d: number of blocks. */ _n( 'Apply %d block', 'Apply %d blocks', count, 'dxai-ui' ), count ) }
+							{ sprintf( /* translators: %d: number of blocks. */ _n( 'Apply %d block', 'Apply %d blocks', count, 'dx-ui' ), count ) }
 						</Button>
 						<Button variant="tertiary" onClick={ () => setProposal( null ) } disabled={ !! busy }>
-							{ __( 'Discard', 'dxai-ui' ) }
+							{ __( 'Discard', 'dx-ui' ) }
 						</Button>
 					</div>
 				</div>
@@ -332,7 +332,7 @@ export default function CopyPrompt( { design: fixed = 0 } ) {
 	function load( design = 0 ) {
 		apiFetch( { path: base + ( design ? '?design=' + design : '' ) } )
 			.then( setData )
-			.catch( ( e ) => setError( e.message || __( 'The pages could not be read.', 'dxai-ui' ) ) );
+			.catch( ( e ) => setError( e.message || __( 'The pages could not be read.', 'dx-ui' ) ) );
 	}
 
 	useEffect( () => {
@@ -354,20 +354,20 @@ export default function CopyPrompt( { design: fixed = 0 } ) {
 	}
 
 	return (
-		<section className="dxai-section dxai-copy" aria-labelledby="dxai-copy-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-copy" aria-labelledby="dxui-copy-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your pages', 'dxai-ui' ) }</p>
-					<h3 id="dxai-copy-title">{ __( 'Words for the pages', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
-						{ __( 'The prompt for the copy of a page, filled in from the page. Copy it into any assistant, or let the AI engine chosen in Settings write the words. Only the words change: the blocks and their styles stay.', 'dxai-ui' ) }
+					<p className="dxui-section-kicker">{ __( 'Your pages', 'dx-ui' ) }</p>
+					<h3 id="dxui-copy-title">{ __( 'Words for the pages', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
+						{ __( 'The prompt for the copy of a page, filled in from the page. Copy it into any assistant, or let the AI engine chosen in Settings write the words. Only the words change: the blocks and their styles stay.', 'dx-ui' ) }
 					</p>
 				</div>
 			</div>
 
 			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
-					label={ __( 'Design', 'dxai-ui' ) }
+					label={ __( 'Design', 'dx-ui' ) }
 					value={ String( data.design ) }
 					options={ data.designs.map( ( d ) => ( { value: String( d.id ), label: d.title } ) ) }
 					onChange={ ( v ) => load( Number( v ) ) }
@@ -376,7 +376,7 @@ export default function CopyPrompt( { design: fixed = 0 } ) {
 			) }
 
 			<ToggleControl
-				label={ __( 'Add what the Home says about the company (name, phone, e-mail, current site)', 'dxai-ui' ) }
+				label={ __( 'Add what the Home says about the company (name, phone, e-mail, current site)', 'dx-ui' ) }
 				checked={ facts }
 				onChange={ setFacts }
 				__nextHasNoMarginBottom
@@ -384,11 +384,11 @@ export default function CopyPrompt( { design: fixed = 0 } ) {
 
 			{ ! data.engine.ready && (
 				<Notice status="info" isDismissible={ false }>
-					{ data.engine.message } { __( 'The prompt can still be copied.', 'dxai-ui' ) }
+					{ data.engine.message } { __( 'The prompt can still be copied.', 'dx-ui' ) }
 				</Notice>
 			) }
 
-			<ul className="dxai-copy__list">
+			<ul className="dxui-copy__list">
 				{ data.pages.map( ( p ) => (
 					<Row key={ p.id } page={ p } facts={ facts } engine={ data.engine } onChange={ update } />
 				) ) }

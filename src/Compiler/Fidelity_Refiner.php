@@ -2,15 +2,15 @@
 /**
  * Pass-2: refine weak Pass-1 structures via the configured LLM.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Support\Logger;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Support\Logger;
 
 final class Fidelity_Refiner {
 

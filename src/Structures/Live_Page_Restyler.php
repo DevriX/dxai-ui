@@ -2,22 +2,22 @@
 /**
  * Restyle crawled live pages to match Home design language via LLM (DeepSeek).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
-use DXAI_UI\Compiler\Block_Normalizer;
-use DXAI_UI\Compiler\Design_Css;
-use DXAI_UI\Compiler\Fidelity_Validator;
-use DXAI_UI\Compiler\Gutenberg_Mapper;
-use DXAI_UI\Compiler\Html_To_Blocks;
-use DXAI_UI\Compiler\Prompt_Builder;
-use DXAI_UI\Engines\Engine_Factory;
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Support\Logger;
+use DX_UI\Compiler\Block_Normalizer;
+use DX_UI\Compiler\Design_Css;
+use DX_UI\Compiler\Fidelity_Validator;
+use DX_UI\Compiler\Gutenberg_Mapper;
+use DX_UI\Compiler\Html_To_Blocks;
+use DX_UI\Compiler\Prompt_Builder;
+use DX_UI\Engines\Engine_Factory;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Support\Logger;
 
 final class Live_Page_Restyler {
 
@@ -31,15 +31,15 @@ final class Live_Page_Restyler {
 	 * Claude — the import screen named one engine and the bill came from the
 	 * other. The active engine wins now; DeepSeek (then any engine with a key)
 	 * is only the fallback when the active one cannot run, e.g. its key is
-	 * missing. `dxai_ui_restyle_engine` can name a specific engine id.
+	 * missing. `dx_ui_restyle_engine` can name a specific engine id.
 	 */
 	public function engine(): LLM_Provider_Interface|\WP_Error {
 		if ( $this->engine instanceof LLM_Provider_Interface ) {
 			return $this->engine;
 		}
 
-		$wanted = (string) apply_filters( 'dxai_ui_restyle_engine', '' );
-		$id     = $wanted !== '' ? $wanted : (string) ( \DXAI_UI\Settings\Options::get()['active_engine'] ?? '' );
+		$wanted = (string) apply_filters( 'dx_ui_restyle_engine', '' );
+		$id     = $wanted !== '' ? $wanted : (string) ( \DX_UI\Settings\Options::get()['active_engine'] ?? '' );
 		$active = Engine_Factory::make( $id !== '' ? $id : null );
 		// Engine_Factory builds an engine whatever its key; one without a key
 		// cannot run, so it does not count as available here.
@@ -49,7 +49,7 @@ final class Live_Page_Restyler {
 			return $this->engine;
 		}
 
-		if ( \DXAI_UI\Settings\Options::get_secret( 'deepseek_api_key' ) !== '' ) {
+		if ( \DX_UI\Settings\Options::get_secret( 'deepseek_api_key' ) !== '' ) {
 			$deepseek = Engine_Factory::make( 'deepseek' );
 			if ( ! is_wp_error( $deepseek ) ) {
 				$this->engine = $deepseek;
@@ -60,7 +60,7 @@ final class Live_Page_Restyler {
 
 		return is_wp_error( $active )
 			? $active
-			: new \WP_Error( 'dxai_ui_restyle_engine', __( 'The AI engine chosen in Settings has no API key, so pages cannot be rebuilt with AI.', 'dxai-ui' ) );
+			: new \WP_Error( 'dx_ui_restyle_engine', __( 'The AI engine chosen in Settings has no API key, so pages cannot be rebuilt with AI.', 'dx-ui' ) );
 	}
 
 	/** Whether the engine id has an API key saved. */
@@ -72,7 +72,7 @@ final class Live_Page_Restyler {
 			'deepseek' => 'deepseek_api_key',
 		)[ $id ] ?? '';
 
-		return $secret !== '' && \DXAI_UI\Settings\Options::get_secret( $secret ) !== '';
+		return $secret !== '' && \DX_UI\Settings\Options::get_secret( $secret ) !== '';
 	}
 
 	/**
@@ -89,7 +89,7 @@ final class Live_Page_Restyler {
 		$title = sanitize_text_field( (string) ( $page['title'] ?? 'Page' ) );
 		$html  = trim( (string) ( $page['html'] ?? '' ) );
 		if ( $html === '' ) {
-			return new \WP_Error( 'dxai_ui_restyle', __( 'Nothing to restyle.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_restyle', __( 'Nothing to restyle.', 'dx-ui' ) );
 		}
 
 		$page['content_facts'] = Prompt_Builder::content_facts_from_html( $html );
@@ -100,7 +100,7 @@ final class Live_Page_Restyler {
 		);
 
 		// Token mode whenever the home guide carries the design's palette: the
-		// model is told to write colours only as var(--dxai-…) — see home_guide().
+		// model is told to write colours only as var(--dxui-…) — see home_guide().
 		$tokens = ! empty( $home['allowed_tokens'] ) && is_array( $home['palette'] ?? null ) && $home['palette'] !== array();
 		$system = Prompt_Builder::system_live_restyle( $tokens );
 		$user   = Prompt_Builder::user_live_restyle( $page, $home );
@@ -190,7 +190,7 @@ final class Live_Page_Restyler {
 			$markup = implode( "\n\n", $parts );
 		}
 		if ( $markup === '' ) {
-			return new \WP_Error( 'dxai_ui_restyle_empty', __( 'Restyle returned empty markup.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_restyle_empty', __( 'Restyle returned empty markup.', 'dx-ui' ) );
 		}
 
 		// Never keep LLM-invented CSS — Home sheet already owns the design.
@@ -205,10 +205,10 @@ final class Live_Page_Restyler {
 		$invent = self::invented_color_pressure( $markup, $home, $tokens );
 		if ( $invent > 3 ) {
 			return new \WP_Error(
-				'dxai_ui_restyle_invent',
+				'dx_ui_restyle_invent',
 				sprintf(
 					/* translators: %d: count of invented colour values */
-					__( 'Restyle invented %d colours outside the Home palette.', 'dxai-ui' ),
+					__( 'Restyle invented %d colours outside the Home palette.', 'dx-ui' ),
 					$invent
 				)
 			);
@@ -242,21 +242,21 @@ final class Live_Page_Restyler {
 		 */
 		$allowed = is_array( $home['allowed_colors'] ?? null ) ? $home['allowed_colors'] : array();
 		$markup  = $tokens
-			? \DXAI_UI\Compiler\Token_Styles::snap_markup( $markup, $home['palette'] )
+			? \DX_UI\Compiler\Token_Styles::snap_markup( $markup, $home['palette'] )
 			: self::clamp_colors( $markup, $allowed );
 
-		// Body shell only — page-level .dxai-ui--{id} must wrap header+body+footer.
-		$markup = preg_replace( '/\bdxai-ui--\d+\b/', '', $markup ) ?? $markup;
+		// Body shell only — page-level .dx-ui--{id} must wrap header+body+footer.
+		$markup = preg_replace( '/\bdx-ui--\d+\b/', '', $markup ) ?? $markup;
 		$markup = preg_replace_callback( '/\bclassName":"([^"]*)"/', static function ( array $m ): string {
-			$class = trim( preg_replace( '/\bdxai-ui\b/', '', $m[1] ) ?? $m[1] );
+			$class = trim( preg_replace( '/\bdx-ui\b/', '', $m[1] ) ?? $m[1] );
 			$class = trim( preg_replace( '/\s+/', ' ', $class ) ?? $class );
 
 			return 'className":"' . $class . '"';
 		}, $markup ) ?? $markup;
 
-		if ( ! str_contains( $markup, 'dxai-live-content' ) ) {
-			$markup = "<!-- wp:group {\"tagName\":\"main\",\"className\":\"dxai-live-content\",\"layout\":{\"type\":\"default\"}} -->\n"
-				. "<main class=\"wp-block-group dxai-live-content\">\n"
+		if ( ! str_contains( $markup, 'dxui-live-content' ) ) {
+			$markup = "<!-- wp:group {\"tagName\":\"main\",\"className\":\"dxui-live-content\",\"layout\":{\"type\":\"default\"}} -->\n"
+				. "<main class=\"wp-block-group dxui-live-content\">\n"
 				. $markup
 				. "\n</main>\n<!-- /wp:group -->";
 		}
@@ -318,7 +318,7 @@ final class Live_Page_Restyler {
 		if ( $html === '' ) {
 			return '';
 		}
-		$shell  = '<main class="dxai-live-content">' . $html . '</main>';
+		$shell  = '<main class="dxui-live-content">' . $html . '</main>';
 		$markup = ( new Html_To_Blocks() )->convert( $shell );
 		/*
 		 * The live page's own colours are the OLD site's, not the redesign's —
@@ -327,7 +327,7 @@ final class Live_Page_Restyler {
 		 * follows Styles like every other page of the design.
 		 */
 		if ( is_array( $palette['colors'] ?? null ) && $palette['colors'] !== array() ) {
-			$markup = \DXAI_UI\Compiler\Token_Styles::snap_markup( $markup, $palette );
+			$markup = \DX_UI\Compiler\Token_Styles::snap_markup( $markup, $palette );
 		}
 
 		return self::publishable( $markup );
@@ -339,7 +339,7 @@ final class Live_Page_Restyler {
 	 * sanitize() makes the markup safe; it does not make it open. The model
 	 * writes block shapes whose save() does not reproduce the stored HTML —
 	 * section comments inside a group, a core/image or core/column carrying
-	 * `dxaiStyle`, a dynamic form stored with markup — and on the development
+	 * `dxuiStyle`, a dynamic form stored with markup — and on the development
 	 * site WordPress 7.1's own validator found 15 blocks on 6 of the 15
 	 * crawled pages that open as "unexpected or invalid content", where the
 	 * editor's recovery would have rebuilt them from their attributes and
@@ -353,7 +353,7 @@ final class Live_Page_Restyler {
 	 * passed: it removes comments and markup, and moves values that are in
 	 * the document already (a declaration from a style="" into a block
 	 * attribute and back out as its longhand, a data-* value into
-	 * `dxaiData`), so its output needs no second filter. Markup it finds
+	 * `dxuiData`), so its output needs no second filter. Markup it finds
 	 * nothing to fix in is returned as the same string.
 	 */
 	private static function publishable( string $markup ): string {
@@ -394,7 +394,7 @@ final class Live_Page_Restyler {
 	}
 
 	/**
-	 * Drop every block that is neither core/* nor dxai-ui/*.
+	 * Drop every block that is neither core/* nor dx-ui/*.
 	 *
 	 * wp_kses_post() judges markup and attribute VALUES; it has no opinion on
 	 * which block type they belong to. A block name is an instruction to run
@@ -404,15 +404,15 @@ final class Live_Page_Restyler {
 	 * attribute) and then asks another plugin's PHP to render form 123, post
 	 * 123, a remote URL, a shortcode. Nothing this class writes needs one:
 	 * the only blocks Prompt_Builder::system_live_restyle() names are
-	 * core/buttons and dxai-ui/form, and every block-name literal in
-	 * Html_To_Blocks is core/* or dxai-ui/* (15 names, checked by grep). So
+	 * core/buttons and dx-ui/form, and every block-name literal in
+	 * Html_To_Blocks is core/* or dx-ui/* (15 names, checked by grep). So
 	 * a foreign name here is a hallucination or a prompt injection carried in
 	 * from the crawled page, and it is removed rather than trusted.
 	 *
 	 * REMOVED, not converted to its inner HTML. Converting was considered
 	 * and rejected for two reasons:
 	 *   - inside a parent (and every restyled body is inside the
-	 *     `dxai-live-content` group restyle() wraps it in) the freed HTML
+	 *     `dxui-live-content` group restyle() wraps it in) the freed HTML
 	 *     lands in the parent's innerContent, so the parent's saved HTML no
 	 *     longer matches its save() and the editor shows "This block contains
 	 *     unexpected or invalid content" on the whole section — the opposite
@@ -422,7 +422,7 @@ final class Live_Page_Restyler {
 	 *     real output IS the render_callback we are refusing to run. For the
 	 *     static ones it is markup written for another plugin's CSS and JS,
 	 *     which the design does not load.
-	 * What a foreign block WRAPS is kept: its core/dxai-ui descendants are
+	 * What a foreign block WRAPS is kept: its core/dx-ui descendants are
 	 * filtered the same way and take its place, one innerContent placeholder
 	 * each, so a hallucinated container (a "row" or "section" block from a
 	 * page builder) costs its own shell and attributes, not the paragraphs
@@ -493,7 +493,7 @@ final class Live_Page_Restyler {
 		$name = $block['blockName'] ?? null;
 		if ( $name === null
 			|| str_starts_with( (string) $name, 'core/' )
-			|| str_starts_with( (string) $name, 'dxai-ui/' )
+			|| str_starts_with( (string) $name, 'dx-ui/' )
 		) {
 			$block['innerBlocks']  = $kept_blocks;
 			$block['innerContent'] = $kept_content;
@@ -519,7 +519,7 @@ final class Live_Page_Restyler {
 		$blob    = $design_css;
 		/*
 		 * With the design's palette, everything the model is shown is shown in
-		 * TOKENS: `background:var(--dxai-accent)` where it used to read
+		 * TOKENS: `background:var(--dxui-accent)` where it used to read
 		 * `background:#F2A34A`. It copies what it sees, so this is the cheapest
 		 * and most reliable way to get tokens back out — the prompt rule and the
 		 * snap in restyle() are there for the cases where it does not.
@@ -539,7 +539,7 @@ final class Live_Page_Restyler {
 				continue;
 			}
 			if ( $tokenise ) {
-				$src = \DXAI_UI\Compiler\Token_Styles::rewrite_html( $src, $palette );
+				$src = \DX_UI\Compiler\Token_Styles::rewrite_html( $src, $palette );
 			}
 			$blob    .= "\n" . $src;
 			$chunks[] = $src;
@@ -552,8 +552,8 @@ final class Live_Page_Restyler {
 							continue;
 						}
 						// Prefer design tokens over Gutenberg chrome.
-						if ( preg_match( '/^(dxai-|sc-|section-|btn|container|hero|cta)/i', $token )
-							|| str_contains( $token, 'dxai-sh-' )
+						if ( preg_match( '/^(dxui-|sc-|section-|btn|container|hero|cta)/i', $token )
+							|| str_contains( $token, 'dxui-sh-' )
 						) {
 							$classes[ $token ] = ( $classes[ $token ] ?? 0 ) + 10;
 						} else {
@@ -604,7 +604,7 @@ final class Live_Page_Restyler {
 
 		/*
 		 * The colours the model may use, as the tokens it must write:
-		 * `{"token":"var(--dxai-accent)","name":"Accent","value":"#F2A34A"}`.
+		 * `{"token":"var(--dxui-accent)","name":"Accent","value":"#F2A34A"}`.
 		 * The value is there so it can reason about contrast; the token is the
 		 * only thing it may put in markup. Solid colours only — the same set
 		 * that are presets in Styles — plus the design's shadows.
@@ -614,7 +614,7 @@ final class Live_Page_Restyler {
 			foreach ( $palette['colors'] as $row ) {
 				if ( ! empty( $row['preset'] ) ) {
 					$tokens[] = array(
-						'token' => 'var(--dxai-' . $row['slug'] . ')',
+						'token' => 'var(--dxui-' . $row['slug'] . ')',
 						'name'  => (string) $row['name'],
 						'value' => (string) $row['value'],
 					);
@@ -622,7 +622,7 @@ final class Live_Page_Restyler {
 			}
 			foreach ( (array) ( $palette['shadows'] ?? array() ) as $row ) {
 				$tokens[] = array(
-					'token' => 'var(--dxai-' . $row['slug'] . ')',
+					'token' => 'var(--dxui-' . $row['slug'] . ')',
 					'name'  => (string) $row['name'] . ' (box-shadow)',
 					'value' => (string) $row['value'],
 				);

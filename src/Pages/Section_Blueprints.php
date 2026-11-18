@@ -2,12 +2,12 @@
 /**
  * The sections a page needs that the Home does not have, made from what the Home has.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * A blueprint turns the kit (Home_Kit) and what is known — the pages of the site, the facts the Home states — into a section. It
@@ -38,7 +38,7 @@ final class Section_Blueprints {
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
 	public static function related( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), bool $list = false, ?int $only = null ): ?array {
-		return self::pour( $kit, $library, $rows, $heading, $seed, $list ? __( 'List of pages', 'dxai-ui' ) : __( 'Related pages', 'dxai-ui' ), $list ? 'list' : 'related', array_column( $rows, 'url' ), $refused, $avoid, $list ? self::LIST_MAX : 0, $only );
+		return self::pour( $kit, $library, $rows, $heading, $seed, $list ? __( 'List of pages', 'dx-ui' ) : __( 'Related pages', 'dx-ui' ), $list ? 'list' : 'related', array_column( $rows, 'url' ), $refused, $avoid, $list ? self::LIST_MAX : 0, $only );
 	}
 
 	/**
@@ -52,23 +52,23 @@ final class Section_Blueprints {
 		$rows = array();
 		if ( ! empty( $facts['phone']['text'] ) ) {
 			$rows[] = array(
-				'title' => __( 'Call us', 'dxai-ui' ),
+				'title' => __( 'Call us', 'dx-ui' ),
 				'text'  => (string) $facts['phone']['text'],
 				'url'   => (string) $facts['phone']['url'],
-				'label' => __( 'Call now', 'dxai-ui' ),
+				'label' => __( 'Call now', 'dx-ui' ),
 			);
 		}
 		if ( ! empty( $facts['email'] ) ) {
 			$rows[] = array(
-				'title' => __( 'Email us', 'dxai-ui' ),
+				'title' => __( 'Email us', 'dx-ui' ),
 				'text'  => (string) $facts['email'],
 				'url'   => 'mailto:' . $facts['email'],
-				'label' => __( 'Send an email', 'dxai-ui' ),
+				'label' => __( 'Send an email', 'dx-ui' ),
 			);
 		}
 		if ( ! empty( $facts['address'] ) ) {
 			$rows[] = array(
-				'title' => __( 'Visit us', 'dxai-ui' ),
+				'title' => __( 'Visit us', 'dx-ui' ),
 				'text'  => (string) $facts['address'],
 				'url'   => '',
 				'label' => '',
@@ -90,7 +90,7 @@ final class Section_Blueprints {
 	 * @return array{block:array<string, mixed>, op:string, index:int}|null
 	 */
 	public static function contact( array $kit, array $library, array $rows, string $heading, string $seed, array &$refused = array(), array $avoid = array(), ?int $only = null ): ?array {
-		return self::pour( $kit, $library, $rows, $heading, $seed, __( 'Contact details', 'dxai-ui' ), 'contact', array_column( $rows, 'text' ), $refused, $avoid, 0, $only );
+		return self::pour( $kit, $library, $rows, $heading, $seed, __( 'Contact details', 'dx-ui' ), 'contact', array_column( $rows, 'text' ), $refused, $avoid, 0, $only );
 	}
 
 	/**

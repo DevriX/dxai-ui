@@ -2,7 +2,7 @@
 /**
  * Print canvas DOM checks for the GTM page.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $id     = 343;
-$canvas = (string) get_post_meta( $id, '_dxai_ui_canvas_html', true );
+$canvas = (string) get_post_meta( $id, '_dx_ui_canvas_html', true );
 $open   = substr( $canvas, 0, 500 );
 echo "open=\n{$open}\n----\n";
 echo 'logo_src=';
@@ -24,4 +24,4 @@ echo 'header_count=' . preg_match_all( '/<header\b/', $canvas ) . "\n";
 echo 'footer_count=' . preg_match_all( '/<footer\b/', $canvas ) . "\n";
 echo 'sticky=' . ( str_contains( $canvas, 'rv-stickycta' ) ? '1' : '0' ) . "\n";
 echo 'wp_group=' . ( str_contains( $canvas, 'wp-block-group' ) ? '1' : '0' ) . "\n";
-echo 'font_urls=' . wp_json_encode( get_post_meta( $id, '_dxai_ui_font_urls', true ) ) . "\n";
+echo 'font_urls=' . wp_json_encode( get_post_meta( $id, '_dx_ui_font_urls', true ) ) . "\n";

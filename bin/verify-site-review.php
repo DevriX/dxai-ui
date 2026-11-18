@@ -17,14 +17,14 @@
  * Everything is deleted after, also when a check dies half-way, and the permalink structure and the hold are put back.
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Gutenberg_Mapper;
-use DXAI_UI\Network\Site_Review;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Site_From_Menu;
+use DX_UI\Compiler\Gutenberg_Mapper;
+use DX_UI\Network\Site_Review;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Site_From_Menu;
 
 $fail   = 0;
 $pass   = 0;
@@ -53,7 +53,7 @@ $clean = static function () use ( &$made, &$menu, $keep, $run ): void {
 	} else {
 		update_option( Site_Review::HOLD, $keep['hold'], false );
 	}
-	foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_key' => '_dxai_review_suite', 'meta_value' => $run ) ) as $id ) {
+	foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_key' => '_dxui_review_suite', 'meta_value' => $run ) ) as $id ) {
 		$made[] = (int) $id;
 	}
 	// Pages the import's own code made in this run carry the run's name in their title.
@@ -88,14 +88,14 @@ $page = static function ( string $title, string $status = 'publish', int $parent
 		exit( 1 );
 	}
 	$made[] = (int) $id;
-	update_post_meta( (int) $id, '_dxai_review_suite', $run );
+	update_post_meta( (int) $id, '_dxui_review_suite', $run );
 
 	return (int) $id;
 };
 // A page the import made for this design (as Site_From_Menu or Team_Pages leave it).
 $mine = static function ( int $id, int $home ): int {
 	update_post_meta( $id, Page_Scope::META, $home );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 
 	return $id;
 };
@@ -105,25 +105,25 @@ $wp_rewrite->set_permalink_structure( '/%postname%/' );
 
 $home = $page( 'Home' );
 update_post_meta( $home, Page_Scope::META, $home );
-update_post_meta( $home, '_dxai_ui_css_url', 'https://example.test/dxai-ui/' . $run . '.css' );
+update_post_meta( $home, '_dx_ui_css_url', 'https://example.test/dx-ui/' . $run . '.css' );
 $taken = $page( 'Taken', 'publish', 0, 'review-taken-' . $run );
 
 echo "The hold\n";
 Site_Review::release();
-$expect( 'without a hold a page an import makes is published', apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'publish' && ! Site_Review::holding() );
+$expect( 'without a hold a page an import makes is published', apply_filters( 'dx_ui_new_page_status', 'publish', $home ) === 'publish' && ! Site_Review::holding() );
 Site_Review::hold();
-$expect( 'held, it is a draft', apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'draft' && Site_Review::holding() );
+$expect( 'held, it is a draft', apply_filters( 'dx_ui_new_page_status', 'publish', $home ) === 'draft' && Site_Review::holding() );
 update_option( Site_Review::HOLD, time() - 1, false );
-$expect( 'a hold that ran out holds nothing', ! Site_Review::holding() && apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'publish' );
+$expect( 'a hold that ran out holds nothing', ! Site_Review::holding() && apply_filters( 'dx_ui_new_page_status', 'publish', $home ) === 'publish' );
 // A hold for one archive: its design's pages are drafts, another import's are published (the screen that asked was closed).
-update_post_meta( $home, '_dxai_ui_source_zip', 'Held ' . $run . '.zip' );
+update_post_meta( $home, '_dx_ui_source_zip', 'Held ' . $run . '.zip' );
 $other_home = $page( 'Other Home' );
-update_post_meta( $other_home, '_dxai_ui_source_zip', 'Other ' . $run . '.zip' );
+update_post_meta( $other_home, '_dx_ui_source_zip', 'Other ' . $run . '.zip' );
 Site_Review::hold( 'Held ' . $run . '.zip' );
-$expect( 'held for an archive, its design\'s new pages are drafts', apply_filters( 'dxai_ui_new_page_status', 'publish', $home ) === 'draft' );
-$expect( '…and another design\'s, or a page of no design, are published', apply_filters( 'dxai_ui_new_page_status', 'publish', $other_home ) === 'publish' && apply_filters( 'dxai_ui_new_page_status', 'publish', 0 ) === 'publish' );
+$expect( 'held for an archive, its design\'s new pages are drafts', apply_filters( 'dx_ui_new_page_status', 'publish', $home ) === 'draft' );
+$expect( '…and another design\'s, or a page of no design, are published', apply_filters( 'dx_ui_new_page_status', 'publish', $other_home ) === 'publish' && apply_filters( 'dx_ui_new_page_status', 'publish', 0 ) === 'publish' );
 update_option( Site_Review::HOLD, time() + 600, false );
-$expect( 'a hold written by the plugin before this (a bare time) still holds every design', apply_filters( 'dxai_ui_new_page_status', 'publish', $other_home ) === 'draft' );
+$expect( 'a hold written by the plugin before this (a bare time) still holds every design', apply_filters( 'dx_ui_new_page_status', 'publish', $other_home ) === 'draft' );
 Site_Review::release();
 
 echo "Pages from the old site (Site_From_Menu)\n";
@@ -131,7 +131,7 @@ $crawl = new Site_From_Menu();
 $save  = new ReflectionMethod( Site_From_Menu::class, 'save_chrome_page' );
 $save->setAccessible( true );
 $put = static function ( string $title, string $path ) use ( $crawl, $save, $home, $run ) {
-	return $save->invoke( $crawl, $title . ' ' . $run, '<!-- wp:paragraph --><p>' . $title . '</p><!-- /wp:paragraph -->', $path, $home, '', array(), '', 'dxai-ui-' . $run, false, 'suite-' . $run . '.zip', new Gutenberg_Mapper() );
+	return $save->invoke( $crawl, $title . ' ' . $run, '<!-- wp:paragraph --><p>' . $title . '</p><!-- /wp:paragraph -->', $path, $home, '', array(), '', 'dx-ui-' . $run, false, 'suite-' . $run . '.zip', new Gutenberg_Mapper() );
 };
 Site_Review::release();
 $live = $put( 'Live Before', '/live-before-' . $run . '/' );
@@ -217,8 +217,8 @@ $expect( '…and by the Home\'s when it has none of its own', ( $rows[ $solo ]['
 $expect( 'the review says it holds', $view['holding'] === true );
 
 // The Home links to the page that will go: by the address it answers with, and by WordPress's own form of a draft's link.
-update_post_meta( $home, '_dxai_ui_site_origin', 'https://old.example.test' );
-update_post_meta( $solo, '_dxai_ui_source_route', 'services/sewage-cleanup' );
+update_post_meta( $home, '_dx_ui_site_origin', 'https://old.example.test' );
+update_post_meta( $solo, '_dx_ui_source_route', 'services/sewage-cleanup' );
 $solo_link = (string) get_permalink( $solo );
 $longer    = home_url( '?page_id=' . $solo . '7' );
 wp_update_post(
@@ -292,7 +292,7 @@ $expect( 'the menu\'s link to it follows', (string) get_post_meta( $item_id, '_m
 
 echo "The route\n";
 $ask = static function ( string $method, array $params ): WP_REST_Response {
-	$request = new WP_REST_Request( $method, '/dxai-ui/v1/site-review' );
+	$request = new WP_REST_Request( $method, '/dx-ui/v1/site-review' );
 	if ( $method === 'GET' ) {
 		$request->set_query_params( $params );
 	} else {

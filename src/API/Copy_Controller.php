@@ -2,18 +2,18 @@
 /**
  * REST: the prompt for the words of a page, and the words an AI writes from it.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Pages\Ai_Budget;
-use DXAI_UI\Pages\Copy_Prompt;
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Page_Critic;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Pages\Ai_Budget;
+use DX_UI\Pages\Copy_Prompt;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Page_Critic;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * GET  /copy                  the designs, and the pages of one (`design`) with what their prompts would say.
@@ -26,7 +26,7 @@ final class Copy_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/copy',
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
@@ -41,7 +41,7 @@ final class Copy_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/copy/(?P<id>\d+)',
 			array(
 				array(
@@ -92,7 +92,7 @@ final class Copy_Controller {
 			// The design the site wears comes first; else the first one.
 			$design = (int) $designs[0]['id'];
 			foreach ( $designs as $d ) {
-				if ( \DXAI_UI\Compiler\Token_Styles::is_brand( (int) $d['id'] ) ) {
+				if ( \DX_UI\Compiler\Token_Styles::is_brand( (int) $d['id'] ) ) {
 					$design = (int) $d['id'];
 					break;
 				}
@@ -185,7 +185,7 @@ final class Copy_Controller {
 
 		$ok = Copy_Writer::revert( $id );
 		if ( ! $ok ) {
-			return new \WP_Error( 'dxai_ui_copy_revert', __( 'There is nothing to put back, or the page was edited after the words were applied.', 'dxai-ui' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'dx_ui_copy_revert', __( 'There is nothing to put back, or the page was edited after the words were applied.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 
 		return new \WP_REST_Response( $this->page_report( $id, $facts ) + array( 'reverted' => true ) );
@@ -197,7 +197,7 @@ final class Copy_Controller {
 	private function page( \WP_REST_Request $request ) {
 		$id = (int) $request['id'];
 		if ( $id < 1 || get_post_type( $id ) !== 'page' || ! current_user_can( 'edit_post', $id ) ) {
-			return new \WP_Error( 'dxai_ui_copy_page', __( 'That page cannot be edited.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_copy_page', __( 'That page cannot be edited.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return $id;

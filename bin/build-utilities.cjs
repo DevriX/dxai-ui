@@ -55,7 +55,7 @@
  * Not here, on purpose: what Utility_Classes does with these rules when it
  * writes them (the class each selector is filed under as `:where(.x)`, the
  * scope, rem as px) and the plugin's own classes for values the theme has no
- * class for (`fw-900`, `text-14-5`, `max-w-1280px`, `text-dxai-ink` —
+ * class for (`fw-900`, `text-14-5`, `max-w-1280px`, `text-dxui-ink` —
  * Utility_Classes::family()). Those are code, versioned by its LAYER_VERSION;
  * this file is only the theme's own CSS. A plugin class yields to any theme
  * class of the same name, so a theme release that adds, say, `fw-900` takes
@@ -494,9 +494,9 @@ function main() {
 	lines.push( ' *' );
 	lines.push( ' * The DevriX theme utility classes (american-restoration' );
 	lines.push( ' * assets/src/sass/base/_utilities.scss), in the theme\'s own cascade order.' );
-	lines.push( ' * Read by DXAI_UI\\Compiler\\Utility_Classes. Source: ' + source + '.' );
+	lines.push( ' * Read by DX_UI\\Compiler\\Utility_Classes. Source: ' + source + '.' );
 	lines.push( ' *' );
-	lines.push( ' * @package DXAI_UI' );
+	lines.push( ' * @package DX_UI' );
 	lines.push( ' */' );
 	lines.push( '' );
 	lines.push( '// phpcs:ignoreFile -- generated data.' );

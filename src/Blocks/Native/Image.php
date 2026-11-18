@@ -2,17 +2,17 @@
 /**
  * A picture: core's Image.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 /**
- * `dxai-ui/image` → `core/image`, with the attachment it points to, so the
+ * `dx-ui/image` → `core/image`, with the attachment it points to, so the
  * picture is a media-library image: replaced from the library, given a size,
  * a link and a caption in the sidebar, and served with WordPress's own
  * `srcset`, `sizes`, width, height and lazy loading (the custom block wrote a
@@ -20,7 +20,7 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * core/image is a `<figure>` around the `<img>`, and the design's classes and
  * CSS were written for the `<img>`. The block carries them on the figure (where
- * a person can see and edit them) with the marker `dxai-part-img`, and the
+ * a person can see and edit them) with the marker `dxui-part-img`, and the
  * rules are written for the image inside it (Style_Rules::PARTS): on the page
  * the figure takes no box, so the picture is laid out exactly where the design
  * put it.
@@ -33,7 +33,7 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Image extends Converter {
 
-	private const KNOWN = array( 'url', 'alt', 'className', 'dxaiCss', 'loading', 'decoding' );
+	private const KNOWN = array( 'url', 'alt', 'className', 'dxuiCss', 'loading', 'decoding' );
 
 	/** @var array<string, bool> Design stylesheet path + mtime => safe to wrap the pictures. */
 	private static array $sheet_safe = array();
@@ -43,11 +43,11 @@ final class Image extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Pictures → Image', 'dxai-ui' );
+		return __( 'Pictures → Image', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/image';
+		return 'dx-ui/image';
 	}
 
 	public function target(): string {
@@ -97,9 +97,9 @@ final class Image extends Converter {
 		}
 		$new['sizeSlug']        = 'full';
 		$new['linkDestination'] = 'none';
-		$new['className']       = trim( 'dxai-part-img ' . (string) ( $attrs['className'] ?? '' ) );
-		if ( ! empty( $attrs['dxaiCss'] ) ) {
-			$new['dxaiCss'] = $attrs['dxaiCss'];
+		$new['className']       = trim( 'dxui-part-img ' . (string) ( $attrs['className'] ?? '' ) );
+		if ( ! empty( $attrs['dxuiCss'] ) ) {
+			$new['dxuiCss'] = $attrs['dxuiCss'];
 		}
 
 		// save(): figure with the generated classes, then the custom ones, then the dxs- class; the image with its id class.
@@ -140,7 +140,7 @@ final class Image extends Converter {
 		if ( $home < 1 ) {
 			return false;
 		}
-		$sheet = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' );
+		$sheet = Upload_Paths::for_meta( $home, '_dx_ui_css_url' );
 		$path  = (string) ( $sheet['path'] ?? '' );
 		if ( $path === '' || ! is_readable( $path ) ) {
 			// No stylesheet to read: nothing addresses a picture by position.

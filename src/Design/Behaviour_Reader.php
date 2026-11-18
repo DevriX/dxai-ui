@@ -2,20 +2,20 @@
 /**
  * What a converted page does when it is touched, read from its markup: the states the compiler made and the rest the runtime does.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Blocks\Assets;
+use DX_UI\Blocks\Assets;
 
 /**
  * The compiler writes a design's behaviour into the markup as marks the page runtime (Compiler\Motion_Runtime) reads: a state's
- * triggers (`dxai-toggle-<state>[--<value>]`, with `data-dxai-set`, `-step`, `-clamp`, `-init`, `-mode`, `-hover`), its projections
- * (`dxai-cls-…` with `data-dxai-on`/`-off` class lists, `dxai-on-…`/`dxai-off-…` panels, `data-dxai-text-<state>` word maps,
- * `data-dxai-disabled`, the aria the trigger carries), its other drivers (`data-dxai-scroll`, `data-dxai-outside`, `data-dxai-any`), and
+ * triggers (`dxui-toggle-<state>[--<value>]`, with `data-dxui-set`, `-step`, `-clamp`, `-init`, `-mode`, `-hover`), its projections
+ * (`dxui-cls-…` with `data-dxui-on`/`-off` class lists, `dxui-on-…`/`dxui-off-…` panels, `data-dxui-text-<state>` word maps,
+ * `data-dxui-disabled`, the aria the trigger carries), its other drivers (`data-dxui-scroll`, `data-dxui-outside`, `data-dxui-any`), and
  * beside the states the things the runtime does on its own: sections that reveal on approach, numbers that count up, the Radix
  * components by their ARIA, portals, two hand-coded families (rv-hero, rv-mbp), rails, the video facade, icons.
  *
@@ -117,19 +117,19 @@ final class Behaviour_Reader {
 				if ( $mark['value'] !== null ) {
 					$triggers[ $mark['state'] ][] = $mark['value'];
 				}
-				$hover = (string) ( $attrs['data-dxai-hover'] ?? '' );
+				$hover = (string) ( $attrs['data-dxui-hover'] ?? '' );
 				if ( $hover !== '' ) {
 					$drive( $mark['state'], 'hover' );
 				}
-				if ( isset( $attrs['data-dxai-step'] ) ) {
+				if ( isset( $attrs['data-dxui-step'] ) ) {
 					$drive( $mark['state'], 'step' );
 				} elseif ( $hover !== 'leave' ) {
 					$drive( $mark['state'], 'click' );
 				}
-				if ( isset( $attrs['data-dxai-init'] ) ) {
-					$states[ $mark['state'] ]['init'] = (string) $attrs['data-dxai-init'];
+				if ( isset( $attrs['data-dxui-init'] ) ) {
+					$states[ $mark['state'] ]['init'] = (string) $attrs['data-dxui-init'];
 				}
-				if ( ! isset( $attrs['data-dxai-step'] ) && ! isset( $attrs['data-dxai-set'] ) ) {
+				if ( ! isset( $attrs['data-dxui-step'] ) && ! isset( $attrs['data-dxui-set'] ) ) {
 					++$states[ $mark['state'] ]['projections']['aria'];
 				}
 			}
@@ -160,20 +160,20 @@ final class Behaviour_Reader {
 				}
 			}
 			foreach ( $attrs as $key => $v ) {
-				if ( str_starts_with( $key, 'data-dxai-text-' ) ) {
-					$s = substr( $key, strlen( 'data-dxai-text-' ) );
+				if ( str_starts_with( $key, 'data-dxui-text-' ) ) {
+					$s = substr( $key, strlen( 'data-dxui-text-' ) );
 					$state( $s );
 					++$states[ $s ]['projections']['text'];
 				}
 			}
-			if ( isset( $attrs['data-dxai-disabled'] ) && preg_match( '/^([A-Za-z_$][\w$]*):(.*)$/', (string) $attrs['data-dxai-disabled'], $m ) === 1 ) {
+			if ( isset( $attrs['data-dxui-disabled'] ) && preg_match( '/^([A-Za-z_$][\w$]*):(.*)$/', (string) $attrs['data-dxui-disabled'], $m ) === 1 ) {
 				$state( $m[1] );
 				++$states[ $m[1] ]['projections']['disabled'];
 				foreach ( explode( ',', $m[2] ) as $v ) {
 					$value( $m[1], trim( $v ) );
 				}
 			}
-			foreach ( self::tokens( (string) ( $attrs['data-dxai-any'] ?? '' ) ) as $spec ) {
+			foreach ( self::tokens( (string) ( $attrs['data-dxui-any'] ?? '' ) ) as $spec ) {
 				$cut = strpos( $spec, ':' );
 				if ( $cut === false || $cut < 1 ) {
 					continue;
@@ -187,7 +187,7 @@ final class Behaviour_Reader {
 					$state( $member );
 				}
 			}
-			foreach ( self::tokens( (string) ( $attrs['data-dxai-scroll'] ?? '' ) ) as $spec ) {
+			foreach ( self::tokens( (string) ( $attrs['data-dxui-scroll'] ?? '' ) ) as $spec ) {
 				$cut = strpos( $spec, ':' );
 				$s   = $cut !== false && $cut > 0 ? substr( $spec, 0, $cut ) : $spec;
 				$state( $s );
@@ -195,13 +195,13 @@ final class Behaviour_Reader {
 				// Pixels, whole (a float would not survive the document's JSON: 24.0 comes back as 24).
 				$states[ $s ]['threshold'] = $cut !== false && $cut > 0 ? (int) round( (float) substr( $spec, $cut + 1 ) ) : 0;
 			}
-			foreach ( self::tokens( (string) ( $attrs['data-dxai-outside'] ?? '' ) ) as $s ) {
+			foreach ( self::tokens( (string) ( $attrs['data-dxui-outside'] ?? '' ) ) as $s ) {
 				$state( $s );
 				$drive( $s, 'outside' );
 			}
 
 			// --- The rest the runtime does.
-			if ( in_array( $name, array( 'section', 'header', 'footer' ), true ) || isset( $attrs['data-reveal'] ) || array_intersect( array( 'rv-close', 'rv-leadmagnet', 'dxai-reveal' ), $classes ) !== array() ) {
+			if ( in_array( $name, array( 'section', 'header', 'footer' ), true ) || isset( $attrs['data-reveal'] ) || array_intersect( array( 'rv-close', 'rv-leadmagnet', 'dxui-reveal' ), $classes ) !== array() ) {
 				++$counts['reveal'];
 			}
 			if ( isset( $attrs['data-countup'] ) || ( in_array( 'rv-num', $classes, true ) && isset( $attrs['data-to'] ) ) ) {
@@ -210,10 +210,10 @@ final class Behaviour_Reader {
 			if ( in_array( 'rv-hero', $classes, true ) ) {
 				++$counts['hero-tabs'];
 			}
-			if ( isset( $attrs['data-dxai-method'] ) || array_intersect( array( 'rv-mbp', 'dxai-method' ), $classes ) !== array() ) {
+			if ( isset( $attrs['data-dxui-method'] ) || array_intersect( array( 'rv-mbp', 'dxui-method' ), $classes ) !== array() ) {
 				++$counts['method-rows'];
 			}
-			if ( isset( $attrs['data-dxai-portal'] ) ) {
+			if ( isset( $attrs['data-dxui-portal'] ) ) {
 				++$counts['portal'];
 			}
 			if ( isset( $attrs['data-lucide'] ) ) {
@@ -347,7 +347,7 @@ final class Behaviour_Reader {
 		}
 		foreach ( $m as $tag ) {
 			$attrs = array();
-			// Names as the compiler wrote them: a state's name rides in some (`data-dxai-text-openFaq`) and is a JavaScript identifier, with its case.
+			// Names as the compiler wrote them: a state's name rides in some (`data-dxui-text-openFaq`) and is a JavaScript identifier, with its case.
 			if ( preg_match_all( '/([a-zA-Z_:][-\w:.]*)\s*=\s*"([^"]*)"/', $tag[2], $a, PREG_SET_ORDER ) ) {
 				foreach ( $a as $pair ) {
 					$attrs[ $pair[1] ] = html_entity_decode( $pair[2], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
@@ -371,14 +371,14 @@ final class Behaviour_Reader {
 	}
 
 	/**
-	 * The marks of one kind in a class list: `dxai-<kind>-<state>[--<value>]`. A state name is a JavaScript identifier and so never
+	 * The marks of one kind in a class list: `dxui-<kind>-<state>[--<value>]`. A state name is a JavaScript identifier and so never
 	 * holds `-`; a value may (`open--how-we-help`), so the split is at the first `--`.
 	 *
 	 * @param array<int, string> $classes
 	 * @return array<int, array{state:string, value:string|null}>
 	 */
 	private static function marks( array $classes, string $kind ): array {
-		$prefix = 'dxai-' . $kind . '-';
+		$prefix = 'dxui-' . $kind . '-';
 		$out    = array();
 		foreach ( $classes as $c ) {
 			if ( ! str_starts_with( $c, $prefix ) ) {
@@ -409,14 +409,14 @@ final class Behaviour_Reader {
 	 * @param array{state:string, value:string|null} $mark
 	 */
 	private static function attr_for( array $attrs, string $kind, array $mark ): string {
-		if ( $mark['value'] !== null && isset( $attrs[ 'data-dxai-' . $kind . '-' . $mark['state'] . '-' . $mark['value'] ] ) ) {
-			return $attrs[ 'data-dxai-' . $kind . '-' . $mark['state'] . '-' . $mark['value'] ];
+		if ( $mark['value'] !== null && isset( $attrs[ 'data-dxui-' . $kind . '-' . $mark['state'] . '-' . $mark['value'] ] ) ) {
+			return $attrs[ 'data-dxui-' . $kind . '-' . $mark['state'] . '-' . $mark['value'] ];
 		}
-		if ( isset( $attrs[ 'data-dxai-' . $kind . '-' . $mark['state'] ] ) ) {
-			return $attrs[ 'data-dxai-' . $kind . '-' . $mark['state'] ];
+		if ( isset( $attrs[ 'data-dxui-' . $kind . '-' . $mark['state'] ] ) ) {
+			return $attrs[ 'data-dxui-' . $kind . '-' . $mark['state'] ];
 		}
 
-		return (string) ( $attrs[ 'data-dxai-' . $kind ] ?? '' );
+		return (string) ( $attrs[ 'data-dxui-' . $kind ] ?? '' );
 	}
 
 	/** @return array<int, string> */

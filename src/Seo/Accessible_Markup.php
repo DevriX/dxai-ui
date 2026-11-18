@@ -3,12 +3,12 @@
  * A design's markup as assistive technology reads it: no attribute an element may not carry, nothing reachable that is hidden, and
  * names that say what is written.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Seo;
+namespace DX_UI\Seo;
 
 /**
  * Lighthouse's accessibility audit, on the corpus (docs/PLAN-PERFECT-PAGES.md, T5.5), found in what the import wrote:
@@ -25,7 +25,7 @@ namespace DXAI_UI\Seo;
  *    needed to know, so this one is made where WordPress hands it over (6.9+: `wp_template_enhancement_output_buffer`).
  *
  * On the content of a design's page and the header and footer the DX template draws, when it is served; nothing stored changes.
- * `dxai_ui_accessible_markup` turns it off.
+ * `dx_ui_accessible_markup` turns it off.
  */
 final class Accessible_Markup {
 
@@ -233,6 +233,6 @@ final class Accessible_Markup {
 		 * @param bool $on Whether the page is a design's.
 		 * @param int  $id The page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_accessible_markup', $id > 0 && Page_Meta::is_design_page( $id ), $id );
+		return (bool) apply_filters( 'dx_ui_accessible_markup', $id > 0 && Page_Meta::is_design_page( $id ), $id );
 	}
 }

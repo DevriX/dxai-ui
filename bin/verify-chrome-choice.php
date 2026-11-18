@@ -12,12 +12,12 @@
  * The site is whatever it is (the test sites have a menu and footer widgets, a new one has none), so every state is made with filters and
  * taken away at the end; the only things made are a page, which a footer record points at, and two menus. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Chrome_Choice;
-use DXAI_UI\Structures\Navigation_Factory;
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Chrome\Chrome_Choice;
+use DX_UI\Structures\Navigation_Factory;
+use DX_UI\Theme\Theme_Compat;
 
 $fail   = 0;
 $pass   = 0;
@@ -79,13 +79,13 @@ $state = array(
 // By reference: an arrow function takes the state as it is when it is made, and the checks change it.
 $filters = array(
 	array(
-		'dxai_ui_dx_themes',
+		'dx_ui_dx_themes',
 		static function () use ( &$state ) {
 			return $state['dx'] ? array( get_stylesheet() ) : array( 'not-' . get_stylesheet() );
 		},
 	),
 	array(
-		'dxai_ui_install_chrome',
+		'dx_ui_install_chrome',
 		static function () use ( &$state ) {
 			return ! $state['classic'];
 		},
@@ -103,20 +103,20 @@ $filters = array(
 		},
 	),
 	array(
-		'pre_option_dxai_ui_footer_widgets',
+		'pre_option_dx_ui_footer_widgets',
 		static function () use ( &$state ) {
 			return $state['written'];
 		},
 	),
 	array(
-		'pre_option_dxai_ui_site_footer',
+		'pre_option_dx_ui_site_footer',
 		static function () use ( &$state ) {
 			return $state['footer'];
 		},
 	),
 	// No header is installed, whatever the site has.
 	array(
-		'pre_option_dxai_ui_site_header',
+		'pre_option_dx_ui_site_header',
 		static function () {
 			return array();
 		},
@@ -234,10 +234,10 @@ $expect( 'a block theme installs, as before (reason free)', 'install' === $r['mo
 $state['menus'] = array( 'primary-navigation' => $person );
 $expect( '…even where a menu is assigned (a block theme does not draw it)', 'free' === $auto()['reason'] );
 $reset();
-add_filter( 'dxai_ui_chrome_mode', $force = static fn() => 'keep', 99 );
+add_filter( 'dx_ui_chrome_mode', $force = static fn() => 'keep', 99 );
 $r = $auto();
-$expect( 'the filter dxai_ui_chrome_mode still has the last word', 'keep' === $r['mode'] && 'filter' === $r['reason'], $said( $r ) );
-remove_filter( 'dxai_ui_chrome_mode', $force, 99 );
+$expect( 'the filter dx_ui_chrome_mode still has the last word', 'keep' === $r['mode'] && 'filter' === $r['reason'], $said( $r ) );
+remove_filter( 'dx_ui_chrome_mode', $force, 99 );
 
 echo "\nDX Base, the theme the plugin carries\n";
 // It has no header, footer or colours of its own, so it lets a design be its brand (install_chrome true, as its functions.php says), and it
@@ -264,19 +264,19 @@ $expect( 'and a theme that is not DX Base, with the same filter, is not taken fo
 $reset();
 
 echo "\nWhat a DX theme is\n";
-remove_filter( 'dxai_ui_dx_themes', $filters[0][1], 99 );
+remove_filter( 'dx_ui_dx_themes', $filters[0][1], 99 );
 $expect( 'american-restoration is one', in_array( 'american-restoration', Theme_Compat::dx_themes(), true ) );
 $expect( 'DX Base is one: it has the same locations and the same areas', in_array( 'dx-base', Theme_Compat::dx_themes(), true ) );
-add_filter( 'dxai_ui_dx_themes', $more = static fn( $t ) => array_merge( (array) $t, array( 'another-dx-theme', '', 7 ) ), 99 );
+add_filter( 'dx_ui_dx_themes', $more = static fn( $t ) => array_merge( (array) $t, array( 'another-dx-theme', '', 7 ) ), 99 );
 $expect( 'the filter adds a theme, and a blank is dropped', in_array( 'another-dx-theme', Theme_Compat::dx_themes(), true ) && ! in_array( '', Theme_Compat::dx_themes(), true ) );
-remove_filter( 'dxai_ui_dx_themes', $more, 99 );
-add_filter( 'dxai_ui_dx_themes', $mine = static fn() => array( get_stylesheet() ), 99 );
+remove_filter( 'dx_ui_dx_themes', $more, 99 );
+add_filter( 'dx_ui_dx_themes', $mine = static fn() => array( get_stylesheet() ), 99 );
 $expect( 'the active theme is a DX theme when it is listed', Theme_Compat::is_dx_theme() );
-remove_filter( 'dxai_ui_dx_themes', $mine, 99 );
-add_filter( 'dxai_ui_dx_themes', $other = static fn() => array( 'not-' . get_stylesheet() ), 99 );
+remove_filter( 'dx_ui_dx_themes', $mine, 99 );
+add_filter( 'dx_ui_dx_themes', $other = static fn() => array( 'not-' . get_stylesheet() ), 99 );
 $expect( '…and is not when it is not', ! Theme_Compat::is_dx_theme() );
-remove_filter( 'dxai_ui_dx_themes', $other, 99 );
-add_filter( 'dxai_ui_dx_themes', $filters[0][1], 99 );
+remove_filter( 'dx_ui_dx_themes', $other, 99 );
+add_filter( 'dx_ui_dx_themes', $filters[0][1], 99 );
 if ( $was_classic ) {
 	remove_filter( $filters[1][0], $filters[1][1], 99 );
 	$expect( 'a DX theme still does not let an import adopt its colours: may_install_chrome() is false on a classic theme (the colours follow the theme)', ! Theme_Compat::may_install_chrome() );

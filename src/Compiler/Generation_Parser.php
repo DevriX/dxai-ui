@@ -2,12 +2,12 @@
 /**
  * Parse and normalize LLM generation JSON.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Generation_Parser {
 
@@ -26,12 +26,12 @@ final class Generation_Parser {
 		if ( ! is_array( $json ) ) {
 			$snippet = self::snippet( $text );
 			return new \WP_Error(
-				'dxai_ui_engine_parse',
+				'dx_ui_engine_parse',
 				sprintf(
 					/* translators: 1: JSON error, 2: response snippet */
-					__( 'The model returned invalid JSON (%1$s). %2$s', 'dxai-ui' ),
+					__( 'The model returned invalid JSON (%1$s). %2$s', 'dx-ui' ),
 					Json_Repair::last_error(),
-					$snippet !== '' ? $snippet : __( 'The response was empty or truncated.', 'dxai-ui' )
+					$snippet !== '' ? $snippet : __( 'The response was empty or truncated.', 'dx-ui' )
 				),
 				array(
 					'status' => 502,
@@ -67,7 +67,7 @@ final class Generation_Parser {
 		}
 
 		if ( ( $markup === '' || ! str_contains( $markup, '<!-- wp:' ) ) && $structures === array() ) {
-			return new \WP_Error( 'dxai_ui_engine_markup', __( 'The model did not return Gutenberg block markup.', 'dxai-ui' ), array( 'status' => 502 ) );
+			return new \WP_Error( 'dx_ui_engine_markup', __( 'The model did not return Gutenberg block markup.', 'dx-ui' ), array( 'status' => 502 ) );
 		}
 
 		$rewriter   = new Dynamic_Rewriter();
@@ -91,7 +91,7 @@ final class Generation_Parser {
 		}
 
 		return array(
-			'block_title'      => $title !== '' ? $title : __( 'DX UI Pattern', 'dxai-ui' ),
+			'block_title'      => $title !== '' ? $title : __( 'DX UI Pattern', 'dx-ui' ),
 			'gutenberg_markup' => is_string( $valid ) ? $valid : $markup,
 			'structures'       => $structures,
 			'custom_css'       => $css,

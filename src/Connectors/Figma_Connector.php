@@ -2,24 +2,24 @@
 /**
  * Figma REST + ZIP connector.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Http\Remote_Client;
-use DXAI_UI\Media\Asset_Harvester;
-use DXAI_UI\Media\Sideloader;
-use DXAI_UI\Settings\Options;
+use DX_UI\Http\Remote_Client;
+use DX_UI\Media\Asset_Harvester;
+use DX_UI\Media\Sideloader;
+use DX_UI\Settings\Options;
 
 final class Figma_Connector {
 
 	public function test_token( string $token = '' ): bool|\WP_Error {
 		$token = $token !== '' ? $token : Options::get_secret( 'figma_api_token' );
 		if ( $token === '' ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Figma token is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Figma token is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$response = Remote_Client::request(
@@ -35,7 +35,7 @@ final class Figma_Connector {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Figma rejected the access token.', 'dxai-ui' ), array( 'status' => 403 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Figma rejected the access token.', 'dx-ui' ), array( 'status' => 403 ) );
 		}
 
 		return true;
@@ -47,7 +47,7 @@ final class Figma_Connector {
 	public static function parse_url( string $url ): array|\WP_Error {
 		$url = esc_url_raw( trim( $url ) );
 		if ( $url === '' ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'A Figma file URL is required.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'A Figma file URL is required.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
@@ -64,7 +64,7 @@ final class Figma_Connector {
 		}
 
 		if ( $file_key === '' ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Could not parse a Figma file key from the URL.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Could not parse a Figma file key from the URL.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		parse_str( $query, $params );
@@ -87,7 +87,7 @@ final class Figma_Connector {
 	public function fetch_from_api( string $url, string $file_key = '', string $node_id = '' ): Source_Document|\WP_Error {
 		$token = Options::get_secret( 'figma_api_token' );
 		if ( $token === '' ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Figma token is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Figma token is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		if ( $file_key === '' || $node_id === '' ) {
@@ -121,10 +121,10 @@ final class Figma_Connector {
 			$retry = $this->retry_after_seconds( is_array( $response['headers'] ) ? $response['headers'] : array() );
 
 			return new \WP_Error(
-				'dxai_ui_figma',
+				'dx_ui_figma',
 				sprintf(
 					/* translators: %d: seconds to wait */
-					__( 'Figma rate limit reached. Retry in %d seconds.', 'dxai-ui' ),
+					__( 'Figma rate limit reached. Retry in %d seconds.', 'dx-ui' ),
 					$retry
 				),
 				array(
@@ -135,7 +135,7 @@ final class Figma_Connector {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Figma file request failed. Check the token, file key, and sharing.', 'dxai-ui' ), array( 'status' => $response['code'] ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Figma file request failed. Check the token, file key, and sharing.', 'dx-ui' ), array( 'status' => $response['code'] ) );
 		}
 
 		$decoded = Remote_Client::decode_body( $response['body'] );
@@ -145,7 +145,7 @@ final class Figma_Connector {
 
 		$node_payload = $decoded['nodes'][ $node_id ] ?? null;
 		if ( ! is_array( $node_payload ) ) {
-			return new \WP_Error( 'dxai_ui_figma', __( 'Figma returned no node for that ID.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_figma', __( 'Figma returned no node for that ID.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		$pruned  = $this->prune_node( $node_payload['document'] ?? array() );

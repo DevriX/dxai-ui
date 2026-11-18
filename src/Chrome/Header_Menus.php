@@ -2,14 +2,14 @@
 /**
  * The header's menus: locations, the design's items, the Site Logo.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Structures\Navigation_Factory;
+use DX_UI\Structures\Navigation_Factory;
 
 /**
  * Where a converted header gets its content: Appearance > Menus, the way
@@ -60,9 +60,9 @@ final class Header_Menus {
 	 */
 	public static function locations(): array {
 		return array(
-			Header_Template::NAV     => __( 'Primary Navigation', 'dxai-ui' ),
-			Header_Template::TOP     => __( 'Header top bar', 'dxai-ui' ),
-			Header_Template::ACTIONS => __( 'Header buttons', 'dxai-ui' ),
+			Header_Template::NAV     => __( 'Primary Navigation', 'dx-ui' ),
+			Header_Template::TOP     => __( 'Header top bar', 'dx-ui' ),
+			Header_Template::ACTIONS => __( 'Header buttons', 'dx-ui' ),
 		);
 	}
 
@@ -139,7 +139,7 @@ final class Header_Menus {
 			return array(
 				'block_markup' => '',
 				'error'        => 'no_header',
-				'message'      => __( 'The design has no header.', 'dxai-ui' ),
+				'message'      => __( 'The design has no header.', 'dx-ui' ),
 			);
 		}
 
@@ -158,7 +158,7 @@ final class Header_Menus {
 		}
 
 		$title   = trim( wp_strip_all_tags( (string) ( $context['title'] ?? '' ) ) );
-		$title   = $title !== '' ? $title : __( 'Site', 'dxai-ui' );
+		$title   = $title !== '' ? $title : __( 'Site', 'dx-ui' );
 		$scope   = (int) ( $context['scope_id'] ?? ( $context['page_id'] ?? 0 ) );
 		$archive = (string) ( $context['archive'] ?? '' );
 		/*
@@ -384,13 +384,13 @@ final class Header_Menus {
 	 */
 	private static function unreadable_message( string $reason ): string {
 		if ( 'no_navigation' === $reason ) {
-			return __( 'The header has no navigation menu to fill (none, a single link, or a breadcrumb trail), so it was kept as the design drew it.', 'dxai-ui' );
+			return __( 'The header has no navigation menu to fill (none, a single link, or a breadcrumb trail), so it was kept as the design drew it.', 'dx-ui' );
 		}
 		if ( 'nav_unread' === $reason ) {
-			return __( 'Some of the header\'s navigation links could not be matched to menu items, so it was kept as the design drew it.', 'dxai-ui' );
+			return __( 'Some of the header\'s navigation links could not be matched to menu items, so it was kept as the design drew it.', 'dx-ui' );
 		}
 
-		return __( 'The header could not be rebuilt from menus exactly as the design drew it, so it was kept as the design drew it.', 'dxai-ui' );
+		return __( 'The header could not be rebuilt from menus exactly as the design drew it, so it was kept as the design drew it.', 'dx-ui' );
 	}
 
 	/**
@@ -478,7 +478,7 @@ final class Header_Menus {
 	 * (site from menu): install() again from the stored header with the
 	 * crawl's page map, so each item whose design path became a page links
 	 * to that page — as Navigation_Factory::save_tree() did for the old
-	 * `dxai-primary` menu, which it no longer writes once a header owns it.
+	 * `dxui-primary` menu, which it no longer writes once a header owns it.
 	 * Everything a person changed on an item is kept, as on any re-import.
 	 *
 	 * The design whose header is rebound is the crawl's own ($scope): a
@@ -723,7 +723,7 @@ final class Header_Menus {
 	 * The Site Logo to draw, or [] for the design's own.
 	 *
 	 * The block editor previews a logo before it is saved by asking the
-	 * block renderer with `dxai_logo`; honoured only in that REST request and
+	 * block renderer with `dxui_logo`; honoured only in that REST request and
 	 * only for someone who may change the logo.
 	 *
 	 * @return array{id?:int, url?:string, alt?:string}
@@ -731,13 +731,13 @@ final class Header_Menus {
 	public static function logo(): array {
 		$id = (int) get_theme_mod( 'custom_logo' );
 		// The primary logo of Theme Global Settings, when the site has one: the theme draws it before the Site Logo (its site-branding part).
-		$set = \DXAI_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' );
+		$set = \DX_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' );
 		if ( $set > 0 ) {
 			$id = $set;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a read-only preview parameter, capability-checked.
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST && isset( $_GET['dxai_logo'] ) && current_user_can( 'edit_theme_options' ) ) {
-			$id = absint( wp_unslash( $_GET['dxai_logo'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST && isset( $_GET['dxui_logo'] ) && current_user_can( 'edit_theme_options' ) ) {
+			$id = absint( wp_unslash( $_GET['dxui_logo'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
 		if ( $id < 1 || ! wp_attachment_is_image( $id ) ) {
 			return array();
@@ -786,7 +786,7 @@ final class Header_Menus {
 		// import does not give the whole site its logo.
 		$may = ! array_key_exists( 'set_site_logo', $context ) || ! empty( $context['set_site_logo'] );
 		// A site with a logo already — the Site Logo, or the primary logo of Theme Global Settings — keeps it.
-		if ( $may && $id > 0 && wp_attachment_is_image( $id ) && ! get_theme_mod( 'custom_logo' ) && \DXAI_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' ) < 1 ) {
+		if ( $may && $id > 0 && wp_attachment_is_image( $id ) && ! get_theme_mod( 'custom_logo' ) && \DX_UI\Theme\Theme_Options::image_id( 'logos', 'primary_logo' ) < 1 ) {
 			/*
 			 * Both stores: `site_logo` is what block themes and the Site
 			 * Logo block read, the theme mod what a classic theme's

@@ -8,14 +8,14 @@
  * Makes three attachments (a picture, a second one, an SVG) and removes them again. Where the active theme does not register dx/picture a
  * stand-in is registered for the run. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Blocks\Native\Picture;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Variants;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Blocks\Native\Picture;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Variants;
 
 $fail   = 0;
 $pass   = 0;
@@ -54,15 +54,15 @@ if ( ! $reg->is_registered( 'dx/picture' ) ) {
 
 // Attachments to point at.
 $dir = wp_upload_dir();
-wp_mkdir_p( $dir['basedir'] . '/dxai-picture-test' );
+wp_mkdir_p( $dir['basedir'] . '/dxui-picture-test' );
 $png = base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="10"/></svg>';
 $made = array();
 $mk   = static function ( string $name, string $body, string $mime, array $meta ) use ( $dir, &$made ): int {
-	$path = $dir['basedir'] . '/dxai-picture-test/' . $name;
+	$path = $dir['basedir'] . '/dxui-picture-test/' . $name;
 	file_put_contents( $path, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_put_contents_file_put_contents
 	$id = wp_insert_attachment( array( 'post_mime_type' => $mime, 'post_title' => $name, 'post_status' => 'inherit' ), $path );
-	wp_update_attachment_metadata( (int) $id, $meta + array( 'file' => 'dxai-picture-test/' . $name ) );
+	wp_update_attachment_metadata( (int) $id, $meta + array( 'file' => 'dxui-picture-test/' . $name ) );
 	$made[] = (int) $id;
 
 	return (int) $id;
@@ -80,7 +80,7 @@ $fin     = static function () use ( &$made, $stand_in, $dir, &$home_id ): void {
 	foreach ( $made as $id ) {
 		wp_delete_attachment( (int) $id, true );
 	}
-	@rmdir( $dir['basedir'] . '/dxai-picture-test' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	@rmdir( $dir['basedir'] . '/dxui-picture-test' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 	if ( $stand_in ) {
 		unregister_block_type( 'dx/picture' );
 	}
@@ -95,7 +95,7 @@ $own = static function ( array $attrs, string $class_in_html = '' ): string {
 		}
 	}
 
-	return '<!-- wp:dxai-ui/image ' . wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES ) . ' -->' . $img . '/><!-- /wp:dxai-ui/image -->';
+	return '<!-- wp:dx-ui/image ' . wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES ) . ' -->' . $img . '/><!-- /wp:dx-ui/image -->';
 };
 $wrap     = static fn( string $inner, string $class = '' ): string => '<!-- wp:group {"className":"' . $class . '"} --><div class="wp-block-group ' . $class . '">' . $inner . '</div><!-- /wp:group -->';
 // A design's Home: the converters read its stylesheet (none here: nothing addresses a picture by position).
@@ -144,18 +144,18 @@ foreach ( Native_Blocks::converters() as $c ) {
 }
 $ids = array_map( static fn( $c ) => $c->id(), Native_Blocks::converters() );
 $expect( 'on a site that has the block, pictures are one of the converters, after the core Image', $conv instanceof Picture && array_search( 'picture', $ids, true ) > array_search( 'image', $ids, true ), implode( ',', $ids ) );
-add_filter( 'dxai_ui_use_dx_picture', '__return_false' );
+add_filter( 'dx_ui_use_dx_picture', '__return_false' );
 $expect( 'and one that can be turned off', ! in_array( 'picture', array_map( static fn( $c ) => $c->id(), Native_Blocks::converters() ), true ) );
-remove_all_filters( 'dxai_ui_use_dx_picture' );
+remove_all_filters( 'dx_ui_use_dx_picture' );
 
 echo "\nThe plugin's own image\n";
 $attrs   = array( 'url' => $url( $a ), 'alt' => 'The team at work', 'className' => 'w-full rounded-xl object-cover', 'width' => '1200', 'height' => '630', 'loading' => 'lazy', 'decoding' => 'async' );
 $content = $wrap( $own( $attrs ) );
 $out     = $convert( $content );
 $p       = $first_attrs( $out['content'], 'dx/picture' );
-$expect( 'becomes DX Picture, self-closing, as the team writes it', str_contains( $out['content'], '<!-- wp:dx/picture {' ) && str_contains( $out['content'], '} /-->' ) && ! str_contains( $out['content'], 'wp:dxai-ui/image' ) && ! str_contains( $out['content'], 'wp:image' ), $out['content'] );
+$expect( 'becomes DX Picture, self-closing, as the team writes it', str_contains( $out['content'], '<!-- wp:dx/picture {' ) && str_contains( $out['content'], '} /-->' ) && ! str_contains( $out['content'], 'wp:dx-ui/image' ) && ! str_contains( $out['content'], 'wp:image' ), $out['content'] );
 $expect( 'with the attachment, its address, the alt and the size the design gave', ( $p['imageId'] ?? 0 ) === $a && ( $p['imageUrl'] ?? '' ) === $url( $a ) && ( $p['imageAlt'] ?? '' ) === 'The team at work' && ( $p['imageWidth'] ?? 0 ) === 1200 && ( $p['imageHeight'] ?? 0 ) === 630, json_encode( $p ) );
-$expect( 'the design\'s classes on it, marked so the rules written for the image reach the image inside', ( $p['className'] ?? '' ) === 'dxai-part-img w-full rounded-xl object-cover', (string) ( $p['className'] ?? '' ) );
+$expect( 'the design\'s classes on it, marked so the rules written for the image reach the image inside', ( $p['className'] ?? '' ) === 'dxui-part-img w-full rounded-xl object-cover', (string) ( $p['className'] ?? '' ) );
 $expect( 'both screens get the uncropped size: the block\'s default for a phone is a 4:5 crop that would change the picture\'s shape', ( $p['mobileSize'] ?? '' ) === 'dx_pic_desktop_hero' && ! isset( $p['desktopSize'] ) );
 $expect( 'lazy loading is what WordPress writes anyway: no priority', ! isset( $p['priority'] ) );
 $expect( 'what the page holds is as the serializer writes it', trim( serialize_blocks( parse_blocks( $out['content'] ) ) ) === trim( $out['content'] ) );
@@ -170,11 +170,11 @@ $ps    = $first_attrs( $sized['content'], 'dx/picture' );
 $expect( 'a srcset and sizes are WordPress\'s to write: they go, the size comes from the file', ( $ps['imageId'] ?? 0 ) === $b && ( $ps['imageWidth'] ?? 0 ) === 800 && ( $ps['imageHeight'] ?? 0 ) === 800 );
 
 echo "\nThe core Image the plugin made\n";
-$core    = '<!-- wp:image {"id":' . $a . ',"sizeSlug":"full","linkDestination":"none","className":"dxai-part-img card-img"} --><figure class="wp-block-image size-full dxai-part-img card-img"><img src="' . esc_url( $url( $a ) ) . '" alt="A card" class="wp-image-' . $a . '"/></figure><!-- /wp:image -->';
+$core    = '<!-- wp:image {"id":' . $a . ',"sizeSlug":"full","linkDestination":"none","className":"dxui-part-img card-img"} --><figure class="wp-block-image size-full dxui-part-img card-img"><img src="' . esc_url( $url( $a ) ) . '" alt="A card" class="wp-image-' . $a . '"/></figure><!-- /wp:image -->';
 $cc      = $convert( $wrap( $core ) );
 $pc      = $first_attrs( $cc['content'], 'dx/picture' );
-$expect( 'is DX Picture too (a page imported before, converted again)', ( $pc['imageId'] ?? 0 ) === $a && ( $pc['imageAlt'] ?? '' ) === 'A card' && ( $pc['className'] ?? '' ) === 'dxai-part-img card-img' && ! str_contains( $cc['content'], 'wp:image' ), json_encode( $pc ) );
-$person  = str_replace( 'dxai-part-img ', '', str_replace( '"className":"dxai-part-img card-img"', '"className":"card-img"', $core ) );
+$expect( 'is DX Picture too (a page imported before, converted again)', ( $pc['imageId'] ?? 0 ) === $a && ( $pc['imageAlt'] ?? '' ) === 'A card' && ( $pc['className'] ?? '' ) === 'dxui-part-img card-img' && ! str_contains( $cc['content'], 'wp:image' ), json_encode( $pc ) );
+$person  = str_replace( 'dxui-part-img ', '', str_replace( '"className":"dxui-part-img card-img"', '"className":"card-img"', $core ) );
 $expect( 'an image a person put in (not the plugin\'s: no marker) is not touched', ! str_contains( $convert( $wrap( $person ) )['content'], 'dx/picture' ) );
 $caption = str_replace( '</figure>', '<figcaption class="wp-element-caption">Words</figcaption></figure>', $core );
 $expect( 'a core Image with a caption is left as it is', ! str_contains( $convert( $wrap( $caption ) )['content'], 'dx/picture' ) );
@@ -188,7 +188,7 @@ $ext = $convert( $wrap( $own( array( 'url' => 'https://elsewhere.test/pic.jpg', 
 $expect( 'a picture that is not in the media library is core\'s Image: the block prints nothing without an attachment', ! str_contains( $ext['content'], 'dx/picture' ) && str_contains( $ext['content'], 'wp:image' ) );
 $sv = $convert( $wrap( $own( array( 'url' => $url( $s ), 'alt' => 'Icon', 'className' => 'icon' ) ) ) );
 $expect( 'an SVG is not served in sizes: it stays an image', ! str_contains( $sv['content'], 'dx/picture' ) );
-$css = $convert( $wrap( $own( array( 'url' => $url( $a ), 'alt' => 'x', 'className' => 'a', 'dxaiCss' => 'border-radius:12px' ) ) ) );
+$css = $convert( $wrap( $own( array( 'url' => $url( $a ), 'alt' => 'x', 'className' => 'a', 'dxuiCss' => 'border-radius:12px' ) ) ) );
 $expect( 'a picture with CSS of its own (a dxs- rule the server-rendered block cannot carry) stays an image', ! str_contains( $css['content'], 'dx/picture' ) );
 $sp = $convert( $wrap( $own( array( 'url' => $url( $a ), 'alt' => 'x' ) ), 'space-y-4 stack' ) );
 $expect( 'a picture in a parent that spaces its children by position stays an image', ! str_contains( $sp['content'], 'dx/picture' ) );
@@ -205,10 +205,10 @@ $expect( 'the same image is core\'s Image, with its attachment', str_contains( $
 $reg->register( $type );
 
 echo "\nThe sizes\n";
-add_filter( 'dxai_ui_picture_sizes', static fn( $sizes ) => array( 'desktop' => 'large', 'mobile' => 'dx_pic_mobile_4x5' ) );
+add_filter( 'dx_ui_picture_sizes', static fn( $sizes ) => array( 'desktop' => 'large', 'mobile' => 'dx_pic_mobile_4x5' ) );
 $sz = $first_attrs( $convert( $content )['content'], 'dx/picture' );
 $expect( 'are the site\'s to choose: another desktop size is written, the block\'s own default for a phone is not', ( $sz['desktopSize'] ?? '' ) === 'large' && ! isset( $sz['mobileSize'] ), json_encode( $sz ) );
-remove_all_filters( 'dxai_ui_picture_sizes' );
+remove_all_filters( 'dx_ui_picture_sizes' );
 
 echo "\nThe team's tools\n";
 $block = parse_blocks( '<!-- wp:group {"tagName":"section","className":"hero"} --><section class="wp-block-group hero"><!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Title</h1><!-- /wp:heading --><!-- wp:dx/picture {"imageId":' . $a . ',"imageUrl":"' . $url( $a ) . '","imageAlt":"Old","imageWidth":1200,"imageHeight":630,"mobileImageId":' . $b . '} /--></section><!-- /wp:group -->' )[0];
@@ -226,16 +226,16 @@ $pool = Section_Variants::pool( array( $none ) );
 $expect( 'the Home\'s pictures a page may show instead are found in DX Pictures too (a photograph, not a mark)', count( $pool ) === 1 && $pool[0]['id'] === $a && $pool[0]['url'] === $url( $a ), json_encode( $pool ) );
 
 echo "\nThe rules for the figure\n";
-$m = new ReflectionMethod( \DXAI_UI\Blocks\Style_Rules::class, 'part_base_css' );
+$m = new ReflectionMethod( \DX_UI\Blocks\Style_Rules::class, 'part_base_css' );
 $m->setAccessible( true );
-$base = (string) $m->invoke( null, array( 'dxai-part-img' => true ) );
-$expect( 'the figure and the picture of a marked DX Picture take no box, as a marked Image\'s figure does', str_contains( $base, '.wp-block-dx-picture.dxai-part-img{display:contents !important}' ) || str_contains( $base, '.wp-block-dx-picture.dxai-part-img{display:contents' ) && str_contains( $base, '.dx-picture__picture{display:contents}' ), $base );
+$base = (string) $m->invoke( null, array( 'dxui-part-img' => true ) );
+$expect( 'the figure and the picture of a marked DX Picture take no box, as a marked Image\'s figure does', str_contains( $base, '.wp-block-dx-picture.dxui-part-img{display:contents !important}' ) || str_contains( $base, '.wp-block-dx-picture.dxui-part-img{display:contents' ) && str_contains( $base, '.dx-picture__picture{display:contents}' ), $base );
 $expect( 'and the image in it keeps the block display the theme gives it (what the design\'s own reset gives its images; an inline image has a gap under it that the design\'s did not: Clean Joe\'s footer logo grew 4px), on the design\'s baseline', ! str_contains( $base, '.dx-picture__img{display:inline}' ) && str_contains( $base, 'vertical-align:baseline' ) );
 $expect( 'the picture\'s <source> takes no box: in a flex row or a grid the figure and the picture take none, so a source would be an empty item of its own and double the gap (found on H2O Away\'s badges)', str_contains( $base, '.dx-picture__picture source{display:none}' ) );
 $expect( 'a page without a marked picture gets none of this', (string) $m->invoke( null, array() ) === '' );
 
 echo "\nExport and import\n";
-$expect( 'a package carries the attachments of a DX Picture and renumbers them on the other site, like those of core\'s Image', in_array( 'imageId', \DXAI_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) && in_array( 'mobileImageId', \DXAI_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) );
+$expect( 'a package carries the attachments of a DX Picture and renumbers them on the other site, like those of core\'s Image', in_array( 'imageId', \DX_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) && in_array( 'mobileImageId', \DX_UI\Transfer\Page_Export::media_id_attrs()['dx/picture'] ?? array(), true ) );
 
 $fin();
 

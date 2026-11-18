@@ -1,20 +1,20 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui copies.
+ * WP-CLI: wp dx-ui copies.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * "Make the rest from this page" (Page_Copies).
  *
- *   wp dxai-ui copies plan <page-id>                                   its sections, and the pages it would be made again for
- *   wp dxai-ui copies make <page-id> [--targets=<ids>] [--words=auto|outline]
- *   wp dxai-ui copies give-back <page-id>                              a copy as it was before
+ *   wp dx-ui copies plan <page-id>                                   its sections, and the pages it would be made again for
+ *   wp dx-ui copies make <page-id> [--targets=<ids>] [--words=auto|outline]
+ *   wp dx-ui copies give-back <page-id>                              a copy as it was before
  *
  * Without --targets it makes the pages `plan` marks as chosen (the empty ones, the copies by hand, the ones made before,
  * the ones the menu names). --targets takes page ids, and 0:<title> for a new page.
@@ -23,7 +23,7 @@ final class Copies_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui copies',
+			'dx-ui copies',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'Make the other services (or cities) from one finished page: its build and look, the site\'s shared sections word for word, the page\'s own words written for each.',

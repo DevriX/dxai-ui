@@ -2,16 +2,16 @@
 /**
  * Fetch a live page and extract main content + image URLs.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Http\Browser_Headers;
-use DXAI_UI\Media\Url_Guard;
-use DXAI_UI\Pages\Html_Main;
+use DX_UI\Http\Browser_Headers;
+use DX_UI\Media\Url_Guard;
+use DX_UI\Pages\Html_Main;
 
 final class Live_Page_Fetcher {
 
@@ -47,7 +47,7 @@ final class Live_Page_Fetcher {
 	public function fetch( string $url, int $timeout = 45, string $allowed_host = '' ): array|\WP_Error {
 		$url = esc_url_raw( $url );
 		if ( $url === '' ) {
-			return new \WP_Error( 'dxai_ui_live', __( 'Empty URL.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_live', __( 'Empty URL.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$pin            = $allowed_host === '' ? '' : self::host( str_contains( $allowed_host, '://' ) ? $allowed_host : 'https://' . $allowed_host );
 		$missing_location = false;
@@ -88,10 +88,10 @@ final class Live_Page_Fetcher {
 				$retry = (int) wp_remote_retrieve_header( $response, 'retry-after' );
 
 				return new \WP_Error(
-					'dxai_ui_live_rate_limited',
+					'dx_ui_live_rate_limited',
 					sprintf(
 						/* translators: %s: URL */
-						__( '%s asked to slow down (HTTP 429).', 'dxai-ui' ),
+						__( '%s asked to slow down (HTTP 429).', 'dx-ui' ),
 						$url
 					),
 					array(
@@ -103,10 +103,10 @@ final class Live_Page_Fetcher {
 			// A bot-protection page, however it is served: the crawl stops (Site_From_Menu), it is never worked around.
 			if ( ( $code === 403 || $code === 503 ) && ( (string) wp_remote_retrieve_header( $response, 'cf-mitigated' ) !== '' || Html_Main::is_challenge( $body ) ) ) {
 				return new \WP_Error(
-					'dxai_ui_live_blocked',
+					'dx_ui_live_blocked',
 					sprintf(
 						/* translators: %s: URL */
-						__( 'Blocked by bot protection on %s — the page cannot be scraped from the server.', 'dxai-ui' ),
+						__( 'Blocked by bot protection on %s — the page cannot be scraped from the server.', 'dx-ui' ),
 						$url
 					),
 					array( 'status' => 502 )
@@ -114,10 +114,10 @@ final class Live_Page_Fetcher {
 			}
 			if ( $code < 200 || $code >= 300 || $body === '' ) {
 				return new \WP_Error(
-					'dxai_ui_live',
+					'dx_ui_live',
 					sprintf(
 						/* translators: 1: HTTP status, 2: URL */
-						__( 'Could not fetch %2$s (HTTP %1$d).', 'dxai-ui' ),
+						__( 'Could not fetch %2$s (HTTP %1$d).', 'dx-ui' ),
 						$code,
 						$url
 					),
@@ -127,10 +127,10 @@ final class Live_Page_Fetcher {
 
 			if ( Html_Main::is_challenge( $body ) ) {
 				return new \WP_Error(
-					'dxai_ui_live_blocked',
+					'dx_ui_live_blocked',
 					sprintf(
 						/* translators: %s: URL */
-						__( 'Blocked by bot protection on %s — the page cannot be scraped from the server.', 'dxai-ui' ),
+						__( 'Blocked by bot protection on %s — the page cannot be scraped from the server.', 'dx-ui' ),
 						$url
 					),
 					array( 'status' => 502 )
@@ -139,10 +139,10 @@ final class Live_Page_Fetcher {
 
 			if ( Html_Main::is_spa_shell( $body ) ) {
 				return new \WP_Error(
-					'dxai_ui_live_spa',
+					'dx_ui_live_spa',
 					sprintf(
 						/* translators: %s: URL */
-						__( 'Client-rendered page at %s has no usable server HTML — live scrape needs server-rendered content.', 'dxai-ui' ),
+						__( 'Client-rendered page at %s has no usable server HTML — live scrape needs server-rendered content.', 'dx-ui' ),
 						$url
 					),
 					array( 'status' => 502 )
@@ -158,10 +158,10 @@ final class Live_Page_Fetcher {
 
 		if ( $missing_location ) {
 			return new \WP_Error(
-				'dxai_ui_live',
+				'dx_ui_live',
 				sprintf(
 					/* translators: %s: URL */
-					__( 'Redirect from %s had no Location header.', 'dxai-ui' ),
+					__( 'Redirect from %s had no Location header.', 'dx-ui' ),
 					$url
 				),
 				array( 'status' => 502 )
@@ -169,10 +169,10 @@ final class Live_Page_Fetcher {
 		}
 
 		return new \WP_Error(
-			'dxai_ui_live',
+			'dx_ui_live',
 			sprintf(
 				/* translators: %s: URL */
-				__( 'Gave up on %s: too many redirects.', 'dxai-ui' ),
+				__( 'Gave up on %s: too many redirects.', 'dx-ui' ),
 				$url
 			),
 			array( 'status' => 502 )
@@ -185,10 +185,10 @@ final class Live_Page_Fetcher {
 	private static function refuse( string $url, string $pin ): ?\WP_Error {
 		if ( ! Url_Guard::is_safe_http( $url ) ) {
 			return new \WP_Error(
-				'dxai_ui_live_unsafe',
+				'dx_ui_live_unsafe',
 				sprintf(
 					/* translators: %s: URL */
-					__( 'Refused to fetch %s: not a public web address.', 'dxai-ui' ),
+					__( 'Refused to fetch %s: not a public web address.', 'dx-ui' ),
 					$url
 				),
 				array( 'status' => 400 )
@@ -196,10 +196,10 @@ final class Live_Page_Fetcher {
 		}
 		if ( $pin !== '' && self::host( $url ) !== $pin ) {
 			return new \WP_Error(
-				'dxai_ui_live_offsite',
+				'dx_ui_live_offsite',
 				sprintf(
 					/* translators: 1: URL, 2: the design's own host */
-					__( 'Refused to fetch %1$s: it is not on %2$s.', 'dxai-ui' ),
+					__( 'Refused to fetch %1$s: it is not on %2$s.', 'dx-ui' ),
 					$url,
 					$pin
 				),

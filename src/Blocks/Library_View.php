@@ -2,15 +2,15 @@
 /**
  * The styles and the script of the team's own sections, on the pages that do not carry the theme's.
  *
- * @package DXAI_UI\Blocks
+ * @package DX_UI\Blocks
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Compat;
 
 /**
  * A section of the library (Pages\Block_Library) is the team's block, made for a page of their theme: the theme's global styles lay it out
@@ -18,7 +18,7 @@ use DXAI_UI\Theme\Theme_Compat;
  * them), and WordPress prints the CSS a block was given in its own settings. A converted page — the plugin's blank canvas, where the page
  * of a design is made — has none of that: its theme is detached from it (Theme_Compat) and WordPress's global styles are not on it.
  *
- * This brings those, for the library's sections and for nothing else: every rule is inside `.dxai-lib`, the class every section of the
+ * This brings those, for the library's sections and for nothing else: every rule is inside `.dxui-lib`, the class every section of the
  * library has, and a page that has no section of it prints none of it. So the page of a design (its Home above all) is as it was. It is
  * the same thing the YouTube facade does (Youtube_Facade_View): the plugin's own copy, where the theme's is not.
  *
@@ -31,10 +31,10 @@ use DXAI_UI\Theme\Theme_Compat;
  */
 final class Library_View {
 
-	public const HANDLE = 'dxai-ui-block-library';
+	public const HANDLE = 'dx-ui-block-library';
 
 	/** The class every section of the library has (bin/build-block-library.php puts it on the section). */
-	public const MARK = 'dxai-lib';
+	public const MARK = 'dxui-lib';
 
 	/** @var array<string, true> The custom CSS rules already added to the stylesheet. */
 	private static array $added = array();
@@ -48,13 +48,13 @@ final class Library_View {
 	}
 
 	public function register_assets(): void {
-		wp_register_style( self::HANDLE, DXAI_UI_URL . 'assets/css/block-library.css', array(), DXAI_UI_VERSION );
-		wp_register_script( self::HANDLE, DXAI_UI_URL . 'assets/js/block-library.js', array(), DXAI_UI_VERSION, true );
+		wp_register_style( self::HANDLE, DX_UI_URL . 'assets/css/block-library.css', array(), DX_UI_VERSION );
+		wp_register_script( self::HANDLE, DX_UI_URL . 'assets/js/block-library.js', array(), DX_UI_VERSION, true );
 	}
 
 	/**
 	 * Whether the theme draws the section on this page: it brings the global styles and its own FAQ (Capabilities::brings(): the theme says
-	 * so with the `dxai-block-library` support, or its adapter knows it does). Not on a converted page, whatever the theme (it is detached
+	 * so with the `dxui-block-library` support, or its adapter knows it does). Not on a converted page, whatever the theme (it is detached
 	 * from it).
 	 */
 	public static function theme_handles(): bool {
@@ -66,7 +66,7 @@ final class Library_View {
 		 *
 		 * @param bool $can The theme is known to, and the page is not a converted one.
 		 */
-		return (bool) apply_filters( 'dxai_ui_theme_has_block_library', $can );
+		return (bool) apply_filters( 'dx_ui_theme_has_block_library', $can );
 	}
 
 	/** Whether markup holds a section of the library (its class, not a longer one that starts with it). */
@@ -112,7 +112,7 @@ final class Library_View {
 			// The theme's own block gap, for the section on a converted page (the canvas sets it to nothing for a design).
 			$gap = function_exists( 'wp_get_global_styles' ) ? wp_get_global_styles( array( 'spacing', 'blockGap' ) ) : '';
 			if ( is_string( $gap ) && preg_match( '/^[\d.]+(?:px|rem|em|%|vw|vh)$/', trim( $gap ) ) === 1 ) {
-				wp_add_inline_style( self::HANDLE, 'body.dxai-ui-blank .dxai-ui .dxai-lib{--wp--style--block-gap:' . trim( $gap ) . ';}' );
+				wp_add_inline_style( self::HANDLE, 'body.dx-ui-blank .dx-ui .dxui-lib{--wp--style--block-gap:' . trim( $gap ) . ';}' );
 			}
 		}
 		if ( str_contains( $markup, 'faq-answer' ) ) {
@@ -122,13 +122,13 @@ final class Library_View {
 		// converted page, which does not carry the theme's stylesheet, their rules come from it for the elements inside the design's
 		// scope, as the theme's FAQ does on a page of the theme that holds copied sections (Theme_Components).
 		if ( Theme_Compat::is_converted_page() && is_singular() ) {
-			$src = \DXAI_UI\Structures\Design_Attach::source_for( (int) get_the_ID() );
-			$css = \DXAI_UI\Support\Upload_Paths::for_meta( $src > 0 ? $src : (int) get_the_ID(), '_dxai_ui_css_url' );
+			$src = \DX_UI\Structures\Design_Attach::source_for( (int) get_the_ID() );
+			$css = \DX_UI\Support\Upload_Paths::for_meta( $src > 0 ? $src : (int) get_the_ID(), '_dx_ui_css_url' );
 			// The FAQ's accordion is this stylesheet's and this script's here (the theme's opens it another way): its classes are not asked of the theme.
 			$not_faq = static fn( array $classes ): array => array_values( array_filter( $classes, static fn( $c ) => ! str_starts_with( (string) $c, 'faq-' ) ) );
-			add_filter( 'dxai_ui_theme_components', $not_faq );
-			\DXAI_UI\Theme\Theme_Components::enqueue( $markup, (string) ( $css['path'] ?? '' ) );
-			remove_filter( 'dxai_ui_theme_components', $not_faq );
+			add_filter( 'dx_ui_theme_components', $not_faq );
+			\DX_UI\Theme\Theme_Components::enqueue( $markup, (string) ( $css['path'] ?? '' ) );
+			remove_filter( 'dx_ui_theme_components', $not_faq );
 		}
 	}
 
@@ -154,7 +154,7 @@ final class Library_View {
 				}
 				// Its own handle, printed after the content (the page's stylesheet is in the head, before there was a section to ask).
 				if ( ! wp_style_is( self::HANDLE . '-custom', 'registered' ) ) {
-					wp_register_style( self::HANDLE . '-custom', false, array(), DXAI_UI_VERSION );
+					wp_register_style( self::HANDLE . '-custom', false, array(), DX_UI_VERSION );
 					wp_enqueue_style( self::HANDLE . '-custom' );
 				}
 				self::$added[ md5( $rule ) ] = true;

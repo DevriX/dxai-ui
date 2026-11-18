@@ -1,22 +1,22 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui template-fonts.
+ * WP-CLI: wp dx-ui template-fonts.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Theme\Template_Fonts;
+use DX_UI\Theme\Template_Fonts;
 
 /**
  * The fonts of the site's template (Template_Fonts) from the command line:
  *
- *   wp dxai-ui template-fonts status
- *   wp dxai-ui template-fonts install --design=<home-id>   host the design's fonts here and set them as the site's
- *   wp dxai-ui template-fonts remove                       stop using them and remove what was fetched: the theme's own choice is back
+ *   wp dx-ui template-fonts status
+ *   wp dx-ui template-fonts install --design=<home-id>   host the design's fonts here and set them as the site's
+ *   wp dx-ui template-fonts remove                       stop using them and remove what was fetched: the theme's own choice is back
  *
  * An import that installs a design as the site's template does the same by itself (when the theme manages the site's fonts and nobody
  * chose them in the theme's settings).
@@ -25,7 +25,7 @@ final class Template_Fonts_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui template-fonts',
+			'dx-ui template-fonts',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'The fonts of the site\'s template: the design\'s, hosted here and set as the site\'s (status, install, remove).',

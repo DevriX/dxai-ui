@@ -2,12 +2,12 @@
 /**
  * Tailwind v4 token registry: the built-in defaults plus a design's own theme.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * Every utility module resolves its named values through this registry.

@@ -73,7 +73,7 @@ async function open(browser, url, width) {
 	await page.goto(url, { waitUntil: 'load', timeout: 60000 });
 	// The design side hydrates with React from a script; wait for its root.
 	await page.waitForFunction(() => {
-		const root = document.querySelector('#dc-root > .sc-host > div') || document.querySelector('.dxai-ui');
+		const root = document.querySelector('#dc-root > .sc-host > div') || document.querySelector('.dx-ui');
 		return root && root.getBoundingClientRect().height > 0 && root.innerText.trim().length > 0;
 	}, { timeout: 30000 }).catch(() => {});
 	// Bounded: `document.fonts.ready` never settles on a page whose font

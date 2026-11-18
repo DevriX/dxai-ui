@@ -2,12 +2,12 @@
 /**
  * A stylesheet cut down to the rules a page can use.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 /**
  * A DevriX theme prints its whole stylesheet (1.1 MB) inline on every page, and a page uses about 2% of it; the
@@ -127,7 +127,7 @@ final class Css_Trim {
 
 	/**
 	 * The rules of a stylesheet that name one of $classes, with each selector that names one narrowed to $scope
-	 * (`:where(.dxai-ui) .faq-answer:not(.is-open)`): the same rule at the same weight, for the elements inside the scope only. The @keyframes
+	 * (`:where(.dx-ui) .faq-answer:not(.is-open)`): the same rule at the same weight, for the elements inside the scope only. The @keyframes
 	 * such a rule animates with come along. A selector that starts at the document (html, body, :root, *) is not a
 	 * component's and is left out. Null when the CSS cannot be read to the end.
 	 *

@@ -2,7 +2,7 @@
 /**
  * The previous / next buttons of a slider that a design draws as a row which scrolls sideways (assets/js/rail.js).
  *
- *   node bin/verify-rail.cjs        (DXAI_PHP and DXAI_PHP_INI name php and its ini, as for bin/release.cjs; DXAI_CHROME names Chrome)
+ *   node bin/verify-rail.cjs        (DXUI_PHP and DXUI_PHP_INI name php and its ini, as for bin/release.cjs; DXUI_CHROME names Chrome)
  *
  * A design's own script moved such a row; the plugin's page script carries a design's state, not what its code does to the DOM, so the
  * buttons turned up on the page and did nothing. This checks the two halves of what replaces it: Assets::has_rail() decides from a page's
@@ -16,9 +16,9 @@ const { spawnSync } = require('child_process');
 const puppeteer = require('puppeteer-core');
 
 const ROOT = path.resolve(__dirname, '..');
-const PHP = process.env.DXAI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
-const INI = process.env.DXAI_PHP_INI || path.join(ROOT, '.verify/tools/dxai-cli.ini');
-const CHROME = process.env.DXAI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
+const PHP = process.env.DXUI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
+const INI = process.env.DXUI_PHP_INI || path.join(ROOT, '.verify/tools/dxui-cli.ini');
+const CHROME = process.env.DXUI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
 const JS = path.join(ROOT, 'assets/js/rail.js');
 
 let pass = 0;
@@ -36,10 +36,10 @@ const expect = (what, ok, detail = '') => {
 // ---- Which pages get the script -------------------------------------------------------------------------------------------------
 const hasRail = (markup) => {
 	const code = [
-		"define('DXAI_UI_DIR', " + JSON.stringify(ROOT + '/') + ');',
-		"require DXAI_UI_DIR . 'src/Autoloader.php';",
-		'DXAI_UI\\Autoloader::register();',
-		'echo DXAI_UI\\Blocks\\Assets::has_rail($argv[1]) ? "yes" : "no";',
+		"define('DX_UI_DIR', " + JSON.stringify(ROOT + '/') + ');',
+		"require DX_UI_DIR . 'src/Autoloader.php';",
+		'DX_UI\\Autoloader::register();',
+		'echo DX_UI\\Blocks\\Assets::has_rail($argv[1]) ? "yes" : "no";',
 	].join('');
 	const r = spawnSync(PHP, ['-c', INI, '-r', code, '--', markup], { encoding: 'utf8' });
 	return r.status === 0 ? r.stdout === 'yes' : null;
@@ -73,7 +73,7 @@ button:disabled{opacity:.4}
 </section>
 <section id="plain">
 <div class="track"><div class="card">1</div><div class="card">2</div><div class="card">3</div></div>
-<button id="own" aria-label="Next reviews" data-dxai-step="x">→</button>
+<button id="own" aria-label="Next reviews" data-dxui-step="x">→</button>
 <form><button id="inform" type="button" aria-label="Next reviews">→</button></form>
 <a id="pager" href="#after" aria-label="Next page">Next page</a>
 <button id="stepper" aria-label="Next step">Next step</button>
@@ -85,7 +85,7 @@ button:disabled{opacity:.4}
 
 (async () => {
 	if (!CHROME) {
-		console.error('no Chrome found (set DXAI_CHROME)');
+		console.error('no Chrome found (set DXUI_CHROME)');
 		process.exit(2);
 	}
 	const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'shell', args: ['--no-sandbox'] });
@@ -140,7 +140,7 @@ button:disabled{opacity:.4}
 	}
 	await wait();
 	const plainAt = await page.evaluate(() => Math.round(document.querySelector('#plain .track').scrollLeft));
-	expect('a button the design\'s own script drives (data-dxai-*), a button of a form, a submit button and "Next step" move nothing', plainAt === 0, String(plainAt));
+	expect('a button the design\'s own script drives (data-dxui-*), a button of a form, a submit button and "Next step" move nothing', plainAt === 0, String(plainAt));
 	await page.evaluate(() => document.getElementById('pager').click());
 	const pager = await page.evaluate(() => window.__pressed.filter((p) => p[0] === 'pager').map((p) => p[1]));
 	expect('a link to another place is not taken over (its click is not cancelled)', pager.length === 1 && pager[0] === false, JSON.stringify(pager));

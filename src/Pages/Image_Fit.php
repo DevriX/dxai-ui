@@ -9,19 +9,19 @@
  * that needs the same crop gets it without work. That is what keeps a
  * section's layout identical to the Home's whatever the old picture's shape.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Media\Image_Quality;
-use DXAI_UI\Media\Sideloader;
+use DX_UI\Media\Image_Quality;
+use DX_UI\Media\Sideloader;
 
 final class Image_Fit {
 
-	public const CROP_META = '_dxai_ui_crop_of';
+	public const CROP_META = '_dx_ui_crop_of';
 
 	/**
 	 * @return array{url:string, id:int}|null
@@ -72,7 +72,7 @@ final class Image_Fit {
 		}
 		$editor->crop( (int) floor( ( $w - $cw ) / 2 ), (int) floor( ( $h - $ch ) / 2 ), $cw, $ch );
 		$ext   = strtolower( (string) pathinfo( $file, PATHINFO_EXTENSION ) );
-		$tmp   = wp_tempnam( 'dxai-crop' ) . '.' . $ext;
+		$tmp   = wp_tempnam( 'dxui-crop' ) . '.' . $ext;
 		$saved = Image_Quality::save( $editor, $tmp );
 		if ( is_wp_error( $saved ) ) {
 			return array( 'url' => (string) wp_get_attachment_url( $id ), 'id' => $id );

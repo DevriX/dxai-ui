@@ -14,14 +14,14 @@
  *
  * Makes pages and removes them. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Header_Menus;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Chrome\Site_Footer_Block;
-use DXAI_UI\Chrome\Site_Header_Block;
+use DX_UI\Chrome\Header_Menus;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Chrome\Site_Footer_Block;
+use DX_UI\Chrome\Site_Header_Block;
 
 $fail   = 0;
 $pass   = 0;
@@ -50,19 +50,19 @@ register_shutdown_function( $fin );
 // the sub-menu; the phone's copy of the menu is a second <nav> in a panel the toggle opens.
 $sub    = static fn( string $label, string $url ): string => '<!-- wp:list-item {"className":"menu-item"} --><li class="menu-item"><a class="gem-sub-item" href="' . $url . '">' . $label . '</a></li><!-- /wp:list-item -->';
 $top    = static fn( string $label, string $url ): string => '<!-- wp:list-item {"className":"menu-item"} --><li class="menu-item"><a class="gem-item" href="' . $url . '">' . $label . '</a></li><!-- /wp:list-item -->';
-$parent = static fn( string $label, string $subs, string $dc = '' ): string => '<!-- wp:dxai-ui/box {"tagName":"li","className":"menu-item menu-item-has-children"} --><li class="menu-item menu-item-has-children"><!-- wp:dxai-ui/html --><a class="gem-item has-submenu' . $dc . '" href="#" aria-haspopup="true">' . $label . '<span class="sub-arrow"><svg aria-hidden="true" viewBox="0 0 1 1"><path d="M0 0"></path></svg></span></a><!-- /wp:dxai-ui/html --><!-- wp:list {"className":"sub-menu"} --><ul class="wp-block-list sub-menu">' . $subs . '</ul><!-- /wp:list --></li><!-- /wp:dxai-ui/box -->';
+$parent = static fn( string $label, string $subs, string $dc = '' ): string => '<!-- wp:dx-ui/box {"tagName":"li","className":"menu-item menu-item-has-children"} --><li class="menu-item menu-item-has-children"><!-- wp:dx-ui/html --><a class="gem-item has-submenu' . $dc . '" href="#" aria-haspopup="true">' . $label . '<span class="sub-arrow"><svg aria-hidden="true" viewBox="0 0 1 1"><path d="M0 0"></path></svg></span></a><!-- /wp:dx-ui/html --><!-- wp:list {"className":"sub-menu"} --><ul class="wp-block-list sub-menu">' . $subs . '</ul><!-- /wp:list --></li><!-- /wp:dx-ui/box -->';
 $menu   = static fn( string $dc ): string => '<!-- wp:list {"className":"gem-nav-menu"} --><ul class="wp-block-list gem-nav-menu">' . $parent( 'Services', $sub( 'Water', 'https://example.test/water' ) . $sub( 'Fire', 'https://example.test/fire' ), $dc ) . $parent( 'Areas', $sub( 'New Jersey', 'https://example.test/nj' ), $dc ) . $top( 'About', 'https://example.test/about' ) . $top( 'Contact', 'https://example.test/contact' ) . '</ul><!-- /wp:list -->';
 $header = static fn( string $n1, string $n2, string $extra = '' ): string => '<!-- wp:group {"tagName":"header","className":"gem gem-10 gem-location-header' . $extra . '"} --><header class="wp-block-group gem gem-10 gem-location-header' . $extra . '">'
 	. '<!-- wp:group {"tagName":"nav","className":"gem-nav-menu--main","ariaLabel":"Menu"} --><nav aria-label="Menu" class="wp-block-group gem-nav-menu--main">' . $menu( '' ) . '</nav><!-- /wp:group -->'
-	. '<!-- wp:dxai-ui/box {"className":"gem-menu-toggle dxai-toggle-menuOpen ' . $n1 . '"} --><div class="gem-menu-toggle dxai-toggle-menuOpen ' . $n1 . '">=</div><!-- /wp:dxai-ui/box -->'
-	. '<!-- wp:dxai-ui/box {"tagName":"nav","className":"gem-nav-menu--dropdown ' . $n2 . ' dxai-cls-menuOpen","dxaiData":{"data-dxai-on-menuopen":"' . $n2 . '--menuOpen-on"}} --><nav class="gem-nav-menu--dropdown ' . $n2 . ' dxai-cls-menuOpen" data-dxai-on-menuopen="' . $n2 . '--menuOpen-on">' . $menu( ' ' . $n2 . '-sub' ) . '</nav><!-- /wp:dxai-ui/box -->'
+	. '<!-- wp:dx-ui/box {"className":"gem-menu-toggle dxui-toggle-menuOpen ' . $n1 . '"} --><div class="gem-menu-toggle dxui-toggle-menuOpen ' . $n1 . '">=</div><!-- /wp:dx-ui/box -->'
+	. '<!-- wp:dx-ui/box {"tagName":"nav","className":"gem-nav-menu--dropdown ' . $n2 . ' dxui-cls-menuOpen","dxuiData":{"data-dxui-on-menuopen":"' . $n2 . '--menuOpen-on"}} --><nav class="gem-nav-menu--dropdown ' . $n2 . ' dxui-cls-menuOpen" data-dxui-on-menuopen="' . $n2 . '--menuOpen-on">' . $menu( ' ' . $n2 . '-sub' ) . '</nav><!-- /wp:dx-ui/box -->'
 	. '</header><!-- /wp:group -->';
 $footer = static fn( string $words ): string => '<!-- wp:group {"tagName":"footer","className":"gem gem-66 gem-location-footer"} --><footer class="wp-block-group gem gem-66 gem-location-footer"><!-- wp:paragraph --><p>' . $words . '</p><!-- /wp:paragraph --></footer><!-- /wp:group -->';
-$skip   = '<!-- wp:dxai-ui/link {"className":"skip-link","url":"#content","text":"Skip to content"} --><a class="wp-block-dxai-ui-link skip-link" href="#content">Skip to content</a><!-- /wp:dxai-ui/link -->';
+$skip   = '<!-- wp:dx-ui/link {"className":"skip-link","url":"#content","text":"Skip to content"} --><a class="wp-block-dx-ui-link skip-link" href="#content">Skip to content</a><!-- /wp:dx-ui/link -->';
 $body   = '<!-- wp:group {"tagName":"main","className":"site-main"} --><main class="wp-block-group site-main"><!-- wp:paragraph --><p>Body</p><!-- /wp:paragraph --></main><!-- /wp:group -->';
 
 echo "Elementor's menu read from the header\n";
-$home_header = $header( 'dxai-dc-1', 'dxai-dc-2' );
+$home_header = $header( 'dxui-dc-1', 'dxui-dc-2' );
 $spec        = Header_Template::build( $home_header );
 $tree        = (array) ( $spec['trees'][ Header_Template::NAV ] ?? array() );
 $expect( 'its parents are dropdowns, a parent of one sub-item too: four top-level items, two and one sub-items', count( $tree ) === 4 && ( $tree[0]['label'] ?? '' ) === 'Services' && count( (array) ( $tree[0]['children'] ?? array() ) ) === 2 && ( $tree[1]['label'] ?? '' ) === 'Areas' && count( (array) ( $tree[1]['children'] ?? array() ) ) === 1, wp_json_encode( $spec['checks'] ?? null ) );
@@ -74,15 +74,15 @@ echo "\nA page's own copy of the header and footer\n";
 $page = static function ( string $title, string $content, int $home = 0 ) use ( &$made ): int {
 	$id     = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => wp_slash( $content ) ) );
 	$made[] = $id;
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
-	update_post_meta( $id, '_dxai_ui_scope_id', $id );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_scope_id', $id );
 	update_post_meta( $id, Page_Chrome::MODE_META, 'install' );
 
 	return $id;
 };
 $home    = $page( 'Site chrome fixture Home', $skip . $body );
-$same    = $page( 'Site chrome fixture page with the same header', $skip . $header( 'dxai-dc-11', 'dxai-dc-12' ) . $body . $footer( 'Footer words' ) );
-$other   = $page( 'Site chrome fixture page with another header', $skip . $header( 'dxai-dc-21', 'dxai-dc-22', ' gem-transparent' ) . $body . $footer( 'Other footer' ) );
+$same    = $page( 'Site chrome fixture page with the same header', $skip . $header( 'dxui-dc-11', 'dxui-dc-12' ) . $body . $footer( 'Footer words' ) );
+$other   = $page( 'Site chrome fixture page with another header', $skip . $header( 'dxui-dc-21', 'dxui-dc-22', ' gem-transparent' ) . $body . $footer( 'Other footer' ) );
 $sources = array(
 	'header' => $home_header,
 	'footer' => $footer( 'Footer words' ),
@@ -91,11 +91,11 @@ $taken = Page_Chrome::adopt_site_chrome( $same, $home, $sources );
 $after = (string) get_post_field( 'post_content', $same );
 $expect( 'the copy of the installed header and footer is taken out of the page', $taken === array( 'header', 'footer' ) && ! str_contains( $after, 'gem-location-header' ) && ! str_contains( $after, 'gem-location-footer' ) && str_contains( $after, 'Body' ) && str_contains( $after, 'skip-link' ), wp_json_encode( $taken ) );
 $meta = get_post_meta( $same, Page_Chrome::SITE_CHROME_META, true );
-$expect( '…and the page records its Home and its own numbers for the header\'s interactive elements', is_array( $meta ) && $home === (int) $meta['home'] && ( $meta['header'] ?? array() ) === array( 'dxai-dc-1' => 'dxai-dc-11', 'dxai-dc-2' => 'dxai-dc-12' ), wp_json_encode( $meta ) );
+$expect( '…and the page records its Home and its own numbers for the header\'s interactive elements', is_array( $meta ) && $home === (int) $meta['home'] && ( $meta['header'] ?? array() ) === array( 'dxui-dc-1' => 'dxui-dc-11', 'dxui-dc-2' => 'dxui-dc-12' ), wp_json_encode( $meta ) );
 $expect( 'a page drawing another header (a modifier class) and another footer keeps its copies, and records nothing', Page_Chrome::adopt_site_chrome( $other, $home, $sources ) === array() && str_contains( (string) get_post_field( 'post_content', $other ), 'gem-transparent' ) && str_contains( (string) get_post_field( 'post_content', $other ), 'Other footer' ) && '' === get_post_meta( $other, Page_Chrome::SITE_CHROME_META, true ) );
 $home_copy = $page( 'Site chrome fixture Home that keeps its header', $skip . $home_header . $body );
 $expect( 'the Home itself is never taken from, even when its content holds the header', Page_Chrome::adopt_site_chrome( $home_copy, $home_copy, $sources ) === array() && str_contains( (string) get_post_field( 'post_content', $home_copy ), 'gem-location-header' ) );
-$expect( 'the design\'s numbers are the page\'s own when its header is drawn', Page_Chrome::own_ids( $same, '<div class="dxai-dc-1 dxai-dc-10" data-on="dxai-dc-2--menuOpen-on"></div>' ) === '<div class="dxai-dc-11 dxai-dc-10" data-on="dxai-dc-12--menuOpen-on"></div>' );
+$expect( 'the design\'s numbers are the page\'s own when its header is drawn', Page_Chrome::own_ids( $same, '<div class="dxui-dc-1 dxui-dc-10" data-on="dxui-dc-2--menuOpen-on"></div>' ) === '<div class="dxui-dc-11 dxui-dc-10" data-on="dxui-dc-12--menuOpen-on"></div>' );
 
 echo "\nThe page is drawn with the site's header and footer\n";
 $expect( 'with no header installed for its Home, the page is given none from it', Page_Chrome::header_markup( $same ) === '' || ! str_contains( Page_Chrome::header_markup( $same ), 'site-header' ) );
@@ -110,9 +110,9 @@ Site_Header_Block::forget();
 $expect( 'its Home\'s header installed from Menus, the page is given the site header block', Page_Chrome::header_markup( $same ) === Site_Header_Block::MARKUP );
 $expect( '…which renders its Home\'s header for it', ( Header_Template::for_post( $same )['source']['scope_id'] ?? 0 ) === $home );
 $expect( 'a page that kept its own copy is not given it', Page_Chrome::header_markup( $other ) !== Site_Header_Block::MARKUP );
-add_filter( 'pre_option_' . \DXAI_UI\Chrome\Footer_Template::OPTION, static fn() => array( 'scope' => $home, 'slots' => array(), 'template' => '<!-- wp:paragraph --><p>Widgets</p><!-- /wp:paragraph -->' ) );
+add_filter( 'pre_option_' . \DX_UI\Chrome\Footer_Template::OPTION, static fn() => array( 'scope' => $home, 'slots' => array(), 'template' => '<!-- wp:paragraph --><p>Widgets</p><!-- /wp:paragraph -->' ) );
 $expect( 'its Home\'s footer installed around Widgets, the page is given the site footer block', Page_Chrome::footer_markup( $same ) === Site_Footer_Block::MARKUP );
-remove_all_filters( 'pre_option_' . \DXAI_UI\Chrome\Footer_Template::OPTION );
+remove_all_filters( 'pre_option_' . \DX_UI\Chrome\Footer_Template::OPTION );
 remove_all_filters( 'pre_option_' . Header_Template::SCOPE_OPTION . $home );
 remove_all_filters( 'pre_option_' . Header_Template::OPTION );
 Site_Header_Block::forget();

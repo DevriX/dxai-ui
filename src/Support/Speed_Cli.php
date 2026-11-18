@@ -1,27 +1,27 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui speed.
+ * WP-CLI: wp dx-ui speed.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * The Library's "Speed" panel from the command line, for a network of sites: run it per site with the standard
  * `--url=<site>`, or over the whole network with `wp site list --field=url | xargs -I% wp --url=% ...`.
  *
- *   wp dxai-ui speed status
- *   wp dxai-ui speed apply  [--design=<home-id>]   copy the design's fonts here
- *   wp dxai-ui speed revert [--design=<home-id>]   put its stylesheet back the way it was imported
- *   wp dxai-ui speed own    [--design=<home-id>]   the design keeps its own fonts, where the theme would draw it in its own
- *   wp dxai-ui speed theme  [--design=<home-id>]   the design is drawn in the theme's fonts; its own leave the stylesheet
- *   wp dxai-ui speed clean  [--dry-run]            remove the font files no stylesheet names (a theme that sets the fonts)
- *   wp dxai-ui speed trim-on | trim-off            print the theme's stylesheet trimmed to each page, or whole
+ *   wp dx-ui speed status
+ *   wp dx-ui speed apply  [--design=<home-id>]   copy the design's fonts here
+ *   wp dx-ui speed revert [--design=<home-id>]   put its stylesheet back the way it was imported
+ *   wp dx-ui speed own    [--design=<home-id>]   the design keeps its own fonts, where the theme would draw it in its own
+ *   wp dx-ui speed theme  [--design=<home-id>]   the design is drawn in the theme's fonts; its own leave the stylesheet
+ *   wp dx-ui speed clean  [--dry-run]            remove the font files no stylesheet names (a theme that sets the fonts)
+ *   wp dx-ui speed trim-on | trim-off            print the theme's stylesheet trimmed to each page, or whole
  *
  * Without --design it works on every imported design of the site.
  */
@@ -29,7 +29,7 @@ final class Speed_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui speed',
+			'dx-ui speed',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'The fonts of the designs from this site, and the theme\'s stylesheet trimmed to the page (status, apply, revert, trim-on, trim-off).',
@@ -71,7 +71,7 @@ final class Speed_Cli {
 		}
 		if ( $action === 'clean' ) {
 			$dry  = ! empty( $assoc['dry-run'] );
-			$done = \DXAI_UI\Media\Font_Host::clean_files( $dry );
+			$done = \DX_UI\Media\Font_Host::clean_files( $dry );
 			\WP_CLI::success( sprintf( '%s %d font files (%d KB); %d kept.%s', $dry ? 'Would remove' : 'Removed', $done['removed'], (int) round( $done['bytes'] / 1024 ), $done['kept'], $done['note'] !== '' ? ' ' . $done['note'] . '.' : '' ) );
 			if ( $dry ) {
 				foreach ( $done['names'] as $name ) {

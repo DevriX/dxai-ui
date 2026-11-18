@@ -2,12 +2,12 @@
 /**
  * Scroll-reveal and count-up runtime for converted Lovable pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Motion_Runtime {
 
@@ -15,18 +15,18 @@ final class Motion_Runtime {
 	 * The marks around the runtime in a page's script (javascript()), so a
 	 * later version can find and replace exactly this part (refresh()).
 	 */
-	private const BEGIN = '/*! dxai-ui motion runtime ';
-	private const END   = '/*! /dxai-ui motion runtime */';
+	private const BEGIN = '/*! dx-ui motion runtime ';
+	private const END   = '/*! /dx-ui motion runtime */';
 
 	/**
 	 * How the runtime began before it was marked — every version so far: its
 	 * IIFE, and the scope lookup as its first statement. Matched at the start
 	 * of a line, with either line ending (the heredoc keeps the file's).
 	 */
-	private const LEGACY_HEAD = '/(?:^|\n)(\(function \(\) \{\r?\n\tvar root = document\.querySelector\("\.dxai-ui"\) \|\| document;)/';
+	private const LEGACY_HEAD = '/(?:^|\n)(\(function \(\) \{\r?\n\tvar root = document\.querySelector\("\.dx-ui"\) \|\| document;)/';
 
 	/** Progress of the stored-script refresh: the runtime version done, and the last file looked at. */
-	public const REFRESH_OPTION = 'dxai_ui_motion_runtime';
+	public const REFRESH_OPTION = 'dx_ui_motion_runtime';
 
 	/** Stored scripts per admin page load (maybe_refresh_stored()). */
 	private const REFRESH_BATCH = 25;
@@ -37,7 +37,7 @@ final class Motion_Runtime {
 	 *
 	 * A page's script is compiled once, at import — Source_Compiler and
 	 * Chunked_Generator put this in `custom_js`, and it is written to
-	 * uploads/dxai-ui/pattern-{id}.js — so every page imported before a
+	 * uploads/dx-ui/pattern-{id}.js — so every page imported before a
 	 * runtime change kept the old runtime: measured when keyboard access to
 	 * hover menus landed, the stored pattern-93057.js was the previous
 	 * runtime byte for byte, and Tab never opened a panel there.
@@ -93,7 +93,7 @@ final class Motion_Runtime {
 	 * Keep stored page scripts on the current runtime: a batch per admin page
 	 * load (by someone who can run imports) until every stored script has been
 	 * looked at once for this runtime version, and on demand with
-	 * `wp dxai-ui refresh-runtime`. No cron, so it also runs where wp-cron is
+	 * `wp dx-ui refresh-runtime`. No cron, so it also runs where wp-cron is
 	 * off, and a batch is small enough for any host's time limit. On
 	 * multisite each site keeps its own progress, as it keeps its own uploads.
 	 *
@@ -103,12 +103,12 @@ final class Motion_Runtime {
 	 * older than the scripts it would rewrite.
 	 */
 	public static function register_refresh(): void {
-		if ( \DXAI_UI\Support\Runtime::render_only() ) {
+		if ( \DX_UI\Support\Runtime::render_only() ) {
 			return;
 		}
 		add_action( 'admin_init', array( self::class, 'maybe_refresh_stored' ) );
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
-			\WP_CLI::add_command( 'dxai-ui refresh-runtime', array( self::class, 'cli' ) );
+			\WP_CLI::add_command( 'dx-ui refresh-runtime', array( self::class, 'cli' ) );
 		}
 	}
 
@@ -134,7 +134,7 @@ final class Motion_Runtime {
 		);
 	}
 
-	/** `wp dxai-ui refresh-runtime`: every stored script, now. */
+	/** `wp dx-ui refresh-runtime`: every stored script, now. */
 	public static function cli(): void {
 		$after = '';
 		$total = array(
@@ -162,13 +162,13 @@ final class Motion_Runtime {
 	}
 
 	/**
-	 * Refresh up to $limit stored scripts (uploads/dxai-ui/pattern-*.js) whose
+	 * Refresh up to $limit stored scripts (uploads/dx-ui/pattern-*.js) whose
 	 * name sorts after $after. A script is rewritten only when refresh()
 	 * changes it; the page enqueues it versioned by the file's mtime
 	 * (Upload_Paths::version()), so visitors get the new copy on their next
 	 * load.
 	 *
-	 * @param string $dir Where the scripts are; the uploads' dxai-ui folder when ''.
+	 * @param string $dir Where the scripts are; the uploads' dx-ui folder when ''.
 	 * @return array{looked:int, refreshed:int, failed:int, last:string, done:bool}
 	 */
 	public static function refresh_stored( int $limit, string $after = '', string $dir = '' ): array {
@@ -184,7 +184,7 @@ final class Motion_Runtime {
 			if ( ! empty( $upload['error'] ) ) {
 				return $out;
 			}
-			$dir = trailingslashit( (string) $upload['basedir'] ) . \DXAI_UI\Support\Upload_Paths::DIR;
+			$dir = trailingslashit( (string) $upload['basedir'] ) . \DX_UI\Support\Upload_Paths::DIR;
 		}
 		$files = glob( trailingslashit( $dir ) . 'pattern-*.js' );
 		if ( ! is_array( $files ) ) {
@@ -232,8 +232,8 @@ final class Motion_Runtime {
 	 * holds sections copied from a design has one around each run of them — a block of the page's own between two runs makes two — and
 	 * the first is not the page: a slider or an accordion in the second never got its script. A scope inside another is part of it.
 	 */
-	var scopes = [].slice.call(document.querySelectorAll(".dxai-ui")).filter(function (el) {
-		return !(el.parentElement && el.parentElement.closest(".dxai-ui"));
+	var scopes = [].slice.call(document.querySelectorAll(".dx-ui")).filter(function (el) {
+		return !(el.parentElement && el.parentElement.closest(".dx-ui"));
 	});
 	(scopes.length ? scopes : [document]).forEach(function (root) {
 	var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -241,7 +241,7 @@ final class Motion_Runtime {
 	// machine's — the toggles, the hover menus and the state machine below stand down there; the reveal, the counting numbers, the
 	// Radix parts and the rest stay this runtime's.
 	var wpi = !!(root.hasAttribute && root.hasAttribute("data-wp-interactive"));
-	if (root && root.classList) { root.classList.add("dxai-motion"); }
+	if (root && root.classList) { root.classList.add("dxui-motion"); }
 	function reveal(el) {
 		el.classList.add("is-in");
 		el.querySelectorAll(".rv-mask-in").forEach(function (mask) {
@@ -255,7 +255,7 @@ final class Motion_Runtime {
 	 * The reveal sweep adds `is-in` to whatever is on screen and never takes it
 	 * off, which is right for a section that fades in once. It is wrong for an
 	 * element that a state projects `is-in` onto: GTM Strategy Hub's sticky CTA
-	 * is `data-dxai-scroll="show:700"` with `data-dxai-on="is-in"` AND
+	 * is `data-dxui-scroll="show:700"` with `data-dxui-on="is-in"` AND
 	 * `position: fixed`, so it is on screen from the first frame, the sweep
 	 * stamped `is-in` on it at load and re-stamped it on every scroll event,
 	 * and the floating bar the design only shows past 700px sat over the page
@@ -263,13 +263,13 @@ final class Motion_Runtime {
 	 * this way.
 	 *
 	 * The machine seeds itself from the markup and projects from there, so the
-	 * rule is simply that one owner per class wins: if `data-dxai-on` names a
+	 * rule is simply that one owner per class wins: if `data-dxui-on` names a
 	 * class the sweep would add, the sweep leaves that element alone.
 	 */
 	var targets = [].slice.call(
-		root.querySelectorAll("section, header, footer, .rv-close, .rv-leadmagnet, [data-reveal], .dxai-reveal")
+		root.querySelectorAll("section, header, footer, .rv-close, .rv-leadmagnet, [data-reveal], .dxui-reveal")
 	).filter(function (el) {
-		var owned = el.getAttribute && el.getAttribute("data-dxai-on");
+		var owned = el.getAttribute && el.getAttribute("data-dxui-on");
 		return !(owned && /(^|[\s,])is-in([\s,:]|$)/.test(owned));
 	});
 	// A section is only hidden once it is individually armed, so anything the
@@ -338,7 +338,7 @@ final class Motion_Runtime {
 	 * is hand-written JavaScript for one corpus design — the thing this
 	 * converter exists not to need — and it only ever worked for elements
 	 * spelled that way. The generic path does it for every design now: the
-	 * compiler emits `data-dxai-scroll="show:700"` with `data-dxai-on="is-in"`
+	 * compiler emits `data-dxui-scroll="show:700"` with `data-dxui-on="is-in"`
 	 * and the state machine below projects it, so this block was both redundant
 	 * and a second writer racing the first.
 	 */
@@ -442,15 +442,15 @@ final class Motion_Runtime {
 	// hoisted; only the `owned` ASSIGNMENT is late, and it lands before any
 	// event can fire.
 	//
-	// Narrow deliberately, and measured: a data-dxai-step trigger is EXEMPT.
-	// Revenue Operations' `rv-cs-arrow` buttons carry `dxai-toggle-i` with no
+	// Narrow deliberately, and measured: a data-dxui-step trigger is EXEMPT.
+	// Revenue Operations' `rv-cs-arrow` buttons carry `dxui-toggle-i` with no
 	// value, no group and no panel, so the only DOM the handler below touches
 	// for them is aria-expanded on the button itself — nothing the machine also
 	// writes, so the two cannot disagree. Gating them off as well removed that
 	// aria flip and cost a control on the behaviour probe (which reads
 	// innerHTML length, and so sees an aria flip) while changing no rendering.
 	function machineOwns(el) {
-		if (owned === null || !el || !el.hasAttribute || el.hasAttribute("data-dxai-step")) {
+		if (owned === null || !el || !el.hasAttribute || el.hasAttribute("data-dxui-step")) {
 			return false;
 		}
 		return marks(el, "toggle").some(function (mark) {
@@ -458,14 +458,14 @@ final class Motion_Runtime {
 		});
 	}
 	root.addEventListener("click", function (event) {
-		var btn = event.target && event.target.closest ? event.target.closest("[class*='dxai-toggle-']") : null;
+		var btn = event.target && event.target.closest ? event.target.closest("[class*='dxui-toggle-']") : null;
 		if (wpi || !btn || !root.contains(btn)) {
 			return;
 		}
 		if (machineOwns(btn)) {
 			return;
 		}
-		if (btn.getAttribute("data-dxai-hover") === "enter" && event.type === "click") {
+		if (btn.getAttribute("data-dxui-hover") === "enter" && event.type === "click") {
 			// Allow click toggle even on hover menus (touch / keyboard).
 		}
 		if (btn.tagName === "A" && btn.getAttribute("href") && btn.getAttribute("href") !== "#") {
@@ -474,7 +474,7 @@ final class Motion_Runtime {
 		event.preventDefault();
 		var names = [];
 		String(btn.className || "").split(/\s+/).forEach(function (c) {
-			if (c.indexOf("dxai-toggle-") === 0) {
+			if (c.indexOf("dxui-toggle-") === 0) {
 				names.push(c.slice(12));
 			}
 		});
@@ -498,10 +498,10 @@ final class Motion_Runtime {
 	function applyToggle(btn, name, willOpen) {
 		var group = name.indexOf("--") > 0 ? name.split("--")[0] : "";
 		if (group) {
-			root.querySelectorAll("[class*='dxai-on-" + group + "--']").forEach(function (el) {
+			root.querySelectorAll("[class*='dxui-on-" + group + "--']").forEach(function (el) {
 				applyPanel(el, false);
 			});
-			root.querySelectorAll("[class*='dxai-toggle-" + group + "--']").forEach(function (el) {
+			root.querySelectorAll("[class*='dxui-toggle-" + group + "--']").forEach(function (el) {
 				el.setAttribute("aria-expanded", "false");
 				el.querySelectorAll(".rotate-45").forEach(function (icon) {
 					icon.classList.remove("rotate-45");
@@ -509,10 +509,10 @@ final class Motion_Runtime {
 				});
 			});
 		}
-		root.querySelectorAll(".dxai-on-" + name).forEach(function (el) {
+		root.querySelectorAll(".dxui-on-" + name).forEach(function (el) {
 			applyPanel(el, willOpen);
 		});
-		root.querySelectorAll(".dxai-off-" + name).forEach(function (el) {
+		root.querySelectorAll(".dxui-off-" + name).forEach(function (el) {
 			applyPanel(el, !willOpen);
 		});
 		btn.setAttribute("aria-expanded", willOpen ? "true" : "false");
@@ -524,7 +524,7 @@ final class Motion_Runtime {
 	}
 	function setHoverState(btn, open) {
 		String(btn.className || "").split(/\s+/).forEach(function (c) {
-			if (c.indexOf("dxai-toggle-") !== 0) {
+			if (c.indexOf("dxui-toggle-") !== 0) {
 				return;
 			}
 			applyToggle(btn, c.slice(12), open);
@@ -534,7 +534,7 @@ final class Motion_Runtime {
 	 * Keyboard access to a hover menu. Both hover bindings use it: the one
 	 * just below and the state machine's.
 	 *
-	 * The `data-dxai-hover="enter"` element is often a plain <div> around the
+	 * The `data-dxui-hover="enter"` element is often a plain <div> around the
 	 * trigger link and its panel (a design's `onMouseEnter` on the menu item,
 	 * Claude Design's header). A <div> never takes focus, so the `focus`
 	 * listener these bindings used never fired: Tab reached the trigger, the
@@ -610,11 +610,11 @@ final class Motion_Runtime {
 	 * live INSIDE each callback: these bindings run while `owned` is still
 	 * null, so testing at bind time would let every one of them through.
 	 */
-	root.querySelectorAll("[data-dxai-hover='enter'], [class*='dxai-toggle-open--']").forEach(function (el) {
+	root.querySelectorAll("[data-dxui-hover='enter'], [class*='dxui-toggle-open--']").forEach(function (el) {
 		if (wpi) { return; }
 		var wrap = el.closest("li, .relative, [class*='relative']") || el.parentElement;
 		el.addEventListener("mouseenter", function () { if (!machineOwns(el)) { setHoverState(el, true); } });
-		if (el.getAttribute("data-dxai-hover") === "enter") {
+		if (el.getAttribute("data-dxui-hover") === "enter") {
 			hoverKeys(el, wrap,
 				function () { if (!machineOwns(el)) { setHoverState(el, true); } },
 				function () { if (!machineOwns(el)) { setHoverState(el, false); } },
@@ -626,7 +626,7 @@ final class Motion_Runtime {
 			wrap.addEventListener("mouseleave", function () { if (!machineOwns(el)) { setHoverState(el, false); } });
 		}
 	});
-	root.querySelectorAll("[data-dxai-hover='leave']").forEach(function (el) {
+	root.querySelectorAll("[data-dxui-hover='leave']").forEach(function (el) {
 		if (wpi) { return; }
 		el.addEventListener("mouseleave", function () { if (!machineOwns(el)) { setHoverState(el, false); } });
 		el.addEventListener("blur", function () { if (!machineOwns(el)) { setHoverState(el, false); } });
@@ -646,9 +646,9 @@ final class Motion_Runtime {
 		 */
 		if (window.lucide) {
 			bootIcons();
-		} else if (window.dxaiLucideUrl) {
+		} else if (window.dxuiLucideUrl) {
 			var script = document.createElement("script");
-			script.src = window.dxaiLucideUrl;
+			script.src = window.dxuiLucideUrl;
 			script.onload = bootIcons;
 			document.head.appendChild(script);
 		}
@@ -664,12 +664,12 @@ final class Motion_Runtime {
 	 * seven projected nothing at all.
 	 *
 	 * The contract instead:
-	 *   trigger  class dxai-toggle-<state>[--<value>], plus data-dxai-step for
-	 *            a relative move, data-dxai-set for a literal assignment
-	 *            (`setOpen(null)`), data-dxai-mode="toggle" to collapse when
-	 *            already on, data-dxai-init for the authored starting value
-	 *   target   class dxai-cls-<state>[--<value>], with data-dxai-on and
-	 *            data-dxai-off naming the classes the DESIGN's own stylesheet
+	 *   trigger  class dxui-toggle-<state>[--<value>], plus data-dxui-step for
+	 *            a relative move, data-dxui-set for a literal assignment
+	 *            (`setOpen(null)`), data-dxui-mode="toggle" to collapse when
+	 *            already on, data-dxui-init for the authored starting value
+	 *   target   class dxui-cls-<state>[--<value>], with data-dxui-on and
+	 *            data-dxui-off naming the classes the DESIGN's own stylesheet
 	 *            selects on — read out of its conditional class expressions,
 	 *            never guessed here. Measured: not one of the seven
 	 *            stylesheets contains an [aria-expanded] selector, so aria
@@ -688,7 +688,7 @@ final class Motion_Runtime {
 	// State names are JavaScript identifiers and so never contain "-"; a value
 	// can (`open--how-we-help`), so the split is at the FIRST "--".
 	function marks(el, kind) {
-		var prefix = "dxai-" + kind + "-";
+		var prefix = "dxui-" + kind + "-";
 		var out = [];
 		tokens(classText(el)).forEach(function (c) {
 			if (c.indexOf(prefix) !== 0) { return; }
@@ -705,19 +705,19 @@ final class Motion_Runtime {
 	 * The classes a projection adds. One element can carry projections for
 	 * several states — a panel whose style depends on the open FAQ index AND
 	 * on the viewport — so the class list is looked up per state and value
-	 * (`data-dxai-on-openFaq-2`), then per state (`data-dxai-on-openFaq`),
-	 * and only then in the shared `data-dxai-on` the earlier compiler wrote.
+	 * (`data-dxui-on-openFaq-2`), then per state (`data-dxui-on-openFaq`),
+	 * and only then in the shared `data-dxui-on` the earlier compiler wrote.
 	 */
 	function attrFor(el, kind, mark) {
-		var v = mark.value === null ? null : el.getAttribute("data-dxai-" + kind + "-" + mark.state + "-" + mark.value);
-		if (v === null) { v = el.getAttribute("data-dxai-" + kind + "-" + mark.state); }
-		if (v === null) { v = el.getAttribute("data-dxai-" + kind); }
+		var v = mark.value === null ? null : el.getAttribute("data-dxui-" + kind + "-" + mark.state + "-" + mark.value);
+		if (v === null) { v = el.getAttribute("data-dxui-" + kind + "-" + mark.state); }
+		if (v === null) { v = el.getAttribute("data-dxui-" + kind); }
 		return v || "";
 	}
 
 	var projections = [];
 	var order = {};
-	root.querySelectorAll("[class*='dxai-cls-']").forEach(function (el) {
+	root.querySelectorAll("[class*='dxui-cls-']").forEach(function (el) {
 		marks(el, "cls").forEach(function (mark) {
 			projections.push({
 				el: el,
@@ -732,7 +732,7 @@ final class Motion_Runtime {
 		});
 	});
 
-	var panels = root.querySelectorAll("[class*='dxai-on-'], [class*='dxai-off-']");
+	var panels = root.querySelectorAll("[class*='dxui-on-'], [class*='dxui-off-']");
 	panels.forEach(function (el) {
 		marks(el, "on").forEach(function (mark) {
 			if (mark.value === null) { return; }
@@ -755,7 +755,7 @@ final class Motion_Runtime {
 			values.sort(function (a, b) { return parseFloat(a) - parseFloat(b); });
 		} else if (values.length > 1) {
 			var byTrigger = [];
-			root.querySelectorAll("[class*='dxai-toggle-" + state + "--']").forEach(function (el) {
+			root.querySelectorAll("[class*='dxui-toggle-" + state + "--']").forEach(function (el) {
 				marks(el, "toggle").forEach(function (mark) {
 					if (mark.state === state && mark.value !== null && byTrigger.indexOf(mark.value) < 0) { byTrigger.push(mark.value); }
 				});
@@ -797,7 +797,7 @@ final class Motion_Runtime {
 			});
 		});
 		/*
-		 * States built from other states: data-dxai-any="dark:solid,open".
+		 * States built from other states: data-dxui-any="dark:solid,open".
 		 *
 		 * Seeded before anything reads the machine, because a member with no
 		 * projection of its own — a scroll flag — would otherwise never be in
@@ -806,8 +806,8 @@ final class Motion_Runtime {
 		 * false, which is the state the page was compiled in.
 		 */
 		var derived = [];
-		[root].concat([].slice.call(root.querySelectorAll("[data-dxai-any]"))).forEach(function (el) {
-			tokens(el.getAttribute && el.getAttribute("data-dxai-any")).forEach(function (spec) {
+		[root].concat([].slice.call(root.querySelectorAll("[data-dxui-any]"))).forEach(function (el) {
+			tokens(el.getAttribute && el.getAttribute("data-dxui-any")).forEach(function (spec) {
 				var cut = spec.indexOf(":");
 				if (cut < 1) { return; }
 				var state = spec.slice(0, cut);
@@ -824,9 +824,9 @@ final class Motion_Runtime {
 		// An explicit initial wins: a relative move needs the index it starts
 		// from, which nothing in the class list states once every arm has been
 		// resolved to the one the page was compiled at.
-		root.querySelectorAll("[data-dxai-init]").forEach(function (el) {
+		root.querySelectorAll("[data-dxui-init]").forEach(function (el) {
 			marks(el, "toggle").forEach(function (mark) {
-				machine[mark.state] = el.getAttribute("data-dxai-init");
+				machine[mark.state] = el.getAttribute("data-dxui-init");
 			});
 		});
 
@@ -872,17 +872,17 @@ final class Motion_Runtime {
 			});
 			/*
 			 * A button that is off for some values of the state — the arrow that goes back, with the list at its first window:
-			 * data-dxai-disabled="start:0", the values listed. The page is compiled at the starting one.
+			 * data-dxui-disabled="start:0", the values listed. The page is compiled at the starting one.
 			 */
-			root.querySelectorAll("[data-dxai-disabled]").forEach(function (el) {
-				var spec = String(el.getAttribute("data-dxai-disabled") || "");
+			root.querySelectorAll("[data-dxui-disabled]").forEach(function (el) {
+				var spec = String(el.getAttribute("data-dxui-disabled") || "");
 				var cut = spec.indexOf(":");
 				if (cut < 1 || spec.slice(0, cut) !== state) { return; }
 				var current = machine[state];
 				el.disabled = current !== null && current !== undefined && spec.slice(cut + 1).split(",").indexOf(String(current)) > -1;
 			});
-			root.querySelectorAll("[class*='dxai-toggle-']").forEach(function (el) {
-				if (el.hasAttribute("data-dxai-step") || el.hasAttribute("data-dxai-set")) { return; }
+			root.querySelectorAll("[class*='dxui-toggle-']").forEach(function (el) {
+				if (el.hasAttribute("data-dxui-step") || el.hasAttribute("data-dxui-set")) { return; }
 				marks(el, "toggle").forEach(function (mark) {
 					if (mark.state !== state) { return; }
 					var hit = holds(state, mark.value);
@@ -898,9 +898,9 @@ final class Motion_Runtime {
 			 * writes every reading it evaluated as a map keyed by state value;
 			 * the machine's own spelling of the value picks the reading.
 			 */
-			root.querySelectorAll("[data-dxai-text-" + state + "]").forEach(function (el) {
+			root.querySelectorAll("[data-dxui-text-" + state + "]").forEach(function (el) {
 				var map;
-				try { map = JSON.parse(el.getAttribute("data-dxai-text-" + state) || "{}"); } catch (e) { return; }
+				try { map = JSON.parse(el.getAttribute("data-dxui-text-" + state) || "{}"); } catch (e) { return; }
 				var current = machine[state];
 				var key = current === null || current === undefined ? "null" : String(current);
 				if (Object.prototype.hasOwnProperty.call(map, key)) { el.textContent = map[key]; }
@@ -923,9 +923,9 @@ final class Motion_Runtime {
 			var acted = false;
 			marks(el, "toggle").forEach(function (mark) {
 				if (!(mark.state in machine)) { return; }
-				var step = parseInt(el.getAttribute("data-dxai-step") || "0", 10);
-				var set = el.getAttribute("data-dxai-set");
-				var mode = el.getAttribute("data-dxai-mode");
+				var step = parseInt(el.getAttribute("data-dxui-step") || "0", 10);
+				var set = el.getAttribute("data-dxui-set");
+				var mode = el.getAttribute("data-dxui-mode");
 				var current = machine[mark.state];
 				if (step) {
 					// `go(i - 1)` on a carousel rail: the value is only right
@@ -937,7 +937,7 @@ final class Motion_Runtime {
 					if (at < 0) { at = 0; }
 					var next = at + step;
 					// `Math.min(3, step + 1)` stops at the end; a carousel wraps.
-					if (el.hasAttribute("data-dxai-clamp")) {
+					if (el.hasAttribute("data-dxui-clamp")) {
 						next = Math.max(0, Math.min(values.length - 1, next));
 					} else {
 						next = ((next % values.length) + values.length) % values.length;
@@ -966,7 +966,7 @@ final class Motion_Runtime {
 
 		root.addEventListener("click", function (event) {
 			var el = event.target && event.target.closest
-				? event.target.closest("[class*='dxai-toggle-']")
+				? event.target.closest("[class*='dxui-toggle-']")
 				: null;
 			if (!el || !root.contains(el)) { return; }
 			/*
@@ -986,7 +986,7 @@ final class Motion_Runtime {
 		 * Hover is a direction, not a toggle.
 		 *
 		 * `fire()` is right for a click and wrong for mouseenter: on a trigger
-		 * carrying data-dxai-mode="toggle" a second entry into the same item —
+		 * carrying data-dxui-mode="toggle" a second entry into the same item —
 		 * which happens whenever the pointer crosses back out of a child and
 		 * in again — would read as "already on" and CLOSE the menu under the
 		 * cursor. These two set the state, idempotently, which is what
@@ -995,7 +995,7 @@ final class Motion_Runtime {
 		/*
 		 * What a VALUELESS trigger means on a state whose projections are all
 		 * keyed by value. `true` could never satisfy `holds("open", "RevOps")`,
-		 * so a bare `dxai-toggle-open` on such a state cannot mean "on" — the
+		 * so a bare `dxui-toggle-open` on such a state cannot mean "on" — the
 		 * only reachable thing it can mean is "none of them". DevriX Elevate's
 		 * fifth nav item is the case: the same
 		 * `onMouseEnter={() => setOpen(item.children ? item.label : null)}` as
@@ -1006,7 +1006,7 @@ final class Motion_Runtime {
 		 * a fact about the page rather than another convention in this file.
 		 */
 		var wanted = function (el, mark) {
-			var set = el.getAttribute("data-dxai-set");
+			var set = el.getAttribute("data-dxui-set");
 			if (set === "null") { return null; }
 			if (set === "true" || set === "false") { return set === "true"; }
 			if (mark.value !== null) { return mark.value; }
@@ -1051,10 +1051,10 @@ final class Motion_Runtime {
 				return want !== null && want !== false && now !== null && now !== undefined && String(now) === String(want);
 			});
 		};
-		root.querySelectorAll("[data-dxai-hover='enter']").forEach(function (el) {
+		root.querySelectorAll("[data-dxui-hover='enter']").forEach(function (el) {
 			// A wrapper that carries its own mouseleave handler closes when the
-			// pointer leaves IT, not its parent: `data-dxai-hover-self`.
-			var wrap = el.hasAttribute("data-dxai-hover-self") ? el : (el.closest("li, .relative, [class*='relative']") || el.parentElement);
+			// pointer leaves IT, not its parent: `data-dxui-hover-self`.
+			var wrap = el.hasAttribute("data-dxui-hover-self") ? el : (el.closest("li, .relative, [class*='relative']") || el.parentElement);
 			el.addEventListener("mouseenter", function () { hoverOn(el); });
 			// Focus, focus leaving and Escape: hoverKeys() above.
 			hoverKeys(el, wrap,
@@ -1065,21 +1065,21 @@ final class Motion_Runtime {
 				wrap.addEventListener("mouseleave", function () { hoverOff(el); });
 			}
 		});
-		root.querySelectorAll("[data-dxai-hover='leave']").forEach(function (el) {
+		root.querySelectorAll("[data-dxui-hover='leave']").forEach(function (el) {
 			el.addEventListener("mouseleave", function () { hoverOff(el); });
 			el.addEventListener("blur", function () { hoverOff(el); });
 			leaveKeys(el, function () { hoverOff(el); });
 		});
 
 		/*
-		 * State the page sets from scrolling: `data-dxai-scroll="scrolled:20"`
+		 * State the page sets from scrolling: `data-dxui-scroll="scrolled:20"`
 		 * means `scrolled` is true once the page is scrolled past 20px — the
 		 * design's `window.scrollY > 20` in a scroll listener, which turns a
 		 * translucent header solid.
 		 */
 		var scrollSpecs = [];
-		[root].concat([].slice.call(root.querySelectorAll("[data-dxai-scroll]"))).forEach(function (el) {
-			tokens(el.getAttribute && el.getAttribute("data-dxai-scroll")).forEach(function (spec) {
+		[root].concat([].slice.call(root.querySelectorAll("[data-dxui-scroll]"))).forEach(function (el) {
+			tokens(el.getAttribute && el.getAttribute("data-dxui-scroll")).forEach(function (spec) {
 				var cut = spec.indexOf(":");
 				var state = cut > 0 ? spec.slice(0, cut) : spec;
 				if (!(state in machine)) { return; }
@@ -1100,14 +1100,14 @@ final class Motion_Runtime {
 		}
 
 		/*
-		 * State a click anywhere else resets: `data-dxai-outside="dropdown"`
+		 * State a click anywhere else resets: `data-dxui-outside="dropdown"`
 		 * is the design's document click listener that closes an open menu.
 		 * A click on one of that state's own triggers or panels is not
 		 * "elsewhere" — the trigger already handled it.
 		 */
 		var outsideStates = [];
-		[root].concat([].slice.call(root.querySelectorAll("[data-dxai-outside]"))).forEach(function (el) {
-			tokens(el.getAttribute && el.getAttribute("data-dxai-outside")).forEach(function (state) {
+		[root].concat([].slice.call(root.querySelectorAll("[data-dxui-outside]"))).forEach(function (el) {
+			tokens(el.getAttribute && el.getAttribute("data-dxui-outside")).forEach(function (state) {
 				if (state in machine && outsideStates.indexOf(state) < 0) { outsideStates.push(state); }
 			});
 		});
@@ -1117,14 +1117,14 @@ final class Motion_Runtime {
 				outsideStates.forEach(function (state) {
 					var current = machine[state];
 					if (current === null || current === false) { return; }
-					if (target && target.closest && target.closest("[class*='dxai-toggle-" + state + "'], [class*='dxai-on-" + state + "'], [class*='dxai-off-" + state + "']")) { return; }
+					if (target && target.closest && target.closest("[class*='dxui-toggle-" + state + "'], [class*='dxui-on-" + state + "'], [class*='dxui-off-" + state + "']")) { return; }
 					machine[state] = (order[state] || []).length ? null : false;
 					project(state);
 				});
 			});
 		}
 	}
-	root.querySelectorAll(".rv-mbp, [data-dxai-method], .dxai-method").forEach(function (wrap) {
+	root.querySelectorAll(".rv-mbp, [data-dxui-method], .dxui-method").forEach(function (wrap) {
 		var rows = wrap.querySelectorAll(".rv-mbp-row");
 		var nums = wrap.querySelectorAll(".rv-mbp-numline");
 		var bar = wrap.querySelector(".rv-mbp-meta-bar > span");
@@ -1171,10 +1171,10 @@ final class Motion_Runtime {
 	 *   menu       trigger [aria-haspopup=menu]   -> panel [role=menu] via aria-controls
 	 *   tooltip    trigger [aria-describedby]     -> panel [role=tooltip], on hover and focus
 	 *
-	 * Grouping comes from the id the converter mints — `dxai-rx-<n>-trigger-…`
+	 * Grouping comes from the id the converter mints — `dxui-rx-<n>-trigger-…`
 	 * — so one accordion on a page cannot close another's panels.
 	 *
-	 * Deliberately NOT keyed on the `dxai-toggle-` classes above: that
+	 * Deliberately NOT keyed on the `dxui-toggle-` classes above: that
 	 * mechanism models a design's own useState, and a Radix component has no
 	 * such state in the source to read. The two never match the same element.
 	 */
@@ -1203,7 +1203,7 @@ final class Motion_Runtime {
 	 * which clearing el.style cannot undo, so the part never opened. There
 	 * the part is shown with an inline display of the runtime's own — the one
 	 * its other classes give it, read with its dxs- classes set aside — and
-	 * `data-dxai-shown` marks that value, so closing takes it off again and
+	 * `data-dxui-shown` marks that value, so closing takes it off again and
 	 * the rule hides the part as before.
 	 */
 	function rxOwnDisplay(el) {
@@ -1224,13 +1224,13 @@ final class Motion_Runtime {
 				var display = rxOwnDisplay(el);
 				if (display && display !== "none") {
 					el.style.display = display;
-					el.setAttribute("data-dxai-shown", "");
+					el.setAttribute("data-dxui-shown", "");
 				}
 			}
 		} else {
 			el.setAttribute("hidden", "");
-			if (el.hasAttribute("data-dxai-shown")) {
-				el.removeAttribute("data-dxai-shown");
+			if (el.hasAttribute("data-dxui-shown")) {
+				el.removeAttribute("data-dxui-shown");
 				el.style.display = "";
 			}
 		}
@@ -1251,15 +1251,15 @@ final class Motion_Runtime {
 		 * and puts nothing on the DOM, so without that attribute this used to
 		 * follow the majority and close the siblings of a multiple accordion.
 		 */
-		var host = trigger.closest("[data-dxai-accordion]");
-		var multiple = host && host.getAttribute("data-dxai-accordion") === "multiple";
+		var host = trigger.closest("[data-dxui-accordion]");
+		var multiple = host && host.getAttribute("data-dxui-accordion") === "multiple";
 
 		/*
 		 * And a `single` accordion that is not `collapsible` cannot be closed
 		 * by clicking its open trigger — the same refusal Radix marks with
 		 * aria-disabled.
 		 */
-		if (!open && !multiple && host && host.getAttribute("data-dxai-collapsible") !== "true") {
+		if (!open && !multiple && host && host.getAttribute("data-dxui-collapsible") !== "true") {
 			return true;
 		}
 
@@ -1394,8 +1394,8 @@ final class Motion_Runtime {
 	function rxHost() {
 		if (rxHostEl) { return rxHostEl; }
 		rxHostEl = document.createElement("div");
-		rxHostEl.className = ((root.className || "") + " dxai-portal").trim();
-		rxHostEl.setAttribute("data-dxai-portal-host", "");
+		rxHostEl.className = ((root.className || "") + " dxui-portal").trim();
+		rxHostEl.setAttribute("data-dxui-portal-host", "");
 		document.body.appendChild(rxHostEl);
 		rxHostEl.addEventListener("click", rxClick);
 		// Leaving a tooltip that was moved here closes it, as leaving its
@@ -1455,7 +1455,7 @@ final class Motion_Runtime {
 	/*
 	 * Radix's popper, reduced to what the kit needs. The panel sits on the
 	 * side of its trigger the content names (`data-side`), aligned along it
-	 * (`data-align`), `data-dxai-offset` pixels away. It flips to the opposite
+	 * (`data-align`), `data-dxui-offset` pixels away. It flips to the opposite
 	 * side when it would leave the viewport, and slides along the trigger to
 	 * stay inside it: measured on the real build, a 341px tooltip centred on
 	 * a button near the right edge of a 390px viewport ends flush with that
@@ -1465,7 +1465,7 @@ final class Motion_Runtime {
 	function rxPopper(trigger, content) {
 		var side = content.getAttribute("data-side") || "bottom";
 		var align = content.getAttribute("data-align") || "center";
-		var offset = parseFloat(content.getAttribute("data-dxai-offset") || "0") || 0;
+		var offset = parseFloat(content.getAttribute("data-dxui-offset") || "0") || 0;
 		var box = trigger.getBoundingClientRect();
 		rxPortal(content);
 		content.style.display = "";
@@ -1577,7 +1577,7 @@ final class Motion_Runtime {
 		return all.length ? all[0] : null;
 	}
 	function rxTipDelay(trigger) {
-		var own = parseFloat(trigger.getAttribute("data-dxai-delay") || "");
+		var own = parseFloat(trigger.getAttribute("data-dxui-delay") || "");
 		// Radix skips the delay when a tooltip closed less than 300ms ago, so
 		// moving along a row of them does not wait at each one.
 		return Date.now() - rxTipClosedAt < 300 ? 0 : (isNaN(own) ? 700 : own);
@@ -1675,7 +1675,7 @@ final class Motion_Runtime {
 		if (tip) { rxTipClose(tip); }
 
 		// A dialog's own close button, or a menu item — both close what holds them.
-		var dismiss = target.closest("[data-dxai-dismiss]");
+		var dismiss = target.closest("[data-dxui-dismiss]");
 		if (dismiss && rxOwns(dismiss)) {
 			var dialog = dismiss.closest('[role="dialog"], [role="alertdialog"]');
 			var owner = dialog ? rxTriggerOf(dialog) : null;
@@ -1783,13 +1783,13 @@ JS;
 		}
 
 		return "\n/* scroll reveal */\n"
-			. $scope . ' .dxai-reveal.is-armed:not(.is-in)'
+			. $scope . ' .dxui-reveal.is-armed:not(.is-in)'
 			. " { opacity: 0; transform: translateY(1rem); }\n"
-			. '@media (prefers-reduced-motion: reduce) { ' . $scope . ' .dxai-reveal.is-armed:not(.is-in)'
+			. '@media (prefers-reduced-motion: reduce) { ' . $scope . ' .dxui-reveal.is-armed:not(.is-in)'
 			. " { opacity: 1; transform: none; } }\n"
 			// Hide Motion_Runtime toggle panels only. Do NOT blanket `.hidden` —
 			// Tailwind responsive pairs like `hidden md:block` must still win.
-			. $scope . " [class*='dxai-on-'].hidden, " . $scope . " [class*='dxai-off-'].hidden { display: none !important; }\n";
+			. $scope . " [class*='dxui-on-'].hidden, " . $scope . " [class*='dxui-off-'].hidden { display: none !important; }\n";
 	}
 
 	public static function should_attach( string $markup, string $css ): string {
@@ -1798,10 +1798,10 @@ JS;
 			str_contains( $hay, 'rv-' )
 			|| str_contains( $hay, 'data-countup' )
 			|| str_contains( $hay, 'is-in' )
-			|| str_contains( $hay, 'dxai-reveal' )
-			|| str_contains( $hay, 'dxai-toggle-' )
-			|| str_contains( $hay, 'dxai-on-' )
-			|| str_contains( $hay, 'dxai-cls-' )
+			|| str_contains( $hay, 'dxui-reveal' )
+			|| str_contains( $hay, 'dxui-toggle-' )
+			|| str_contains( $hay, 'dxui-on-' )
+			|| str_contains( $hay, 'dxui-cls-' )
 			|| str_contains( $hay, 'data-lucide' )
 			/*
 			 * The Radix markers. Without them a page whose only interactive

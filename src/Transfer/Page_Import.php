@@ -2,23 +2,23 @@
 /**
  * Import a page package: the page, its design and what it renders with.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Transfer;
+namespace DX_UI\Transfer;
 
-use DXAI_UI\Chrome\Footer_Widgets;
-use DXAI_UI\Chrome\Header_Menus;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Chrome\Site_Footer_Block;
-use DXAI_UI\Chrome\Site_Header_Block;
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Media\Sideloader;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Design_Theme_Json;
+use DX_UI\Chrome\Footer_Widgets;
+use DX_UI\Chrome\Header_Menus;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Chrome\Site_Footer_Block;
+use DX_UI\Chrome\Site_Header_Block;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Media\Sideloader;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Design_Theme_Json;
 
 /**
  * Reads a package Page_Export wrote and makes the page exist here, looking
@@ -45,7 +45,7 @@ use DXAI_UI\Theme\Design_Theme_Json;
  * 3. the rewrite, of the page, every part, pattern, header and footer, the
  *    design stylesheet and script and the meta: every uploads URL the source
  *    used to the URL of that attachment (and size) here; the page's own URLs
- *    there to its URL here; `dxai-ui--{old scope}` to `dxai-ui--{new id}`
+ *    there to its URL here; `dx-ui--{old scope}` to `dx-ui--{new id}`
  *    wherever it is a whole class token (the design sheet is scoped to it);
  *    pattern, navigation and attachment ids in block attributes and
  *    `wp-image-N`; template-part references to this site's theme; a link
@@ -68,7 +68,7 @@ use DXAI_UI\Theme\Design_Theme_Json;
  *      or footer block becomes one, from its markup — the header filled from
  *      the packaged menus, as the source showed it);
  * 5. the page itself, with its template and meta, and its stylesheet and
- *    script written to uploads/dxai-ui/pattern-{id}.{css,js} (the script on
+ *    script written to uploads/dx-ui/pattern-{id}.{css,js} (the script on
  *    this site's motion runtime). A page this package creates is a draft
  *    unless the importer asked to publish it: a package is someone's HTML,
  *    CSS and JavaScript, looked at before it is public. A page it updates
@@ -97,10 +97,10 @@ final class Page_Import {
 	public const CHROME_AUTO = '';
 
 	/** On a page this package created until it is written in full; the next import finishes it as a new page. */
-	private const PENDING_META = '_dxai_ui_transfer_pending';
+	private const PENDING_META = '_dx_ui_transfer_pending';
 
 	/** Meta never copied from a package: this site's own bookkeeping, or measured again here. */
-	private const SKIP_META = array( Package::KEY_META, Package::SOURCE_META, self::PENDING_META, '_dxai_ui_audit', '_dxai_ui_canvas_html', '_dxai_ui_crawl', '_dxai_ui_page_id' );
+	private const SKIP_META = array( Package::KEY_META, Package::SOURCE_META, self::PENDING_META, '_dx_ui_audit', '_dx_ui_canvas_html', '_dx_ui_crawl', '_dx_ui_page_id' );
 
 	/** Page statuses kept from the source; anything else is published. */
 	private const STATUSES = array( 'publish', 'draft', 'pending', 'private' );
@@ -117,7 +117,7 @@ final class Page_Import {
 	/** @var array<string, string> Source URL => URL here, looked up whole (url_lookup()). */
 	private array $urls = array();
 
-	/** @var array<int, int> Old scope / pattern id => new id, for `dxai-ui--N`. */
+	/** @var array<int, int> Old scope / pattern id => new id, for `dx-ui--N`. */
 	private array $scopes = array();
 
 	/** @var array<int, int> Source attachment id => attachment id here. */
@@ -161,9 +161,9 @@ final class Page_Import {
 	 * (a Super Admin on multisite, DISALLOW_UNFILTERED_HTML otherwise).
 	 */
 	public static function refusal(): string {
-		return method_exists( \DXAI_UI\API\Converter_Controller::class, 'unfiltered_html_message' )
-			? \DXAI_UI\API\Converter_Controller::unfiltered_html_message()
-			: __( 'Importing a page package publishes its HTML, CSS and JavaScript, so it must run as a user allowed to publish unfiltered HTML.', 'dxai-ui' );
+		return method_exists( \DX_UI\API\Converter_Controller::class, 'unfiltered_html_message' )
+			? \DX_UI\API\Converter_Controller::unfiltered_html_message()
+			: __( 'Importing a page package publishes its HTML, CSS and JavaScript, so it must run as a user allowed to publish unfiltered HTML.', 'dx-ui' );
 	}
 
 	/**
@@ -188,7 +188,7 @@ final class Page_Import {
 	 * How long one step of an import from the admin screen may add media:
 	 * 20 seconds — a third of WP Engine's 60 s request limit, and less when
 	 * PHP's own limit is lower and cannot be raised. Filterable
-	 * (`dxai_ui_transfer_step_seconds`); 0 imports in one request.
+	 * (`dx_ui_transfer_step_seconds`); 0 imports in one request.
 	 */
 	public static function step_budget( bool $raised = true ): float {
 		$budget = 20.0;
@@ -197,7 +197,7 @@ final class Page_Import {
 			$budget = min( $budget, max( 3.0, $limit * 0.4 ) );
 		}
 
-		return max( 0.0, (float) apply_filters( 'dxai_ui_transfer_step_seconds', $budget ) );
+		return max( 0.0, (float) apply_filters( 'dx_ui_transfer_step_seconds', $budget ) );
 	}
 
 	/**
@@ -231,12 +231,12 @@ final class Page_Import {
 	 */
 	public function run( string $zip_path, string $name = '', array $options = array() ): array|\WP_Error {
 		if ( ! current_user_can( 'unfiltered_html' ) ) {
-			return new \WP_Error( 'dxai_ui_unfiltered_html', self::refusal(), array( 'status' => 403 ) );
+			return new \WP_Error( 'dx_ui_unfiltered_html', self::refusal(), array( 'status' => 403 ) );
 		}
 		$chrome = self::chrome_choice( $options['chrome'] ?? self::CHROME_AUTO );
 		if ( null === $chrome ) {
 			/* translators: %s: the value given. */
-			return new \WP_Error( 'dxai_ui_transfer_chrome', sprintf( __( 'Unknown header and footer choice "%s": use keep, install or auto.', 'dxai-ui' ), is_scalar( $options['chrome'] ?? null ) ? (string) $options['chrome'] : '' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_transfer_chrome', sprintf( __( 'Unknown header and footer choice "%s": use keep, install or auto.', 'dx-ui' ), is_scalar( $options['chrome'] ?? null ) ? (string) $options['chrome'] : '' ), array( 'status' => 400 ) );
 		}
 		$name    = $name !== '' ? $name : wp_basename( $zip_path );
 		$job     = is_array( $options['job'] ?? null ) ? $options['job'] : null;
@@ -252,7 +252,7 @@ final class Page_Import {
 		 * every unpacked package, so the uploads fallback is used then.
 		 */
 		$root = static fn( $dir ) => is_string( $dir ) && $dir !== '' && Package::listable( $dir ) ? $dir : '';
-		add_filter( 'dxai_ui_zip_work_root', $root, 99 );
+		add_filter( 'dx_ui_zip_work_root', $root, 99 );
 		try {
 			$unpacked = Zip_Extractor::unpack(
 				array(
@@ -263,13 +263,13 @@ final class Page_Import {
 				)
 			);
 		} finally {
-			remove_filter( 'dxai_ui_zip_work_root', $root, 99 );
+			remove_filter( 'dx_ui_zip_work_root', $root, 99 );
 		}
 		if ( is_wp_error( $unpacked ) ) {
 			return new \WP_Error(
-				'dxai_ui_transfer_refused',
+				'dx_ui_transfer_refused',
 				/* translators: %s: why the archive was refused. */
-				sprintf( __( 'The package was refused: %s', 'dxai-ui' ), $unpacked->get_error_message() ),
+				sprintf( __( 'The package was refused: %s', 'dx-ui' ), $unpacked->get_error_message() ),
 				array( 'status' => 400 )
 			);
 		}
@@ -324,9 +324,9 @@ final class Page_Import {
 				return $report;
 			} catch ( \Throwable $e ) {
 				return new \WP_Error(
-					'dxai_ui_transfer_failed',
+					'dx_ui_transfer_failed',
 					/* translators: %s: error message. */
-					sprintf( __( 'The import stopped part way: %s. What it wrote so far is kept (a page it creates stays private until it is written in full); importing the package again continues from there.', 'dxai-ui' ), $e->getMessage() ),
+					sprintf( __( 'The import stopped part way: %s. What it wrote so far is kept (a page it creates stays private until it is written in full); importing the package again continues from there.', 'dx-ui' ), $e->getMessage() ),
 					array( 'status' => 500 )
 				);
 			}
@@ -372,7 +372,7 @@ final class Page_Import {
 			),
 			'message' => sprintf(
 				/* translators: 1: files done, 2: files in the package. */
-				__( '%1$d of %2$d files are in the media library; the import goes on in the next step.', 'dxai-ui' ),
+				__( '%1$d of %2$d files are in the media library; the import goes on in the next step.', 'dx-ui' ),
 				$done,
 				$total
 			),
@@ -388,56 +388,56 @@ final class Page_Import {
 	private function validate( string $dir, array $files ): array|\WP_Error {
 		$have = array_flip( array_map( 'strval', $files ) );
 		$not  = static fn( string $why ): \WP_Error => new \WP_Error(
-			'dxai_ui_transfer_manifest',
+			'dx_ui_transfer_manifest',
 			/* translators: %s: what is wrong. */
-			sprintf( __( 'This is not a DX UI page package: %s', 'dxai-ui' ), $why ),
+			sprintf( __( 'This is not a DX UI page package: %s', 'dx-ui' ), $why ),
 			array( 'status' => 400 )
 		);
 		if ( ! isset( $have[ Package::MANIFEST ] ) ) {
-			return $not( __( 'it has no manifest.json at its root.', 'dxai-ui' ) );
+			return $not( __( 'it has no manifest.json at its root.', 'dx-ui' ) );
 		}
 		$path = $dir . '/' . Package::MANIFEST;
 		$size = (int) filesize( $path );
 		if ( $size < 2 || $size > Package::MANIFEST_MAX ) {
-			return $not( __( 'its manifest.json is empty or too large.', 'dxai-ui' ) );
+			return $not( __( 'its manifest.json is empty or too large.', 'dx-ui' ) );
 		}
 		$manifest = json_decode( (string) file_get_contents( $path ), true, 128 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		if ( ! is_array( $manifest ) ) {
-			return $not( __( 'its manifest.json is not valid JSON.', 'dxai-ui' ) );
+			return $not( __( 'its manifest.json is not valid JSON.', 'dx-ui' ) );
 		}
 		if ( ( $manifest['format'] ?? null ) !== Package::FORMAT ) {
 			/* translators: %s: format name. */
-			return $not( sprintf( __( 'its manifest says format "%s".', 'dxai-ui' ), is_scalar( $manifest['format'] ?? null ) ? (string) $manifest['format'] : '' ) );
+			return $not( sprintf( __( 'its manifest says format "%s".', 'dx-ui' ), is_scalar( $manifest['format'] ?? null ) ? (string) $manifest['format'] : '' ) );
 		}
 		$version = $manifest['format_version'] ?? null;
 		if ( ! is_int( $version ) || $version < 1 ) {
-			return $not( __( 'its manifest has no valid format version.', 'dxai-ui' ) );
+			return $not( __( 'its manifest has no valid format version.', 'dx-ui' ) );
 		}
 		if ( $version > Package::VERSION ) {
 			return new \WP_Error(
-				'dxai_ui_transfer_version',
+				'dx_ui_transfer_version',
 				/* translators: 1: package format version, 2: plugin version, 3: newest readable format version. */
-				sprintf( __( 'This package was made by a newer DX UI (package format %1$d, plugin %2$s); this site reads format %3$d. Update the plugin here first.', 'dxai-ui' ), $version, is_scalar( $manifest['plugin_version'] ?? null ) ? (string) $manifest['plugin_version'] : '?', Package::VERSION ),
+				sprintf( __( 'This package was made by a newer DX UI (package format %1$d, plugin %2$s); this site reads format %3$d. Update the plugin here first.', 'dx-ui' ), $version, is_scalar( $manifest['plugin_version'] ?? null ) ? (string) $manifest['plugin_version'] : '?', Package::VERSION ),
 				array( 'status' => 400 )
 			);
 		}
 		$page   = $manifest['page'] ?? null;
 		$source = $manifest['source'] ?? null;
 		if ( ! is_array( $page ) || ! is_string( $page['content'] ?? null ) || ! is_string( $page['title'] ?? null ) || ! is_array( $page['meta'] ?? array() ) ) {
-			return $not( __( 'its manifest has no page.', 'dxai-ui' ) );
+			return $not( __( 'its manifest has no page.', 'dx-ui' ) );
 		}
 		if ( ! is_array( $source ) || ! is_string( $source['site_url'] ?? null ) || '' === trim( (string) $source['site_url'] ) || ! is_string( $source['page_key'] ?? null ) || '' === (string) $source['page_key'] ) {
-			return $not( __( 'its manifest does not say which site and page it came from.', 'dxai-ui' ) );
+			return $not( __( 'its manifest does not say which site and page it came from.', 'dx-ui' ) );
 		}
 		foreach ( array( 'parts', 'patterns', 'navigations', 'media', 'files' ) as $list ) {
 			$manifest[ $list ] = $manifest[ $list ] ?? array();
 			if ( ! is_array( $manifest[ $list ] ) || array_filter( $manifest[ $list ], static fn( $row ): bool => ! is_array( $row ) ) !== array() ) {
 				/* translators: %s: manifest key. */
-				return $not( sprintf( __( 'its "%s" list is not a list of entries.', 'dxai-ui' ), $list ) );
+				return $not( sprintf( __( 'its "%s" list is not a list of entries.', 'dx-ui' ), $list ) );
 			}
 		}
 		if ( count( $manifest['parts'] ) + count( $manifest['patterns'] ) + count( $manifest['navigations'] ) > Package::MAX_ITEMS || count( $manifest['media'] ) > 5000 ) {
-			return $not( __( 'it lists more parts, patterns or media than a page package can hold.', 'dxai-ui' ) );
+			return $not( __( 'it lists more parts, patterns or media than a page package can hold.', 'dx-ui' ) );
 		}
 		$manifest['design'] = is_array( $manifest['design'] ?? null ) ? $manifest['design'] : array();
 		$manifest['chrome'] = is_array( $manifest['chrome'] ?? null ) ? $manifest['chrome'] : array();
@@ -449,16 +449,16 @@ final class Page_Import {
 			$rel = (string) ( $file['path'] ?? '' );
 			if ( ! Package::safe_path( $rel ) ) {
 				/* translators: %s: path. */
-				return $not( sprintf( __( 'it lists a file at an unsafe path (%s).', 'dxai-ui' ), $rel ) );
+				return $not( sprintf( __( 'it lists a file at an unsafe path (%s).', 'dx-ui' ), $rel ) );
 			}
 			if ( ! isset( $have[ $rel ] ) ) {
 				/* translators: %s: path. */
-				return $not( sprintf( __( 'the file %s it lists is missing or of a type that is never imported.', 'dxai-ui' ), $rel ) );
+				return $not( sprintf( __( 'the file %s it lists is missing or of a type that is never imported.', 'dx-ui' ), $rel ) );
 			}
 			$sha1 = (string) ( $file['sha1'] ?? '' );
 			if ( $sha1 === '' || ! hash_equals( $sha1, (string) sha1_file( $dir . '/' . $rel ) ) ) {
 				/* translators: %s: path. */
-				return $not( sprintf( __( 'the file %s is not the one it was exported with (checksum mismatch).', 'dxai-ui' ), $rel ) );
+				return $not( sprintf( __( 'the file %s is not the one it was exported with (checksum mismatch).', 'dx-ui' ), $rel ) );
 			}
 			$listed[ $rel ] = true;
 		}
@@ -474,12 +474,12 @@ final class Page_Import {
 		foreach ( $manifest['media'] as $row ) {
 			$file = (string) ( $row['file'] ?? '' );
 			if ( $file === '' ) {
-				return $not( __( 'a media entry names no file.', 'dxai-ui' ) );
+				return $not( __( 'a media entry names no file.', 'dx-ui' ) );
 			}
 			$refs[] = array( $file, 'media' );
 			if ( ! Package::media_allowed( (string) ( $row['name'] ?? $file ) ) ) {
 				/* translators: %s: file name. */
-				return $not( sprintf( __( 'it carries %s, which is not an image, video, audio or font file.', 'dxai-ui' ), (string) ( $row['name'] ?? $file ) ) );
+				return $not( sprintf( __( 'it carries %s, which is not an image, video, audio or font file.', 'dx-ui' ), (string) ( $row['name'] ?? $file ) ) );
 			}
 		}
 		foreach ( $refs as $ref ) {
@@ -491,7 +491,7 @@ final class Page_Import {
 			$ok  = $kind === 'media' ? Package::media_allowed( $rel ) : $ext === $kind;
 			if ( ! isset( $listed[ $rel ] ) || ! $ok ) {
 				/* translators: %s: path. */
-				return $not( sprintf( __( 'it names %s, which it does not list or which is of the wrong type.', 'dxai-ui' ), $rel ) );
+				return $not( sprintf( __( 'it names %s, which it does not list or which is of the wrong type.', 'dx-ui' ), $rel ) );
 			}
 		}
 
@@ -507,7 +507,7 @@ final class Page_Import {
 	private function apply( array $manifest, string $dir, string $chrome, array $items, array $results, bool $publish ): array|\WP_Error {
 		$source         = (array) $manifest['source'];
 		$page           = (array) $manifest['page'];
-		$archive        = (string) ( $page['meta']['_dxai_ui_source_zip'] ?? '' );
+		$archive        = (string) ( $page['meta']['_dx_ui_source_zip'] ?? '' );
 		$this->identity = Package::identity( (string) $source['site_url'], (string) $source['page_key'] );
 		$this->source_hosts( $manifest );
 
@@ -519,7 +519,7 @@ final class Page_Import {
 		$created        = $reserved['created'];
 		$page_id        = $reserved['id'];
 		$this->current  = (string) get_post_field( 'post_content', $page_id );
-		$this->page_key = $this->page_key( (string) ( $page['meta']['_dxai_ui_page_key'] ?? '' ), $page_id, (string) $source['site_url'] );
+		$this->page_key = $this->page_key( (string) ( $page['meta']['_dx_ui_page_key'] ?? '' ), $page_id, (string) $source['site_url'] );
 
 		/*
 		 * The header and footer choice, resolved the way a ZIP import resolves
@@ -565,13 +565,13 @@ final class Page_Import {
 			ksort( $this->unmatched, SORT_STRING );
 			$this->warnings[] = sprintf(
 				/* translators: %s: list of URLs. */
-				__( 'Links to other pages of the source site now point at the same paths on this site, but this site has no page there yet: %s. They work once those pages exist here.', 'dxai-ui' ),
+				__( 'Links to other pages of the source site now point at the same paths on this site, but this site has no page there yet: %s. They work once those pages exist here.', 'dx-ui' ),
 				implode( ', ', array_values( $this->unmatched ) )
 			);
 		}
 
-		if ( class_exists( \DXAI_UI\Verification\Import_Audit::class ) ) {
-			update_post_meta( $page_id, \DXAI_UI\Verification\Import_Audit::META, ( new \DXAI_UI\Verification\Import_Audit() )->page( $page_id ) );
+		if ( class_exists( \DX_UI\Verification\Import_Audit::class ) ) {
+			update_post_meta( $page_id, \DX_UI\Verification\Import_Audit::META, ( new \DX_UI\Verification\Import_Audit() )->page( $page_id ) );
 		}
 		if ( class_exists( Site_Header_Block::class ) ) {
 			Site_Header_Block::forget();
@@ -579,8 +579,8 @@ final class Page_Import {
 		// The must-use runtime renders converted pages only on a site its
 		// record says has one; activation and admin_init keep that record,
 		// and a WP-CLI import runs neither.
-		if ( class_exists( \DXAI_UI\Support\Runtime::class ) && ! \DXAI_UI\Support\Runtime::render_only() ) {
-			\DXAI_UI\Support\Runtime::ensure();
+		if ( class_exists( \DX_UI\Support\Runtime::class ) && ! \DX_UI\Support\Runtime::render_only() ) {
+			\DX_UI\Support\Runtime::ensure();
 		}
 
 		// What the chrome report reads: install()'s answers, or what keeping did.
@@ -607,8 +607,8 @@ final class Page_Import {
 				'part_id'      => $part_id,
 				'reason'       => $choice['reason'],
 				'message'      => 'header' === $area
-					? __( 'The header is a template part of this page; Appearance › Menus was not changed.', 'dxai-ui' )
-					: __( 'The footer is a template part of this page; Appearance › Widgets was not changed.', 'dxai-ui' ),
+					? __( 'The header is a template part of this page; Appearance › Menus was not changed.', 'dx-ui' )
+					: __( 'The footer is a template part of this page; Appearance › Widgets was not changed.', 'dx-ui' ),
 			);
 		}
 		$classic = $this->classic_warning( $chrome_out );
@@ -618,7 +618,7 @@ final class Page_Import {
 		if ( $retired['kept'] !== array() ) {
 			$this->warnings[] = sprintf(
 				/* translators: %s: template part ids. */
-				__( 'This site keeps no trash (EMPTY_TRASH_DAYS is 0), where wp_trash_post() deletes for good, so the template parts this page no longer uses stay published instead (ids %s): nothing renders them, and Appearance › Editor › Patterns lists them.', 'dxai-ui' ),
+				__( 'This site keeps no trash (EMPTY_TRASH_DAYS is 0), where wp_trash_post() deletes for good, so the template parts this page no longer uses stay published instead (ids %s): nothing renders them, and Appearance › Editor › Patterns lists them.', 'dx-ui' ),
 				implode( ', ', array_map( 'intval', $retired['kept'] ) )
 			);
 		}
@@ -655,8 +655,8 @@ final class Page_Import {
 			'brand'         => $brand,
 			'warnings'      => array_values( array_unique( array_merge( array_map( 'strval', (array) ( $manifest['warnings'] ?? array() ) ), $this->warnings ) ) ),
 		);
-		if ( method_exists( \DXAI_UI\API\Converter_Controller::class, 'chrome_report' ) ) {
-			$report['chrome_report'] = \DXAI_UI\API\Converter_Controller::chrome_report( $raw, $choice );
+		if ( method_exists( \DX_UI\API\Converter_Controller::class, 'chrome_report' ) ) {
+			$report['chrome_report'] = \DX_UI\API\Converter_Controller::chrome_report( $raw, $choice );
 		}
 		foreach ( array( 'header', 'footer' ) as $area ) {
 			unset( $report['chrome'][ $area ]['answer'] );
@@ -672,7 +672,7 @@ final class Page_Import {
 	 * @return array{mode:string, requested:string, reason:string, message:string}
 	 */
 	private function resolve_chrome( string $requested, string $archive, int $page_id ): array {
-		if ( ! class_exists( \DXAI_UI\Chrome\Chrome_Choice::class ) ) {
+		if ( ! class_exists( \DX_UI\Chrome\Chrome_Choice::class ) ) {
 			return array(
 				'mode'      => self::CHROME_INSTALL === $requested ? self::CHROME_INSTALL : self::CHROME_KEEP,
 				'requested' => $requested,
@@ -680,7 +680,7 @@ final class Page_Import {
 				'message'   => '',
 			);
 		}
-		$choice = \DXAI_UI\Chrome\Chrome_Choice::resolve(
+		$choice = \DX_UI\Chrome\Chrome_Choice::resolve(
 			$requested,
 			array(
 				'scope'   => 'page',
@@ -708,7 +708,7 @@ final class Page_Import {
 	 * @param array<string, mixed> $chrome_out chrome()'s answer.
 	 */
 	private function classic_warning( array $chrome_out ): string {
-		if ( ! class_exists( \DXAI_UI\Theme\Theme_Compat::class ) || ! method_exists( \DXAI_UI\Theme\Theme_Compat::class, 'may_install_chrome' ) || ! \DXAI_UI\Chrome\Chrome_Choice::theme_draws_chrome() ) {
+		if ( ! class_exists( \DX_UI\Theme\Theme_Compat::class ) || ! method_exists( \DX_UI\Theme\Theme_Compat::class, 'may_install_chrome' ) || ! \DX_UI\Chrome\Chrome_Choice::theme_draws_chrome() ) {
 			return '';
 		}
 		$changed = array();
@@ -724,10 +724,10 @@ final class Page_Import {
 			}
 			if ( $names !== array() ) {
 				/* translators: %s: menu location names. */
-				$changed[] = sprintf( __( 'the menu locations %s now show the design\'s menus', 'dxai-ui' ), implode( ', ', $names ) );
+				$changed[] = sprintf( __( 'the menu locations %s now show the design\'s menus', 'dx-ui' ), implode( ', ', $names ) );
 			}
 			if ( ! empty( $header['logo_set'] ) ) {
-				$changed[] = __( 'the design\'s logo is now the Site Logo', 'dxai-ui' );
+				$changed[] = __( 'the design\'s logo is now the Site Logo', 'dx-ui' );
 			}
 		}
 		$footer = (array) ( $chrome_out['footer'] ?? array() );
@@ -738,7 +738,7 @@ final class Page_Import {
 				$names[] = (string) ( $wp_registered_sidebars[ $area ]['name'] ?? $area );
 			}
 			/* translators: %s: widget area names. */
-			$changed[] = sprintf( __( 'the widget areas %s now hold the design\'s footer widgets', 'dxai-ui' ), implode( ', ', $names ) );
+			$changed[] = sprintf( __( 'the widget areas %s now hold the design\'s footer widgets', 'dx-ui' ), implode( ', ', $names ) );
 		}
 		if ( $changed === array() ) {
 			return '';
@@ -746,7 +746,7 @@ final class Page_Import {
 
 		return sprintf(
 			/* translators: %s: what changed, as a list. */
-			__( 'This theme draws the header and footer of every page of the site from the same menu locations and widget areas, and on every page of the site %s. To give the site its own back: Appearance › Menus › Manage Locations, and the earlier widgets are under Inactive Widgets in Appearance › Widgets. Importing with "keep" leaves both alone.', 'dxai-ui' ),
+			__( 'This theme draws the header and footer of every page of the site from the same menu locations and widget areas, and on every page of the site %s. To give the site its own back: Appearance › Menus › Manage Locations, and the earlier widgets are under Inactive Widgets in Appearance › Widgets. Importing with "keep" leaves both alone.', 'dx-ui' ),
 			implode( '; ', $changed )
 		);
 	}
@@ -829,7 +829,7 @@ final class Page_Import {
 					'id'    => 0,
 					'url'   => '',
 					'name'  => $name,
-					'error' => is_wp_error( $got ) ? $got->get_error_message() : __( 'no file was stored', 'dxai-ui' ),
+					'error' => is_wp_error( $got ) ? $got->get_error_message() : __( 'no file was stored', 'dx-ui' ),
 				);
 				continue;
 			}
@@ -891,11 +891,11 @@ final class Page_Import {
 	private function map_media( array $items, array $results ): array {
 		foreach ( $items as $i => $item ) {
 			$item = (array) $item;
-			$got  = isset( $results[ $i ] ) && is_array( $results[ $i ] ) ? $results[ $i ] : array( 'error' => __( 'it was not imported', 'dxai-ui' ) );
+			$got  = isset( $results[ $i ] ) && is_array( $results[ $i ] ) ? $results[ $i ] : array( 'error' => __( 'it was not imported', 'dx-ui' ) );
 			if ( '' !== (string) ( $got['error'] ?? '' ) ) {
 				$this->warnings[] = sprintf(
 					/* translators: 1: file name, 2: error. */
-					__( '%1$s could not be added to the media library: %2$s', 'dxai-ui' ),
+					__( '%1$s could not be added to the media library: %2$s', 'dx-ui' ),
 					(string) ( $got['name'] ?? ( $item['name'] ?? '' ) ),
 					(string) $got['error']
 				);
@@ -1114,7 +1114,7 @@ final class Page_Import {
 				'post_content' => '',
 				'meta_input'   => array(
 					Package::KEY_META         => $this->identity,
-					'_dxai_ui_generated_page' => '1',
+					'_dx_ui_generated_page' => '1',
 					self::PENDING_META        => '1',
 				),
 			),
@@ -1187,7 +1187,7 @@ final class Page_Import {
 			);
 			if ( is_wp_error( $id ) || ! $id ) {
 				/* translators: 1: kind, 2: title. */
-				$this->warnings[] = sprintf( __( 'The %1$s "%2$s" could not be created.', 'dxai-ui' ), $kind, (string) ( $row['title'] ?? '' ) );
+				$this->warnings[] = sprintf( __( 'The %1$s "%2$s" could not be created.', 'dx-ui' ), $kind, (string) ( $row['title'] ?? '' ) );
 				continue;
 			}
 			$out[ $old ] = array(
@@ -1210,7 +1210,7 @@ final class Page_Import {
 	private function plan_parts( array $parts ): void {
 		foreach ( $parts as $part ) {
 			$slug = (string) ( $part['slug'] ?? '' );
-			if ( ! str_starts_with( $slug, 'dxai-' ) || preg_match( '/^[a-z0-9-]+$/', $slug ) !== 1 ) {
+			if ( ! str_starts_with( $slug, 'dxui-' ) || preg_match( '/^[a-z0-9-]+$/', $slug ) !== 1 ) {
 				continue;
 			}
 			$mine = self::owned( 'wp_template_part', $this->identity . ':part:' . $slug );
@@ -1267,8 +1267,8 @@ final class Page_Import {
 		if ( $this->scopes !== array() ) {
 			$scopes = $this->scopes;
 			$text   = (string) preg_replace_callback(
-				'/(?<![A-Za-z0-9_-])dxai-ui--(\d+)(?![A-Za-z0-9_-])/',
-				static fn( array $m ): string => isset( $scopes[ (int) $m[1] ] ) ? 'dxai-ui--' . $scopes[ (int) $m[1] ] : $m[0],
+				'/(?<![A-Za-z0-9_-])dx-ui--(\d+)(?![A-Za-z0-9_-])/',
+				static fn( array $m ): string => isset( $scopes[ (int) $m[1] ] ) ? 'dx-ui--' . $scopes[ (int) $m[1] ] : $m[0],
 				$text
 			);
 		}
@@ -1318,13 +1318,13 @@ final class Page_Import {
 		};
 		if ( $name === 'core/block' ) {
 			$swap( $attrs, 'ref', $this->patterns );
-		} elseif ( $name === 'dxai-ui/pattern' ) {
+		} elseif ( $name === 'dx-ui/pattern' ) {
 			$swap( $attrs, 'patternId', $this->patterns );
 		} elseif ( $name === 'core/navigation' ) {
 			$swap( $attrs, 'ref', $this->navigations );
 		} elseif ( $name === 'core/template-part' ) {
 			$slug = (string) ( $attrs['slug'] ?? '' );
-			if ( str_starts_with( $slug, 'dxai-' ) ) {
+			if ( str_starts_with( $slug, 'dxui-' ) ) {
 				if ( isset( $this->part_slugs[ $slug ] ) && $this->part_slugs[ $slug ] !== $slug ) {
 					$attrs['slug'] = $this->part_slugs[ $slug ];
 					$changed       = true;
@@ -1445,7 +1445,7 @@ final class Page_Import {
 	}
 
 	/**
-	 * The meta a package may set on a post: `_dxai_ui_*` keys (and the extra
+	 * The meta a package may set on a post: `_dx_ui_*` keys (and the extra
 	 * ones named), rewritten; nothing else — a package cannot write
 	 * `_wp_attached_file`, capabilities or any other plugin's data.
 	 *
@@ -1460,11 +1460,11 @@ final class Page_Import {
 			if ( in_array( $key, self::SKIP_META, true ) ) {
 				continue;
 			}
-			if ( preg_match( '/^_dxai_ui_[a-z0-9_]+$/', $key ) !== 1 && ! in_array( $key, $extra, true ) ) {
+			if ( preg_match( '/^_dx_ui_[a-z0-9_]+$/', $key ) !== 1 && ! in_array( $key, $extra, true ) ) {
 				continue;
 			}
 			$out[ $key ] = $this->rewrite_value( $value );
-			if ( '_dxai_ui_font_urls' === $key ) {
+			if ( '_dx_ui_font_urls' === $key ) {
 				$out[ $key ] = $this->font_urls( $out[ $key ] );
 			}
 		}
@@ -1479,7 +1479,7 @@ final class Page_Import {
 	 * design asset, its URL mapped here). Anything else is left out and named
 	 * in the result, never loaded silently — a package from someone else
 	 * could make the page call any server on every visit. More hosts can be
-	 * allowed with the `dxai_ui_transfer_font_hosts` filter.
+	 * allowed with the `dx_ui_transfer_font_hosts` filter.
 	 *
 	 * @param mixed $urls
 	 * @return array<int, string>
@@ -1490,7 +1490,7 @@ final class Page_Import {
 		 *
 		 * @param array<int, string> $hosts
 		 */
-		$hosts = array_map( 'strtolower', (array) apply_filters( 'dxai_ui_transfer_font_hosts', self::FONT_HOSTS ) );
+		$hosts = array_map( 'strtolower', (array) apply_filters( 'dx_ui_transfer_font_hosts', self::FONT_HOSTS ) );
 		foreach ( array( home_url( '/' ), site_url( '/' ), (string) ( wp_upload_dir( null, false )['baseurl'] ?? '' ) ) as $own ) {
 			$host = strtolower( (string) wp_parse_url( $own, PHP_URL_HOST ) );
 			if ( $host !== '' ) {
@@ -1510,9 +1510,9 @@ final class Page_Import {
 			}
 			$this->warnings[] = sprintf(
 				/* translators: 1: stylesheet URL, 2: host. */
-				__( 'The page asked to load the font stylesheet %1$s, from %2$s, which is not a font service this plugin knows; it is not loaded. If you trust it, allow the host with the dxai_ui_transfer_font_hosts filter and import again.', 'dxai-ui' ),
+				__( 'The page asked to load the font stylesheet %1$s, from %2$s, which is not a font service this plugin knows; it is not loaded. If you trust it, allow the host with the dx_ui_transfer_font_hosts filter and import again.', 'dx-ui' ),
 				esc_url_raw( $url ),
-				$host !== '' ? $host : __( 'no host', 'dxai-ui' )
+				$host !== '' ? $host : __( 'no host', 'dx-ui' )
 			);
 		}
 
@@ -1520,7 +1520,7 @@ final class Page_Import {
 	}
 
 	/**
-	 * Set a post's meta to exactly these `_dxai_ui_*` keys: each written, and
+	 * Set a post's meta to exactly these `_dx_ui_*` keys: each written, and
 	 * one the post carries that the package no longer has removed (a flag the
 	 * source dropped since the last import, like the static-HTML one, would
 	 * otherwise keep changing how the page renders). Other keys are untouched.
@@ -1531,7 +1531,7 @@ final class Page_Import {
 	private static function set_meta( int $post_id, array $meta, array $keep = array() ): void {
 		foreach ( array_keys( (array) get_post_meta( $post_id ) ) as $key ) {
 			$key = (string) $key;
-			if ( str_starts_with( $key, '_dxai_ui_' ) && ! array_key_exists( $key, $meta ) && ! in_array( $key, $keep, true ) && ! in_array( $key, self::SKIP_META, true ) ) {
+			if ( str_starts_with( $key, '_dx_ui_' ) && ! array_key_exists( $key, $meta ) && ! in_array( $key, $keep, true ) && ! in_array( $key, self::SKIP_META, true ) ) {
 				delete_post_meta( $post_id, $key );
 			}
 		}
@@ -1566,22 +1566,22 @@ final class Page_Import {
 				)
 			);
 			$meta                               = $this->allowed_meta( $row['meta'] ?? array(), array( 'wp_pattern_sync_status' ) );
-			$meta['_dxai_ui_generated']         = '1';
+			$meta['_dx_ui_generated']         = '1';
 			$meta[ Package::KEY_META ]          = $ids[ $old ]['key'];
-			unset( $meta['_dxai_ui_css_url'] );
-			self::set_meta( $id, $meta, array( '_dxai_ui_css_url' ) );
+			unset( $meta['_dx_ui_css_url'] );
+			self::set_meta( $id, $meta, array( '_dx_ui_css_url' ) );
 			if ( ! array_key_exists( 'wp_pattern_sync_status', $meta ) ) {
 				delete_post_meta( $id, 'wp_pattern_sync_status' );
 			}
 
 			$css = (string) ( $row['css'] ?? '' );
 			if ( $css !== '' ) {
-				$url = ( new \DXAI_UI\Compiler\Tailwind_Purger() )->persist( $id, $this->rewrite( (string) file_get_contents( $dir . '/' . $css ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				$url = ( new \DX_UI\Compiler\Tailwind_Purger() )->persist( $id, $this->rewrite( (string) file_get_contents( $dir . '/' . $css ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				if ( ! is_wp_error( $url ) ) {
-					update_post_meta( $id, '_dxai_ui_css_url', Upload_Paths::for_storage( $url ) );
+					update_post_meta( $id, '_dx_ui_css_url', Upload_Paths::for_storage( $url ) );
 				}
 			} else {
-				delete_post_meta( $id, '_dxai_ui_css_url' );
+				delete_post_meta( $id, '_dx_ui_css_url' );
 			}
 			$out[] = array(
 				'id'        => $id,
@@ -1643,7 +1643,7 @@ final class Page_Import {
 		}
 		$page    = (array) $manifest['page'];
 		$title   = (string) $page['title'];
-		$archive = (string) ( $page['meta']['_dxai_ui_source_zip'] ?? '' );
+		$archive = (string) ( $page['meta']['_dx_ui_source_zip'] ?? '' );
 		$extra   = array();
 		$out     = array(
 			'content'      => $content,
@@ -1668,7 +1668,7 @@ final class Page_Import {
 			}
 			if ( $markup === '' ) {
 				/* translators: %s: header or footer. */
-				$this->warnings[] = sprintf( __( 'The package names a %s but carries no markup for it.', 'dxai-ui' ), $area );
+				$this->warnings[] = sprintf( __( 'The package names a %s but carries no markup for it.', 'dx-ui' ), $area );
 				$out[ $area ]     = array(
 					'mode' => 'none',
 					'kept' => '',
@@ -1693,11 +1693,11 @@ final class Page_Import {
 					) + self::answer_summary( $area, $answer );
 					continue;
 				}
-				$message          = (string) ( $answer['message'] ?? ( $answer['error'] ?? __( 'it was refused', 'dxai-ui' ) ) );
+				$message          = (string) ( $answer['message'] ?? ( $answer['error'] ?? __( 'it was refused', 'dx-ui' ) ) );
 				$this->warnings[] = sprintf(
 					/* translators: 1: header or footer, 2: reason. */
-					__( 'The %1$s was not installed into Appearance and stays a template part of the page: %2$s', 'dxai-ui' ),
-					'header' === $area ? __( 'header', 'dxai-ui' ) : __( 'footer', 'dxai-ui' ),
+					__( 'The %1$s was not installed into Appearance and stays a template part of the page: %2$s', 'dx-ui' ),
+					'header' === $area ? __( 'header', 'dx-ui' ) : __( 'footer', 'dx-ui' ),
 					$message
 				);
 			}
@@ -1713,8 +1713,8 @@ final class Page_Import {
 				$extra[ $slug ]                     = array(
 					'slug'  => $slug,
 					'area'  => $area,
-					'title' => $title . ' ' . ( 'header' === $area ? __( 'Header', 'dxai-ui' ) : __( 'Footer', 'dxai-ui' ) ),
-					'meta'  => array( '_dxai_ui_area' => $area ),
+					'title' => $title . ' ' . ( 'header' === $area ? __( 'Header', 'dx-ui' ) : __( 'Footer', 'dx-ui' ) ),
+					'meta'  => array( '_dx_ui_area' => $area ),
 				);
 				$ref                                = sprintf(
 					'<!-- wp:template-part %s /-->',
@@ -1771,7 +1771,7 @@ final class Page_Import {
 				'meta_query'       => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
-						'key'   => '_dxai_ui_generated',
+						'key'   => '_dx_ui_generated',
 						'value' => '1',
 					),
 					array(
@@ -1860,8 +1860,8 @@ final class Page_Import {
 				return is_array( $answer ) ? $answer : array( 'block_markup' => '' );
 			}
 			// The key Template_Part_Factory names this page's footer part by
-			// (dxai-footer-{key}): a hand-back writes that same part.
-			$prefix  = 'dxai-footer-';
+			// (dxui-footer-{key}): a hand-back writes that same part.
+			$prefix  = 'dxui-footer-';
 			$context = array(
 				'page_id'  => $page_id,
 				'title'    => $title,
@@ -1869,8 +1869,8 @@ final class Page_Import {
 				'owner'    => $this->page_key,
 				'part_key' => str_starts_with( $part_slug, $prefix ) ? substr( $part_slug, strlen( $prefix ) ) : '',
 			);
-			$answer  = method_exists( \DXAI_UI\Structures\Structure_Repository::class, 'install_site_footer' )
-				? \DXAI_UI\Structures\Structure_Repository::install_site_footer( $markup, $context )
+			$answer  = method_exists( \DX_UI\Structures\Structure_Repository::class, 'install_site_footer' )
+				? \DX_UI\Structures\Structure_Repository::install_site_footer( $markup, $context )
 				: Footer_Widgets::install( $markup, $context + array( 'scope' => $page_id ) );
 
 			return is_array( $answer ) ? $answer : array( 'block_markup' => '' );
@@ -1892,7 +1892,7 @@ final class Page_Import {
 	 * @param array<string, mixed> $packaged location => {name, items}.
 	 */
 	private function apply_menus( array $answer, array $packaged, string $markup, string $owner, string $archive ): void {
-		if ( ! class_exists( \DXAI_UI\Structures\Navigation_Factory::class ) || ! method_exists( \DXAI_UI\Structures\Navigation_Factory::class, 'header_menu' ) ) {
+		if ( ! class_exists( \DX_UI\Structures\Navigation_Factory::class ) || ! method_exists( \DX_UI\Structures\Navigation_Factory::class, 'header_menu' ) ) {
 			return;
 		}
 		$design = (array) ( Header_Template::build( $markup )['trees'] ?? array() );
@@ -1907,7 +1907,7 @@ final class Page_Import {
 				continue;
 			}
 			$term = wp_get_nav_menu_object( $menu_id );
-			( new \DXAI_UI\Structures\Navigation_Factory( $owner, (string) preg_replace( '/\.zip$/i', '', $archive ), false ) )->header_menu(
+			( new \DX_UI\Structures\Navigation_Factory( $owner, (string) preg_replace( '/\.zip$/i', '', $archive ), false ) )->header_menu(
 				$term instanceof \WP_Term ? (string) $term->name : (string) ( $menu['name'] ?? '' ),
 				$items,
 				$location,
@@ -1959,7 +1959,7 @@ final class Page_Import {
 	 * @param array<string, mixed> $packaged location => {name, items}.
 	 */
 	private function header_as_shown( string $markup, array $packaged ): string {
-		if ( ! class_exists( \DXAI_UI\Chrome\Header_Renderer::class ) ) {
+		if ( ! class_exists( \DX_UI\Chrome\Header_Renderer::class ) ) {
 			return $markup;
 		}
 		$spec   = Header_Template::build( $markup );
@@ -1976,7 +1976,7 @@ final class Page_Import {
 			return $markup;
 		}
 
-		return \DXAI_UI\Chrome\Header_Renderer::markup( ( new \DXAI_UI\Chrome\Header_Renderer( $spec, $menus ) )->root() );
+		return \DX_UI\Chrome\Header_Renderer::markup( ( new \DX_UI\Chrome\Header_Renderer( $spec, $menus ) )->root() );
 	}
 
 	/**
@@ -2035,7 +2035,7 @@ final class Page_Import {
 		$ascii = trim( substr( trim( $ascii, '-' ), 0, 40 ), '-' );
 		$key   = ( $ascii !== '' ? $ascii : 'page' ) . '-t' . substr( $this->identity, 0, 8 );
 
-		return 'dxai-' . $area . '-' . $key;
+		return 'dxui-' . $area . '-' . $key;
 	}
 
 	/**
@@ -2105,13 +2105,13 @@ final class Page_Import {
 			}
 			if ( is_wp_error( $id ) || ! $id ) {
 				/* translators: %s: part slug. */
-				$this->warnings[] = sprintf( __( 'The template part %s could not be written.', 'dxai-ui' ), $slug );
+				$this->warnings[] = sprintf( __( 'The template part %s could not be written.', 'dx-ui' ), $slug );
 				continue;
 			}
 			$id                          = (int) $id;
 			$meta                        = $this->allowed_meta( $row['meta'] ?? array() );
-			$meta['_dxai_ui_generated']  = '1';
-			$meta['_dxai_ui_area']       = $area;
+			$meta['_dx_ui_generated']  = '1';
+			$meta['_dx_ui_area']       = $area;
 			$meta[ Package::KEY_META ]   = $key;
 			self::set_meta( $id, $meta );
 			if ( taxonomy_exists( 'wp_theme' ) ) {
@@ -2262,8 +2262,8 @@ final class Page_Import {
 		);
 
 		$meta = $this->allowed_meta( $page['meta'] ?? array() );
-		unset( $meta['_dxai_ui_css_url'], $meta['_dxai_ui_js_url'] );
-		$meta['_dxai_ui_generated_page'] = '1';
+		unset( $meta['_dx_ui_css_url'], $meta['_dx_ui_js_url'] );
+		$meta['_dx_ui_generated_page'] = '1';
 		$meta[ Page_Scope::META ]        = $page_id;
 		$meta[ Package::KEY_META ]       = $this->identity;
 		$meta[ Package::SOURCE_META ]    = array(
@@ -2273,21 +2273,21 @@ final class Page_Import {
 			'modified_gmt'   => (string) ( $page['modified_gmt'] ?? '' ),
 		);
 		if ( $this->page_key !== '' ) {
-			$meta['_dxai_ui_page_key'] = $this->page_key;
+			$meta['_dx_ui_page_key'] = $this->page_key;
 		}
-		self::set_meta( $page_id, $meta, array( '_dxai_ui_css_url', '_dxai_ui_js_url', '_dxai_ui_audit' ) );
+		self::set_meta( $page_id, $meta, array( '_dx_ui_css_url', '_dx_ui_js_url', '_dx_ui_audit' ) );
 
 		$template = (string) ( $page['template'] ?? '' );
 		if ( in_array( $template, Package::TEMPLATES, true ) || $template === 'default' ) {
 			update_post_meta( $page_id, '_wp_page_template', $template );
 		} elseif ( $template !== '' && $template !== 'default' ) {
 			/* translators: %s: template file. */
-			$this->warnings[] = sprintf( __( 'The page used the template %s on the source site, which is not part of DX UI; it uses the default template here.', 'dxai-ui' ), $template );
+			$this->warnings[] = sprintf( __( 'The page used the template %s on the source site, which is not part of DX UI; it uses the default template here.', 'dx-ui' ), $template );
 			delete_post_meta( $page_id, '_wp_page_template' );
 		}
 
 		$design = (array) ( $manifest['design'] ?? array() );
-		$purger = new \DXAI_UI\Compiler\Tailwind_Purger();
+		$purger = new \DX_UI\Compiler\Tailwind_Purger();
 		$out    = array(
 			'css'     => '',
 			'js'      => '',
@@ -2299,29 +2299,29 @@ final class Page_Import {
 			if ( is_wp_error( $url ) ) {
 				$this->warnings[] = $url->get_error_message();
 			} else {
-				update_post_meta( $page_id, '_dxai_ui_css_url', Upload_Paths::for_storage( $url ) );
+				update_post_meta( $page_id, '_dx_ui_css_url', Upload_Paths::for_storage( $url ) );
 				$out['css'] = Upload_Paths::for_storage( $url );
 			}
 		} else {
-			delete_post_meta( $page_id, '_dxai_ui_css_url' );
+			delete_post_meta( $page_id, '_dx_ui_css_url' );
 		}
 		$js = (string) ( $design['js'] ?? '' );
 		if ( $js !== '' ) {
 			$code  = $this->rewrite( (string) file_get_contents( $dir . '/' . $js ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$from  = (string) ( $manifest['plugin_version'] ?? '' );
-			$newer = $from !== '' && defined( 'DXAI_UI_VERSION' ) && version_compare( $from, (string) DXAI_UI_VERSION, '>' );
-			if ( ! $newer && class_exists( \DXAI_UI\Compiler\Motion_Runtime::class ) ) {
-				$code = \DXAI_UI\Compiler\Motion_Runtime::refresh( $code );
+			$newer = $from !== '' && defined( 'DX_UI_VERSION' ) && version_compare( $from, (string) DX_UI_VERSION, '>' );
+			if ( ! $newer && class_exists( \DX_UI\Compiler\Motion_Runtime::class ) ) {
+				$code = \DX_UI\Compiler\Motion_Runtime::refresh( $code );
 			}
 			$url = $purger->persist_js( $page_id, $code );
 			if ( is_wp_error( $url ) ) {
 				$this->warnings[] = $url->get_error_message();
 			} else {
-				update_post_meta( $page_id, '_dxai_ui_js_url', Upload_Paths::for_storage( (string) $url ) );
+				update_post_meta( $page_id, '_dx_ui_js_url', Upload_Paths::for_storage( (string) $url ) );
 				$out['js'] = Upload_Paths::for_storage( (string) $url );
 			}
 		} else {
-			delete_post_meta( $page_id, '_dxai_ui_js_url' );
+			delete_post_meta( $page_id, '_dx_ui_js_url' );
 		}
 
 		// Written in full: its status now, and no longer pending.
@@ -2348,7 +2348,7 @@ final class Page_Import {
 	 * page agree on the owner.
 	 */
 	private function page_key( string $key, int $page_id, string $site_url ): string {
-		$current = (string) get_post_meta( $page_id, '_dxai_ui_page_key', true );
+		$current = (string) get_post_meta( $page_id, '_dx_ui_page_key', true );
 		if ( $key === '' ) {
 			return $current;
 		}
@@ -2358,7 +2358,7 @@ final class Page_Import {
 		}
 		if ( self::key_holder( $key, $page_id ) > 0 ) {
 			/* translators: %s: page key. */
-			$this->warnings[] = sprintf( __( 'Another page here already belongs to the same design (%s); the imported page keeps an identity of its own, so importing that design ZIP here later updates the other page, not this one.', 'dxai-ui' ), $key );
+			$this->warnings[] = sprintf( __( 'Another page here already belongs to the same design (%s); the imported page keeps an identity of its own, so importing that design ZIP here later updates the other page, not this one.', 'dx-ui' ), $key );
 
 			return $suffixed;
 		}
@@ -2377,7 +2377,7 @@ final class Page_Import {
 				'posts_per_page' => 1,
 				'fields'         => 'ids',
 				'post__not_in'   => array( $page_id ),
-				'meta_key'       => '_dxai_ui_page_key', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_dx_ui_page_key', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);

@@ -2,16 +2,16 @@
 /**
  * The menu of a design's pages: its header and footer links point at the pages made for it.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Capabilities;
 
 /**
  * A design keeps its menu in its own header and footer (links in blocks, not a WordPress menu), and every page made for
@@ -113,11 +113,11 @@ final class Team_Menu {
 	 * @return array<int, int>
 	 */
 	private static function menus_of( int $home ): array {
-		$spec = \DXAI_UI\Chrome\Header_Template::scoped( $home );
+		$spec = \DX_UI\Chrome\Header_Template::scoped( $home );
 		$out  = array();
 		foreach ( (array) ( $spec['menus'] ?? array() ) as $id ) {
 			$id = (int) $id;
-			if ( $id > 0 && (string) get_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) !== '' ) {
+			if ( $id > 0 && (string) get_term_meta( $id, \DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) !== '' ) {
 				$out[] = $id;
 			}
 		}
@@ -455,7 +455,7 @@ final class Team_Menu {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $after ), array( 'ID' => $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $id );
+		\DX_UI\Blocks\Style_Rules::forget( $id );
 		foreach ( array( Team_Pages::HASH, Copy_Writer::HASH ) as $key ) {
 			if ( (string) get_post_meta( $id, $key, true ) === $was ) {
 				update_post_meta( $id, $key, $now );

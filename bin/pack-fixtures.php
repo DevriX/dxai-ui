@@ -12,10 +12,10 @@
  *
  * bin/dc-shape.php packs the same way and takes the function from here.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-if ( ! function_exists( 'dxai_pack_dc_fixture' ) ) {
+if ( ! function_exists( 'dxui_pack_dc_fixture' ) ) {
 	/**
 	 * Pack a fixture folder the way a Claude Design export is packed: flat, forward slashes.
 	 *
@@ -23,7 +23,7 @@ if ( ! function_exists( 'dxai_pack_dc_fixture' ) ) {
 	 * @param string $out The archive to write (replaced when it exists).
 	 * @return int The number of files packed, or -1 when the archive could not be written.
 	 */
-	function dxai_pack_dc_fixture( string $dir, string $out ): int {
+	function dxui_pack_dc_fixture( string $dir, string $out ): int {
 		if ( ! is_dir( dirname( $out ) ) && ! mkdir( dirname( $out ), 0777, true ) && ! is_dir( dirname( $out ) ) ) {
 			return -1;
 		}
@@ -51,20 +51,20 @@ if ( ! function_exists( 'dxai_pack_dc_fixture' ) ) {
 }
 
 // Required by another script for the function only: nothing to run.
-if ( defined( 'DXAI_PACK_FIXTURES_LIBRARY' ) ) {
+if ( defined( 'DXUI_PACK_FIXTURES_LIBRARY' ) ) {
 	return;
 }
 
-$dxai_root    = dirname( __DIR__ );
-$dxai_fixture = $dxai_root . '/fixtures/dc-minimal';
-$dxai_zip     = $dxai_root . '/.verify/dc-minimal.zip';
-if ( ! is_dir( $dxai_fixture ) ) {
-	echo "pack-fixtures: no fixtures/dc-minimal in {$dxai_root}\n";
+$dxui_root    = dirname( __DIR__ );
+$dxui_fixture = $dxui_root . '/fixtures/dc-minimal';
+$dxui_zip     = $dxui_root . '/.verify/dc-minimal.zip';
+if ( ! is_dir( $dxui_fixture ) ) {
+	echo "pack-fixtures: no fixtures/dc-minimal in {$dxui_root}\n";
 	exit( 1 );
 }
-$dxai_packed = dxai_pack_dc_fixture( $dxai_fixture, $dxai_zip );
-if ( $dxai_packed < 1 ) {
-	echo "pack-fixtures: could not write {$dxai_zip}\n";
+$dxui_packed = dxui_pack_dc_fixture( $dxui_fixture, $dxui_zip );
+if ( $dxui_packed < 1 ) {
+	echo "pack-fixtures: could not write {$dxui_zip}\n";
 	exit( 1 );
 }
-echo "packed fixtures/dc-minimal -> .verify/dc-minimal.zip ({$dxai_packed} files)\n";
+echo "packed fixtures/dc-minimal -> .verify/dc-minimal.zip ({$dxui_packed} files)\n";

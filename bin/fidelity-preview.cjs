@@ -10,7 +10,7 @@
  * usage: node bin/fidelity-preview.cjs <dumped-result.json> <out.html> [coverage.json]
  *        (the dump is any JSON of { result, harvest, structures })
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 const fs = require( 'fs' );
@@ -98,7 +98,7 @@ const perfect = {
 	 * left this state reporting the 30 islands still in the markup — which is
 	 * the check working, and a fixture that was not what it claimed.
 	 */
-	gutenberg_markup: String( data.result.gutenberg_markup || '' ).replace( /<!--\s+wp:dxai-ui\/html(?:\s+\/-->|[\s\S]*?<!--\s+\/wp:dxai-ui\/html\s+-->)/g, '' ),
+	gutenberg_markup: String( data.result.gutenberg_markup || '' ).replace( /<!--\s+wp:dx-ui\/html(?:\s+\/-->|[\s\S]*?<!--\s+\/wp:dx-ui\/html\s+-->)/g, '' ),
 	islands: {},
 	unevaluated: [],
 	unresolved_utilities: [],
@@ -181,8 +181,8 @@ fs.writeFileSync(
 	}
 </style>
 </head>
-<body class="dxai-ui-wrap">
-<div id="dxai-ui-app" class="dxai-ui-admin"><div class="harness">${ body }</div></div>
+<body class="dx-ui-wrap">
+<div id="dx-ui-app" class="dx-ui-admin"><div class="harness">${ body }</div></div>
 </body>
 </html>
 `

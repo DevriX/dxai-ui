@@ -2,14 +2,14 @@
 /**
  * Native blocks in place of the plugin's own, in pages already imported and in new ones.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Color_Usage;
+use DX_UI\Compiler\Color_Usage;
 
 /**
  * The plugin adds a block of its own only where nothing else says the same
@@ -30,10 +30,10 @@ use DXAI_UI\Compiler\Color_Usage;
 final class Native_Blocks {
 
 	/** On the design's Home: what was converted, per post. */
-	public const META = '_dxai_ui_native_blocks';
+	public const META = '_dx_ui_native_blocks';
 
 	/** On each converted post: its content from before. */
-	public const BEFORE = '_dxai_ui_before_native_blocks';
+	public const BEFORE = '_dx_ui_before_native_blocks';
 
 	/**
 	 * The converters usable on this site, in the order they run.
@@ -68,7 +68,7 @@ final class Native_Blocks {
 		 *
 		 * @param array<int, Converter> $all
 		 */
-		$all = apply_filters( 'dxai_ui_native_converters', $all );
+		$all = apply_filters( 'dx_ui_native_converters', $all );
 
 		return array_values( array_filter( $all, static fn( $c ) => $c instanceof Converter && $c->available() ) );
 	}
@@ -82,7 +82,7 @@ final class Native_Blocks {
 	public static function convert_content( string $content, array $context = array() ): array {
 		$converters = self::converters();
 		// Nothing to do to a page without a custom block or a group (a group of an earlier pass may still get its layout).
-		if ( $converters === array() || ( ! str_contains( $content, '<!-- wp:dxai-ui/' ) && ! str_contains( $content, '<!-- wp:group' ) ) ) {
+		if ( $converters === array() || ( ! str_contains( $content, '<!-- wp:dx-ui/' ) && ! str_contains( $content, '<!-- wp:group' ) ) ) {
 			return array(
 				'content' => $content,
 				'counts'  => array(),
@@ -346,7 +346,7 @@ final class Native_Blocks {
 	/**
 	 * A post's content, written as it is.
 	 *
-	 * wp_update_post() runs KSES for whoever lacks unfiltered_html: a WP-CLI run with no user (wp dxai-ui native-blocks apply, without
+	 * wp_update_post() runs KSES for whoever lacks unfiltered_html: a WP-CLI run with no user (wp dx-ui native-blocks apply, without
 	 * --user), cron, a site admin on multisite. KSES takes the iframes, the forms and their controls out of a design's pages. What is
 	 * written here is the design's own content, changed only by this class's converters or put back as it was kept, so it is not
 	 * filtered on the way: the same rule Page_Order, Team_Run and Style_Repair follow. Filters that were off stay off.
@@ -408,7 +408,7 @@ final class Native_Blocks {
 		 * @param bool $on   Convert.
 		 * @param int  $home The design's Home.
 		 */
-		if ( $fresh && ! self::applied( $home ) && ! apply_filters( 'dxai_ui_native_blocks_on_import', true, $home ) ) {
+		if ( $fresh && ! self::applied( $home ) && ! apply_filters( 'dx_ui_native_blocks_on_import', true, $home ) ) {
 			return;
 		}
 		self::apply( $home );

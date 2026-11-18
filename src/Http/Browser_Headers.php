@@ -2,23 +2,23 @@
 /**
  * Request headers for live-site fetches.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Http;
+namespace DX_UI\Http;
 
 /**
  * The headers the page builder sends to a client's old site: the Accept
  * headers a browser sends, so the site answers with the same HTML it serves
  * people, and a User-Agent that says what is asking — in the `compatible`
- * form crawlers use, with the plugin's name for robots.txt groups (`dxai-ui`,
+ * form crawlers use, with the plugin's name for robots.txt groups (`dx-ui`,
  * Crawl_Politeness). It does not pretend to be a browser.
  */
 final class Browser_Headers {
 
-	public const USER_AGENT = 'Mozilla/5.0 (compatible; DXAI-UI/1.0; +https://devrix.com/dxai-ui)';
+	public const USER_AGENT = 'Mozilla/5.0 (compatible; DX-UI/1.0; +https://devrix.com/dx-ui)';
 
 	/**
 	 * @return array<string, string>

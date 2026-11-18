@@ -2,15 +2,15 @@
 /**
  * What is below a design's first screen waits; what opens the page does not.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Seo\Page_Meta;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Seo\Page_Meta;
 
 /**
  * WordPress makes the first pictures of a page's content eager and gives the first big one `fetchpriority="high"`, taking it for
@@ -19,38 +19,38 @@ use DXAI_UI\Seo\Page_Meta;
  * high priority, and a map's frame loaded its script at once (docs/PLAN-PERFECT-PAGES.md, T5.1). On a design's page, the pictures
  * and frames of every top-level block after the first that is content (a header before it is not) load lazily, and none of them has
  * the high priority; the blocks the page opens on are left to WordPress. So do the ones of a panel hidden until the page's runtime opens
- * it (`hidden` with a `dxai-on-` state mark: a header's dropdown, whose five icons were 231 KiB loaded with every page of H2O), and
- * the ones of the footer the DX template draws after the page (Template_Chrome). `dxai_ui_lazy_below` turns it off. A group around
+ * it (`hidden` with a `dxui-on-` state mark: a header's dropdown, whose five icons were 231 KiB loaded with every page of H2O), and
+ * the ones of the footer the DX template draws after the page (Template_Chrome). `dx_ui_lazy_below` turns it off. A group around
  * the header is the header (Semper Dry's hero picture, its Largest Contentful Paint, went lazy when the group was taken for the first
  * content), and a group around the whole page is opened: its children are the page's sections (Clean Joe's never were below).
  *
  * A map's frame there waits for more: Chrome loads a lazy frame once it is about 1250 px from the screen, and H2O Away's Contact page
  * has its Google map 1229 px below the first screen — 400 KiB of the map's script loaded with the page, 730 ms of blocking time. Its
- * address goes to `data-dxai-src` and a few lines at the end of the page load it when it is 300 px from the screen (FRAME_MARGIN).
+ * address goes to `data-dxui-src` and a few lines at the end of the page load it when it is 300 px from the screen (FRAME_MARGIN).
  *
  * A picture written as CSS (a block's own `background-image`) cannot be lazy: the browser asks for it once the block is styled,
  * wherever it is. Arcus's two photographs six and ten screens down (323 KiB) shared the phone's bandwidth with its hero: LCP 4.7 s,
  * 3.9 s without them. A block below the first screen whose own CSS paints a file behind it gets BG_CLASS; while scripts run (the
- * head marks <html> `dxai-js`), a rule with the precedence of four ids (one more than a block's own rule, Style_Rules) keeps its
+ * head marks <html> `dxui-js`), a rule with the precedence of four ids (one more than a block's own rule, Style_Rules) keeps its
  * background unpainted, and the lines at the end of the page take the class off 600 px from the screen (BG_MARGIN). Without scripts
  * it paints at once. A background in an inline style (a group's background image in the editor) is not covered.
  */
 final class Image_Loading {
 
 	/** The attribute a top-level block below the first screen is marked with while it renders. */
-	private const MARK = '__dxai_below';
+	private const MARK = '__dxui_below';
 
 	/** How near the screen a waiting frame is loaded. */
 	public const FRAME_MARGIN = '300px';
 
 	/** The class of a block whose background picture waits for the screen. */
-	public const BG_CLASS = 'dxai-lazy-bg';
+	public const BG_CLASS = 'dxui-lazy-bg';
 
 	/** How near the screen a waiting background is painted. */
 	public const BG_MARGIN = '600px';
 
 	/** The attribute a block below the first screen with a background picture is marked with while it renders. */
-	private const LAZY_BG = '__dxai_lazy_bg';
+	private const LAZY_BG = '__dxui_lazy_bg';
 
 	/** Whether this page has a frame waiting for the screen (the loader is printed at its end). */
 	private static bool $waiting = false;
@@ -82,7 +82,7 @@ final class Image_Loading {
 	private static bool $lone = false;
 
 	/** The attribute a wrapper is marked with while it renders, so its level ends with it. */
-	private const WRAP = '__dxai_wrap';
+	private const WRAP = '__dxui_wrap';
 
 	public function register(): void {
 		add_filter( 'the_content', array( self::class, 'reset' ), 1 );
@@ -161,8 +161,8 @@ final class Image_Loading {
 		}
 		$lone       = self::$lone;
 		self::$lone = $top ? false : self::$lone;
-		$box = in_array( (string) $block['blockName'], array( 'core/group', 'dxai-ui/box' ), true );
-		if ( $top && ! self::$content && ( self::is_wrapper( $block ) || ( $lone && $box && ( \DXAI_UI\Pages\Section_Library::wraps_sections( $block ) || self::kids( $block ) === 1 ) ) ) ) {
+		$box = in_array( (string) $block['blockName'], array( 'core/group', 'dx-ui/box' ), true );
+		if ( $top && ! self::$content && ( self::is_wrapper( $block ) || ( $lone && $box && ( \DX_UI\Pages\Section_Library::wraps_sections( $block ) || self::kids( $block ) === 1 ) ) ) ) {
 			// Its children are the page's sections: the next level down is the page's.
 			self::$levels[]              = self::$depth;
 			$block['attrs'][ self::WRAP ] = true;
@@ -196,7 +196,7 @@ final class Image_Loading {
 		$id = (int) get_queried_object_id();
 
 		/** For the footer the DX template draws: true on any page. */
-		return (bool) apply_filters( 'dxai_ui_lazy_below', true, $id ) ? self::lazy( $html ) : $html;
+		return (bool) apply_filters( 'dx_ui_lazy_below', true, $id ) ? self::lazy( $html ) : $html;
 	}
 
 	/**
@@ -253,11 +253,11 @@ final class Image_Loading {
 	 * @param array<string, mixed> $block
 	 */
 	private static function has_background( array $block ): bool {
-		return preg_match( '/background(?:-image)?\s*:[^;]*url\(\s*[\'"]?(?!data:)/i', (string) ( $block['attrs']['dxaiCss'] ?? '' ) ) === 1;
+		return preg_match( '/background(?:-image)?\s*:[^;]*url\(\s*[\'"]?(?!data:)/i', (string) ( $block['attrs']['dxuiCss'] ?? '' ) ) === 1;
 	}
 
 	/**
-	 * On a design's page that may have one: what keeps a waiting background unpainted while scripts run — <html> marked `dxai-js`
+	 * On a design's page that may have one: what keeps a waiting background unpainted while scripts run — <html> marked `dxui-js`
 	 * in the head, and the rule (four ids, one more than a block's own rule). Without scripts the background paints at once.
 	 */
 	public static function enqueue_background_rule(): void {
@@ -266,15 +266,15 @@ final class Image_Loading {
 			return;
 		}
 		/** For a waiting background on a design's page: the same switch as its pictures'. */
-		if ( ! (bool) apply_filters( 'dxai_ui_lazy_below', true, $id ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_lazy_below', true, $id ) ) {
 			return;
 		}
-		wp_register_script( 'dxai-ui-js', false, array(), DXAI_UI_VERSION, false );
-		wp_enqueue_script( 'dxai-ui-js' );
-		wp_add_inline_script( 'dxai-ui-js', 'document.documentElement.classList.add("dxai-js");' );
-		wp_register_style( 'dxai-ui-lazy-bg', false, array(), DXAI_UI_VERSION );
-		wp_enqueue_style( 'dxai-ui-lazy-bg' );
-		wp_add_inline_style( 'dxai-ui-lazy-bg', '.dxai-js ' . str_repeat( ':is(.' . self::BG_CLASS . ',#dxai-h)', 4 ) . '{background-image:none}' );
+		wp_register_script( 'dx-ui-js', false, array(), DX_UI_VERSION, false );
+		wp_enqueue_script( 'dx-ui-js' );
+		wp_add_inline_script( 'dx-ui-js', 'document.documentElement.classList.add("dxui-js");' );
+		wp_register_style( 'dx-ui-lazy-bg', false, array(), DX_UI_VERSION );
+		wp_enqueue_style( 'dx-ui-lazy-bg' );
+		wp_add_inline_style( 'dx-ui-lazy-bg', '.dxui-js ' . str_repeat( ':is(.' . self::BG_CLASS . ',#dxui-h)', 4 ) . '{background-image:none}' );
 	}
 
 	/** Markup with its pictures and frames lazy, and no high priority on them. */
@@ -293,7 +293,7 @@ final class Image_Loading {
 			}
 			$src = (string) $tags->get_attribute( 'src' );
 			if ( $name === 'IFRAME' && self::is_map( $src ) ) {
-				$tags->set_attribute( 'data-dxai-src', $src );
+				$tags->set_attribute( 'data-dxui-src', $src );
 				// No address until it is near the screen (WordPress refuses about:blank: not a protocol esc_url() allows).
 				$tags->remove_attribute( 'src' );
 				self::$waiting = true;
@@ -315,13 +315,13 @@ final class Image_Loading {
 	public static function print_loader(): void {
 		if ( self::$backgrounds ) {
 			self::$backgrounds = false;
-			echo "<script id=\"dxai-ui-backgrounds\">(function(){var b=document.querySelectorAll('." . esc_js( self::BG_CLASS ) . "');function go(e){e.classList.remove('" . esc_js( self::BG_CLASS ) . "');}if(!('IntersectionObserver' in window)){for(var k=0;k<b.length;k++){go(b[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::BG_MARGIN ) . " 0px'});for(var j=0;j<b.length;j++){io.observe(b[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its values are escaped.
+			echo "<script id=\"dx-ui-backgrounds\">(function(){var b=document.querySelectorAll('." . esc_js( self::BG_CLASS ) . "');function go(e){e.classList.remove('" . esc_js( self::BG_CLASS ) . "');}if(!('IntersectionObserver' in window)){for(var k=0;k<b.length;k++){go(b[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::BG_MARGIN ) . " 0px'});for(var j=0;j<b.length;j++){io.observe(b[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its values are escaped.
 		}
 		if ( ! self::$waiting ) {
 			return;
 		}
 		self::$waiting = false;
-		echo "<script id=\"dxai-ui-frames\">(function(){var f=document.querySelectorAll('iframe[data-dxai-src]');function go(i){var s=i.getAttribute('data-dxai-src');if(s){i.removeAttribute('data-dxai-src');i.src=s;}}if(!('IntersectionObserver' in window)){for(var k=0;k<f.length;k++){go(f[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::FRAME_MARGIN ) . " 0px'});for(var j=0;j<f.length;j++){io.observe(f[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its one value is escaped.
+		echo "<script id=\"dx-ui-frames\">(function(){var f=document.querySelectorAll('iframe[data-dxui-src]');function go(i){var s=i.getAttribute('data-dxui-src');if(s){i.removeAttribute('data-dxui-src');i.src=s;}}if(!('IntersectionObserver' in window)){for(var k=0;k<f.length;k++){go(f[k]);}return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);go(e.target);}});},{rootMargin:'" . esc_js( self::FRAME_MARGIN ) . " 0px'});for(var j=0;j<f.length;j++){io.observe(f[j]);}})();</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a fixed script; its one value is escaped.
 	}
 
 	/** On the main content of a design's page, unless turned off. */
@@ -337,11 +337,11 @@ final class Image_Loading {
 		 * @param bool $on Whether the page is a design's (for the content; the footer the DX template draws passes true).
 		 * @param int  $id The page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_lazy_below', $id > 0 && Page_Meta::is_design_page( $id ), $id );
+		return (bool) apply_filters( 'dx_ui_lazy_below', $id > 0 && Page_Meta::is_design_page( $id ), $id );
 	}
 
 	/**
-	 * A panel hidden until the page's runtime opens it: `hidden` with a state mark of the compiler (`dxai-on-<state>`). `hidden` alone
+	 * A panel hidden until the page's runtime opens it: `hidden` with a state mark of the compiler (`dxui-on-<state>`). `hidden` alone
 	 * is not one, as a design may show it again at a wider screen.
 	 *
 	 * @param array<string, mixed> $block
@@ -349,7 +349,7 @@ final class Image_Loading {
 	private static function waits( array $block ): bool {
 		$classes = preg_split( '/\s+/', (string) ( $block['attrs']['className'] ?? '' ) );
 
-		return is_array( $classes ) && in_array( 'hidden', $classes, true ) && array() !== preg_grep( '/^dxai-on-/', $classes );
+		return is_array( $classes ) && in_array( 'hidden', $classes, true ) && array() !== preg_grep( '/^dxui-on-/', $classes );
 	}
 
 	/**
@@ -368,7 +368,7 @@ final class Image_Loading {
 			return true;
 		}
 
-		return in_array( $tag, array( 'header', 'nav' ), true ) || in_array( $name, array( 'core/template-part', 'dxai-ui/site-header' ), true ) ||
+		return in_array( $tag, array( 'header', 'nav' ), true ) || in_array( $name, array( 'core/template-part', 'dx-ui/site-header' ), true ) ||
 			str_contains( (string) ( $block['attrs']['className'] ?? '' ), 'skip-link' ) ||
 			( empty( $block['innerBlocks'] ) && trim( $html ) !== '' && trim( wp_strip_all_tags( $html ) ) === '' && ! preg_match( '/<(?:img|iframe|svg|video|picture)\b/i', $html ) ) ||
 			// A group around the header (Semper Dry's: a sticky group with the <header> and the phone menu in it): holds a header or a

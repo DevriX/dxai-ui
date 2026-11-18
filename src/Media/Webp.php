@@ -2,12 +2,12 @@
 /**
  * A design's JPEG and PNG pictures stored as WebP, when that is smaller.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Lighthouse's first finding on every page of H2O Away was "Serve images in next-gen formats": 275–326 KiB to win on a page, the
@@ -19,15 +19,15 @@ namespace DXAI_UI\Media;
  *
  * Not converted: a picture the server cannot write as WebP, an animated PNG, a palette PNG under GD (which cannot encode one), a
  * file under MIN_BYTES, a favicon or touch icon (browsers and platforms that ask for those want PNG), and a WebP that would not be at
- * most RATIO of the file. Then the file is stored as it came. `dxai_ui_webp` turns it off.
+ * most RATIO of the file. Then the file is stored as it came. `dx_ui_webp` turns it off.
  */
 final class Webp {
 
 	/** Post meta on a WebP attachment: the SHA-1 of the file it was made from, so the same file is not converted again. */
-	public const SOURCE_META = '_dxai_ui_webp_of';
+	public const SOURCE_META = '_dx_ui_webp_of';
 
 	/** Post meta on a JPEG or PNG attachment whose WebP was tried and not kept: it is not tried again. */
-	public const KEPT_META = '_dxai_ui_webp_kept';
+	public const KEPT_META = '_dx_ui_webp_kept';
 
 	/** Below this, a file has nothing to win. */
 	public const MIN_BYTES = 2048;
@@ -59,7 +59,7 @@ final class Webp {
 		 * @param bool   $on       Whether the server can write WebP.
 		 * @param string $filename The picture's file name.
 		 */
-		return (bool) apply_filters( 'dxai_ui_webp', $able, $filename );
+		return (bool) apply_filters( 'dx_ui_webp', $able, $filename );
 	}
 
 	/**
@@ -95,7 +95,7 @@ final class Webp {
 		}
 		$editor->maybe_exif_rotate();
 		$dir   = get_temp_dir();
-		$saved = Image_Quality::save( $editor, $dir . wp_unique_filename( $dir, 'dxai-webp-' . wp_generate_password( 8, false ) . '.webp' ), 'image/webp' );
+		$saved = Image_Quality::save( $editor, $dir . wp_unique_filename( $dir, 'dxui-webp-' . wp_generate_password( 8, false ) . '.webp' ), 'image/webp' );
 		if ( '' !== $rgb ) {
 			wp_delete_file( $rgb );
 		}
@@ -138,7 +138,7 @@ final class Webp {
 		imagealphablending( $image, false );
 		imagesavealpha( $image, true );
 		$dir = get_temp_dir();
-		$out = $dir . wp_unique_filename( $dir, 'dxai-rgb-' . wp_generate_password( 8, false ) . '.png' );
+		$out = $dir . wp_unique_filename( $dir, 'dxui-rgb-' . wp_generate_password( 8, false ) . '.png' );
 		// The image is freed with its object (imagedestroy() does nothing since PHP 8.0 and is deprecated in 8.5).
 		$ok = imagepng( $image, $out, 1 );
 

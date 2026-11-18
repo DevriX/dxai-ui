@@ -7,12 +7,12 @@
  *
  * Makes two attachments and removes them; changes the Site Logo and one ACF option for a moment and puts both back. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Header_Menus;
-use DXAI_UI\Theme\Theme_Buttons;
-use DXAI_UI\Theme\Theme_Options;
+use DX_UI\Chrome\Header_Menus;
+use DX_UI\Theme\Theme_Buttons;
+use DX_UI\Theme\Theme_Options;
 
 $fail   = 0;
 $pass   = 0;
@@ -28,14 +28,14 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 
 // Two pictures to point at.
 $dir = wp_upload_dir();
-wp_mkdir_p( $dir['basedir'] . '/dxai-options-test' );
+wp_mkdir_p( $dir['basedir'] . '/dxui-options-test' );
 $png  = base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 $made = array();
 $mk   = static function ( string $name, string $mime ) use ( $dir, $png, &$made ): int {
-	$path = $dir['basedir'] . '/dxai-options-test/' . $name;
+	$path = $dir['basedir'] . '/dxui-options-test/' . $name;
 	file_put_contents( $path, $mime === 'image/png' ? $png : 'text' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_put_contents_file_put_contents
 	$id = wp_insert_attachment( array( 'post_mime_type' => $mime, 'post_title' => $name, 'post_status' => 'inherit' ), $path );
-	wp_update_attachment_metadata( (int) $id, array( 'file' => 'dxai-options-test/' . $name, 'width' => 1, 'height' => 1 ) );
+	wp_update_attachment_metadata( (int) $id, array( 'file' => 'dxui-options-test/' . $name, 'width' => 1, 'height' => 1 ) );
 	$made[] = (int) $id;
 
 	return (int) $id;
@@ -58,12 +58,12 @@ $fin  = static function () use ( &$made, $dir, $was ): void {
 	foreach ( $made as $id ) {
 		wp_delete_attachment( (int) $id, true );
 	}
-	@rmdir( $dir['basedir'] . '/dxai-options-test' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	@rmdir( $dir['basedir'] . '/dxui-options-test' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 };
 $give = static function ( array $values ): void {
-	remove_all_filters( 'dxai_ui_theme_option' );
+	remove_all_filters( 'dx_ui_theme_option' );
 	add_filter(
-		'dxai_ui_theme_option',
+		'dx_ui_theme_option',
 		static function ( $value, $path ) use ( $values ) {
 			$key = implode( '.', (array) $path );
 
@@ -73,7 +73,7 @@ $give = static function ( array $values ): void {
 		2
 	);
 };
-$clear = static fn() => remove_all_filters( 'dxai_ui_theme_option' );
+$clear = static fn() => remove_all_filters( 'dx_ui_theme_option' );
 
 echo "Without the options\n";
 $clear();
@@ -150,8 +150,8 @@ if ( ! function_exists( 'amr_build_button_theme_variables_css' ) ) {
 		echo "  (ACF has no such field here: the lengths are not exercised)\n";
 	}
 	$reset = static function (): void {
-		wp_dequeue_style( 'dxai-ui-theme-buttons' );
-		wp_deregister_style( 'dxai-ui-theme-buttons' );
+		wp_dequeue_style( 'dx-ui-theme-buttons' );
+		wp_deregister_style( 'dx-ui-theme-buttons' );
 	};
 	if ( Theme_Buttons::url() === '' ) {
 		echo "  (the theme has no button styles to print: the radius goes with them)\n";
@@ -159,13 +159,13 @@ if ( ! function_exists( 'amr_build_button_theme_variables_css' ) ) {
 		$clear();
 		$reset();
 		Theme_Buttons::enqueue();
-		$after = implode( '', (array) wp_styles()->get_data( 'dxai-ui-theme-buttons', 'after' ) );
-		$expect( 'the sheet of the theme\'s buttons has no radius of its own to print when the options say nothing', wp_style_is( 'dxai-ui-theme-buttons', 'enqueued' ) && ! str_contains( $after, '--amr-button-border-radius' ) );
+		$after = implode( '', (array) wp_styles()->get_data( 'dx-ui-theme-buttons', 'after' ) );
+		$expect( 'the sheet of the theme\'s buttons has no radius of its own to print when the options say nothing', wp_style_is( 'dx-ui-theme-buttons', 'enqueued' ) && ! str_contains( $after, '--amr-button-border-radius' ) );
 		if ( $acf_radius ) {
 			update_field( 'border_radius_style', 'none', 'option' );
 			$reset();
 			Theme_Buttons::enqueue();
-			$after = implode( '', (array) wp_styles()->get_data( 'dxai-ui-theme-buttons', 'after' ) );
+			$after = implode( '', (array) wp_styles()->get_data( 'dx-ui-theme-buttons', 'after' ) );
 			$expect( 'and with the setting the page prints it after the sheet (the theme\'s stylesheet, where it prints it, is not on a converted page)', str_contains( $after, '--amr-button-border-radius:0px' ), $after );
 			$restore();
 		}

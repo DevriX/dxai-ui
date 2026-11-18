@@ -20,7 +20,7 @@
 
 const path = require('path');
 
-const CHROME = process.env.DXAI_CHROME
+const CHROME = process.env.DXUI_CHROME
 	|| 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 function arg(name, fallback) {

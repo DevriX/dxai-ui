@@ -15,14 +15,14 @@
  *
  * usage: bin/wp-php.sh bin/coverage-signals.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Verification\Design_Coverage;
+use DX_UI\Verification\Design_Coverage;
 
 $fails = 0;
 $ran   = 0;

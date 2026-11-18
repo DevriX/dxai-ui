@@ -2,12 +2,12 @@
 /**
  * What an export leaves in a page that nothing shows.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
 /**
  * A Claude Design export carries a `<template id="__bundler_thumbnail">` with the preview picture of its own
@@ -23,7 +23,7 @@ final class Tidy extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Leftovers of the design\'s export removed', 'dxai-ui' );
+		return __( 'Leftovers of the design\'s export removed', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -76,7 +76,7 @@ final class Tidy extends Converter {
 		}
 		$walk = static function ( array $b ) use ( &$walk ): bool {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( $name !== '' && ! in_array( $name, array( 'core/group', 'dxai-ui/svg', 'dxai-ui/box', 'core/image' ), true ) ) {
+			if ( $name !== '' && ! in_array( $name, array( 'core/group', 'dx-ui/svg', 'dx-ui/box', 'core/image' ), true ) ) {
 				return false;
 			}
 			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {

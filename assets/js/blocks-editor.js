@@ -11,40 +11,40 @@
 	// attribute is a theme.json object and cannot hold `font-size: clamp(...)`,
 	// which is where these designs keep their type scale.
 	// The theme's own Link box and Span take the same (Native_Blocks): the design's CSS rides their dxs- class too.
-	const DXAI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'core/image', 'core/button', 'amr/link-box', 'amr/span' ];
+	const DXUI_STYLED = [ 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'core/image', 'core/button', 'amr/link-box', 'amr/span' ];
 
 	// Core blocks whose design data attributes save() writes (see the
 	// getSaveContent filters below), so the canvas carries them too.
-	const DXAI_DATA_CORE = [ 'core/group', 'core/list', 'core/list-item' ];
+	const DXUI_DATA_CORE = [ 'core/group', 'core/list', 'core/list-item' ];
 
 	/*
 	 * The canvas shows a block the way the front end does: with the same
 	 * dxs- class save() writes, and a rule for that class in a <style> of the
-	 * canvas (see dxaiLiveRules()) — not an inline preview. The inline
+	 * canvas (see dxuiLiveRules()) — not an inline preview. The inline
 	 * preview parsed the declarations through a detached element's
 	 * CSSStyleDeclaration and copied its longhands, and every longhand of a
 	 * shorthand holding var() reads back empty: 74 declarations on Semper Dry
-	 * (every `background:var(--dxai-…)`, so every section background and the
+	 * (every `background:var(--dxui-…)`, so every section background and the
 	 * hero overlay) never reached the canvas.
 	 */
 
-	// A block's own CSS: dxaiCss, else the inline style it was stored with
-	// before its CSS moved out of the markup (dxai-ui/link keeps that one in
+	// A block's own CSS: dxuiCss, else the inline style it was stored with
+	// before its CSS moved out of the markup (dx-ui/link keeps that one in
 	// `style`). Only for the canvas — save() still writes the legacy style.
-	function dxaiOwnCss( a, name ) {
-		const css = ( a && ( a.dxaiCss || ( name === 'dxai-ui/link' ? a.style : a.dxaiStyle ) ) ) || '';
+	function dxuiOwnCss( a, name ) {
+		const css = ( a && ( a.dxuiCss || ( name === 'dx-ui/link' ? a.style : a.dxuiStyle ) ) ) || '';
 
 		return typeof css === 'string' && css.trim() !== '' ? css : '';
 	}
 
 	// The dxs- class the canvas gives a block for its own CSS.
-	function dxaiCanvasClass( a, name ) {
-		const css = dxaiOwnCss( a, name );
+	function dxuiCanvasClass( a, name ) {
+		const css = dxuiOwnCss( a, name );
 
-		return css ? dxaiCssClass( css ) : '';
+		return css ? dxuiCssClass( css ) : '';
 	}
 
-	function dxaiJoin() {
+	function dxuiJoin() {
 		return Array.prototype.slice.call( arguments ).filter( Boolean ).join( ' ' ).trim();
 	}
 
@@ -52,19 +52,19 @@
 	// value for one of these would either be overwritten or break the editor
 	// (a design tabindex or role on an editable block), so the canvas leaves
 	// them to the editor. aria-hidden stays off every block element too: see
-	// dxaiReactProps().
-	const DXAI_EDITOR_OWNED = [ 'id', 'role', 'tabindex', 'aria-label', 'draggable', 'contenteditable', 'inert', 'autofocus', 'data-block', 'data-type', 'data-title', 'data-empty', 'data-align', 'data-draggable', 'data-clear' ];
+	// dxuiReactProps().
+	const DXUI_EDITOR_OWNED = [ 'id', 'role', 'tabindex', 'aria-label', 'draggable', 'contenteditable', 'inert', 'autofocus', 'data-block', 'data-type', 'data-title', 'data-empty', 'data-align', 'data-draggable', 'data-clear' ];
 
-	// A block's data-* attributes (dxaiData), for the canvas element.
-	function dxaiCanvasData( a ) {
-		const data = a && a.dxaiData && typeof a.dxaiData === 'object' ? a.dxaiData : null;
+	// A block's data-* attributes (dxuiData), for the canvas element.
+	function dxuiCanvasData( a ) {
+		const data = a && a.dxuiData && typeof a.dxuiData === 'object' ? a.dxuiData : null;
 		if ( ! data ) {
 			return null;
 		}
 		const out = {};
 		Object.keys( data ).forEach( function ( key ) {
 			const name = String( key ).toLowerCase();
-			if ( name.indexOf( 'data-' ) === 0 && DXAI_EDITOR_OWNED.indexOf( name ) === -1 && data[ key ] !== undefined && data[ key ] !== null ) {
+			if ( name.indexOf( 'data-' ) === 0 && DXUI_EDITOR_OWNED.indexOf( name ) === -1 && data[ key ] !== undefined && data[ key ] !== null ) {
 				out[ name ] = String( data[ key ] );
 			}
 		} );
@@ -73,7 +73,7 @@
 	}
 
 	// HTML attribute names React DOM spells differently.
-	const DXAI_REACT_NAMES = {
+	const DXUI_REACT_NAMES = {
 		for: 'htmlFor',
 		referrerpolicy: 'referrerPolicy',
 		srcset: 'srcSet',
@@ -96,13 +96,13 @@
 
 	// Boolean attributes: present at all, whatever the value (`open=""` is an
 	// open <details>), where React would read '' as false and drop them.
-	const DXAI_REACT_BOOLEAN = [ 'hidden', 'open', 'required', 'multiple', 'novalidate', 'readonly', 'autoplay', 'muted', 'loop', 'controls', 'playsinline', 'reversed' ];
+	const DXUI_REACT_BOOLEAN = [ 'hidden', 'open', 'required', 'multiple', 'novalidate', 'readonly', 'autoplay', 'muted', 'loop', 'controls', 'playsinline', 'reversed' ];
 
 	/*
 	 * The attributes one of save()'s prop builders writes (HTML names, as the
 	 * serializer takes them), as props React DOM renders the same element
 	 * with in the canvas. `style` is left out — its CSS arrives as the dxs-
-	 * class — and so is what the editor owns (DXAI_EDITOR_OWNED). A form
+	 * class — and so is what the editor owns (DXUI_EDITOR_OWNED). A form
 	 * control's value becomes its default value, so the canvas does not warn
 	 * about a controlled input, and `disabled` becomes aria-disabled on an
 	 * element with editable children, which a disabled button would stop
@@ -117,7 +117,7 @@
 	 * went silent for a screen reader. No design sheet on the site selects
 	 * on aria-hidden, so the canvas looks the same without it.
 	 */
-	function dxaiReactProps( props, tag, opts ) {
+	function dxuiReactProps( props, tag, opts ) {
 		const out = {};
 		const options = opts || {};
 		const control = [ 'input', 'textarea', 'select' ].indexOf( tag ) > -1;
@@ -128,7 +128,7 @@
 				return;
 			}
 			const name = String( key ).toLowerCase();
-			if ( name === 'style' || name === 'defaultvalue' || DXAI_EDITOR_OWNED.indexOf( name ) > -1 ) {
+			if ( name === 'style' || name === 'defaultvalue' || DXUI_EDITOR_OWNED.indexOf( name ) > -1 ) {
 				return;
 			}
 			if ( name === 'aria-hidden' ) {
@@ -142,8 +142,8 @@
 				}
 				return;
 			}
-			if ( DXAI_REACT_BOOLEAN.indexOf( name ) > -1 ) {
-				out[ DXAI_REACT_NAMES[ name ] || name ] = true;
+			if ( DXUI_REACT_BOOLEAN.indexOf( name ) > -1 ) {
+				out[ DXUI_REACT_NAMES[ name ] || name ] = true;
 				return;
 			}
 			if ( control && name === 'value' ) {
@@ -154,7 +154,7 @@
 				out.defaultChecked = true;
 				return;
 			}
-			out[ DXAI_REACT_NAMES[ name ] || name ] = value;
+			out[ DXUI_REACT_NAMES[ name ] || name ] = value;
 		} );
 
 		return out;
@@ -163,13 +163,13 @@
 	/*
 	 * Style_Rules::rule(), safe() and closed() in src/Blocks/Style_Rules.php,
 	 * ported so a rule written here is the rule the page is served with:
-	 * `:is(.dxs-…,#dxai-h)` three times over, (3,0,0) — the precedence the
+	 * `:is(.dxs-…,#dxui-h)` three times over, (3,0,0) — the precedence the
 	 * inline style had — with braces and angle brackets escaped and a
 	 * declaration that never closes cut off. PHP walks bytes and this walks
 	 * UTF-16 units; every character the scan acts on is ASCII, which UTF-8
 	 * never uses inside a multi-byte character, so both cut at the same place.
 	 */
-	function dxaiClosed( css ) {
+	function dxuiClosed( css ) {
 		let depth = 0;
 		let quote = '';
 		let keep = 0;
@@ -202,50 +202,50 @@
 		return quote === '' && depth === 0 ? css : css.slice( 0, keep );
 	}
 
-	function dxaiSafeCss( css ) {
+	function dxuiSafeCss( css ) {
 		const escaped = String( css ).replace( /[<>{}]/g, function ( ch ) {
 			return { '<': '\\3C ', '>': '\\3E ', '{': '\\7B ', '}': '\\7D ' }[ ch ];
 		} );
 
 		// PHP's trim() set, not String#trim()'s wider one.
-		return dxaiClosed( escaped ).replace( /^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, '' );
+		return dxuiClosed( escaped ).replace( /^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, '' );
 	}
 
 	/*
 	 * Token_Styles::fg_channel() in src/Compiler/Token_Styles.php: a colour a design takes from one of its tokens is read through
-	 * the token's text channel (`var(--dxai-ink--fg,var(--dxai-ink))`), which is where a theme's binding keeps the colours it has
+	 * the token's text channel (`var(--dxui-ink--fg,var(--dxui-ink))`), which is where a theme's binding keeps the colours it has
 	 * set apart (Theme_Binding). The server writes every rule that way, and a rule written here has to as well, or the canvas shows
 	 * the design's colour where the page shows the theme's.
 	 */
-	function dxaiFgChannel( css ) {
-		if ( String( css ).indexOf( 'var(--dxai-' ) === -1 ) {
+	function dxuiFgChannel( css ) {
+		if ( String( css ).indexOf( 'var(--dxui-' ) === -1 ) {
 			return css;
 		}
 
 		return String( css ).replace( /(^|[;{\s])((?:-webkit-text-fill-|text-decoration-|text-emphasis-|caret-|column-rule-)?color|fill|stroke)(\s*:\s*)([^;{}]*)/gi, function ( match, before, prop, colon, value ) {
-			return before + prop + colon + value.replace( /(?<!--fg,)var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/gi, 'var(--dxai-$1--fg,var(--dxai-$1))' );
+			return before + prop + colon + value.replace( /(?<!--fg,)var\(\s*--dxui-([a-z0-9]+(?:-[a-z0-9]+)*)\s*\)/gi, 'var(--dxui-$1--fg,var(--dxui-$1))' );
 		} );
 	}
 
-	function dxaiRule( cls, css ) {
-		const safe = dxaiSafeCss( dxaiFgChannel( css ) );
+	function dxuiRule( cls, css ) {
+		const safe = dxuiSafeCss( dxuiFgChannel( css ) );
 		if ( safe === '' || ! /^dxs-[a-z0-9]+$/.test( cls ) ) {
 			return '';
 		}
-		const one = ':is(.' + cls + ',#dxai-h)';
+		const one = ':is(.' + cls + ',#dxui-h)';
 
 		return one + one + one + '{' + safe + '}';
 	}
 
 	/*
 	 * No inline styles in saved markup (Style_Hoister, PHP): a block's own CSS
-	 * lives in its dxaiCss attribute, and save() writes the class
+	 * lives in its dxuiCss attribute, and save() writes the class
 	 * dxs-{hash} in place of style="". Style_Rules writes the rule for it
 	 * when the page renders. The hash is FNV-1a over the CSS text's UTF-8
 	 * bytes, in base 36 — Style_Hoister::css_class() computes the same, so a
 	 * block saved here names the rule the server writes.
 	 */
-	function dxaiCssClass( css ) {
+	function dxuiCssClass( css ) {
 		const bytes = new window.TextEncoder().encode( String( css ) );
 		let hash = 0x811c9dc5;
 		for ( let i = 0; i < bytes.length; i++ ) {
@@ -255,14 +255,14 @@
 		return 'dxs-' + ( hash >>> 0 ).toString( 36 );
 	}
 
-	// A block's saved props with its dxaiCss as a class instead of a style.
-	function dxaiHoist( props, a ) {
-		if ( ! a || ! a.dxaiCss ) {
+	// A block's saved props with its dxuiCss as a class instead of a style.
+	function dxuiHoist( props, a ) {
+		if ( ! a || ! a.dxuiCss ) {
 			return props;
 		}
 		const out = Object.assign( {}, props );
 		delete out.style;
-		const cls = dxaiCssClass( a.dxaiCss );
+		const cls = dxuiCssClass( a.dxuiCss );
 		out.className = out.className ? out.className + ' ' + cls : cls;
 		return out;
 	}
@@ -270,36 +270,36 @@
 	// The core blocks' canvas element gets what their save() writes: the dxs-
 	// class and the design's data attributes, which the design's own rules
 	// select on (`[data-desk]`/`[data-mob]` swap Semper Dry's header rows, and
-	// with none in the canvas both rows showed). Their dxai-ui counterparts
+	// with none in the canvas both rows showed). Their dx-ui counterparts
 	// do the same in their edit(). role and the aria attributes stay with the
-	// editor (DXAI_EDITOR_OWNED). Any block's anchor — the id save() writes,
-	// which the editor replaces with its own — goes on as data-dxai-id, which
+	// editor (DXUI_EDITOR_OWNED). Any block's anchor — the id save() writes,
+	// which the editor replaces with its own — goes on as data-dxui-id, which
 	// the canvas's copy of the design's id rules also selects on (see
-	// dxaiTwinDesignIds()).
+	// dxuiTwinDesignIds()).
 	addFilter(
 		'editor.BlockListBlock',
-		'dxai-ui/canvas-design-attrs',
+		'dx-ui/canvas-design-attrs',
 		createHigherOrderComponent( function ( BlockListBlock ) {
 			return function ( props ) {
 				const name = props.name || ( props.block && props.block.name ) || '';
 				const attributes = props.attributes || {};
-				const styled = DXAI_STYLED.indexOf( name ) > -1;
-				const cls = styled ? dxaiCanvasClass( attributes, name ) : '';
-				const data = styled && DXAI_DATA_CORE.indexOf( name ) > -1 ? dxaiCanvasData( attributes ) : null;
+				const styled = DXUI_STYLED.indexOf( name ) > -1;
+				const cls = styled ? dxuiCanvasClass( attributes, name ) : '';
+				const data = styled && DXUI_DATA_CORE.indexOf( name ) > -1 ? dxuiCanvasData( attributes ) : null;
 				const anchor = typeof attributes.anchor === 'string' ? attributes.anchor.trim() : '';
 				if ( ! cls && ! data && ! anchor ) {
 					return el( BlockListBlock, props );
 				}
 				const wrapperProps = Object.assign( {}, props.wrapperProps || {}, data || {} );
 				if ( cls ) {
-					wrapperProps.className = dxaiJoin( wrapperProps.className, cls );
+					wrapperProps.className = dxuiJoin( wrapperProps.className, cls );
 				}
 				if ( anchor ) {
-					wrapperProps[ 'data-dxai-id' ] = anchor;
+					wrapperProps[ 'data-dxui-id' ] = anchor;
 				}
 				return el( BlockListBlock, Object.assign( {}, props, { wrapperProps: wrapperProps } ) );
 			};
-		}, 'dxaiUiCanvasDesignAttrs' )
+		}, 'dxUiCanvasDesignAttrs' )
 	);
 
 	/*
@@ -310,16 +310,16 @@
 	 * the front end renders them — so the design's CSS reaches the block as
 	 * there (`.gem-element-7a3257c .gem-heading-title`, a flex item, a padded
 	 * box). A section lifted to the top of the page carries the page's frame
-	 * (metadata.dxaiFrame), drawn the same way, outside the section's own
+	 * (metadata.dxuiFrame), drawn the same way, outside the section's own
 	 * wrappers. Nothing of this is saved: the page is unfolded on the server
 	 * when the editor saves it.
 	 */
-	const dxaiWrapShapes = new Map();
+	const dxuiWrapShapes = new Map();
 
-	function dxaiWrapShape( wrap ) {
+	function dxuiWrapShape( wrap ) {
 		const open = wrap && typeof wrap.open === 'string' ? wrap.open : '';
-		if ( dxaiWrapShapes.has( open ) ) {
-			return dxaiWrapShapes.get( open );
+		if ( dxuiWrapShapes.has( open ) ) {
+			return dxuiWrapShapes.get( open );
 		}
 		let shape = null;
 		if ( /^\s*<[a-zA-Z][a-zA-Z0-9-]*[\s>]/.test( open ) ) {
@@ -345,36 +345,36 @@
 				} );
 				// What WordPress adds to a group's element when it renders one with no layout of its own.
 				if ( wrap.name === 'core/group' && ! ( wrap.attrs && wrap.attrs.layout ) ) {
-					props.className = dxaiJoin( props.className, 'is-layout-flow wp-block-group-is-layout-flow' );
+					props.className = dxuiJoin( props.className, 'is-layout-flow wp-block-group-is-layout-flow' );
 				}
-				// The canvas's copy of the design's id rules selects on data-dxai-id (dxaiTwinDesignIds()).
+				// The canvas's copy of the design's id rules selects on data-dxui-id (dxuiTwinDesignIds()).
 				if ( props.id ) {
-					props[ 'data-dxai-id' ] = props.id;
+					props[ 'data-dxui-id' ] = props.id;
 				}
 				shape = { tag: node.tagName.toLowerCase(), props: props };
 			}
 		}
-		dxaiWrapShapes.set( open, shape );
+		dxuiWrapShapes.set( open, shape );
 
 		return shape;
 	}
 
 	addFilter(
 		'editor.BlockListBlock',
-		'dxai-ui/folded-wrappers',
+		'dx-ui/folded-wrappers',
 		createHigherOrderComponent( function ( BlockListBlock ) {
 			return function ( props ) {
 				const meta = props.attributes && props.attributes.metadata;
 				const wraps = [];
-				if ( meta && meta.dxaiFrame && Array.isArray( meta.dxaiFrame.wraps ) ) {
-					Array.prototype.push.apply( wraps, meta.dxaiFrame.wraps );
+				if ( meta && meta.dxuiFrame && Array.isArray( meta.dxuiFrame.wraps ) ) {
+					Array.prototype.push.apply( wraps, meta.dxuiFrame.wraps );
 				}
-				if ( meta && Array.isArray( meta.dxaiWrap ) ) {
-					Array.prototype.push.apply( wraps, meta.dxaiWrap );
+				if ( meta && Array.isArray( meta.dxuiWrap ) ) {
+					Array.prototype.push.apply( wraps, meta.dxuiWrap );
 				}
 				let out = el( BlockListBlock, props );
 				for ( let i = wraps.length - 1; i >= 0; i-- ) {
-					const shape = dxaiWrapShape( wraps[ i ] );
+					const shape = dxuiWrapShape( wraps[ i ] );
 					if ( shape ) {
 						out = el( shape.tag, shape.props, out );
 					}
@@ -382,7 +382,7 @@
 
 				return out;
 			};
-		}, 'dxaiUiFoldedWrappers' )
+		}, 'dxUiFoldedWrappers' )
 	);
 
 	// A block's own CSS, editable. It is kept out of the markup (save()
@@ -390,15 +390,15 @@
 	// a block still on its old inline style moves that style here.
 	addFilter(
 		'editor.BlockEdit',
-		'dxai-ui/design-css',
+		'dx-ui/design-css',
 		createHigherOrderComponent( function ( BlockEdit ) {
 			return function ( props ) {
 				const type = wp.blocks.getBlockType( props.name );
-				if ( ! props.isSelected || ! type || ! type.attributes || ! type.attributes.dxaiCss ) {
+				if ( ! props.isSelected || ! type || ! type.attributes || ! type.attributes.dxuiCss ) {
 					return el( BlockEdit, props );
 				}
 				const a = props.attributes || {};
-				const legacy = props.name === 'dxai-ui/link' ? 'style' : 'dxaiStyle';
+				const legacy = props.name === 'dx-ui/link' ? 'style' : 'dxuiStyle';
 				return el( wp.element.Fragment, null,
 					el( BlockEdit, props ),
 					el( InspectorControls, null,
@@ -406,9 +406,9 @@
 							el( TextareaControl, {
 								label: 'Declarations',
 								help: 'Written to the page stylesheet, not into the block markup.',
-								value: a.dxaiCss || a[ legacy ] || '',
+								value: a.dxuiCss || a[ legacy ] || '',
 								onChange: function ( value ) {
-									const next = { dxaiCss: value };
+									const next = { dxuiCss: value };
 									if ( a[ legacy ] ) {
 										next[ legacy ] = type.attributes[ legacy ] && type.attributes[ legacy ].default !== undefined ? type.attributes[ legacy ].default : undefined;
 									}
@@ -419,7 +419,7 @@
 					)
 				);
 			};
-		}, 'dxaiUiDesignCss' )
+		}, 'dxUiDesignCss' )
 	);
 
 	/*
@@ -433,12 +433,12 @@
 	 * so the canvas showed the imported token values instead of the ones
 	 * Styles is set to. What only this script can do is below.
 	 */
-	function dxaiEditorCfg() {
-		return window.dxaiUIEditor || {};
+	function dxuiEditorCfg() {
+		return window.dxUIEditor || {};
 	}
 
-	function dxaiCanvasCfg() {
-		const canvas = dxaiEditorCfg().canvas;
+	function dxuiCanvasCfg() {
+		const canvas = dxuiEditorCfg().canvas;
 
 		return canvas && typeof canvas === 'object' ? canvas : {};
 	}
@@ -446,8 +446,8 @@
 	// Whether the post renders on the plugin's blank template, read from the
 	// edited value, so picking another template in the inspector switches
 	// the canvas over with it.
-	function dxaiOnBlank() {
-		const canvas = dxaiCanvasCfg();
+	function dxuiOnBlank() {
+		const canvas = dxuiCanvasCfg();
 		if ( ! canvas.converted ) {
 			return false;
 		}
@@ -495,10 +495,10 @@
 	 * converted post on the blank template. What it takes out it keeps, and
 	 * gives back if the template is switched away.
 	 */
-	const dxaiTheme = { seen: null, blank: null, layout: undefined, global: [], other: [] };
+	const dxuiTheme = { seen: null, blank: null, layout: undefined, global: [], other: [] };
 
-	function dxaiIsThemeStyle( style, defaults ) {
-		if ( ! style || typeof style !== 'object' || style.dxaiTokens ) {
+	function dxuiIsThemeStyle( style, defaults ) {
+		if ( ! style || typeof style !== 'object' || style.dxuiTokens ) {
 			return false;
 		}
 		if ( style.isGlobalStyles ) {
@@ -509,8 +509,8 @@
 		return style.__unstableType === 'theme' || defaults.indexOf( style ) > -1;
 	}
 
-	function dxaiReconcileSettings() {
-		const canvas = dxaiCanvasCfg();
+	function dxuiReconcileSettings() {
+		const canvas = dxuiCanvasCfg();
 		if ( ! canvas.converted ) {
 			return;
 		}
@@ -519,21 +519,21 @@
 			return;
 		}
 		const settings = store.getEditorSettings();
-		const blank = dxaiOnBlank();
-		if ( settings === dxaiTheme.seen && blank === dxaiTheme.blank ) {
+		const blank = dxuiOnBlank();
+		if ( settings === dxuiTheme.seen && blank === dxuiTheme.blank ) {
 			return;
 		}
-		dxaiTheme.seen = settings;
-		dxaiTheme.blank = blank;
+		dxuiTheme.seen = settings;
+		dxuiTheme.blank = blank;
 		const styles = Array.isArray( settings.styles ) ? settings.styles : [];
 		const isTokens = function ( style ) {
-			return !! ( style && style.dxaiTokens );
+			return !! ( style && style.dxuiTokens );
 		};
 		const next = {};
 		if ( blank ) {
 			const defaults = Array.isArray( settings.defaultEditorStyles ) ? settings.defaultEditorStyles : [];
 			const dropped = styles.filter( function ( style ) {
-				return dxaiIsThemeStyle( style, defaults );
+				return dxuiIsThemeStyle( style, defaults );
 			} );
 			const kept = styles.filter( function ( style ) {
 				return dropped.indexOf( style ) === -1;
@@ -544,19 +544,19 @@
 					return style.isGlobalStyles;
 				} );
 				if ( global.length ) {
-					dxaiTheme.global = global;
+					dxuiTheme.global = global;
 				}
 				dropped.forEach( function ( style ) {
-					if ( ! style.isGlobalStyles && dxaiTheme.other.indexOf( style ) === -1 ) {
-						dxaiTheme.other.push( style );
+					if ( ! style.isGlobalStyles && dxuiTheme.other.indexOf( style ) === -1 ) {
+						dxuiTheme.other.push( style );
 					}
 				} );
-				next.styles = tokens ? [ { css: canvas.tokens, __unstableType: 'presets', dxaiTokens: true } ].concat( kept ) : kept;
+				next.styles = tokens ? [ { css: canvas.tokens, __unstableType: 'presets', dxuiTokens: true } ].concat( kept ) : kept;
 			}
 			const features = settings.__experimentalFeatures;
 			const layout = features && features.layout;
 			if ( layout && ( layout.contentSize || layout.wideSize ) ) {
-				dxaiTheme.layout = layout;
+				dxuiTheme.layout = layout;
 				const open = Object.assign( {}, layout );
 				delete open.contentSize;
 				delete open.wideSize;
@@ -566,21 +566,21 @@
 			if ( styles.some( isTokens ) ) {
 				// Where the editor itself puts them: the theme's own sheets
 				// first, the rebuilt global styles last.
-				next.styles = dxaiTheme.other.concat( styles.filter( function ( style ) {
+				next.styles = dxuiTheme.other.concat( styles.filter( function ( style ) {
 					return ! isTokens( style );
-				} ), dxaiTheme.global );
-				dxaiTheme.other = [];
-				dxaiTheme.global = [];
+				} ), dxuiTheme.global );
+				dxuiTheme.other = [];
+				dxuiTheme.global = [];
 			}
 			const features = settings.__experimentalFeatures;
 			const layout = features && features.layout;
-			if ( dxaiTheme.layout && layout && ! layout.contentSize && ! layout.wideSize ) {
+			if ( dxuiTheme.layout && layout && ! layout.contentSize && ! layout.wideSize ) {
 				next.__experimentalFeatures = Object.assign( {}, features, { layout: Object.assign( {}, layout, {
-					contentSize: dxaiTheme.layout.contentSize,
-					wideSize: dxaiTheme.layout.wideSize,
+					contentSize: dxuiTheme.layout.contentSize,
+					wideSize: dxuiTheme.layout.wideSize,
 				} ) } );
 			}
-			dxaiTheme.layout = undefined;
+			dxuiTheme.layout = undefined;
 		}
 		if ( Object.keys( next ).length ) {
 			wp.data.dispatch( 'core/editor' ).updateEditorSettings( next );
@@ -601,10 +601,10 @@
 	 * template" preference is setDefaultRenderingMode()'s, and is left as it
 	 * is. The mode is given back if the template is switched away.
 	 */
-	const dxaiMode = { from: '', told: false };
+	const dxuiMode = { from: '', told: false };
 
-	function dxaiKeepPostOnly() {
-		if ( ! dxaiCanvasCfg().converted ) {
+	function dxuiKeepPostOnly() {
+		if ( ! dxuiCanvasCfg().converted ) {
 			return;
 		}
 		const select = wp.data.select( 'core/editor' );
@@ -613,25 +613,25 @@
 			return;
 		}
 		const mode = select.getRenderingMode();
-		if ( dxaiOnBlank() ) {
+		if ( dxuiOnBlank() ) {
 			if ( ! mode || mode === 'post-only' ) {
 				return;
 			}
-			dxaiMode.from = mode;
+			dxuiMode.from = mode;
 			dispatch.setRenderingMode( 'post-only' );
 			const notices = wp.data.dispatch( 'core/notices' );
-			if ( ! dxaiMode.told && notices && notices.createInfoNotice ) {
-				dxaiMode.told = true;
+			if ( ! dxuiMode.told && notices && notices.createInfoNotice ) {
+				dxuiMode.told = true;
 				notices.createInfoNotice(
-					wp.i18n.__( 'This page renders on the DX UI blank template, which has no theme header or footer, so the editor shows the page alone.', 'dxai-ui' ),
-					{ id: 'dxai-ui-post-only', type: 'snackbar' }
+					wp.i18n.__( 'This page renders on the DX UI blank template, which has no theme header or footer, so the editor shows the page alone.', 'dx-ui' ),
+					{ id: 'dx-ui-post-only', type: 'snackbar' }
 				);
 			}
 			return;
 		}
-		if ( dxaiMode.from ) {
-			const from = dxaiMode.from;
-			dxaiMode.from = '';
+		if ( dxuiMode.from ) {
+			const from = dxuiMode.from;
+			dxuiMode.from = '';
 			if ( mode === 'post-only' ) {
 				dispatch.setRenderingMode( from );
 			}
@@ -645,12 +645,12 @@
 	 * editor loads) knows the blocks as they were stored. A block restyled in
 	 * the Design CSS panel gets a new hash, so its new class had no rule until
 	 * the page was saved and reloaded. This keeps one <style> per canvas with
-	 * a rule for every block's own CSS and its inner runs' (dxaiInner),
+	 * a rule for every block's own CSS and its inner runs' (dxuiInner),
 	 * rebuilt when an attribute changes — inside template parts and synced
 	 * patterns too, whose blocks are in the same store.
 	 */
-	const DXAI_LIVE_ID = 'dxai-ui-live-rules';
-	const dxaiLive = { attrs: new Map(), css: '', rules: new Map() };
+	const DXUI_LIVE_ID = 'dx-ui-live-rules';
+	const dxuiLive = { attrs: new Map(), css: '', rules: new Map() };
 
 	/*
 	 * Utility classes the canvas has no rule for yet.
@@ -673,58 +673,58 @@
 	 * A name the route answers is not a utility — the design's own class, a
 	 * state class — is not asked for again.
 	 */
-	const DXAI_UTIL_ID = 'dxai-ui-live-utilities';
-	const dxaiUtil = { seen: new Map(), loaded: false, want: new Set(), got: new Set(), none: new Set(), css: '', timer: 0, busy: false };
+	const DXUI_UTIL_ID = 'dx-ui-live-utilities';
+	const dxuiUtil = { seen: new Map(), loaded: false, want: new Set(), got: new Set(), none: new Set(), css: '', timer: 0, busy: false };
 
-	function dxaiClassTokens( value ) {
+	function dxuiClassTokens( value ) {
 		return typeof value === 'string' ? value.split( /\s+/ ).filter( Boolean ) : [];
 	}
 
 	// The classes of block `id` if they should be asked for: it was edited,
 	// or it is new and not inside what the server rendered the rules for.
-	function dxaiUtilChanged( store, id, a ) {
+	function dxuiUtilChanged( store, id, a ) {
 		const now = a && typeof a.className === 'string' ? a.className : '';
-		const was = dxaiUtil.seen.get( id );
-		dxaiUtil.seen.set( id, now );
+		const was = dxuiUtil.seen.get( id );
+		dxuiUtil.seen.set( id, now );
 		if ( was === undefined ) {
-			if ( ! dxaiUtil.loaded || ! now ) {
+			if ( ! dxuiUtil.loaded || ! now ) {
 				return [];
 			}
 			const parents = store.getBlockParentsByBlockName ? store.getBlockParentsByBlockName( id, [ 'core/template-part', 'core/block', 'core/widget-area' ] ) : [];
 
-			return parents && parents.length ? [] : dxaiClassTokens( now );
+			return parents && parents.length ? [] : dxuiClassTokens( now );
 		}
 		if ( was === now ) {
 			return [];
 		}
-		const before = dxaiClassTokens( was );
-		const tokens = dxaiClassTokens( now );
+		const before = dxuiClassTokens( was );
+		const tokens = dxuiClassTokens( now );
 
 		return tokens.some( function ( token ) {
 			return before.indexOf( token ) === -1;
 		} ) ? tokens : [];
 	}
 
-	function dxaiUtilQueue( tokens ) {
+	function dxuiUtilQueue( tokens ) {
 		let grew = false;
 		tokens.forEach( function ( token ) {
-			if ( ! dxaiUtil.got.has( token ) && ! dxaiUtil.want.has( token ) && ! dxaiUtil.none.has( token ) && /^[A-Za-z0-9_:%./[\]-]{1,80}$/.test( token ) && token.indexOf( 'dxs-' ) !== 0 ) {
-				dxaiUtil.want.add( token );
+			if ( ! dxuiUtil.got.has( token ) && ! dxuiUtil.want.has( token ) && ! dxuiUtil.none.has( token ) && /^[A-Za-z0-9_:%./[\]-]{1,80}$/.test( token ) && token.indexOf( 'dxs-' ) !== 0 ) {
+				dxuiUtil.want.add( token );
 				grew = true;
 			}
 		} );
 		// Once typing pauses: a class name typed into the field arrives one
 		// letter at a time, and each prefix is a class of its own.
 		if ( grew ) {
-			clearTimeout( dxaiUtil.timer );
-			dxaiUtil.timer = setTimeout( dxaiUtilFetch, 500 );
+			clearTimeout( dxuiUtil.timer );
+			dxuiUtil.timer = setTimeout( dxuiUtilFetch, 500 );
 		}
 	}
 
-	function dxaiUtilFetch() {
-		dxaiUtil.timer = 0;
-		const path = dxaiEditorCfg().utilityRules;
-		if ( dxaiUtil.busy || ! dxaiUtil.want.size || typeof path !== 'string' || path === '' || ! wp.apiFetch ) {
+	function dxuiUtilFetch() {
+		dxuiUtil.timer = 0;
+		const path = dxuiEditorCfg().utilityRules;
+		if ( dxuiUtil.busy || ! dxuiUtil.want.size || typeof path !== 'string' || path === '' || ! wp.apiFetch ) {
 			return;
 		}
 		// Only names still on a block now: the prefixes typed on the way
@@ -733,44 +733,44 @@
 		const present = new Set();
 		if ( store && store.getClientIdsWithDescendants ) {
 			store.getClientIdsWithDescendants().forEach( function ( id ) {
-				dxaiClassTokens( ( store.getBlockAttributes( id ) || {} ).className ).forEach( function ( token ) {
+				dxuiClassTokens( ( store.getBlockAttributes( id ) || {} ).className ).forEach( function ( token ) {
 					present.add( token );
 				} );
 			} );
 		}
-		const fresh = Array.from( dxaiUtil.want ).filter( function ( token ) {
+		const fresh = Array.from( dxuiUtil.want ).filter( function ( token ) {
 			return present.has( token );
 		} );
-		dxaiUtil.want.clear();
+		dxuiUtil.want.clear();
 		if ( ! fresh.length ) {
 			return;
 		}
 		// Every utility asked for so far, in one sheet (see above); the
 		// route reads at most 500 names.
-		const names = Array.from( dxaiUtil.got ).concat( fresh ).slice( -500 );
-		dxaiUtil.busy = true;
-		const post = Number( dxaiEditorCfg().postId ) || 0;
+		const names = Array.from( dxuiUtil.got ).concat( fresh ).slice( -500 );
+		dxuiUtil.busy = true;
+		const post = Number( dxuiEditorCfg().postId ) || 0;
 		wp.apiFetch( { path: path + ( path.indexOf( '?' ) > -1 ? '&' : '?' ) + 'classes=' + encodeURIComponent( names.join( ' ' ) ) + '&post=' + post } ).then( function ( res ) {
 			const live = res && Array.isArray( res.classes ) ? res.classes.map( String ) : [];
 			names.forEach( function ( name ) {
 				if ( live.indexOf( name ) === -1 ) {
-					dxaiUtil.none.add( name );
+					dxuiUtil.none.add( name );
 				}
 			} );
-			dxaiUtil.got = new Set( live );
+			dxuiUtil.got = new Set( live );
 			const css = res && typeof res.css === 'string' ? res.css : '';
-			if ( css !== dxaiUtil.css ) {
-				dxaiUtil.css = css;
-				dxaiCanvasDocs().forEach( dxaiWriteRules );
+			if ( css !== dxuiUtil.css ) {
+				dxuiUtil.css = css;
+				dxuiCanvasDocs().forEach( dxuiWriteRules );
 			}
 		} ).catch( function () {
 			// No route (an older build) or no permission: the classes keep
 			// no rule until the page is saved and reopened, as before.
 		} ).then( function () {
-			dxaiUtil.busy = false;
+			dxuiUtil.busy = false;
 			// Classes that changed while this request was out.
-			if ( dxaiUtil.want.size && ! dxaiUtil.timer ) {
-				dxaiUtil.timer = setTimeout( dxaiUtilFetch, 500 );
+			if ( dxuiUtil.want.size && ! dxuiUtil.timer ) {
+				dxuiUtil.timer = setTimeout( dxuiUtilFetch, 500 );
 			}
 		} );
 	}
@@ -782,98 +782,98 @@
 	 * (Theme_Binding). A rule written here for the same class comes later in the canvas and wins, so the canvas showed the
 	 * design's own where the page shows the theme's.
 	 */
-	const DXAI_SERVER_RULES = 'dxai-ui-rules-editor-inline-css';
-	const dxaiServerSeen = new WeakMap();
+	const DXUI_SERVER_RULES = 'dx-ui-rules-editor-inline-css';
+	const dxuiServerSeen = new WeakMap();
 
-	function dxaiServerClasses( doc ) {
-		const style = doc.getElementById( DXAI_SERVER_RULES );
+	function dxuiServerClasses( doc ) {
+		const style = doc.getElementById( DXUI_SERVER_RULES );
 		const text = style ? style.textContent : '';
-		let seen = dxaiServerSeen.get( doc );
+		let seen = dxuiServerSeen.get( doc );
 		if ( ! seen || seen.length !== text.length ) {
 			seen = { length: text.length, names: new Set( ( text.match( /\.dxs-[a-z0-9]+/g ) || [] ).map( function ( name ) {
 				return name.slice( 1 );
 			} ) ) };
-			dxaiServerSeen.set( doc, seen );
+			dxuiServerSeen.set( doc, seen );
 		}
 
 		return seen.names;
 	}
 
 	// The rules to write into one canvas: every block's own, but those the server's copy in that canvas has.
-	function dxaiLiveCss( doc ) {
-		const server = dxaiServerClasses( doc );
+	function dxuiLiveCss( doc ) {
+		const server = dxuiServerClasses( doc );
 		let css = '';
-		dxaiLive.rules.forEach( function ( declarations, cls ) {
+		dxuiLive.rules.forEach( function ( declarations, cls ) {
 			if ( ! server.has( cls ) ) {
-				css += dxaiRule( cls, declarations );
+				css += dxuiRule( cls, declarations );
 			}
 		} );
 
 		return css;
 	}
 
-	function dxaiLiveRules() {
+	function dxuiLiveRules() {
 		const store = wp.data.select( 'core/block-editor' );
 		if ( ! store || ! store.getClientIdsWithDescendants ) {
 			return false;
 		}
 		const ids = store.getClientIdsWithDescendants();
 		const attrs = new Map();
-		let changed = ids.length !== dxaiLive.attrs.size;
+		let changed = ids.length !== dxuiLive.attrs.size;
 		const classes = [];
 		ids.forEach( function ( id ) {
 			const a = store.getBlockAttributes( id );
 			attrs.set( id, a );
-			if ( dxaiLive.attrs.get( id ) !== a ) {
+			if ( dxuiLive.attrs.get( id ) !== a ) {
 				changed = true;
-				Array.prototype.push.apply( classes, dxaiUtilChanged( store, id, a ) );
+				Array.prototype.push.apply( classes, dxuiUtilChanged( store, id, a ) );
 			}
 		} );
 		if ( ids.length ) {
 			// The stored page is in the store from here on; what arrives
 			// later was inserted.
-			dxaiUtil.loaded = true;
+			dxuiUtil.loaded = true;
 		}
 		if ( classes.length ) {
-			dxaiUtilQueue( classes );
+			dxuiUtilQueue( classes );
 		}
 		if ( ! changed ) {
 			return false;
 		}
-		dxaiLive.attrs = attrs;
+		dxuiLive.attrs = attrs;
 		const rules = new Map();
 		attrs.forEach( function ( a, id ) {
 			if ( ! a ) {
 				return;
 			}
-			const own = dxaiOwnCss( a, store.getBlockName( id ) );
+			const own = dxuiOwnCss( a, store.getBlockName( id ) );
 			if ( own ) {
-				rules.set( dxaiCssClass( own ), own );
+				rules.set( dxuiCssClass( own ), own );
 			}
-			if ( a.dxaiInner && typeof a.dxaiInner === 'object' ) {
-				Object.keys( a.dxaiInner ).forEach( function ( cls ) {
-					if ( typeof a.dxaiInner[ cls ] === 'string' ) {
-						rules.set( cls, a.dxaiInner[ cls ] );
+			if ( a.dxuiInner && typeof a.dxuiInner === 'object' ) {
+				Object.keys( a.dxuiInner ).forEach( function ( cls ) {
+					if ( typeof a.dxuiInner[ cls ] === 'string' ) {
+						rules.set( cls, a.dxuiInner[ cls ] );
 					}
 				} );
 			}
 		} );
 		let css = '';
 		rules.forEach( function ( declarations, cls ) {
-			css += dxaiRule( cls, declarations );
+			css += dxuiRule( cls, declarations );
 		} );
-		if ( css === dxaiLive.css ) {
+		if ( css === dxuiLive.css ) {
 			return false;
 		}
-		dxaiLive.css = css;
-		dxaiLive.rules = rules;
+		dxuiLive.css = css;
+		dxuiLive.rules = rules;
 
 		return true;
 	}
 
 	// Every document blocks are edited in: the canvas iframe(s), or this
 	// document where the editor is not iframed (the Widgets screen).
-	function dxaiCanvasDocs() {
+	function dxuiCanvasDocs() {
 		const docs = [];
 		document.querySelectorAll( 'iframe[name="editor-canvas"]' ).forEach( function ( frame ) {
 			let doc = null;
@@ -882,9 +882,9 @@
 			} catch ( e ) {
 				doc = null;
 			}
-			if ( ! frame.dxaiLoadHooked ) {
-				frame.dxaiLoadHooked = true;
-				frame.addEventListener( 'load', dxaiSync );
+			if ( ! frame.dxuiLoadHooked ) {
+				frame.dxuiLoadHooked = true;
+				frame.addEventListener( 'load', dxuiSync );
 			}
 			if ( doc && doc.body ) {
 				docs.push( doc );
@@ -897,58 +897,58 @@
 		return docs;
 	}
 
-	function dxaiWriteRules( doc ) {
-		let style = doc.getElementById( DXAI_LIVE_ID );
+	function dxuiWriteRules( doc ) {
+		let style = doc.getElementById( DXUI_LIVE_ID );
 		if ( ! style && doc.head ) {
 			style = doc.createElement( 'style' );
-			style.id = DXAI_LIVE_ID;
+			style.id = DXUI_LIVE_ID;
 			doc.head.appendChild( style );
 		}
-		const live = dxaiLiveCss( doc );
+		const live = dxuiLiveCss( doc );
 		if ( style && style.textContent !== live ) {
 			style.textContent = live;
 		}
-		let utilities = doc.getElementById( DXAI_UTIL_ID );
-		if ( ! utilities && dxaiUtil.css !== '' && style && style.parentNode ) {
+		let utilities = doc.getElementById( DXUI_UTIL_ID );
+		if ( ! utilities && dxuiUtil.css !== '' && style && style.parentNode ) {
 			utilities = doc.createElement( 'style' );
-			utilities.id = DXAI_UTIL_ID;
+			utilities.id = DXUI_UTIL_ID;
 			style.parentNode.insertBefore( utilities, style );
 		}
-		if ( utilities && utilities.textContent !== dxaiUtil.css ) {
-			utilities.textContent = dxaiUtil.css;
+		if ( utilities && utilities.textContent !== dxuiUtil.css ) {
+			utilities.textContent = dxuiUtil.css;
 		}
 		if ( doc.body ) {
-			dxaiQueueListItems( doc );
+			dxuiQueueListItems( doc );
 		}
 	}
 
 	/*
 	 * The classes the canvas <body> (the `.editor-styles-wrapper`) carries
 	 * for a converted post — editor-design.css keys its page rules on them:
-	 * dxai-ui-canvas for any converted post, the design's scope classes
+	 * dx-ui-canvas for any converted post, the design's scope classes
 	 * (Page_Scope; on the front end they are on a <div> around the content,
-	 * and the scoped stylesheet matches either), dxai-ui-static for a Claude
-	 * Design export (the front end's body class) and dxai-ui-blank while the
+	 * and the scoped stylesheet matches either), dx-ui-static for a Claude
+	 * Design export (the front end's body class) and dx-ui-blank while the
 	 * post is on the blank template.
 	 */
-	function dxaiCanvasClasses() {
-		const canvas = dxaiCanvasCfg();
+	function dxuiCanvasClasses() {
+		const canvas = dxuiCanvasCfg();
 		// An ordinary page with sections copied from a design (attached) takes the scope classes too: the front end wraps those sections in them.
 		if ( ! canvas.converted && ! canvas.attached ) {
 			return [];
 		}
-		const names = [ 'dxai-ui-canvas' ];
+		const names = [ 'dx-ui-canvas' ];
 		if ( canvas.attached ) {
 			// editor-design.css lets the copied sections take the width the front end gives them.
-			names.push( 'dxai-ui-attached' );
+			names.push( 'dx-ui-attached' );
 		}
 		if ( canvas.static ) {
-			names.push( 'dxai-ui-static' );
+			names.push( 'dx-ui-static' );
 		}
-		if ( dxaiOnBlank() ) {
-			names.push( 'dxai-ui-blank' );
+		if ( dxuiOnBlank() ) {
+			names.push( 'dx-ui-blank' );
 		}
-		String( dxaiEditorCfg().scopeClass || '' ).split( /\s+/ ).forEach( function ( name ) {
+		String( dxuiEditorCfg().scopeClass || '' ).split( /\s+/ ).forEach( function ( name ) {
 			if ( name ) {
 				names.push( name );
 			}
@@ -957,8 +957,8 @@
 		return names;
 	}
 
-	function dxaiApplyClasses( body ) {
-		const want = body.dxaiClasses || [];
+	function dxuiApplyClasses( body ) {
+		const want = body.dxuiClasses || [];
 		want.forEach( function ( name ) {
 			if ( ! body.classList.contains( name ) ) {
 				body.classList.add( name );
@@ -971,14 +971,14 @@
 	// in a design block — a nav item, a CTA, a whole card that is one <a> —
 	// navigated the canvas away, and a design <form> submitted. Links in
 	// editor UI inside the canvas (placeholders, notices) are left alone.
-	function dxaiGuardDoc( doc ) {
+	function dxuiGuardDoc( doc ) {
 		doc.addEventListener( 'click', function ( event ) {
 			const target = event.target && event.target.closest ? event.target : null;
 			const link = target ? target.closest( 'a[href]' ) : null;
 			if ( ! link || event.defaultPrevented || ( link.getAttribute( 'href' ) || '' ).charAt( 0 ) === '#' ) {
 				return;
 			}
-			if ( ! link.closest( '[data-type^="dxai-ui/"], .dxai-ui-canvas .block-editor-block-list__layout' ) || link.closest( '[class*="components-"]' ) ) {
+			if ( ! link.closest( '[data-type^="dx-ui/"], .dx-ui-canvas .block-editor-block-list__layout' ) || link.closest( '[class*="components-"]' ) ) {
 				return;
 			}
 			event.preventDefault();
@@ -1004,9 +1004,9 @@
 	 * element is being edited — put back when it takes focus, taken off
 	 * when it loses it, and never left on one that just mounted unfocused.
 	 */
-	const DXAI_RICH_TEXT = '.block-editor-rich-text__editable';
+	const DXUI_RICH_TEXT = '.block-editor-rich-text__editable';
 
-	function dxaiRestRichText( node, doc ) {
+	function dxuiRestRichText( node, doc ) {
 		if ( node === doc.activeElement ) {
 			return;
 		}
@@ -1018,20 +1018,20 @@
 		}
 	}
 
-	function dxaiWatchRichText( doc, body ) {
+	function dxuiWatchRichText( doc, body ) {
 		doc.addEventListener( 'focusin', function ( event ) {
-			const node = event.target && event.target.closest ? event.target.closest( DXAI_RICH_TEXT ) : null;
-			if ( node && body.classList.contains( 'dxai-ui-canvas' ) ) {
+			const node = event.target && event.target.closest ? event.target.closest( DXUI_RICH_TEXT ) : null;
+			if ( node && body.classList.contains( 'dx-ui-canvas' ) ) {
 				node.style.whiteSpace = 'pre-wrap';
 				node.style.minWidth = '1px';
 			}
 		} );
 		doc.addEventListener( 'focusout', function ( event ) {
-			const node = event.target && event.target.closest ? event.target.closest( DXAI_RICH_TEXT ) : null;
-			if ( node && body.classList.contains( 'dxai-ui-canvas' ) ) {
+			const node = event.target && event.target.closest ? event.target.closest( DXUI_RICH_TEXT ) : null;
+			if ( node && body.classList.contains( 'dx-ui-canvas' ) ) {
 				// After focus has moved, so activeElement is the new owner.
 				setTimeout( function () {
-					dxaiRestRichText( node, doc );
+					dxuiRestRichText( node, doc );
 				}, 0 );
 			}
 		} );
@@ -1040,13 +1040,13 @@
 			return;
 		}
 		new View( function ( records ) {
-			if ( ! body.classList.contains( 'dxai-ui-canvas' ) ) {
+			if ( ! body.classList.contains( 'dx-ui-canvas' ) ) {
 				return;
 			}
 			records.forEach( function ( record ) {
 				if ( record.type === 'attributes' ) {
-					if ( record.target.matches && record.target.matches( DXAI_RICH_TEXT ) ) {
-						dxaiRestRichText( record.target, doc );
+					if ( record.target.matches && record.target.matches( DXUI_RICH_TEXT ) ) {
+						dxuiRestRichText( record.target, doc );
 					}
 					return;
 				}
@@ -1054,17 +1054,17 @@
 					if ( added.nodeType !== 1 ) {
 						return;
 					}
-					if ( added.matches( DXAI_RICH_TEXT ) ) {
-						dxaiRestRichText( added, doc );
+					if ( added.matches( DXUI_RICH_TEXT ) ) {
+						dxuiRestRichText( added, doc );
 					}
-					added.querySelectorAll( DXAI_RICH_TEXT ).forEach( function ( node ) {
-						dxaiRestRichText( node, doc );
+					added.querySelectorAll( DXUI_RICH_TEXT ).forEach( function ( node ) {
+						dxuiRestRichText( node, doc );
 					} );
 				} );
 			} );
 		} ).observe( body, { childList: true, subtree: true, attributes: true, attributeFilter: [ 'style' ] } );
-		body.querySelectorAll( DXAI_RICH_TEXT ).forEach( function ( node ) {
-			dxaiRestRichText( node, doc );
+		body.querySelectorAll( DXUI_RICH_TEXT ).forEach( function ( node ) {
+			dxuiRestRichText( node, doc );
 		} );
 	}
 
@@ -1083,57 +1083,57 @@
 	 * Tablet and Mobile previews), a stylesheet finishes loading. Once per
 	 * frame at most.
 	 */
-	const DXAI_LI_LAYOUTS = [ 'flex', 'inline-flex', 'grid', 'inline-grid', 'inline', 'inline-block' ];
+	const DXUI_LI_LAYOUTS = [ 'flex', 'inline-flex', 'grid', 'inline-grid', 'inline', 'inline-block' ];
 
-	function dxaiLayoutListItems( doc ) {
+	function dxuiLayoutListItems( doc ) {
 		const view = doc.defaultView;
 		const host = doc.body && doc.body.classList.contains( 'editor-styles-wrapper' ) ? doc.body : doc.querySelector( '.editor-styles-wrapper' );
-		if ( ! view || ! host || ! host.classList.contains( 'dxai-ui-canvas' ) ) {
+		if ( ! view || ! host || ! host.classList.contains( 'dx-ui-canvas' ) ) {
 			return;
 		}
 		host.querySelectorAll( 'li[data-type="core/list-item"]' ).forEach( function ( li ) {
 			const style = view.getComputedStyle( li );
 			const display = style.display;
-			let want = DXAI_LI_LAYOUTS.indexOf( display ) > -1 ? display : '';
+			let want = DXUI_LI_LAYOUTS.indexOf( display ) > -1 ? display : '';
 			if ( ! want && display.indexOf( 'list-item' ) > -1 && style.listStylePosition === 'inside' && ( style.listStyleType !== 'none' || style.listStyleImage !== 'none' ) ) {
 				want = 'inside';
 			}
-			if ( ( li.getAttribute( 'data-dxai-li' ) || '' ) === want ) {
+			if ( ( li.getAttribute( 'data-dxui-li' ) || '' ) === want ) {
 				return;
 			}
 			if ( want ) {
-				li.setAttribute( 'data-dxai-li', want );
+				li.setAttribute( 'data-dxui-li', want );
 			} else {
-				li.removeAttribute( 'data-dxai-li' );
+				li.removeAttribute( 'data-dxui-li' );
 			}
 		} );
 	}
 
-	function dxaiQueueListItems( doc ) {
+	function dxuiQueueListItems( doc ) {
 		const view = doc.defaultView;
-		if ( ! view || doc.dxaiListQueued ) {
+		if ( ! view || doc.dxuiListQueued ) {
 			return;
 		}
-		doc.dxaiListQueued = true;
+		doc.dxuiListQueued = true;
 		( view.requestAnimationFrame || view.setTimeout ).call( view, function () {
-			doc.dxaiListQueued = false;
-			dxaiLayoutListItems( doc );
+			doc.dxuiListQueued = false;
+			dxuiLayoutListItems( doc );
 		} );
 	}
 
-	function dxaiWatchListItems( doc, body ) {
+	function dxuiWatchListItems( doc, body ) {
 		const view = doc.defaultView;
-		if ( ! view || doc.dxaiListWatched ) {
+		if ( ! view || doc.dxuiListWatched ) {
 			return;
 		}
-		doc.dxaiListWatched = true;
+		doc.dxuiListWatched = true;
 		const queue = function () {
-			dxaiQueueListItems( doc );
+			dxuiQueueListItems( doc );
 		};
 		view.addEventListener( 'resize', queue );
 		doc.addEventListener( 'load', function ( event ) {
 			if ( event.target && event.target.tagName === 'LINK' ) {
-				dxaiTwinDesignIds( doc );
+				dxuiTwinDesignIds( doc );
 				queue();
 			}
 		}, true );
@@ -1152,16 +1152,16 @@
 	 * (`block-{clientId}`), so a design rule for a section's id —
 	 * `#who.rv-whofor .rv-personas--columns`, in 73 of the 1,512 design
 	 * sheets in this site's uploads — matched nothing in the canvas. A block's
-	 * anchor rides as data-dxai-id instead, and each rule of the page's design
+	 * anchor rides as data-dxui-id instead, and each rule of the page's design
 	 * sheet that names an id gets a twin right after it, in the canvas's copy
-	 * of the sheet only, whose `#who` reads `:is(#who,[data-dxai-id="who"])`:
+	 * of the sheet only, whose `#who` reads `:is(#who,[data-dxui-id="who"])`:
 	 * the same specificity (an id's) at the same place in the cascade. Ids
 	 * inside attribute selectors (`[href="#who"]`) are left alone, and so is
-	 * `#dxai-h`, the id no element has that Style_Rules lifts with. A sheet
+	 * `#dxui-h`, the id no element has that Style_Rules lifts with. A sheet
 	 * served from another origin cannot be read and keeps its rules as they
 	 * are.
 	 */
-	function dxaiIdTwinSelector( selector ) {
+	function dxuiIdTwinSelector( selector ) {
 		let out = '';
 		let quote = '';
 		let bracket = 0;
@@ -1188,8 +1188,8 @@
 				bracket--;
 			} else if ( ch === '#' && bracket === 0 ) {
 				const m = /^-?[_a-zA-Z\u00a0-\uffff][\w\u00a0-\uffff-]*/.exec( selector.slice( i + 1 ) );
-				if ( m && m[ 0 ] !== 'dxai-h' ) {
-					out += ':is(#' + m[ 0 ] + ',[data-dxai-id="' + m[ 0 ] + '"])';
+				if ( m && m[ 0 ] !== 'dxui-h' ) {
+					out += ':is(#' + m[ 0 ] + ',[data-dxui-id="' + m[ 0 ] + '"])';
 					i += m[ 0 ].length;
 					changed = true;
 					continue;
@@ -1202,11 +1202,11 @@
 	}
 
 	// Backwards, so a twin inserted after its rule is never visited itself.
-	function dxaiTwinRules( rules, host ) {
+	function dxuiTwinRules( rules, host ) {
 		for ( let i = rules.length - 1; i >= 0; i-- ) {
 			const rule = rules[ i ];
 			if ( typeof rule.selectorText === 'string' ) {
-				const twin = dxaiIdTwinSelector( rule.selectorText );
+				const twin = dxuiIdTwinSelector( rule.selectorText );
 				if ( twin && rule.cssText.indexOf( rule.selectorText ) === 0 ) {
 					try {
 						host.insertRule( twin + rule.cssText.slice( rule.selectorText.length ), i + 1 );
@@ -1218,15 +1218,15 @@
 			// @media, @supports, @layer, @container — and a style rule's own
 			// nested rules.
 			if ( rule.cssRules && rule.cssRules.length && typeof rule.insertRule === 'function' ) {
-				dxaiTwinRules( rule.cssRules, rule );
+				dxuiTwinRules( rule.cssRules, rule );
 			}
 		}
 	}
 
-	function dxaiTwinDesignIds( doc ) {
-		doc.querySelectorAll( 'link[rel="stylesheet"][id^="dxai-ui-page-editor-"]' ).forEach( function ( link ) {
+	function dxuiTwinDesignIds( doc ) {
+		doc.querySelectorAll( 'link[rel="stylesheet"][id^="dx-ui-page-editor-"]' ).forEach( function ( link ) {
 			const sheet = link.sheet;
-			if ( ! sheet || sheet.dxaiIdTwins ) {
+			if ( ! sheet || sheet.dxuiIdTwins ) {
 				return;
 			}
 			let rules = null;
@@ -1235,9 +1235,9 @@
 			} catch ( e ) {
 				rules = null;
 			}
-			sheet.dxaiIdTwins = true;
+			sheet.dxuiIdTwins = true;
 			if ( rules ) {
-				dxaiTwinRules( rules, sheet );
+				dxuiTwinRules( rules, sheet );
 			}
 		} );
 	}
@@ -1245,13 +1245,13 @@
 	// Assets::drop_theme_styles() in the canvas: a stylesheet served from the
 	// theme's directory is dequeued from a converted page's front end, and
 	// its inline CSS goes with it, so both are switched off here too.
-	function dxaiDropThemeSheets( doc ) {
-		const roots = ( dxaiCanvasCfg().themeRoots || [] ).filter( Boolean );
+	function dxuiDropThemeSheets( doc ) {
+		const roots = ( dxuiCanvasCfg().themeRoots || [] ).filter( Boolean );
 		if ( ! roots.length ) {
 			return;
 		}
 		// The styles of the theme's own blocks stay, as they do on the front end (the server lists them).
-		const blocks = new Set( ( dxaiCanvasCfg().themeBlocks || [] ).map( function ( handle ) {
+		const blocks = new Set( ( dxuiCanvasCfg().themeBlocks || [] ).map( function ( handle ) {
 			return handle + '-css';
 		} ) );
 		doc.querySelectorAll( 'link[rel="stylesheet"][href]' ).forEach( function ( link ) {
@@ -1269,61 +1269,61 @@
 		} );
 	}
 
-	function dxaiEnsureDoc( doc, classes ) {
+	function dxuiEnsureDoc( doc, classes ) {
 		const body = doc.body && doc.body.classList.contains( 'editor-styles-wrapper' ) ? doc.body : doc.querySelector( '.editor-styles-wrapper' );
 		if ( body ) {
-			// A class this script added and no longer wants: dxai-ui-blank
+			// A class this script added and no longer wants: dx-ui-blank
 			// after the template was switched away.
-			( body.dxaiClasses || [] ).forEach( function ( name ) {
+			( body.dxuiClasses || [] ).forEach( function ( name ) {
 				if ( classes.indexOf( name ) === -1 ) {
 					body.classList.remove( name );
 				}
 			} );
-			body.dxaiClasses = classes;
-			dxaiApplyClasses( body );
+			body.dxuiClasses = classes;
+			dxuiApplyClasses( body );
 			// The editor renders the body's class list itself and rewrites it
 			// when its own classes change; put ours back before it paints.
 			const View = doc.defaultView && doc.defaultView.MutationObserver;
-			if ( View && ! body.dxaiObserver ) {
-				body.dxaiObserver = new View( function () {
-					dxaiApplyClasses( body );
+			if ( View && ! body.dxuiObserver ) {
+				body.dxuiObserver = new View( function () {
+					dxuiApplyClasses( body );
 				} );
-				body.dxaiObserver.observe( body, { attributes: true, attributeFilter: [ 'class' ] } );
+				body.dxuiObserver.observe( body, { attributes: true, attributeFilter: [ 'class' ] } );
 			}
-			if ( classes.length && ! body.dxaiRichWatched ) {
-				body.dxaiRichWatched = true;
-				dxaiWatchRichText( doc, body );
+			if ( classes.length && ! body.dxuiRichWatched ) {
+				body.dxuiRichWatched = true;
+				dxuiWatchRichText( doc, body );
 			}
 			if ( classes.length ) {
-				dxaiWatchListItems( doc, body );
+				dxuiWatchListItems( doc, body );
 			}
 		}
-		dxaiWriteRules( doc );
+		dxuiWriteRules( doc );
 		if ( classes.length ) {
 			// The theme's CSS is off a converted page, and off the copied sections of an ordinary page where the front end fences it (Theme_Fence).
-			if ( dxaiCanvasCfg().converted || dxaiCanvasCfg().fence ) {
-				dxaiDropThemeSheets( doc );
+			if ( dxuiCanvasCfg().converted || dxuiCanvasCfg().fence ) {
+				dxuiDropThemeSheets( doc );
 			}
-			dxaiTwinDesignIds( doc );
+			dxuiTwinDesignIds( doc );
 		}
-		if ( ! doc.dxaiGuarded ) {
-			doc.dxaiGuarded = true;
-			dxaiGuardDoc( doc );
+		if ( ! doc.dxuiGuarded ) {
+			doc.dxuiGuarded = true;
+			dxuiGuardDoc( doc );
 		}
 	}
 
-	let dxaiQueued = false;
+	let dxuiQueued = false;
 
-	function dxaiSync() {
-		if ( dxaiQueued ) {
+	function dxuiSync() {
+		if ( dxuiQueued ) {
 			return;
 		}
-		dxaiQueued = true;
+		dxuiQueued = true;
 		const run = function () {
-			dxaiQueued = false;
-			const classes = dxaiCanvasClasses();
-			dxaiCanvasDocs().forEach( function ( doc ) {
-				dxaiEnsureDoc( doc, classes );
+			dxuiQueued = false;
+			const classes = dxuiCanvasClasses();
+			dxuiCanvasDocs().forEach( function ( doc ) {
+				dxuiEnsureDoc( doc, classes );
 			} );
 		};
 		if ( window.requestAnimationFrame ) {
@@ -1335,26 +1335,26 @@
 
 	if ( wp.data && wp.data.subscribe ) {
 		wp.data.subscribe( function () {
-			dxaiReconcileSettings();
-			dxaiKeepPostOnly();
+			dxuiReconcileSettings();
+			dxuiKeepPostOnly();
 			// Written at once, before the block that changed re-renders with
 			// its new class, so it never paints without its rule.
-			if ( dxaiLiveRules() ) {
-				dxaiCanvasDocs().forEach( dxaiWriteRules );
+			if ( dxuiLiveRules() ) {
+				dxuiCanvasDocs().forEach( dxuiWriteRules );
 			}
-			dxaiSync();
+			dxuiSync();
 		} );
 	}
 	if ( wp.domReady ) {
 		wp.domReady( function () {
-			dxaiSync();
+			dxuiSync();
 			// A canvas the editor replaced without a store change (a new
 			// iframe document) is picked up within a second.
-			setInterval( dxaiSync, 1000 );
+			setInterval( dxuiSync, 1000 );
 		} );
 	}
 
-	addFilter( 'blocks.registerBlockType', 'dxai-ui/paragraph-class', function ( settings, name ) {
+	addFilter( 'blocks.registerBlockType', 'dx-ui/paragraph-class', function ( settings, name ) {
 		/*
 		 * core/paragraph's `className` support is deliberately left as core
 		 * ships it (off). It used to be switched on here so design classes
@@ -1365,31 +1365,31 @@
 		 * paragraph anywhere on the site matched any version of the block:
 		 * every ordinary post opened with its paragraphs marked invalid.
 		 */
-		if ( DXAI_STYLED.indexOf( name ) !== -1 ) {
+		if ( DXUI_STYLED.indexOf( name ) !== -1 ) {
 			settings.attributes = Object.assign( {}, settings.attributes, {
-				dxaiStyle: { type: 'string' },
-				dxaiCss: { type: 'string' },
+				dxuiStyle: { type: 'string' },
+				dxuiCss: { type: 'string' },
 				// CSS of the styled runs inside, class => declarations
 				// (Style_Hoister::INNER_ATTR). Kept on the block so a copy of
 				// it brings its rules along; without it registered, the
 				// editor would drop it on the first save.
-				dxaiInner: { type: 'object' },
+				dxuiInner: { type: 'object' },
 			} );
 		}
 		if ( name === 'core/html' ) {
 			settings.attributes = Object.assign( {}, settings.attributes, {
-				dxaiInner: { type: 'object' },
+				dxuiInner: { type: 'object' },
 			} );
 		}
 		// The list and its rows both keep their data attributes: a design's
 		// responsive rules select on them (`[data-promise]` on a <ul>).
 		if ( name === 'core/list-item' || name === 'core/list' ) {
-			// A row's data attributes — `data-dxai-on="is-open"` is how a
+			// A row's data attributes — `data-dxui-on="is-open"` is how a
 			// process-rail row says which state shows it. Html_To_Blocks keeps
 			// them here; without the attribute registered, save() dropped them
 			// and every such row opened as an invalid block.
 			settings.attributes = Object.assign( {}, settings.attributes, {
-				dxaiData: { type: 'object' },
+				dxuiData: { type: 'object' },
 			} );
 		}
 		if ( name === 'core/group' ) {
@@ -1401,12 +1401,12 @@
 				// Behaviour the design drives off data attributes, `data-reveal`
 				// above all. Without somewhere to keep them, save() dropped them
 				// and every section that had one opened as an invalid block.
-				dxaiData: { type: 'object' },
+				dxuiData: { type: 'object' },
 				// Raw inline style off the design. Core's own `style` attribute
 				// is a theme.json object and cannot carry arbitrary CSS, and
 				// custom-CSS support rejects markup-looking values such as the
 				// data-URI SVG backgrounds these designs use.
-				dxaiStyle: { type: 'string' },
+				dxuiStyle: { type: 'string' },
 			} );
 		}
 		return settings;
@@ -1421,8 +1421,8 @@
 	 * stored element's own href: the block opens valid, with the link it
 	 * shows on the page, and the next save stores it in `url` too.
 	 */
-	addFilter( 'blocks.registerBlockType', 'dxai-ui/stored-href', function ( settings, name ) {
-		if ( [ 'dxai-ui/link', 'dxai-ui/text', 'dxai-ui/box' ].indexOf( name ) === -1 || ! settings.attributes || ! settings.attributes.url || ! settings.save ) {
+	addFilter( 'blocks.registerBlockType', 'dx-ui/stored-href', function ( settings, name ) {
+		if ( [ 'dx-ui/link', 'dx-ui/text', 'dx-ui/box' ].indexOf( name ) === -1 || ! settings.attributes || ! settings.attributes.url || ! settings.save ) {
 			return settings;
 		}
 		return Object.assign( {}, settings, {
@@ -1438,35 +1438,35 @@
 		} );
 	} );
 
-	addFilter( 'blocks.getSaveContent.extraProps', 'dxai-ui/inline-style', function ( extra, blockType, attributes ) {
-		if ( ! blockType || DXAI_STYLED.indexOf( blockType.name ) === -1 ) {
+	addFilter( 'blocks.getSaveContent.extraProps', 'dx-ui/inline-style', function ( extra, blockType, attributes ) {
+		if ( ! blockType || DXUI_STYLED.indexOf( blockType.name ) === -1 ) {
 			return extra;
 		}
-		if ( attributes.dxaiCss ) {
-			const cls = dxaiCssClass( attributes.dxaiCss );
+		if ( attributes.dxuiCss ) {
+			const cls = dxuiCssClass( attributes.dxuiCss );
 			extra.className = extra.className ? extra.className + ' ' + cls : cls;
-		} else if ( attributes.dxaiStyle ) {
+		} else if ( attributes.dxuiStyle ) {
 			// A block stored before its CSS moved out of the markup.
-			extra.style = attributes.dxaiStyle;
+			extra.style = attributes.dxuiStyle;
 		}
 		return extra;
 	} );
 
-	addFilter( 'blocks.getSaveContent.extraProps', 'dxai-ui/list-item-data', function ( extra, blockType, attributes ) {
+	addFilter( 'blocks.getSaveContent.extraProps', 'dx-ui/list-item-data', function ( extra, blockType, attributes ) {
 		if ( ! blockType || ( blockType.name !== 'core/list-item' && blockType.name !== 'core/list' ) ) {
 			return extra;
 		}
-		if ( attributes.dxaiData && typeof attributes.dxaiData === 'object' ) {
-			Object.keys( attributes.dxaiData ).forEach( function ( key ) {
+		if ( attributes.dxuiData && typeof attributes.dxuiData === 'object' ) {
+			Object.keys( attributes.dxuiData ).forEach( function ( key ) {
 				if ( key.indexOf( 'data-' ) === 0 ) {
-					extra[ key ] = attributes.dxaiData[ key ];
+					extra[ key ] = attributes.dxuiData[ key ];
 				}
 			} );
 		}
 		return extra;
 	} );
 
-	addFilter( 'blocks.getSaveContent.extraProps', 'dxai-ui/group-a11y', function ( extra, blockType, attributes ) {
+	addFilter( 'blocks.getSaveContent.extraProps', 'dx-ui/group-a11y', function ( extra, blockType, attributes ) {
 		if ( ! blockType || blockType.name !== 'core/group' ) {
 			return extra;
 		}
@@ -1482,13 +1482,13 @@
 		if ( attributes.ariaLabel ) {
 			extra[ 'aria-label' ] = attributes.ariaLabel;
 		}
-		if ( attributes.dxaiStyle ) {
-			extra.style = attributes.dxaiStyle;
+		if ( attributes.dxuiStyle ) {
+			extra.style = attributes.dxuiStyle;
 		}
-		if ( attributes.dxaiData && typeof attributes.dxaiData === 'object' ) {
-			Object.keys( attributes.dxaiData ).forEach( function ( key ) {
+		if ( attributes.dxuiData && typeof attributes.dxuiData === 'object' ) {
+			Object.keys( attributes.dxuiData ).forEach( function ( key ) {
 				if ( key.indexOf( 'data-' ) === 0 ) {
-					extra[ key ] = attributes.dxaiData[ key ];
+					extra[ key ] = attributes.dxuiData[ key ];
 				}
 			} );
 		}
@@ -1496,8 +1496,8 @@
 	} );
 
 	/*
-	 * A block whose saved markup is one element written verbatim (dxai-ui/html,
-	 * dxai-ui/svg) renders that element itself in the canvas, as the block's
+	 * A block whose saved markup is one element written verbatim (dx-ui/html,
+	 * dx-ui/svg) renders that element itself in the canvas, as the block's
 	 * own element — not inside a wrapper. Wrapped, it stopped being the flex
 	 * or grid item the design lays out (an icon went from block to inline),
 	 * and every design selector with a child combinator missed it.
@@ -1507,10 +1507,10 @@
 	 * parser leaves them (`viewbox` becomes `viewBox` on an <svg>). React
 	 * renders the element with the editor's props and the design's classes;
 	 * the rest of the root's attributes are set on it directly (see
-	 * useDxaiRootAttrs()), because React would warn about or mis-case half of
+	 * useDxuiRootAttrs()), because React would warn about or mis-case half of
 	 * them. null when the markup is not exactly one element.
 	 */
-	function dxaiParseRoot( markup ) {
+	function dxuiParseRoot( markup ) {
 		if ( typeof markup !== 'string' || markup.trim() === '' ) {
 			return null;
 		}
@@ -1543,17 +1543,17 @@
 			cls: root.getAttribute( 'class' ) || '',
 			attrs: attrs,
 			inner: root.innerHTML,
-			isVoid: DXAI_VOID_TAGS.indexOf( root.localName ) > -1,
+			isVoid: DXUI_VOID_TAGS.indexOf( root.localName ) > -1,
 		};
 	}
 
 	// The parsed root's attributes on the rendered element, except the ones
 	// React already writes (class) or the editor owns, and aria-hidden: the
 	// element is the block's own, which the editor focuses when the block is
-	// selected (see dxaiReactProps()) — a selected icon held focus inside an
+	// selected (see dxuiReactProps()) — a selected icon held focus inside an
 	// aria-hidden <svg>. Attributes set on an earlier render and gone from the
 	// markup now are removed.
-	function useDxaiRootAttrs( ref, parsed ) {
+	function useDxuiRootAttrs( ref, parsed ) {
 		const applied = useRef( [] );
 		useLayoutEffect( function () {
 			const node = ref.current;
@@ -1566,14 +1566,14 @@
 				const lower = name.toLowerCase();
 				if ( lower === 'id' && ! attr[ 0 ] && attr[ 2 ] !== '' ) {
 					// The editor's id stays; the design's rides as
-					// data-dxai-id, as a core block's anchor does.
-					now.push( 'data-dxai-id' );
-					if ( node.getAttribute( 'data-dxai-id' ) !== attr[ 2 ] ) {
-						node.setAttribute( 'data-dxai-id', attr[ 2 ] );
+					// data-dxui-id, as a core block's anchor does.
+					now.push( 'data-dxui-id' );
+					if ( node.getAttribute( 'data-dxui-id' ) !== attr[ 2 ] ) {
+						node.setAttribute( 'data-dxui-id', attr[ 2 ] );
 					}
 					return;
 				}
-				if ( lower === 'class' || lower === 'aria-hidden' || DXAI_EDITOR_OWNED.indexOf( lower ) > -1 ) {
+				if ( lower === 'class' || lower === 'aria-hidden' || DXUI_EDITOR_OWNED.indexOf( lower ) > -1 ) {
 					return;
 				}
 				now.push( name );
@@ -1596,7 +1596,7 @@
 
 	// Design chrome core cannot model. Saves the payload verbatim, so unlike a
 	// dynamic block the page still renders if the plugin is deactivated.
-	registerBlockType( 'dxai-ui/html', {
+	registerBlockType( 'dx-ui/html', {
 		apiVersion: 3,
 		title: 'DX HTML',
 		category: 'dx-blocks',
@@ -1604,15 +1604,15 @@
 		supports: { className: false, customClassName: false, html: false, customCSS: false, anchor: false },
 		attributes: {
 			content: { type: 'string', source: 'html' },
-			dxaiInner: { type: 'object', default: {} },
+			dxuiInner: { type: 'object', default: {} },
 		},
 		edit: function ( props ) {
 			const content = props.attributes.content || '';
 			const parsed = useMemo( function () {
-				return dxaiParseRoot( content );
+				return dxuiParseRoot( content );
 			}, [ content ] );
 			const ref = useRef();
-			useDxaiRootAttrs( ref, parsed );
+			useDxuiRootAttrs( ref, parsed );
 			// No outline or padding of its own any more: the 2px padding moved
 			// every island's box, and the editor outlines a selected block.
 			if ( parsed ) {
@@ -1630,17 +1630,17 @@
 		},
 	} );
 
-	// dxai-ui/text's attributes as `[ HTML name, block attribute ]`, in the
+	// dx-ui/text's attributes as `[ HTML name, block attribute ]`, in the
 	// order save() writes them. Mirrors Html_To_Blocks::TEXT_ATTR_MAP — the two
 	// emitters have to agree character for character or Gutenberg re-runs
 	// save(), fails the comparison, and the block opens invalid.
 	// Mirrors Html_To_Blocks::TEXT_ATTR_MAP, in its key order — including
 	// href/target/rel, which is what lets a designed call-to-action ride this
 	// block instead of staying raw HTML. See the comment on that map.
-	const DXAI_TEXT_ATTRS = [
+	const DXUI_TEXT_ATTRS = [
 		[ 'id', 'anchor' ],
 		[ 'class', 'className' ],
-		[ 'style', 'dxaiStyle' ],
+		[ 'style', 'dxuiStyle' ],
 		[ 'href', 'url' ],
 		[ 'target', 'target' ],
 		[ 'rel', 'rel' ],
@@ -1655,7 +1655,7 @@
 	// inspector puts whatever a person types straight into it — so both
 	// emitters have to reject the same values, or PHP would fall back to
 	// `span` while this side wrote `<foo bar>` for the same attributes.
-	function dxaiTextTag( a ) {
+	function dxuiTextTag( a ) {
 		const tag = String( a.tagName === undefined || a.tagName === '' ? 'span' : a.tagName ).trim().toLowerCase();
 
 		return /^[a-z][a-z0-9]*$/.test( tag ) ? tag : 'span';
@@ -1665,16 +1665,16 @@
 	// them in the source's own order — attrOrder when the design's order was
 	// not the canonical one — is what keeps the saved element byte-identical to
 	// the markup the ZIP shipped.
-	function dxaiTextProps( a ) {
+	function dxuiTextProps( a ) {
 		const named = {};
-		DXAI_TEXT_ATTRS.forEach( function ( pair ) {
+		DXUI_TEXT_ATTRS.forEach( function ( pair ) {
 			named[ pair[ 0 ] ] = pair[ 1 ];
 		} );
-		const data = a.dxaiData && typeof a.dxaiData === 'object' ? a.dxaiData : {};
+		const data = a.dxuiData && typeof a.dxuiData === 'object' ? a.dxuiData : {};
 		const explicit = Array.isArray( a.attrOrder ) && a.attrOrder.length > 0;
 		const order = explicit
 			? a.attrOrder
-			: DXAI_TEXT_ATTRS.map( function ( pair ) { return pair[ 0 ]; } ).concat( Object.keys( data ) );
+			: DXUI_TEXT_ATTRS.map( function ( pair ) { return pair[ 0 ]; } ).concat( Object.keys( data ) );
 
 		const props = {};
 		order.forEach( function ( key ) {
@@ -1702,10 +1702,10 @@
 	}
 
 	// The design's own text leaves — chips, badges, eyebrows, display numbers,
-	// dt/dd pairs. These used to be dxai-ui/html because the only alternative
+	// dt/dd pairs. These used to be dx-ui/html because the only alternative
 	// was core/paragraph, and that turns the `<span>` into a `<p>`, which the
 	// designs style separately (`.rv-testimonial p { font-size: 20px }`).
-	registerBlockType( 'dxai-ui/text', {
+	registerBlockType( 'dx-ui/text', {
 		apiVersion: 3,
 		title: 'DX Text',
 		icon: 'editor-textcolor',
@@ -1728,12 +1728,12 @@
 			// block rather than needing one each.
 			tagName: { type: 'string', default: 'span' },
 			className: { type: 'string', default: '' },
-			dxaiStyle: { type: 'string', default: '' },
-			dxaiCss: { type: 'string', default: '' },
-			dxaiInner: { type: 'object', default: {} },
-			dxaiData: { type: 'object', default: {} },
+			dxuiStyle: { type: 'string', default: '' },
+			dxuiCss: { type: 'string', default: '' },
+			dxuiInner: { type: 'object', default: {} },
+			dxuiData: { type: 'object', default: {} },
 			anchor: { type: 'string', default: '' },
-			// A link's own attributes — see DXAI_TEXT_ATTRS.
+			// A link's own attributes — see DXUI_TEXT_ATTRS.
 			url: { type: 'string', default: '' },
 			target: { type: 'string', default: '' },
 			rel: { type: 'string', default: '' },
@@ -1752,7 +1752,7 @@
 		},
 		edit: function ( props ) {
 			const a = props.attributes;
-			const tag = dxaiTextTag( a );
+			const tag = dxuiTextTag( a );
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null,
 					el( PanelBody, { title: 'Text' },
@@ -1771,8 +1771,8 @@
 				),
 				// The element save() writes — its attributes, the design's class
 				// and the dxs- class for its CSS — as the editable element.
-				el( RichText, Object.assign( {}, useBlockProps( Object.assign( dxaiReactProps( dxaiTextProps( a ), tag ), {
-					className: dxaiJoin( a.className, dxaiCanvasClass( a, 'dxai-ui/text' ) ) || undefined,
+				el( RichText, Object.assign( {}, useBlockProps( Object.assign( dxuiReactProps( dxuiTextProps( a ), tag ), {
+					className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/text' ) ) || undefined,
 				} ) ), {
 					tagName: tag,
 					value: a.content || '',
@@ -1791,8 +1791,8 @@
 		},
 		save: function ( props ) {
 			const a = props.attributes;
-			return el( RichText.Content, Object.assign( {}, dxaiHoist( dxaiTextProps( a ), a ), {
-				tagName: dxaiTextTag( a ),
+			return el( RichText.Content, Object.assign( {}, dxuiHoist( dxuiTextProps( a ), a ), {
+				tagName: dxuiTextTag( a ),
 				value: a.content || '',
 			} ) );
 		},
@@ -1800,10 +1800,10 @@
 
 	// Mirrors Html_To_Blocks::BOX_ATTR_MAP, in its key order: the canonical
 	// write order when the element carried no attrOrder of its own.
-	const DXAI_BOX_ATTRS = [
+	const DXUI_BOX_ATTRS = [
 		[ 'id', 'anchor' ],
 		[ 'class', 'className' ],
-		[ 'style', 'dxaiStyle' ],
+		[ 'style', 'dxuiStyle' ],
 		[ 'type', 'elType' ],
 		[ 'href', 'url' ],
 		[ 'src', 'src' ],
@@ -1844,11 +1844,11 @@
 
 	// Void elements, matching Html_To_Blocks::VOID_TAGS. The serializer writes
 	// these as `<tag …/>` and they take no children.
-	const DXAI_VOID_TAGS = [ 'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr' ];
+	const DXUI_VOID_TAGS = [ 'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr' ];
 
-	// Mirrors Html_To_Blocks::box_tag(). Same rule as dxaiTextTag(), defaulting
+	// Mirrors Html_To_Blocks::box_tag(). Same rule as dxuiTextTag(), defaulting
 	// to `div` because a box inserted by hand is a container.
-	function dxaiBoxTag( a ) {
+	function dxuiBoxTag( a ) {
 		const tag = String( a.tagName === undefined || a.tagName === '' ? 'div' : a.tagName ).trim().toLowerCase();
 
 		return /^[a-z][a-z0-9]*$/.test( tag ) ? tag : 'div';
@@ -1858,16 +1858,16 @@
 	// value is written when the element's own attrOrder names it — `alt=""` on
 	// a decorative image — and skipped when there is no explicit order, where
 	// an empty value cannot be told apart from an absent attribute.
-	function dxaiBoxProps( a ) {
+	function dxuiBoxProps( a ) {
 		const named = {};
-		DXAI_BOX_ATTRS.forEach( function ( pair ) {
+		DXUI_BOX_ATTRS.forEach( function ( pair ) {
 			named[ pair[ 0 ] ] = pair[ 1 ];
 		} );
-		const data = a.dxaiData && typeof a.dxaiData === 'object' ? a.dxaiData : {};
+		const data = a.dxuiData && typeof a.dxuiData === 'object' ? a.dxuiData : {};
 		const explicit = Array.isArray( a.attrOrder ) && a.attrOrder.length > 0;
 		const order = explicit
 			? a.attrOrder
-			: DXAI_BOX_ATTRS.map( function ( pair ) { return pair[ 0 ]; } ).concat( Object.keys( data ) );
+			: DXUI_BOX_ATTRS.map( function ( pair ) { return pair[ 0 ]; } ).concat( Object.keys( data ) );
 
 		const props = {};
 		order.forEach( function ( key ) {
@@ -1891,15 +1891,15 @@
 	}
 
 	/*
-	 * dxai-ui/box — the design's own element, with its children as blocks.
+	 * dx-ui/box — the design's own element, with its children as blocks.
 	 *
-	 * save() writes the element through dxaiBoxProps(), the mirror of
+	 * save() writes the element through dxuiBoxProps(), the mirror of
 	 * Html_To_Blocks::box_attrs(), so one attribute order and one escaping
 	 * contract cover both emitters. There is no `content` attribute: the
 	 * children are their own blocks, so nothing here goes through the hpq
-	 * round trip that governs dxai-ui/text.
+	 * round trip that governs dx-ui/text.
 	 */
-	wp.blocks.registerBlockType( 'dxai-ui/box', {
+	wp.blocks.registerBlockType( 'dx-ui/box', {
 		apiVersion: 3,
 		title: 'DX Box',
 		category: 'dx-blocks',
@@ -1907,9 +1907,9 @@
 		attributes: {
 			tagName: { type: 'string', default: 'div' },
 			className: { type: 'string', default: '' },
-			dxaiStyle: { type: 'string', default: '' },
-			dxaiCss: { type: 'string', default: '' },
-			dxaiData: { type: 'object', default: {} },
+			dxuiStyle: { type: 'string', default: '' },
+			dxuiCss: { type: 'string', default: '' },
+			dxuiData: { type: 'object', default: {} },
 			anchor: { type: 'string', default: '' },
 			elType: { type: 'string', default: '' },
 			url: { type: 'string', default: '' },
@@ -1943,7 +1943,7 @@
 			ariaCurrent: { type: 'string', default: '' },
 			ariaHasPopup: { type: 'string', default: '' },
 			ariaOrientation: { type: 'string', default: '' },
-			// See DXAI_BOX_ATTRS: an embedded map and an open accordion.
+			// See DXUI_BOX_ATTRS: an embedded map and an open accordion.
 			referrerPolicy: { type: 'string', default: '' },
 			open: { type: 'string', default: '' },
 			attrOrder: { type: 'array', default: [] },
@@ -1960,15 +1960,15 @@
 		},
 		edit: function ( props ) {
 			const a = props.attributes;
-			const tag = dxaiBoxTag( a );
-			const isVoid = DXAI_VOID_TAGS.indexOf( tag ) > -1;
+			const tag = dxuiBoxTag( a );
+			const isVoid = DXUI_VOID_TAGS.indexOf( tag ) > -1;
 			// Every attribute save() writes, through the same builder — an
 			// <img> box without its src was a blank box, and a <details> box
 			// without `open` a closed one — plus the design's class and the
 			// dxs- class for its CSS. A void element has no editable children,
 			// so it keeps a real `disabled`.
-			const blockProps = useBlockProps( Object.assign( dxaiReactProps( dxaiBoxProps( a ), tag, { inert: isVoid } ), {
-				className: dxaiJoin( a.className, dxaiCanvasClass( a, 'dxai-ui/box' ) ) || undefined,
+			const blockProps = useBlockProps( Object.assign( dxuiReactProps( dxuiBoxProps( a ), tag, { inert: isVoid } ), {
+				className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/box' ) ) || undefined,
 			} ) );
 			const inner = useInnerBlocksProps( blockProps, {} );
 			const fields = [
@@ -2016,17 +2016,17 @@
 		},
 		save: function ( props ) {
 			const a = props.attributes;
-			const tag = dxaiBoxTag( a );
-			if ( DXAI_VOID_TAGS.indexOf( tag ) > -1 ) {
-				return el( tag, dxaiHoist( dxaiBoxProps( a ), a ) );
+			const tag = dxuiBoxTag( a );
+			if ( DXUI_VOID_TAGS.indexOf( tag ) > -1 ) {
+				return el( tag, dxuiHoist( dxuiBoxProps( a ), a ) );
 			}
 
-			return el( tag, dxaiHoist( dxaiBoxProps( a ), a ), el( InnerBlocks.Content ) );
+			return el( tag, dxuiHoist( dxuiBoxProps( a ), a ), el( InnerBlocks.Content ) );
 		},
 	} );
 
 	/*
-	 * dxai-ui/svg — the design's own inline SVG.
+	 * dx-ui/svg — the design's own inline SVG.
 	 *
 	 * The root attributes are an ordered list of pairs, written as props in
 	 * that order; the serializer's getNormalAttributeName() restores the SVG
@@ -2035,7 +2035,7 @@
 	 * string, written verbatim by both emitters through
 	 * dangerouslySetInnerHTML, which the serializer emits as content.
 	 */
-	const DXAI_SVG_EDITABLE = [
+	const DXUI_SVG_EDITABLE = [
 		[ 'width', 'Width' ],
 		[ 'height', 'Height' ],
 		[ 'fill', 'Fill' ],
@@ -2044,23 +2044,23 @@
 		[ 'class', 'Class' ],
 	];
 
-	function dxaiSvgPairs( a ) {
+	function dxuiSvgPairs( a ) {
 		return Array.isArray( a.svgAttrs ) ? a.svgAttrs.filter( function ( pair ) {
 			return Array.isArray( pair ) && pair.length > 1;
 		} ) : [];
 	}
 
-	function dxaiSvgProps( a ) {
+	function dxuiSvgProps( a ) {
 		const props = {};
-		dxaiSvgPairs( a ).forEach( function ( pair ) {
+		dxuiSvgPairs( a ).forEach( function ( pair ) {
 			props[ String( pair[ 0 ] ) ] = String( pair[ 1 ] );
 		} );
 
 		return props;
 	}
 
-	function dxaiSvgValue( a, name ) {
-		const hit = dxaiSvgPairs( a ).find( function ( pair ) { return String( pair[ 0 ] ) === name; } );
+	function dxuiSvgValue( a, name ) {
+		const hit = dxuiSvgPairs( a ).find( function ( pair ) { return String( pair[ 0 ] ) === name; } );
 
 		return hit ? String( hit[ 1 ] ) : '';
 	}
@@ -2068,8 +2068,8 @@
 	// Editing a root attribute keeps the source order: an existing pair is
 	// replaced in place, a new one is appended, and clearing a value removes
 	// the pair so the attribute disappears rather than becoming empty.
-	function dxaiSvgSet( a, name, value ) {
-		const pairs = dxaiSvgPairs( a ).map( function ( pair ) { return [ String( pair[ 0 ] ), String( pair[ 1 ] ) ]; } );
+	function dxuiSvgSet( a, name, value ) {
+		const pairs = dxuiSvgPairs( a ).map( function ( pair ) { return [ String( pair[ 0 ] ), String( pair[ 1 ] ) ]; } );
 		const at = pairs.findIndex( function ( pair ) { return pair[ 0 ] === name; } );
 		if ( value === '' ) {
 			return at > -1 ? pairs.slice( 0, at ).concat( pairs.slice( at + 1 ) ) : pairs;
@@ -2083,7 +2083,7 @@
 		return pairs.concat( [ [ name, value ] ] );
 	}
 
-	registerBlockType( 'dxai-ui/svg', {
+	registerBlockType( 'dx-ui/svg', {
 		apiVersion: 3,
 		title: 'DX Icon',
 		category: 'dx-blocks',
@@ -2099,17 +2099,17 @@
 		attributes: {
 			svgAttrs: { type: 'array', default: [] },
 			svgInner: { type: 'string', default: '' },
-			dxaiInner: { type: 'object', default: {} },
+			dxuiInner: { type: 'object', default: {} },
 		},
 		edit: function ( props ) {
 			const a = props.attributes;
-			const fields = DXAI_SVG_EDITABLE.map( function ( pair ) {
+			const fields = DXUI_SVG_EDITABLE.map( function ( pair ) {
 				return el( TextControl, {
 					key: pair[ 0 ],
 					label: pair[ 1 ],
-					value: dxaiSvgValue( a, pair[ 0 ] ),
+					value: dxuiSvgValue( a, pair[ 0 ] ),
 					onChange: function ( value ) {
-						props.setAttributes( { svgAttrs: dxaiSvgSet( a, pair[ 0 ], value ) } );
+						props.setAttributes( { svgAttrs: dxuiSvgSet( a, pair[ 0 ], value ) } );
 					},
 				} );
 			} );
@@ -2121,15 +2121,15 @@
 				onChange: function ( value ) { props.setAttributes( { svgInner: value } ); },
 			} ) );
 
-			// The <svg> itself is the block's element (see dxaiParseRoot()):
+			// The <svg> itself is the block's element (see dxuiParseRoot()):
 			// inside two wrapper <div>s it was an inline box instead of the
 			// flex or grid item the design lays out.
-			const markup = dxaiSvgMarkup( a );
+			const markup = dxuiSvgMarkup( a );
 			const parsed = useMemo( function () {
-				return dxaiParseRoot( markup );
+				return dxuiParseRoot( markup );
 			}, [ markup ] );
 			const ref = useRef();
-			useDxaiRootAttrs( ref, parsed );
+			useDxuiRootAttrs( ref, parsed );
 
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null, el( PanelBody, { title: 'Icon' }, fields ) ),
@@ -2143,7 +2143,7 @@
 		save: function ( props ) {
 			const a = props.attributes;
 
-			return el( 'svg', Object.assign( {}, dxaiSvgProps( a ), {
+			return el( 'svg', Object.assign( {}, dxuiSvgProps( a ), {
 				dangerouslySetInnerHTML: { __html: a.svgInner || '' },
 			} ) );
 		},
@@ -2151,16 +2151,16 @@
 
 	// The canvas preview only: RawHTML needs one string, and the saved markup
 	// is built by save() above rather than from this.
-	function dxaiSvgMarkup( a ) {
+	function dxuiSvgMarkup( a ) {
 		let out = '<svg';
-		dxaiSvgPairs( a ).forEach( function ( pair ) {
+		dxuiSvgPairs( a ).forEach( function ( pair ) {
 			out += ' ' + String( pair[ 0 ] ) + '="' + String( pair[ 1 ] ).replace( /&/g, '&amp;' ).replace( /"/g, '&quot;' ) + '"';
 		} );
 
 		return out + '>' + ( a.svgInner || '' ) + '</svg>';
 	}
 
-	// dxai-ui/link's attributes as `[ HTML name, block attribute ]`, in the one
+	// dx-ui/link's attributes as `[ HTML name, block attribute ]`, in the one
 	// order both save()s write them. Mirrors Html_To_Blocks::LINK_ATTR_MAP;
 	// `class` and `href` are written by the tag opener before this list runs,
 	// so they are not in it.
@@ -2170,7 +2170,7 @@
 	// dropped them reading the block back and save() regenerated an element
 	// without them — an invalid block on first open. title, target and rel were
 	// never carried at all.
-	const DXAI_LINK_ATTRS = [
+	const DXUI_LINK_ATTRS = [
 		[ 'target', 'target' ],
 		[ 'rel', 'rel' ],
 		[ 'title', 'title' ],
@@ -2184,10 +2184,10 @@
 	];
 
 	// The element's attributes as save() writes them — and, through
-	// dxaiReactProps(), as edit() renders them.
-	function dxaiLinkProps( a ) {
+	// dxuiReactProps(), as edit() renders them.
+	function dxuiLinkProps( a ) {
 		const tag = a.tagName === 'button' ? 'button' : 'a';
-		const className = [ 'wp-block-dxai-ui-link', a.className ].filter( Boolean ).join( ' ' );
+		const className = [ 'wp-block-dx-ui-link', a.className ].filter( Boolean ).join( ' ' );
 		// The serializer writes attributes in prop insertion order, so this
 		// order is what keeps save() byte-identical to what the compiler
 		// stored. It is Html_To_Blocks::link_open_tag()'s order.
@@ -2199,7 +2199,7 @@
 			// made Continue-style CTAs fail PHP link_reproduces().
 			extra.type = a.elType;
 		}
-		DXAI_LINK_ATTRS.forEach( function ( pair ) {
+		DXUI_LINK_ATTRS.forEach( function ( pair ) {
 			if ( a[ pair[ 1 ] ] ) {
 				extra[ pair[ 0 ] ] = a[ pair[ 1 ] ];
 			}
@@ -2207,7 +2207,7 @@
 		if ( a.disabled ) {
 			extra.disabled = true;
 		}
-		const data = a.dxaiData && typeof a.dxaiData === 'object' ? a.dxaiData : {};
+		const data = a.dxuiData && typeof a.dxuiData === 'object' ? a.dxuiData : {};
 		Object.keys( data ).sort().forEach( function ( key ) {
 			const name = String( key ).toLowerCase();
 			if ( name.indexOf( 'data-' ) === 0 && data[ key ] !== undefined && data[ key ] !== null ) {
@@ -2218,16 +2218,16 @@
 			extra[ 'aria-selected' ] = 'true';
 		}
 		// Its CSS as a class, not a style attribute (Style_Hoister).
-		if ( a.dxaiCss ) {
+		if ( a.dxuiCss ) {
 			delete extra.style;
-			extra.className = extra.className + ' ' + dxaiCssClass( a.dxaiCss );
+			extra.className = extra.className + ' ' + dxuiCssClass( a.dxuiCss );
 		}
 
 		return extra;
 	}
 
 	/*
-	 * dxai-ui/link `text` and dxai-ui/details `question` are plain text: the
+	 * dx-ui/link `text` and dx-ui/details `question` are plain text: the
 	 * compiler stores the element's textContent, and save() writes it as a
 	 * text child, which escapes it. RichText works in HTML, so it is given
 	 * the text escaped, and what it hands back is turned into text again.
@@ -2237,15 +2237,15 @@
 	 * escaped, as RichText's own HTML does, so the value it gets back after
 	 * an edit is the one it gave and the caret stays put.
 	 */
-	function dxaiTextToHtml( text ) {
+	function dxuiTextToHtml( text ) {
 		return String( text || '' ).replace( /&/g, '&amp;' ).replace( /</g, '&lt;' );
 	}
 
-	function dxaiHtmlToText( html ) {
+	function dxuiHtmlToText( html ) {
 		return wp.richText.getTextContent( wp.richText.create( { html: html || '' } ) );
 	}
 
-	registerBlockType( 'dxai-ui/link', {
+	registerBlockType( 'dx-ui/link', {
 		apiVersion: 3,
 		title: 'DX Link',
 		icon: 'admin-links',
@@ -2278,9 +2278,9 @@
 			imageUrl: { type: 'string', default: '' },
 			imageAlt: { type: 'string', default: '' },
 			style: { type: 'string', default: '' },
-			dxaiCss: { type: 'string', default: '' },
+			dxuiCss: { type: 'string', default: '' },
 			elType: { type: 'string', default: '' },
-			dxaiData: { type: 'object', default: {} },
+			dxuiData: { type: 'object', default: {} },
 			hasInner: { type: 'boolean', default: false },
 		},
 		supports: { className: true, html: false, anchor: true },
@@ -2290,28 +2290,28 @@
 			/*
 			 * The element save() writes, from the same builder: the real <a>
 			 * or <button> with its href, classes, dxs- class and data
-			 * attributes. It was a <div class="dxai-link-editor"> with a
+			 * attributes. It was a <div class="dxui-link-editor"> with a
 			 * <span> in it and none of the design's CSS — 339 declarations on
 			 * Semper Dry's 49 links, so every nav item, button and the skip
-			 * link rendered unstyled. Clicks do not navigate (dxaiGuardDoc()).
+			 * link rendered unstyled. Clicks do not navigate (dxuiGuardDoc()).
 			 * A label that is the element's only content is the editable
-			 * element itself, as dxai-ui/text's is, so no <span> the design
+			 * element itself, as dx-ui/text's is, so no <span> the design
 			 * never had sits inside it for its `a span` rules to catch.
 			 */
-			const saved = dxaiLinkProps( a );
-			const own = dxaiCanvasClass( a, 'dxai-ui/link' );
-			const base = dxaiReactProps( saved, tag );
-			base.className = dxaiJoin( 'wp-block-dxai-ui-link', a.className, own );
+			const saved = dxuiLinkProps( a );
+			const own = dxuiCanvasClass( a, 'dx-ui/link' );
+			const base = dxuiReactProps( saved, tag );
+			base.className = dxuiJoin( 'wp-block-dx-ui-link', a.className, own );
 			const blockProps = useBlockProps( base );
-			const inner = useInnerBlocksProps( blockProps, { allowedBlocks: [ 'core/paragraph', 'core/heading', 'core/group', 'core/html', 'dxai-ui/link' ] } );
+			const inner = useInnerBlocksProps( blockProps, { allowedBlocks: [ 'core/paragraph', 'core/heading', 'core/group', 'core/html', 'dx-ui/link' ] } );
 			const label = function ( extra ) {
 				return el( RichText, Object.assign( {}, extra, {
 					tagName: extra.tagName || 'span',
-					value: dxaiTextToHtml( a.text ),
+					value: dxuiTextToHtml( a.text ),
 					placeholder: 'Link text',
 					allowedFormats: [],
 					disableLineBreaks: true,
-					onChange: function ( value ) { props.setAttributes( { text: dxaiHtmlToText( value ) } ); },
+					onChange: function ( value ) { props.setAttributes( { text: dxuiHtmlToText( value ) } ); },
 				} ) );
 			};
 			let body;
@@ -2396,7 +2396,7 @@
 		save: function ( props ) {
 			const a = props.attributes;
 			const tag = a.tagName === 'button' ? 'button' : 'a';
-			const extra = dxaiLinkProps( a );
+			const extra = dxuiLinkProps( a );
 			if ( a.hasInner ) {
 				return el( tag, extra, el( InnerBlocks.Content ) );
 			}
@@ -2423,13 +2423,13 @@
 		},
 	} );
 
-	// dxai-ui/image's attributes as `[ HTML name, block attribute ]`, in the
+	// dx-ui/image's attributes as `[ HTML name, block attribute ]`, in the
 	// order save() writes them. Mirrors Html_To_Blocks::DESIGN_IMAGE_ATTRS.
-	const DXAI_IMAGE_ATTRS = [
+	const DXUI_IMAGE_ATTRS = [
 		[ 'src', 'url' ],
 		[ 'alt', 'alt' ],
 		[ 'class', 'className' ],
-		[ 'style', 'dxaiStyle' ],
+		[ 'style', 'dxuiStyle' ],
 		[ 'width', 'width' ],
 		[ 'height', 'height' ],
 		[ 'loading', 'loading' ],
@@ -2440,11 +2440,11 @@
 
 	// The serializer lower-cases an unknown prop name and maps className to
 	// class, so `srcSet` is how you get `srcset` out of it.
-	const DXAI_IMAGE_PROP = { class: 'className', srcset: 'srcSet' };
+	const DXUI_IMAGE_PROP = { class: 'className', srcset: 'srcSet' };
 
-	function dxaiImageProps( a, withStyle ) {
+	function dxuiImageProps( a, withStyle ) {
 		const props = {};
-		DXAI_IMAGE_ATTRS.forEach( function ( pair ) {
+		DXUI_IMAGE_ATTRS.forEach( function ( pair ) {
 			// React DOM rejects a string `style` prop — edit() gets a parsed object.
 			if ( pair[ 0 ] === 'style' && ! withStyle ) {
 				return;
@@ -2453,7 +2453,7 @@
 			if ( ! value ) {
 				return;
 			}
-			props[ DXAI_IMAGE_PROP[ pair[ 0 ] ] || pair[ 0 ] ] = value;
+			props[ DXUI_IMAGE_PROP[ pair[ 0 ] ] || pair[ 0 ] ] = value;
 		} );
 		return props;
 	}
@@ -2464,7 +2464,7 @@
 	// had to stay raw HTML. core/image also has no attribute for loading,
 	// decoding, srcset or sizes, and its width/height are CSS lengths rather
 	// than the presentational attributes the design shipped.
-	registerBlockType( 'dxai-ui/image', {
+	registerBlockType( 'dx-ui/image', {
 		apiVersion: 3,
 		title: 'DX Image',
 		icon: 'format-image',
@@ -2483,8 +2483,8 @@
 			url: { type: 'string', default: '' },
 			alt: { type: 'string', default: '' },
 			className: { type: 'string', default: '' },
-			dxaiStyle: { type: 'string', default: '' },
-			dxaiCss: { type: 'string', default: '' },
+			dxuiStyle: { type: 'string', default: '' },
+			dxuiCss: { type: 'string', default: '' },
 			// Strings: these are the HTML attributes as the design wrote them.
 			width: { type: 'string', default: '' },
 			height: { type: 'string', default: '' },
@@ -2530,19 +2530,19 @@
 				// take the block's id and selection classes with it.
 				el( 'img', Object.assign(
 					{},
-					dxaiImageProps( a, false ),
+					dxuiImageProps( a, false ),
 					useBlockProps( {
-						className: dxaiJoin( a.className, dxaiCanvasClass( a, 'dxai-ui/image' ) ) || undefined,
+						className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/image' ) ) || undefined,
 					} )
 				) )
 			);
 		},
 		save: function ( props ) {
-			return el( 'img', dxaiHoist( dxaiImageProps( props.attributes, true ), props.attributes ) );
+			return el( 'img', dxuiHoist( dxuiImageProps( props.attributes, true ), props.attributes ) );
 		},
 	} );
 
-	registerBlockType( 'dxai-ui/details', {
+	registerBlockType( 'dx-ui/details', {
 		apiVersion: 3,
 		title: 'DX Details',
 		icon: 'editor-ul',
@@ -2558,7 +2558,7 @@
 			const blockProps = useBlockProps( { className: props.attributes.className } );
 			const inner = useInnerBlocksProps(
 				{},
-				{ allowedBlocks: [ 'core/paragraph', 'core/list', 'core/heading', 'dxai-ui/link' ] }
+				{ allowedBlocks: [ 'core/paragraph', 'core/list', 'core/heading', 'dx-ui/link' ] }
 			);
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null,
@@ -2576,11 +2576,11 @@
 						el( RichText, {
 							tagName: 'span',
 							className: 'rv-faq-q',
-							value: dxaiTextToHtml( props.attributes.question ),
+							value: dxuiTextToHtml( props.attributes.question ),
 							placeholder: 'Question',
 							allowedFormats: [],
 							disableLineBreaks: true,
-							onChange: function ( value ) { props.setAttributes( { question: dxaiHtmlToText( value ) } ); },
+							onChange: function ( value ) { props.setAttributes( { question: dxuiHtmlToText( value ) } ); },
 						} ),
 						el( 'span', { className: 'rv-faq-plus', 'aria-hidden': 'true' }, '+' )
 					),
@@ -2602,7 +2602,7 @@
 		},
 	} );
 
-	registerBlockType( 'dxai-ui/countup', {
+	registerBlockType( 'dx-ui/countup', {
 		apiVersion: 3,
 		title: 'DX Count Up',
 		icon: 'chart-bar',
@@ -2655,7 +2655,7 @@
 		},
 	} );
 
-	registerBlockType( 'dxai-ui/slider', {
+	registerBlockType( 'dx-ui/slider', {
 		apiVersion: 3,
 		title: 'DX Slider',
 		icon: 'images-alt2',
@@ -2663,9 +2663,9 @@
 		description: 'Pixel-perfect slider whose slides stay editable in Gutenberg.',
 		supports: { className: true, html: false, align: [ 'wide', 'full' ] },
 		edit: function () {
-			const blockProps = useBlockProps( { className: 'dxai-slider', 'data-dxai-slider': '1' } );
+			const blockProps = useBlockProps( { className: 'dxui-slider', 'data-dxui-slider': '1' } );
 			const inner = useInnerBlocksProps(
-				{ className: 'dxai-slider-track' },
+				{ className: 'dxui-slider-track' },
 				{
 					allowedBlocks: [ 'core/cover', 'core/image', 'core/group', 'core/media-text' ],
 					orientation: 'horizontal',
@@ -2674,13 +2674,13 @@
 			return el( 'div', blockProps, el( 'div', inner ) );
 		},
 		save: function () {
-			const blockProps = useBlockProps.save( { className: 'dxai-slider', 'data-dxai-slider': '1' } );
-			const inner = useInnerBlocksProps.save( { className: 'dxai-slider-track' } );
+			const blockProps = useBlockProps.save( { className: 'dxui-slider', 'data-dxui-slider': '1' } );
+			const inner = useInnerBlocksProps.save( { className: 'dxui-slider-track' } );
 			return el( 'div', blockProps, el( 'div', inner ) );
 		},
 	} );
 
-	registerBlockType( 'dxai-ui/form', {
+	registerBlockType( 'dx-ui/form', {
 		apiVersion: 3,
 		title: 'DX Form',
 		icon: 'email',
@@ -2694,7 +2694,7 @@
 		},
 		supports: { className: true, html: false },
 		edit: function ( props ) {
-			const blockProps = useBlockProps( { className: 'dxai-form-editor' } );
+			const blockProps = useBlockProps( { className: 'dxui-form-editor' } );
 			const json = JSON.stringify( props.attributes.fields || [], null, 2 );
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null,

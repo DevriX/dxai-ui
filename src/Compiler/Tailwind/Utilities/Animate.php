@@ -2,16 +2,16 @@
 /**
  * The `tailwindcss-animate` utilities.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind\Utilities;
+namespace DX_UI\Compiler\Tailwind\Utilities;
 
-use DXAI_UI\Compiler\Tailwind\Candidate;
-use DXAI_UI\Compiler\Tailwind\Theme;
-use DXAI_UI\Compiler\Tailwind\Utility_Module;
+use DX_UI\Compiler\Tailwind\Candidate;
+use DX_UI\Compiler\Tailwind\Theme;
+use DX_UI\Compiler\Tailwind\Utility_Module;
 
 /**
  * `animate-in`, `animate-out` and the enter/exit modifiers that steer them.

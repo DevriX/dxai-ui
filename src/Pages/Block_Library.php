@@ -2,19 +2,19 @@
 /**
  * The team's own sections, kept in the plugin, for the pages made from a Home.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Media\Svg_Files;
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Blocks\Native\Button;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Buttons;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Media\Svg_Files;
+use DX_UI\Support\Color_Math;
+use DX_UI\Blocks\Native\Button;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Buttons;
+use DX_UI\Theme\Theme_Palette;
 
 /**
  * A page made from a design's Home takes the Home's own sections (Team_Pages). Where the Home has none of a kind (the questions, a
@@ -27,9 +27,9 @@ use DXAI_UI\Theme\Theme_Palette;
  * them. What it does not keep is what made it one company's. That is a token the page is made with from what the Home says
  * (`{{company}}`, `{{phone}}`, …), or a marker the library reads when it fills the section:
  *
- *   dxaiIf       the block is there only when the Home says what it names (a phone, an address);
- *   dxaiRepeat   the block is the item of a list the page fills (the places of the site): one copy for each;
- *   dxaiIcon     the image is a small drawing the library ships (a chevron, a pin): a file in the media library.
+ *   dxuiIf       the block is there only when the Home says what it names (a phone, an address);
+ *   dxuiRepeat   the block is the item of a list the page fills (the places of the site): one copy for each;
+ *   dxuiIcon     the image is a small drawing the library ships (a chevron, a pin): a file in the media library.
  *
  * A section is used only where it can look as it was made to: the theme is one the library is for (american-restoration), the
  * blocks it is made of are registered, and what it needs (a phone, places) is known. Otherwise it is not used, and the page goes
@@ -165,7 +165,7 @@ final class Block_Library {
 		$entry = self::entry( $id );
 		$key   = (string) ( $entry['_dir'] ?? '' ) . '|' . $id;
 		if ( ! isset( self::$markup[ $key ] ) ) {
-			$file                 = rtrim( (string) ( $entry['_dir'] ?? DXAI_UI_DIR . self::DIR ), '/\\' ) . '/blocks/' . $id . '.html';
+			$file                 = rtrim( (string) ( $entry['_dir'] ?? DX_UI_DIR . self::DIR ), '/\\' ) . '/blocks/' . $id . '.html';
 			self::$markup[ $key ] = $entry !== null && is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
 
@@ -179,14 +179,14 @@ final class Block_Library {
 	 */
 	public static function themes(): array {
 		// The built-in library's own (its index names them): what the built-in template is for.
-		$themes = array_values( array_filter( array_map( 'strval', (array) ( self::doc( DXAI_UI_DIR . self::DIR )['themes'] ?? array() ) ) ) );
+		$themes = array_values( array_filter( array_map( 'strval', (array) ( self::doc( DX_UI_DIR . self::DIR )['themes'] ?? array() ) ) ) );
 
 		/**
 		 * The themes whose pages may take the library's sections.
 		 *
 		 * @param array<int, string> $themes Theme folder names (the child's or the parent's).
 		 */
-		return array_values( array_filter( array_map( 'strval', (array) apply_filters( 'dxai_ui_block_library_themes', $themes ) ) ) );
+		return array_values( array_filter( array_map( 'strval', (array) apply_filters( 'dx_ui_block_library_themes', $themes ) ) ) );
 	}
 
 	/** Whether the active theme (or its parent) is one the library is for. */
@@ -358,7 +358,7 @@ final class Block_Library {
 		 * @param array<string, mixed> $facts
 		 * @param int                  $home  The design's Home.
 		 */
-		return (array) apply_filters( 'dxai_ui_block_library_facts', $facts, $home );
+		return (array) apply_filters( 'dx_ui_block_library_facts', $facts, $home );
 	}
 
 	/**
@@ -379,7 +379,7 @@ final class Block_Library {
 	 * @return array<string, mixed>
 	 */
 	private static function pattern_facts( string $id ): array {
-		$design = get_option( \DXAI_UI\Theme\Design_Theme_Json::OPTION );
+		$design = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
 		$home   = is_array( $design ) ? (int) ( $design['page_id'] ?? 0 ) : 0;
 		$home   = $home > 0 && get_post_status( $home ) === 'publish' ? $home : 0;
 		$kit    = $home > 0 ? Home_Kit::facts( $home ) : array(
@@ -393,14 +393,14 @@ final class Block_Library {
 		$facts['industry'] = (string) ( self::entry( $id )['industry'] ?? '' );
 		$facts['kind']     = '';
 		if ( $facts['phone'] === '' ) {
-			$facts['phone']     = __( 'Your phone number', 'dxai-ui' );
+			$facts['phone']     = __( 'Your phone number', 'dx-ui' );
 			$facts['phone_url'] = '#';
 		}
 		if ( $facts['contact_url'] === '' ) {
 			$facts['contact_url'] = '#';
 		}
 		$places = array();
-		foreach ( $home > 0 ? \DXAI_UI\Pages\Team_Pages::places_of_home( $home ) : array() as $place ) {
+		foreach ( $home > 0 ? \DX_UI\Pages\Team_Pages::places_of_home( $home ) : array() as $place ) {
 			$places[] = array(
 				'title' => (string) $place,
 				'url'   => '',
@@ -408,7 +408,7 @@ final class Block_Library {
 		}
 		for ( $n = count( $places ); $n < 6; $n++ ) {
 			$places[] = array(
-				'title' => __( 'City, ST', 'dxai-ui' ),
+				'title' => __( 'City, ST', 'dx-ui' ),
 				'url'   => '',
 			);
 		}
@@ -575,7 +575,7 @@ final class Block_Library {
 		// team's own (a page of a company that answers its customers' questions shows those answers).
 		$own = array( 'faq' => 'faq', 'reviews' => 'reviews', 'process' => 'steps' );
 		if ( isset( $own[ $role ] ) && count( (array) ( $facts['lists'][ $own[ $role ] ] ?? array() ) ) >= 2 ) {
-			$listing = array_values( array_filter( $ids, static fn( $id ) => str_contains( self::markup( (string) $id ), '"dxaiRepeat":"' . $own[ $role ] . '"' ) ) );
+			$listing = array_values( array_filter( $ids, static fn( $id ) => str_contains( self::markup( (string) $id ), '"dxuiRepeat":"' . $own[ $role ] . '"' ) ) );
 			if ( $listing !== array() ) {
 				foreach ( array_diff( $ids, $listing ) as $id ) {
 					$cant[] = $id . ': the Home has its own';
@@ -647,7 +647,7 @@ final class Block_Library {
 		// The lists: the places and the services, and what a layout (Layouts) is given to repeat — its steps, reviews, questions, logos, figures, points.
 		$lists = array( 'places' => (array) $facts['places'], 'services' => (array) $facts['services'] ) + (array) ( $facts['lists'] ?? array() );
 		// What the section lists, for the team's words of its headings (tokens(): a heading that names services is not kept over points).
-		preg_match_all( '/"dxaiRepeat":"([a-z]+)"/', self::markup( $id ), $lm );
+		preg_match_all( '/"dxuiRepeat":"([a-z]+)"/', self::markup( $id ), $lm );
 		$facts['section_lists'] = array_values( array_unique( $lm[1] ) );
 		self::$rows_used = array();
 		// A box laid over a picture the layout has not (a figure in a corner of an empty column) lies over one of the Home's: a slot for
@@ -829,7 +829,7 @@ final class Block_Library {
 			return $block;
 		}
 
-		return \DXAI_UI\Blocks\Native\Library_Style::follow( $block, $home, $role );
+		return \DX_UI\Blocks\Native\Library_Style::follow( $block, $home, $role );
 	}
 
 	/** The role a theme's block plays in the sections ('span', 'link_box', 'picture'), or '' for a block that is not a theme's for one. */
@@ -1134,12 +1134,12 @@ final class Block_Library {
 	private static function conditions( array &$block, array $facts ): void {
 		for ( $i = count( $block['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
 			$child = &$block['innerBlocks'][ $i ];
-			if ( isset( $child['attrs']['dxaiIf'] ) ) {
+			if ( isset( $child['attrs']['dxuiIf'] ) ) {
 				$ok = true;
-				foreach ( (array) $child['attrs']['dxaiIf'] as $need ) {
+				foreach ( (array) $child['attrs']['dxuiIf'] as $need ) {
 					$ok = $ok && self::has( $facts, (string) $need );
 				}
-				unset( $child['attrs']['dxaiIf'] );
+				unset( $child['attrs']['dxuiIf'] );
 				if ( ! $ok ) {
 					unset( $child );
 					Block_Tree::drop( $block, $i );
@@ -1158,7 +1158,7 @@ final class Block_Library {
 	}
 
 	/**
-	 * Lists: the block marked `dxaiRepeat` is the first item, and each row of the list is one copy of it.
+	 * Lists: the block marked `dxuiRepeat` is the first item, and each row of the list is one copy of it.
 	 *
 	 * @param array<string, mixed>                         $block
 	 * @param array<string, array<int, array<string, string>>> $lists name => rows
@@ -1169,16 +1169,16 @@ final class Block_Library {
 	private static function repeats( array &$block, array $lists, array $facts, array &$missing ): bool {
 		for ( $i = 0; $i < count( $block['innerBlocks'] ); $i++ ) {
 			$child = $block['innerBlocks'][ $i ];
-			if ( isset( $child['attrs']['dxaiRepeat'] ) ) {
-				$name = (string) $child['attrs']['dxaiRepeat'];
+			if ( isset( $child['attrs']['dxuiRepeat'] ) ) {
+				$name = (string) $child['attrs']['dxuiRepeat'];
 				$rows = array_values( array_filter( (array) ( $lists[ $name ] ?? array() ), static fn( $r ) => is_array( $r ) && trim( (string) ( $r['title'] ?? '' ) ) !== '' ) );
-				// A layout's list: as many rows as the team's section held (dxaiCount), and, in a grid of columns, this column's share of
-				// them (dxaiSlice: which column of how many — the rows are dealt across the columns in turn).
-				$slice = $child['attrs']['dxaiSlice'] ?? null;
+				// A layout's list: as many rows as the team's section held (dxuiCount), and, in a grid of columns, this column's share of
+				// them (dxuiSlice: which column of how many — the rows are dealt across the columns in turn).
+				$slice = $child['attrs']['dxuiSlice'] ?? null;
 				if ( is_array( $slice ) && count( $slice ) === 2 && (int) $slice[1] > 1 ) {
 					$rows = array_values( array_filter( $rows, static fn( $i ) => $i % (int) $slice[1] === (int) $slice[0], ARRAY_FILTER_USE_KEY ) );
 				}
-				$count = (int) ( $child['attrs']['dxaiCount'] ?? 0 );
+				$count = (int) ( $child['attrs']['dxuiCount'] ?? 0 );
 				if ( $count > 0 ) {
 					$rows = array_slice( $rows, 0, $count );
 				}
@@ -1199,14 +1199,14 @@ final class Block_Library {
 				$shape = self::shape( $child );
 				for ( $j = count( $block['innerBlocks'] ) - 1; $j >= 0; $j-- ) {
 					$other = $block['innerBlocks'][ $j ];
-					if ( $j !== $i && ! isset( $other['attrs']['dxaiRepeat'] ) && self::shape( $other ) === $shape && str_contains( serialize_block( $other ), '{{t:' ) ) {
+					if ( $j !== $i && ! isset( $other['attrs']['dxuiRepeat'] ) && self::shape( $other ) === $shape && str_contains( serialize_block( $other ), '{{t:' ) ) {
 						Block_Tree::drop( $block, $j );
 						if ( $j < $i ) {
 							--$i;
 						}
 					}
 				}
-				unset( $child['attrs']['dxaiRepeat'], $child['attrs']['dxaiCount'], $child['attrs']['dxaiSlice'] );
+				unset( $child['attrs']['dxuiRepeat'], $child['attrs']['dxuiCount'], $child['attrs']['dxuiSlice'] );
 				foreach ( $rows as $n => $row ) {
 					$copy = $child;
 					// The row as it came (a layout's rows say more: a picture, a drawing, a line above the title), its three words tidied.
@@ -1249,10 +1249,10 @@ final class Block_Library {
 			if ( ! is_array( $child ) ) {
 				continue;
 			}
-			if ( isset( $child['attrs']['dxaiRepeat'] ) ) {
+			if ( isset( $child['attrs']['dxuiRepeat'] ) ) {
 				$tpl  = serialize_block( $child );
-				$rows = array_values( array_filter( (array) ( $lists[ (string) $child['attrs']['dxaiRepeat'] ] ?? array() ), static fn( array $r ) => trim( (string) ( $r['title'] ?? '' ) ) !== '' ) );
-				if ( $rows !== array() && str_contains( $tpl, '{{row:text' ) && preg_match( '/\{\{row:(?:icon|image)|dxaiIcon|\{\{icon/', $tpl ) !== 1
+				$rows = array_values( array_filter( (array) ( $lists[ (string) $child['attrs']['dxuiRepeat'] ] ?? array() ), static fn( array $r ) => trim( (string) ( $r['title'] ?? '' ) ) !== '' ) );
+				if ( $rows !== array() && str_contains( $tpl, '{{row:text' ) && preg_match( '/\{\{row:(?:icon|image)|dxuiIcon|\{\{icon/', $tpl ) !== 1
 					&& array_filter( $rows, static fn( $r ) => trim( (string) ( $r['text'] ?? '' ) ) !== '' ) === array() ) {
 					return true;
 				}
@@ -1321,7 +1321,7 @@ final class Block_Library {
 			}
 			$kids = array_values( array_filter( (array) ( $child['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
 			// (A paragraph for a few words set large: a section's heading over its line, which is set large too, is no figure.)
-			if ( ! isset( $child['attrs']['dxaiRepeat'] ) && count( $kids ) === 2 && $only( $kids[0] ) && $only( $kids[1] ) && $large( $kids[0] ) && ! $large( $kids[1] )
+			if ( ! isset( $child['attrs']['dxuiRepeat'] ) && count( $kids ) === 2 && $only( $kids[0] ) && $only( $kids[1] ) && $large( $kids[0] ) && ! $large( $kids[1] )
 				&& $kids[0]['blockName'] === 'core/paragraph' && str_contains( (string) $kids[0]['innerHTML'], '{{t:p-s' ) ) {
 				$figure = null;
 				while ( $stats !== array() && $figure === null ) {
@@ -1431,8 +1431,8 @@ final class Block_Library {
 	private static function icons( array &$block, bool $dry = false, string $colour = '' ): void {
 		for ( $i = count( $block['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
 			$child = &$block['innerBlocks'][ $i ];
-			if ( isset( $child['attrs']['dxaiIcon'] ) ) {
-				$name = (string) $child['attrs']['dxaiIcon'];
+			if ( isset( $child['attrs']['dxuiIcon'] ) ) {
+				$name = (string) $child['attrs']['dxuiIcon'];
 				$file = self::icon( $name, $dry, $colour );
 				if ( $file === null ) {
 					// No file to point at: the drawing is left out, not a broken picture.
@@ -1448,7 +1448,7 @@ final class Block_Library {
 					}
 				}
 				$child['attrs']['id'] = $file['id'];
-				unset( $child['attrs']['dxaiIcon'] );
+				unset( $child['attrs']['dxuiIcon'] );
 			}
 			self::icons( $child, $dry, $colour );
 			unset( $child );
@@ -1465,7 +1465,7 @@ final class Block_Library {
 		if ( preg_match( '/^[a-z0-9-]{2,40}$/', $name ) !== 1 ) {
 			return null;
 		}
-		$path = DXAI_UI_DIR . self::DIR . 'icons/' . $name . '.svg';
+		$path = DX_UI_DIR . self::DIR . 'icons/' . $name . '.svg';
 		if ( ! is_readable( $path ) ) {
 			return null;
 		}
@@ -1602,7 +1602,7 @@ final class Block_Library {
 		}
 		// (A row's words are the row's, not provisional: only a section's own slots are marked.)
 		if ( $provisional && $row === null ) {
-			$block['attrs']['dxaiProvisional'] = true;
+			$block['attrs']['dxuiProvisional'] = true;
 		}
 		foreach ( $block['innerBlocks'] as &$child ) {
 			self::tokens( $child, $facts, $row, $missing );
@@ -1763,7 +1763,7 @@ final class Block_Library {
 		for ( $i = count( $block['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
 			$child = $block['innerBlocks'][ $i ];
 			$name  = (string) ( $child['blockName'] ?? '' );
-			if ( ( in_array( $name, array( 'core/paragraph', 'core/heading', 'core/list-item', 'dxai-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) &&(array) ( $child['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' && ! str_contains( (string) $child['innerHTML'], '<img' ) ) {
+			if ( ( in_array( $name, array( 'core/paragraph', 'core/heading', 'core/list-item', 'dx-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) &&(array) ( $child['innerBlocks'] ?? array() ) === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' && ! str_contains( (string) $child['innerHTML'], '<img' ) ) {
 				Block_Tree::drop( $block, $i );
 				continue;
 			}
@@ -1803,7 +1803,7 @@ final class Block_Library {
 	private static function thin( array &$block, bool &$kept ): void {
 		for ( $i = 0; $i < count( $block['innerBlocks'] ); $i++ ) {
 			$child = $block['innerBlocks'][ $i ];
-			if ( ! empty( $child['attrs']['dxaiProvisional'] ) && (string) ( $child['blockName'] ?? '' ) === 'core/paragraph' ) {
+			if ( ! empty( $child['attrs']['dxuiProvisional'] ) && (string) ( $child['blockName'] ?? '' ) === 'core/paragraph' ) {
 				if ( $kept ) {
 					Block_Tree::drop( $block, $i );
 					--$i;
@@ -1841,13 +1841,13 @@ final class Block_Library {
 			return $block;
 		}
 		// The colours a slug is drawn in, where the blocks are: on a page of a design, its own colour of the same name takes the class
-		// inside the design's scope (`.dxai-ui--N .has-accent-color` is the design's accent, not the theme's). A design that follows the
+		// inside the design's scope (`.dx-ui--N .has-accent-color` is the design's accent, not the theme's). A design that follows the
 		// theme's colours (Theme_Binding) draws the theme's own in a class the theme has — the accent band of a team's layout is the
 		// theme's accent there — and its own only in a class the theme has not (its `on-accent`, which the plugin draws).
 		$candidates = array_keys( $colours );
 		if ( $home > 0 ) {
-			$follows = \DXAI_UI\Theme\Theme_Binding::follows( $home );
-			foreach ( (array) ( get_post_meta( $home, '_dxai_ui_palette', true )['colors'] ?? array() ) as $row ) {
+			$follows = \DX_UI\Theme\Theme_Binding::follows( $home );
+			foreach ( (array) ( get_post_meta( $home, '_dx_ui_palette', true )['colors'] ?? array() ) as $row ) {
 				$slug = sanitize_key( (string) ( is_array( $row ) ? ( $row['slug'] ?? '' ) : '' ) );
 				$hex  = Color_Math::hex( (string) ( is_array( $row ) ? ( $row['value'] ?? '' ) : '' ) );
 				if ( $slug !== '' && $hex !== '' && ( ! $follows || ! isset( $colours[ $slug ] ) ) ) {
@@ -1880,7 +1880,7 @@ final class Block_Library {
 		$a       = is_array( $b['attrs'] ?? null ) ? $b['attrs'] : array();
 		$name    = (string) ( $b['blockName'] ?? '' );
 		$colours = (array) $ctx['colours'];
-		$is_card = preg_match( '/(?:^|\s)dxai-lib-card(?:\s|$)/', (string) ( $a['className'] ?? '' ) ) === 1;
+		$is_card = preg_match( '/(?:^|\s)dxui-lib-card(?:\s|$)/', (string) ( $a['className'] ?? '' ) ) === 1;
 		// The block's own ground: a preset of the theme, a colour of its own (laid over the ground: a veil of white on a dark band is dark).
 		$own = '';
 		$bg  = (string) ( $a['backgroundColor'] ?? '' );
@@ -1888,9 +1888,9 @@ final class Block_Library {
 			$own = (string) ( $colours[ $bg ] ?? '' );
 		} elseif ( is_string( $a['style']['color']['background'] ?? null ) ) {
 			$own = self::over( (string) $a['style']['color']['background'], $ground );
-		} elseif ( (int) ( $ctx['home'] ?? 0 ) > 0 && ( preg_match( '/(?:^|\s)bg-/', (string) ( $a['className'] ?? '' ) ) === 1 || str_contains( (string) ( $a['dxaiCss'] ?? '' ), 'background' ) ) ) {
+		} elseif ( (int) ( $ctx['home'] ?? 0 ) > 0 && ( preg_match( '/(?:^|\s)bg-/', (string) ( $a['className'] ?? '' ) ) === 1 || str_contains( (string) ( $a['dxuiCss'] ?? '' ), 'background' ) ) ) {
 			// A ground of the Home's, by its class or its own CSS (the band of its call to action, put on a section by Library_Style).
-			$own = \DXAI_UI\Blocks\Native\Button::ground_hex( $a, (int) $ctx['home'] );
+			$own = \DX_UI\Blocks\Native\Button::ground_hex( $a, (int) $ctx['home'] );
 		} elseif ( $name === 'core/cover' ) {
 			$own = (string) ( $colours[ (string) ( $a['overlayColor'] ?? '' ) ] ?? '#222222' );
 		}
@@ -1941,7 +1941,7 @@ final class Block_Library {
 				}
 				$b    = self::set_colour( $b, 'text', $to );
 				$mine = $to !== '' ? (string) ( $colours[ $to ] ?? '' ) : '';
-			} elseif ( $mine === '' && ( in_array( $name, array( 'core/heading', 'core/paragraph', 'core/list', 'core/details', 'core/quote', 'dxai-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) ) {
+			} elseif ( $mine === '' && ( in_array( $name, array( 'core/heading', 'core/paragraph', 'core/list', 'core/details', 'core/quote', 'dx-ui/text' ), true ) || Capabilities::is_block( $name, 'span' ) ) ) {
 				// Words with no colour of their own: on a dark ground unless a box above gave them one that reads, and on a light ground
 				// under a box's colour that does not read here, the theme's colour for this ground.
 				if ( ( $dark && ! $heir_reads ) || ( ! $dark && $inherit !== '' && ! $heir_reads ) ) {
@@ -2120,7 +2120,7 @@ final class Block_Library {
 	 * @param array<string, mixed> $block
 	 */
 	private static function markers( array &$block ): void {
-		unset( $block['attrs']['dxaiIf'], $block['attrs']['dxaiRepeat'], $block['attrs']['dxaiIcon'], $block['attrs']['dxaiCount'], $block['attrs']['dxaiSlice'], $block['attrs']['dxaiProvisional'] );
+		unset( $block['attrs']['dxuiIf'], $block['attrs']['dxuiRepeat'], $block['attrs']['dxuiIcon'], $block['attrs']['dxuiCount'], $block['attrs']['dxuiSlice'], $block['attrs']['dxuiProvisional'] );
 		foreach ( $block['innerBlocks'] as &$child ) {
 			self::markers( $child );
 		}

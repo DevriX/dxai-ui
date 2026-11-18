@@ -2,12 +2,12 @@
 /**
  * Turns a candidate's variant list into at-rules and selector fragments.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * Everything to the left of the last `:` in a class name lands here.

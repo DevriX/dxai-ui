@@ -2,12 +2,12 @@
 /**
  * DX Base: the theme the plugin brings for a site that has no DX theme of its own.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
 /**
  * A DX site has one structure: the header is Appearance > Menus, the footer is Appearance > Widgets, drawn in the design the site was
@@ -29,7 +29,7 @@ final class Base_Theme {
 	public const SLUG = 'dx-base';
 
 	/** What is recorded of an installation: `mode` (copied | registered) and the version it was made from. */
-	public const OPTION = 'dxai_ui_base_theme';
+	public const OPTION = 'dx_ui_base_theme';
 
 	public function register(): void {
 		// A theme directory has to be registered on every request, before the themes are looked up.
@@ -40,12 +40,12 @@ final class Base_Theme {
 
 	/** The theme as the plugin carries it. */
 	public static function source(): string {
-		return DXAI_UI_DIR . 'themes/' . self::SLUG;
+		return DX_UI_DIR . 'themes/' . self::SLUG;
 	}
 
 	/** The folder that holds the theme's folder, as a theme directory. */
 	public static function directory(): string {
-		return DXAI_UI_DIR . 'themes';
+		return DX_UI_DIR . 'themes';
 	}
 
 	/** The version of the theme the plugin carries, read from its style.css. */
@@ -106,15 +106,15 @@ final class Base_Theme {
 	 */
 	public static function install() {
 		if ( ! is_readable( self::source() . '/style.css' ) ) {
-			return new \WP_Error( 'dxai_ui_base_theme_source', __( 'The plugin does not carry the DX Base theme.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_base_theme_source', __( 'The plugin does not carry the DX Base theme.', 'dx-ui' ) );
 		}
 		$root   = get_theme_root();
 		$target = trailingslashit( $root ) . self::SLUG;
 		if ( ! self::fillable( $target ) ) {
 			return new \WP_Error(
-				'dxai_ui_base_theme_taken',
+				'dx_ui_base_theme_taken',
 				/* translators: %s: the folder name. */
-				sprintf( __( 'The themes folder already has a folder named %s that is not DX Base, so it was not touched.', 'dxai-ui' ), self::SLUG )
+				sprintf( __( 'The themes folder already has a folder named %s that is not DX Base, so it was not touched.', 'dx-ui' ), self::SLUG )
 			);
 		}
 		$copied = self::copy_to( $root );
@@ -122,9 +122,9 @@ final class Base_Theme {
 			// The folder can be written and the copy stopped anyway (a file in the way, a full disk): say so, do not list the theme from
 			// the plugin beside a half copy. style.css went first, so the next install finishes it.
 			return new \WP_Error(
-				'dxai_ui_base_theme_copy',
+				'dx_ui_base_theme_copy',
 				/* translators: %s: the theme's folder. */
-				sprintf( __( 'The DX Base theme could not be copied completely into %s. Check that the folder and the files in it can be written and install again: the copy is finished, nothing is lost.', 'dxai-ui' ), $target )
+				sprintf( __( 'The DX Base theme could not be copied completely into %s. Check that the folder and the files in it can be written and install again: the copy is finished, nothing is lost.', 'dx-ui' ), $target )
 			);
 		}
 		if ( true === $copied ) {
@@ -158,7 +158,7 @@ final class Base_Theme {
 		self::register_directory();
 		wp_clean_themes_cache();
 		if ( ! wp_get_theme( self::SLUG )->exists() ) {
-			return new \WP_Error( 'dxai_ui_base_theme_install', __( 'The DX Base theme could not be installed: the themes folder cannot be written and the plugin\'s own folder cannot be registered.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_base_theme_install', __( 'The DX Base theme could not be installed: the themes folder cannot be written and the plugin\'s own folder cannot be registered.', 'dx-ui' ) );
 		}
 
 		return array(
@@ -260,7 +260,7 @@ final class Base_Theme {
 	 */
 	public static function activate() {
 		if ( ! wp_get_theme( self::SLUG )->exists() ) {
-			return new \WP_Error( 'dxai_ui_base_theme_missing', __( 'Install the DX Base theme first.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_base_theme_missing', __( 'Install the DX Base theme first.', 'dx-ui' ) );
 		}
 		switch_theme( self::SLUG );
 
@@ -290,6 +290,6 @@ final class Base_Theme {
 	 * DISALLOW_FILE_MODS (or the `file_mod_allowed` filter) the theme is not copied, it is listed from the plugin's folder instead.
 	 */
 	private static function writable( string $dir ): bool {
-		return is_dir( $dir ) && wp_is_writable( $dir ) && wp_is_file_mod_allowed( 'dxai_ui_base_theme' );
+		return is_dir( $dir ) && wp_is_writable( $dir ) && wp_is_file_mod_allowed( 'dx_ui_base_theme' );
 	}
 }

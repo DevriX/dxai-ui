@@ -2,21 +2,21 @@
 /**
  * The site footer block: the design's frame around the footer's widgets.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Blocks\Style_Rules;
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Blocks\Style_Rules;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 /**
- * `dxai-ui/site-footer`, a dynamic block with nothing stored in it: it renders
+ * `dx-ui/site-footer`, a dynamic block with nothing stored in it: it renders
  * the stored footer frame (Footer_Template) with each slot replaced by what
  * its widget area renders (Footer_Widgets::render_area()). While the areas
  * hold exactly the design's blocks, the result is the design's footer markup
@@ -29,7 +29,7 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * The footer belongs to ONE design — the last import that had a footer — and
  * its frame and widgets are styled by that design: its scoped stylesheet
- * (`.dxai-ui.dxai-ui--{scope} …`), its `--dxai-*` tokens and its fonts.
+ * (`.dx-ui.dx-ui--{scope} …`), its `--dxui-*` tokens and its fonts.
  * Rendered in the content of a page of that design, inside Page_Scope's
  * scope element, the block is bare: exactly the design's markup, where the
  * design had it. Rendered anywhere else — a page of another converted design,
@@ -45,7 +45,7 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * The footer's `dxs-` rules and utility classes are not in the page's
  * content. For a page of the footer's design they go to the page's rule
- * collection (Style_Rules) through `dxai_ui_style_rules_markup`, on the front
+ * collection (Style_Rules) through `dx_ui_style_rules_markup`, on the front
  * end and in the editor canvas alike; for any other page they are written by
  * design_assets(), read against the footer's design (its class names are its
  * own, not theme utilities). Where neither runs — the block rendered after
@@ -55,26 +55,26 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Site_Footer_Block {
 
-	public const NAME   = 'dxai-ui/site-footer';
-	public const MARKUP = '<!-- wp:dxai-ui/site-footer /-->';
+	public const NAME   = 'dx-ui/site-footer';
+	public const MARKUP = '<!-- wp:dx-ui/site-footer /-->';
 
-	private const SCRIPT = 'dxai-ui-site-footer-editor';
+	private const SCRIPT = 'dx-ui-site-footer-editor';
 
 	/** The rules of the element that carries the footer's design elsewhere (frame()). */
-	private const FRONT_STYLE = 'dxai-ui-site-footer';
+	private const FRONT_STYLE = 'dx-ui-site-footer';
 
 	/** The footer design's stylesheet, tokens and preset fallbacks, for a page of another design. */
-	private const DESIGN_STYLE = 'dxai-ui-site-footer-design';
+	private const DESIGN_STYLE = 'dx-ui-site-footer-design';
 
 	/** Around a framed footer in a page's content, until lift() has moved it. */
-	private const LIFT_OPEN  = '<!--dxai-ui:site-footer-->';
-	private const LIFT_CLOSE = '<!--/dxai-ui:site-footer-->';
+	private const LIFT_OPEN  = '<!--dx-ui:site-footer-->';
+	private const LIFT_CLOSE = '<!--/dx-ui:site-footer-->';
 
 	/**
 	 * How a design's stylesheet and the brand's override declare the tokens
 	 * for every converted page (Token_Styles::definitions_css(), brand_css()).
 	 */
-	private const GENERIC_TOKENS = ':root,.dxai-ui.dxai-ui{';
+	private const GENERIC_TOKENS = ':root,.dx-ui.dx-ui{';
 
 	/** Nesting depth of render(): a footer inside its own widget areas renders nothing. */
 	private static int $depth = 0;
@@ -100,7 +100,7 @@ final class Site_Footer_Block {
 	public function register(): void {
 		add_action( 'init', array( self::class, 'register_block' ) );
 		add_action( 'enqueue_block_editor_assets', array( self::class, 'editor_data' ) );
-		add_filter( 'dxai_ui_style_rules_markup', array( self::class, 'style_rules_markup' ), 10, 2 );
+		add_filter( 'dx_ui_style_rules_markup', array( self::class, 'style_rules_markup' ), 10, 2 );
 		add_filter( 'rest_request_before_callbacks', array( self::class, 'note_preview' ), 10, 3 );
 		// Around every `the_content`: first of all, and after Page_Scope's
 		// wrapper (20), so the footer can leave another design's scope.
@@ -135,27 +135,27 @@ final class Site_Footer_Block {
 	}
 
 	public static function register_block(): void {
-		$file = DXAI_UI_DIR . 'assets/js/site-footer-editor.js';
+		$file = DX_UI_DIR . 'assets/js/site-footer-editor.js';
 		wp_register_script(
 			self::SCRIPT,
-			DXAI_UI_URL . 'assets/js/site-footer-editor.js',
+			DX_UI_URL . 'assets/js/site-footer-editor.js',
 			array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-server-side-render', 'wp-i18n' ),
-			is_readable( $file ) ? (string) filemtime( $file ) : DXAI_UI_VERSION,
+			is_readable( $file ) ? (string) filemtime( $file ) : DX_UI_VERSION,
 			true
 		);
-		$css = DXAI_UI_DIR . 'assets/css/site-footer-front.css';
+		$css = DX_UI_DIR . 'assets/css/site-footer-front.css';
 		wp_register_style(
 			self::FRONT_STYLE,
-			DXAI_UI_URL . 'assets/css/site-footer-front.css',
+			DX_UI_URL . 'assets/css/site-footer-front.css',
 			array(),
-			is_readable( $css ) ? (string) filemtime( $css ) : DXAI_UI_VERSION
+			is_readable( $css ) ? (string) filemtime( $css ) : DX_UI_VERSION
 		);
 		register_block_type(
 			self::NAME,
 			array(
 				'api_version'           => 3,
-				'title'                 => __( 'DX Site Footer', 'dxai-ui' ),
-				'description'           => __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dxai-ui' ),
+				'title'                 => __( 'DX Site Footer', 'dx-ui' ),
+				'description'           => __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dx-ui' ),
 				'category'              => 'dx-blocks',
 				'keywords'              => array( 'footer', 'widgets' ),
 				'editor_script_handles' => array( self::SCRIPT ),
@@ -180,7 +180,7 @@ final class Site_Footer_Block {
 	public static function editor_data(): void {
 		wp_localize_script(
 			self::SCRIPT,
-			'dxaiUISiteFooter',
+			'dxUISiteFooter',
 			array(
 				'widgetsUrl' => admin_url( 'widgets.php' ),
 				'canEdit'    => current_user_can( 'edit_theme_options' ),
@@ -297,7 +297,7 @@ final class Site_Footer_Block {
 	 * A design's stylesheet is scoped to its page's scope element, and every
 	 * rule in it reaches every element inside — the footer's too, wherever
 	 * its own scope element sits. Semper Dry's Lovable import has a Tailwind
-	 * reset (`.dxai-ui.dxai-ui--93777 :where(*) { margin: 0; padding: 0 … }`)
+	 * reset (`.dx-ui.dx-ui--93777 :where(*) { margin: 0; padding: 0 … }`)
 	 * that would take every margin out of the other Semper Dry's footer; the
 	 * page's `frontend-isolate.css` turns every box border-box. The footer is
 	 * the page's last block (the page layout puts it there), so what follows
@@ -317,7 +317,7 @@ final class Site_Footer_Block {
 		$after  = substr( $content, $close + strlen( self::LIFT_CLOSE ) );
 		if ( $scope > 0
 			&& preg_match( '/^\s*<\/div>\s*$/', $after ) === 1
-			&& preg_match( '/^\s*<div\b[^>]*\bclass="[^"]*\bdxai-ui--' . $scope . '\b/', $before ) === 1 ) {
+			&& preg_match( '/^\s*<div\b[^>]*\bclass="[^"]*\bdx-ui--' . $scope . '\b/', $before ) === 1 ) {
 			return self::unmark( $before . $after . $footer );
 		}
 
@@ -339,7 +339,7 @@ final class Site_Footer_Block {
 	 * ran under Tailwind's reset; `--dynamic`: one that did), for the rules
 	 * of site-footer-front.css that keep another page's resets off it or give
 	 * it the ones its own page had; a static footer's also carries
-	 * `dxai-ui-static`, the class blank-canvas.css reads to leave a static
+	 * `dx-ui-static`, the class blank-canvas.css reads to leave a static
 	 * design's margins alone. `alignfull` on both: in a theme's constrained
 	 * content the footer spans the page, as on its own.
 	 *
@@ -348,22 +348,22 @@ final class Site_Footer_Block {
 	private static function frame( string $html, array $footer ): string {
 		$page  = (int) ( $footer['page_id'] ?? 0 );
 		$scope = self::scope( $footer );
-		$outer = 'dxai-ui-site-footer alignfull ' . ( self::is_static( $footer ) ? 'dxai-ui-site-footer--static dxai-ui-static' : 'dxai-ui-site-footer--dynamic' );
-		$inner = $page > 0 ? Page_Scope::classes( $page, $scope ) : 'wp-block-group alignfull dxai-ui dxai-ui--' . $scope . ' is-layout-flow wp-block-group-is-layout-flow';
+		$outer = 'dx-ui-site-footer alignfull ' . ( self::is_static( $footer ) ? 'dx-ui-site-footer--static dx-ui-static' : 'dx-ui-site-footer--dynamic' );
+		$inner = $page > 0 ? Page_Scope::classes( $page, $scope ) : 'wp-block-group alignfull dx-ui dx-ui--' . $scope . ' is-layout-flow wp-block-group-is-layout-flow';
 
 		return '<div class="' . esc_attr( $outer ) . '"><div class="' . esc_attr( $inner ) . '">' . $html . '</div></div>';
 	}
 
 	/**
 	 * Whether the footer's design is a Claude Design export (its page is
-	 * rendered without Tailwind's reset, `body.dxai-ui-static`).
+	 * rendered without Tailwind's reset, `body.dx-ui-static`).
 	 *
 	 * @param array<string, mixed> $footer
 	 */
 	private static function is_static( array $footer ): bool {
 		$page = (int) ( $footer['page_id'] ?? 0 );
 
-		return $page > 0 && (bool) get_post_meta( $page, '_dxai_ui_static_html', true );
+		return $page > 0 && (bool) get_post_meta( $page, '_dx_ui_static_html', true );
 	}
 
 	/**
@@ -382,16 +382,16 @@ final class Site_Footer_Block {
 		}
 		$page  = (int) ( $footer['page_id'] ?? 0 );
 		$scope = self::scope( $footer );
-		$carried = \DXAI_UI\Media\Font_Host::covered( Upload_Paths::for_meta( $page, '_dxai_ui_css_url' )['path'] );
+		$carried = \DX_UI\Media\Font_Host::covered( Upload_Paths::for_meta( $page, '_dx_ui_css_url' )['path'] );
 		foreach ( self::font_urls( $footer ) as $i => $url ) {
-			if ( isset( $carried[ \DXAI_UI\Media\Font_Host::key( $url ) ] ) ) {
+			if ( isset( $carried[ \DX_UI\Media\Font_Host::key( $url ) ] ) ) {
 				continue;
 			}
-			wp_enqueue_style( 'dxai-ui-font-' . $page . '-' . $i, \DXAI_UI\Media\Font_Host::link_url( $url ), array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- a font CSS URL is versioned by its query.
+			wp_enqueue_style( 'dx-ui-font-' . $page . '-' . $i, \DX_UI\Media\Font_Host::link_url( $url ), array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- a font CSS URL is versioned by its query.
 		}
 		if ( ! wp_style_is( self::DESIGN_STYLE, 'registered' ) ) {
 			// dynamic.css: what every converted page loads under its sheet (Assets).
-			wp_register_style( self::DESIGN_STYLE, false, array( self::FRONT_STYLE, 'dxai-ui-dynamic' ), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- inline only.
+			wp_register_style( self::DESIGN_STYLE, false, array( self::FRONT_STYLE, 'dx-ui-dynamic' ), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- inline only.
 		}
 		wp_enqueue_style( self::DESIGN_STYLE );
 		$markup = self::markup();
@@ -409,7 +409,7 @@ final class Site_Footer_Block {
 	private static function font_urls( array $footer ): array {
 		$page  = (int) ( $footer['page_id'] ?? 0 );
 		// The theme's fonts draw the design (Theme_Fonts): its own stylesheets are not asked for.
-		$fonts = $page > 0 && ! \DXAI_UI\Theme\Theme_Fonts::adopts( $page ) ? get_post_meta( $page, '_dxai_ui_font_urls', true ) : array();
+		$fonts = $page > 0 && ! \DX_UI\Theme\Theme_Fonts::adopts( $page ) ? get_post_meta( $page, '_dx_ui_font_urls', true ) : array();
 		$out   = array();
 		foreach ( is_array( $fonts ) ? array_values( $fonts ) : array() as $i => $url ) {
 			$url = esc_url_raw( (string) $url );
@@ -426,15 +426,15 @@ final class Site_Footer_Block {
 	 * tokens kept to the footer.
 	 *
 	 * Every rule of a design's sheet is scoped to its page's scope element,
-	 * save one: the token block Token_Styles appends, `:root,.dxai-ui.dxai-ui
-	 * { --dxai-ink: … }`, and the brand's override of it, which are written
+	 * save one: the token block Token_Styles appends, `:root,.dx-ui.dx-ui
+	 * { --dxui-ink: … }`, and the brand's override of it, which are written
 	 * for every converted page at once. Loaded on a page of another design as
-	 * it is, that block would redefine `--dxai-ink` for the page too — and
+	 * it is, that block would redefine `--dxui-ink` for the page too — and
 	 * designs name their tokens alike (both Semper Dry imports have an `ink`).
 	 * So the sheet is printed inline with those selectors narrowed to the
-	 * footer's scope element: `.dxai-ui.dxai-ui--{scope}.dxai-ui--{scope}`,
+	 * footer's scope element: `.dx-ui.dx-ui--{scope}.dx-ui--{scope}`,
 	 * (0,3,0), which also outranks the other page's own token block where
-	 * both reach the footer's scope element (`.dxai-ui.dxai-ui` matches it
+	 * both reach the footer's scope element (`.dx-ui.dx-ui` matches it
 	 * too), in whichever order the two are printed. Any relative url() is
 	 * pointed back at the sheet's folder.
 	 *
@@ -447,7 +447,7 @@ final class Site_Footer_Block {
 		if ( $page < 1 || $scope < 1 ) {
 			return '';
 		}
-		$sheet = Upload_Paths::for_meta( $page, '_dxai_ui_css_url' );
+		$sheet = Upload_Paths::for_meta( $page, '_dx_ui_css_url' );
 		$key   = $page . '|' . $scope . '|' . $sheet['path'] . '|' . ( $sheet['path'] !== '' ? (string) @filemtime( $sheet['path'] ) : '' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a missing sheet reads as none.
 		if ( isset( $memo[ $key ] ) ) {
 			return $memo[ $key ];
@@ -459,8 +459,8 @@ final class Site_Footer_Block {
 		// The brand's override: its tokens and the design's own custom
 		// properties pointed at the Styles presets (Assets adds it after the
 		// sheet on the design's own page).
-		$css .= \DXAI_UI\Media\Late_Fonts::hold( Token_Styles::brand_css( $page ) );
-		$own  = '.dxai-ui.dxai-ui--' . $scope . '.dxai-ui--' . $scope . '{';
+		$css .= \DX_UI\Media\Late_Fonts::hold( Token_Styles::brand_css( $page ) );
+		$own  = '.dx-ui.dx-ui--' . $scope . '.dx-ui--' . $scope . '{';
 		$css  = str_replace( self::GENERIC_TOKENS, $own, $css );
 		// Printed in a <style> element: nothing in it may close that element.
 		$memo[ $key ] = str_ireplace( '</style', '<\/style', $css );
@@ -572,7 +572,7 @@ final class Site_Footer_Block {
 	 * What the editor preview needs inside it, for a post that does not hold
 	 * the block yet — it was just inserted, or put back. The canvas gets a
 	 * post's rules from what is stored (Style_Rules::css_for_post(), through
-	 * `dxai_ui_style_rules_markup`; canvas_assets()), so until such a post is
+	 * `dx_ui_style_rules_markup`; canvas_assets()), so until such a post is
 	 * saved its preview would show the frame and the widgets without their
 	 * own CSS. The dxs- rules: each matches its own hashed class alone, so a
 	 * copy of one later in the canvas changes nothing else, where a second
@@ -617,7 +617,7 @@ final class Site_Footer_Block {
 		$css .= self::fallback_css( $presets, (int) ( $footer['page_id'] ?? 0 ), self::scope( $footer ) );
 
 		// rule() escapes every `<`, and design_css() every `</style`.
-		return $links . ( $css === '' ? '' : '<style id="dxai-ui-site-footer-preview-rules">' . $css . '</style>' );
+		return $links . ( $css === '' ? '' : '<style id="dx-ui-site-footer-preview-rules">' . $css . '</style>' );
 	}
 
 	/**
@@ -651,14 +651,14 @@ final class Site_Footer_Block {
 		$scope = $scope > 0 ? $scope : $page_id;
 		$css   = '';
 		foreach ( array_keys( $presets ) as $slug ) {
-			$css .= $prefix . '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . ') !important}';
+			$css .= $prefix . '.dx-ui.dx-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxui-' . $slug . ') !important}';
 		}
 
 		return $css;
 	}
 
 	/**
-	 * The dxaiCss and dxaiInner rules of some blocks, by class, and the
+	 * The dxuiCss and dxuiInner rules of some blocks, by class, and the
 	 * preset text colours they use.
 	 *
 	 * @param array<int, mixed>     $blocks
@@ -730,7 +730,7 @@ final class Site_Footer_Block {
 	}
 
 	/**
-	 * `dxai_ui_style_rules_markup`: the footer's markup for a post of the
+	 * `dx_ui_style_rules_markup`: the footer's markup for a post of the
 	 * footer's design that holds the block, so Style_Rules writes its rules
 	 * with the page's own. A post of another design frames the footer in its
 	 * own design, and its rules are read against that design instead
@@ -789,7 +789,7 @@ final class Site_Footer_Block {
 	}
 
 	/**
-	 * The rules of some of the footer's markup — dxs-, dxaiInner and theme
+	 * The rules of some of the footer's markup — dxs-, dxuiInner and theme
 	 * utility classes — read against the footer's design (its scope decides
 	 * which class names are the design's own rather than utilities).
 	 */

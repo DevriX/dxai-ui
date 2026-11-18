@@ -2,12 +2,12 @@
 /**
  * A design's photographs written as light as Lighthouse asks, at the highest quality that is.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Lighthouse's "Improve image delivery" counts a picture as too heavy above 1/6 of a byte a pixel (the trace engine's ImageDelivery
@@ -21,12 +21,12 @@ namespace DXAI_UI\Media;
  * scaled copy of a large one, the WebP the import makes of a JPEG and the crop it makes for a slot. Five Star: LCP 3.5 → 2.8 s,
  * Performance 91 → 95. Never the design's own file, a picture with transparency (a logo, a badge: lossy edges show around their
  * letters), nor a lossless one. Sizes are written in the request that imports the picture, by cron once that request has used half
- * its time limit; an attachment imported before is fitted when an import meets it again. `dxai_ui_image_quality` turns it off.
+ * its time limit; an attachment imported before is fitted when an import meets it again. `dx_ui_image_quality` turns it off.
  */
 final class Image_Quality {
 
 	/** Post meta on an attachment whose sizes were fitted: the rule they were fitted by (a changed rule fits them again). */
-	public const META = '_dxai_ui_quality';
+	public const META = '_dx_ui_quality';
 
 	/** The rule, as META holds it. */
 	public const RULE = '1/6 byte a pixel, quality 74 at least';
@@ -41,7 +41,7 @@ final class Image_Quality {
 	public const STEP = 4;
 
 	/** Cron: one attachment's sizes, when the request that imported it ran long. */
-	public const HOOK = 'dxai_ui_fit_image_quality';
+	public const HOOK = 'dx_ui_fit_image_quality';
 
 	public function register(): void {
 		add_action( self::HOOK, array( self::class, 'fit' ) );
@@ -132,7 +132,7 @@ final class Image_Quality {
 			if ( is_wp_error( $resized ) || $width !== (int) $got['width'] || $height !== (int) $got['height'] ) {
 				continue;
 			}
-			$tmp = $path . '.dxai-quality.webp';
+			$tmp = $path . '.dxui-quality.webp';
 			if ( ! copy( $path, $tmp ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
 				continue;
 			}
@@ -251,6 +251,6 @@ final class Image_Quality {
 		 * @param bool $on Whether they are.
 		 * @param int  $id The attachment; 0 for a file written before it is one (the WebP of a JPEG, a crop for a slot).
 		 */
-		return (bool) apply_filters( 'dxai_ui_image_quality', true, $id );
+		return (bool) apply_filters( 'dx_ui_image_quality', true, $id );
 	}
 }

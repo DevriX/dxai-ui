@@ -2,14 +2,14 @@
 /**
  * The footer's content, as widgets in Appearance > Widgets.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Blocks\Style_Rules;
+use DX_UI\Blocks\Style_Rules;
 
 /**
  * A converted design's footer content lives where a DevriX theme keeps its
@@ -42,7 +42,7 @@ final class Footer_Widgets {
 	 * written to and the md5 of the content written, which tells an instance
 	 * a person has since edited from one still as imported.
 	 */
-	public const OWNED = 'dxai_ui_footer_widgets';
+	public const OWNED = 'dx_ui_footer_widgets';
 
 	/** The title wrapper a legacy widget gets in the footer's areas. */
 	private const LEGACY_TITLE = array( '<h2 class="widget-title">', '</h2>' );
@@ -142,19 +142,19 @@ final class Footer_Widgets {
 	private static function args( string $area, array $slot, string $title ): array {
 		$copyright = ( $slot['kind'] ?? '' ) === 'copyright';
 		$number    = (int) ( $slot['number'] ?? 0 );
-		$design    = $title !== '' ? $title : __( 'the imported design', 'dxai-ui' );
+		$design    = $title !== '' ? $title : __( 'the imported design', 'dx-ui' );
 
 		return array(
 			'id'             => $area,
 			'name'           => $copyright
-				? __( 'Footer Copyright', 'dxai-ui' )
+				? __( 'Footer Copyright', 'dx-ui' )
 				/* translators: %d: footer column number. */
-				: sprintf( __( 'Footer Column %d', 'dxai-ui' ), $number ),
+				: sprintf( __( 'Footer Column %d', 'dx-ui' ), $number ),
 			'description'    => $copyright
 				/* translators: %s: design name. */
-				? sprintf( __( 'The bottom bar of the footer of %s: copyright, legal and social links. The bar itself comes from the design.', 'dxai-ui' ), $design )
+				? sprintf( __( 'The bottom bar of the footer of %s: copyright, legal and social links. The bar itself comes from the design.', 'dx-ui' ), $design )
 				/* translators: 1: footer column number, 2: design name. */
-				: sprintf( __( 'Column %1$d of the footer of %2$s. Its blocks render inside that column; the column, the grid and the footer background come from the design.', 'dxai-ui' ), $number, $design ),
+				: sprintf( __( 'Column %1$d of the footer of %2$s. Its blocks render inside that column; the column, the grid and the footer background come from the design.', 'dx-ui' ), $number, $design ),
 			'class'          => '',
 			'before_widget'  => '',
 			'after_widget'   => '',
@@ -311,7 +311,7 @@ final class Footer_Widgets {
 				AND p.post_status IN ('publish','future','draft','pending','private')
 				AND ( p.ID = %d OR m.meta_value = %s )
 				ORDER BY p.ID ASC",
-				\DXAI_UI\Structures\Page_Scope::META,
+				\DX_UI\Structures\Page_Scope::META,
 				'%' . $wpdb->esc_like( '<!-- wp:' . Site_Footer_Block::NAME ) . '%',
 				$page,
 				(string) $scope

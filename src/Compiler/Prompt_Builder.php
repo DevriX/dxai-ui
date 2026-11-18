@@ -1,19 +1,19 @@
 <?php
 /**
- * Verbatim DXAI-UI system prompt + user payload.
+ * Verbatim DX-UI system prompt + user payload.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Prompt_Builder {
 
 	public static function system(): string {
 		$base = <<<'PROMPT'
-You are DXAI-UI Engine, an advanced Frontend-to-Gutenberg Compiler. 
+You are DX-UI Engine, an advanced Frontend-to-Gutenberg Compiler. 
 Your job is to translate raw Figma JSON / Lovable React+Tailwind code into clean, valid WordPress Gutenberg Block markup.
 
 STRICT REQUIREMENTS:
@@ -38,8 +38,8 @@ PROMPT;
    - navigation / footer menus: core/navigation + menu_items [{label, url}]. Footer type is footer.
    - hero: core/cover (or group) with core/site-title or core/post-title when the title is the site/page title. Buttons stay core/buttons.
    - blog / news / cards of articles: ALWAYS core/query + core/post-template + core/post-title + core/post-featured-image + core/post-excerpt + core/post-date + core/query-pagination. Never fake posts with static headings.
-   - form / contact / newsletter: use <!-- wp:dxai-ui/form {"fields":[...]} /--> and duplicate fields into form_fields. Do not output raw <form> HTML.
-   - slider / carousel: wrap slides in <!-- wp:dxai-ui/slider --> with inner core/cover or core/image slides so they remain editable in Gutenberg.
+   - form / contact / newsletter: use <!-- wp:dx-ui/form {"fields":[...]} /--> and duplicate fields into form_fields. Do not output raw <form> HTML.
+   - slider / carousel: wrap slides in <!-- wp:dx-ui/slider --> with inner core/cover or core/image slides so they remain editable in Gutenberg.
    - other bands: type section using group/columns/media-text.
 8. gutenberg_markup is the page BODY only (hero + sections + blog + forms + sliders). Do not repeat header/footer there; those live in structures[].
 9. menu_items and form_fields must always be arrays (empty if not applicable).
@@ -197,7 +197,7 @@ PROMPT;
 	 * The live restyler's system prompt.
 	 *
 	 * With $tokens, the brand rules require colours as the design's tokens —
-	 * `var(--dxai-accent)` — and forbid writing any hex or rgb() value at all.
+	 * `var(--dxui-accent)` — and forbid writing any hex or rgb() value at all.
 	 * The hex version told the model to "copy inline style patterns" and to
 	 * keep "every color hex" inside an allowed list, which is exactly how a
 	 * restyled page ended up with 369 invented declarations and zero token
@@ -209,12 +209,12 @@ PROMPT;
 		}
 
 		return <<<'PROMPT'
-You are DXAI-UI Live Restyler — a senior product designer + Gutenberg engineer.
+You are DX-UI Live Restyler — a senior product designer + Gutenberg engineer.
 You rebuild ONE WordPress page BODY so it feels like a native continuation of the Home page: same brand chrome, higher UI/UX craft.
 
 BRAND LOCK (non-negotiable):
 1. Output valid Gutenberg block comment syntax only in gutenberg_markup.
-2. REUSE Home visual language from home_sections / style_recipes / allowed_colors / class_sample. Copy inline style patterns and Home classes (dxai-sh-*, section shells, button recipes) — never invent a new brand.
+2. REUSE Home visual language from home_sections / style_recipes / allowed_colors / class_sample. Copy inline style patterns and Home classes (dxui-sh-*, section shells, button recipes) — never invent a new brand.
 3. FORBIDDEN: inventing colors, gradients, Tailwind color utilities (bg-slate-*, text-gray-*, bg-sky-*, purple/indigo/teal themes), new CSS variables, or custom_css. custom_css and custom_js MUST be empty strings.
 4. Every color hex / rgba in your markup MUST appear in allowed_colors (or be white/black/transparent). If unsure, copy a style_recipes entry verbatim and only swap text/images.
 5. Scraped content is FACTS only (copy, image URLs, structure signals) — never copy colors, classes, or styles from the live site.
@@ -224,10 +224,10 @@ UI/UX CRAFT (within Home language):
 7. Mirror Home section rhythm: consistent vertical padding, max-width containers, heading scale, button styles, card/media gaps. Alternate visual density (full-bleed / contained / split) like Home — do not stack identical plain text blocks.
 8. Typography: preserve scraped wording; improve scannability (short lead, readable paragraphs, list clusters). Prefer one H1-equivalent hero title, then H2 section titles. No wall-of-text sections.
 9. Media: place images from images[] / content_facts intentionally (hero, split media-text, card grids). Prefer real URLs; never invent stock photos. Keep alt text meaningful when available.
-10. Interactive: Contact / lead pages MUST use <!-- wp:dxai-ui/form {"fields":[...]} /--> with sensible fields from content_facts.form_signals. CTAs use Home button recipes (core/buttons), not plain links dressed as buttons.
+10. Interactive: Contact / lead pages MUST use <!-- wp:dx-ui/form {"fields":[...]} /--> with sensible fields from content_facts.form_signals. CTAs use Home button recipes (core/buttons), not plain links dressed as buttons.
 11. Accessibility & polish: logical heading order, sufficient contrast using only allowed_colors, focusable controls via real blocks, no decorative empty groups, no overlapping absolute chrome unless Home already does it.
 12. Mobile: stacks must read cleanly — columns collapse to single column; avoid cramped multi-column text; keep touch-friendly CTA spacing using Home patterns.
-13. Do NOT output header or footer. Wrap body in group/main with class dxai-live-content as a shell only.
+13. Do NOT output header or footer. Wrap body in group/main with class dxui-live-content as a shell only.
 14. Return ONLY JSON (no markdown fences):
    {"block_title":"...","gutenberg_markup":"...","custom_css":"","custom_js":"","required_media":[]}
 PROMPT;
@@ -244,10 +244,10 @@ PROMPT;
 	 */
 	private static function token_restyle_rules( string $base ): string {
 		$swaps = array(
-			'2. REUSE Home visual language from home_sections / style_recipes / allowed_colors / class_sample. Copy inline style patterns and Home classes (dxai-sh-*, section shells, button recipes) — never invent a new brand.'
-				=> '2. REUSE Home visual language from home_sections / style_recipes / allowed_tokens / class_sample. Reuse Home classes (dxai-sh-*, section shells, button recipes) and Home\'s style patterns — never invent a new brand.',
+			'2. REUSE Home visual language from home_sections / style_recipes / allowed_colors / class_sample. Copy inline style patterns and Home classes (dxui-sh-*, section shells, button recipes) — never invent a new brand.'
+				=> '2. REUSE Home visual language from home_sections / style_recipes / allowed_tokens / class_sample. Reuse Home classes (dxui-sh-*, section shells, button recipes) and Home\'s style patterns — never invent a new brand.',
 			'4. Every color hex / rgba in your markup MUST appear in allowed_colors (or be white/black/transparent). If unsure, copy a style_recipes entry verbatim and only swap text/images.'
-				=> '4. COLOURS ARE TOKENS. Write every colour and every shadow ONLY as a token from allowed_tokens, exactly as given — e.g. background:var(--dxai-accent);color:var(--dxai-on-accent);box-shadow:var(--dxai-shadow-1). NEVER write a hex (#...), rgb(), rgba() or named colour. home_sections and style_recipes already show the tokens in use: copy them as they are. The site owner changes these colours once, in Styles, and every value you write must follow.',
+				=> '4. COLOURS ARE TOKENS. Write every colour and every shadow ONLY as a token from allowed_tokens, exactly as given — e.g. background:var(--dxui-accent);color:var(--dxui-on-accent);box-shadow:var(--dxui-shadow-1). NEVER write a hex (#...), rgb(), rgba() or named colour. home_sections and style_recipes already show the tokens in use: copy them as they are. The site owner changes these colours once, in Styles, and every value you write must follow.',
 			'sufficient contrast using only allowed_colors'
 				=> 'sufficient contrast between the tokens you pair (allowed_tokens gives each token\'s value)',
 		);
@@ -318,7 +318,7 @@ PROMPT;
 		return "Rebuild this page BODY as a polished UI/UX composition that clones Home's design system — do not invent a brand.\n"
 			. "Archetype={$archetype}. Obey ux_brief. "
 			. ( $tokens !== array()
-				? "Write colours and shadows ONLY as var(--dxai-…) tokens from allowed_tokens — never a hex or rgb() value. Use style_recipes + Home classes.\n"
+				? "Write colours and shadows ONLY as var(--dxui-…) tokens from allowed_tokens — never a hex or rgb() value. Use style_recipes + Home classes.\n"
 				: "Use only allowed_colors + style_recipes + Home classes.\n" )
 			. "Keep real copy + image URLs from content_facts. No header/footer. custom_css empty.\n"
 			. "Escape newlines as \\n. JSON only.\n\n"
@@ -347,7 +347,7 @@ PROMPT;
 		$colors     = implode( ', ', array_slice( is_array( $home['allowed_colors'] ?? null ) ? $home['allowed_colors'] : array(), 0, 24 ) );
 		$recipes    = implode( "\n---\n", array_slice( is_array( $home['style_recipes'] ?? null ) ? $home['style_recipes'] : array(), 0, 10 ) );
 		$tokens     = is_array( $home['allowed_tokens'] ?? null ) ? $home['allowed_tokens'] : array();
-		// Token mode lists `var(--dxai-accent) = Accent (#F2A34A)` instead of
+		// Token mode lists `var(--dxui-accent) = Accent (#F2A34A)` instead of
 		// bare hex, for the same reason as user_live_restyle().
 		$palette_block = $tokens !== array()
 			? "ALLOWED TOKENS — write colours and shadows ONLY as these, never as hex or rgb():\n"
@@ -429,7 +429,7 @@ PROMPT;
 		$by_type = array(
 			'contact'  => array(
 				'Lead with trust + how to reach you; put the form above the fold or immediately after a short intro.',
-				'Use wp:dxai-ui/form with name, email, message (add phone/subject if content_facts.form_signals suggest them).',
+				'Use wp:dx-ui/form with name, email, message (add phone/subject if content_facts.form_signals suggest them).',
 				'Optional: compact info strip (address / phone / hours) beside or under the form using Home list/card styles.',
 			),
 			'about'    => array(
@@ -478,7 +478,7 @@ PROMPT;
 		$dynamic  = array();
 
 		if ( ! empty( $signals['has_form'] ) && $archetype !== 'contact' ) {
-			$dynamic[] = 'Include a wp:dxai-ui/form section — content signals a form on this page.';
+			$dynamic[] = 'Include a wp:dx-ui/form section — content signals a form on this page.';
 		}
 		if ( ! empty( $signals['cta_phrases'] ) && is_array( $signals['cta_phrases'] ) ) {
 			$cta = array_slice( $signals['cta_phrases'], 0, 3 );
@@ -622,7 +622,7 @@ PROMPT;
 			. "- Preserve harvested hyperlinks. Load harvested fonts (Google stylesheet or @font-face files).\n"
 			. "- Split header, menus, footer, hero, blog, forms, and sliders into structures[].\n"
 			. "- Blog listings MUST be core/query (dynamic posts), never static placeholder cards.\n"
-			. "- Forms MUST be wp:dxai-ui/form. Sliders MUST be wp:dxai-ui/slider with inner blocks.\n"
+			. "- Forms MUST be wp:dx-ui/form. Sliders MUST be wp:dx-ui/slider with inner blocks.\n"
 			. "- Prefer shell + core/html for flex/grid/absolute chrome; never force is-layout-flow on design-owned layout.\n";
 	}
 }

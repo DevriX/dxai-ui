@@ -2,12 +2,12 @@
 /**
  * Turn compiled design HTML into native Gutenberg blocks (editable).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Html_To_Blocks {
 
@@ -19,7 +19,7 @@ final class Html_To_Blocks {
 	private const PHRASE_TAGS = array( 'span', 'em', 'strong', 'i', 'b', 'br', 'small', 'code', 'mark', 'sub', 'sup', 'abbr', 'time', 'u' );
 
 	/**
-	 * Elements with no closing tag. dxai-ui/box writes one as `<tag …/>` and
+	 * Elements with no closing tag. dx-ui/box writes one as `<tag …/>` and
 	 * declares no children — the form the editor's serialiser writes for its
 	 * own SELF_CLOSING_TAGS set (wp-includes/js/dist/element.js), which is
 	 * what the stored markup has to match.
@@ -27,7 +27,7 @@ final class Html_To_Blocks {
 	private const VOID_TAGS = array( 'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr' );
 
 	/**
-	 * dxai-ui/box's attributes, as `[ HTML name => block attribute ]`.
+	 * dx-ui/box's attributes, as `[ HTML name => block attribute ]`.
 	 *
 	 * TEXT_ATTR_MAP plus the names the corpus actually puts on the elements
 	 * that were still raw HTML, measured over 2511 islands: `type` on 258,
@@ -37,13 +37,13 @@ final class Html_To_Blocks {
 	 * declared or the element cannot travel as a block at all.
 	 *
 	 * The key order is the canonical write order; `attrOrder` carries the
-	 * source's own when it differs. Mirrored by DXAI_BOX_ATTRS in
+	 * source's own when it differs. Mirrored by DXUI_BOX_ATTRS in
 	 * assets/js/blocks-editor.js.
 	 */
 	private const BOX_ATTR_MAP = array(
 		'id'               => 'anchor',
 		'class'            => 'className',
-		'style'            => 'dxaiStyle',
+		'style'            => 'dxuiStyle',
 		'type'             => 'elType',
 		'href'             => 'url',
 		'src'              => 'src',
@@ -89,13 +89,13 @@ final class Html_To_Blocks {
 	);
 
 	/**
-	 * Tags dxai-ui/text can stand in for when they hold nothing but text.
+	 * Tags dx-ui/text can stand in for when they hold nothing but text.
 	 *
 	 * `span` because span() had no non-island exit at all; `dt` and `dd`
 	 * because they reached node()'s last resort with no branch of their own.
 	 */
 	/*
-	 * The phrase tags joined `span`, `dt` and `dd` once dxai-ui/box existed.
+	 * The phrase tags joined `span`, `dt` and `dd` once dx-ui/box existed.
 	 * Before it, an `<em>` or `<strong>` inside a converted container had no
 	 * branch of its own and reached node()'s last resort: 212 of them became
 	 * raw HTML the moment their parent stopped being one. They are leaves in
@@ -105,7 +105,7 @@ final class Html_To_Blocks {
 	private const TEXT_LEAF_TAGS = array( 'span', 'dt', 'dd', 'em', 'strong', 'b', 'i', 'small', 'code', 'mark', 'sub', 'sup', 'abbr', 'time', 'u' );
 
 	/**
-	 * The attributes dxai-ui/text declares, as `[ HTML name => block attribute ]`.
+	 * The attributes dx-ui/text declares, as `[ HTML name => block attribute ]`.
 	 *
 	 * The key order is also the order text_attrs() writes them in, so it is the
 	 * canonical order an element is compared against before `attrOrder` has to
@@ -120,7 +120,7 @@ final class Html_To_Blocks {
 	 *
 	 * A designed call-to-action is one element holding a glyph and a line of
 	 * copy — `<a href="tel:…" class="…" style="…">📞 Call <span
-	 * class="sc-interp">(855) 560-7463</span></a>`. dxai-ui/box cannot take it,
+	 * class="sc-interp">(855) 560-7463</span></a>`. dx-ui/box cannot take it,
 	 * because a box's children are blocks and the anchor has words of its own;
 	 * link()'s leaf and tree paths cannot name that shape either. So every one
 	 * of them fell through to raw HTML: on the H2O Away export, 12 of the 34
@@ -161,7 +161,7 @@ final class Html_To_Blocks {
 	private const TEXT_ATTR_MAP = array(
 		'id'              => 'anchor',
 		'class'           => 'className',
-		'style'           => 'dxaiStyle',
+		'style'           => 'dxuiStyle',
 		'href'            => 'url',
 		'target'          => 'target',
 		'rel'             => 'rel',
@@ -393,7 +393,7 @@ final class Html_To_Blocks {
 	/**
 	 * A `style="…"` fragment for the saved markup, or nothing.
 	 *
-	 * Paired with a `dxaiStyle` attribute and the extraProps filter in
+	 * Paired with a `dxuiStyle` attribute and the extraProps filter in
 	 * assets/js/blocks-editor.js so the editor regenerates the same attribute.
 	 */
 	private function style_attr( string $style ): string {
@@ -418,11 +418,11 @@ final class Html_To_Blocks {
 	private function parse( string $html ): array {
 		$dom  = new \DOMDocument( '1.0', 'UTF-8' );
 		$prev = libxml_use_internal_errors( true );
-		$wrapped = '<div id="dxai-html-to-blocks">' . $html . '</div>';
+		$wrapped = '<div id="dxui-html-to-blocks">' . $html . '</div>';
 		$dom->loadHTML( '<?xml encoding="utf-8" ?>' . $wrapped, LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 		libxml_use_internal_errors( $prev );
-		$root = $dom->getElementById( 'dxai-html-to-blocks' );
+		$root = $dom->getElementById( 'dxui-html-to-blocks' );
 		if ( ! $root instanceof \DOMElement ) {
 			return array();
 		}
@@ -521,7 +521,7 @@ final class Html_To_Blocks {
 		/*
 		 * An icon element carries its whole meaning in `data-lucide` /
 		 * `data-icon` and holds no text, so nothing could promote it: 344 of
-		 * them were raw HTML. dxai-ui/box round-trips the data attribute and
+		 * them were raw HTML. dx-ui/box round-trips the data attribute and
 		 * the class, and an empty box is exactly `<i … ></i>`.
 		 */
 		if ( $tag === 'i' && ( $node->hasAttribute( 'data-lucide' ) || $node->hasAttribute( 'data-icon' ) ) ) {
@@ -530,10 +530,10 @@ final class Html_To_Blocks {
 		}
 		if ( $tag === 'a' || $tag === 'button' ) {
 			/*
-			 * A control the dxai-ui/link path cannot own — one carrying a
-			 * behaviour marker, a data-dxai hook or an attribute that block
+			 * A control the dx-ui/link path cannot own — one carrying a
+			 * behaviour marker, a data-dxui hook or an attribute that block
 			 * does not declare — used to keep its source HTML: 380 of them.
-			 * dxai-ui/box takes the element as written, with its children as
+			 * dx-ui/box takes the element as written, with its children as
 			 * blocks, which is the same guarantee with none of the loss.
 			 */
 			if ( $this->keep_source_control( $node ) ) {
@@ -545,7 +545,7 @@ final class Html_To_Blocks {
 		}
 		if ( $tag === 'details' ) {
 			/*
-			 * dxai-ui/details rewrites the summary into the DevriX FAQ shape
+			 * dx-ui/details rewrites the summary into the DevriX FAQ shape
 			 * (`rv-faq-num` / `rv-faq-q` / a `+` glyph). A design whose
 			 * summary is styled inline, or whose details starts `open`,
 			 * would lose both — the H2O export's first FAQ came out closed
@@ -554,10 +554,10 @@ final class Html_To_Blocks {
 			 */
 			if ( ! $this->details_is_faq_shape( $node ) ) {
 				/*
-				 * Not the shape dxai-ui/details rewrites — but that is a reason
+				 * Not the shape dx-ui/details rewrites — but that is a reason
 				 * to skip THAT block, not a reason to give up on the element.
 				 * A `<details>` holds a `<summary>` and its content and no
-				 * words of its own, which is exactly what dxai-ui/box takes, so
+				 * words of its own, which is exactly what dx-ui/box takes, so
 				 * the accordion keeps its own markup AND its children stay
 				 * editable blocks. The H2O Away FAQ is six of these, each with
 				 * an inline style and one of them `open`, and all six were
@@ -626,7 +626,7 @@ final class Html_To_Blocks {
 			 * Under Tailwind's preflight that difference is zeroed, but a static
 			 * design keeps the browser's paragraph margins on purpose (see
 			 * blank-canvas.css), so an element that was not a <p> says so —
-			 * with a class, `dxai-not-p`, that blank-canvas.css zeroes at
+			 * with a class, `dxui-not-p`, that blank-canvas.css zeroes at
 			 * specificity (0,0,0).
 			 *
 			 * Not an inline `margin: 0`. That was tried twice. Exempting a
@@ -641,7 +641,7 @@ final class Html_To_Blocks {
 			 */
 			$class = $this->class_name( $node );
 			if ( $tag !== 'p' ) {
-				$class = trim( $class . ' dxai-not-p' );
+				$class = trim( $class . ' dxui-not-p' );
 			}
 
 			return $this->paragraph(
@@ -678,7 +678,7 @@ final class Html_To_Blocks {
 
 		// Anything else the design wrote, as the element it wrote, with its
 		// children as blocks — or, when it has words of its own that a box
-		// would have to discard, as one dxai-ui/text holding the whole run.
+		// would have to discard, as one dx-ui/text holding the whole run.
 		// Only markup neither block can reproduce byte for byte is still
 		// handed over as source HTML. `<summary>Do you work with my insurance
 		// company?<span data-caret></span></summary>` is the shape that needs
@@ -692,7 +692,7 @@ final class Html_To_Blocks {
 	 */
 	private function span( \DOMElement $el ): array {
 		// A span holding nothing but text is the design's own inline box — a
-		// chip, a badge, a display number — and dxai-ui/text reproduces it
+		// chip, a badge, a display number — and dx-ui/text reproduces it
 		// exactly, so the copy inside becomes editable.
 		$text_leaf = $this->text_leaf( $el );
 		if ( $text_leaf !== null ) {
@@ -700,7 +700,7 @@ final class Html_To_Blocks {
 		}
 		/*
 		 * Nested phrasing — `<span class="chip"><strong>A</strong> B</span>` —
-		 * is one dxai-ui/text when the emitter can put the run back byte for
+		 * is one dx-ui/text when the emitter can put the run back byte for
 		 * byte. text_leaf() refuses any element child; text_run() takes the
 		 * whole span as a rich-text run (including loose text beside phrase
 		 * children). That was the corpus's single largest island class.
@@ -713,7 +713,7 @@ final class Html_To_Blocks {
 		 * Classed spans are chips, badges and labels: never promote one to a
 		 * paragraph, which collapses a flex or grid row into stacked blocks.
 		 *
-		 * dxai-ui/box keeps the span exactly as written and turns the run
+		 * dx-ui/box keeps the span exactly as written and turns the run
 		 * inside it into blocks; text_block() is the mixed-content fallback
 		 * when a box cannot hold loose words beside element children.
 		 */
@@ -736,7 +736,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * A text-only phrasing leaf as dxai-ui/text, or null when the block could
+	 * A text-only phrasing leaf as dx-ui/text, or null when the block could
 	 * not reproduce the element byte for byte.
 	 *
 	 * span() had no non-island exit: a classed span was sealed because
@@ -746,7 +746,7 @@ final class Html_To_Blocks {
 	 * `<span class="rv-chip">Legal Liability</span>`: no block emitted a
 	 * `<span>` carrying the design's own class and nothing else, so the choice
 	 * was a paragraph — a different box, under the design's own `.rv-obj p`
-	 * rules — or a black box. dxai-ui/text is that block.
+	 * rules — or a black box. dx-ui/text is that block.
 	 *
 	 * What makes the swap safe rather than hopeful is the identity check in
 	 * text_block(), which this hands the element to once it knows it is a leaf.
@@ -777,7 +777,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The element as one dxai-ui/text, or null when the block's own emitter
+	 * The element as one dx-ui/text, or null when the block's own emitter
 	 * does not already reproduce its markup.
 	 *
 	 * Shared by the two ways in — a phrasing leaf holding only text
@@ -796,8 +796,8 @@ final class Html_To_Blocks {
 		$tag = strtolower( $el->tagName );
 		// Interactive chrome keeps its whole attribute surface — see group().
 		// This is also what keeps a control-projected element out: the compiler
-		// writes `data-dxai-on` / `data-dxai-off` next to a `dxai-cls-*` class,
-		// and any `data-dxai*` attribute is prefer_html_wrapper()'s first test.
+		// writes `data-dxui-on` / `data-dxui-off` next to a `dxui-cls-*` class,
+		// and any `data-dxui*` attribute is prefer_html_wrapper()'s first test.
 		if ( $this->prefer_html_wrapper( $el ) ) {
 			return null;
 		}
@@ -842,7 +842,7 @@ final class Html_To_Blocks {
 			 * Measured cost of the four extra characters (scratch:
 			 * collapse/refusal-cost.php over the source corpus): 10 attribute
 			 * values refused, 2 of them for a real apostrophe. Of the other 8,
-			 * one is an `aria-label` on an `a`, which takes dxai-ui/link and
+			 * one is an `aria-label` on an `a`, which takes dx-ui/link and
 			 * never reaches here at all; the remaining 7 are `class` values
 			 * holding a Tailwind arbitrary variant — `[&>*]:w-[78%]` — on a
 			 * `div` that text_run() could otherwise fold. Narrowing the guard
@@ -890,7 +890,7 @@ final class Html_To_Blocks {
 		}
 		$data = $this->data_map( $el );
 		if ( $data !== array() ) {
-			$attrs['dxaiData'] = $data;
+			$attrs['dxuiData'] = $data;
 		}
 		// Two source orders exist in the corpus — 16 leaves write `class`
 		// before `aria-hidden` and 7 write it after — so no single canonical
@@ -911,7 +911,7 @@ final class Html_To_Blocks {
 			return null;
 		}
 
-		return $this->leaf( 'dxai-ui/text', $attrs, $html );
+		return $this->leaf( 'dx-ui/text', $attrs, $html );
 	}
 
 	/**
@@ -1025,7 +1025,7 @@ final class Html_To_Blocks {
 
 	/**
 	 * A container whose whole child list is one inline run, as ONE
-	 * dxai-ui/text — or null when it is not that shape, or the block could not
+	 * dx-ui/text — or null when it is not that shape, or the block could not
 	 * reproduce it.
 	 *
 	 * `<div class="rv-diff-row"><span class="rv-check">✓</span><span>We do
@@ -1044,7 +1044,7 @@ final class Html_To_Blocks {
 	 * Widening is_text_flow() is NOT the fix. That branch emits
 	 * core/paragraph, so `<div class="rv-diff-row">` would come back as a `<p>`
 	 * — a different box, and under the design's own `p` rules, which is the
-	 * whole reason tag_scopes() exists. dxai-ui/text keeps the design's own
+	 * whole reason tag_scopes() exists. dx-ui/text keeps the design's own
 	 * element, so the collapse needs no new block and moves no markup: its
 	 * tagName is free-form and its `content` is `source: 'html'` with
 	 * `selector: '*'`, which resolves through hpq's `querySelector('*')` to the
@@ -1053,21 +1053,21 @@ final class Html_To_Blocks {
 	 * This sits before group(), so it also answers for a container group()
 	 * would have sealed as raw HTML: owns_design_layout() seals a positioned
 	 * container because a core/group around it would let WP's layout CSS in,
-	 * and a dxai-ui/text is that same element with nothing added, so the reason
+	 * and a dx-ui/text is that same element with nothing added, so the reason
 	 * does not reach here. No container in the corpus took that path.
 	 *
 	 * "Nothing added" is the load-bearing half, and it is a property of the
 	 * registration rather than a hope. core/group declares `layout`, `spacing`,
 	 * `align`, `typography` and `__experimentalBorder`, which is what puts
 	 * `is-layout-*` and `wp-container-*` on the element and pulls in core's
-	 * rules for them; dxai-ui/text declares className, customClassName,
+	 * rules for them; dx-ui/text declares className, customClassName,
 	 * customCSS, html, anchor and splitting, all false, so there is no support
 	 * that can emit a class. Its save() is RichText.Content with the design's
 	 * own attributes and NOT useBlockProps.save(), so the
 	 * blocks.getSaveContent.extraProps filter — which useBlockProps.save()
-	 * applies unconditionally — never runs over it either. dxai-ui/link is the
+	 * applies unconditionally — never runs over it either. dx-ui/link is the
 	 * contrast worth keeping in view: that one does add
-	 * `wp-block-dxai-ui-link`, written by both save()s on purpose.
+	 * `wp-block-dx-ui-link`, written by both save()s on purpose.
 	 *
 	 * @return array<string, mixed>|null
 	 */
@@ -1100,7 +1100,7 @@ final class Html_To_Blocks {
 
 		/*
 		 * Loose copy beside phrase children — `<span class="chip"><strong>A</strong> B</span>` —
-		 * is what dxai-ui/text is for: one rich-text run, source bytes kept so
+		 * is what dx-ui/text is for: one rich-text run, source bytes kept so
 		 * the identity check compares against the design. GROUP_TAGS that are
 		 * a pure text flow already left via is_text_flow() → paragraph before
 		 * text_run() is called, so this only reaches chips/spans and containers
@@ -1146,7 +1146,7 @@ final class Html_To_Blocks {
 	 *
 	 * The first is the tag. PHRASE_TAGS, not INLINE_TAGS: the tags in the
 	 * difference all have a block of their own — `a` and `button` have
-	 * dxai-ui/link, an `img` has dxai-ui/image, a `label` reaches group() — and
+	 * dx-ui/link, an `img` has dx-ui/image, a `label` reaches group() — and
 	 * folding one into a run trades a typed block with its own editing surface
 	 * for a string, which for a link also hands the href to rich text's
 	 * escaper. This test used to sit in text_run()'s child loop, one level
@@ -1184,7 +1184,7 @@ final class Html_To_Blocks {
 	 * which seals the paragraph path against the same hazard. Two containers
 	 * are refused for it, both holding `<span class="rv-num" data-countup="62"
 	 * data-suffix="%">`. The container's OWN data attributes are fine: they
-	 * travel in `dxaiData` and come out of the same emitter, byte for byte.
+	 * travel in `dxuiData` and come out of the same emitter, byte for byte.
 	 */
 	private function run_survives_rich_text( \DOMElement $el ): bool {
 		foreach ( $el->getElementsByTagName( '*' ) as $node ) {
@@ -1213,7 +1213,7 @@ final class Html_To_Blocks {
 	 * text_run() has already asked the stricter run_survives_rich_text(). The
 	 * third way in, control_block(), asked nothing, so a call-to-action with its
 	 * icon — `<a …><i data-lucide="phone" …></i>(214) 526-7900</a>`, or an
-	 * inline `<svg>` — folded into one dxai-ui/text, and so did
+	 * inline `<svg>` — folded into one dx-ui/text, and so did
 	 * `<label>First name<input …></label>`. The front end stayed the same to
 	 * the byte, which is why no harness saw it; the first edit of the label
 	 * then deleted the icon or the field from the live page.
@@ -1263,7 +1263,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The tag dxai-ui/text writes. Free-form like core/group's, defaulting to
+	 * The tag dx-ui/text writes. Free-form like core/group's, defaulting to
 	 * `span`, so `dt` and `dd` travel on the same block.
 	 *
 	 * @param array<string, mixed> $attrs
@@ -1275,7 +1275,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * dxai-ui/text's attribute list, in `attrOrder` if the element carried one
+	 * dx-ui/text's attribute list, in `attrOrder` if the element carried one
 	 * and in TEXT_ATTR_MAP order otherwise.
 	 *
 	 * Mirrored by save() in assets/js/blocks-editor.js: every attribute the
@@ -1316,7 +1316,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * dxai-ui/box's attribute list. Same rules as text_attrs(), a wider map.
+	 * dx-ui/box's attribute list. Same rules as text_attrs(), a wider map.
 	 *
 	 * @param array<string, mixed> $attrs
 	 */
@@ -1336,7 +1336,7 @@ final class Html_To_Blocks {
 	 * @param array<string, mixed>  $attrs
 	 */
 	private static function attrs_from_map( array $map, array $attrs ): string {
-		$data     = is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array();
+		$data     = is_array( $attrs['dxuiData'] ?? null ) ? $attrs['dxuiData'] : array();
 		$explicit = is_array( $attrs['attrOrder'] ?? null ) && $attrs['attrOrder'] !== array();
 		$order    = $explicit
 			? $attrs['attrOrder']
@@ -1385,7 +1385,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * dxai-ui/box: the design's own container element, with its children as
+	 * dx-ui/box: the design's own container element, with its children as
 	 * blocks.
 	 *
 	 * The element is written exactly as the design wrote it — same tag, same
@@ -1398,12 +1398,12 @@ final class Html_To_Blocks {
 	 * islands measured across the corpus, which is markup nobody can edit in
 	 * the editor.
 	 *
-	 * `dxaiData` carries every data attribute, `className` the classes, so the
-	 * `dxai-toggle-*` / `dxai-on-*` markers and `data-dxai-*` payloads that
+	 * `dxuiData` carries every data attribute, `className` the classes, so the
+	 * `dxui-toggle-*` / `dxui-on-*` markers and `data-dxui-*` payloads that
 	 * Motion_Runtime drives survive intact — which is what prefer_html_wrapper()
 	 * was protecting by refusing to convert at all.
 	 *
-	 * Shares text_attrs() with dxai-ui/text: one attribute serialiser, one
+	 * Shares text_attrs() with dx-ui/text: one attribute serialiser, one
 	 * order, one escaping contract, mirrored once in assets/js/blocks-editor.js.
 	 *
 	 * @param array<string, mixed> $attrs
@@ -1421,9 +1421,9 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The tag dxai-ui/box writes. Free-form like dxai-ui/text's and defaulting
+	 * The tag dx-ui/box writes. Free-form like dx-ui/text's and defaulting
 	 * to `div` rather than `span`, because a box inserted by hand is a
-	 * container. Mirrored by dxaiBoxTag() in assets/js/blocks-editor.js: both
+	 * container. Mirrored by dxuiBoxTag() in assets/js/blocks-editor.js: both
 	 * emitters must reject the same values, or one would fall back while the
 	 * other wrote the typed tag and the block would open invalid.
 	 *
@@ -1436,7 +1436,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The element as one dxai-ui/box wrapped around `$inner`, or null when the
+	 * The element as one dx-ui/box wrapped around `$inner`, or null when the
 	 * block's emitter does not already reproduce its markup.
 	 *
 	 * The identity check is the same discipline as text_block()'s: build the
@@ -1472,7 +1472,7 @@ final class Html_To_Blocks {
 		 * An element whose children are elements, or nothing, boxes exactly.
 		 * One with words of its own keeps its source HTML for now: text has to
 		 * travel in a declared `content` attribute so the editor's save() can
-		 * write it back, which is what dxai-ui/text does and what this block
+		 * write it back, which is what dx-ui/text does and what this block
 		 * would need before it can take them.
 		 */
 		foreach ( $el->childNodes as $child ) {
@@ -1501,7 +1501,7 @@ final class Html_To_Blocks {
 		}
 		$data = $this->data_map( $el );
 		if ( $data !== array() ) {
-			$attrs['dxaiData'] = $data;
+			$attrs['dxuiData'] = $data;
 		}
 		/*
 		 * Empty values are kept rather than cleaned away: `alt=""` is how a
@@ -1557,7 +1557,7 @@ final class Html_To_Blocks {
 		}
 
 		return array(
-			'blockName'    => 'dxai-ui/box',
+			'blockName'    => 'dx-ui/box',
 			'attrs'        => $attrs,
 			'innerBlocks'  => $inner,
 			'innerHTML'    => $open . $close,
@@ -1601,13 +1601,13 @@ final class Html_To_Blocks {
 		return $pairs( $el ) === $pairs( $mine );
 	}
 	/**
-	 * dxai-ui/svg: the design's own inline SVG.
+	 * dx-ui/svg: the design's own inline SVG.
 	 *
 	 * The root attributes travel as an ORDERED LIST of name/value pairs rather
 	 * than through a map of declared block attributes, because an SVG's
 	 * attribute surface is open — the corpus's 163 inline SVGs carry viewBox,
 	 * fill, stroke, stroke-width, width, height, preserveAspectRatio, role,
-	 * aria-hidden, focusable and data-dxai hooks between them, and their
+	 * aria-hidden, focusable and data-dxui hooks between them, and their
 	 * children carry twenty more. A list keeps the source order, which is part
 	 * of reproducing the markup, and needs no map to grow.
 	 *
@@ -1637,7 +1637,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The element as one dxai-ui/svg, or null when the block cannot reproduce
+	 * The element as one dx-ui/svg, or null when the block cannot reproduce
 	 * it.
 	 *
 	 * @return array<string, mixed>|null
@@ -1670,7 +1670,7 @@ final class Html_To_Blocks {
 			return null;
 		}
 
-		return $this->leaf( 'dxai-ui/svg', $attrs, self::svg_html( $attrs ) );
+		return $this->leaf( 'dx-ui/svg', $attrs, self::svg_html( $attrs ) );
 	}
 
 
@@ -1710,7 +1710,7 @@ final class Html_To_Blocks {
 		 * box cannot either, because both want children that are blocks.
 		 *
 		 * That used to end the matter. But it is the same mixed-content shape
-		 * link() already answers with one dxai-ui/text over the whole run, and
+		 * link() already answers with one dx-ui/text over the whole run, and
 		 * a form field is written exactly this way —
 		 * `<label class="…">What do you need help with?<select …>…</select></label>`
 		 * — so the H2O Away lead form contributed nine islands, one per field,
@@ -1732,9 +1732,9 @@ final class Html_To_Blocks {
 		 * Interactive chrome, flex/grid (class or inline) and absolute layers
 		 * must not become core/group: its generated `wp-block-group` class
 		 * hands the element to WordPress layout CSS, and its attribute surface
-		 * has nowhere to put a `data-dxai-*` hook.
+		 * has nowhere to put a `data-dxui-*` hook.
 		 *
-		 * dxai-ui/box has neither problem — no generated class, and every
+		 * dx-ui/box has neither problem — no generated class, and every
 		 * class and data attribute carried verbatim — so it is tried first and
 		 * only a container it cannot reproduce falls through to source HTML.
 		 * These two guards were 665 of the corpus's 3001 islands.
@@ -1766,7 +1766,7 @@ final class Html_To_Blocks {
 			// and the stored markup lacks, and is stripped for any user without
 			// unfiltered_html. A plain string attribute re-emitted by
 			// assets/js/blocks-editor.js round-trips instead.
-			$attrs['dxaiStyle'] = $style;
+			$attrs['dxuiStyle'] = $style;
 		}
 		$role = $el->getAttribute( 'role' );
 		if ( $role !== '' ) {
@@ -1793,7 +1793,7 @@ final class Html_To_Blocks {
 		 */
 		$map = $this->data_map( $el );
 		if ( $map !== array() ) {
-			$attrs['dxaiData'] = $map;
+			$attrs['dxuiData'] = $map;
 		}
 
 		// Do not force is-layout-flow — it adds margin-block on children and
@@ -1824,7 +1824,7 @@ final class Html_To_Blocks {
 	 */
 	private function prefer_html_wrapper( \DOMElement $el ): bool {
 		$class = $el->getAttribute( 'class' );
-		if ( str_contains( $class, 'dxai-toggle-' ) || str_contains( $class, 'dxai-on-' ) ) {
+		if ( str_contains( $class, 'dxui-toggle-' ) || str_contains( $class, 'dxui-on-' ) ) {
 			return true;
 		}
 		foreach ( $el->attributes ?? array() as $attr ) {
@@ -1832,7 +1832,7 @@ final class Html_To_Blocks {
 				continue;
 			}
 			$name = strtolower( $attr->name );
-			if ( str_starts_with( $name, 'data-dxai' ) || $name === 'data-lucide' ) {
+			if ( str_starts_with( $name, 'data-dxui' ) || $name === 'data-lucide' ) {
 				return true;
 			}
 			if ( in_array( $name, array( 'data-state', 'data-open', 'data-closed', 'onclick' ), true ) ) {
@@ -2003,9 +2003,9 @@ final class Html_To_Blocks {
 	 * `<h1>`–`<h6>` simply vanished, with no refusal, where box, text and
 	 * link all refuse what they cannot write. The one that matters most is
 	 * the compiler's own: a heading or paragraph whose class depends on a
-	 * state carries a `dxai-cls-*` marker in its class and the class lists in
-	 * `data-dxai-on` / `data-dxai-off` (Jsx_Compiler's
-	 * attach_class_projection(), Dc_Renderer's per-state `data-dxai-on-*`).
+	 * state carries a `dxui-cls-*` marker in its class and the class lists in
+	 * `data-dxui-on` / `data-dxui-off` (Jsx_Compiler's
+	 * attach_class_projection(), Dc_Renderer's per-state `data-dxui-on-*`).
 	 * The marker survived and the lists did not, so the runtime found the
 	 * element and projected nothing onto it: a row whose background turns ink
 	 * on hover kept its dark heading. `aria-*`, `role`, `title` and `hidden`
@@ -2061,7 +2061,7 @@ final class Html_To_Blocks {
 		// it, which is what blocked widening owns_design_layout().
 		$style = trim( $el->getAttribute( 'style' ) );
 		if ( $style !== '' ) {
-			$attrs['dxaiStyle'] = $style;
+			$attrs['dxuiStyle'] = $style;
 		}
 		$classes = trim( 'wp-block-heading ' . $class );
 		$html    = '<h' . $level . $this->id_attr( $id ) . $this->style_attr( $style ) . ' class="' . esc_attr( $classes ) . '">' . $inner . '</h' . $level . '>';
@@ -2085,7 +2085,7 @@ final class Html_To_Blocks {
 		// collapses the paragraph to base size.
 		$style = trim( $style );
 		if ( $style !== '' ) {
-			$attrs['dxaiStyle'] = $style;
+			$attrs['dxuiStyle'] = $style;
 		}
 		/*
 		 * No `wp-block-paragraph` here: stock core/paragraph declares
@@ -2144,7 +2144,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * dxai-ui/image's attributes, as `[ HTML name => block attribute ]`, in the
+	 * dx-ui/image's attributes, as `[ HTML name => block attribute ]`, in the
 	 * order image_html() writes them — and the order the save() in
 	 * assets/js/blocks-editor.js sets its props.
 	 */
@@ -2152,7 +2152,7 @@ final class Html_To_Blocks {
 		'src'      => 'url',
 		'alt'      => 'alt',
 		'class'    => 'className',
-		'style'    => 'dxaiStyle',
+		'style'    => 'dxuiStyle',
 		'width'    => 'width',
 		'height'   => 'height',
 		'loading'  => 'loading',
@@ -2170,7 +2170,7 @@ final class Html_To_Blocks {
 		 * wraps the picture in a `<figure class="wp-block-image">` that becomes
 		 * the box in the image's place — which is precisely why the governing
 		 * rule sent most images to an island: 12 of the 23 `<img>` elements
-		 * this branch saw. dxai-ui/image emits the `<img>` and nothing else, so
+		 * this branch saw. dx-ui/image emits the `<img>` and nothing else, so
 		 * the choice is now "core/image where it is lossless, our own block
 		 * otherwise", and no image has to be a black box.
 		 */
@@ -2183,7 +2183,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The image as a bare `<img>` on dxai-ui/image, or its source HTML when
+	 * The image as a bare `<img>` on dx-ui/image, or its source HTML when
 	 * even that could not reproduce it.
 	 *
 	 * @return array<string, mixed>
@@ -2225,7 +2225,7 @@ final class Html_To_Blocks {
 				?? $this->html_block( $this->outer( $el ) );
 		}
 
-		return $this->leaf( 'dxai-ui/image', $attrs, $html );
+		return $this->leaf( 'dx-ui/image', $attrs, $html );
 	}
 
 	/**
@@ -2260,7 +2260,7 @@ final class Html_To_Blocks {
 		 * not the presentational attributes a design ships. So an `<img>`
 		 * carrying any of those is one core/image has to drop, and 10 of the 11
 		 * that converted were dropping something: `loading="lazy"` on 9 of them
-		 * and `width`/`height` on 7. They now go to dxai-ui/image, which keeps
+		 * and `width`/`height` on 7. They now go to dx-ui/image, which keeps
 		 * all of it.
 		 */
 		foreach ( $el->attributes ?? array() as $attr ) {
@@ -2315,7 +2315,7 @@ final class Html_To_Blocks {
 		 * on a block-level figure means "as wide as the container" and stretched
 		 * the footer logo to 363px. A replaced element's intrinsic ratio is not
 		 * something the figure can stand in for, so the <img> has to carry its
-		 * own classes — which is now dxai-ui/image's job rather than raw HTML's.
+		 * own classes — which is now dx-ui/image's job rather than raw HTML's.
 		 */
 		if ( $this->image_needs_own_ratio( $class ) ) {
 			return null;
@@ -2335,7 +2335,7 @@ final class Html_To_Blocks {
 		 * reading is that the wrapper is pure overhead. An image that *does*
 		 * carry design classes keeps the block: there the figure is the box the
 		 * design asked for. Both of the rejected shapes now go to
-		 * dxai-ui/image, which is the same `<img>` with no wrapper at all.
+		 * dx-ui/image, which is the same `<img>` with no wrapper at all.
 		 */
 		$parent = $el->parentNode;
 		if ( $class === '' || ( $parent instanceof \DOMElement && $this->lays_out_children( $parent ) ) ) {
@@ -2370,7 +2370,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The attributes dxai-ui/link declares, as `[ HTML name => block attribute ]`.
+	 * The attributes dx-ui/link declares, as `[ HTML name => block attribute ]`.
 	 *
 	 * The key order is the order link_open_tag() writes them in, and the save()
 	 * in assets/js/blocks-editor.js writes the same names in the same order.
@@ -2477,13 +2477,13 @@ final class Html_To_Blocks {
 	 */
 	/**
 	 * The last three answers for a control, in order of how much of it stays
-	 * editable: a box whose children are blocks, then one dxai-ui/text holding
+	 * editable: a box whose children are blocks, then one dx-ui/text holding
 	 * the whole inline run, then the source HTML.
 	 *
 	 * The middle step is the new one. box_block() returns null for any element
 	 * with words of its own — its children are blocks and a bare text node has
 	 * nowhere to go — which is every designed call-to-action in this corpus,
-	 * so they all landed on raw HTML. dxai-ui/text carries exactly that shape:
+	 * so they all landed on raw HTML. dx-ui/text carries exactly that shape:
 	 * the element's own tag and attributes, its inline run as `content`.
 	 *
 	 * Order matters. A box keeps the children as separate, individually
@@ -2493,7 +2493,7 @@ final class Html_To_Blocks {
 	 *
 	 * Safe by construction rather than by inspection: text_block() returns null
 	 * unless text_html() reproduces the element byte for byte, and
-	 * prefer_html_wrapper() keeps every `data-dxai*` control out of it, so a
+	 * prefer_html_wrapper() keeps every `data-dxui*` control out of it, so a
 	 * behaviour hook still travels as source HTML.
 	 *
 	 * @return array<string, mixed>
@@ -2565,14 +2565,14 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The link as a dxai-ui/link wrapped around inner blocks, or null when the
+	 * The link as a dx-ui/link wrapped around inner blocks, or null when the
 	 * block could not put back the element the design wrote.
 	 *
 	 * This branch used to read a FIXED list of fourteen attributes off the
 	 * element and throw the rest away, which is a different rule from the one
 	 * the leaf path next door already lives by, and a losing one. Measured
 	 * through the real converter, `<a id="cta" href="/x"><div class="c"><p>One</p></div><p>Two</p></a>`
-	 * came back as `<a class="wp-block-dxai-ui-link" href="/x">` with attrs
+	 * came back as `<a class="wp-block-dx-ui-link" href="/x">` with attrs
 	 * `{"url":"/x","tagName":"a","hasInner":true}`: the `id` was simply gone.
 	 * So were `aria-hidden`, `aria-labelledby`, `data-ga-event`, `tabindex`,
 	 * `download`, `name` and `hreflang`, and a `<button type="submit">` came
@@ -2619,7 +2619,7 @@ final class Html_To_Blocks {
 		$content[] = $close;
 
 		return array(
-			'blockName'    => 'dxai-ui/link',
+			'blockName'    => 'dx-ui/link',
 			'attrs'        => $this->clean_attrs( $attrs ),
 			'innerBlocks'  => $inner,
 			'innerHTML'    => $open . $close,
@@ -2628,7 +2628,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The link as a dxai-ui/link leaf, or null when the block could not put
+	 * The link as a dx-ui/link leaf, or null when the block could not put
 	 * back everything the design put on the element.
 	 *
 	 * Positive, rather than a list of bails: every attribute has to have a
@@ -2671,14 +2671,14 @@ final class Html_To_Blocks {
 			return null;
 		}
 
-		return $this->leaf( 'dxai-ui/link', $this->clean_attrs( $attrs ), self::link_html( $attrs ) );
+		return $this->leaf( 'dx-ui/link', $this->clean_attrs( $attrs ), self::link_html( $attrs ) );
 	}
 
 	/**
 	 * The block attributes for the ELEMENT itself — everything except its
 	 * children — or null when one of the design's attributes has nowhere to go.
 	 *
-	 * Positive, and shared by both routes into dxai-ui/link, because both have
+	 * Positive, and shared by both routes into dx-ui/link, because both have
 	 * to answer the same question about the same element. The leaf path was
 	 * built this way; the inner-blocks path was not, and read a fixed list
 	 * instead, which is why `<a id="cta" href="/x">…` lost its `id`.
@@ -2747,9 +2747,9 @@ final class Html_To_Blocks {
 				continue;
 			}
 			/*
-			 * Motion / step hooks (`data-dxai-init`, `data-dxai-on`, …) used to
-			 * refuse the whole element. Same contract as dxai-ui/box + text:
-			 * declare them on dxaiData so the CTA stays an editable link.
+			 * Motion / step hooks (`data-dxui-init`, `data-dxui-on`, …) used to
+			 * refuse the whole element. Same contract as dx-ui/box + text:
+			 * declare them on dxuiData so the CTA stays an editable link.
 			 */
 			if ( str_starts_with( $name, 'data-' ) && preg_match( '/^[a-z][a-z0-9-]*$/', $name ) === 1 ) {
 				$data[ $name ] = (string) $attr->value;
@@ -2760,7 +2760,7 @@ final class Html_To_Blocks {
 		}
 
 		if ( $data !== array() ) {
-			$attrs['dxaiData'] = $data;
+			$attrs['dxuiData'] = $data;
 		}
 
 		return $attrs;
@@ -2790,7 +2790,7 @@ final class Html_To_Blocks {
 	 * compares a CHILDLESS clone, because the children of that route are other
 	 * blocks and each of them answers for itself; what this block owns is the
 	 * element. Render signatures for the same reason link_reproduces() uses
-	 * them — the emitter is allowed to prepend `wp-block-dxai-ui-link` and to
+	 * them — the emitter is allowed to prepend `wp-block-dx-ui-link` and to
 	 * order attributes its own way, and nothing else.
 	 *
 	 * @param array<string, mixed> $attrs
@@ -2800,7 +2800,7 @@ final class Html_To_Blocks {
 		if ( ! $want instanceof \DOMElement ) {
 			return false;
 		}
-		$want->setAttribute( 'class', trim( 'wp-block-dxai-ui-link ' . $this->class_name( $el ) ) );
+		$want->setAttribute( 'class', trim( 'wp-block-dx-ui-link ' . $this->class_name( $el ) ) );
 		$got = self::first_element( self::link_open_tag( $attrs ) . self::link_close_tag( $attrs ) );
 
 		return $got instanceof \DOMElement && self::render_sig( $want ) === self::render_sig( $got );
@@ -2970,7 +2970,7 @@ final class Html_To_Blocks {
 	 * attributes, same rendered content.
 	 *
 	 * Compared as render signatures rather than bytes, because the emitter
-	 * normalises two things on purpose — it prepends `wp-block-dxai-ui-link` to
+	 * normalises two things on purpose — it prepends `wp-block-dx-ui-link` to
 	 * the class list, and it writes the source's indentation as the single
 	 * space HTML collapses it to.
 	 *
@@ -2981,7 +2981,7 @@ final class Html_To_Blocks {
 		if ( ! $want instanceof \DOMElement ) {
 			return false;
 		}
-		$want->setAttribute( 'class', trim( 'wp-block-dxai-ui-link ' . $this->class_name( $el ) ) );
+		$want->setAttribute( 'class', trim( 'wp-block-dx-ui-link ' . $this->class_name( $el ) ) );
 		$got = self::first_element( self::link_html( $attrs ) );
 
 		return $got instanceof \DOMElement && self::render_sig( $want ) === self::render_sig( $got );
@@ -2992,7 +2992,7 @@ final class Html_To_Blocks {
 	 */
 	public static function link_open_tag( array $attrs ): string {
 		$tag   = ( $attrs['tagName'] ?? 'a' ) === 'button' ? 'button' : 'a';
-		$class = trim( 'wp-block-dxai-ui-link ' . (string) ( $attrs['className'] ?? '' ) );
+		$class = trim( 'wp-block-dx-ui-link ' . (string) ( $attrs['className'] ?? '' ) );
 		$html  = '<' . $tag . ' class="' . esc_attr( $class ) . '"';
 		if ( $tag === 'a' ) {
 			$html .= ' href="' . esc_url( (string) ( $attrs['url'] ?? '' ) ) . '"';
@@ -3026,7 +3026,7 @@ final class Html_To_Blocks {
 		if ( ! empty( $attrs['disabled'] ) ) {
 			$html .= ' disabled';
 		}
-		$data = is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array();
+		$data = is_array( $attrs['dxuiData'] ?? null ) ? $attrs['dxuiData'] : array();
 		ksort( $data );
 		foreach ( $data as $name => $value ) {
 			$name = strtolower( (string) $name );
@@ -3107,12 +3107,12 @@ final class Html_To_Blocks {
 
 	/**
 	 * Icon buttons, lucide marks, and menu toggles must keep their inner HTML.
-	 * Reconstructing them as dxai-ui/link drops empty `<i data-lucide>` nodes.
+	 * Reconstructing them as dx-ui/link drops empty `<i data-lucide>` nodes.
 	 */
 	private function keep_source_control( \DOMElement $el ): bool {
 		/*
-		 * Text-bearing CTAs must reach dxai-ui/link (editable label) even when
-		 * they also carry Motion_Runtime hooks (`dxai-toggle-*`, data-dxai-*).
+		 * Text-bearing CTAs must reach dx-ui/link (editable label) even when
+		 * they also carry Motion_Runtime hooks (`dxui-toggle-*`, data-dxui-*).
 		 * Sealing those first left Continue / Book / Submit as opaque `core/html`
 		 * islands — the label was uneditable. Icon-only toggles still seal below.
 		 */
@@ -3120,7 +3120,7 @@ final class Html_To_Blocks {
 			return false;
 		}
 		$class = $el->getAttribute( 'class' );
-		if ( str_contains( $class, 'dxai-toggle-' ) ) {
+		if ( str_contains( $class, 'dxui-toggle-' ) ) {
 			return true;
 		}
 		/*
@@ -3138,7 +3138,7 @@ final class Html_To_Blocks {
 		 * The bail on `aria-expanded` is gone too, and for the same reason: it
 		 * is now declared as `ariaExpanded` and written by both save()s, which
 		 * is the whole point of this change. What still seals a toggle is the
-		 * `dxai-toggle-` class above — the control, not the attribute. Measured
+		 * `dxui-toggle-` class above — the control, not the attribute. Measured
 		 * effect of dropping this clause on the corpus: none, all 19
 		 * aria-expanded controls carry that class.
 		 */
@@ -3149,7 +3149,7 @@ final class Html_To_Blocks {
 			return true;
 		}
 		// A media descendant only forces raw HTML when it IS the control. An
-		// icon-only button has nothing for dxai-ui/link to carry, so sealing it
+		// icon-only button has nothing for dx-ui/link to carry, so sealing it
 		// is right. But most designed links are text plus a trailing chevron,
 		// and link() recurses for those — the icon survives as a small nested
 		// block while the copy becomes editable. Bailing on mere presence sealed
@@ -3231,7 +3231,7 @@ final class Html_To_Blocks {
 			'question'  => $question,
 			'className' => $class,
 		);
-		$classes = trim( 'wp-block-dxai-ui-details ' . $class );
+		$classes = trim( 'wp-block-dx-ui-details ' . $class );
 		$open    = '<details class="' . esc_attr( $classes ) . '"><summary><span class="rv-faq-num">' . esc_html( $num ) . '</span><span class="rv-faq-q">' . esc_html( $question ) . '</span><span class="rv-faq-plus" aria-hidden="true">+</span></summary>';
 		$close   = '</details>';
 		$content = array( $open );
@@ -3241,7 +3241,7 @@ final class Html_To_Blocks {
 		$content[] = $close;
 
 		return array(
-			'blockName'    => 'dxai-ui/details',
+			'blockName'    => 'dx-ui/details',
 			'attrs'        => $this->clean_attrs( $attrs ),
 			'innerBlocks'  => $inner,
 			'innerHTML'    => $open . $close,
@@ -3250,7 +3250,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * Whether a `<details>` is the DevriX FAQ item dxai-ui/details reproduces:
+	 * Whether a `<details>` is the DevriX FAQ item dx-ui/details reproduces:
 	 * only `class` on the element, a summary built from `rv-faq-*` spans and
 	 * no inline styles anywhere in it.
 	 */
@@ -3485,7 +3485,7 @@ final class Html_To_Blocks {
 	}
 
 	/**
-	 * The animated number as dxai-ui/countup, or null when the block cannot
+	 * The animated number as dx-ui/countup, or null when the block cannot
 	 * put back the element the design wrote.
 	 *
 	 * This was the one leaf path with no identity check. It rebuilt the element
@@ -3535,7 +3535,7 @@ final class Html_To_Blocks {
 			return null;
 		}
 
-		return $this->leaf( 'dxai-ui/countup', $this->clean_attrs( $attrs ), $html );
+		return $this->leaf( 'dx-ui/countup', $this->clean_attrs( $attrs ), $html );
 	}
 
 	/**
@@ -3588,14 +3588,14 @@ final class Html_To_Blocks {
 		if ( ! $want instanceof \DOMElement ) {
 			return false;
 		}
-		$want->setAttribute( 'class', trim( 'wp-block-dxai-ui-countup ' . $class ) );
+		$want->setAttribute( 'class', trim( 'wp-block-dx-ui-countup ' . $class ) );
 		$got = self::first_element( $html );
 
 		return $got instanceof \DOMElement && self::render_sig( $want ) === self::render_sig( $got );
 	}
 
 	/**
-	 * dxai-ui/countup's markup. Mirrored by save() in
+	 * dx-ui/countup's markup. Mirrored by save() in
 	 * assets/js/blocks-editor.js, and byte for byte: bin/countup-parity.cjs
 	 * runs that save() through the real @wordpress/element serializer and
 	 * compares.
@@ -3605,7 +3605,7 @@ final class Html_To_Blocks {
 	 * attributes; the class arrives afterwards, appended to the props object by
 	 * core's own extraProps filters — custom-class-name adds the block's
 	 * `className` attribute and generated-class-name puts
-	 * `wp-block-dxai-ui-countup` in front of it. renderToString writes props in
+	 * `wp-block-dx-ui-countup` in front of it. renderToString writes props in
 	 * insertion order, so the editor puts `class` after the data attributes,
 	 * and this side has to do the same. It used to write `class` first, and
 	 * while the validator did not mind — isEqualTagAttributePairs compares
@@ -3618,7 +3618,7 @@ final class Html_To_Blocks {
 		$value    = (string) ( $attrs['value'] ?? '' );
 		$suffix   = (string) ( $attrs['suffix'] ?? '' );
 		$sr_class = trim( (string) ( $attrs['srClass'] ?? '' ) );
-		$classes  = trim( 'wp-block-dxai-ui-countup ' . (string) ( $attrs['className'] ?? '' ) );
+		$classes  = trim( 'wp-block-dx-ui-countup ' . (string) ( $attrs['className'] ?? '' ) );
 
 		$html = '<span data-countup="' . esc_attr( $value ) . '"'
 			. ' data-suffix="' . esc_attr( $suffix ) . '"'
@@ -3678,7 +3678,7 @@ final class Html_To_Blocks {
 			 * Per-row inline styles carry real design: one funnel tapers by
 			 * giving each `<li>` its own `width`, so dropping the attribute
 			 * flattened the taper and the narrowest row stopped wrapping.
-			 * core/list-item has no slot for it, so it travels as dxaiStyle and
+			 * core/list-item has no slot for it, so it travels as dxuiStyle and
 			 * assets/js/blocks-editor.js writes it back.
 			 */
 			$li_style = trim( $child->getAttribute( 'style' ) );
@@ -3687,14 +3687,14 @@ final class Html_To_Blocks {
 			 *
 			 * This used to rebuild the `<li>` from class and style alone, so
 			 * every other attribute on it was dropped — including
-			 * `data-dxai-on`, which is how a row says which state shows it.
+			 * `data-dxui-on`, which is how a row says which state shows it.
 			 * RevOps Insight Engine writes six of them, one per `<li>` of a
 			 * process rail, and losing them left the five arrows that drive
 			 * that rail inert: the behaviour check read `controls 3/8` and the
 			 * coverage check `behaviour-markers 24/30`, both of them pointing
 			 * at markup that had simply been rewritten without them.
 			 *
-			 * Only `data-*` travels, because `dxaiData` is the one slot
+			 * Only `data-*` travels, because `dxuiData` is the one slot
 			 * core/list-item has for an unmodelled attribute and
 			 * assets/js/blocks-editor.js writes back exactly the `data-`
 			 * prefixed keys — anything else would serialize here and vanish on
@@ -3708,11 +3708,11 @@ final class Html_To_Blocks {
 				$li_attrs['className'] = $li_class;
 			}
 			if ( $li_style !== '' ) {
-				$li_attrs['dxaiStyle'] = $li_style;
+				$li_attrs['dxuiStyle'] = $li_style;
 			}
 			$li_map = $this->data_map( $child );
 			if ( $li_map !== array() ) {
-				$li_attrs['dxaiData'] = $li_map;
+				$li_attrs['dxuiData'] = $li_map;
 			}
 			$items[] = $this->leaf( 'core/list-item', $li_attrs, $li_html );
 		}
@@ -3725,7 +3725,7 @@ final class Html_To_Blocks {
 		}
 		$style = trim( $el->getAttribute( 'style' ) );
 		if ( $style !== '' ) {
-			$attrs['dxaiStyle'] = $style;
+			$attrs['dxuiStyle'] = $style;
 		}
 		/*
 		 * And the list's own data attributes, as for its rows above. A design
@@ -3739,7 +3739,7 @@ final class Html_To_Blocks {
 		 */
 		$list_map = $this->data_map( $el );
 		if ( $list_map !== array() ) {
-			$attrs['dxaiData'] = $list_map;
+			$attrs['dxuiData'] = $list_map;
 		}
 
 		$tag     = $ordered ? 'ol' : 'ul';
@@ -3872,10 +3872,10 @@ final class Html_To_Blocks {
 	private static function first_element( string $html ): \DOMElement|null {
 		$dom  = new \DOMDocument( '1.0', 'UTF-8' );
 		$prev = libxml_use_internal_errors( true );
-		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxai-emitter-check">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
+		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxui-emitter-check">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 		libxml_use_internal_errors( $prev );
-		$root = $dom->getElementById( 'dxai-emitter-check' );
+		$root = $dom->getElementById( 'dxui-emitter-check' );
 		foreach ( $root instanceof \DOMElement ? $root->childNodes : array() as $child ) {
 			if ( $child instanceof \DOMElement ) {
 				return $child;

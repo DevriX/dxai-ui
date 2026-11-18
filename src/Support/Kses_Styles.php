@@ -2,14 +2,14 @@
 /**
  * What WordPress's KSES filter does to a converted design's inline styles.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Style_Hoister;
 
 /**
  * KSES runs on every post saved by a user without `unfiltered_html`: a site
@@ -23,7 +23,7 @@ use DXAI_UI\Compiler\Style_Hoister;
  * colour written as rgba(), hsl(), oklch() or color-mix().
  *
  * Worse than the loss is what it does to blocks. KSES filters the style=""
- * in the HTML but not the same CSS kept in the block's `dxaiStyle` attribute
+ * in the HTML but not the same CSS kept in the block's `dxuiStyle` attribute
  * (it runs a plain-text filter over attribute strings), and the editor
  * rebuilds style="" from the attribute — so the two no longer match, and every
  * such block opens as "This block contains unexpected or invalid content".
@@ -171,11 +171,11 @@ final class Kses_Styles {
 
 	/** Block attributes that hold a CSS declaration list mirrored into style="". */
 	/*
-	 * dxaiCss is not mirrored into the HTML (Style_Hoister writes a class
+	 * dxuiCss is not mirrored into the HTML (Style_Hoister writes a class
 	 * instead), but it is CSS someone without unfiltered_html could edit, so
 	 * KSES's CSS filter applies to it all the same.
 	 */
-	private const STYLE_ATTRS = array( 'dxaiStyle', 'style', 'dxaiCss' );
+	private const STYLE_ATTRS = array( 'dxuiStyle', 'style', 'dxuiCss' );
 
 	public function register(): void {
 		add_filter( 'safe_style_css', array( self::class, 'properties' ) );
@@ -241,7 +241,7 @@ final class Kses_Styles {
 		if ( ! is_string( $content ) || ! str_contains( $content, '<!-- wp:' ) ) {
 			return $content;
 		}
-		if ( ! str_contains( $content, '"dxaiStyle"' ) && ! str_contains( $content, '"dxaiCss"' ) && ! str_contains( $content, '"dxaiInner"' ) && ! str_contains( $content, '"style":"' ) && ! str_contains( $content, '&amp;' ) ) {
+		if ( ! str_contains( $content, '"dxuiStyle"' ) && ! str_contains( $content, '"dxuiCss"' ) && ! str_contains( $content, '"dxuiInner"' ) && ! str_contains( $content, '"style":"' ) && ! str_contains( $content, '&amp;' ) ) {
 			return $content;
 		}
 		if ( is_string( $context ) && $context !== 'post' ) {
@@ -300,7 +300,7 @@ final class Kses_Styles {
 	}
 
 	/**
-	 * A block's dxaiInner (class => declarations) through the same CSS filter.
+	 * A block's dxuiInner (class => declarations) through the same CSS filter.
 	 *
 	 * The classes are the keys, so a value KSES trims keeps its class and the
 	 * element inside still matches it. Only `dxs-` keys are kept: the rule is
@@ -345,7 +345,7 @@ final class Kses_Styles {
 	/**
 	 * The block's element with its dxs- class renamed after its CSS changed.
 	 *
-	 * dxaiCss is not mirrored into style="", but its hash is: the element
+	 * dxuiCss is not mirrored into style="", but its hash is: the element
 	 * carries `dxs-{hash}`, the class Style_Rules writes the rule for. When
 	 * KSES drops a declaration the value — and so the hash — changes, and the
 	 * old class would name a rule no longer written: the declarations KSES
@@ -407,9 +407,9 @@ final class Kses_Styles {
 	 * @return array<string, mixed>
 	 */
 	private static function plain_text_attrs( string $name, array $attrs, bool &$changed ): array {
-		$own = str_starts_with( $name, 'dxai-ui/' );
+		$own = str_starts_with( $name, 'dx-ui/' );
 		foreach ( $attrs as $key => $value ) {
-			if ( in_array( $key, array( 'svgInner', 'svgAttrs', 'dxaiStyle', 'style', 'dxaiCss', 'dxaiInner' ), true ) ) {
+			if ( in_array( $key, array( 'svgInner', 'svgAttrs', 'dxuiStyle', 'style', 'dxuiCss', 'dxuiInner' ), true ) ) {
 				continue;
 			}
 			if ( ! $own && ! in_array( $key, array( 'className', 'ariaLabel', 'labelledBy' ), true ) ) {

@@ -12,8 +12,8 @@
  *   node bin/run-suites.cjs --wp "<command that runs wp-cli on the site>" [--group ci,local] [--only a,b] [--strict]
  *                           [--json report.json] [--user 1] [--no-prepare] [--list]
  *
- *   --wp       how to run wp-cli on the site to test, from this plugin's folder: "npx wp-env run cli --env-cwd=wp-content/plugins/dxai-ui wp"
- *              in CI, "bash /path/to/wrapper.sh" locally. Also read from DXAI_WP.
+ *   --wp       how to run wp-cli on the site to test, from this plugin's folder: "npx wp-env run cli --env-cwd=wp-content/plugins/dx-ui wp"
+ *              in CI, "bash /path/to/wrapper.sh" locally. Also read from DXUI_WP.
  *   --group    which groups (bin/suites.json): ci (a clean site: the plugin, DX Base, Twenty Twenty-Five), local (needs what a
  *              working site holds: imported designs, the team's theme), manual, browser and paid (asks a real AI provider; by
  *              hand). Default: ci,local.
@@ -24,7 +24,7 @@
  * Runs bin/pack-fixtures.php first (the fixture archives are not in git). Exit code 1 when any suite is FAIL or ERROR
  * (or SKIP under --strict). In GitHub Actions it also writes the table to the job summary and an annotation per failure.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 'use strict';
@@ -48,7 +48,7 @@ const groups = opt( 'group', 'ci,local' ).split( ',' ).map( ( g ) => g.trim() ).
 const only = ( opt( 'only', '' ) || '' ).split( ',' ).map( ( s ) => s.trim() ).filter( Boolean );
 const strict = flag( 'strict' );
 const user = opt( 'user', '1' );
-const wp = opt( 'wp', process.env.DXAI_WP || '' );
+const wp = opt( 'wp', process.env.DXUI_WP || '' );
 
 // Every suite file is in the manifest, so each says where it runs; one that is not is reported (and fails a --strict run).
 const listed = new Set( manifest.suites.map( ( s ) => s.file ) );
@@ -63,7 +63,7 @@ if ( flag( 'list' ) ) {
 	process.exit( 0 );
 }
 if ( wp === '' ) {
-	console.error( 'run-suites: say how to run wp-cli on the site: --wp "<command>" or DXAI_WP (see the header of this file)' );
+	console.error( 'run-suites: say how to run wp-cli on the site: --wp "<command>" or DXUI_WP (see the header of this file)' );
 	process.exit( 2 );
 }
 if ( picked.length === 0 ) {

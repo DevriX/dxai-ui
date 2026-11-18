@@ -7,11 +7,11 @@
  *
  * Makes one draft page and removes it again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Copy_Prompt;
-use DXAI_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Copy_Prompt;
+use DX_UI\Pages\Copy_Writer;
 
 $fail   = 0;
 $pass   = 0;
@@ -96,7 +96,7 @@ $expect( 'heading, paragraph, button and the next heading are listed; the icon a
 $expect( 'each is placed in the section the team named', array_column( $inv, 'section' ) === array( 'Hero Section', 'Hero Section', 'Hero Section', 'FAQ Section' ), implode( ',', array_column( $inv, 'section' ) ) );
 $expect( 'inline markup is kept in the words', str_contains( $inv[1]['html'], '<strong>Tyler</strong>' ) );
 
-$stub = new class() extends DXAI_UI\Engines\Abstract_Engine {
+$stub = new class() extends DX_UI\Engines\Abstract_Engine {
 	public ?string $got = null;
 	public string $reply = '';
 	public function get_id(): string { return 'stub'; }
@@ -119,7 +119,7 @@ $stub->reply = wp_json_encode(
 		'flags'  => array( 'The FAQ names another city' ),
 	)
 );
-add_filter( 'dxai_ui_copy_engine', static fn() => $stub );
+add_filter( 'dx_ui_copy_engine', static fn() => $stub );
 
 $before = (string) get_post_field( 'post_content', $id );
 $prop   = Copy_Writer::propose( $id );
@@ -135,7 +135,7 @@ foreach ( $prop['blocks'] as $b ) {
 	}
 }
 $stale = Copy_Writer::apply( $id, $changes, 'not-the-fingerprint' );
-$expect( 'words written for other words are refused', is_wp_error( $stale ) && $stale->get_error_code() === 'dxai_ui_copy_stale' );
+$expect( 'words written for other words are refused', is_wp_error( $stale ) && $stale->get_error_code() === 'dx_ui_copy_stale' );
 
 $done = Copy_Writer::apply( $id, array( 't1' => $changes['t1'], 't3' => $changes['t3'] ), $prop['fingerprint'] );
 $after = (string) get_post_field( 'post_content', $id );
@@ -167,7 +167,7 @@ $expect( 'an untouched page goes back byte for byte', Copy_Writer::revert( $id )
 echo "\nWhat the AI can get wrong\n";
 $stub->reply = 'Sure! Here is the copy you asked for.';
 $bad = Copy_Writer::propose( $id );
-$expect( 'an answer that is not JSON changes nothing', is_wp_error( $bad ) && $bad->get_error_code() === 'dxai_ui_copy_parse' && (string) get_post_field( 'post_content', $id ) === $before );
+$expect( 'an answer that is not JSON changes nothing', is_wp_error( $bad ) && $bad->get_error_code() === 'dx_ui_copy_parse' && (string) get_post_field( 'post_content', $id ) === $before );
 $stub->reply = wp_json_encode( array( 'blocks' => array( array( 'id' => 't1', 'text' => '   ' ) ), 'flags' => array() ) );
 $empty = Copy_Writer::propose( $id );
 $expect( 'an empty line is not a change', ! is_wp_error( $empty ) && $empty['changed'] === 0 );

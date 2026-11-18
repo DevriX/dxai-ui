@@ -1,11 +1,11 @@
 <?php
 /**
- * Purge all DXAI-UI generated content and re-import ZIPs.
+ * Purge all DX-UI generated content and re-import ZIPs.
  *
  * Usage:
  *   php bin/purge-and-import-real-zips.php <wp-root> <zip1> <zip2>
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ if ( function_exists( 'get_user_by' ) ) {
  * @param \WP_Query $q
  * @return int
  */
-function dxai_delete_posts_from_query( \WP_Query $q ): int {
+function dxui_delete_posts_from_query( \WP_Query $q ): int {
 	$deleted = 0;
 	foreach ( $q->posts as $post ) {
 		if ( ! $post instanceof WP_Post ) {
@@ -68,7 +68,7 @@ function dxai_delete_posts_from_query( \WP_Query $q ): int {
  * @param string|null $meta_key Marker meta required, or null for a type the
  *                              plugin owns outright.
  */
-function dxai_purge_type( string $type, ?string $meta_key ): int {
+function dxui_purge_type( string $type, ?string $meta_key ): int {
 	$args = array(
 		'post_type'              => $type,
 		'post_status'            => array_keys( get_post_stati() ),
@@ -87,31 +87,31 @@ function dxai_purge_type( string $type, ?string $meta_key ): int {
 		);
 	}
 
-	return dxai_delete_posts_from_query( new WP_Query( $args ) );
+	return dxui_delete_posts_from_query( new WP_Query( $args ) );
 }
 
 $deleted = array();
 
 // Types the plugin owns outright.
-$deleted['dxai_conversion'] = dxai_purge_type( DXAI_UI\Content\Content_Types::CONVERSION, null );
-$deleted['dxai_form_entry'] = dxai_purge_type( DXAI_UI\Content\Content_Types::FORM_ENTRY, null );
+$deleted['dxui_conversion'] = dxui_purge_type( DX_UI\Content\Content_Types::CONVERSION, null );
+$deleted['dxui_form_entry'] = dxui_purge_type( DX_UI\Content\Content_Types::FORM_ENTRY, null );
 
 // Shared types: only what carries the generated marker.
-$deleted['wp_block']         = dxai_purge_type( 'wp_block', '_dxai_ui_generated' );
-$deleted['wp_template_part'] = dxai_purge_type( 'wp_template_part', '_dxai_ui_generated' );
-$deleted['wp_navigation']    = dxai_purge_type( 'wp_navigation', '_dxai_ui_generated' );
-$deleted['page']             = dxai_purge_type( 'page', '_dxai_ui_generated_page' );
+$deleted['wp_block']         = dxui_purge_type( 'wp_block', '_dx_ui_generated' );
+$deleted['wp_template_part'] = dxui_purge_type( 'wp_template_part', '_dx_ui_generated' );
+$deleted['wp_navigation']    = dxui_purge_type( 'wp_navigation', '_dx_ui_generated' );
+$deleted['page']             = dxui_purge_type( 'page', '_dx_ui_generated_page' );
 
 // Demo blog posts the plugin seeds so a design's blog section has content.
-$deleted['post'] = dxai_purge_type( 'post', '_dxai_ui_seeded' );
+$deleted['post'] = dxui_purge_type( 'post', '_dx_ui_seeded' );
 
 /*
  * Sideloaded media. Sideloader::store() stamps every attachment it creates
- * with _dxai_ui_asset_kind, so this reaches the plugin's uploads and nothing
+ * with _dx_ui_asset_kind, so this reaches the plugin's uploads and nothing
  * a person put there by hand. Force delete, so the files leave the disk too —
  * repeated import runs had grown wp-content/uploads to 1.5 GB.
  */
-$deleted['attachment'] = dxai_purge_type( 'attachment', '_dxai_ui_asset_kind' );
+$deleted['attachment'] = dxui_purge_type( 'attachment', '_dx_ui_asset_kind' );
 
 /*
  * Generated stylesheets and scripts. One pattern-<id>.css is written per
@@ -119,7 +119,7 @@ $deleted['attachment'] = dxai_purge_type( 'attachment', '_dxai_ui_asset_kind' );
  * 2,451 of them, 118 MB — more than every image put together. Keyed by post id,
  * so anything whose post is gone can go with it.
  */
-$assets  = trailingslashit( wp_upload_dir()['basedir'] ) . 'dxai-ui/';
+$assets  = trailingslashit( wp_upload_dir()['basedir'] ) . 'dx-ui/';
 $stale   = 0;
 $freed   = 0;
 foreach ( glob( $assets . 'pattern-*.{css,js}', GLOB_BRACE ) ?: array() as $file ) {
@@ -176,10 +176,10 @@ foreach ( glob( $basedir . '*/*/*.{jpg,jpeg,png,gif,webp,avif,svg,ico,mp4,webm,w
 
 echo 'stale_assets_removed=' . $stale . ' bytes_freed=' . $freed . PHP_EOL;
 
-// 6) Classic nav menus that DXAI wrote into theme locations.
+// 6) Classic nav menus that DXUI wrote into theme locations.
 $locations = get_theme_mod( 'nav_menu_locations', array() );
 $locations = is_array( $locations ) ? $locations : array();
-foreach ( array( 'dxai-primary', 'dxai-footer' ) as $loc ) {
+foreach ( array( 'dxui-primary', 'dxui-footer' ) as $loc ) {
 	if ( isset( $locations[ $loc ] ) ) {
 		$menu_id = (int) $locations[ $loc ];
 		if ( $menu_id > 0 ) {
@@ -196,14 +196,14 @@ foreach ( array( 'dxai-primary', 'dxai-footer' ) as $loc ) {
  */
 foreach ( array( 'primary-navigation', 'header-top', 'header-actions' ) as $loc ) {
 	$menu_id = (int) ( $locations[ $loc ] ?? 0 );
-	if ( $menu_id > 0 && '' !== (string) get_term_meta( $menu_id, DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
+	if ( $menu_id > 0 && '' !== (string) get_term_meta( $menu_id, DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
 		unset( $locations[ $loc ] );
 	}
 }
 set_theme_mod( 'nav_menu_locations', $locations );
 // The stored headers point at pages this purge just removed.
-delete_option( DXAI_UI\Chrome\Header_Template::OPTION );
-foreach ( (array) $GLOBALS['wpdb']->get_col( $GLOBALS['wpdb']->prepare( "SELECT option_name FROM {$GLOBALS['wpdb']->options} WHERE option_name LIKE %s", $GLOBALS['wpdb']->esc_like( DXAI_UI\Chrome\Header_Template::SCOPE_OPTION ) . '%' ) ) as $option ) {
+delete_option( DX_UI\Chrome\Header_Template::OPTION );
+foreach ( (array) $GLOBALS['wpdb']->get_col( $GLOBALS['wpdb']->prepare( "SELECT option_name FROM {$GLOBALS['wpdb']->options} WHERE option_name LIKE %s", $GLOBALS['wpdb']->esc_like( DX_UI\Chrome\Header_Template::SCOPE_OPTION ) . '%' ) ) as $option ) {
 	delete_option( (string) $option );
 }
 
@@ -212,8 +212,8 @@ echo "purge_deleted=" . wp_json_encode( $deleted ) . PHP_EOL;
 // Re-import.
 $php = new ZipArchive();
 
-$compiler   = new DXAI_UI\Compiler\Source_Compiler();
-$structures = new DXAI_UI\Structures\Structure_Repository();
+$compiler   = new DX_UI\Compiler\Source_Compiler();
+$structures = new DX_UI\Structures\Structure_Repository();
 
 /** @var array<int, string> Archives that reported status=ok, checked for page ownership at the end. */
 $imported = array();
@@ -241,7 +241,7 @@ foreach ( $zips as $zip_path ) {
 	 * another way through wp-admin. Whatever Zip_Router decides, both paths now
 	 * decide together.
 	 */
-	$doc = DXAI_UI\Connectors\Zip_Router::import( $file );
+	$doc = DX_UI\Connectors\Zip_Router::import( $file );
 
 	if ( is_wp_error( $doc ) ) {
 		echo "import_zip={$name} status=import_error message=" . $doc->get_error_message() . PHP_EOL;
@@ -286,7 +286,7 @@ foreach ( $zips as $zip_path ) {
 	);
 	foreach ( $page_ids as $one ) {
 		if ( $one > 0 ) {
-			update_post_meta( $one, '_dxai_ui_source_zip', $name );
+			update_post_meta( $one, '_dx_ui_source_zip', $name );
 		}
 	}
 
@@ -318,14 +318,14 @@ foreach ( $zips as $zip_path ) {
  * This is the check that was missing. Three designs in this corpus ship a
  * `jobs.$slug.tsx` route, and a page used to be identified by its route slug
  * alone — so Careers Page Builder, Client Connect Hub and Growth Engine Hub all
- * computed `dxai-jobs-slug`, and each import UPDATED the previous design's page
+ * computed `dxui-jobs-slug`, and each import UPDATED the previous design's page
  * instead of making its own. Eighteen archives imported, seventeen pages
  * existed, and every line above said status=ok: the only visible trace was
  * three of them sharing a page_id, which nothing read.
  *
  * Asked of the database rather than of what save() returned, because the bug
  * was that save() returned a perfectly valid page id — just not a page of this
- * design's own. Ownership is `_dxai_ui_page_key`, which is the archive name
+ * design's own. Ownership is `_dx_ui_page_key`, which is the archive name
  * plus the computed slug; see Structure_Repository::existing_page().
  */
 $unowned = array();
@@ -336,7 +336,7 @@ foreach ( $imported as $name ) {
 			'post_status'    => 'any',
 			'posts_per_page' => -1,
 			'fields'         => 'ids',
-			'meta_key'       => '_dxai_ui_source_zip',
+			'meta_key'       => '_dx_ui_source_zip',
 			'meta_value'     => $name,
 		)
 	);

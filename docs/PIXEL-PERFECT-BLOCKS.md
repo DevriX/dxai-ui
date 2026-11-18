@@ -1,7 +1,7 @@
 # Pixel-perfect JSX/TS → Gutenberg (multi-site)
 
 **Date:** 2026-09-04 (rev 2 — multi-site + DeepSeek)  
-**Scope:** DXAI-UI must convert **many unrelated sites** (Lovable, Figma, HTML/CSS/JS, Vue, React, Next, Design.com) — not only ARA / Arcus.  
+**Scope:** DX-UI must convert **many unrelated sites** (Lovable, Figma, HTML/CSS/JS, Vue, React, Next, Design.com) — not only ARA / Arcus.  
 **Constraint:** Always **separated Gutenberg structures** (header / nav / footer / hero / blog / form / slider / section). Never one page-level `wp:html` blob.
 
 ## Product framing
@@ -35,9 +35,9 @@ Research across converters and agency tooling converges on the same pattern:
 6. **Lovable-specific converters use AI QA**  
    [Lovable Converter](https://lovableconverter.com/lovable-to-wordpress): copy full component files → AI-powered Gutenberg with QA — validates that **source code + model** is the realistic Lovable path (no public Lovable API).
 
-**Takeaway for DXAI-UI:** Hybrid wins at scale — rule-based shell + tiered leaves for every site; DeepSeek (or other engine) only where fidelity/structure confidence is low or the user demands 100% Lovable match. Adopt **html-to-gutenberg’s shell pattern** in Pass 1 (section HTML owns flex/grid; leaves editable); do **not** depend on their webpack toolchain for multi-site ZIP import.
+**Takeaway for DX-UI:** Hybrid wins at scale — rule-based shell + tiered leaves for every site; DeepSeek (or other engine) only where fidelity/structure confidence is low or the user demands 100% Lovable match. Adopt **html-to-gutenberg’s shell pattern** in Pass 1 (section HTML owns flex/grid; leaves editable); do **not** depend on their webpack toolchain for multi-site ZIP import.
 
-## Current DXAI-UI pipeline
+## Current DX-UI pipeline
 
 ```
 ZIP / Figma / paste
@@ -45,7 +45,7 @@ ZIP / Figma / paste
   → IF Source_Compiler.can_compile → deterministic JSX/DC/HTML path
   → ELSE Chunked_Generator(DeepSeek|Claude|GPT|Grok) per Prompt_Builder
   → Dynamic_Rewriter + Blog_Hydrator
-  → Structure_Repository (dxai-* parts, patterns, page)
+  → Structure_Repository (dxui-* parts, patterns, page)
   → Tailwind_Purger + Motion_Runtime
 ```
 
@@ -101,16 +101,16 @@ Call the configured engine (DeepSeek recommended for cost/quality on markup JSON
 
 | Tier | Output | Rule |
 |------|--------|------|
-| Shell | `core/group` / `dxai-*` template-part | Every structure root |
-| A | `core/query`, `dxai-ui/form`, `dxai-ui/slider` | Detected blog/form/slider **and** `Rewrite_Policy` set to `dynamic` for that type; under `copy` (the default) the designed markup is kept |
+| Shell | `core/group` / `dxui-*` template-part | Every structure root |
+| A | `core/query`, `dx-ui/form`, `dx-ui/slider` | Detected blog/form/slider **and** `Rewrite_Policy` set to `dynamic` for that type; under `copy` (the default) the designed markup is kept |
 | B | heading, paragraph, image, list | Parent not flex/grid/absolute |
 | C | `core/html` under shell | Flex/grid, mega-menus, toggles, SVG, DC inline layouts |
-| D | `dxai-ui/*` | Only if attrs preserve full class+style |
+| D | `dx-ui/*` | Only if attrs preserve full class+style |
 
 ### E. Multi-site isolation
 
-- Template parts: `dxai-header-{page-key}`, `dxai-footer-{page-key}` (never theme `header`/`footer`)
-- CSS scope: `.dxai-ui.dxai-ui--{pageId}` per page; compile from that design’s `source_html` + `design_css_raw`
+- Template parts: `dxui-header-{page-key}`, `dxui-footer-{page-key}` (never theme `header`/`footer`)
+- CSS scope: `.dx-ui.dx-ui--{pageId}` per page; compile from that design’s `source_html` + `design_css_raw`
 - No global Preflight; no shared “ARA tokens” baked into the plugin
 - Menus: create `wp_navigation` for WP, but **do not flatten** designed headers into `core/navigation` when chrome already exists
 
@@ -122,7 +122,7 @@ Already implemented: `DeepSeek_Engine` → `api.deepseek.com/chat/completions`, 
 
 1. Valid `<!-- wp:* -->` only; Tailwind classes unchanged.  
 2. `structures[]` split — body markup without duplicating header/footer.  
-3. Blog → `core/query`; form → `dxai-ui/form`; slider → `dxai-ui/slider` — only when `Rewrite_Policy` is `dynamic` for that type; under `copy` reproduce the design.  
+3. Blog → `core/query`; form → `dx-ui/form`; slider → `dx-ui/slider` — only when `Rewrite_Policy` is `dynamic` for that type; under `copy` reproduce the design.  
 4. Prefer harvested media URLs; reuse tokens.  
 5. **New:** Prefer shell + html chrome over deep group trees when layout is flex/grid.  
 6. **New:** Input includes `source_html` golden + failed heuristic notes so the model **refines**, not reinvents.
@@ -139,7 +139,7 @@ On failure: retry once with DeepSeek; else keep Pass 1 + flag in conversion meta
 ## Acceptance (any site)
 
 - Ingest works for Lovable / Figma / generated ZIPs without site-specific code  
-- Structures always split; header/footer as `dxai-*` parts  
+- Structures always split; header/footer as `dxui-*` parts  
 - Frontend matches provided design within visual-diff tolerance (header, hero, key grid, footer)  
 - All design Tailwind tokens/utilities in scoped CSS  
 - Interactions (menus, FAQ, reveal) work via Motion_Runtime or source JS  
@@ -593,9 +593,9 @@ text is narrower and wraps more. One testimonial grew 61px that way.
 
 **`core/list-item` has no slot for an inline style.** One design tapers a funnel
 by giving each `<li>` its own `width`, and dropping the attribute flattened the
-taper — the narrowest row stopped wrapping. It travels as `dxaiStyle` now, like
+taper — the narrowest row stopped wrapping. It travels as `dxuiStyle` now, like
 every other style core cannot hold; `core/list` and `core/list-item` joined
-`DXAI_STYLED` in `assets/js/blocks-editor.js`.
+`DXUI_STYLED` in `assets/js/blocks-editor.js`.
 
 **Promoting an element changes which of the design's rules apply to it.**
 `.rv-obj-num` is a `<div>` the design sizes at 13px, and the same design says
@@ -632,10 +632,10 @@ checks had dropped.
 `bin/verify-cleanup.php` fixes it generically. Snapshot before, clean up after:
 
 ```php
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
-$dxai_snapshot = dxai_verify_snapshot();
+require DX_UI_DIR . 'bin/verify-cleanup.php';
+$dxui_snapshot = dxui_verify_snapshot();
 … the check …
-dxai_verify_cleanup( $dxai_snapshot );
+dxui_verify_cleanup( $dxui_snapshot );
 ```
 
 The snapshot is every post id **and every file under uploads**, so cleanup
@@ -653,7 +653,7 @@ script's job, where that is the stated intent. Scoping the sweep to files that
 appeared during the run gives the same result without the footgun.
 
 Measured: the full suite now leaves `page`, `attachment`, `wp_block`,
-`wp_template_part`, `wp_navigation`, `dxai_conversion` and `revision` counts
+`wp_template_part`, `wp_navigation`, `dxui_conversion` and `revision` counts
 unchanged, and 497 files before and after.
 
 ## One command after an import
@@ -682,13 +682,13 @@ Three things it took to make the report trustworthy:
 - **The design-to-ZIP pairing is recorded, not guessed.** A page's title comes
   from the design's own content, so a title-to-filename heuristic paired four of
   seven and reported the other three as *passing* while measuring nothing.
-  `purge-and-import-real-zips.php` now writes `_dxai_ui_source_zip` on the page
+  `purge-and-import-real-zips.php` now writes `_dx_ui_source_zip` on the page
   and `bin/import-manifest.php` hands it over.
 - **An unmeasured page fails.** "Skipped" printed green is how those three rode
   along unchecked.
 - **A PHP diagnostic counts only when it names a file inside this checkout.**
   Loading wp-admin includes under CLI makes core itself warn three times; the
-  first attempt matched on the folder name `DXAI-UI`, which is also what the
+  first attempt matched on the folder name `DX-UI`, which is also what the
   Local site is called, and blamed us for all of them. They are reported as
   `(+3 core warnings)` beside a passing check instead.
 
@@ -705,7 +705,7 @@ measuring a design against its own source.
 
 `src/Verification/Import_Audit.php` runs on the request that finishes an import
 — `Converter_Controller::save_pattern()`, right after the page is written. The
-result goes into the response and onto the page as `_dxai_ui_audit`, and
+result goes into the response and onto the page as `_dx_ui_audit`, and
 `ConvertWizard` shows it beside the buttons that invite someone to go and look.
 `bin/verify-audit.php` runs the same class over every generated page, so the CLI
 and the panel cannot disagree about whether a conversion is sound.
@@ -920,6 +920,6 @@ survived being checked by hand against both stylesheets.
 ## Related
 
 - Live ARA/Arcus audit notes: earlier section in git history / conversation 2026-09-04  
-- Engines: `.cursor/skills/dxai-ui/engines.md`  
+- Engines: `.cursor/skills/dx-ui/engines.md`  
 - Prompt: `src/Compiler/Prompt_Builder.php`  
 - Entry: `src/API/Converter_Controller.php` (`can_compile` → Source vs Chunked_Generator)

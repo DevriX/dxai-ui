@@ -2,17 +2,17 @@
 /**
  * Site chrome around converted page bodies (not stored in post_content).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Template_Part_Factory;
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Template_Part_Factory;
+use DX_UI\Theme\Blank_Template;
 
 /**
  * Converted pages store body sections only. The header and footer are
@@ -39,20 +39,20 @@ use DXAI_UI\Theme\Blank_Template;
  */
 final class Page_Chrome {
 
-	public const PART_KEY_META = '_dxai_ui_part_key';
-	public const MODE_META     = '_dxai_ui_chrome';
+	public const PART_KEY_META = '_dx_ui_part_key';
+	public const MODE_META     = '_dx_ui_chrome';
 
 	/**
 	 * On a page of a design's site whose own copy of the design's header or footer the import took out (adopt_site_chrome()): the
 	 * design's Home, whose header (from Menus) and footer (around Widgets) the page is drawn with, and, per area, the page's own
-	 * numbers for the design's interactive elements in it (dxai-dc-N for the page's dxai-dc-M), so its own state script and state
+	 * numbers for the design's interactive elements in it (dxui-dc-N for the page's dxui-dc-M), so its own state script and state
 	 * rules drive the menu as they drove its copy.
 	 */
-	public const SITE_CHROME_META = '_dxai_ui_site_chrome';
+	public const SITE_CHROME_META = '_dx_ui_site_chrome';
 
 	/** Where the page's own content is, between the header and footer added as it is drawn: DX Blank makes it the page's <main>. */
-	public const MAIN_OPEN  = '<!--dxai-ui:main-->';
-	public const MAIN_CLOSE = '<!--/dxai-ui:main-->';
+	public const MAIN_OPEN  = '<!--dx-ui:main-->';
+	public const MAIN_CLOSE = '<!--/dx-ui:main-->';
 
 	/** @var array<string, array{header: string, footer: string}> Home id@modified => its chrome markup. */
 	private static array $home_chrome = array();
@@ -64,7 +64,7 @@ final class Page_Chrome {
 		// Before do_blocks (9): inject block comments so they render inside Page_Scope (20).
 		add_filter( 'the_content', array( self::class, 'inject' ), 8 );
 		// What is added is part of the page for its styles: its dxs- and utility rules are written with the page's (Style_Rules).
-		add_filter( 'dxai_ui_style_rules_markup', array( self::class, 'rules_markup' ), 10, 2 );
+		add_filter( 'dx_ui_style_rules_markup', array( self::class, 'rules_markup' ), 10, 2 );
 	}
 
 	/**
@@ -181,7 +181,7 @@ final class Page_Chrome {
 		}
 		$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
 
-		return $scope > 0 || (string) get_post_meta( $post_id, '_dxai_ui_generated_page', true ) === '1';
+		return $scope > 0 || (string) get_post_meta( $post_id, '_dx_ui_generated_page', true ) === '1';
 	}
 
 	/**
@@ -352,14 +352,14 @@ final class Page_Chrome {
 		// A block with no saved markup (a picture drawn at render) is compared by its attributes: its self-closing delimiter stays.
 		$html = (string) preg_replace( '#<!--\s+/?wp:[a-z0-9/_-]+(?:\s+\{(?:(?!-->).)*\})?\s+-->#s', '', $markup );
 		$ids  = array();
-		if ( preg_match_all( '/\bdxai-dc-\d+\b/', $html, $m ) ) {
+		if ( preg_match_all( '/\bdxui-dc-\d+\b/', $html, $m ) ) {
 			foreach ( $m[0] as $id ) {
 				if ( ! in_array( $id, $ids, true ) ) {
 					$ids[] = $id;
 				}
 			}
 		}
-		$html = (string) preg_replace( '/\bdxai-dc-\d+\b/', 'dxai-dc-#', $html );
+		$html = (string) preg_replace( '/\bdxui-dc-\d+\b/', 'dxui-dc-#', $html );
 		$html = (string) preg_replace_callback(
 			'/\bclass="([^"]*)"/',
 			static function ( array $m ): string {
@@ -395,7 +395,7 @@ final class Page_Chrome {
 		if ( $map === array() ) {
 			return $html;
 		}
-		$out = preg_replace_callback( '/\bdxai-dc-\d+\b/', static fn( array $m ): string => $map[ $m[0] ] ?? $m[0], $html );
+		$out = preg_replace_callback( '/\bdxui-dc-\d+\b/', static fn( array $m ): string => $map[ $m[0] ] ?? $m[0], $html );
 
 		return is_string( $out ) ? $out : $html;
 	}
@@ -418,15 +418,15 @@ final class Page_Chrome {
 	 * (PCRE limits on a very large page) leaves the markup as it was, never empty.
 	 */
 	public static function strip_blocks( string $markup ): string {
-		$out = preg_replace( '/<!--\s*wp:dxai-ui\/site-header\b[^>]*\/-->\s*/i', '', $markup );
-		$out = is_string( $out ) ? preg_replace( '/<!--\s*wp:dxai-ui\/site-footer\b[^>]*\/-->\s*/i', '', $out ) : null;
+		$out = preg_replace( '/<!--\s*wp:dx-ui\/site-header\b[^>]*\/-->\s*/i', '', $markup );
+		$out = is_string( $out ) ? preg_replace( '/<!--\s*wp:dx-ui\/site-footer\b[^>]*\/-->\s*/i', '', $out ) : null;
 		$out = is_string( $out ) ? preg_replace_callback(
 			'/<!--\s*wp:template-part\s+(\{.*?\})\s*\/-->\s*/s',
 			static function ( array $m ): string {
 				$attrs = json_decode( $m[1], true );
 				$slug  = is_array( $attrs ) ? (string) ( $attrs['slug'] ?? '' ) : '';
 				$area  = is_array( $attrs ) ? (string) ( $attrs['area'] ?? '' ) : '';
-				if ( in_array( $area, array( 'header', 'footer' ), true ) || preg_match( '/^dxai-(?:header|footer)/', $slug ) ) {
+				if ( in_array( $area, array( 'header', 'footer' ), true ) || preg_match( '/^dxui-(?:header|footer)/', $slug ) ) {
 					return '';
 				}
 

@@ -13,16 +13,16 @@
  * recorded replies include ones that break each rule, so the rules are checked too: a rule that lets its bad reply through fails.
  * Makes the Home and the page as drafts and deletes them again. Exit code 1 when a case is judged otherwise than it must be.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Pages\Ai_Budget;
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Page_Planner;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Pages\Ai_Budget;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Page_Planner;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
 
 $live  = in_array( 'live', (array) ( $args ?? array() ), true );
 $dir   = dirname( __DIR__ ) . '/fixtures/ai-eval/';
@@ -45,8 +45,8 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 };
 
 /** The engine of the recorded replies: it answers what the case gives it. */
-if ( ! class_exists( 'Dxai_Eval_Engine' ) ) {
-	final class Dxai_Eval_Engine implements LLM_Provider_Interface {
+if ( ! class_exists( 'Dxui_Eval_Engine' ) ) {
+	final class Dxui_Eval_Engine implements LLM_Provider_Interface {
 		/** @var string What the next request is answered with. */
 		public static string $reply = '';
 
@@ -60,7 +60,7 @@ if ( ! class_exists( 'Dxai_Eval_Engine' ) ) {
 			return true;
 		}
 		public function generate( string $system, string $user, array $args = array() ): array|\WP_Error {
-			return new \WP_Error( 'dxai_eval', 'not used' );
+			return new \WP_Error( 'dxui_eval', 'not used' );
 		}
 		public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
 			return self::$reply;
@@ -76,9 +76,9 @@ if ( $live ) {
 	}
 	echo 'Live: ' . $engine->get_label() . " answers every case once.\n";
 } else {
-	$engine    = new Dxai_Eval_Engine();
+	$engine    = new Dxui_Eval_Engine();
 	$recorded  = static fn() => $engine;
-	add_filter( 'dxai_ui_copy_engine', $recorded );
+	add_filter( 'dx_ui_copy_engine', $recorded );
 	if ( Copy_Writer::engine() !== $engine ) {
 		echo "  FAIL  the recorded replies answer (another engine would)\n";
 		exit( 1 );
@@ -102,8 +102,8 @@ if ( ! is_int( $home_id ) || $home_id < 1 ) {
 }
 $made[] = $home_id;
 update_post_meta( $home_id, Page_Scope::META, $home_id );
-update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home_id, '_dxai_ui_css_url', 'dxai-ui/ai-eval.css' );
+update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home_id, '_dx_ui_css_url', 'dx-ui/ai-eval.css' );
 
 /**
  * The phone numbers (digits), e-mail addresses and links in a text.
@@ -174,7 +174,7 @@ foreach ( (array) $cases['planner'] as $case ) {
 		continue;
 	}
 	foreach ( (array) $case['replies'] as $reply ) {
-		Dxai_Eval_Engine::$reply = (string) $reply['reply'];
+		Dxui_Eval_Engine::$reply = (string) $reply['reply'];
 		$r      = Page_Planner::run( $engine, $ctx, new Ai_Budget( 100000 ) );
 		$took   = $r['plan'] !== null;
 		$reason = (string) $r['reason'];
@@ -212,7 +212,7 @@ foreach ( (array) $cases['copy'] as $case ) {
 	}
 	foreach ( (array) $case['replies'] as $reply ) {
 		if ( isset( $reply['raw'] ) ) {
-			Dxai_Eval_Engine::$reply = (string) $reply['raw'];
+			Dxui_Eval_Engine::$reply = (string) $reply['raw'];
 		} else {
 			$blocks = array();
 			foreach ( (array) $reply['blocks'] as $before => $after ) {
@@ -222,7 +222,7 @@ foreach ( (array) $cases['copy'] as $case ) {
 				}
 				$blocks[] = array( 'id' => $ids[ $before ], 'text' => (string) $after );
 			}
-			Dxai_Eval_Engine::$reply = (string) wp_json_encode( array( 'blocks' => $blocks, 'flags' => array() ) );
+			Dxui_Eval_Engine::$reply = (string) wp_json_encode( array( 'blocks' => $blocks, 'flags' => array() ) );
 		}
 		$p      = Copy_Writer::propose( $page_id, $override );
 		$broken = is_wp_error( $p ) ? array( array( 'rule' => 'answer', 'detail' => $p->get_error_message() ) ) : $judge_words( $p['blocks'], $facts );
@@ -233,7 +233,7 @@ foreach ( (array) $cases['copy'] as $case ) {
 }
 
 if ( isset( $recorded ) ) {
-	remove_filter( 'dxai_ui_copy_engine', $recorded );
+	remove_filter( 'dx_ui_copy_engine', $recorded );
 }
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

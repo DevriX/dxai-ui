@@ -2,16 +2,16 @@
 /**
  * Turn source SEO <title> strings into short WordPress page titles.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 final class Page_Title {
 
-	public const SEO_META = '_dxai_ui_seo_title';
+	public const SEO_META = '_dx_ui_seo_title';
 
 	/**
 	 * Design.com / scraped pages ship long browser titles
@@ -28,13 +28,13 @@ final class Page_Title {
 	 *
 	 * This used to return the LAST segment, the brand, for route pages too —
 	 * the brand preference belongs to for_home() only. Measured on the local
-	 * install before the fix: page 89306, post_name `dxai-icp-segmentation`
+	 * install before the fix: page 89306, post_name `dxui-icp-segmentation`
 	 * (ICP Activated (78).zip, src/routes/icp-segmentation.tsx, title "ICP
 	 * Segmentation | DevriX"), was saved with post_title "DevriX" — the same
 	 * name as the seven DevriX home pages, so the admin list and every menu
 	 * built from page titles showed the brand where the page should be, and
 	 * Structure_Repository::link_paths() registered `/devrix` and
-	 * `/dxai-devrix` as paths of that route page.
+	 * `/dxui-devrix` as paths of that route page.
 	 */
 	public static function for_page( string $source_title, string $fallback = 'Home' ): string {
 		return self::shorten( $source_title, $fallback, false );

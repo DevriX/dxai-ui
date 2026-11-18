@@ -2,14 +2,14 @@
 /**
  * A design's page in the editor without its wrapper groups.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Theme\Blank_Template;
 
 /**
  * A design converted to blocks keeps every element it had, and most of a design's elements are wrappers: Elementor puts a heading in a
@@ -20,7 +20,7 @@ use DXAI_UI\Theme\Blank_Template;
  *
  * So the page keeps them, and the editor does not show them. When the editor asks for a design's page (the REST API, `context=edit`),
  * a wrapper of one block — a Group or a Box with nothing of its own but its element, classes, design CSS, id, ARIA and data
- * attributes — is folded into the block it holds: its block comment and its two tags go in that block's `metadata.dxaiWrap`, outermost
+ * attributes — is folded into the block it holds: its block comment and its two tags go in that block's `metadata.dxuiWrap`, outermost
  * first, and the List View shows the heading, the image, the button. `metadata` is the attribute core gives every block (block names,
  * bindings) and keeps as it is, so the fold travels through the editor with the block: it moves, duplicates, copies and is deleted
  * with it. The canvas draws the wrappers around it again (blocks-editor.js), so the design's CSS reaches it as on the front end. When
@@ -33,19 +33,19 @@ use DXAI_UI\Theme\Blank_Template;
 final class Wrap_Fold {
 
 	/** Where a folded block keeps its wrappers, in its metadata. */
-	public const KEY = 'dxaiWrap';
+	public const KEY = 'dxuiWrap';
 
 	/** Where a section lifted to the top of the page keeps the page's frame around it, in its metadata (lift_frame()). */
-	public const FRAME = 'dxaiFrame';
+	public const FRAME = 'dxuiFrame';
 
 	/** The List View name the editor gave a section (name_sections()), in its metadata. */
-	public const NAMED = 'dxaiNamed';
+	public const NAMED = 'dxuiNamed';
 
 	/** The blocks a design's wrappers are. */
-	private const WRAPPERS = array( 'core/group', 'dxai-ui/box' );
+	private const WRAPPERS = array( 'core/group', 'dx-ui/box' );
 
 	/** What a wrapper may carry and still be folded: its element and what the design gave it, nothing the editor sets. */
-	private const STRUCTURAL = array( 'tagName', 'className', 'dxaiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxaiData', 'attrOrder', 'metadata' );
+	private const STRUCTURAL = array( 'tagName', 'className', 'dxuiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxuiData', 'attrOrder', 'metadata' );
 
 	public function register(): void {
 		add_filter( 'rest_prepare_page', array( self::class, 'prepare' ), 10, 3 );
@@ -63,7 +63,7 @@ final class Wrap_Fold {
 		 * @param bool $fold    Fold them (default true for a design's page).
 		 * @param int  $post_id The page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_fold_wrappers', Blank_Template::is_design_page( $post_id ), $post_id );
+		return (bool) apply_filters( 'dx_ui_fold_wrappers', Blank_Template::is_design_page( $post_id ), $post_id );
 	}
 
 	/**
@@ -141,7 +141,7 @@ final class Wrap_Fold {
 	 * <main>, its content box, the design's page root (Gemini Restoration: main > .page-content > .gem-138, its seven sections in it) —
 	 * so every section sat a level or three down, under a group that was not one. When the only group at the top of the page holds two
 	 * blocks or more and nothing else of its own, it is lifted: each block it holds stands at the top, carrying the wrapper (with the
-	 * ones folded into it) in `metadata.dxaiFrame`, and unfold() puts the blocks that follow one another under the same frame back in
+	 * ones folded into it) in `metadata.dxuiFrame`, and unfold() puts the blocks that follow one another under the same frame back in
 	 * it — with any block someone added among them or after them, which is what a section added to the page would have been.
 	 *
 	 * @param array<int, array<string, mixed>> $blocks
@@ -151,7 +151,7 @@ final class Wrap_Fold {
 		$at = null;
 		foreach ( $blocks as $i => $block ) {
 			$name = (string) ( $block['blockName'] ?? '' );
-			if ( in_array( $name, array( 'core/group', 'dxai-ui/box' ), true ) ) {
+			if ( in_array( $name, array( 'core/group', 'dx-ui/box' ), true ) ) {
 				if ( null !== $at ) {
 					return $blocks;
 				}
@@ -360,7 +360,7 @@ final class Wrap_Fold {
 			if ( ! empty( $block['attrs']['metadata']['name'] ) ) {
 				continue;
 			}
-			$name = \DXAI_UI\Blocks\Native\Section_Names::for_section( $block );
+			$name = \DX_UI\Blocks\Native\Section_Names::for_section( $block );
 			if ( $name === '' ) {
 				continue;
 			}

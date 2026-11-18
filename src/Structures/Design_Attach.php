@@ -14,19 +14,19 @@
  * rendering half the must-use runtime keeps booting, so such a page keeps its
  * look with the plugin deactivated or deleted as well.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 final class Design_Attach {
 
 	/** Post meta on an ordinary page: the design (its Home page id) to show; -1 for none; absent for automatic. */
-	public const META = '_dxai_ui_design';
+	public const META = '_dx_ui_design';
 
 	/** @var array<int, int> Post id => the page whose design it shows (0: none). */
 	private static array $cache = array();
@@ -92,7 +92,7 @@ final class Design_Attach {
 
 	private static function resolve( int $post_id ): int {
 		// A converted page carries its own design.
-		if ( Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' )['url'] !== '' ) {
+		if ( Upload_Paths::for_meta( $post_id, '_dx_ui_css_url' )['url'] !== '' ) {
 			return $post_id;
 		}
 		$chosen = (int) get_post_meta( $post_id, self::META, true );
@@ -111,8 +111,8 @@ final class Design_Attach {
 
 	/** Whether content holds blocks of an imported design (this plugin's blocks, or blocks with their CSS). */
 	public static function holds_design_blocks( string $content ): bool {
-		return str_contains( $content, '<!-- wp:dxai-ui/' )
-			|| str_contains( $content, '"dxaiCss"' )
+		return str_contains( $content, '<!-- wp:dx-ui/' )
+			|| str_contains( $content, '"dxuiCss"' )
 			|| preg_match( '/class="[^"]*\bdxs-[a-z0-9]+\b/', $content ) === 1;
 	}
 
@@ -121,9 +121,9 @@ final class Design_Attach {
 		return $page_id > 0
 			&& get_post_type( $page_id ) === 'page'
 			&& get_post_status( $page_id ) !== 'trash'
-			&& Upload_Paths::for_meta( $page_id, '_dxai_ui_css_url' )['url'] !== ''
+			&& Upload_Paths::for_meta( $page_id, '_dx_ui_css_url' )['url'] !== ''
 			&& (int) get_post_meta( $page_id, Page_Scope::META, true ) === $page_id
-			&& ! get_post_meta( $page_id, '_dxai_ui_from_live_menu', true );
+			&& ! get_post_meta( $page_id, '_dx_ui_from_live_menu', true );
 	}
 
 	/**
@@ -157,9 +157,9 @@ final class Design_Attach {
 			$wpdb->prepare(
 				"SELECT p.ID FROM {$wpdb->posts} p
 				 INNER JOIN {$wpdb->postmeta} s ON s.post_id = p.ID AND s.meta_key = %s AND CAST( s.meta_value AS UNSIGNED ) = p.ID
-				 INNER JOIN {$wpdb->postmeta} g ON g.post_id = p.ID AND g.meta_key = '_dxai_ui_generated_page' AND g.meta_value = '1'
+				 INNER JOIN {$wpdb->postmeta} g ON g.post_id = p.ID AND g.meta_key = '_dx_ui_generated_page' AND g.meta_value = '1'
 				 WHERE p.post_type = 'page' AND p.post_status IN ( 'publish', 'draft', 'private' )
-				 AND NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} l WHERE l.post_id = p.ID AND l.meta_key = '_dxai_ui_from_live_menu' )
+				 AND NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} l WHERE l.post_id = p.ID AND l.meta_key = '_dx_ui_from_live_menu' )
 				 ORDER BY p.post_modified DESC, p.ID DESC LIMIT %d",
 				Page_Scope::META,
 				max( 1, $limit )
@@ -176,18 +176,18 @@ final class Design_Attach {
 			return self::$default;
 		}
 		$designs = self::designs();
-		$option  = get_option( \DXAI_UI\Theme\Design_Theme_Json::OPTION );
+		$option  = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
 		$source  = is_array( $option ) ? (string) ( $option['source'] ?? '' ) : '';
 		$pick    = 0;
 		foreach ( $designs as $page ) {
-			if ( $source !== '' && (string) get_post_meta( $page->ID, '_dxai_ui_source_zip', true ) === $source ) {
+			if ( $source !== '' && (string) get_post_meta( $page->ID, '_dx_ui_source_zip', true ) === $source ) {
 				$pick = (int) $page->ID;
 				break;
 			}
 		}
 		if ( $pick === 0 ) {
 			// Without a brand: the design every design page belongs to, when there is just one design (one archive).
-			$archives = array_unique( array_map( static fn( $p ) => (string) get_post_meta( $p->ID, '_dxai_ui_source_zip', true ), $designs ) );
+			$archives = array_unique( array_map( static fn( $p ) => (string) get_post_meta( $p->ID, '_dx_ui_source_zip', true ), $designs ) );
 			if ( count( $archives ) === 1 && $designs !== array() ) {
 				$pick = (int) end( $designs )->ID; // the oldest page of it: its Home
 			}

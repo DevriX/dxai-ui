@@ -2,12 +2,12 @@
 /**
  * Normalize structure arrays from the LLM or a single markup blob.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Structure_Normalizer {
 
@@ -31,7 +31,7 @@ final class Structure_Normalizer {
 		if ( $out === array() && str_contains( $fallback_markup, '<!-- wp:' ) ) {
 			$out[] = array(
 				'type'             => self::guess_type( $fallback_markup ),
-				'title'            => $title !== '' ? $title : __( 'Section', 'dxai-ui' ),
+				'title'            => $title !== '' ? $title : __( 'Section', 'dx-ui' ),
 				'gutenberg_markup' => $fallback_markup,
 				'menu_items'       => array(),
 				'form_fields'      => array(),
@@ -108,8 +108,8 @@ final class Structure_Normalizer {
 		$hay = strtolower( $markup );
 		return match ( true ) {
 			str_contains( $hay, 'wp:query' ) || str_contains( $hay, 'wp:post-template' ) => 'blog',
-			str_contains( $hay, 'dxai-ui/form' ) || str_contains( $hay, '<form' ) => 'form',
-			str_contains( $hay, 'dxai-ui/slider' ) || str_contains( $hay, 'swiper' ) => 'slider',
+			str_contains( $hay, 'dx-ui/form' ) || str_contains( $hay, '<form' ) => 'form',
+			str_contains( $hay, 'dx-ui/slider' ) || str_contains( $hay, 'swiper' ) => 'slider',
 			str_contains( $hay, 'wp:cover' ) && ( str_contains( $hay, 'hero' ) || str_contains( $hay, 'min-h-screen' ) ) => 'hero',
 			str_contains( $hay, 'wp:navigation' ) && str_contains( $hay, 'site-title' ) => 'header',
 			str_contains( $hay, 'wp:navigation' ) => 'navigation',

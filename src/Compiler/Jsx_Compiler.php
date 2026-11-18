@@ -2,12 +2,12 @@
 /**
  * Compile Lovable/React TSX into HTML that keeps class names 1:1.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Jsx_Compiler {
 
@@ -36,7 +36,7 @@ final class Jsx_Compiler {
 	);
 
 	/** Sentinel for "this method is not implemented", since null is a valid result. */
-	private const UNHANDLED = '__dxai_unhandled__';
+	private const UNHANDLED = '__dxui_unhandled__';
 
 	/** List methods whose argument is an arrow callback — see call_callback_method(). */
 	private const CALLBACK_METHODS = array(
@@ -83,30 +83,30 @@ final class Jsx_Compiler {
 	);
 
 	/** Sentinel for an unbound class-name joiner, handled in call_value(). */
-	private const JOINER = '__dxai_class_joiner__';
+	private const JOINER = '__dxui_class_joiner__';
 
 	/** The same, for a joiner that merges. */
-	private const MERGER = '__dxai_class_merger__';
+	private const MERGER = '__dxui_class_merger__';
 
 	/** `Object.keys` / `.values` / `.entries` — see call_value(). */
-	private const OBJECT_KEYS    = '__dxai_object_keys__';
-	private const OBJECT_VALUES  = '__dxai_object_values__';
-	private const OBJECT_ENTRIES = '__dxai_object_entries__';
-	private const ARRAY_FROM     = '__dxai_array_from__';
-	private const ARRAY_IS_ARRAY = '__dxai_array_is_array__';
+	private const OBJECT_KEYS    = '__dxui_object_keys__';
+	private const OBJECT_VALUES  = '__dxui_object_values__';
+	private const OBJECT_ENTRIES = '__dxui_object_entries__';
+	private const ARRAY_FROM     = '__dxui_array_from__';
+	private const ARRAY_IS_ARRAY = '__dxui_array_is_array__';
 
 	/** `useId()`, which mints one stable id per call — see call_value(). */
-	private const USE_ID = '__dxai_use_id__';
+	private const USE_ID = '__dxui_use_id__';
 
 	/** `createContext()` and `useContext()` — see $context_values. */
-	private const CREATE_CONTEXT = '__dxai_create_context__';
-	private const USE_CONTEXT    = '__dxai_use_context__';
+	private const CREATE_CONTEXT = '__dxui_create_context__';
+	private const USE_CONTEXT    = '__dxui_use_context__';
 
 	/** Key marking a value as a React context object. */
-	private const CONTEXT = '__dxai_context__';
+	private const CONTEXT = '__dxui_context__';
 
 	/** Key marking a value as an icon component — see resolve_ident(). */
-	private const ICON = '__dxai_icon__';
+	private const ICON = '__dxui_icon__';
 
 	/**
 	 * A `cva()` result: the class-variance-authority recipe, held until called.
@@ -119,10 +119,10 @@ final class Jsx_Compiler {
 	 * `bg-primary`, no `h-10` for `size="lg"`, no `border-input` for
 	 * `variant="outline"`.
 	 */
-	private const CVA = '__dxai_cva__';
+	private const CVA = '__dxui_cva__';
 
 	/** A `new Date()` value, held so its getters can be answered. */
-	private const DATE = '__dxai_date__';
+	private const DATE = '__dxui_date__';
 
 	private string $src = '';
 
@@ -349,9 +349,9 @@ final class Jsx_Compiler {
 	 * real fidelity: ARA's mobile section nav projects
 	 * `activeId === s.id ? "bg-ara-green ..." : "..."`, but `setActiveId` is
 	 * called only from an IntersectionObserver, never from a handler. Marking
-	 * those seven chips pushed them out of `dxai-ui/link` and into
-	 * `dxai-ui/html`, because Html_To_Blocks keeps any element carrying a
-	 * `dxai-` marker as raw source — a block-structure change bought for a
+	 * those seven chips pushed them out of `dx-ui/link` and into
+	 * `dx-ui/html`, because Html_To_Blocks keeps any element carrying a
+	 * `dxui-` marker as raw source — a block-structure change bought for a
 	 * control that cannot be clicked.
 	 *
 	 * @var array<string, true>
@@ -362,7 +362,7 @@ final class Jsx_Compiler {
 	 * States a scroll listener drives, as `state => threshold in px`.
 	 *
 	 * Filled by scroll_driven(); read by attach_class_projection(), which emits
-	 * the `data-dxai-scroll` marker Motion_Runtime watches.
+	 * the `data-dxui-scroll` marker Motion_Runtime watches.
 	 *
 	 * @var array<string, float>
 	 */
@@ -373,7 +373,7 @@ final class Jsx_Compiler {
 	 *
 	 * `const dark = solid || open !== null` makes `dark` a state of its own,
 	 * true when any member is. Filled by derived_booleans(); emitted as
-	 * `data-dxai-any` beside the class projection that reads it.
+	 * `data-dxui-any` beside the class projection that reads it.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
@@ -620,8 +620,8 @@ final class Jsx_Compiler {
 	 * A projection naming a class no stylesheet matches is the same defect as
 	 * the 396 `aria-expanded` attributes this corpus emits against zero
 	 * `[aria-expanded]` selectors: correct-looking markup that moves no pixel.
-	 * Measured before this ran: 28 distinct classes in `data-dxai-on` /
-	 * `data-dxai-off`, 21 of them selectable — 75%.
+	 * Measured before this ran: 28 distinct classes in `data-dxui-on` /
+	 * `data-dxui-off`, 21 of them selectable — 75%.
 	 *
 	 * The seven that were not are all Tailwind utilities —
 	 * `pointer-events-auto`, `translate-y-0`, `opacity-100`, `rotate-180` — and
@@ -658,7 +658,7 @@ final class Jsx_Compiler {
 		foreach ( $sections as $section ) {
 			$all .= (string) ( $section['html'] ?? '' );
 		}
-		if ( ! str_contains( $all, 'data-dxai-on' ) && ! str_contains( $all, 'data-dxai-off' ) ) {
+		if ( ! str_contains( $all, 'data-dxui-on' ) && ! str_contains( $all, 'data-dxui-off' ) ) {
 			return $sections;
 		}
 
@@ -684,7 +684,7 @@ final class Jsx_Compiler {
 		 * a synthetic class attribute holding every candidate is enough.
 		 */
 		$compilable = array();
-		if ( preg_match_all( '/ data-dxai-(?:on|off)="([^"]*)"/', $all, $lists ) ) {
+		if ( preg_match_all( '/ data-dxui-(?:on|off)="([^"]*)"/', $all, $lists ) ) {
 			$candidates = array();
 			foreach ( $lists[1] as $chunk ) {
 				foreach ( preg_split( '/\s+/', (string) $chunk ) ?: array() as $token ) {
@@ -713,12 +713,12 @@ final class Jsx_Compiler {
 		$verdict = array();
 		foreach ( $sections as $index => $section ) {
 			$html = (string) ( $section['html'] ?? '' );
-			if ( ! str_contains( $html, 'data-dxai-' ) ) {
+			if ( ! str_contains( $html, 'data-dxui-' ) ) {
 				continue;
 			}
 
 			$html = (string) preg_replace_callback(
-				'/ data-dxai-(on|off)="([^"]*)"/',
+				'/ data-dxui-(on|off)="([^"]*)"/',
 				static function ( array $m ) use ( $corpus, $css, $compilable, &$dropped, &$verdict ): string {
 					$keep = array();
 					foreach ( preg_split( '/\s+/', $m[2] ) ?: array() as $token ) {
@@ -738,7 +738,7 @@ final class Jsx_Compiler {
 						$dropped[ $token ] = ( $dropped[ $token ] ?? 0 ) + 1;
 					}
 
-					return $keep === array() ? '' : ' data-dxai-' . $m[1] . '="' . implode( ' ', $keep ) . '"';
+					return $keep === array() ? '' : ' data-dxui-' . $m[1] . '="' . implode( ' ', $keep ) . '"';
 				},
 				$html
 			);
@@ -746,16 +746,16 @@ final class Jsx_Compiler {
 			// A marker with nothing left to project is the defect this method
 			// exists to remove, so it goes too — and with it the reason
 			// Html_To_Blocks would have sealed the element as raw source.
-			if ( str_contains( $html, 'dxai-cls-' ) ) {
+			if ( str_contains( $html, 'dxui-cls-' ) ) {
 				$html = (string) preg_replace_callback(
 					'/<[a-zA-Z][^\s>]*(?:"[^"]*"|\'[^\']*\'|[^>"\'])*>/',
 					static function ( array $m ): string {
 						$tag = $m[0];
-						if ( ! str_contains( $tag, 'dxai-cls-' ) || str_contains( $tag, 'data-dxai-on="' ) || str_contains( $tag, 'data-dxai-off="' ) ) {
+						if ( ! str_contains( $tag, 'dxui-cls-' ) || str_contains( $tag, 'data-dxui-on="' ) || str_contains( $tag, 'data-dxui-off="' ) ) {
 							return $tag;
 						}
 
-						return (string) preg_replace( '/\s*\bdxai-cls-[A-Za-z0-9_-]+/', '', $tag );
+						return (string) preg_replace( '/\s*\bdxui-cls-[A-Za-z0-9_-]+/', '', $tag );
 					},
 					$html
 				);
@@ -1133,11 +1133,11 @@ final class Jsx_Compiler {
 
 		$dom  = new \DOMDocument( '1.0', 'UTF-8' );
 		$prev = libxml_use_internal_errors( true );
-		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxai-page-root">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
+		$dom->loadHTML( '<?xml encoding="utf-8" ?><div id="dxui-page-root">' . $html . '</div>', LIBXML_HTML_NODEFDTD );
 		libxml_clear_errors();
 		libxml_use_internal_errors( $prev );
 
-		$root = $dom->getElementById( 'dxai-page-root' );
+		$root = $dom->getElementById( 'dxui-page-root' );
 		if ( ! $root instanceof \DOMElement ) {
 			return array();
 		}
@@ -1165,7 +1165,7 @@ final class Jsx_Compiler {
 				|| str_contains( $markup, '<svg' )
 				|| str_contains( $markup, '<i ' )
 				|| str_contains( $markup, 'data-lucide' )
-				|| str_contains( $markup, 'dxai-toggle-' );
+				|| str_contains( $markup, 'dxui-toggle-' );
 			if ( $textless && ! $visual ) {
 				continue;
 			}
@@ -1294,7 +1294,7 @@ final class Jsx_Compiler {
 			return $this->titleize( $id );
 		}
 
-		$component = trim( $node->getAttribute( 'data-dxai-component' ) );
+		$component = trim( $node->getAttribute( 'data-dxui-component' ) );
 		// A design's own `Section` is a band wrapper too: its heading names it.
 		if ( $component !== '' && ! preg_match( '/^(?:FadeUp|Reveal|Animate|Motion|Fade|Wrapper|Container)|^Section$/i', $component ) ) {
 			return $component;
@@ -1329,7 +1329,7 @@ final class Jsx_Compiler {
 			return 'form';
 		}
 
-		$component = trim( $node->getAttribute( 'data-dxai-component' ) );
+		$component = trim( $node->getAttribute( 'data-dxui-component' ) );
 		$hint      = Tsx_Section_Splitter::type_hint( $component !== '' ? $component : $name, $markup );
 		if ( $hint !== 'section' ) {
 			return $hint;
@@ -1365,7 +1365,7 @@ final class Jsx_Compiler {
 	}
 
 	private function strip_markers( string $html ): string {
-		return (string) preg_replace( '/\s*data-dxai-component="[^"]*"/', '', $html );
+		return (string) preg_replace( '/\s*data-dxui-component="[^"]*"/', '', $html );
 	}
 
 	/**
@@ -1586,7 +1586,7 @@ final class Jsx_Compiler {
 		// component's OWN props and nothing else. Passing only the merged scope
 		// swept the module globals into it, and `logoAsset` and `buttonVariants`
 		// were spread onto the markup as `logoasset=""` and
-		// `buttonvariants="__dxai_cva__"` attributes.
+		// `buttonvariants="__dxui_cva__"` attributes.
 		$scope   = $this->apply_default_props( $code, $scope, $props );
 		$code    = $this->select_branch( $code, $scope );
 		$scope   = $this->bind_prelude( $code, $scope );
@@ -1855,13 +1855,13 @@ final class Jsx_Compiler {
 		}
 
 		$out = array();
-		foreach ( Tsx_Section_Splitter::extract_components_public( (string) preg_replace( $declared, '$1DxaiOwn$2', $source ) ) as $fn ) {
+		foreach ( Tsx_Section_Splitter::extract_components_public( (string) preg_replace( $declared, '$1DxuiOwn$2', $source ) ) as $fn ) {
 			$name = (string) $fn['name'];
-			if ( ! str_starts_with( $name, 'DxaiOwn' ) ) {
+			if ( ! str_starts_with( $name, 'DxuiOwn' ) ) {
 				continue;
 			}
-			$name         = substr( $name, strlen( 'DxaiOwn' ) );
-			$out[ $name ] = (string) preg_replace( '/\bDxaiOwn' . $name . '\b/', $name, (string) $fn['code'], 1 );
+			$name         = substr( $name, strlen( 'DxuiOwn' ) );
+			$out[ $name ] = (string) preg_replace( '/\bDxuiOwn' . $name . '\b/', $name, (string) $fn['code'], 1 );
 		}
 
 		return $out;
@@ -2034,7 +2034,7 @@ final class Jsx_Compiler {
 			 *
 			 * and which came out permanently transparent because nothing here
 			 * read either line. Motion_Runtime has watched
-			 * `data-dxai-scroll="state:threshold"` since it was written and
+			 * `data-dxui-scroll="state:threshold"` since it was written and
 			 * Dc_Renderer already emits it for Claude Design exports; this is
 			 * the React path catching up.
 			 *
@@ -2338,7 +2338,7 @@ final class Jsx_Compiler {
 		$last   = max( 0, $total - $window['size'] );
 		$starts = range( max( 0, $index - $window['size'] + 1 ), min( $index, $last ) );
 		foreach ( $starts as $start ) {
-			$html = self::add_class( $html, 'dxai-on-' . $state . '--' . $start );
+			$html = self::add_class( $html, 'dxui-on-' . $state . '--' . $start );
 		}
 		if ( ! in_array( (int) ( $this->state_init[ $window['state'] ] ?? 0 ), $starts, true ) ) {
 			$html = self::add_class( $html, 'hidden' );
@@ -3549,9 +3549,9 @@ final class Jsx_Compiler {
 		 */
 		if ( $part === 'Root' && ( $package === 'accordion' || $package === 'collapsible' ) ) {
 			$type = $this->stringify_attr( $attrs['type'] ?? '' );
-			$out['data-dxai-accordion'] = $type !== '' ? $type : 'single';
+			$out['data-dxui-accordion'] = $type !== '' ? $type : 'single';
 			if ( ! empty( $attrs['collapsible'] ) || $type === 'multiple' ) {
-				$out['data-dxai-collapsible'] = 'true';
+				$out['data-dxui-collapsible'] = 'true';
 			}
 		}
 
@@ -3577,7 +3577,7 @@ final class Jsx_Compiler {
 
 		$active = $root['active'] ?? null;
 		$own    = $item !== null ? ( $item['value'] ?? null ) : $this->stringify_attr( $attrs['value'] ?? '' );
-		$base   = (string) ( $root['base'] ?? 'dxai-rx' );
+		$base   = (string) ( $root['base'] ?? 'dxui-rx' );
 		/*
 		 * The slot names the trigger/panel PAIR, and where it comes from
 		 * differs by component. An accordion wraps each pair in an `Item`, so
@@ -3635,12 +3635,12 @@ final class Jsx_Compiler {
 						if ( $delay !== '' ) {
 							// `delayDuration` is a prop Radix consumes, published
 							// under our name so the runtime can honour it.
-							$out['data-dxai-delay'] = $delay;
+							$out['data-dxui-delay'] = $delay;
 						}
 					} elseif ( $hover ) {
 						// A hover card links nothing in ARIA at all, so the
 						// pairing is ours.
-						$out['data-dxai-controls'] = $content_id;
+						$out['data-dxui-controls'] = $content_id;
 					} else {
 						$out['aria-expanded'] = 'false';
 						$out['aria-controls'] = $content_id;
@@ -3678,7 +3678,7 @@ final class Jsx_Compiler {
 						if ( $offset !== '' && $offset !== '0' ) {
 							// The gap between trigger and panel. A consumed
 							// prop, so under our name; the kit sets 4.
-							$out['data-dxai-offset'] = $offset;
+							$out['data-dxui-offset'] = $offset;
 						}
 					}
 					break;
@@ -3703,7 +3703,7 @@ final class Jsx_Compiler {
 					 * behaviour is a React handler. Our own attribute, named
 					 * as ours, is the only way the front end can know.
 					 */
-					$out['data-dxai-dismiss'] = 'true';
+					$out['data-dxui-dismiss'] = 'true';
 					break;
 			}
 
@@ -3824,7 +3824,7 @@ final class Jsx_Compiler {
 		}
 
 		++$this->ids;
-		$id            = 'dxai-id-' . $this->ids;
+		$id            = 'dxui-id-' . $this->ids;
 		$this->next_id = $id;
 		// The component's prelude binds whatever the value expression reads —
 		// for FormItem that is the `const id = React.useId()` just armed.
@@ -3941,7 +3941,7 @@ final class Jsx_Compiler {
 					'collapsible' => ! empty( $attrs['collapsible'] ),
 					// A tooltip's own `delayDuration`, for its trigger.
 					'delay'    => $this->stringify_attr( $attrs['delayDuration'] ?? '' ),
-					'base'     => 'dxai-rx-' . $this->radix_roots,
+					'base'     => 'dxui-rx-' . $this->radix_roots,
 					'slots'    => 0,
 				);
 			} else {
@@ -5247,7 +5247,7 @@ final class Jsx_Compiler {
 			$props['children'] = $children === '' ? '' : array( '__html' => $children );
 			$html  = $this->mark_component( $this->render_named( $name, $props ), $name );
 			if ( isset( $attrs['__toggle'] ) && is_string( $attrs['__toggle'] ) && $attrs['__toggle'] !== '' ) {
-				$html = self::add_class( $html, 'dxai-toggle-' . sanitize_html_class( $attrs['__toggle'] ) );
+				$html = self::add_class( $html, 'dxui-toggle-' . sanitize_html_class( $attrs['__toggle'] ) );
 			}
 			/*
 			 * Portal content is not inline content. Keep the markup — the
@@ -5393,31 +5393,31 @@ final class Jsx_Compiler {
 		$class = $this->stringify_attr( $attrs['className'] ?? $attrs['class'] ?? '' );
 		if ( isset( $attrs['__toggle'] ) && is_string( $attrs['__toggle'] ) && $attrs['__toggle'] !== '' ) {
 			$state = $attrs['__toggle'];
-			$class = trim( $class . ' dxai-toggle-' . sanitize_html_class( $state ) );
+			$class = trim( $class . ' dxui-toggle-' . sanitize_html_class( $state ) );
 			$attrs['className'] = $class;
 			// An arrow that steps a list to its next window does not open anything: it has no expanded state to announce.
 			if ( ! isset( $attrs['aria-expanded'] ) && ! isset( $attrs['ariaExpanded'] ) && ! isset( $attrs['__meta']['clamp'] ) ) {
 				$attrs['aria-expanded'] = $this->toggle_is_expanded( $state, $scope ) ? 'true' : 'false';
 			}
 			if ( isset( $attrs['__hover'] ) ) {
-				$attrs['data-dxai-hover'] = (string) $attrs['__hover'];
+				$attrs['data-dxui-hover'] = (string) $attrs['__hover'];
 				unset( $attrs['__hover'] );
 			} elseif ( str_contains( $state, 'open--' ) || preg_match( '/^open--/', $state ) === 1 ) {
 				// Mega-menu triggers: hover to open like the React source.
-				$attrs['data-dxai-hover'] = 'enter';
+				$attrs['data-dxui-hover'] = 'enter';
 			}
 			foreach ( is_array( $attrs['__meta'] ?? null ) ? $attrs['__meta'] : array() as $key => $meta ) {
-				$attrs[ 'data-dxai-' . $key ] = (string) $meta;
+				$attrs[ 'data-dxui-' . $key ] = (string) $meta;
 			}
 			unset( $attrs['__toggle'] );
 		}
 		unset( $attrs['__meta'] );
 		if ( isset( $attrs['__disabled'] ) ) {
-			$attrs['data-dxai-disabled'] = (string) $attrs['__disabled'];
+			$attrs['data-dxui-disabled'] = (string) $attrs['__disabled'];
 		}
 		unset( $attrs['__disabled'] );
 		[ $class, $attrs ] = $this->attach_class_projection( $class, $attrs );
-		// Accordion panels gated by `open ? "1fr" : "0fr"` need dxai-on-* hooks.
+		// Accordion panels gated by `open ? "1fr" : "0fr"` need dxui-on-* hooks.
 		$attrs = $this->attach_accordion_panel( $attrs, $scope );
 		if ( str_contains( $class, 'rv-hero-tab' ) ) {
 			foreach ( array_reverse( $scope, true ) as $value ) {
@@ -5429,9 +5429,9 @@ final class Jsx_Compiler {
 			}
 		}
 		if ( str_contains( $class, 'rv-mbp' ) && ! str_contains( $class, 'rv-mbp-' ) ) {
-			$attrs['data-dxai-method'] = '1';
+			$attrs['data-dxui-method'] = '1';
 			// Carried as a class too, so the hook survives block conversion.
-			$attrs['className'] = trim( $class . ' dxai-method' );
+			$attrs['className'] = trim( $class . ' dxui-method' );
 		}
 
 		$html_attrs = $this->html_attrs( $attrs, $tag );
@@ -5761,7 +5761,7 @@ final class Jsx_Compiler {
 	 *
 	 * `open ? "1fr" : "0fr"` opens on the true arm; ARA's strip is written the
 	 * other way round — `stripDismissed ? 0 : 44` — and a panel marked
-	 * `dxai-on-*` when the state actually hides it would vanish on the click
+	 * `dxui-on-*` when the state actually hides it would vanish on the click
 	 * meant to reveal it. Bigger wins; equal or unreadable declines to guess.
 	 */
 	private static function open_arm( mixed $on, mixed $off ): ?bool {
@@ -6046,9 +6046,9 @@ final class Jsx_Compiler {
 		$flag = sanitize_html_class( $state );
 		if ( $when_on ) {
 			$html = self::add_class( $html, 'hidden' );
-			$html = self::add_class( $html, 'dxai-on-' . $flag );
+			$html = self::add_class( $html, 'dxui-on-' . $flag );
 		} else {
-			$html = self::add_class( $html, 'dxai-off-' . $flag );
+			$html = self::add_class( $html, 'dxui-off-' . $flag );
 		}
 
 		return $html;
@@ -6099,7 +6099,7 @@ final class Jsx_Compiler {
 	 * `className` through block conversion while arbitrary `data-*` is dropped.
 	 */
 	private function mark_reveal( string $html ): string {
-		return self::add_class( $html, 'dxai-reveal' );
+		return self::add_class( $html, 'dxui-reveal' );
 	}
 
 	/**
@@ -6114,7 +6114,7 @@ final class Jsx_Compiler {
 	 * content is `fixed … z-50 grid …`, so `grid` would win and the panel would
 	 * still cover the page. An inline style outranks every class.
 	 *
-	 * The `data-dxai-portal` marker says why the element is hidden, so a later
+	 * The `data-dxui-portal` marker says why the element is hidden, so a later
 	 * pass — or a projected control — can find these deliberately.
 	 */
 	/**
@@ -6185,8 +6185,8 @@ final class Jsx_Compiler {
 			$updated = $updated . ' style="display:none">';
 		}
 
-		if ( ! str_contains( $updated, 'data-dxai-portal' ) ) {
-			$updated = (string) preg_replace( '/>$/', ' data-dxai-portal="1">', $updated, 1 );
+		if ( ! str_contains( $updated, 'data-dxui-portal' ) ) {
+			$updated = (string) preg_replace( '/>$/', ' data-dxui-portal="1">', $updated, 1 );
 		}
 
 		return $updated . substr( $html, strlen( $open ) );
@@ -6236,7 +6236,7 @@ final class Jsx_Compiler {
 		}
 		$at += strlen( $m[1] );
 
-		return substr( $html, 0, $at ) . ' data-dxai-component="' . esc_attr( $name ) . '"' . substr( $html, $at );
+		return substr( $html, 0, $at ) . ' data-dxui-component="' . esc_attr( $name ) . '"' . substr( $html, $at );
 	}
 
 	/**
@@ -6255,7 +6255,7 @@ final class Jsx_Compiler {
 		}
 		// The reveal hook rides in the class list: block conversion keeps
 		// `className` but discards arbitrary data attributes.
-		$out .= ' class="' . esc_attr( trim( $class . ' dxai-reveal' ) ) . '"';
+		$out .= ' class="' . esc_attr( trim( $class . ' dxui-reveal' ) ) . '"';
 		$out .= ' data-reveal="1">' . $children . '</section>';
 		return $out;
 	}
@@ -6405,7 +6405,7 @@ final class Jsx_Compiler {
 			 * A function is never an attribute. Render props are captured as
 			 * callables now (see RENDER_PROPS), and one that nothing called
 			 * would otherwise be stringified onto the element — the same way a
-			 * cva recipe once shipped as `buttonvariants="__dxai_cva__"`.
+			 * cva recipe once shipped as `buttonvariants="__dxui_cva__"`.
 			 */
 			if ( is_array( $value ) && ! empty( $value['__fn'] ) ) {
 				continue;
@@ -7100,7 +7100,7 @@ final class Jsx_Compiler {
 			 */
 			++$this->ids;
 
-			return 'dxai-id-' . $this->ids;
+			return 'dxui-id-' . $this->ids;
 		}
 		if ( $fn === self::CREATE_CONTEXT ) {
 			++$this->contexts;
@@ -7299,7 +7299,7 @@ final class Jsx_Compiler {
 		 */
 		if ( is_array( $left ) && isset( $left[ $method ] ) ) {
 			$member = $left[ $method ];
-			if ( is_string( $member ) && str_starts_with( $member, '__dxai_' ) ) {
+			if ( is_string( $member ) && str_starts_with( $member, '__dxui_' ) ) {
 				return $this->call_value( $member, $args, $scope );
 			}
 			if ( is_array( $member ) && ! empty( $member['__fn'] ) ) {
@@ -8418,19 +8418,19 @@ final class Jsx_Compiler {
 	 * Turn the class gates found in this element's className expression into
 	 * markup the runtime can read back.
 	 *
-	 * The marker is a class, `dxai-cls-<state>[--<value>]`, because a class is
+	 * The marker is a class, `dxui-cls-<state>[--<value>]`, because a class is
 	 * what already survives the block round trip — Html_To_Blocks keeps any
-	 * element carrying a `dxai-` marker or a `data-dxai-*` attribute as its
-	 * own source HTML. The class LISTS ride in `data-dxai-on` /
-	 * `data-dxai-off`, which a class name cannot hold: half of what these
+	 * element carrying a `dxui-` marker or a `data-dxui-*` attribute as its
+	 * own source HTML. The class LISTS ride in `data-dxui-on` /
+	 * `data-dxui-off`, which a class name cannot hold: half of what these
 	 * designs project is a Tailwind utility with characters
 	 * sanitize_html_class() strips — `grid-rows-[1fr]`, `text-ink/70`,
 	 * `md:text-2xl`. Both attributes are plain `data-*`, so
-	 * Html_To_Blocks::data_map() carries them in the `dxaiData` object the
+	 * Html_To_Blocks::data_map() carries them in the `dxuiData` object the
 	 * blocks already declare and both emitters already write; no block
 	 * attribute had to be added.
 	 *
-	 * Deliberately NOT named `dxai-on-*`: that marker means "hidden until the
+	 * Deliberately NOT named `dxui-on-*`: that marker means "hidden until the
 	 * state is on" to the existing runtime, which would hide every element a
 	 * class projection touched.
 	 *
@@ -8458,16 +8458,16 @@ final class Jsx_Compiler {
 			return array( $class, $attrs );
 		}
 
-		$class              = trim( $class . ' dxai-cls-' . $flag );
+		$class              = trim( $class . ' dxui-cls-' . $flag );
 		$attrs['className'] = $class;
 		// Written only when non-empty: text_attrs() drops an empty attribute,
 		// and a block whose stored markup carries one save() will not write
 		// opens invalid on the first edit.
 		if ( trim( $on ) !== '' ) {
-			$attrs['data-dxai-on'] = $on;
+			$attrs['data-dxui-on'] = $on;
 		}
 		if ( trim( $off ) !== '' ) {
-			$attrs['data-dxai-off'] = $off;
+			$attrs['data-dxui-off'] = $off;
 		}
 
 		/*
@@ -8475,16 +8475,16 @@ final class Jsx_Compiler {
 		 *
 		 * The class lists above say what to add and remove; these say when. A
 		 * derived boolean carries its members so the runtime can recompute it —
-		 * `data-dxai-any="dark:solid,open"`, true when any member is — and any
+		 * `data-dxui-any="dark:solid,open"`, true when any member is — and any
 		 * member the design drives from the scroll offset carries its threshold
-		 * in `data-dxai-scroll`, which Motion_Runtime has watched all along.
+		 * in `data-dxui-scroll`, which Motion_Runtime has watched all along.
 		 * Written on this element rather than the page root because this is the
 		 * element that survives to the page: the runtime reads both attributes
 		 * from anywhere inside it.
 		 */
 		$scrolled = array();
 		if ( isset( $this->derived[ $flag ] ) ) {
-			$attrs['data-dxai-any'] = $flag . ':' . implode( ',', $this->derived[ $flag ] );
+			$attrs['data-dxui-any'] = $flag . ':' . implode( ',', $this->derived[ $flag ] );
 			foreach ( $this->derived[ $flag ] as $member ) {
 				if ( isset( $this->scroll_states[ $member ] ) ) {
 					$scrolled[] = $member . ':' . self::px( $this->scroll_states[ $member ] );
@@ -8494,7 +8494,7 @@ final class Jsx_Compiler {
 			$scrolled[] = $flag . ':' . self::px( $this->scroll_states[ $flag ] );
 		}
 		if ( $scrolled !== array() ) {
-			$attrs['data-dxai-scroll'] = implode( ' ', $scrolled );
+			$attrs['data-dxui-scroll'] = implode( ' ', $scrolled );
 		}
 
 		return array( $class, $attrs );
@@ -8507,7 +8507,7 @@ final class Jsx_Compiler {
 
 	/**
 	 * Accordion answer panels use style ternaries, not `open && <div/>`.
-	 * Attach the same dxai-on-* hooks so Motion_Runtime can open/close them.
+	 * Attach the same dxui-on-* hooks so Motion_Runtime can open/close them.
 	 *
 	 * @param array<string, mixed> $attrs
 	 * @param array<string, mixed> $scope
@@ -8561,13 +8561,13 @@ final class Jsx_Compiler {
 			}
 		}
 
-		$class = trim( $class . ' dxai-' . ( $on_when ? 'on' : 'off' ) . '-' . $flag );
+		$class = trim( $class . ' dxui-' . ( $on_when ? 'on' : 'off' ) . '-' . $flag );
 		if ( ! $open ) {
 			$class = trim( $class . ' hidden' );
 		}
 		$attrs['className'] = $class;
 		if ( is_array( $style ) ) {
-			$attrs['data-dxai-accordion'] = '1';
+			$attrs['data-dxui-accordion'] = '1';
 			if ( isset( $style['gridTemplateRows'] ) || isset( $style['grid-template-rows'] ) ) {
 				$attrs['data-open-rows']  = '1fr';
 				$attrs['data-closed-rows'] = '0fr';

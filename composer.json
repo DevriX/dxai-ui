@@ -1,5 +1,5 @@
 {
-  "name": "devrix/dxai-ui",
+  "name": "devrix/dx-ui",
   "description": "Figma/Lovable to Gutenberg WordPress plugin",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "DXAI_UI\\": "src/"
+      "DX_UI\\": "src/"
     }
   },
   "config": {

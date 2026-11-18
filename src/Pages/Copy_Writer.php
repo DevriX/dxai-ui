@@ -2,17 +2,17 @@
 /**
  * The words of a page, rewritten from the copy prompt.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Compiler\Json_Repair;
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Structures\Live_Page_Restyler;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Compiler\Json_Repair;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Structures\Live_Page_Restyler;
+use DX_UI\Theme\Capabilities;
 
 /**
  * The team's prompt (Copy_Prompt) asks an AI to go through a page's visible text and give back new copy block by
@@ -31,13 +31,13 @@ use DXAI_UI\Theme\Capabilities;
 final class Copy_Writer {
 
 	/** On a page: its content before the copy was applied. */
-	public const BEFORE = '_dxai_ui_before_copy';
+	public const BEFORE = '_dx_ui_before_copy';
 
 	/** On a page: the hash of the content the copy wrote (a later edit is not undone). */
-	public const HASH = '_dxai_ui_copy_hash';
+	public const HASH = '_dx_ui_copy_hash';
 
 	/** On a page: the sections whose words stay as they are, by the hash of their words (section_hash()). */
-	public const KEEP = '_dxai_ui_copy_keep';
+	public const KEEP = '_dx_ui_copy_keep';
 
 	/** @var array<string, bool> The KEEP of the page being walked. */
 	private static array $keep = array();
@@ -50,9 +50,9 @@ final class Copy_Writer {
 		'core/heading'   => 'heading',
 		'core/paragraph' => 'paragraph',
 		'core/list-item' => 'list item',
-		'dxai-ui/text'   => 'text',
+		'dx-ui/text'   => 'text',
 		'core/button'    => 'button',
-		'dxai-ui/link'   => 'link',
+		'dx-ui/link'   => 'link',
 	);
 
 	/**
@@ -147,7 +147,7 @@ final class Copy_Writer {
 	public static function propose( int $page_id, ?array $override = null, bool $facts = false ): array|\WP_Error {
 		$items = self::inventory( $page_id );
 		if ( $items === array() ) {
-			return new \WP_Error( 'dxai_ui_copy_empty', __( 'This page has no text blocks to rewrite.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_copy_empty', __( 'This page has no text blocks to rewrite.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$engine = self::engine();
 		if ( is_wp_error( $engine ) ) {
@@ -205,7 +205,7 @@ final class Copy_Writer {
 		$content = (string) get_post_field( 'post_content', $page_id );
 		$items   = self::inventory( $page_id );
 		if ( $fingerprint === '' || self::fingerprint( $items ) !== $fingerprint ) {
-			return new \WP_Error( 'dxai_ui_copy_stale', __( 'The page changed since these words were written. Generate them again.', 'dxai-ui' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'dx_ui_copy_stale', __( 'The page changed since these words were written. Generate them again.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 		$blocks  = parse_blocks( $content );
 		$n       = 0;
@@ -244,7 +244,7 @@ final class Copy_Writer {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $new_content ), array( 'ID' => $page_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $page_id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $page_id );
+		\DX_UI\Blocks\Style_Rules::forget( $page_id );
 		update_post_meta( $page_id, self::HASH, md5( $new_content ) );
 
 		return array( 'applied' => $applied );
@@ -271,7 +271,7 @@ final class Copy_Writer {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $before ), array( 'ID' => $page_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $page_id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $page_id );
+		\DX_UI\Blocks\Style_Rules::forget( $page_id );
 		delete_post_meta( $page_id, self::BEFORE );
 		delete_post_meta( $page_id, self::HASH );
 
@@ -283,7 +283,7 @@ final class Copy_Writer {
 	 * another, which is how this is tested without asking a provider.
 	 */
 	public static function engine(): LLM_Provider_Interface|\WP_Error {
-		$given = apply_filters( 'dxai_ui_copy_engine', null );
+		$given = apply_filters( 'dx_ui_copy_engine', null );
 		if ( $given instanceof LLM_Provider_Interface ) {
 			return $given;
 		}
@@ -292,7 +292,7 @@ final class Copy_Writer {
 			return $engine;
 		}
 		if ( ! method_exists( $engine, 'complete' ) ) {
-			return new \WP_Error( 'dxai_ui_copy_engine', __( 'The AI engine chosen in Settings cannot answer in plain text.', 'dxai-ui' ), array( 'status' => 501 ) );
+			return new \WP_Error( 'dx_ui_copy_engine', __( 'The AI engine chosen in Settings cannot answer in plain text.', 'dx-ui' ), array( 'status' => 501 ) );
 		}
 
 		return $engine;
@@ -306,7 +306,7 @@ final class Copy_Writer {
 	public static function parse( string $text ): array|\WP_Error {
 		$data = Json_Repair::decode( $text );
 		if ( ! is_array( $data ) || ! isset( $data['blocks'] ) || ! is_array( $data['blocks'] ) ) {
-			return new \WP_Error( 'dxai_ui_copy_parse', __( 'The AI did not answer in the shape that was asked for, so nothing was changed.', 'dxai-ui' ), array( 'status' => 502 ) );
+			return new \WP_Error( 'dx_ui_copy_parse', __( 'The AI did not answer in the shape that was asked for, so nothing was changed.', 'dx-ui' ), array( 'status' => 502 ) );
 		}
 		$blocks = array();
 		foreach ( $data['blocks'] as $row ) {
@@ -472,7 +472,7 @@ final class Copy_Writer {
 	 * @return array<int, string>
 	 */
 	public static function locked_names(): array {
-		return array_values( array_unique( array( __( 'Related pages', 'dxai-ui' ), __( 'List of pages', 'dxai-ui' ), __( 'Contact details', 'dxai-ui' ), 'Related pages', 'List of pages', 'Contact details' ) ) );
+		return array_values( array_unique( array( __( 'Related pages', 'dx-ui' ), __( 'List of pages', 'dx-ui' ), __( 'Contact details', 'dx-ui' ), 'Related pages', 'List of pages', 'Contact details' ) ) );
 	}
 
 	/**
@@ -518,7 +518,7 @@ final class Copy_Writer {
 			return null;
 		}
 		$html = $content[0];
-		if ( $name === 'core/button' || $name === 'dxai-ui/link' ) {
+		if ( $name === 'core/button' || $name === 'dx-ui/link' ) {
 			if ( preg_match( '/^(.*?<a\b[^>]*>)(.*?)(<\/a>.*)$/s', $html, $m ) !== 1 ) {
 				return null;
 			}
@@ -568,7 +568,7 @@ final class Copy_Writer {
 		}
 		$b['innerContent'][0]  = $html;
 		$b['innerHTML']        = $html;
-		if ( ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && isset( $b['attrs']['text'] ) ) {
+		if ( ( $b['blockName'] ?? '' ) === 'dx-ui/link' && isset( $b['attrs']['text'] ) ) {
 			$b['attrs']['text'] = trim( html_entity_decode( wp_strip_all_tags( $new ), ENT_QUOTES, 'UTF-8' ) );
 		}
 

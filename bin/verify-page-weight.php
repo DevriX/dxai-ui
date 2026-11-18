@@ -19,13 +19,13 @@
  *
  * Makes the pages and deletes them, also when a check dies half-way. Exit code 1 when a check does not hold.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Page_Css_Trim;
-use DXAI_UI\Media\Lcp_Preload;
-use DXAI_UI\Media\Webp;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Compiler\Page_Css_Trim;
+use DX_UI\Media\Lcp_Preload;
+use DX_UI\Media\Webp;
+use DX_UI\Structures\Page_Scope;
 
 $fail   = 0;
 $pass   = 0;
@@ -49,19 +49,19 @@ $clean = static function () use ( &$made ): void {
 register_shutdown_function( $clean );
 
 echo "A page's stylesheet, what its markup can use\n";
-$markup = '<div class="hero-block gem-element-1"><p class="lead" id="intro" data-dxai-on-menu="dxai-dc-5--menu-on">Café – “x”</p><a href="#a" class="md:flex">a</a></div>';
+$markup = '<div class="hero-block gem-element-1"><p class="lead" id="intro" data-dxui-on-menu="dxui-dc-5--menu-on">Café – “x”</p><a href="#a" class="md:flex">a</a></div>';
 $tokens = Page_Css_Trim::tokens( $markup );
 $keeps  = static fn( string $css ): bool => trim( Page_Css_Trim::trim( $css, $tokens ) ) !== '';
 $expect( 'a rule whose classes are all in the markup stays', $keeps( '.hero-block .lead{color:red}' ) );
 $expect( 'a rule naming a class of another page goes', ! $keeps( '.hero-block .other-page{color:red}' ) );
 $expect( 'one selector of the list that can match keeps the rule', $keeps( '.nope, .lead{color:red}' ) );
-$expect( 'an id and an attribute name are required too', $keeps( '#intro[data-dxai-on-menu]{x:1}' ) && ! $keeps( '#outro{x:1}' ) && ! $keeps( '[data-missing]{x:1}' ) );
+$expect( 'an id and an attribute name are required too', $keeps( '#intro[data-dxui-on-menu]{x:1}' ) && ! $keeps( '#outro{x:1}' ) && ! $keeps( '[data-missing]{x:1}' ) );
 $expect( 'an attribute\'s value is not a class (`[href$=".pdf"]`)', $keeps( 'a[href$=".pdf"]{x:1}' ) );
 $expect( 'an escaped colon is part of the class (`.md\:flex`)', $keeps( '.md\:flex{display:flex}' ) && ! $keeps( '.lg\:flex{display:flex}' ) );
-$expect( 'a class the runtime adds (is-in, dxai-…, swiper-…) is taken as there', $keeps( '.lead.is-in{opacity:1}' ) && $keeps( '.dxai-toggle-x .lead{x:1}' ) );
-$expect( 'a word of a data attribute counts (the runtime\'s projection classes)', $keeps( '.dxai-dc-5--menu-on{x:1}' ) );
+$expect( 'a class the runtime adds (is-in, dxui-…, swiper-…) is taken as there', $keeps( '.lead.is-in{opacity:1}' ) && $keeps( '.dxui-toggle-x .lead{x:1}' ) );
+$expect( 'a word of a data attribute counts (the runtime\'s projection classes)', $keeps( '.dxui-dc-5--menu-on{x:1}' ) );
 $expect( ':where()/:is() need one of their selectors (a rule of another page: `:where(.dxg-page-about) .lead`)', ! $keeps( ':where(.dxg-page-about) .lead{x:1}' ) && $keeps( ':where(.dxg-page-about,.hero-block) .lead{x:1}' ) && $keeps( '.lead:is(p){x:1}' ) );
-$expect( ':not() asks nothing of the markup', $keeps( '.lead:not(.other-page){x:1}' ) && $keeps( 'p:where(:not(.dxai-not-p)){x:1}' ) );
+$expect( ':not() asks nothing of the markup', $keeps( '.lead:not(.other-page){x:1}' ) && $keeps( 'p:where(:not(.dxui-not-p)){x:1}' ) );
 $expect( 'pseudo-classes and pseudo-elements say when, not which', $keeps( '.lead:hover::before{x:1}' ) );
 $expect( 'a rule of tags only stays (html, body, *)', $keeps( 'body{margin:0}' ) && $keeps( '*,::before{box-sizing:border-box}' ) );
 $out = Page_Css_Trim::trim( '@media (max-width:767px){.other-page{x:1}}@media (max-width:767px){.lead{x:2}}@keyframes fadeInUp{from{opacity:0}to{opacity:1}}@supports (display:grid){.gone{x:1}}', $tokens );
@@ -73,7 +73,7 @@ $out   = Page_Css_Trim::trim( $faces, $tokens );
 $expect( 'a @font-face of a subset the page never shows goes (cyrillic, greek); ASCII\'s and a character the page shows (–) stay', ! str_contains( $out, 'U+0460' ) && ! str_contains( $out, 'U+1F00' ) && str_contains( $out, 'U+0000-00FF' ) && str_contains( $out, 'U+2010-2027' ), $out );
 $expect( 'a face declared twice is written once; a face with no range stays', 1 === substr_count( $out, 'font-family:I' ) );
 $expect( 'a character the CSS writes itself (`content:"\1F0A"`) keeps its subset', str_contains( Page_Css_Trim::trim( $faces . '.lead::before{content:"\1F0A"}', $tokens ), 'U+1F00-1FFF' ) );
-$block = '<!-- wp:dxai-ui/box {"className":"from-json","tagName":"section","html":"\u003cspan class=\u0022in-attr\u0022\u003e"} /-->';
+$block = '<!-- wp:dx-ui/box {"className":"from-json","tagName":"section","html":"\u003cspan class=\u0022in-attr\u0022\u003e"} /-->';
 $bt    = Page_Css_Trim::tokens( $block );
 $expect( 'a dynamic block\'s attributes count: its className, and the classes in HTML it holds, JSON-escaped', isset( $bt['class']['from-json'], $bt['class']['in-attr'] ), wp_json_encode( array_keys( $bt['class'] ) ) );
 $expect( 'the header and the footer of the design\'s source are read with the page', str_contains( Page_Css_Trim::chrome( '<header class="h">x</header><main class="m">y</main><footer class="f">z</footer>' ), 'class="f"' ) && ! str_contains( Page_Css_Trim::chrome( '<header class="h">x</header><main class="m">y</main><footer class="f">z</footer>' ), 'class="m"' ) );
@@ -84,9 +84,9 @@ $big   = str_repeat( '.other-page-rule{color:red}', 40000 ) . '.lead{color:blue}
 $whole = Page_Css_Trim::apply( '.other{x:1}.lead{x:2}', '', $markup, 1 );
 $expect( 'a sheet under a megabyte is left whole', '.other{x:1}.lead{x:2}' === $whole );
 $expect( 'a sheet over it keeps what the page uses', '.lead{color:blue}' === Page_Css_Trim::apply( $big, '', $markup, 1 ) );
-add_filter( 'dxai_ui_page_css_trim', '__return_false' );
+add_filter( 'dx_ui_page_css_trim', '__return_false' );
 $expect( 'the filter turns it off', $big === Page_Css_Trim::apply( $big, '', $markup, 1 ) );
-remove_filter( 'dxai_ui_page_css_trim', '__return_false' );
+remove_filter( 'dx_ui_page_css_trim', '__return_false' );
 $limit = ini_get( 'pcre.backtrack_limit' );
 ini_set( 'pcre.backtrack_limit', '5' ); // phpcs:ignore WordPress.PHP.IniSet.Risky -- a regex that gives up, on purpose.
 $gave_up = Page_Css_Trim::apply( $big, '', '<div class="' . str_repeat( 'x', 200 ) . ' lead">', 1 );
@@ -94,7 +94,7 @@ ini_set( 'pcre.backtrack_limit', (string) $limit ); // phpcs:ignore WordPress.PH
 $expect( 'a regex that gave up (pcre.backtrack_limit) keeps the whole sheet rather than emptying it', $big === $gave_up, (string) strlen( $gave_up ) );
 
 echo "\nThe picture the page opens on, from its stylesheet\n";
-$skip    = '<!-- wp:dxai-ui/link {"className":"skip-link screen-reader-text"} --><a class="wp-block-dxai-ui-link skip-link screen-reader-text" href="#content">Skip to content</a><!-- /wp:dxai-ui/link -->';
+$skip    = '<!-- wp:dx-ui/link {"className":"skip-link screen-reader-text"} --><a class="wp-block-dx-ui-link skip-link screen-reader-text" href="#content">Skip to content</a><!-- /wp:dx-ui/link -->';
 $section = static fn( string $cls, string $inner = '' ): string => '<!-- wp:group {"className":"' . $cls . '"} --><div class="wp-block-group ' . $cls . '"><!-- wp:paragraph --><p>' . $cls . $inner . '</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
 $wrap    = static fn( string $inner, string $cls = 'gem gem-138' ): string => '<!-- wp:group {"className":"' . $cls . '"} --><div class="wp-block-group ' . $cls . '">' . $inner . '</div><!-- /wp:group -->';
 $elementor = $skip . '<!-- wp:group {"tagName":"main","className":"site-main"} --><main class="wp-block-group site-main">' . $wrap( $section( 'e-con e-parent gem-element-hero hero-block' ) . $section( 'e-con e-parent gem-element-2' ) . $section( 'e-con e-parent gem-element-3' ) ) . '</main><!-- /wp:group -->';
@@ -103,7 +103,7 @@ $expect( 'past a skip link, inside a <main> and the page <div> it holds: the fir
 $own  = array( 'class' => array( 'wp-block-group', 'gem-element', 'e-con', 'e-parent', 'gem-element-hero', 'hero-block' ), 'id' => 'hero' );
 $rest = array_slice( $sections, 1 );
 $pics = static fn( string $css ): array => Lcp_Preload::from_sheet( $css, $own, $rest );
-$one  = $pics( '.dxai-ui .gem-138 .gem-element.gem-element-hero:not(.gem-motion-effects-element-type-background){background-color:#000;background-image:url("https://example.test/hero.jpg")}' );
+$one  = $pics( '.dx-ui .gem-138 .gem-element.gem-element-hero:not(.gem-motion-effects-element-type-background){background-color:#000;background-image:url("https://example.test/hero.jpg")}' );
 $expect( 'its own class\'s rule in the sheet (through :not()) names it, for every width', array( array( 'url' => 'https://example.test/hero.jpg', 'media' => '' ) ) === $one, wp_json_encode( $one ) );
 $sized = $pics( '.gem-element-hero{background-image:url(https://example.test/wide.jpg)}@media (max-width:1024px){.gem-element-hero{background-image:url(https://example.test/tablet.jpg)}}@media (max-width:767px){.gem-element-hero{background-image:url(https://example.test/phone.jpg)}}' );
 $expect( 'another picture per screen width, each with the range it shows in', array( array( 'url' => 'https://example.test/phone.jpg', 'media' => '(max-width: 767px)' ), array( 'url' => 'https://example.test/tablet.jpg', 'media' => '(min-width: 767.02px) and (max-width: 1024px)' ), array( 'url' => 'https://example.test/wide.jpg', 'media' => '(min-width: 1024.02px)' ) ) === $sized, wp_json_encode( $sized ) );
@@ -121,12 +121,12 @@ if ( ! $home || ! $hero || is_wp_error( $hero ) ) {
 $made[] = (int) $home;
 $made[] = (int) $hero;
 update_post_meta( (int) $hero, Page_Scope::META, (string) $home );
-$dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'dxai-ui';
+$dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'dx-ui';
 wp_mkdir_p( $dir );
 $sheet = $dir . '/page-weight-fixture-' . $hero . '.css';
 file_put_contents( $sheet, '.gem-138 .gem-element-hero{background-image:url(https://example.test/sheet-hero.jpg)}' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 register_shutdown_function( static fn() => is_file( $sheet ) && unlink( $sheet ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
-update_post_meta( (int) $hero, '_dxai_ui_css_url', 'dxai-ui/' . basename( $sheet ) );
+update_post_meta( (int) $hero, '_dx_ui_css_url', 'dx-ui/' . basename( $sheet ) );
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $hero ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
 $GLOBALS['post']         = get_post( $hero );
@@ -161,7 +161,7 @@ echo "\nA palette PNG as WebP\n";
 if ( ! function_exists( 'imagecreate' ) || ! function_exists( 'imagewebp' ) ) {
 	echo "  (no GD with WebP here: not checked)\n";
 } else {
-	$png = get_temp_dir() . 'dxai-page-weight-palette.png';
+	$png = get_temp_dir() . 'dxui-page-weight-palette.png';
 	$im  = imagecreatetruecolor( 400, 300 );
 	for ( $y = 0; $y < 300; $y++ ) {
 		for ( $x = 0; $x < 400; $x++ ) {
@@ -174,7 +174,7 @@ if ( ! function_exists( 'imagecreate' ) || ! function_exists( 'imagewebp' ) ) {
 	$made_webp = Webp::wanted( $png, 'team-photo.png' ) ? Webp::make( $png, 'team-photo.png' ) : null;
 	$is_webp   = is_array( $made_webp ) && is_file( $made_webp['path'] ) && 'RIFF' === (string) file_get_contents( $made_webp['path'], false, null, 0, 4 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	$expect( 'a palette PNG is written as WebP through a true-colour copy (GD writes none from a palette)', $is_webp && 'team-photo.webp' === $made_webp['filename'], wp_json_encode( $made_webp ) );
-	$expect( '…and the copy is not left in the temporary folder', array() === glob( get_temp_dir() . 'dxai-rgb-*.png' ) );
+	$expect( '…and the copy is not left in the temporary folder', array() === glob( get_temp_dir() . 'dxui-rgb-*.png' ) );
 	if ( is_array( $made_webp ) && is_file( $made_webp['path'] ) ) {
 		unlink( $made_webp['path'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
 	}

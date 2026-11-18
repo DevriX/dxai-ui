@@ -12,19 +12,19 @@ import { config, link } from '../router';
 export default function SiteScreen() {
 	const meta = config.theme
 		/* translators: %s: the active theme's name. */
-		? __( 'The site’s template and what the imports made for the whole site.', 'dxai-ui' ) + ' ' + __( 'Theme:', 'dxai-ui' ) + ' ' + config.theme
-		: __( 'The site’s template and what the imports made for the whole site.', 'dxai-ui' );
+		? __( 'The site’s template and what the imports made for the whole site.', 'dx-ui' ) + ' ' + __( 'Theme:', 'dx-ui' ) + ' ' + config.theme
+		: __( 'The site’s template and what the imports made for the whole site.', 'dx-ui' );
 	const actions = (
 		<>
-			{ link( 'menus' ) && <a className="components-button is-secondary" href={ link( 'menus' ) }>{ __( 'Menus', 'dxai-ui' ) }</a> }
-			{ link( 'widgets' ) && <a className="components-button is-secondary" href={ link( 'widgets' ) }>{ __( 'Widgets', 'dxai-ui' ) }</a> }
-			{ link( 'themes' ) && <a className="components-button is-secondary" href={ link( 'themes' ) }>{ __( 'Themes', 'dxai-ui' ) }</a> }
+			{ link( 'menus' ) && <a className="components-button is-secondary" href={ link( 'menus' ) }>{ __( 'Menus', 'dx-ui' ) }</a> }
+			{ link( 'widgets' ) && <a className="components-button is-secondary" href={ link( 'widgets' ) }>{ __( 'Widgets', 'dx-ui' ) }</a> }
+			{ link( 'themes' ) && <a className="components-button is-secondary" href={ link( 'themes' ) }>{ __( 'Themes', 'dx-ui' ) }</a> }
 		</>
 	);
 
 	return (
-		<Page title={ __( 'Site', 'dxai-ui' ) } meta={ meta } actions={ actions } className="dxai-page--site">
-			<div className="dxai-panel dxai-panel--stack">
+		<Page title={ __( 'Site', 'dx-ui' ) } meta={ meta } actions={ actions } className="dxui-page--site">
+			<div className="dxui-panel dxui-panel--stack">
 				<Template />
 				<Libraries />
 				<Collections />

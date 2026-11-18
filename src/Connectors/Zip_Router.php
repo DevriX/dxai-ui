@@ -2,12 +2,12 @@
 /**
  * Which connector a dropped archive belongs to.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
 /**
  * One sniffer, two callers.
@@ -105,8 +105,8 @@ final class Zip_Router {
 		$path = (string) ( $file['tmp_name'] ?? '' );
 		if ( $path === '' || ! is_readable( $path ) ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
-				__( 'Upload a design archive (.zip).', 'dxai-ui' ),
+				'dx_ui_zip',
+				__( 'Upload a design archive (.zip).', 'dx-ui' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -168,9 +168,9 @@ final class Zip_Router {
 	 */
 	public static function label( string $kind ): string {
 		return match ( $kind ) {
-			self::LOVABLE => __( 'React source (Lovable, Vite)', 'dxai-ui' ),
-			self::DC      => __( 'Claude Design export', 'dxai-ui' ),
-			default       => __( 'Generated design (HTML, Vue, Next.js)', 'dxai-ui' ),
+			self::LOVABLE => __( 'React source (Lovable, Vite)', 'dx-ui' ),
+			self::DC      => __( 'Claude Design export', 'dx-ui' ),
+			default       => __( 'Generated design (HTML, Vue, Next.js)', 'dx-ui' ),
 		};
 	}
 }

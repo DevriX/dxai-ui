@@ -9,19 +9,19 @@
  * `isCompact` (`s.wide === false && !s.mobile`). The compiler read ONE query for every key (the first), so `wide` followed the
  * mobile breakpoint, inverted, and was missing from the initial state: the page's first render used `wide` unset (shown) and every
  * other render `wide` false, and each element that reads it came out depending on every state of the component — the rating link
- * carried `dxai-off-open dxai-off-mSvc dxai-off-mArea … dxai-off-scrolled`, so it vanished, and the compact line appeared, the moment
+ * carried `dxui-off-open dxui-off-mSvc dxui-off-mArea … dxui-off-scrolled`, so it vanished, and the compact line appeared, the moment
  * a dropdown opened. Now each key follows the query its own `matchMedia()` was given (Dc_Script::mount_effects()) and each variant
  * is worked out at the width it stands for (Dc_Renderer: the mobile twin at the breakpoint, the primary one wider than any).
  *
  * Pure: nothing is written. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Dc_Renderer;
-use DXAI_UI\Compiler\Dc_Script;
+use DX_UI\Compiler\Dc_Renderer;
+use DX_UI\Compiler\Dc_Script;
 
 $fail   = 0;
 $pass   = 0;
@@ -82,11 +82,11 @@ $tag      = static function ( string $html, string $id ): string {
 $rating = $tag( $html, 'rating' );
 $expect( 'the layout switches at the first query\'s breakpoint', 860 === $renderer->breakpoint() && str_contains( $out['css'], '@media (max-width: 860px)' ), (string) $renderer->breakpoint() );
 $expect( 'the rating link is in the page', '' !== $rating );
-$expect( 'it depends on no state of the component: no dxai-on-/dxai-off- class (it vanished when a dropdown opened)', '' !== $rating && preg_match( '/dxai-(?:on|off)-/', $rating ) !== 1, $rating );
-$expect( 'it sits in the desktop row, so it needs no media mark of its own', '' !== $rating && ! str_contains( $rating, 'dxai-dc-' ), $rating );
+$expect( 'it depends on no state of the component: no dxui-on-/dxui-off- class (it vanished when a dropdown opened)', '' !== $rating && preg_match( '/dxui-(?:on|off)-/', $rating ) !== 1, $rating );
+$expect( 'it sits in the desktop row, so it needs no media mark of its own', '' !== $rating && ! str_contains( $rating, 'dxui-dc-' ), $rating );
 $expect( 'the compact line, true on neither side, is not drawn (it appeared when a dropdown opened)', ! str_contains( $html, 'Compact' ), substr( $html, 0, 300 ) );
-$expect( 'the other states keep their markers: the menu toggle and the step', str_contains( $html, 'dxai-toggle-open--a' ) && str_contains( $html, 'data-dxai-step="1"' ) );
-$expect( 'the mobile row is the mobile side\'s', str_contains( $tag( $html, 'mobile' ), 'dxai-dc-mobile' ) );
+$expect( 'the other states keep their markers: the menu toggle and the step', str_contains( $html, 'dxui-toggle-open--a' ) && str_contains( $html, 'data-dxui-step="1"' ) );
+$expect( 'the mobile row is the mobile side\'s', str_contains( $tag( $html, 'mobile' ), 'dxui-dc-mobile' ) );
 
 // A second query that is a min-width BELOW the first's breakpoint (a "tablet" state, true on both sides of it) is true in both variants.
 $tablet_mount = '		this.mq = window.matchMedia(\'(max-width: 860px)\');
@@ -97,7 +97,7 @@ $tablet_mount = '		this.mq = window.matchMedia(\'(max-width: 860px)\');
 		this.onTq(); this.tq.addEventListener(\'change\', this.onTq);';
 $tablet       = new Dc_Script( $component( $tablet_mount, '			isTablet: s.tablet !== false,' ), array() );
 $tablet_out   = ( new Dc_Renderer( $tablet ) )->render( '<header><sc-if value="{{ isTablet }}"><b id="tab">Tablet and up</b></sc-if></header>' );
-$expect( 'a state that is true on both sides of the breakpoint (a min-width below it) is drawn without a media mark', str_contains( $tablet_out['html'], 'Tablet and up' ) && ! str_contains( $tag( $tablet_out['html'], 'tab' ), 'dxai-dc-' ), $tablet_out['html'] );
+$expect( 'a state that is true on both sides of the breakpoint (a min-width below it) is drawn without a media mark', str_contains( $tablet_out['html'], 'Tablet and up' ) && ! str_contains( $tag( $tablet_out['html'], 'tab' ), 'dxui-dc-' ), $tablet_out['html'] );
 
 echo "\nOne query, as before\n";
 $one_mount = '		this.mq = window.matchMedia(\'(max-width: 900px)\');
@@ -106,7 +106,7 @@ $one_mount = '		this.mq = window.matchMedia(\'(max-width: 900px)\');
 $one       = new Dc_Script( $component( $one_mount, '			isWide: true, isCompact: false,' ), array() );
 $one_r     = new Dc_Renderer( $one );
 $one_out   = $one_r->render( $template );
-$expect( 'a component with one query: its breakpoint, its mobile key, its marks', 900 === $one_r->breakpoint() && '(max-width: 900px)' === ( $one->mount_effects()['media']['mobile'] ?? '' ) && str_contains( $tag( $one_out['html'], 'mobile' ), 'dxai-dc-mobile' ) && str_contains( $one_out['html'], 'id="rating"' ) );
+$expect( 'a component with one query: its breakpoint, its mobile key, its marks', 900 === $one_r->breakpoint() && '(max-width: 900px)' === ( $one->mount_effects()['media']['mobile'] ?? '' ) && str_contains( $tag( $one_out['html'], 'mobile' ), 'dxui-dc-mobile' ) && str_contains( $one_out['html'], 'id="rating"' ) );
 
 $min_only = new Dc_Script( $component( '		this.mq = window.matchMedia(\'(min-width: 901px)\');
 		this.onMq = () => { this.setState({ desktop: this.mq.matches }); };

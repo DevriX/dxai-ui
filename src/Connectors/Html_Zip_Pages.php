@@ -2,12 +2,12 @@
 /**
  * Derive WP page routes from static HTML files in a design ZIP.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
 final class Html_Zip_Pages {
 

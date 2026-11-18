@@ -7,14 +7,14 @@
  *
  * Run: wp eval-file bin/verify-audit.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$audit = new DXAI_UI\Verification\Import_Audit();
+$audit = new DX_UI\Verification\Import_Audit();
 $pages = get_posts(
 	array(
 		'post_type'      => 'page',
@@ -24,7 +24,7 @@ $pages = get_posts(
 		'order'          => 'ASC',
 		'meta_query'     => array(
 			array(
-				'key'     => '_dxai_ui_generated_page',
+				'key'     => '_dx_ui_generated_page',
 				'compare' => 'EXISTS',
 			),
 		),

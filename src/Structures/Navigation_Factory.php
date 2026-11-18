@@ -2,14 +2,14 @@
 /**
  * Create or update wp_navigation + classic menus.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
-use DXAI_UI\Connectors\Site_Origin;
+use DX_UI\Connectors\Site_Origin;
 
 final class Navigation_Factory {
 
@@ -43,14 +43,14 @@ final class Navigation_Factory {
 	 * never carries it, so only items with it are ever deleted. Same key the
 	 * plugin already uses for its other generated posts.
 	 */
-	private const ITEM_META = '_dxai_ui_generated';
+	private const ITEM_META = '_dx_ui_generated';
 
 	/**
 	 * Term meta on a classic menu whose items carry ITEM_META. Without it the
 	 * menu predates the marks, and an unmarked item is not evidence of a
 	 * person (see classic_menu()).
 	 */
-	private const MENU_MARKED_META = '_dxai_ui_items_marked';
+	private const MENU_MARKED_META = '_dx_ui_items_marked';
 
 	/**
 	 * Post meta on a wp_navigation post: [target key, label] of every link
@@ -60,7 +60,7 @@ final class Navigation_Factory {
 	 * to their own page, would then read as generated and be removed. The
 	 * record lives outside the markup, where copying a block cannot forge it.
 	 */
-	private const NAV_TARGETS_META = '_dxai_ui_nav_targets';
+	private const NAV_TARGETS_META = '_dx_ui_nav_targets';
 
 	/**
 	 * Post meta on a classic menu item: the design's value of each field this
@@ -70,7 +70,7 @@ final class Navigation_Factory {
 	 * and follows the design; one that holds something else is a person's
 	 * and is kept.
 	 */
-	private const WRITTEN_META = '_dxai_ui_written';
+	private const WRITTEN_META = '_dx_ui_written';
 
 	/** Item fields a design may set, and the wp_update_nav_menu_item() argument for each. */
 	private const DESIGN_FIELDS = array(
@@ -83,14 +83,14 @@ final class Navigation_Factory {
 	/**
 	 * Term meta on a classic menu header_menu() wrote: the header location it
 	 * fills. The header's primary menu is named like the one save() has
-	 * always written for the old `dxai-primary` location ("{title} Primary"),
+	 * always written for the old `dxui-primary` location ("{title} Primary"),
 	 * so the menu a person already edited is the one the header reads. From
 	 * then on the header install is its only writer: save() and save_tree()
 	 * still write their wp_navigation post but leave this menu alone. Two
 	 * writers with different item trees — the compiler's flat menu_items, the
 	 * header's three levels — would each trash the items the other added.
 	 */
-	public const HEADER_MENU_META = '_dxai_ui_header_location';
+	public const HEADER_MENU_META = '_dx_ui_header_location';
 
 	/**
 	 * Term meta on a header menu: the design identity (label path, see
@@ -99,7 +99,7 @@ final class Navigation_Factory {
 	 * removed by a person — Appearance > Menus deletes a removed item outright
 	 * — and a re-import leaves it out instead of adding it back.
 	 */
-	private const HEADER_ITEMS_META = '_dxai_ui_header_items';
+	private const HEADER_ITEMS_META = '_dx_ui_header_items';
 
 	/**
 	 * Term meta on a classic menu, post meta on a wp_navigation post: the
@@ -118,15 +118,15 @@ final class Navigation_Factory {
 	 * see legacy_owner()); a menu of the same name that belongs to another
 	 * design is left alone and the design gets a menu of its own.
 	 */
-	public const OWNER_META = '_dxai_ui_owner';
+	public const OWNER_META = '_dx_ui_owner';
 
 	/**
 	 * Term meta on a classic menu save() wrote, post meta on a wp_navigation
-	 * post: which of the design's menus it is (`dxai-primary`,
-	 * `dxai-footer`), so an owner's menus are told apart without their names.
+	 * post: which of the design's menus it is (`dxui-primary`,
+	 * `dxui-footer`), so an owner's menus are told apart without their names.
 	 * A header menu says its location in HEADER_MENU_META instead.
 	 */
-	private const ROLE_META = '_dxai_ui_menu_role';
+	private const ROLE_META = '_dx_ui_menu_role';
 
 	/** The design identity menus are written for (OWNER_META); '' for none. */
 	private string $owner;
@@ -144,7 +144,7 @@ final class Navigation_Factory {
 	private bool $adopt_legacy;
 
 	/**
-	 * @param string $owner        The design identity (the home page's `_dxai_ui_page_key`); '' keeps
+	 * @param string $owner        The design identity (the home page's `_dx_ui_page_key`); '' keeps
 	 *                             the old by-name behaviour for callers that have none.
 	 * @param string $label        What tells the design apart in a menu name (its archive, without .zip).
 	 * @param bool   $adopt_legacy Whether an unowned legacy menu found by name may be taken.
@@ -167,7 +167,7 @@ final class Navigation_Factory {
 	 * @param string $archive Its archive, when the page carries no key (then `archive#`).
 	 */
 	public static function owner_key( int $page_id, string $archive = '' ): string {
-		$key = $page_id > 0 ? (string) get_post_meta( $page_id, '_dxai_ui_page_key', true ) : '';
+		$key = $page_id > 0 ? (string) get_post_meta( $page_id, '_dx_ui_page_key', true ) : '';
 		if ( $key !== '' ) {
 			return $key;
 		}
@@ -188,8 +188,8 @@ final class Navigation_Factory {
 		$names = (array) $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options} WHERE option_name = %s OR option_name LIKE %s",
-				'dxai_ui_site_header',
-				$wpdb->esc_like( 'dxai_ui_site_header_' ) . '%'
+				'dx_ui_site_header',
+				$wpdb->esc_like( 'dx_ui_site_header_' ) . '%'
 			)
 		);
 		foreach ( $names as $name ) {
@@ -348,7 +348,7 @@ final class Navigation_Factory {
 				'posts_per_page' => 5,
 				'orderby'        => 'ID',
 				'order'          => 'ASC',
-				'meta_key'       => '_dxai_ui_generated',
+				'meta_key'       => '_dx_ui_generated',
 				'meta_value'     => '1',
 			)
 		);
@@ -402,7 +402,7 @@ final class Navigation_Factory {
 	/**
 	 * @param array<int, array{label:string, url:string, children?:array, page_id?:int}> $items
 	 */
-	public function save( string $title, array $items, string $location = 'dxai-primary' ): int {
+	public function save( string $title, array $items, string $location = 'dxui-primary' ): int {
 		// No items from the design: the one Home link the navigation has always
 		// fallen back to. Not given to the classic menu, as before.
 		$wanted = array_filter( $items, 'is_array' ) !== array()
@@ -450,7 +450,7 @@ final class Navigation_Factory {
 			 * backslash and the person's block would be corrupted.
 			 */
 			'post_content' => wp_slash( $merged['content'] ),
-			'meta_input'   => array( '_dxai_ui_generated' => '1' ),
+			'meta_input'   => array( '_dx_ui_generated' => '1' ),
 		);
 
 		if ( $post instanceof \WP_Post ) {
@@ -471,8 +471,8 @@ final class Navigation_Factory {
 			update_post_meta( $id, self::ROLE_META, $location );
 			/*
 			 * A classic menu only for a location something registered, which
-			 * is what renders one. The plugin's own `dxai-primary` and
-			 * `dxai-footer` are not registered any more: the header is written
+			 * is what renders one. The plugin's own `dxui-primary` and
+			 * `dxui-footer` are not registered any more: the header is written
 			 * into its own menus by Header_Menus::install() (header_menu()),
 			 * the footer is widgets. The "{title} Primary" / "{title} Footer"
 			 * classic menus this used to keep in step rendered nowhere, and
@@ -494,7 +494,7 @@ final class Navigation_Factory {
 	 * @param array<int, array{label?:string, url?:string, children?:array}> $tree
 	 * @param array<string, int>                                               $path_map path => page_id
 	 */
-	public function save_tree( string $title, array $tree, array $path_map, string $location = 'dxai-primary', string $origin = '' ): int {
+	public function save_tree( string $title, array $tree, array $path_map, string $location = 'dxui-primary', string $origin = '' ): int {
 		$items = $this->bind_pages( $tree, $path_map, $origin );
 
 		return $this->save( $title, $items, $location );
@@ -1071,7 +1071,7 @@ final class Navigation_Factory {
 
 		/*
 		 * Assigned only to a location something registered. The plugin's own
-		 * `dxai-primary` / `dxai-footer` are no longer registered (the header
+		 * `dxui-primary` / `dxui-footer` are no longer registered (the header
 		 * reads `primary-navigation`, the footer is widgets), and an import
 		 * that still names them must not leave assignments to locations
 		 * nothing renders — nor take over the header's.

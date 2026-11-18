@@ -2,7 +2,7 @@
 /**
  * How much of every converted page is raw HTML nobody can edit.
  *
- * A `dxai-ui/html` block is the converter's fallback: markup it could not turn
+ * A `dx-ui/html` block is the converter's fallback: markup it could not turn
  * into a block, stored verbatim. The page renders exactly right — that is the
  * point of the fallback — so neither the geometry oracle nor block validity can
  * see it, and it cost nothing measurable until the goal became editable
@@ -10,20 +10,20 @@
  * and nobody had a number for it.
  *
  * This suite is that number. It reports on every run, and fails only when
- * `DXAI_ISLAND_BUDGET` names a ceiling and the count is above it — a suite
+ * `DXUI_ISLAND_BUDGET` names a ceiling and the count is above it — a suite
  * that fails for a known reason stops being read, and the count is not zero
  * yet. Set the ceiling once it is, and it only goes down from there.
  *
  * Run: wp eval-file bin/verify-islands.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$ceiling = getenv( 'DXAI_ISLAND_BUDGET' );
+$ceiling = getenv( 'DXUI_ISLAND_BUDGET' );
 $budget  = $ceiling === false || $ceiling === '' ? null : (int) $ceiling;
 
 $pages = get_posts(
@@ -41,7 +41,7 @@ $blocks  = 0;
 
 foreach ( $pages as $id ) {
 	$content = (string) get_post_field( 'post_content', (int) $id );
-	if ( ! str_contains( $content, '<!-- wp:dxai-ui/' ) && ! str_contains( $content, '<!-- wp:group' ) ) {
+	if ( ! str_contains( $content, '<!-- wp:dx-ui/' ) && ! str_contains( $content, '<!-- wp:group' ) ) {
 		// Not a converted page: a site's own pages must not move the number.
 		continue;
 	}
@@ -49,7 +49,7 @@ foreach ( $pages as $id ) {
 	 * Opening delimiters only. A block comment pair matches the same name
 	 * twice, and counting both reported every figure at double.
 	 */
-	$mine  = preg_match_all( '/<!-- wp:dxai-ui\/html\b/', $content );
+	$mine  = preg_match_all( '/<!-- wp:dx-ui\/html\b/', $content );
 	$total = preg_match_all( '/<!-- wp:[a-z0-9-]+\/?[a-z0-9-]*/', $content );
 
 	$islands += (int) $mine;

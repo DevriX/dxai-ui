@@ -46,14 +46,14 @@ foreach ( $chars as $label => $value ) {
 	$rows[ $label ] = array(
 		'value'    => $value,
 		'saveHTML' => $m[1] ?? '(?)',
-		'attr'     => \DXAI_UI\Compiler\Html_To_Blocks::attr_value( $value ),
+		'attr'     => \DX_UI\Compiler\Html_To_Blocks::attr_value( $value ),
 		'esc_attr' => esc_attr( $value ),
 		'esc_html' => esc_html( $value ),
 	);
 }
 
 file_put_contents(
-	sys_get_temp_dir() . '/dxai-escaper-parity.json',
+	sys_get_temp_dir() . '/dxui-escaper-parity.json',
 	(string) wp_json_encode( $rows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE )
 );
 

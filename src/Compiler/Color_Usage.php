@@ -2,15 +2,15 @@
 /**
  * Where a design uses each of its colours.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * Before a design's colours follow a theme (Theme_Binding), two things have to
@@ -21,7 +21,7 @@ use DXAI_UI\Support\Upload_Paths;
  * Read from what the design stores, not from a browser (hosting has none):
  *  - the block tree of the design's pages, pages built from them and its
  *    template parts: each block's own colours come from its classes
- *    (`text-dxai-T`, `bg-dxai-T`), its CSS (`dxaiCss`, `dxaiInner`) and core
+ *    (`text-dxui-T`, `bg-dxui-T`), its CSS (`dxuiCss`, `dxuiInner`) and core
  *    colour presets (`textColor`, `backgroundColor`); a text block's pair is
  *    its text colour (its own, or inherited) on the nearest background up the
  *    tree (the design root's when none);
@@ -34,19 +34,19 @@ use DXAI_UI\Support\Upload_Paths;
  * And which selectors paint each background, with the text colour they paint
  * it under (`painters`, keyed `<bg>|<fg>`): the importer's class, a core
  * preset's class, the Colour panel's inline style, a block's own rule class
- * (its `dxaiCss`, or an inline run of it). A text colour the theme's
+ * (its `dxuiCss`, or an inline run of it). A text colour the theme's
  * background no longer reads on can then be given another one there alone
  * (Theme_Binding's scoped channels).
  */
 final class Color_Usage {
 
-	public const META = '_dxai_ui_color_usage';
+	public const META = '_dx_ui_color_usage';
 
 	/** @var array<string, true> The design's translucent tokens (a text on one is read against what is under it). */
 	private static array $translucent = array();
 
 	/** Blocks whose own content is text a person reads. */
-	private const TEXT_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'core/button', 'core/quote', 'core/pullquote', 'dxai-ui/text', 'dxai-ui/link', 'dxai-ui/button' );
+	private const TEXT_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'core/button', 'core/quote', 'core/pullquote', 'dx-ui/text', 'dx-ui/link', 'dx-ui/button' );
 
 	/**
 	 * Scan a design (its Home id) and store the result on the Home.
@@ -119,13 +119,13 @@ final class Color_Usage {
 			)
 		);
 		$ids = array_merge( $ids, array_map( 'intval', $pages ) );
-		$key = \DXAI_UI\Chrome\Page_Chrome::part_key_for( $home );
+		$key = \DX_UI\Chrome\Page_Chrome::part_key_for( $home );
 		if ( $key !== '' ) {
 			foreach ( array( 'header', 'footer' ) as $area ) {
 				$parts = get_posts(
 					array(
 						'post_type'      => 'wp_template_part',
-						'name'           => \DXAI_UI\Structures\Template_Part_Factory::slug( $area, $key ),
+						'name'           => \DX_UI\Structures\Template_Part_Factory::slug( $area, $key ),
 						'post_status'    => array( 'publish', 'draft', 'private' ),
 						'posts_per_page' => 1,
 						'fields'         => 'ids',
@@ -210,20 +210,20 @@ final class Color_Usage {
 		if ( preg_match( '/^\s*<[a-z][a-z0-9]*\b[^>]*\bclass="([^"]*)"/i', (string) ( $block['innerHTML'] ?? '' ), $m ) ) {
 			$class .= ' ' . $m[1];
 		}
-		if ( preg_match( '/(?:^|\s)text-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
+		if ( preg_match( '/(?:^|\s)text-dxui-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
 			$out['fg'] = $m[1];
 		}
 		foreach ( preg_split( '/\s+/', trim( $class ) ) ?: array() as $name ) {
-			if ( str_starts_with( $name, 'text-' ) && ! str_starts_with( $name, 'text-dxai-' ) && preg_match( '/(?:^|;)\s*color\s*:/', Utility_Classes::base_declarations( $name ) ) === 1 ) {
+			if ( str_starts_with( $name, 'text-' ) && ! str_starts_with( $name, 'text-dxui-' ) && preg_match( '/(?:^|;)\s*color\s*:/', Utility_Classes::base_declarations( $name ) ) === 1 ) {
 				$out['other'] = true;
 			}
 		}
 		if ( is_string( $attrs['style']['color']['text'] ?? null ) && self::token_in( $attrs['style']['color']['text'] ) === '' ) {
 			$out['other'] = true;
 		}
-		if ( preg_match( '/(?:^|\s)bg-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
+		if ( preg_match( '/(?:^|\s)bg-dxui-([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s|$)/', $class, $m ) ) {
 			$out['bg']      = $m[1];
-			$out['painter'] = '.bg-dxai-' . $m[1];
+			$out['painter'] = '.bg-dxui-' . $m[1];
 		}
 		// Older imports carry the design's colours as core presets named after its tokens.
 		if ( $out['fg'] === '' && is_string( $attrs['textColor'] ?? null ) ) {
@@ -241,9 +241,9 @@ final class Color_Usage {
 		// lives there, and the text in it was read against the section under the card.
 		if ( $out['bg'] === '' && is_string( $attrs['style']['color']['background'] ?? null ) ) {
 			$out['bg']      = self::token_in( $attrs['style']['color']['background'] );
-			$out['painter'] = $out['bg'] !== '' ? '[style*="background-color:var(--dxai-' . $out['bg'] . ')"]' : '';
+			$out['painter'] = $out['bg'] !== '' ? '[style*="background-color:var(--dxui-' . $out['bg'] . ')"]' : '';
 		}
-		$own_css = self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) );
+		$own_css = self::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) );
 		if ( isset( $own_css['color'] ) && self::token_in( $own_css['color'] ) === '' && ! preg_match( '/^\s*(inherit|currentcolor)\s*$/i', (string) $own_css['color'] ) ) {
 			$out['other'] = true;
 		}
@@ -257,13 +257,13 @@ final class Color_Usage {
 			} elseif ( str_starts_with( $prop, 'background' ) ) {
 				if ( $out['bg'] === '' ) {
 					$out['bg']      = $token;
-					$out['painter'] = '.' . Style_Hoister::css_class( (string) $attrs['dxaiCss'] );
+					$out['painter'] = '.' . Style_Hoister::css_class( (string) $attrs['dxuiCss'] );
 				}
 			} elseif ( str_starts_with( $prop, 'border' ) || str_starts_with( $prop, 'outline' ) ) {
 				$out['border'][] = $token;
 			}
 		}
-		foreach ( is_array( $attrs['dxaiInner'] ?? null ) ? $attrs['dxaiInner'] : array() as $run_class => $css ) {
+		foreach ( is_array( $attrs['dxuiInner'] ?? null ) ? $attrs['dxuiInner'] : array() as $run_class => $css ) {
 			$decls  = self::declarations( (string) $css );
 			$token  = isset( $decls['color'] ) ? self::token_in( $decls['color'] ) : '';
 			$ground = '';
@@ -293,7 +293,7 @@ final class Color_Usage {
 		$palette = get_post_meta( $home, Token_Styles::META, true );
 		$out     = array();
 		foreach ( is_array( $palette['colors'] ?? null ) ? $palette['colors'] : array() as $row ) {
-			$rgba = \DXAI_UI\Support\Color_Math::parse( (string) ( $row['value'] ?? '' ) );
+			$rgba = \DX_UI\Support\Color_Math::parse( (string) ( $row['value'] ?? '' ) );
 			if ( is_array( $row ) && $rgba !== null && $rgba[3] < 1 ) {
 				$out[ (string) ( $row['slug'] ?? '' ) ] = true;
 			}
@@ -303,7 +303,7 @@ final class Color_Usage {
 	}
 
 	/**
-	 * The design root's own text and background: the rule for `.dxai-ui.dxai-ui--{scope}` itself in its sheet.
+	 * The design root's own text and background: the rule for `.dx-ui.dx-ui--{scope}` itself in its sheet.
 	 *
 	 * @return array{fg:string, bg:string}
 	 */
@@ -313,7 +313,7 @@ final class Color_Usage {
 			'bg' => '',
 		);
 		$css   = self::sheet( $home );
-		$scope = preg_quote( '.dxai-ui.dxai-ui--' . $home, '/' );
+		$scope = preg_quote( '.dx-ui.dx-ui--' . $home, '/' );
 		if ( preg_match_all( '/(?:^|[}\s])' . $scope . '\s*\{([^{}]*)\}/', $css, $m ) ) {
 			foreach ( $m[1] as $body ) {
 				$decls = self::declarations( $body );
@@ -350,7 +350,7 @@ final class Color_Usage {
 				if ( $channel === '' ) {
 					continue;
 				}
-				if ( preg_match_all( '/var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)(?:--fg)?\s*[,)]/', $value, $vars ) ) {
+				if ( preg_match_all( '/var\(\s*--dxui-([a-z0-9]+(?:-[a-z0-9]+)*)(?:--fg)?\s*[,)]/', $value, $vars ) ) {
 					foreach ( array_unique( $vars[1] ) as $slug ) {
 						self::bump( $usage, $slug, $channel );
 					}
@@ -363,7 +363,7 @@ final class Color_Usage {
 	 * The background a block paints of its own, as the design wrote it: `token:<slug>` for a design token, `preset:<slug>` for a colour
 	 * preset of the site, a literal colour, `image` for a gradient or a picture, or '' when it paints none (what is under it shows).
 	 *
-	 * Read like scan() reads a block (the importer's `bg-dxai-*` classes, the Colour panel, `dxaiCss`), and also from the design's
+	 * Read like scan() reads a block (the importer's `bg-dxui-*` classes, the Colour panel, `dxuiCss`), and also from the design's
 	 * own class names, which a Tailwind design keeps (`bg-flame`): the rule the design's sheet has for the class names the token.
 	 * For a converter that has to judge one colour against what lies behind it (Native\Button), not for the scan: the pairs it
 	 * stores stay what they were.
@@ -382,13 +382,13 @@ final class Color_Usage {
 		if ( is_string( $custom ) && $custom !== '' ) {
 			return self::painted( $custom );
 		}
-		$own = self::painted_by( self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) );
+		$own = self::painted_by( self::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) );
 		if ( $own !== '' ) {
 			return $own;
 		}
 		$classes = preg_split( '/\s+/', trim( (string) ( $attrs['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
 		foreach ( $classes as $class ) {
-			if ( preg_match( '/^bg-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $class, $m ) === 1 ) {
+			if ( preg_match( '/^bg-dxui-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $class, $m ) === 1 ) {
 				return 'token:' . $m[1];
 			}
 		}
@@ -446,7 +446,7 @@ final class Color_Usage {
 			return 'preset:' . strtolower( $m[1] );
 		}
 
-		return \DXAI_UI\Support\Color_Math::parse( $value ) !== null ? $value : '';
+		return \DX_UI\Support\Color_Math::parse( $value ) !== null ? $value : '';
 	}
 
 	/** @var array<int, string> The design sheets background_of() has read in this request, by Home. */
@@ -463,7 +463,7 @@ final class Color_Usage {
 
 	/** The design's own stylesheet, as written ('' when it cannot be read). */
 	private static function sheet( int $home ): string {
-		$path = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'];
+		$path = Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'];
 
 		return $path !== '' && is_readable( $path ) ? (string) file_get_contents( $path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	}
@@ -488,7 +488,7 @@ final class Color_Usage {
 
 	/** The first design token a value reads ('' when none). */
 	private static function token_in( string $value ): string {
-		return preg_match( '/var\(\s*--dxai-([a-z0-9]+(?:-[a-z0-9]+)*?)(?:--fg)?\s*[,)]/', $value, $m ) ? $m[1] : '';
+		return preg_match( '/var\(\s*--dxui-([a-z0-9]+(?:-[a-z0-9]+)*?)(?:--fg)?\s*[,)]/', $value, $m ) ? $m[1] : '';
 	}
 
 	/** @param array<string, mixed> $usage */

@@ -7,15 +7,15 @@
  * Compiles a pasted component, saves a synced pattern from markup and reads the library back, then removes what it made
  * (bin/verify-cleanup.php). Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
-$dxai_snapshot = dxai_verify_snapshot();
+require DX_UI_DIR . 'bin/verify-cleanup.php';
+$dxui_snapshot = dxui_verify_snapshot();
 
 $fail   = 0;
 $pass   = 0;
@@ -34,7 +34,7 @@ if ( $user instanceof WP_User && ! is_user_logged_in() ) {
 	wp_set_current_user( $user->ID );
 }
 
-$process = new WP_REST_Request( 'POST', '/dxai-ui/v1/process-source' );
+$process = new WP_REST_Request( 'POST', '/dx-ui/v1/process-source' );
 $process->set_param( 'source_type', 'lovable-code' );
 $process->set_param( 'code', 'export default function Hero(){ return <section className="flex flex-col gap-6 p-8 bg-slate-900 text-white"><h1 className="text-4xl font-bold">Hello</h1></section>; }' );
 $process->set_param( 'title', 'Hero snippet' );
@@ -50,8 +50,8 @@ $markup = '<!-- wp:group {"className":"flex flex-col gap-6 p-8 bg-slate-900 text
 	. '<!-- /wp:heading -->'
 	. '</div><!-- /wp:group -->';
 
-$save = new WP_REST_Request( 'POST', '/dxai-ui/v1/save-pattern' );
-$save->set_param( 'block_title', 'DXAI UI Smoke Pattern' );
+$save = new WP_REST_Request( 'POST', '/dx-ui/v1/save-pattern' );
+$save->set_param( 'block_title', 'DXUI UI Smoke Pattern' );
 $save->set_param( 'gutenberg_markup', $markup );
 $save->set_param( 'custom_css', '' );
 $save->set_param( 'synced', true );
@@ -60,11 +60,11 @@ $pattern = $saved->get_data()['pattern'] ?? array();
 $expect( 'markup is saved as a synced pattern (save-pattern answers 200 with an id)', 200 === $saved->get_status() && (int) ( $pattern['id'] ?? 0 ) > 0, 'status ' . $saved->get_status() . ', id ' . (int) ( $pattern['id'] ?? 0 ) );
 $expect( 'the pattern carries the compiled styles of its classes', ! empty( $pattern['css'] ) );
 
-$list = rest_do_request( new WP_REST_Request( 'GET', '/dxai-ui/v1/patterns' ) );
+$list = rest_do_request( new WP_REST_Request( 'GET', '/dx-ui/v1/patterns' ) );
 $ids  = array_map( static fn( $p ) => (int) ( $p['id'] ?? 0 ), (array) ( $list->get_data()['patterns'] ?? array() ) );
 $expect( 'and the library lists it', in_array( (int) ( $pattern['id'] ?? 0 ), $ids, true ), count( $ids ) . ' patterns listed' );
 
-dxai_verify_cleanup( $dxai_snapshot );
+dxui_verify_cleanup( $dxui_snapshot );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

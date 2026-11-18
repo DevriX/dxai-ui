@@ -3,7 +3,7 @@
  * Compile the GTM Strategy Hub TSX without an LLM.
  * Run: wp eval-file bin/verify-lovable-compile.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,8 +15,8 @@ if ( $user instanceof WP_User ) {
 	wp_set_current_user( $user->ID );
 }
 
-$tsx = DXAI_UI_DIR . '.tmp-gtm-hub/src/routes/index.tsx';
-$css = DXAI_UI_DIR . '.tmp-gtm-hub/src/styles.css';
+$tsx = DX_UI_DIR . '.tmp-gtm-hub/src/routes/index.tsx';
+$css = DX_UI_DIR . '.tmp-gtm-hub/src/styles.css';
 if ( ! is_readable( $tsx ) ) {
 	echo "SKIP: the GTM Strategy Hub project is not unpacked in .tmp-gtm-hub on this machine\n";
 	exit( 77 );
@@ -24,14 +24,14 @@ if ( ! is_readable( $tsx ) ) {
 
 $code    = (string) file_get_contents( $tsx ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 $styles  = is_readable( $css ) ? (string) file_get_contents( $css ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-$order   = DXAI_UI\Compiler\Tsx_Section_Splitter::page_order( $code );
+$order   = DX_UI\Compiler\Tsx_Section_Splitter::page_order( $code );
 echo 'page_order=' . implode( ',', $order ) . PHP_EOL;
 
 $harvest = array(
 	'images' => array(),
 	'css'    => $styles,
 );
-$sections = ( new DXAI_UI\Compiler\Jsx_Compiler() )->compile_file( $code, $harvest );
+$sections = ( new DX_UI\Compiler\Jsx_Compiler() )->compile_file( $code, $harvest );
 echo 'section_count=' . count( $sections ) . PHP_EOL;
 foreach ( $sections as $section ) {
 	$html = (string) ( $section['html'] ?? '' );
@@ -57,14 +57,14 @@ echo 'mbp_rows=' . substr_count( $blob, 'rv-mbp-row' ) . PHP_EOL;
 echo 'has_quote=' . ( str_contains( $blob, 'We\'d approved' ) || str_contains( $blob, 'We’d approved' ) || str_contains( $blob, 'approved the GTM plan' ) ? '1' : '0' ) . PHP_EOL;
 echo 'has_logo_img=' . ( str_contains( $blob, '<img' ) ? '1' : '0' ) . PHP_EOL;
 echo 'hero_tabs=' . substr_count( $blob, 'rv-hero-tab' ) . PHP_EOL;
-echo 'prepared_css=' . strlen( DXAI_UI\Compiler\Design_Css::prepare( $styles ) ) . PHP_EOL;
+echo 'prepared_css=' . strlen( DX_UI\Compiler\Design_Css::prepare( $styles ) ) . PHP_EOL;
 echo 'has_hero_full=' . ( str_contains( $blob, 'rv-hero-full' ) ? '1' : '0' ) . PHP_EOL;
 echo 'has_hero_v3=' . ( str_contains( $blob, 'rv-hero-v3' ) ? '1' : '0' ) . PHP_EOL;
 
-$scoped = DXAI_UI\Compiler\Css_Scoper::apply( '.dxai-ui.dxai-ui--1', '.rv-root { background: #1a1a1a; } .rv-root > section { margin: 0; }' );
-echo 'scope_root_self=' . ( str_contains( $scoped, '.dxai-ui.dxai-ui--1.rv-root { background' ) ? '1' : '0' ) . PHP_EOL;
-echo 'scope_root_child=' . ( str_contains( $scoped, '.dxai-ui.dxai-ui--1.rv-root > section' ) ? '1' : '0' ) . PHP_EOL;
-echo 'scope_no_desc=' . ( str_contains( $scoped, '.dxai-ui.dxai-ui--1 .rv-root' ) ? '0' : '1' ) . PHP_EOL;
+$scoped = DX_UI\Compiler\Css_Scoper::apply( '.dx-ui.dx-ui--1', '.rv-root { background: #1a1a1a; } .rv-root > section { margin: 0; }' );
+echo 'scope_root_self=' . ( str_contains( $scoped, '.dx-ui.dx-ui--1.rv-root { background' ) ? '1' : '0' ) . PHP_EOL;
+echo 'scope_root_child=' . ( str_contains( $scoped, '.dx-ui.dx-ui--1.rv-root > section' ) ? '1' : '0' ) . PHP_EOL;
+echo 'scope_no_desc=' . ( str_contains( $scoped, '.dx-ui.dx-ui--1 .rv-root' ) ? '0' : '1' ) . PHP_EOL;
 
 foreach ( $sections as $section ) {
 	if ( in_array( $section['name'], array( 'WhoFor', 'Testimonial', 'Footer', 'Method', 'StickyCTA' ), true ) ) {

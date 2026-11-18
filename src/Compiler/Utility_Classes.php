@@ -2,15 +2,15 @@
 /**
  * The DevriX theme utility classes, and the plugin's own, for converted blocks.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A block's own CSS written as utility classes where one matches.
@@ -31,8 +31,8 @@ use DXAI_UI\Support\Upload_Paths;
  * `text-14-5` next to `text-14`, `max-w-1280px` next to `max-w-1200px`,
  * `h-58px`, `rounded-5px`, `lh-1-6`, `ls-0-02em`, `whitespace-nowrap`,
  * `cursor-pointer`, `list-style-none`, and for the design's colour tokens
- * `text-dxai-ink` (color:var(--dxai-ink)), `bg-dxai-neutral-100` and
- * `shadow-dxai-shadow-2`. Same contract as the theme's — one class, one
+ * `text-dxui-ink` (color:var(--dxui-ink)), `bg-dxui-neutral-100` and
+ * `shadow-dxui-shadow-2`. Same contract as the theme's — one class, one
  * declaration, `!important` — and each value family sits in the cascade right
  * after the theme's own base rules of that family, before its responsive
  * variants, so `md-text-18` still overrides `text-14-5` from 768px up as it
@@ -55,7 +55,7 @@ use DXAI_UI\Support\Upload_Paths;
  *  - Every `!important` declaration of any specificity beats both — the
  *    inline style because important beats it, the utility by specificity.
  *    The design's own are scoped by Css_Scoper (every selector starts
- *    `.dxai-ui.dxai-ui--{id}`, so each is at least (0,2,0); checked
+ *    `.dx-ui.dx-ui--{id}`, so each is at least (0,2,0); checked
  *    2026-09-25 against Semper Dry's pattern-93057.css — 161 in 95 rules,
  *    the lowest (0,3,0) — and every design sheet on the development site:
  *    1,514 files, 113,868 declarations, none outside a scope); core's own
@@ -113,7 +113,7 @@ use DXAI_UI\Support\Upload_Paths;
  *       Style_Hoister::design_names()), and Style_Rules writes no utility
  *       rule for a name the page's design defines or uses;
  *     - around it: every rule is scoped with `:where(…)` (SCOPE, no added
- *       specificity) to a design scope element (`.dxai-ui` — a converted
+ *       specificity) to a design scope element (`.dx-ui` — a converted
  *       page's, a pattern's scope group, the footer's frame, a Widgets-screen
  *       area), to a block Style_Rules marks when it renders one outside any
  *       scope (MARK) and to the block editor. A theme's own markup — its
@@ -150,13 +150,13 @@ final class Utility_Classes {
 	 * into an ordinary page, a footer widget a classic theme prints in its own
 	 * sidebar — so the scoped rules reach it and nothing of the theme's.
 	 */
-	public const MARK = 'dxai-utilities';
+	public const MARK = 'dxui-utilities';
 
 	/**
 	 * Where a rule applies (see the class comment): a design scope and what
 	 * is inside it, a marked block, the block editor's content.
 	 */
-	private const SCOPE = ':where(.dxai-ui,.dxai-ui *,.dxai-utilities,.editor-styles-wrapper *)';
+	private const SCOPE = ':where(.dx-ui,.dx-ui *,.dxui-utilities,.editor-styles-wrapper *)';
 
 	/**
 	 * While css_for_classes() writes rules for a part (a block whose wrapper is not the element the design styled —
@@ -171,7 +171,7 @@ final class Utility_Classes {
 	 * The editor form's lift: (2,0,0), matched by the class alone (no element
 	 * carries the id). Combined with the class itself, (2,1,0).
 	 */
-	private const LIFT = ':is(#dxai-h#dxai-h,.%s)';
+	private const LIFT = ':is(#dxui-h#dxui-h,.%s)';
 
 	/**
 	 * Longhands never moved to a utility, on any block: the runtime writes
@@ -244,7 +244,7 @@ final class Utility_Classes {
 	private const WHOLE_PROPS = array( 'white-space', 'list-style', 'background' );
 
 	/** The families' order at one cascade position (see family()). */
-	private const FAMILY_RANK = array( 'fw', 'text', 'lh', 'ls', 'rounded', 'max-w', 'min-h', 'min-w', 'w', 'h', 'kw', 'text-dxai', 'bg-dxai', 'shadow-dxai' );
+	private const FAMILY_RANK = array( 'fw', 'text', 'lh', 'ls', 'rounded', 'max-w', 'min-h', 'min-w', 'w', 'h', 'kw', 'text-dxui', 'bg-dxui', 'shadow-dxui' );
 
 	/** @var array<string, mixed>|null */
 	private static ?array $data = null;
@@ -319,7 +319,7 @@ final class Utility_Classes {
 	/**
 	 * The bounds of the site's design system, read from the theme's own classes: the widest `max-w-<n>px` it has (on a grid of 5px,
 	 * 1200 on american-restoration) and the largest padding it has (its spacing scale ends at `24-5`: 98px). Null when the theme
-	 * has no such classes (no catalogue: there is nothing to keep within). `dxai_ui_design_system` (array|null: max_width, padding in
+	 * has no such classes (no catalogue: there is nothing to keep within). `dx_ui_design_system` (array|null: max_width, padding in
 	 * px) changes them, or returns null to switch the fitting off.
 	 *
 	 * @return array{max_width:int, padding:float}|null
@@ -345,7 +345,7 @@ final class Utility_Classes {
 				);
 			}
 		}
-		$system = apply_filters( 'dxai_ui_design_system', $found );
+		$system = apply_filters( 'dx_ui_design_system', $found );
 
 		return is_array( $system ) && (int) ( $system['max_width'] ?? 0 ) > 0 && (float) ( $system['padding'] ?? 0 ) > 0 ? array(
 			'max_width' => (int) $system['max_width'],
@@ -468,7 +468,7 @@ final class Utility_Classes {
 
 		/*
 		 * Whole declarations one of the plugin's classes declares exactly —
-		 * `white-space:nowrap`, `list-style:none`, `background:var(--dxai-x)`.
+		 * `white-space:nowrap`, `list-style:none`, `background:var(--dxui-x)`.
 		 * Each is a shorthand (white-space is white-space-collapse plus
 		 * text-wrap-mode now), so its class is exact only while nothing else
 		 * in the list reaches the same longhands: then no declaration order
@@ -929,18 +929,18 @@ final class Utility_Classes {
 
 	/**
 	 * The class names a design's runtime switches on and off — the lists in
-	 * `data-dxai-on…` / `data-dxai-off…` attributes Motion_Runtime toggles
-	 * (as HTML attributes or inside a block's dxaiData). They are the
+	 * `data-dxui-on…` / `data-dxui-off…` attributes Motion_Runtime toggles
+	 * (as HTML attributes or inside a block's dxuiData). They are the
 	 * design's state, never a utility's, whatever they are called.
 	 *
 	 * @return array<int, string>
 	 */
 	public static function toggle_names( string $markup ): array {
-		if ( ! str_contains( $markup, 'data-dxai-o' ) ) {
+		if ( ! str_contains( $markup, 'data-dxui-o' ) ) {
 			return array();
 		}
 		$out = array();
-		if ( preg_match_all( '/data-dxai-o(?:n|ff)[A-Za-z0-9_-]*(?:\\\\u0022|\\\\"|")?\s*[:=]\s*(?:\\\\u0022|\\\\"|")((?:(?!\\\\u0022|\\\\")[^"])*)/', $markup, $m ) ) {
+		if ( preg_match_all( '/data-dxui-o(?:n|ff)[A-Za-z0-9_-]*(?:\\\\u0022|\\\\"|")?\s*[:=]\s*(?:\\\\u0022|\\\\"|")((?:(?!\\\\u0022|\\\\")[^"])*)/', $markup, $m ) ) {
 			foreach ( $m[1] as $list ) {
 				foreach ( preg_split( '/\s+/', html_entity_decode( (string) $list, ENT_QUOTES | ENT_HTML5, 'UTF-8' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
 					$out[ $token ] = true;
@@ -1030,7 +1030,7 @@ final class Utility_Classes {
 		}
 		$scope = (int) get_post_meta( $post_id, Page_Scope::META, true );
 		foreach ( array_unique( array_filter( array( $post_id, $scope ) ) ) as $id ) {
-			$path = Upload_Paths::for_meta( (int) $id, '_dxai_ui_css_url' )['path'];
+			$path = Upload_Paths::for_meta( (int) $id, '_dx_ui_css_url' )['path'];
 			if ( $path !== '' && is_readable( $path ) ) {
 				$out[] = $path;
 			}
@@ -1145,14 +1145,14 @@ final class Utility_Classes {
 		if ( preg_match( '/^(max-w|min-h|min-w|w|h)-(\d{1,5})px$/', $class, $m ) === 1 ) {
 			return $out( self::SIZE_FAMILIES[ $m[1] ][0], $m[2] . 'px', $m[1], (float) $m[2] );
 		}
-		if ( preg_match( '/^(text|bg|shadow)-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $class, $m ) === 1 ) {
+		if ( preg_match( '/^(text|bg|shadow)-dxui-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $class, $m ) === 1 ) {
 			$prop = array(
 				'text'   => 'color',
 				'bg'     => 'background',
 				'shadow' => 'box-shadow',
 			)[ $m[1] ];
 
-			return $out( $prop, 'var(--dxai-' . $m[2] . ')', $m[1] . '-dxai', 0.0 );
+			return $out( $prop, 'var(--dxui-' . $m[2] . ')', $m[1] . '-dxui', 0.0 );
 		}
 
 		return null;
@@ -1181,7 +1181,7 @@ final class Utility_Classes {
 				return preg_match( '/^(\d{1,4})px$/', $value, $m ) === 1 ? 'rounded-' . $m[1] . 'px' : null;
 			case 'color':
 			case 'box-shadow':
-				return preg_match( '/^var\(--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\)$/', $value, $m ) === 1 ? ( $prop === 'color' ? 'text' : 'shadow' ) . '-dxai-' . $m[1] : null;
+				return preg_match( '/^var\(--dxui-([a-z0-9]+(?:-[a-z0-9]+)*)\)$/', $value, $m ) === 1 ? ( $prop === 'color' ? 'text' : 'shadow' ) . '-dxui-' . $m[1] : null;
 		}
 		foreach ( self::SIZE_FAMILIES as $prefix => $family ) {
 			if ( $family[0] === $prop ) {
@@ -1203,7 +1203,7 @@ final class Utility_Classes {
 	 */
 	private static function whole_class( string $prop, string $value ): ?string {
 		if ( $prop === 'background' ) {
-			return preg_match( '/^var\(--dxai-([a-z0-9]+(?:-[a-z0-9]+)*)\)$/', $value, $m ) === 1 ? 'bg-dxai-' . $m[1] : null;
+			return preg_match( '/^var\(--dxui-([a-z0-9]+(?:-[a-z0-9]+)*)\)$/', $value, $m ) === 1 ? 'bg-dxui-' . $m[1] : null;
 		}
 		foreach ( self::KEYWORDS as $class => $pair ) {
 			if ( $pair[0] === $prop && $pair[1] === $value ) {
@@ -1926,8 +1926,8 @@ final class Utility_Classes {
 
 	/**
 	 * One value in the form two equal values share: lower case outside
-	 * quotes and custom property names (`var(--dxai-Brand)` is not
-	 * `var(--dxai-brand)`), single spaces and none around `(`, `)` and `,`,
+	 * quotes and custom property names (`var(--dxui-Brand)` is not
+	 * `var(--dxui-brand)`), single spaces and none around `(`, `)` and `,`,
 	 * rem as px at the root size, a zero length as `0`, numbers without
 	 * redundant zeros, `transparent` as the `rgba(0,0,0,0)` Sass writes for it.
 	 */

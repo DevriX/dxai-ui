@@ -2,12 +2,12 @@
 /**
  * An archive's files only partly added: the round of an import read in rounds is up.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Thrown by Asset_Harvester::from_zip() when the deadline set by until() passes with files left to add. The files added so far are

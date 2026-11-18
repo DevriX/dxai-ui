@@ -15,18 +15,18 @@
  * Against the small Claude Design fixture (.verify/dc-minimal.zip), imported under a name of its own and removed when the suite ends,
  * however it ends; the setting is put back as it was. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Interactivity;
-use DXAI_UI\Compiler\Motion_Runtime;
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Dc_Connector;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Settings\Options;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Blocks\Interactivity;
+use DX_UI\Compiler\Motion_Runtime;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Dc_Connector;
+use DX_UI\Content\Content_Types;
+use DX_UI\Settings\Options;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Support\Upload_Paths;
 
 $fail   = 0;
 $pass   = 0;
@@ -48,10 +48,10 @@ $force    = null;
 $filter   = static function ( $on ) use ( &$force ) {
 	return $force === null ? $on : $force;
 };
-add_filter( 'dxai_ui_interactivity', $filter );
+add_filter( 'dx_ui_interactivity', $filter );
 $fin = static function () use ( &$saved, $max_att, $settings, $filter ): void {
 	global $wpdb;
-	remove_filter( 'dxai_ui_interactivity', $filter );
+	remove_filter( 'dx_ui_interactivity', $filter );
 	if ( is_array( $settings ) ) {
 		update_option( Options::OPTION_KEY, $settings, false );
 	} else {
@@ -59,18 +59,18 @@ $fin = static function () use ( &$saved, $max_att, $settings, $filter ): void {
 	}
 	$home = (int) ( $saved['page_id'] ?? 0 );
 	if ( $home > 0 ) {
-		$file = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] ?? '';
+		$file = Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'] ?? '';
 		if ( is_string( $file ) && $file !== '' && is_file( $file ) ) {
 			wp_delete_file( $file );
 		}
-		$js = Upload_Paths::for_meta( $home, '_dxai_ui_js_url' )['path'] ?? '';
+		$js = Upload_Paths::for_meta( $home, '_dx_ui_js_url' )['path'] ?? '';
 		if ( is_string( $js ) && $js !== '' && is_file( $js ) ) {
 			wp_delete_file( $js );
 		}
 		foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => Page_Scope::META, 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
-		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
+		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
 		$ids = array_merge(
@@ -82,7 +82,7 @@ $fin = static function () use ( &$saved, $max_att, $settings, $filter ): void {
 		foreach ( array_unique( array_filter( $ids ) ) as $id ) {
 			wp_delete_post( (int) $id, true );
 		}
-		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dxai_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dx_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		foreach ( $new as $id ) {
 			wp_delete_attachment( (int) $id, true );
 		}
@@ -93,35 +93,35 @@ register_shutdown_function( $fin );
 
 echo "The directives, mark for mark\n";
 $force = true;
-$html  = '<div class="hero dxai-cls-dark" data-dxai-on="bg-paper/95 backdrop-blur-md" data-dxai-off="bg-transparent">'
-	. '<button class="btn dxai-toggle-open" aria-expanded="false">Menu</button>'
-	. '<button class="dxai-toggle-open--services" data-dxai-hover="enter" data-dxai-mode="toggle" aria-expanded="false">Services</button>'
-	. '<a class="dxai-toggle-open" data-dxai-hover="leave" data-dxai-set="null" href="#x">Close</a>'
-	. '<button class="dxai-toggle-slide" data-dxai-step="1" aria-label="Next">›</button>'
-	. '<button class="dxai-toggle-tab--a" role="tab" aria-selected="true">Tab</button>'
-	. '<nav class="hidden dxai-on-open">panel</nav>'
-	. '<div class="dxai-on-openFaq--0" style="grid-template-rows:0fr" data-open-rows="1fr">answer</div>'
-	. '<div class="hidden dxai-off-open" data-open-max="300px">other</div>'
-	. '<button data-dxai-disabled="slide:0" disabled>‹</button>'
-	. '<span data-dxai-text-openFaq="{&quot;0&quot;:&quot;−&quot;}">−</span>'
-	. '<p class="plain">words</p><img src="a.jpg" class="dxai-cls-x" data-dxai-on="seen" />'
-	. '<button class="dxai-toggle-open" data-wp-on--click="actions.other">mine</button></div>';
+$html  = '<div class="hero dxui-cls-dark" data-dxui-on="bg-paper/95 backdrop-blur-md" data-dxui-off="bg-transparent">'
+	. '<button class="btn dxui-toggle-open" aria-expanded="false">Menu</button>'
+	. '<button class="dxui-toggle-open--services" data-dxui-hover="enter" data-dxui-mode="toggle" aria-expanded="false">Services</button>'
+	. '<a class="dxui-toggle-open" data-dxui-hover="leave" data-dxui-set="null" href="#x">Close</a>'
+	. '<button class="dxui-toggle-slide" data-dxui-step="1" aria-label="Next">›</button>'
+	. '<button class="dxui-toggle-tab--a" role="tab" aria-selected="true">Tab</button>'
+	. '<nav class="hidden dxui-on-open">panel</nav>'
+	. '<div class="dxui-on-openFaq--0" style="grid-template-rows:0fr" data-open-rows="1fr">answer</div>'
+	. '<div class="hidden dxui-off-open" data-open-max="300px">other</div>'
+	. '<button data-dxui-disabled="slide:0" disabled>‹</button>'
+	. '<span data-dxui-text-openFaq="{&quot;0&quot;:&quot;−&quot;}">−</span>'
+	. '<p class="plain">words</p><img src="a.jpg" class="dxui-cls-x" data-dxui-on="seen" />'
+	. '<button class="dxui-toggle-open" data-wp-on--click="actions.other">mine</button></div>';
 $out   = Interactivity::directives( $html );
 $tag   = static function ( string $marker ) use ( $out ): string {
 	return preg_match( '/<[a-z]+\b[^>]*' . preg_quote( $marker, '/' ) . '[^>]*>/', $out, $m ) === 1 ? $m[0] : '';
 };
-$expect( 'a projection binds its whole class list (the design\'s classes hold / and :, which an attribute name cannot)', str_contains( $tag( 'dxai-cls-dark' ), 'data-wp-bind--class="state.cls"' ) && ! str_contains( $tag( 'dxai-cls-dark' ), 'data-wp-class--' ), $tag( 'dxai-cls-dark' ) );
-$expect( 'a click trigger gets its click and its aria', str_contains( $tag( 'btn dxai-toggle-open' ), 'data-wp-on--click="actions.fire"' ) && str_contains( $tag( 'btn dxai-toggle-open' ), 'data-wp-bind--aria-expanded="state.expanded"' ), $tag( 'btn dxai-toggle-open' ) );
-$expect( 'a hover trigger gets mouseenter and focusin too; a leave trigger mouseleave, focusout and blur, and no aria (it sets a literal)', str_contains( $tag( 'dxai-toggle-open--services' ), 'data-wp-on--mouseenter="actions.hoverOn"' ) && str_contains( $tag( 'dxai-toggle-open--services' ), 'data-wp-on--focusin="actions.focusOn"' ) && str_contains( $tag( 'data-dxai-hover="leave"' ), 'data-wp-on--mouseleave="actions.hoverOff"' ) && str_contains( $tag( 'data-dxai-hover="leave"' ), 'data-wp-on--focusout="actions.focusOut"' ) && str_contains( $tag( 'data-dxai-hover="leave"' ), 'data-wp-on--blur="actions.hoverOff"' ) && ! str_contains( $tag( 'data-dxai-hover="leave"' ), 'aria-expanded="state' ), $tag( 'data-dxai-hover="leave"' ) );
-$expect( 'a step trigger gets no aria (it moves along the values); a tab binds aria-selected as well', ! str_contains( $tag( 'data-dxai-step="1"' ), 'data-wp-bind--aria' ) && str_contains( $tag( 'data-dxai-step="1"' ), 'actions.fire' ) && str_contains( $tag( 'role="tab"' ), 'data-wp-bind--aria-selected="state.selected"' ), $tag( 'data-dxai-step="1"' ) );
-$expect( 'a panel binds its class list; one that animates its rows or its height binds those styles too', str_contains( $tag( 'dxai-on-open"' ), 'data-wp-bind--class="state.cls"' ) && ! str_contains( $tag( 'dxai-on-open"' ), 'data-wp-style' ) && str_contains( $tag( 'data-open-rows' ), 'data-wp-style--grid-template-rows="state.rows"' ) && str_contains( $tag( 'data-open-max' ), 'data-wp-style--max-height="state.maxHeight"' ) && str_contains( $tag( 'data-open-max' ), 'data-wp-style--opacity="state.opacity"' ), $tag( 'data-open-rows' ) );
-$expect( 'a control disabled for some values binds disabled', str_contains( $tag( 'data-dxai-disabled' ), 'data-wp-bind--disabled="state.off"' ) );
-$expect( 'words that change with a state get no directive (the store writes them: a text binding could not know the first reading)', ! str_contains( $tag( 'data-dxai-text-openFaq' ), 'data-wp-' ) );
-$expect( 'an element with no mark, an element with a directive of its own, and a void element are left as they are', str_contains( $out, '<p class="plain">words</p>' ) && str_contains( $out, 'data-wp-on--click="actions.other">mine' ) && ! str_contains( $tag( 'actions.other' ), 'actions.fire' ) && str_contains( $out, 'data-dxai-on="seen" data-wp-bind--class="state.cls" />' ), substr( $out, -200 ) );
+$expect( 'a projection binds its whole class list (the design\'s classes hold / and :, which an attribute name cannot)', str_contains( $tag( 'dxui-cls-dark' ), 'data-wp-bind--class="state.cls"' ) && ! str_contains( $tag( 'dxui-cls-dark' ), 'data-wp-class--' ), $tag( 'dxui-cls-dark' ) );
+$expect( 'a click trigger gets its click and its aria', str_contains( $tag( 'btn dxui-toggle-open' ), 'data-wp-on--click="actions.fire"' ) && str_contains( $tag( 'btn dxui-toggle-open' ), 'data-wp-bind--aria-expanded="state.expanded"' ), $tag( 'btn dxui-toggle-open' ) );
+$expect( 'a hover trigger gets mouseenter and focusin too; a leave trigger mouseleave, focusout and blur, and no aria (it sets a literal)', str_contains( $tag( 'dxui-toggle-open--services' ), 'data-wp-on--mouseenter="actions.hoverOn"' ) && str_contains( $tag( 'dxui-toggle-open--services' ), 'data-wp-on--focusin="actions.focusOn"' ) && str_contains( $tag( 'data-dxui-hover="leave"' ), 'data-wp-on--mouseleave="actions.hoverOff"' ) && str_contains( $tag( 'data-dxui-hover="leave"' ), 'data-wp-on--focusout="actions.focusOut"' ) && str_contains( $tag( 'data-dxui-hover="leave"' ), 'data-wp-on--blur="actions.hoverOff"' ) && ! str_contains( $tag( 'data-dxui-hover="leave"' ), 'aria-expanded="state' ), $tag( 'data-dxui-hover="leave"' ) );
+$expect( 'a step trigger gets no aria (it moves along the values); a tab binds aria-selected as well', ! str_contains( $tag( 'data-dxui-step="1"' ), 'data-wp-bind--aria' ) && str_contains( $tag( 'data-dxui-step="1"' ), 'actions.fire' ) && str_contains( $tag( 'role="tab"' ), 'data-wp-bind--aria-selected="state.selected"' ), $tag( 'data-dxui-step="1"' ) );
+$expect( 'a panel binds its class list; one that animates its rows or its height binds those styles too', str_contains( $tag( 'dxui-on-open"' ), 'data-wp-bind--class="state.cls"' ) && ! str_contains( $tag( 'dxui-on-open"' ), 'data-wp-style' ) && str_contains( $tag( 'data-open-rows' ), 'data-wp-style--grid-template-rows="state.rows"' ) && str_contains( $tag( 'data-open-max' ), 'data-wp-style--max-height="state.maxHeight"' ) && str_contains( $tag( 'data-open-max' ), 'data-wp-style--opacity="state.opacity"' ), $tag( 'data-open-rows' ) );
+$expect( 'a control disabled for some values binds disabled', str_contains( $tag( 'data-dxui-disabled' ), 'data-wp-bind--disabled="state.off"' ) );
+$expect( 'words that change with a state get no directive (the store writes them: a text binding could not know the first reading)', ! str_contains( $tag( 'data-dxui-text-openFaq' ), 'data-wp-' ) );
+$expect( 'an element with no mark, an element with a directive of its own, and a void element are left as they are', str_contains( $out, '<p class="plain">words</p>' ) && str_contains( $out, 'data-wp-on--click="actions.other">mine' ) && ! str_contains( $tag( 'actions.other' ), 'actions.fire' ) && str_contains( $out, 'data-dxui-on="seen" data-wp-bind--class="state.cls" />' ), substr( $out, -200 ) );
 $expect( 'the same markup gives the same answer, and markup with no mark comes back untouched', Interactivity::directives( $html ) === $out && Interactivity::directives( '<div class="hero"><p>words</p></div>' ) === '<div class="hero"><p>words</p></div>' );
-$expect( 'the region\'s attributes: the store, an empty context the init callback seeds, the document and window listeners', str_contains( Interactivity::root_attrs(), 'data-wp-interactive="dxai-ui"' ) && str_contains( Interactivity::root_attrs(), "data-wp-context='" . Interactivity::CONTEXT . "'" ) && str_contains( Interactivity::root_attrs(), 'data-wp-init="callbacks.init"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-document--click="actions.outside"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-window--scroll="actions.scroll"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-document--keydown="actions.escape"' ) && null !== json_decode( Interactivity::CONTEXT, true ), Interactivity::root_attrs() );
-$expect( 'the scope element opens with them', str_contains( Page_Scope::open( 1, 1 ), 'dxai-ui dxai-ui--1' ) && str_contains( Page_Scope::open( 1, 1 ), 'data-wp-interactive="dxai-ui"' ) );
-$expect( 'markup with a state is told from markup without one', Interactivity::has_states( '<div class="x dxai-toggle-open">' ) && Interactivity::has_states( '<!-- wp:dxai-ui/box {"className":"dxai-cls-dark"} -->' ) && Interactivity::has_states( '<span data-dxai-text-openFaq="{}">' ) && ! Interactivity::has_states( '<div class="dxai-ui dxai-online"><p>dxai-on</p></div>' ) );
+$expect( 'the region\'s attributes: the store, an empty context the init callback seeds, the document and window listeners', str_contains( Interactivity::root_attrs(), 'data-wp-interactive="dx-ui"' ) && str_contains( Interactivity::root_attrs(), "data-wp-context='" . Interactivity::CONTEXT . "'" ) && str_contains( Interactivity::root_attrs(), 'data-wp-init="callbacks.init"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-document--click="actions.outside"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-window--scroll="actions.scroll"' ) && str_contains( Interactivity::root_attrs(), 'data-wp-on-document--keydown="actions.escape"' ) && null !== json_decode( Interactivity::CONTEXT, true ), Interactivity::root_attrs() );
+$expect( 'the scope element opens with them', str_contains( Page_Scope::open( 1, 1 ), 'dx-ui dx-ui--1' ) && str_contains( Page_Scope::open( 1, 1 ), 'data-wp-interactive="dx-ui"' ) );
+$expect( 'markup with a state is told from markup without one', Interactivity::has_states( '<div class="x dxui-toggle-open">' ) && Interactivity::has_states( '<!-- wp:dx-ui/box {"className":"dxui-cls-dark"} -->' ) && Interactivity::has_states( '<span data-dxui-text-openFaq="{}">' ) && ! Interactivity::has_states( '<div class="dx-ui dxui-online"><p>dxui-on</p></div>' ) );
 $force = false;
 $expect( 'off: no directives on the content, no region on the scope element', Interactivity::enrich( $html ) === $html && '' === Interactivity::root_attrs() && ! str_contains( Page_Scope::open( 1, 1 ), 'data-wp-' ) );
 $force = null;
@@ -132,7 +132,7 @@ $expect( 'the store is a script module on @wordpress/interactivity', ( static fu
 	wp_script_modules()->print_import_map();
 	$map = (string) ob_get_clean();
 	// Registered, not enqueued: the import map is written for what is enqueued; the registration is what enqueue() needs.
-	return function_exists( 'wp_register_script_module' ) && is_file( DXAI_UI_DIR . 'assets/js/interactivity.js' ) && str_contains( (string) file_get_contents( DXAI_UI_DIR . 'assets/js/interactivity.js' ), "from '@wordpress/interactivity'" ) && is_string( $map ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	return function_exists( 'wp_register_script_module' ) && is_file( DX_UI_DIR . 'assets/js/interactivity.js' ) && str_contains( (string) file_get_contents( DX_UI_DIR . 'assets/js/interactivity.js' ), "from '@wordpress/interactivity'" ) && is_string( $map ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 } )() );
 
 echo "\nOn a page of the fixture\n";
@@ -162,7 +162,7 @@ if ( ! is_file( $zip ) ) {
 	$on = $fetch( $home );
 	update_option( Options::OPTION_KEY, array_merge( $stored, array( 'interactivity' => false ) ), false );
 	$off = $fetch( $home );
-	$expect( 'on: the page\'s scope element is the region, the marks carry their directives', preg_match( '/<div class="[^"]*dxai-ui--' . $home . '[^"]*"[^>]*data-wp-interactive="dxai-ui"/', $on ) === 1 && substr_count( $on, 'data-wp-on--click="actions.fire"' ) >= 1 && substr_count( $on, 'data-wp-bind--class="state.cls"' ) >= 1, (string) substr_count( $on, 'data-wp-' ) );
+	$expect( 'on: the page\'s scope element is the region, the marks carry their directives', preg_match( '/<div class="[^"]*dx-ui--' . $home . '[^"]*"[^>]*data-wp-interactive="dx-ui"/', $on ) === 1 && substr_count( $on, 'data-wp-on--click="actions.fire"' ) >= 1 && substr_count( $on, 'data-wp-bind--class="state.cls"' ) >= 1, (string) substr_count( $on, 'data-wp-' ) );
 	$expect( '…the store module is on the page, with the import map before it', str_contains( $on, 'assets/js/interactivity.js' ) && str_contains( $on, 'type="importmap"' ) && str_contains( $on, '@wordpress/interactivity' ) && strpos( $on, 'type="importmap"' ) < strpos( $on, 'assets/js/interactivity.js' ) );
 	$expect( 'off: none of it', ! str_contains( $off, 'data-wp-' ) && ! str_contains( $off, 'assets/js/interactivity.js' ) );
 	// WordPress writes the module tag as `<script id="…" src="…" type="module">` and the import map as `<script id="wp-importmap" type="importmap">`.

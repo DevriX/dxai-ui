@@ -25,7 +25,7 @@
  * Run:
  *   php bin/control-audit.php --wp <wordpress-root> --zip "<a.zip>" --zip "<b.zip>"
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( PHP_SAPI !== 'cli' ) {
@@ -59,7 +59,7 @@ require rtrim( (string) $opts['wp'], '/\\' ) . '/wp-load.php';
  *
  * @return array<string, int>
  */
-function dxai_state_classes( string $css ): array {
+function dxui_state_classes( string $css ): array {
 	preg_match_all( '/\.(is-[a-z0-9-]+|has-[a-z0-9-]+|active|open|selected|current)\b/i', $css, $matches );
 	$out = array();
 	foreach ( $matches[1] ?? array() as $name ) {
@@ -91,7 +91,7 @@ foreach ( $opts['zip'] as $path ) {
 		continue;
 	}
 
-	$source = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip(
+	$source = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip(
 		array( 'name' => $name, 'tmp_name' => $path, 'error' => 0, 'size' => filesize( (string) $path ) )
 	);
 	if ( is_wp_error( $source ) ) {
@@ -111,15 +111,15 @@ foreach ( $opts['zip'] as $path ) {
 		}
 	}
 
-	$result = ( new DXAI_UI\Compiler\Source_Compiler() )->compile( $source );
+	$result = ( new DX_UI\Compiler\Source_Compiler() )->compile( $source );
 	$markup = (string) ( $result['gutenberg_markup'] ?? '' );
 	foreach ( (array) ( $result['structures'] ?? array() ) as $structure ) {
 		$markup .= "\n" . (string) ( $structure['source_html'] ?? '' );
 	}
 	$css = (string) ( $result['design_css_raw'] ?? '' );
 
-	$triggers = (int) preg_match_all( '/dxai-toggle-[a-z0-9_-]+/i', $markup );
-	$targets  = (int) preg_match_all( '/dxai-(?:on|off)-[a-z0-9_-]+/i', $markup );
+	$triggers = (int) preg_match_all( '/dxui-toggle-[a-z0-9_-]+/i', $markup );
+	$targets  = (int) preg_match_all( '/dxui-(?:on|off)-[a-z0-9_-]+/i', $markup );
 	$aria     = (int) preg_match_all( '/aria-expanded=/i', $markup );
 	$css_aria = (int) preg_match_all( '/\[aria-(?:expanded|selected|pressed|current)/i', $css );
 
@@ -139,7 +139,7 @@ foreach ( $opts['zip'] as $path ) {
 	$totals['aria']     += $aria;
 	$totals['css_aria'] += $css_aria;
 
-	foreach ( dxai_state_classes( $css ) as $class => $n ) {
+	foreach ( dxui_state_classes( $css ) as $class => $n ) {
 		$states[ $class ] = ( $states[ $class ] ?? 0 ) + $n;
 	}
 }
@@ -185,7 +185,7 @@ foreach ( $states as $class => $n ) {
 }
 
 echo "\nhandlers  handler props the designs' own sources declare\n";
-echo "triggers  dxai-toggle-* markers emitted (a control the runtime can bind)\n";
-echo "targets   dxai-on-*/dxai-off-* markers (an element the runtime can change)\n";
+echo "triggers  dxui-toggle-* markers emitted (a control the runtime can bind)\n";
+echo "targets   dxui-on-*/dxui-off-* markers (an element the runtime can change)\n";
 echo "aria      aria-expanded attributes emitted\n";
 echo "cssAria   selectors in the DESIGN's css keying on aria-* — if 0, ours are inert\n";

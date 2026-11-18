@@ -2,19 +2,19 @@
 /**
  * What the active theme can do for a design: the contract the plugin asks instead of the theme's name.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Chrome\Chrome_Choice;
-use DXAI_UI\Theme\Adapters\Amr_Adapter;
-use DXAI_UI\Theme\Adapters\Block_Theme_Adapter;
-use DXAI_UI\Theme\Adapters\Classic_Adapter;
-use DXAI_UI\Theme\Adapters\Dx_Base_Adapter;
-use DXAI_UI\Theme\Adapters\Theme_Adapter;
+use DX_UI\Chrome\Chrome_Choice;
+use DX_UI\Theme\Adapters\Amr_Adapter;
+use DX_UI\Theme\Adapters\Block_Theme_Adapter;
+use DX_UI\Theme\Adapters\Classic_Adapter;
+use DX_UI\Theme\Adapters\Dx_Base_Adapter;
+use DX_UI\Theme\Adapters\Theme_Adapter;
 
 /**
  * One place that answers what the site's theme offers a design (docs/PLAN-ARCHITECTURE.md, section 5): whether it is a DX theme
@@ -32,8 +32,8 @@ final class Capabilities {
 
 	/** What a theme may bring on its own pages, and the theme support any theme declares to say it does. */
 	public const FEATURES = array(
-		'video-facade'   => 'dxai-youtube-facade',
-		'library-styles' => 'dxai-block-library',
+		'video-facade'   => 'dxui-youtube-facade',
+		'library-styles' => 'dxui-block-library',
 	);
 
 	/** Core's block for a role, where the theme has none of its own. */
@@ -128,7 +128,7 @@ final class Capabilities {
 	 * @return array<int, string>
 	 */
 	public static function image_blocks(): array {
-		return array_merge( array( 'core/image', 'dxai-ui/image' ), self::blocks( 'picture' ) );
+		return array_merge( array( 'core/image', 'dx-ui/image' ), self::blocks( 'picture' ) );
 	}
 
 	/**
@@ -271,7 +271,7 @@ final class Capabilities {
 	 * when the site lets files be changed and the folder can be written. A team's theme is never written into.
 	 */
 	public static function styles_writable(): bool {
-		if ( ! self::has_theme_json() || ! function_exists( 'wp_is_file_mod_allowed' ) || ! wp_is_file_mod_allowed( 'dxai_ui_style_variation' ) ) {
+		if ( ! self::has_theme_json() || ! function_exists( 'wp_is_file_mod_allowed' ) || ! wp_is_file_mod_allowed( 'dx_ui_style_variation' ) ) {
 			return false;
 		}
 		$dir = wp_normalize_path( get_stylesheet_directory() );

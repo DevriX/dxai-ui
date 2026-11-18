@@ -2,7 +2,7 @@
 /**
  * Inspect GTM native-block conversion quality.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -38,7 +38,7 @@ if ( $idx !== false ) {
  * @param array<int, array<string, mixed>> $blocks
  * @param list<string>                     $html
  */
-function dxai_collect_html( array $blocks, array &$html ): void {
+function dxui_collect_html( array $blocks, array &$html ): void {
 	foreach ( $blocks as $block ) {
 		if ( ( $block['blockName'] ?? '' ) === 'core/html' ) {
 			$sample = trim( wp_strip_all_tags( (string) ( $block['innerHTML'] ?? '' ) ) );
@@ -53,13 +53,13 @@ function dxai_collect_html( array $blocks, array &$html ): void {
 			$html[] = $tag . ' | ' . substr( $class, 0, 80 ) . ' | ' . substr( $sample, 0, 60 );
 		}
 		if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
-			dxai_collect_html( $block['innerBlocks'], $html );
+			dxui_collect_html( $block['innerBlocks'], $html );
 		}
 	}
 }
 
 $html = array();
-dxai_collect_html( parse_blocks( $p->post_content ), $html );
+dxui_collect_html( parse_blocks( $p->post_content ), $html );
 echo "----- html blocks (" . count( $html ) . ") -----\n";
 foreach ( $html as $row ) {
 	echo $row . "\n";

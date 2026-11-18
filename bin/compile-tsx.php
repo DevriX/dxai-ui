@@ -8,12 +8,12 @@
  * runtime (Motion_Runtime::javascript()) — what a test needs to load the compiled markup in a browser and press its controls.
  * The few WordPress functions the compiler calls are stood in for.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-define( 'DXAI_UI_DIR', dirname( __DIR__ ) . '/' );
-require DXAI_UI_DIR . 'src/Autoloader.php';
-DXAI_UI\Autoloader::register();
+define( 'DX_UI_DIR', dirname( __DIR__ ) . '/' );
+require DX_UI_DIR . 'src/Autoloader.php';
+DX_UI\Autoloader::register();
 
 $stubs = array(
 	'esc_attr'            => static fn( $t ) => htmlspecialchars( (string) $t, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ),
@@ -28,8 +28,8 @@ $stubs = array(
 );
 foreach ( $stubs as $name => $fn ) {
 	if ( ! function_exists( $name ) ) {
-		$GLOBALS['dxai_stub'][ $name ] = $fn;
-		eval( 'function ' . $name . '(...$args) { return ($GLOBALS["dxai_stub"]["' . $name . '"])(...$args); }' ); // phpcs:ignore Squiz.PHP.Eval.Discouraged
+		$GLOBALS['dxui_stub'][ $name ] = $fn;
+		eval( 'function ' . $name . '(...$args) { return ($GLOBALS["dxui_stub"]["' . $name . '"])(...$args); }' ); // phpcs:ignore Squiz.PHP.Eval.Discouraged
 	}
 }
 
@@ -51,7 +51,7 @@ if ( ! isset( $files[ $route ] ) ) {
 	exit( 1 );
 }
 $css      = is_readable( $dir . '/src/styles.css' ) ? (string) file_get_contents( $dir . '/src/styles.css' ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+$compiler = new DX_UI\Compiler\Jsx_Compiler();
 $out      = array();
 foreach ( $compiler->compile_file(
 	$files[ $route ],
@@ -70,7 +70,7 @@ echo json_encode(
 	array(
 		'sections'    => $out,
 		'unevaluated' => count( $compiler->unevaluated() ),
-		'runtime'     => DXAI_UI\Compiler\Motion_Runtime::javascript(),
+		'runtime'     => DX_UI\Compiler\Motion_Runtime::javascript(),
 	),
 	JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
 );

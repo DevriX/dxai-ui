@@ -18,17 +18,17 @@
  *
  * The palette is put in place for its checks and given back; nothing is written. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Library;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Layouts;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Variants;
-use DXAI_UI\Pages\Template;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Pages\Block_Library;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Layouts;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Variants;
+use DX_UI\Pages\Template;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Palette;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -69,7 +69,7 @@ $roles = Template::palette_roles();
 $expect( 'the palette of the network: the colour for words on a dark ground is "border" (the case)', 'border' === $roles['on_dark'], wp_json_encode( $roles ) );
 $band = array(
 	'blockName'    => 'core/group',
-	'attrs'        => array( 'backgroundColor' => 'secondary', 'className' => 'dxai-lib' ),
+	'attrs'        => array( 'backgroundColor' => 'secondary', 'className' => 'dxui-lib' ),
 	'innerBlocks'  => array(
 		array(
 			'blockName'    => 'core/heading',
@@ -86,8 +86,8 @@ $band = array(
 			'innerContent' => array( '<p>Talk to a real person 24/7 and get help on the way today.</p>' ),
 		),
 	),
-	'innerHTML'    => '<div class="wp-block-group dxai-lib has-secondary-background-color has-background"></div>',
-	'innerContent' => array( '<div class="wp-block-group dxai-lib has-secondary-background-color has-background">', null, null, '</div>' ),
+	'innerHTML'    => '<div class="wp-block-group dxui-lib has-secondary-background-color has-background"></div>',
+	'innerContent' => array( '<div class="wp-block-group dxui-lib has-secondary-background-color has-background">', null, null, '</div>' ),
 );
 $made   = Block_Library::legible( $band );
 $markup = serialize_block( $made );
@@ -123,25 +123,25 @@ $memo->setValue( null, $before );
 
 echo "\nAt the import: a design's colours on its own blocks\n";
 // A design whose colour is named "border" (the colour of its lines) and is the theme's too: no text takes it as a class.
-$design = new ReflectionProperty( \DXAI_UI\Blocks\Native\Text_Color::class, 'design' );
-$live   = new ReflectionProperty( \DXAI_UI\Blocks\Native\Text_Color::class, 'live' );
+$design = new ReflectionProperty( \DX_UI\Blocks\Native\Text_Color::class, 'design' );
+$live   = new ReflectionProperty( \DX_UI\Blocks\Native\Text_Color::class, 'live' );
 $design->setAccessible( true );
 $live->setAccessible( true );
 $design->setValue( null, array( -5 => array( 'border' => '#ffffff', 'brand' => '#0c2341' ) ) );
 $live->setValue( null, array( 'border' => '#ffffff', 'brand' => '#0c2341' ) );
-$preset = new ReflectionMethod( \DXAI_UI\Blocks\Native\Text_Color::class, 'preset' );
+$preset = new ReflectionMethod( \DX_UI\Blocks\Native\Text_Color::class, 'preset' );
 $preset->setAccessible( true );
 $expect( 'a design\'s text in its colour named "border" is no `has-border-color` (its other colours still are the theme\'s class)', '' === $preset->invoke( null, -5, 'border' ) && 'brand' === $preset->invoke( null, -5, 'brand' ) );
-\DXAI_UI\Blocks\Native\Text_Color::forget();
+\DX_UI\Blocks\Native\Text_Color::forget();
 // A theme whose white is named "border": a design's white words are not swapped into it.
-$swap = new ReflectionMethod( \DXAI_UI\Theme\Theme_Class_Swap::class, 'swap_block' );
+$swap = new ReflectionMethod( \DX_UI\Theme\Theme_Class_Swap::class, 'swap_block' );
 $swap->setAccessible( true );
 $words = array(
 	'blockName'    => 'core/paragraph',
-	'attrs'        => array( 'className' => 'text-dxai-white' ),
+	'attrs'        => array( 'className' => 'text-dxui-white' ),
 	'innerBlocks'  => array(),
-	'innerHTML'    => '<p class="text-dxai-white">Talk to a real person.</p>',
-	'innerContent' => array( '<p class="text-dxai-white">Talk to a real person.</p>' ),
+	'innerHTML'    => '<p class="text-dxui-white">Talk to a real person.</p>',
+	'innerContent' => array( '<p class="text-dxui-white">Talk to a real person.</p>' ),
 );
 $n    = 0;
 $to_border = $swap->invokeArgs( null, array( $words, array( 'white' => array( 'text_color' => 'border' ) ), &$n ) );
@@ -254,7 +254,7 @@ if ( is_string( $kept ) && $kept !== '' ) {
 	$fresh  = static function (): void {
 		wp_clean_theme_json_cache();
 		WP_Theme_JSON_Resolver::clean_cached_data();
-		\DXAI_UI\Theme\Theme_Fonts::reset();
+		\DX_UI\Theme\Theme_Fonts::reset();
 	};
 	$inter = static function () use ( $fonts ): array {
 		$b    = array(
@@ -273,26 +273,26 @@ if ( is_string( $kept ) && $kept !== '' ) {
 	$fresh();
 	$b = $inter();
 	$expect( 'a family the theme names but the page does not draw (Inter on American Restoration): taken off, its class too', ! isset( $b['attrs']['fontFamily'] ) && ! str_contains( (string) $b['innerHTML'], 'font-family' ), $one_line( serialize_block( $b ) ) );
-	add_filter( 'dxai_ui_theme_fonts', $theirs, PHP_INT_MAX );
+	add_filter( 'dx_ui_theme_fonts', $theirs, PHP_INT_MAX );
 	$fresh();
 	$b = $inter();
 	$expect( '…and kept where it is the theme\'s own heading font', 'Inter' === ( $b['attrs']['fontFamily'] ?? '' ) && str_contains( (string) $b['innerHTML'], 'has-inter-font-family' ), $one_line( serialize_block( $b ) ) );
-	remove_filter( 'dxai_ui_theme_fonts', $theirs, PHP_INT_MAX );
+	remove_filter( 'dx_ui_theme_fonts', $theirs, PHP_INT_MAX );
 	remove_filter( 'wp_theme_json_data_theme', $named );
 	$fresh();
 }
 
 echo "\nThe words of a place's page\n";
 $lib  = array( 'company' => 'Taylored Restoration', 'company_short' => 'Taylored', 'phone' => '(907) 344-1239', 'industry' => 'restoration', 'places' => array(), 'services' => array(), 'lists' => array(), 'places_home' => array( array( 'title' => 'Fairbanks, AK' ) ) );
-$of   = static fn( string $title, string $type ): array => \DXAI_UI\Pages\Layouts::page_facts( $lib, array( 'title' => $title, 'type' => $type ), 'two-col', 'seed', array() );
+$of   = static fn( string $title, string $type ): array => \DX_UI\Pages\Layouts::page_facts( $lib, array( 'title' => $title, 'type' => $type ), 'two-col', 'seed', array() );
 $here = $of( 'Anchorage, AK', 'location' );
 $expect( 'a place\'s own page is about the company\'s trade, in that place (its title is no service)', 'restoration' === $here['subject'] && 'Anchorage, AK' === $here['region'], wp_json_encode( array( $here['subject'], $here['region'] ) ) );
 $said = '';
 for ( $n = 0; $n < 12 && ! str_contains( $said, 'handles' ); $n++ ) {
-	$said .= ' ' . \DXAI_UI\Pages\Layouts::words( 'p-l', array( 'slot_seed' => (string) $n ) + $here, null );
+	$said .= ' ' . \DX_UI\Pages\Layouts::words( 'p-l', array( 'slot_seed' => (string) $n ) + $here, null );
 }
 $expect( 'its words say what is done there, never the place as a service ("handles anchorage, ak")', str_contains( $said, 'Taylored Restoration handles restoration for homes and businesses in Anchorage, AK.' ) && ! str_contains( $said, 'anchorage, ak' ), $one_line( $said ) );
-$expect( '…and its questions\' heading starts as a heading does', 'Restoration questions, answered' === \DXAI_UI\Pages\Layouts::words( 'h2-s', array( 'role' => 'faq' ) + $here, null ) );
+$expect( '…and its questions\' heading starts as a heading does', 'Restoration questions, answered' === \DX_UI\Pages\Layouts::words( 'h2-s', array( 'role' => 'faq' ) + $here, null ) );
 $town = $of( 'Wasilla & Mat-Su Valley', 'location' );
 $expect( 'a place without a state is the place too', 'restoration' === $town['subject'] && 'Wasilla & Mat-Su Valley' === $town['region'], wp_json_encode( array( $town['subject'], $town['region'] ) ) );
 $in   = $of( 'Water Damage in Tyler, TX', 'location' );
@@ -345,7 +345,7 @@ $expect( 'a call to action\'s small caption under its button takes no provisiona
 if ( WP_Block_Type_Registry::get_instance()->is_registered( 'dx/transition-break' ) ) {
 	$edged = array();
 	foreach ( array( 'layout-cta-6' => 'cta', 'layout-cta-7' => 'cta', 'layout-process-4' => 'process' ) as $lid => $lrole ) {
-		$lsrc          = (string) file_get_contents( DXAI_UI_DIR . 'data/block-library/blocks/' . $lid . '.html' );
+		$lsrc          = (string) file_get_contents( DX_UI_DIR . 'data/block-library/blocks/' . $lid . '.html' );
 		$lout          = Block_Library::fill( $lid, array( 'role' => $lrole ) + $facts, $why );
 		$edged[ $lid ] = array( str_contains( $lsrc, '"className":"absolute bottom-0"' ), null === $lout ? 'not made: ' . $why : ( str_contains( serialize_block( $lout ), 'wp:dx/transition-break' ) ? 'wave' : 'none' ) );
 	}
@@ -354,15 +354,15 @@ if ( WP_Block_Type_Registry::get_instance()->is_registered( 'dx/transition-break
 	echo "  (no dx/transition-break on this theme: the layouts with a wave over their edge are not made here)\n";
 }
 // A button the theme's style fills with the colour of its band (a layout on the accent, its button the theme's primary, the accent too).
-$accent_hex = (string) ( \DXAI_UI\Theme\Capabilities::palette()['accent'] ?? '' );
-$primary    = \DXAI_UI\Theme\Theme_Buttons::fill( 'primary-button' );
-$second     = \DXAI_UI\Theme\Theme_Buttons::has( 'secondary-button' ) ? \DXAI_UI\Theme\Theme_Buttons::fill( 'secondary-button' ) : '';
-if ( $accent_hex !== '' && $primary !== '' && $second !== '' && \DXAI_UI\Support\Color_Math::distance( $primary, $accent_hex ) < 10.0 && \DXAI_UI\Support\Color_Math::distance( $second, $accent_hex ) >= 10.0 ) {
-	$band_markup = '<!-- wp:group {"backgroundColor":"accent","className":"dxai-lib"} --><div class="wp-block-group dxai-lib has-accent-background-color has-background"><!-- wp:heading --><h2 class="wp-block-heading">Need help now?</h2><!-- /wp:heading --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="tel:5550100">Call</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->';
+$accent_hex = (string) ( \DX_UI\Theme\Capabilities::palette()['accent'] ?? '' );
+$primary    = \DX_UI\Theme\Theme_Buttons::fill( 'primary-button' );
+$second     = \DX_UI\Theme\Theme_Buttons::has( 'secondary-button' ) ? \DX_UI\Theme\Theme_Buttons::fill( 'secondary-button' ) : '';
+if ( $accent_hex !== '' && $primary !== '' && $second !== '' && \DX_UI\Support\Color_Math::distance( $primary, $accent_hex ) < 10.0 && \DX_UI\Support\Color_Math::distance( $second, $accent_hex ) >= 10.0 ) {
+	$band_markup = '<!-- wp:group {"backgroundColor":"accent","className":"dxui-lib"} --><div class="wp-block-group dxui-lib has-accent-background-color has-background"><!-- wp:heading --><h2 class="wp-block-heading">Need help now?</h2><!-- /wp:heading --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-primary-button"} --><div class="wp-block-button is-style-primary-button"><a class="wp-block-button__link wp-element-button" href="tel:5550100">Call</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->';
 	// (A band of another colour of the theme, apart from both buttons: the primary is seen there and stays.)
 	$far = '';
-	foreach ( \DXAI_UI\Theme\Capabilities::palette() as $far_slug => $far_hex ) {
-		if ( $far_slug !== 'accent' && \DXAI_UI\Support\Color_Math::distance( $primary, (string) $far_hex ) >= 10.0 && \DXAI_UI\Support\Color_Math::distance( $second, (string) $far_hex ) >= 10.0 ) {
+	foreach ( \DX_UI\Theme\Capabilities::palette() as $far_slug => $far_hex ) {
+		if ( $far_slug !== 'accent' && \DX_UI\Support\Color_Math::distance( $primary, (string) $far_hex ) >= 10.0 && \DX_UI\Support\Color_Math::distance( $second, (string) $far_hex ) >= 10.0 ) {
 			$far = (string) $far_slug;
 			break;
 		}
@@ -391,7 +391,7 @@ $expect( '…and a question of this page\'s service is its own', ! Layouts::name
 $expect( 'the Home\'s call to action about water damage is not the fire page\'s', Layouts::names_other( 'Water damage? We\'re on site in about 60 minutes. Local crews in Anchorage, Mat-Su, and Fairbanks.', array( 'Fire & Smoke Damage', $services[2][1] ), array_merge( array( $services[0], $services[1], $services[3] ) ) ) );
 
 echo "\nA page says a sentence once\n";
-\DXAI_UI\Pages\Layouts::begin( 'Reconstruction', 'service' );
+\DX_UI\Pages\Layouts::begin( 'Reconstruction', 'service' );
 $page = array( 'title' => 'Reconstruction', 'home' => 0, 'kind' => 'service', 'once' => true, 'company' => 'Taylored Restoration', 'company_short' => 'Taylored', 'phone' => '(907) 344-1239', 'subject' => 'Reconstruction', 'region' => 'Anchorage, AK' );
 $lines = array();
 $blank = 0;
@@ -412,18 +412,18 @@ Layouts::said_back( $page, $state );
 $expect( 'a section given up gives its lines back', ! Layouts::said( $page, 'A line said by a section that was given up.', false ) );
 
 echo "\nA call after a call, a box fixed over the page\n";
-$calls = new ReflectionMethod( \DXAI_UI\Pages\Team_Pages::class, 'calls' );
+$calls = new ReflectionMethod( \DX_UI\Pages\Team_Pages::class, 'calls' );
 $calls->setAccessible( true );
-$last  = new ReflectionMethod( \DXAI_UI\Pages\Team_Pages::class, 'last_calls' );
+$last  = new ReflectionMethod( \DX_UI\Pages\Team_Pages::class, 'last_calls' );
 $last->setAccessible( true );
 $band  = parse_blocks( '<!-- wp:group --><div class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Damage won\'t wait.</h2><!-- /wp:heading --><!-- wp:paragraph --><p><a href="tel:9073441239">Call (907) 344-1239</a></p><!-- /wp:paragraph --></div><!-- /wp:group -->' )[0];
 $grid  = parse_blocks( '<!-- wp:group --><div class="wp-block-group">' . str_repeat( '<!-- wp:paragraph --><p><a href="tel:9073441239">In-house crews</a></p><!-- /wp:paragraph -->', 6 ) . '</div><!-- /wp:group -->' )[0];
 $expect( 'a band with a phone and a line is a call; a grid of six cards that each lead to the phone is not', $calls->invoke( null, $band ) && ! $calls->invoke( null, $grid ) );
 $expect( 'the last place shown decides (a place left out is not one)', $last->invoke( null, array( array( 'source' => 'library', 'role' => 'two-col', 'calls' => true ), array( 'source' => '', 'role' => 'cards' ) ) ) && ! $last->invoke( null, array( array( 'source' => 'home', 'role' => 'cta', 'calls' => true ), array( 'source' => 'library', 'role' => 'faq', 'calls' => false ) ) ) );
-$fixed_home = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Library pour fixed bar Home', 'post_content' => '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Our services</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Every kind of damage, made right.</p><!-- /wp:paragraph --></section><!-- /wp:group --><!-- wp:group {"className":"fixed bottom-0","dxaiCss":"position:fixed;bottom:0;left:0;right:0"} --><div class="wp-block-group fixed bottom-0"><!-- wp:group --><div class="wp-block-group"><!-- wp:paragraph --><p>On site in ~60 min</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>24/7 · Since 1972</p><!-- /wp:paragraph --></div><!-- /wp:group --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="tel:9073441239">Call: (907) 344-1239</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->' ), true );
+$fixed_home = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Library pour fixed bar Home', 'post_content' => '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group"><!-- wp:heading --><h2 class="wp-block-heading">Our services</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Every kind of damage, made right.</p><!-- /wp:paragraph --></section><!-- /wp:group --><!-- wp:group {"className":"fixed bottom-0","dxuiCss":"position:fixed;bottom:0;left:0;right:0"} --><div class="wp-block-group fixed bottom-0"><!-- wp:group --><div class="wp-block-group"><!-- wp:paragraph --><p>On site in ~60 min</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>24/7 · Since 1972</p><!-- /wp:paragraph --></div><!-- /wp:group --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="tel:9073441239">Call: (907) 344-1239</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->' ), true );
 if ( ! is_wp_error( $fixed_home ) ) {
-	$kinds = array_map( static fn( $c ) => (int) $c['index'], \DXAI_UI\Pages\Section_Library::for_page( (int) $fixed_home ) );
-	$float = \DXAI_UI\Pages\Section_Library::floating( (int) $fixed_home );
+	$kinds = array_map( static fn( $c ) => (int) $c['index'], \DX_UI\Pages\Section_Library::for_page( (int) $fixed_home ) );
+	$float = \DX_UI\Pages\Section_Library::floating( (int) $fixed_home );
 	$expect( 'a box the Home fixes over the page (a call bar for phones) takes no section\'s place, and every page made from the Home carries it', array( 0 ) === $kinds && 1 === count( $float ) && str_contains( serialize_block( $float[0] ), 'Call: (907) 344-1239' ), wp_json_encode( $kinds ) . ' ' . count( $float ) );
 	wp_delete_post( (int) $fixed_home, true );
 }

@@ -2,14 +2,14 @@
 /**
  * The pages made for a design wear the design's header and footer as its Home has them now.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * A design that keeps its header and footer in its Home's content (a page written as one group, a classic theme) hands each
@@ -30,10 +30,10 @@ use DXAI_UI\Structures\Design_Attach;
 final class Team_Chrome {
 
 	/** On a Home: the hash of the header and footer last put on its pages. */
-	public const HASH = '_dxai_ui_chrome_hash';
+	public const HASH = '_dx_ui_chrome_hash';
 
 	/** Option: the version of the one-off sync (upgrade()). */
-	public const DONE = 'dxai_ui_team_chrome_done';
+	public const DONE = 'dx_ui_team_chrome_done';
 
 	/** 1: the header and footer; 2: and the Home's frame (Page_Frame). */
 	public const VERSION = '2';
@@ -121,7 +121,7 @@ final class Team_Chrome {
 	 */
 	private static function chrome( int $home ): ?array {
 		$chrome = Section_Library::chrome_markup( $home );
-		$in     = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dxai-ui/site-' );
+		$in     = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dx-ui/site-' );
 		$top    = static fn( string $m ): array => array_values( array_filter( parse_blocks( $m ), static fn( $b ) => trim( (string) ( $b['blockName'] ?? '' ) ) !== '' ) );
 		$header = $in( (string) $chrome['header'] ) ? (string) $chrome['header'] : '';
 		$footer = $in( (string) $chrome['footer'] ) ? (string) $chrome['footer'] : '';

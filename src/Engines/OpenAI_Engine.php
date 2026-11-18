@@ -2,15 +2,15 @@
 /**
  * OpenAI engine (Responses API).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
-use DXAI_UI\Compiler\Schema;
-use DXAI_UI\Http\Remote_Client;
+use DX_UI\Compiler\Schema;
+use DX_UI\Http\Remote_Client;
 
 final class OpenAI_Engine extends Abstract_Engine {
 
@@ -29,7 +29,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 
 	public function test_connection(): bool|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'OpenAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'OpenAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$response = Remote_Client::post_json(
@@ -60,10 +60,10 @@ final class OpenAI_Engine extends Abstract_Engine {
 				30
 			);
 			if ( is_wp_error( $fallback ) ) {
-				return $this->http_error( $response['code'], $response['body'], __( 'OpenAI connection failed.', 'dxai-ui' ) );
+				return $this->http_error( $response['code'], $response['body'], __( 'OpenAI connection failed.', 'dx-ui' ) );
 			}
 			if ( $fallback['code'] < 200 || $fallback['code'] >= 300 ) {
-				return $this->http_error( $fallback['code'], $fallback['body'], __( 'OpenAI connection failed.', 'dxai-ui' ) );
+				return $this->http_error( $fallback['code'], $fallback['body'], __( 'OpenAI connection failed.', 'dx-ui' ) );
 			}
 		}
 
@@ -72,7 +72,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'OpenAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'OpenAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$schema = Schema::generation();
@@ -86,7 +86,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 			'text'              => array(
 				'format' => array(
 					'type'   => 'json_schema',
-					'name'   => 'dxai_ui_block',
+					'name'   => 'dx_ui_block',
 					'strict' => true,
 					'schema' => $schema,
 				),
@@ -115,7 +115,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 				return $chat;
 			}
 			if ( $chat['code'] < 200 || $chat['code'] >= 300 ) {
-				return $this->http_error( $chat['code'], $chat['body'], __( 'OpenAI generation failed.', 'dxai-ui' ) );
+				return $this->http_error( $chat['code'], $chat['body'], __( 'OpenAI generation failed.', 'dx-ui' ) );
 			}
 			$decoded = Remote_Client::decode_body( $chat['body'] );
 			if ( is_wp_error( $decoded ) ) {
@@ -152,7 +152,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 
 	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'OpenAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'OpenAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$response = Remote_Client::post_json(
 			'https://api.openai.com/v1/chat/completions',
@@ -169,7 +169,7 @@ final class OpenAI_Engine extends Abstract_Engine {
 			return $response;
 		}
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'OpenAI did not answer.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'OpenAI did not answer.', 'dx-ui' ) );
 		}
 		$decoded = Remote_Client::decode_body( $response['body'] );
 		if ( is_wp_error( $decoded ) ) {

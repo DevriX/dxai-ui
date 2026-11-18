@@ -15,14 +15,14 @@
  *
  * usage: bin/wp-php.sh bin/jsx-escapes.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Jsx_Compiler;
+use DX_UI\Compiler\Jsx_Compiler;
 
 $decode = new ReflectionMethod( Jsx_Compiler::class, 'decode_js_escapes' );
 $decode->setAccessible( true );

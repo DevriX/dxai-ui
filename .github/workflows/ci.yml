@@ -60,14 +60,14 @@ jobs:
       # The page runtime in a browser: what is on screen as a page opens is never hidden for an entrance (no site needed). After
       # npm ci: puppeteer-core comes with the dev tools (the runner has Chrome).
       - name: The page runtime reveals nothing that is already on screen
-        run: DXAI_PHP="$(command -v php)" node bin/verify-reveal.cjs
+        run: DXUI_PHP="$(command -v php)" node bin/verify-reveal.cjs
 
       # The ZIP a tag would release, made from what git carries: a file the plugin needs that git does not have fails here,
       # on the push, not on the tag (v0.4.0-beta.34 shipped without the icon runtime, ignored by a `vendor/` rule).
       - name: The release ZIP builds
         run: |
-          export DXAI_PHP="$(command -v php)"
-          export DXAI_PHP_INI="$(php -r 'echo php_ini_loaded_file();')"
+          export DXUI_PHP="$(command -v php)"
+          export DXUI_PHP_INI="$(php -r 'echo php_ini_loaded_file();')"
           node bin/release.cjs 0.0.0-ci --no-build
 
   suites:
@@ -102,10 +102,10 @@ jobs:
       # DX Base installed by the plugin itself, a folder of the site's own as a person's install makes it (a mount of
       # themes/dx-base would be the plugin's own files: the suite that installs it would copy them onto themselves).
       - name: DX Base, installed by the plugin
-        run: $WP_ENV run cli --env-cwd=wp-content/plugins/dxai-ui wp dxai-ui base-theme install
+        run: $WP_ENV run cli --env-cwd=wp-content/plugins/dx-ui wp dx-ui base-theme install
 
       - name: The ci group, strict
-        run: node bin/run-suites.cjs --wp "$WP_ENV run cli --env-cwd=wp-content/plugins/dxai-ui wp" --group ci --strict --json suites.json
+        run: node bin/run-suites.cjs --wp "$WP_ENV run cli --env-cwd=wp-content/plugins/dx-ui wp" --group ci --strict --json suites.json
 
       - name: The report
         if: always()

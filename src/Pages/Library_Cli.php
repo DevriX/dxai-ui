@@ -2,25 +2,25 @@
 /**
  * WP-CLI: the team libraries (templates) a site keeps.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
- *   wp dxai-ui library list                                        every template, which is in use
- *   wp dxai-ui library create <label> --theme=<slug> [--extends=<slug>]
- *   wp dxai-ui library add <slug> <file>                           one more export (a WordPress export, or block markup), and the library built again
- *   wp dxai-ui library build <slug>                                built again from its exports
- *   wp dxai-ui library delete <slug>                               gone, with everything in it
+ *   wp dx-ui library list                                        every template, which is in use
+ *   wp dx-ui library create <label> --theme=<slug> [--extends=<slug>]
+ *   wp dx-ui library add <slug> <file>                           one more export (a WordPress export, or block markup), and the library built again
+ *   wp dx-ui library build <slug>                                built again from its exports
+ *   wp dx-ui library delete <slug>                               gone, with everything in it
  */
 final class Library_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui library',
+			'dx-ui library',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'The team libraries (templates) a site keeps: made from the team\'s exports, built here, trained with more.',
@@ -87,7 +87,7 @@ final class Library_Cli {
 				if ( is_wp_error( $lib ) ) {
 					\WP_CLI::error( $lib->get_error_message() );
 				}
-				\WP_CLI::success( sprintf( 'Made the library "%s" (%s) for %s. Add an export: wp dxai-ui library add %s <file>', $lib['label'], $lib['slug'], implode( ', ', $lib['themes'] ), $lib['slug'] ) );
+				\WP_CLI::success( sprintf( 'Made the library "%s" (%s) for %s. Add an export: wp dx-ui library add %s <file>', $lib['label'], $lib['slug'], implode( ', ', $lib['themes'] ), $lib['slug'] ) );
 				return;
 			case 'add':
 				$file = (string) ( $args[2] ?? '' );

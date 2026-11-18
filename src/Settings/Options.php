@@ -2,19 +2,19 @@
 /**
  * Plugin options.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Settings;
+namespace DX_UI\Settings;
 
-use DXAI_UI\Compiler\Rewrite_Policy;
-use DXAI_UI\Security\Secret_Store;
+use DX_UI\Compiler\Rewrite_Policy;
+use DX_UI\Security\Secret_Store;
 
 final class Options {
 
-	public const OPTION_KEY = 'dxai_ui_settings';
+	public const OPTION_KEY = 'dx_ui_settings';
 
 	private const SECRET_FIELDS = array(
 		'anthropic_api_key',
@@ -26,7 +26,7 @@ final class Options {
 	);
 
 	public function register(): void {
-		add_filter( 'dxai_ui_get_settings', array( $this, 'get' ) );
+		add_filter( 'dx_ui_get_settings', array( $this, 'get' ) );
 	}
 
 	/**

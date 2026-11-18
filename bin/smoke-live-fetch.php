@@ -6,7 +6,7 @@
  *
  * Usage: php bin/smoke-live-fetch.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -21,8 +21,8 @@ $root = dirname( __DIR__ );
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', $root . '/' );
 }
-if ( ! defined( 'DXAI_UI_DIR' ) ) {
-	define( 'DXAI_UI_DIR', $root . '/' );
+if ( ! defined( 'DX_UI_DIR' ) ) {
+	define( 'DX_UI_DIR', $root . '/' );
 }
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 	define( 'HOUR_IN_SECONDS', 3600 );
@@ -51,7 +51,7 @@ if ( ! function_exists( 'trailingslashit' ) ) {
 }
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( string $path = '' ): string {
-		return 'https://dxai-ui.local' . $path;
+		return 'https://dx-ui.local' . $path;
 	}
 }
 if ( ! function_exists( '__' ) ) {
@@ -66,11 +66,11 @@ if ( ! function_exists( 'esc_url_raw' ) ) {
 }
 
 require_once $root . '/src/Autoloader.php';
-DXAI_UI\Autoloader::register();
+DX_UI\Autoloader::register();
 
-use DXAI_UI\Connectors\Live_Page_Fetcher;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Pages\Html_Main;
+use DX_UI\Connectors\Live_Page_Fetcher;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Pages\Html_Main;
 
 $fail = 0;
 $ok   = 0;

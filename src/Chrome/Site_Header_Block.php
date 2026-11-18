@@ -1,23 +1,23 @@
 <?php
 /**
- * The `dxai-ui/site-header` block.
+ * The `dx-ui/site-header` block.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Blocks\Style_Rules;
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Blocks\Style_Rules;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * The header as one dynamic block. It has no content of its own: it renders
  * the page's design header (Header_Template::for_post()) with the current
  * menus (Header_Menus) through Header_Renderer, so a page stores
- * `<!-- wp:dxai-ui/site-header /-->` and nothing a person could get out of
+ * `<!-- wp:dx-ui/site-header /-->` and nothing a person could get out of
  * step with Appearance > Menus.
  *
  * Rendered where the header part was rendered — inside the page content,
@@ -32,17 +32,17 @@ use DXAI_UI\Structures\Page_Scope;
  */
 final class Site_Header_Block {
 
-	public const NAME = 'dxai-ui/site-header';
+	public const NAME = 'dx-ui/site-header';
 
 	/** What a page stores for the header (Header_Menus::install() returns it). */
-	public const MARKUP = '<!-- wp:dxai-ui/site-header /-->';
+	public const MARKUP = '<!-- wp:dx-ui/site-header /-->';
 
-	private const SCRIPT = 'dxai-ui-site-header-editor';
-	private const STYLE  = 'dxai-ui-site-header';
-	private const RULES  = 'dxai-ui-site-header-rules';
+	private const SCRIPT = 'dx-ui-site-header-editor';
+	private const STYLE  = 'dx-ui-site-header';
+	private const RULES  = 'dx-ui-site-header-rules';
 
 	/** Style_Rules' filter for markup it should collect rules from beside the page's. */
-	public const RULES_FILTER = 'dxai_ui_style_rules_markup';
+	public const RULES_FILTER = 'dx_ui_style_rules_markup';
 
 	/** @var array<string, array{root:array<string, mixed>, flyout:bool, scope:int}> This request's filled headers, by key(). */
 	private static array $filled = array();
@@ -68,24 +68,24 @@ final class Site_Header_Block {
 	public function register_block(): void {
 		wp_register_script(
 			self::SCRIPT,
-			DXAI_UI_URL . 'assets/js/site-header-editor.js',
+			DX_UI_URL . 'assets/js/site-header-editor.js',
 			array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-server-side-render', 'wp-i18n', 'wp-data', 'wp-core-data' ),
-			(string) filemtime( DXAI_UI_DIR . 'assets/js/site-header-editor.js' ),
+			(string) filemtime( DX_UI_DIR . 'assets/js/site-header-editor.js' ),
 			true
 		);
 		wp_register_style(
 			self::STYLE,
-			DXAI_UI_URL . 'assets/css/site-header-front.css',
+			DX_UI_URL . 'assets/css/site-header-front.css',
 			array(),
-			(string) filemtime( DXAI_UI_DIR . 'assets/css/site-header-front.css' )
+			(string) filemtime( DX_UI_DIR . 'assets/css/site-header-front.css' )
 		);
 
 		register_block_type(
 			self::NAME,
 			array(
 				'api_version'     => 3,
-				'title'           => __( 'DX Site Header', 'dxai-ui' ),
-				'description'     => __( 'The site header: links from Appearance > Menus, the logo from the Site Logo, the look from the imported design.', 'dxai-ui' ),
+				'title'           => __( 'DX Site Header', 'dx-ui' ),
+				'description'     => __( 'The site header: links from Appearance > Menus, the logo from the Site Logo, the look from the imported design.', 'dx-ui' ),
 				'category'        => 'dx-blocks',
 				'icon'            => 'menu',
 				'keywords'        => array( 'header', 'menu', 'navigation', 'logo' ),
@@ -191,7 +191,7 @@ final class Site_Header_Block {
 	/**
 	 * Hand Style_Rules the header for a page holding the block, so its rules
 	 * print with the page's own: the header as filled from the menus, whose
-	 * blocks carry the design's dxaiCss and dxaiInner, and whose items carry
+	 * blocks carry the design's dxuiCss and dxuiInner, and whose items carry
 	 * the classes a person gave them in Appearance > Menus — a theme utility
 	 * class typed there gets its rule the way one typed into a block's
 	 * Additional CSS class(es) does.
@@ -246,7 +246,7 @@ final class Site_Header_Block {
 	}
 
 	/**
-	 * The header's rules — dxs-, dxaiInner and the theme utility classes its
+	 * The header's rules — dxs-, dxuiInner and the theme utility classes its
 	 * blocks and menu items carry — printed here only when nothing asked the
 	 * Style_Rules filter this request: a Style_Rules that reads it prints them
 	 * itself, and printing both would only double the bytes.
@@ -300,7 +300,7 @@ final class Site_Header_Block {
 	}
 
 	/**
-	 * The dxs- rules a markup string's blocks carry (dxaiCss, dxaiInner).
+	 * The dxs- rules a markup string's blocks carry (dxuiCss, dxuiInner).
 	 */
 	public static function rules_css( string $markup ): string {
 		$rules = array();
@@ -365,7 +365,7 @@ final class Site_Header_Block {
 
 		wp_localize_script(
 			self::SCRIPT,
-			'dxaiSiteHeader',
+			'dxuiSiteHeader',
 			array(
 				'installed'     => null !== $spec,
 				// A page of no converted design: no scoped stylesheet styles the header here.

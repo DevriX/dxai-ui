@@ -2,12 +2,12 @@
 /**
  * A YouTube video, added the way the team adds one: a facade, not a live player.
  *
- * @package DXAI_UI\Compiler
+ * @package DX_UI\Compiler
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * A YouTube iframe on a page loads a player, its scripts and its trackers whether anyone watches the video or not, and that is
@@ -114,7 +114,7 @@ BLOCK;
 		 *
 		 * @param bool $can This WordPress knows block visibility.
 		 */
-		return (bool) apply_filters( 'dxai_ui_video_hidden_embeds', $can );
+		return (bool) apply_filters( 'dx_ui_video_hidden_embeds', $can );
 	}
 
 	/**
@@ -197,7 +197,7 @@ BLOCK;
 		);
 		// A block that is nothing but a YouTube iframe (a raw HTML block of the design, or of an engine).
 		$markup = (string) preg_replace_callback(
-			'#<!-- wp:(html|dxai-ui/html)(?: \{[^\n]*?\})? -->\s*(<iframe\b[^>]*>\s*</iframe>)\s*<!-- /wp:\1 -->#s',
+			'#<!-- wp:(html|dx-ui/html)(?: \{[^\n]*?\})? -->\s*(<iframe\b[^>]*>\s*</iframe>)\s*<!-- /wp:\1 -->#s',
 			static function ( array $m ): string {
 				$doc = new \DOMDocument();
 				$old = libxml_use_internal_errors( true );

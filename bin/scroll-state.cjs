@@ -3,7 +3,7 @@
  *
  * The design's sticky header turns solid once the page is scrolled past a
  * threshold — `setSolid(window.scrollY > 24)` in the source, a
- * `data-dxai-scroll="solid:24"` marker on the page, and Motion_Runtime
+ * `data-dxui-scroll="solid:24"` marker on the page, and Motion_Runtime
  * watching. Every part of that can be present and the header still never
  * change, which is exactly what shipped for months: the geometry oracle
  * compiles its design side with the same compiler, so both sides were equally
@@ -15,7 +15,7 @@
  *
  * usage: node bin/scroll-state.cjs <url>… [--chrome <path>]
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 const path = require('path');
@@ -83,11 +83,11 @@ const same = (a, b) => Boolean(a) && Boolean(b) && a.bg === b.bg && a.border ===
 		await new Promise((r) => setTimeout(r, 1200));
 
 		const slug = url.replace(/\/$/, '').split('/').pop();
-		const specs = await page.evaluate(() => [...document.querySelectorAll('[data-dxai-scroll]')].map((el, i) => ({
-			spec: el.getAttribute('data-dxai-scroll'),
-			any: el.getAttribute('data-dxai-any'),
+		const specs = await page.evaluate(() => [...document.querySelectorAll('[data-dxui-scroll]')].map((el, i) => ({
+			spec: el.getAttribute('data-dxui-scroll'),
+			any: el.getAttribute('data-dxui-any'),
 			// A selector this script can hand back to the page.
-			selector: '[data-dxai-scroll]:nth-of-type(' + (i + 1) + ')',
+			selector: '[data-dxui-scroll]:nth-of-type(' + (i + 1) + ')',
 			tag: el.tagName,
 		})));
 
@@ -99,7 +99,7 @@ const same = (a, b) => Boolean(a) && Boolean(b) && a.bg === b.bg && a.border ===
 
 		for (const spec of specs) {
 			++checked;
-			const selector = '[data-dxai-scroll="' + spec.spec.replace(/"/g, '') + '"]';
+			const selector = '[data-dxui-scroll="' + spec.spec.replace(/"/g, '') + '"]';
 			const threshold = parseFloat((spec.spec.split(':')[1] || '0')) || 0;
 
 			const atTop = await page.evaluate(READ, selector);

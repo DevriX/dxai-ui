@@ -4,7 +4,7 @@ import apiFetch from '@wordpress/api-fetch';
 /*
  * "Export with styles" for a converted page: a link to the nonce-protected
  * download (Transfer_Admin::export_url(), the same one the Pages list's row
- * action uses), which answers with the page's .dxai.zip package.
+ * action uses), which answers with the page's .dxui.zip package.
  *
  * loadTransferInfo() reads the converted pages with their export links, and
  * what the import panel needs to know about this site (the header and footer
@@ -12,7 +12,7 @@ import apiFetch from '@wordpress/api-fetch';
  * who may not import or export gets the server's reason instead.
  */
 export function loadTransferInfo() {
-	return apiFetch( { path: '/dxai-ui/v1/transfer/pages' } ).then( ( res ) => {
+	return apiFetch( { path: '/dx-ui/v1/transfer/pages' } ).then( ( res ) => {
 		const links = {};
 		( Array.isArray( res && res.pages ) ? res.pages : [] ).forEach( ( page ) => {
 			if ( page && page.id && page.export_url ) {
@@ -33,11 +33,11 @@ export default function TransferExport( { url, title } ) {
 			href={ url }
 			aria-label={ sprintf(
 				/* translators: %s: page title */
-				__( 'Export “%s” with its styles as a DX UI package', 'dxai-ui' ),
+				__( 'Export “%s” with its styles as a DX UI package', 'dx-ui' ),
 				title || ''
 			) }
 		>
-			{ __( 'Export', 'dxai-ui' ) }
+			{ __( 'Export', 'dx-ui' ) }
 		</a>
 	);
 }

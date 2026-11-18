@@ -2,12 +2,12 @@
 /**
  * A JavaScript function value inside the Claude Design logic interpreter.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * Arrow functions and class methods alike: parameters, a body (an expression

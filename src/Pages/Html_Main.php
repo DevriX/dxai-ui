@@ -6,12 +6,12 @@
  * Shopify, and plain SSR pages use the same landmarks — without wiping
  * content that lives in a semantic <header> or in-page <nav>.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 final class Html_Main {
 

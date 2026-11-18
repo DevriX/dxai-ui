@@ -4,7 +4,7 @@
  *
  *   bash bin/wp-php.sh bin/verify-wrap-fold.php        (or: wp eval-file bin/verify-wrap-fold.php --user=1)
  *
- * Wrap_Fold folds a Group (or a Box) around one block into that block's `metadata.dxaiWrap` when the editor asks for a design's page
+ * Wrap_Fold folds a Group (or a Box) around one block into that block's `metadata.dxuiWrap` when the editor asks for a design's page
  * (`context=edit`), lifts the page's frame (the one group around all its sections) onto the sections, names the sections in the List
  * View, and puts every one of these back when the editor saves (`rest_pre_insert_page`). What is stored, rendered and read by the rest
  * of the plugin never carries a fold. Checked here: what folds and what does not (a wrapper with a setting of the editor's own, a wrapper
@@ -13,10 +13,10 @@
  *
  * Makes pages and removes them. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Wrap_Fold;
+use DX_UI\Blocks\Wrap_Fold;
 
 $fail   = 0;
 $pass   = 0;
@@ -42,15 +42,15 @@ register_shutdown_function( $fin );
 $para    = static fn( string $words ): string => '<!-- wp:paragraph --><p>' . $words . '</p><!-- /wp:paragraph -->';
 $heading = static fn( string $words, int $level = 2 ): string => '<!-- wp:heading {"level":' . $level . '} --><h' . $level . ' class="wp-block-heading">' . $words . '</h' . $level . '><!-- /wp:heading -->';
 $group   = static fn( string $class, string $inner, string $extra = '', string $tag = 'div' ): string => '<!-- wp:group {' . ( $tag !== 'div' ? '"tagName":"' . $tag . '",' : '' ) . '"className":"' . $class . '"' . $extra . '} --><' . $tag . ' class="wp-block-group ' . $class . '">' . $inner . '</' . $tag . '><!-- /wp:group -->';
-$box     = static fn( string $class, string $inner ): string => '<!-- wp:dxai-ui/box {"tagName":"span","className":"' . $class . '"} --><span class="' . $class . '">' . $inner . '</span><!-- /wp:dxai-ui/box -->';
-$skip    = '<!-- wp:dxai-ui/link {"className":"skip-link","url":"#content","text":"Skip to content"} --><a class="wp-block-dxai-ui-link skip-link" href="#content">Skip to content</a><!-- /wp:dxai-ui/link -->';
+$box     = static fn( string $class, string $inner ): string => '<!-- wp:dx-ui/box {"tagName":"span","className":"' . $class . '"} --><span class="' . $class . '">' . $inner . '</span><!-- /wp:dx-ui/box -->';
+$skip    = '<!-- wp:dx-ui/link {"className":"skip-link","url":"#content","text":"Skip to content"} --><a class="wp-block-dx-ui-link skip-link" href="#content">Skip to content</a><!-- /wp:dx-ui/link -->';
 
 // An Elementor-shaped page: main > .page-content > .gem-1 around three sections, each section a box around its inner box around
 // widgets, each widget a group around its heading or text; one widget with a colour setting; one with two blocks.
-$widget   = static fn( string $id, string $inner ) => $group( 'gem-element gem-element-' . $id . ' gem-widget', $inner, ',"dxaiData":{"data-id":"' . $id . '"}' );
+$widget   = static fn( string $id, string $inner ) => $group( 'gem-element gem-element-' . $id . ' gem-widget', $inner, ',"dxuiData":{"data-id":"' . $id . '"}' );
 $section  = static fn( string $id, string $inner ) => $group( 'gem-element gem-element-' . $id . ' e-con e-parent', $group( 'e-con-inner', $inner ) );
 $hero     = $section( 's1', $widget( 'w1', $heading( 'Hero words', 1 ) ) . $widget( 'w2', $para( 'Hero text' ) ) );
-$services = $section( 's2', $widget( 'w3', $heading( 'Our services' ) ) . $group( 'gem-colored', $para( 'Coloured' ), ',"backgroundColor":"primary"' ) . $widget( 'w4', $box( 'gem-button-content-wrapper', $box( 'gem-button-icon', '<!-- wp:dxai-ui/svg {"svgInner":""} --><svg></svg><!-- /wp:dxai-ui/svg -->' ) ) ) );
+$services = $section( 's2', $widget( 'w3', $heading( 'Our services' ) ) . $group( 'gem-colored', $para( 'Coloured' ), ',"backgroundColor":"primary"' ) . $widget( 'w4', $box( 'gem-button-content-wrapper', $box( 'gem-button-icon', '<!-- wp:dx-ui/svg {"svgInner":""} --><svg></svg><!-- /wp:dx-ui/svg -->' ) ) ) );
 $contact  = $section( 's3', $widget( 'w5', $heading( 'Talk to us' ) . $para( 'Two blocks in one widget' ) ) );
 $frame    = $group( 'site-main', $group( 'page-content', $group( 'gem gem-1', $hero . $services . $contact ) ), ',"anchor":"content"', 'main' );
 $content  = $skip . "\n" . $frame . "\n";
@@ -59,7 +59,7 @@ echo "Folding\n";
 $folded = Wrap_Fold::fold( $content );
 $tree   = parse_blocks( $folded );
 $real   = array_values( array_filter( $tree, static fn( $b ) => ! empty( $b['blockName'] ) ) );
-$expect( 'the sections stand at the top of the page, after the skip link: the frame around them is lifted', count( $real ) === 4 && $real[0]['blockName'] === 'dxai-ui/link', wp_json_encode( array_map( static fn( $b ) => $b['attrs']['className'] ?? $b['blockName'], $real ) ) );
+$expect( 'the sections stand at the top of the page, after the skip link: the frame around them is lifted', count( $real ) === 4 && $real[0]['blockName'] === 'dx-ui/link', wp_json_encode( array_map( static fn( $b ) => $b['attrs']['className'] ?? $b['blockName'], $real ) ) );
 $expect( '…each carrying the frame it was in (main, the content box, the page root)', count( (array) ( $real[1]['attrs']['metadata'][ Wrap_Fold::FRAME ]['wraps'] ?? array() ) ) === 3 && ( $real[1]['attrs']['metadata'][ Wrap_Fold::FRAME ]['id'] ?? '' ) === ( $real[3]['attrs']['metadata'][ Wrap_Fold::FRAME ]['id'] ?? 'x' ) );
 $expect( 'a section is its inner box, its own box folded into it', ( $real[1]['attrs']['className'] ?? '' ) === 'e-con-inner' && count( (array) ( $real[1]['attrs']['metadata'][ Wrap_Fold::KEY ] ?? array() ) ) === 1 );
 $expect( 'each section is named in the List View: the hero, then by its heading', ( $real[1]['attrs']['metadata']['name'] ?? '' ) === 'Hero Section' && ( $real[2]['attrs']['metadata']['name'] ?? '' ) === 'Our services', wp_json_encode( array_map( static fn( $b ) => $b['attrs']['metadata']['name'] ?? '', $real ) ) );
@@ -67,7 +67,7 @@ $hero_kids = $real[1]['innerBlocks'];
 $expect( 'a widget around one heading is the heading: the group is folded into it', $hero_kids[0]['blockName'] === 'core/heading' && ( $hero_kids[0]['attrs']['metadata'][ Wrap_Fold::KEY ][0]['attrs']['className'] ?? '' ) === 'gem-element gem-element-w1 gem-widget' );
 $svc = $real[2]['innerBlocks'];
 $expect( 'a group with a colour of the editor\'s own stays a group someone edits', $svc[1]['blockName'] === 'core/group' && ( $svc[1]['attrs']['backgroundColor'] ?? '' ) === 'primary' );
-$expect( 'two boxes around an icon fold into it, outermost first, under the widget around them', $svc[2]['blockName'] === 'dxai-ui/svg' && array_map( static fn( $w ) => $w['attrs']['className'] ?? '', (array) $svc[2]['attrs']['metadata'][ Wrap_Fold::KEY ] ) === array( 'gem-element gem-element-w4 gem-widget', 'gem-button-content-wrapper', 'gem-button-icon' ) );
+$expect( 'two boxes around an icon fold into it, outermost first, under the widget around them', $svc[2]['blockName'] === 'dx-ui/svg' && array_map( static fn( $w ) => $w['attrs']['className'] ?? '', (array) $svc[2]['attrs']['metadata'][ Wrap_Fold::KEY ] ) === array( 'gem-element gem-element-w4 gem-widget', 'gem-button-content-wrapper', 'gem-button-icon' ) );
 $expect( 'a widget of two blocks stays a group: the section whose one widget it is, is that group', $real[3]['blockName'] === 'core/group' && str_contains( (string) ( $real[3]['attrs']['className'] ?? '' ), 'gem-element-w5' ) && count( $real[3]['innerBlocks'] ) === 2 && count( (array) $real[3]['attrs']['metadata'][ Wrap_Fold::KEY ] ) === 2 );
 $before = Wrap_Fold::measure( $content );
 $after  = Wrap_Fold::measure( $folded );
@@ -116,14 +116,14 @@ $dup                          = $blocks;
 $dup[ $keys[1] ]              = $hero_block;
 $out                          = Wrap_Fold::unfold( serialize_blocks( $dup ) );
 $expect( 'a folded heading duplicated: both carry the widget around them', substr_count( $out, 'gem-element-w1 gem-widget' ) === 4 /* comment + class, twice */ && substr_count( $out, 'Hero words' ) === 2 );
-$expect( 'nothing of the fold is left in what is stored', ! preg_match( '/dxaiWrap|dxaiFrame|dxaiNamed/', Wrap_Fold::unfold( serialize_blocks( $dup ) ) ) );
+$expect( 'nothing of the fold is left in what is stored', ! preg_match( '/dxuiWrap|dxuiFrame|dxuiNamed/', Wrap_Fold::unfold( serialize_blocks( $dup ) ) ) );
 
 echo "\nThrough the REST API, as the editor asks for it\n";
 $design = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Wrap fold fixture design page', 'post_content' => wp_slash( $content ) ) );
 $plain  = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Wrap fold fixture theme page', 'post_content' => wp_slash( $content ) ) );
 $made[] = $design;
 $made[] = $plain;
-update_post_meta( $design, '_dxai_ui_generated_page', '1' );
+update_post_meta( $design, '_dx_ui_generated_page', '1' );
 $get = static function ( int $id, string $context ): string {
 	$request = new WP_REST_Request( 'GET', '/wp/v2/pages/' . $id );
 	$request->set_param( 'context', $context );
@@ -136,15 +136,15 @@ $raw = $get( $design, 'edit' );
 $expect( 'a design\'s page opens folded', str_contains( $raw, Wrap_Fold::KEY ) && str_contains( $raw, Wrap_Fold::FRAME ) );
 $expect( 'a page that is not a design\'s opens as it is stored', $get( $plain, 'edit' ) === $content );
 $view = $get( $design, 'view' );
-$expect( 'what a visitor reads of it (context=view) is not folded', ! str_contains( $view, 'dxaiWrap' ) && str_contains( $view, 'gem-element-w1' ) );
+$expect( 'what a visitor reads of it (context=view) is not folded', ! str_contains( $view, 'dxuiWrap' ) && str_contains( $view, 'gem-element-w1' ) );
 $save = new WP_REST_Request( 'POST', '/wp/v2/pages/' . $design );
 $save->set_param( 'content', str_replace( 'Hero text', 'Saved hero text', $raw ) );
 $status = rest_do_request( $save )->get_status();
 clean_post_cache( $design );
 $expect( 'saved from the editor, it is stored unfolded, with the edit and nothing else changed', 200 === $status && get_post_field( 'post_content', $design ) === str_replace( 'Hero text', 'Saved hero text', $content ), (string) $status );
-add_filter( 'dxai_ui_fold_wrappers', '__return_false' );
+add_filter( 'dx_ui_fold_wrappers', '__return_false' );
 $expect( 'a site that turns it off opens a design\'s page as it is stored', $get( $design, 'edit' ) === get_post_field( 'post_content', $design ) );
-remove_all_filters( 'dxai_ui_fold_wrappers' );
+remove_all_filters( 'dx_ui_fold_wrappers' );
 
 echo "\nA fold does not let anything else in\n";
 $forged = str_replace( '"open":"', '"open":"<script>', $folded );

@@ -2,20 +2,20 @@
 /**
  * Builds a design's document from what the compiler produced and what the import saved.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Compiler\Design_Tokens;
-use DXAI_UI\Compiler\Menu_Tree;
-use DXAI_UI\Compiler\Tailwind\Theme;
-use DXAI_UI\Pages\Menu_Pages;
-use DXAI_UI\Verification\Design_Coverage;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Compiler\Design_Tokens;
+use DX_UI\Compiler\Menu_Tree;
+use DX_UI\Compiler\Tailwind\Theme;
+use DX_UI\Pages\Menu_Pages;
+use DX_UI\Verification\Design_Coverage;
 
 /**
  * One builder for every source. It reads the compile result (Source_Compiler::compile(): the pages, their structures and their
@@ -76,7 +76,7 @@ final class Document_Builder {
 					'bound'       => self::bound( $result, $home, $pages ),
 				),
 				'built'       => array(
-					'plugin'   => defined( 'DXAI_UI_VERSION' ) ? (string) DXAI_UI_VERSION : '',
+					'plugin'   => defined( 'DX_UI_VERSION' ) ? (string) DX_UI_VERSION : '',
 					'compiler' => (string) ( $result['compiler'] ?? '' ),
 					'at'       => gmdate( 'c' ),
 				),
@@ -291,7 +291,7 @@ final class Document_Builder {
 	private static function css_budget( array $result, int $home, array $pages ): array {
 		$css = (string) ( $result['custom_css'] ?? '' );
 		if ( $home > 0 ) {
-			$path = \DXAI_UI\Support\Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] ?? '';
+			$path = \DX_UI\Support\Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'] ?? '';
 			if ( is_string( $path ) && $path !== '' && is_readable( $path ) ) {
 				$css = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			}
@@ -300,11 +300,11 @@ final class Document_Builder {
 		foreach ( $pages as $page ) {
 			$id = (int) ( $page['id'] ?? 0 );
 			if ( $id > 0 ) {
-				$literals += \DXAI_UI\Compiler\Token_Styles::count_literals( (string) get_post_field( 'post_content', $id ) );
+				$literals += \DX_UI\Compiler\Token_Styles::count_literals( (string) get_post_field( 'post_content', $id ) );
 			}
 		}
 		if ( $home < 1 ) {
-			$literals = \DXAI_UI\Compiler\Token_Styles::count_literals( (string) ( $result['gutenberg_markup'] ?? '' ) );
+			$literals = \DX_UI\Compiler\Token_Styles::count_literals( (string) ( $result['gutenberg_markup'] ?? '' ) );
 		}
 
 		return array(
@@ -317,7 +317,7 @@ final class Document_Builder {
 	/**
 	 * How the pages' blocks carry their colours (phase 2 of the plan measures it): as a preset of the site (`textColor`,
 	 * `backgroundColor`), as the block's custom colour (`style.color`), or still as a class the design's stylesheet rules
-	 * (`text-dxai-…`, `bg-dxai-…`) — the saved pages after a save, the compiled markup before.
+	 * (`text-dxui-…`, `bg-dxui-…`) — the saved pages after a save, the compiled markup before.
 	 *
 	 * @param array<string, mixed>             $result
 	 * @param array<int, array<string, mixed>> $pages
@@ -330,12 +330,12 @@ final class Document_Builder {
 			'text'       => array(
 				'preset' => preg_match_all( '/"textColor":"/', $markup ),
 				'custom' => preg_match_all( '/"color":\{"text":"/', $markup ),
-				'class'  => preg_match_all( '/(?<=[\s"])text-dxai-[a-z0-9-]+(?=[\s"])/', $markup ),
+				'class'  => preg_match_all( '/(?<=[\s"])text-dxui-[a-z0-9-]+(?=[\s"])/', $markup ),
 			),
 			'background' => array(
 				'preset' => preg_match_all( '/"backgroundColor":"/', $markup ),
 				'custom' => preg_match_all( '/"color":\{"background":"/', $markup ),
-				'class'  => preg_match_all( '/(?<=[\s"])bg-dxai-[a-z0-9-]+(?=[\s"])/', $markup ),
+				'class'  => preg_match_all( '/(?<=[\s"])bg-dxui-[a-z0-9-]+(?=[\s"])/', $markup ),
 			),
 		);
 	}
@@ -730,7 +730,7 @@ final class Document_Builder {
 		foreach ( is_array( $result['pages'] ?? null ) ? $result['pages'] : array() as $page ) {
 			$markup .= "\n" . (string) ( is_array( $page ) ? ( $page['gutenberg_markup'] ?? '' ) : '' );
 		}
-		$countups = substr_count( $markup, 'wp:dxai-ui/countup' );
+		$countups = substr_count( $markup, 'wp:dx-ui/countup' );
 		if ( $countups > 0 ) {
 			$rows['countup'] = array( $countups, 'a number that counts up' );
 		}

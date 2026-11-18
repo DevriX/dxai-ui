@@ -33,28 +33,28 @@ function is( got, want, label ) {
 
 /* Counting blocks from serialised markup. */
 const markup = [
-	'<!-- wp:dxai-ui/section {"tag":"section"} -->',
-	'<!-- wp:dxai-ui/text {"tag":"h2","content":"Hi"} /-->',
-	'<!-- wp:dxai-ui/html -->',
+	'<!-- wp:dx-ui/section {"tag":"section"} -->',
+	'<!-- wp:dx-ui/text {"tag":"h2","content":"Hi"} /-->',
+	'<!-- wp:dx-ui/html -->',
 	'<svg viewBox="0 0 4 4"></svg>',
-	'<!-- /wp:dxai-ui/html -->',
-	'<!-- /wp:dxai-ui/section -->',
+	'<!-- /wp:dx-ui/html -->',
+	'<!-- /wp:dx-ui/section -->',
 ].join( '\n' );
 is( blockCounts( markup ), { blocks: 3, islands: 1 }, 'block delimiters counted once' );
 is( blockCounts( '' ), { blocks: 0, islands: 0 }, 'empty markup' );
-// A self-closing island: `<!-- wp:dxai-ui/html /-->` has no closing delimiter.
-is( blockCounts( '<!-- wp:dxai-ui/html /-->' ), { blocks: 1, islands: 1 }, 'self-closed island' );
-// The core block is `core/html`; ours is `dxai-ui/html`. Neither may be missed,
+// A self-closing island: `<!-- wp:dx-ui/html /-->` has no closing delimiter.
+is( blockCounts( '<!-- wp:dx-ui/html /-->' ), { blocks: 1, islands: 1 }, 'self-closed island' );
+// The core block is `core/html`; ours is `dx-ui/html`. Neither may be missed,
 // and no block whose name merely starts with those may be counted.
 is(
-	blockCounts( '<!-- wp:html -->x<!-- /wp:html -->\n<!-- wp:dxai-ui/htmlish -->y<!-- /wp:dxai-ui/htmlish -->' ),
+	blockCounts( '<!-- wp:html -->x<!-- /wp:html -->\n<!-- wp:dx-ui/htmlish -->y<!-- /wp:dx-ui/htmlish -->' ),
 	{ blocks: 2, islands: 1 },
 	'core/html counts, htmlish does not'
 );
 
 /* Several pages of markup count as one conversion. */
 is(
-	blockCounts( [ '<!-- wp:dxai-ui/section /-->', '<!-- wp:dxai-ui/html -->x<!-- /wp:dxai-ui/html -->' ] ),
+	blockCounts( [ '<!-- wp:dx-ui/section /-->', '<!-- wp:dx-ui/html -->x<!-- /wp:dx-ui/html -->' ] ),
 	{ blocks: 2, islands: 1 },
 	'an array of pages counts as one'
 );
@@ -71,10 +71,10 @@ is(
 is(
 	measureFidelity(
 		{
-			gutenberg_markup: '<!-- wp:dxai-ui/section /--><!-- wp:dxai-ui/text /--><!-- wp:dxai-ui/box /-->',
+			gutenberg_markup: '<!-- wp:dx-ui/section /--><!-- wp:dx-ui/text /--><!-- wp:dx-ui/box /-->',
 			pages: [
-				{ gutenberg_markup: '<!-- wp:dxai-ui/section /--><!-- wp:dxai-ui/html /-->' },
-				{ gutenberg_markup: '<!-- wp:dxai-ui/section /--><!-- wp:dxai-ui/html /-->' },
+				{ gutenberg_markup: '<!-- wp:dx-ui/section /--><!-- wp:dx-ui/html /-->' },
+				{ gutenberg_markup: '<!-- wp:dx-ui/section /--><!-- wp:dx-ui/html /-->' },
 			],
 			islands: { a: 2 },
 			design_css_raw: 'x',
@@ -89,7 +89,7 @@ is(
 /* A clean conversion is pixel perfect; anything short of it is not. */
 const clean = measureFidelity(
 	{
-		gutenberg_markup: '<!-- wp:dxai-ui/section -->a<!-- /wp:dxai-ui/section -->',
+		gutenberg_markup: '<!-- wp:dx-ui/section -->a<!-- /wp:dx-ui/section -->',
 		islands: {},
 		unevaluated: [],
 		unresolved_utilities: [],
@@ -106,7 +106,7 @@ is( clean.gaps, [], 'clean run has no gaps' );
 
 const gappy = measureFidelity(
 	{
-		gutenberg_markup: '<!-- wp:dxai-ui/section -->a<!-- /wp:dxai-ui/section -->',
+		gutenberg_markup: '<!-- wp:dx-ui/section -->a<!-- /wp:dx-ui/section -->',
 		islands: { span: 3, a: 1 },
 		unevaluated: [ { kind: 'unbound-call', source: 'useInView()', count: 4 } ],
 		unresolved_utilities: [ 'bg-primary/40' ],
@@ -125,7 +125,7 @@ is( worstElements( gappy.byElement ), [ { tag: 'span', count: 3 }, { tag: 'a', c
 
 /* A design that never ran under Tailwind is not missing a theme. */
 const staticDesign = measureFidelity(
-	{ gutenberg_markup: '<!-- wp:dxai-ui/section /-->', islands: {}, design_css_raw: '', static_html: true },
+	{ gutenberg_markup: '<!-- wp:dx-ui/section /-->', islands: {}, design_css_raw: '', static_html: true },
 	{},
 	[]
 );

@@ -2,14 +2,14 @@
 /**
  * Whether a structure keeps the design or becomes a WordPress-native block.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Settings\Options;
+use DX_UI\Settings\Options;
 
 /**
  * A blog section can be a pixel copy of the designed cards, or a Query Loop

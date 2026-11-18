@@ -19,12 +19,12 @@
  *
  * Software decides; nothing here calls an AI model.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 final class Page_Composer {
 
@@ -47,7 +47,7 @@ final class Page_Composer {
 	private const LINK_CSS = 'color:inherit;text-decoration:underline;text-underline-offset:.15em';
 
 	/** Blocks whose inline runs can carry CSS of their own (Style_Hoister::CONTENT_BLOCKS). */
-	private const INLINE_CSS_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'dxai-ui/text' );
+	private const INLINE_CSS_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'dx-ui/text' );
 
 	/** The space below a picture added at the top of a card that had no icon there. */
 	private const CARD_IMAGE_GAP = '18px';
@@ -224,7 +224,7 @@ final class Page_Composer {
 		$class   = array_diff( $class, $this->white );
 		$painted = preg_grep( '/^(?:(?:sm|md|lg|xl|2xl)[:-])*(?:bg-|has-background|has-[a-z0-9-]+-background-color|has-[a-z0-9-]+-gradient-background)/', $class ) !== array()
 			|| isset( $attrs['backgroundColor'] ) || isset( $attrs['gradient'] ) || isset( $attrs['style']['color']['background'] ) || isset( $attrs['style']['color']['gradient'] ) || isset( $attrs['style']['background'] )
-			|| preg_match( '/(?:^|;)\s*background(?:-color|-image)?\s*:(?!\s*(?:none|transparent))/', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1
+			|| preg_match( '/(?:^|;)\s*background(?:-color|-image)?\s*:(?!\s*(?:none|transparent))/', (string) ( $attrs['dxuiCss'] ?? '' ) ) === 1
 			|| self::has_photo_backdrop( Section_Library::analyze( $section, 0 ) );
 
 		return $painted ? '' : 'white';
@@ -870,7 +870,7 @@ final class Page_Composer {
 	 * @return array<string, mixed>|null
 	 */
 	private function questions( array $unit ): ?array {
-		$slot = 'dxai faq slot';
+		$slot = 'dxui faq slot';
 		$text = array_merge( $unit, array( 'kind' => 'text', 'paras' => array( $slot ), 'faq' => array(), 'items' => array(), 'list' => array(), 'buttons' => array(), 'images' => array() ) );
 		$into = $this->choose( $text, false );
 		if ( $into === null || (array) $unit['faq'] === array() ) {
@@ -1157,10 +1157,10 @@ final class Page_Composer {
 
 		// 1. The design's machinery that has no content of its own: "show more" boxes, their toggles, breakpoint duplicates. Not in
 		//    the design's form: a step form shows and hides its fields with that machinery, and without it there is no form.
-		$block = $c['kind'] === 'form' ? $block : $this->prune( $block, static fn( $b ) => str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-on-' )
-			|| str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-toggle-' )
-			|| ( ( $b['blockName'] ?? '' ) === 'dxai-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'button' )
-			|| array_intersect( array( 'data-mob', 'data-desk' ), array_keys( (array) ( $b['attrs']['dxaiData'] ?? array() ) ) ) );
+		$block = $c['kind'] === 'form' ? $block : $this->prune( $block, static fn( $b ) => str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxui-on-' )
+			|| str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxui-toggle-' )
+			|| ( ( $b['blockName'] ?? '' ) === 'dx-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'button' )
+			|| array_intersect( array( 'data-mob', 'data-desk' ), array_keys( (array) ( $b['attrs']['dxuiData'] ?? array() ) ) ) );
 		$a = Section_Library::analyze( $block, (int) $c['index'] );
 
 		// 2. Panels other than the chosen one go, with their container.
@@ -1344,7 +1344,7 @@ final class Page_Composer {
 	 */
 	private static function item_text_slot( ?array $rep ): ?array {
 		foreach ( (array) ( $rep['shape']['slots'] ?? array() ) as $s ) {
-			if ( $s['type'] === 'text' && ! $s['decor'] && in_array( (string) $s['name'], array( 'core/paragraph', 'dxai-ui/text' ), true ) && ! in_array( strtolower( (string) $s['tag'] ), array( 'address', 'summary', 'figcaption', 'cite', 'blockquote' ), true ) ) {
+			if ( $s['type'] === 'text' && ! $s['decor'] && in_array( (string) $s['name'], array( 'core/paragraph', 'dx-ui/text' ), true ) && ! in_array( strtolower( (string) $s['tag'] ), array( 'address', 'summary', 'figcaption', 'cite', 'blockquote' ), true ) ) {
 				return (array) $s['path'];
 			}
 		}
@@ -1377,7 +1377,7 @@ final class Page_Composer {
 		}
 		$text = Block_Tree::at( $block, array_merge( $rep['path'], array( $rep['items'][0] ), $slot ) );
 		$gap  = self::bottom_gap( Block_Tree::at( $block, $head ) );
-		Block_Tree::set_css( $text, Block_Tree::with_css( (string) ( $text['attrs']['dxaiCss'] ?? '' ), 'margin-bottom', $gap ) );
+		Block_Tree::set_css( $text, Block_Tree::with_css( (string) ( $text['attrs']['dxuiCss'] ?? '' ), 'margin-bottom', $gap ) );
 		$parent = &Block_Tree::at( $block, array_slice( $head, 0, -1 ) );
 		Block_Tree::insert( $parent, $head[ count( $head ) - 1 ] + 1, $text );
 		unset( $parent );
@@ -1531,7 +1531,7 @@ final class Page_Composer {
 	 */
 	private static function mark_icons( array $b ): array {
 		if ( Home_Kit::is_icon( $b ) ) {
-			$b['attrs']['__dxai_drop'] = true;
+			$b['attrs']['__dxui_drop'] = true;
 			return $b;
 		}
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $i => $inner ) {
@@ -1578,7 +1578,7 @@ final class Page_Composer {
 	 * @return array<string, mixed>
 	 */
 	private static function unflag( array $b ): array {
-		$data = (array) ( $b['attrs']['dxaiData'] ?? array() );
+		$data = (array) ( $b['attrs']['dxuiData'] ?? array() );
 		$gone = array_intersect( array( 'data-mob', 'data-desk' ), array_keys( $data ) );
 		if ( ! $gone ) {
 			return $b;
@@ -1587,9 +1587,9 @@ final class Page_Composer {
 			unset( $data[ $key ] );
 		}
 		if ( $data === array() ) {
-			unset( $b['attrs']['dxaiData'] );
+			unset( $b['attrs']['dxuiData'] );
 		} else {
-			$b['attrs']['dxaiData'] = $data;
+			$b['attrs']['dxuiData'] = $data;
 		}
 		$strip = static function ( $part ) use ( $gone ) {
 			if ( ! is_string( $part ) ) {
@@ -1718,7 +1718,7 @@ final class Page_Composer {
 			$gap    = count( $texts ) >= 2 ? self::bottom_gap( Block_Tree::at( $block, $texts[ count( $texts ) - 2 ] ) ) : '16px';
 			$spaced = $copy;
 			if ( ! self::has_bottom_space( $copy ) ) {
-				Block_Tree::set_css( $spaced, Block_Tree::with_css( (string) ( $spaced['attrs']['dxaiCss'] ?? '' ), 'margin-bottom', $gap ) );
+				Block_Tree::set_css( $spaced, Block_Tree::with_css( (string) ( $spaced['attrs']['dxuiCss'] ?? '' ), 'margin-bottom', $gap ) );
 				$parent['innerBlocks'][ $idx ] = $spaced;
 			}
 			for ( $i = count( $texts ); $i < $count; $i++ ) {
@@ -1738,7 +1738,7 @@ final class Page_Composer {
 		for ( $i = 0; $i <= count( $path ); $i++ ) {
 			$name = (string) ( $node['blockName'] ?? '' );
 			$tag  = strtolower( (string) ( $node['attrs']['tagName'] ?? '' ) );
-			if ( in_array( $name, array( 'dxai-ui/link', 'core/button' ), true ) || ( in_array( $name, array( 'dxai-ui/box', 'dxai-ui/text' ), true ) && $tag === 'a' ) ) {
+			if ( in_array( $name, array( 'dx-ui/link', 'core/button' ), true ) || ( in_array( $name, array( 'dx-ui/box', 'dx-ui/text' ), true ) && $tag === 'a' ) ) {
 				return true;
 			}
 			if ( $i === count( $path ) || ! isset( $node['innerBlocks'][ $path[ $i ] ] ) ) {
@@ -1862,15 +1862,15 @@ final class Page_Composer {
 		if ( stripos( $html, '<a ' ) === false || ! in_array( (string) ( $node['blockName'] ?? '' ), self::INLINE_CSS_BLOCKS, true ) ) {
 			return $html;
 		}
-		$class = \DXAI_UI\Compiler\Style_Hoister::css_class( self::LINK_CSS );
+		$class = \DX_UI\Compiler\Style_Hoister::css_class( self::LINK_CSS );
 		$html  = (string) preg_replace_callback(
 			'/<a\b([^>]*)>/i',
 			static fn( $m ) => preg_match( '/\sclass\s*=/i', $m[1] ) ? $m[0] : '<a class="' . $class . '"' . $m[1] . '>',
 			$html
 		);
-		$inner                  = is_array( $node['attrs'][ \DXAI_UI\Compiler\Style_Hoister::INNER_ATTR ] ?? null ) ? $node['attrs'][ \DXAI_UI\Compiler\Style_Hoister::INNER_ATTR ] : array();
+		$inner                  = is_array( $node['attrs'][ \DX_UI\Compiler\Style_Hoister::INNER_ATTR ] ?? null ) ? $node['attrs'][ \DX_UI\Compiler\Style_Hoister::INNER_ATTR ] : array();
 		$inner[ $class ]        = self::LINK_CSS;
-		$node['attrs'][ \DXAI_UI\Compiler\Style_Hoister::INNER_ATTR ] = $inner;
+		$node['attrs'][ \DX_UI\Compiler\Style_Hoister::INNER_ATTR ] = $inner;
 
 		return $html;
 	}
@@ -2024,9 +2024,9 @@ final class Page_Composer {
 					// Further text slots (a "learn more" line): the old card's link label, if it had one.
 					$this->set( $block, $abs( $s['path'] ), ( $item['label'] ?? '' ) !== '' ? esc_html( (string) $item['label'] ) : null );
 				}
-				if ( ( $node['blockName'] ?? '' ) === 'dxai-ui/link' || ( $shape['slots'][0]['type'] ?? '' ) === 'card' ) {
+				if ( ( $node['blockName'] ?? '' ) === 'dx-ui/link' || ( $shape['slots'][0]['type'] ?? '' ) === 'card' ) {
 					$target = &Block_Tree::at( $block, $path );
-					if ( ( $target['blockName'] ?? '' ) === 'dxai-ui/link' ) {
+					if ( ( $target['blockName'] ?? '' ) === 'dx-ui/link' ) {
 						Block_Tree::set_link( $target, ( $item['href'] ?? '' ) !== '' ? (string) $item['href'] : '#' );
 					}
 					unset( $target );
@@ -2104,14 +2104,14 @@ final class Page_Composer {
 				unset( $card );
 				return false;
 			}
-			Block_Tree::set_css( $picture, Block_Tree::with_css( (string) ( $picture['attrs']['dxaiCss'] ?? '' ), 'margin-bottom', self::CARD_IMAGE_GAP ) );
+			Block_Tree::set_css( $picture, Block_Tree::with_css( (string) ( $picture['attrs']['dxuiCss'] ?? '' ), 'margin-bottom', self::CARD_IMAGE_GAP ) );
 			Block_Tree::insert( $card, 0, $picture );
 			unset( $card );
 
 			return true;
 		}
 		$gap = self::bottom_gap( Block_Tree::at( $card, $icon ) );
-		Block_Tree::set_css( $picture, Block_Tree::with_css( (string) ( $picture['attrs']['dxaiCss'] ?? '' ), 'margin-bottom', $gap ) );
+		Block_Tree::set_css( $picture, Block_Tree::with_css( (string) ( $picture['attrs']['dxuiCss'] ?? '' ), 'margin-bottom', $gap ) );
 		$parent = &Block_Tree::at( $card, array_slice( $icon, 0, -1 ) );
 		$at     = $icon[ count( $icon ) - 1 ];
 		Block_Tree::drop( $parent, $at );
@@ -2163,7 +2163,7 @@ final class Page_Composer {
 	}
 
 	/**
-	 * The dxai-ui/image blocks of a section a visitor always sees as pictures of their own: not in a box shown on one
+	 * The dx-ui/image blocks of a section a visitor always sees as pictures of their own: not in a box shown on one
 	 * screen width only or hidden until a toggle, not decorative, not beside an overlay (a backdrop under a scrim).
 	 *
 	 * @param array<string, mixed> $b
@@ -2171,21 +2171,21 @@ final class Page_Composer {
 	 */
 	private static function shown_pictures( array $b ): array {
 		$class = ' ' . (string) ( $b['attrs']['className'] ?? '' ) . ' ';
-		if ( str_contains( $class, 'dxai-on-' ) || str_contains( $class, ' hidden ' ) || array_intersect( array( 'data-mob', 'data-desk' ), array_keys( (array) ( $b['attrs']['dxaiData'] ?? array() ) ) ) ) {
+		if ( str_contains( $class, 'dxui-on-' ) || str_contains( $class, ' hidden ' ) || array_intersect( array( 'data-mob', 'data-desk' ), array_keys( (array) ( $b['attrs']['dxuiData'] ?? array() ) ) ) ) {
 			return array();
 		}
-		if ( (string) ( $b['blockName'] ?? '' ) === 'dxai-ui/image' ) {
+		if ( (string) ( $b['blockName'] ?? '' ) === 'dx-ui/image' ) {
 			$decor = ( $b['attrs']['ariaHidden'] ?? '' ) === 'true' || preg_match( '#^\s*<[^>]*\baria-hidden="true"#', (string) $b['innerHTML'] ) === 1;
 			return $decor ? array() : array( $b );
 		}
 		$kids = (array) ( $b['innerBlocks'] ?? array() );
 		$veil = false;
 		foreach ( $kids as $k ) {
-			$veil = $veil || ( empty( $k['innerBlocks'] ) && ( ( $k['attrs']['ariaHidden'] ?? '' ) === 'true' || preg_match( '#^\s*<[^>]*\baria-hidden="true"#', (string) ( $k['innerHTML'] ?? '' ) ) === 1 ) && (string) ( $k['blockName'] ?? '' ) === 'dxai-ui/box' );
+			$veil = $veil || ( empty( $k['innerBlocks'] ) && ( ( $k['attrs']['ariaHidden'] ?? '' ) === 'true' || preg_match( '#^\s*<[^>]*\baria-hidden="true"#', (string) ( $k['innerHTML'] ?? '' ) ) === 1 ) && (string) ( $k['blockName'] ?? '' ) === 'dx-ui/box' );
 		}
 		$out = array();
 		foreach ( $kids as $k ) {
-			if ( $veil && (string) ( $k['blockName'] ?? '' ) === 'dxai-ui/image' ) {
+			if ( $veil && (string) ( $k['blockName'] ?? '' ) === 'dx-ui/image' ) {
 				continue; // a picture beside an overlay is that box's backdrop
 			}
 			array_push( $out, ...self::shown_pictures( $k ) );
@@ -2201,7 +2201,7 @@ final class Page_Composer {
 	 */
 	private static function bottom_gap( array $b ): string {
 		// The block's own declarations first, in order (the last margin-bottom or margin wins), then its inline runs'.
-		foreach ( array( Block_Tree::css_of( $b ), strtolower( implode( ';', array_map( 'strval', (array) ( $b['attrs']['dxaiInner'] ?? array() ) ) ) ) ) as $css ) {
+		foreach ( array( Block_Tree::css_of( $b ), strtolower( implode( ';', array_map( 'strval', (array) ( $b['attrs']['dxuiInner'] ?? array() ) ) ) ) ) as $css ) {
 			$gap = '';
 			foreach ( array_filter( array_map( 'trim', explode( ';', $css ) ), 'strlen' ) as $decl ) {
 				if ( preg_match( '/^margin-bottom:(.+)$/', $decl, $m ) ) {
@@ -2291,7 +2291,7 @@ final class Page_Composer {
 			// Nothing of the old page's for it: the design's own background stays — it is how the section looks,
 			// the overlay and the text colours over it were made for it.
 			$node                          = &Block_Tree::at( $block, $s['path'] );
-			$node['attrs']['__dxai_image'] = true;
+			$node['attrs']['__dxui_image'] = true;
 			unset( $node );
 		}
 		if ( $bg !== '' ) {
@@ -2309,7 +2309,7 @@ final class Page_Composer {
 			// page has none of its own for it — the two columns stay two.
 			if ( $ref === '' && ! empty( $unit['same'] ) ) {
 				$node                          = &Block_Tree::at( $block, $s['path'] );
-				$node['attrs']['__dxai_image'] = true;
+				$node['attrs']['__dxui_image'] = true;
 				unset( $node );
 				continue;
 			}
@@ -2329,7 +2329,7 @@ final class Page_Composer {
 				$fill  = min( count( $r['items'] ), count( $queue ) + count( $spare ) );
 				foreach ( array_slice( $r['items'], $fill ) as $idx ) {
 					$node                         = &Block_Tree::at( $block, array_merge( $r['path'], array( $idx ) ) );
-					$node['attrs']['__dxai_drop'] = true;
+					$node['attrs']['__dxui_drop'] = true;
 					unset( $node );
 				}
 				$r['items'] = array_slice( $r['items'], 0, $fill );
@@ -2359,7 +2359,7 @@ final class Page_Composer {
 	 * @param array<string, mixed> $block
 	 */
 	private function css_photo( array &$block, string $ref ): bool {
-		$css = (string) ( $block['attrs']['dxaiCss'] ?? '' );
+		$css = (string) ( $block['attrs']['dxuiCss'] ?? '' );
 		if ( ! isset( $this->pool[ $ref ] ) || preg_match( '/background(?:-image)?\s*:[^;]*?url\(\s*([\'"]?)([^\'")]+\.(?:jpe?g|png|webp|avif)(?:\?[^\'")]*)?)\1\s*\)/i', $css, $m ) !== 1 ) {
 			return false;
 		}
@@ -2474,7 +2474,7 @@ final class Page_Composer {
 			return;
 		}
 		if ( $ref === '' || ! isset( $this->pool[ $ref ] ) ) {
-			$node['attrs']['__dxai_drop'] = true;
+			$node['attrs']['__dxui_drop'] = true;
 			return;
 		}
 		$img    = $this->pool[ $ref ];
@@ -2482,11 +2482,11 @@ final class Page_Composer {
 		$cover  = str_contains( Block_Tree::css_of( $node ), 'object-fit:cover' );
 		$got    = ( $this->images )( (string) $img['src'], $aspect, ! $cover && $aspect > 0 );
 		if ( ! is_array( $got ) || empty( $got['url'] ) ) {
-			$node['attrs']['__dxai_drop'] = true;
+			$node['attrs']['__dxui_drop'] = true;
 			return;
 		}
 		Block_Tree::set_image( $node, (string) $got['url'], (string) ( $img['alt'] ?? '' ), (int) ( $got['id'] ?? 0 ) );
-		$node['attrs']['__dxai_image'] = true;
+		$node['attrs']['__dxui_image'] = true;
 		$this->used_images[ $ref ]     = true;
 	}
 
@@ -2565,14 +2565,14 @@ final class Page_Composer {
 	private function sweep( array $block, bool $keep_widgets ): array {
 		$foreign = function ( array $b ) use ( $keep_widgets ): bool {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( ! empty( $b['attrs']['__dxai_drop'] ) ) {
+			if ( ! empty( $b['attrs']['__dxui_drop'] ) ) {
 				return true;
 			}
-			if ( in_array( $name, array( 'dxai-ui/image', 'core/image' ), true ) || ( $name === 'dxai-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'img' ) ) {
+			if ( in_array( $name, array( 'dx-ui/image', 'core/image' ), true ) || ( $name === 'dx-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'img' ) ) {
 				// The design's own mark (an icon) stays with its card: the card was chosen for the words it says (resize_matched()).
-				return empty( $b['attrs']['__dxai_image'] ) && ! Home_Kit::is_icon( $b );
+				return empty( $b['attrs']['__dxui_image'] ) && ! Home_Kit::is_icon( $b );
 			}
-			if ( $name === 'dxai-ui/html' && ! $keep_widgets && preg_match( '#<(form|input|select|textarea|button)\b#i', (string) $b['innerHTML'] ) ) {
+			if ( $name === 'dx-ui/html' && ! $keep_widgets && preg_match( '#<(form|input|select|textarea|button)\b#i', (string) $b['innerHTML'] ) ) {
 				return true;
 			}
 			// A form of any kind (a form plugin's block or shortcode) stays only in the section the old page's form
@@ -2587,7 +2587,7 @@ final class Page_Composer {
 			if ( $text === '' || preg_match( '/^[\s★☆✓✔✗+−–·•|→←↑↓\-\d%]+$/u', $text ) ) {
 				return false;
 			}
-			if ( $name === 'dxai-ui/html' && $keep_widgets ) {
+			if ( $name === 'dx-ui/html' && $keep_widgets ) {
 				return false;
 			}
 
@@ -2596,8 +2596,8 @@ final class Page_Composer {
 		$block = $this->prune( $block, $foreign );
 		// Containers the removals left empty go; a box that was empty in the design itself — the overlay over a
 		// photo, a rule, an accent shape — is drawing, not an empty slot, and stays.
-		$block = $this->prune( $block, static fn( $b ) => self::is_empty( $b ) && ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'dxai-ui/svg' ), true ) && self::is_container( $b ) && ! self::is_drawing( $b ) );
-		self::clear_marks( $block, array( '__dxai_drop', '__dxai_image' ) );
+		$block = $this->prune( $block, static fn( $b ) => self::is_empty( $b ) && ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'dx-ui/svg' ), true ) && self::is_container( $b ) && ! self::is_drawing( $b ) );
+		self::clear_marks( $block, array( '__dxui_drop', '__dxui_image' ) );
 
 		return $block;
 	}
@@ -2608,7 +2608,7 @@ final class Page_Composer {
 	 * @param array<string, mixed> $b
 	 */
 	private static function is_drawing( array $b ): bool {
-		return ! empty( $b['attrs']['__dxai_drawing'] ) && empty( $b['innerBlocks'] );
+		return ! empty( $b['attrs']['__dxui_drawing'] ) && empty( $b['innerBlocks'] );
 	}
 
 	/**
@@ -2619,9 +2619,9 @@ final class Page_Composer {
 	 */
 	private static function mark_drawings( array &$block ): void {
 		if ( empty( $block['innerBlocks'] ) ) {
-			if ( (string) ( $block['blockName'] ?? '' ) === 'dxai-ui/box' && strtolower( (string) ( $block['attrs']['tagName'] ?? '' ) ) !== 'img' && Block_Tree::own_text( $block ) === ''
-				&& ( trim( (string) ( $block['attrs']['dxaiCss'] ?? '' ) ) !== '' || trim( (string) ( $block['attrs']['className'] ?? '' ) ) !== '' ) ) {
-				$block['attrs']['__dxai_drawing'] = true;
+			if ( (string) ( $block['blockName'] ?? '' ) === 'dx-ui/box' && strtolower( (string) ( $block['attrs']['tagName'] ?? '' ) ) !== 'img' && Block_Tree::own_text( $block ) === ''
+				&& ( trim( (string) ( $block['attrs']['dxuiCss'] ?? '' ) ) !== '' || trim( (string) ( $block['attrs']['className'] ?? '' ) ) !== '' ) ) {
+				$block['attrs']['__dxui_drawing'] = true;
 			}
 			return;
 		}
@@ -2639,7 +2639,7 @@ final class Page_Composer {
 	private static function mark_grids( array &$block ): void {
 		$kids = count( (array) ( $block['innerBlocks'] ?? array() ) );
 		if ( $kids >= 2 && preg_match( '/(^|;)display:(inline-)?grid(;|$)/', Block_Tree::css_of( $block ) ) ) {
-			$block['attrs']['__dxai_cols'] = $kids;
+			$block['attrs']['__dxui_cols'] = $kids;
 		}
 		foreach ( $block['innerBlocks'] as &$inner ) {
 			self::mark_grids( $inner );
@@ -2655,7 +2655,7 @@ final class Page_Composer {
 	 * @param array<string, mixed> $block
 	 */
 	private function keep_measure( array &$block ): void {
-		$was = (int) ( $block['attrs']['__dxai_cols'] ?? 0 );
+		$was = (int) ( $block['attrs']['__dxui_cols'] ?? 0 );
 		$now = count( (array) $block['innerBlocks'] );
 		if ( $was >= 2 && $now >= 1 && $now < $was ) {
 			$grid = Block_Tree::css_of( $block );
@@ -2663,12 +2663,12 @@ final class Page_Composer {
 			// auto-fill) does so by itself.
 			if ( ! preg_match( '/grid-template-columns:repeat\(auto-(fit|fill)/', $grid ) ) {
 				$cols = $now === 1 ? '1fr' : 'repeat(' . $now . ',minmax(0,1fr))';
-				Block_Tree::set_css( $block, Block_Tree::with_css( (string) ( $block['attrs']['dxaiCss'] ?? '' ), 'grid-template-columns', $cols ) );
+				Block_Tree::set_css( $block, Block_Tree::with_css( (string) ( $block['attrs']['dxuiCss'] ?? '' ), 'grid-template-columns', $cols ) );
 			}
 			if ( $now === 1 ) {
 				$only = &$block['innerBlocks'][0];
 				if ( ! str_contains( serialize_block( $only ), '<img' ) && ! preg_match( '/(^|;)max-width:/', Block_Tree::css_of( $only ) ) ) {
-					Block_Tree::set_css( $only, Block_Tree::with_css( (string) ( $only['attrs']['dxaiCss'] ?? '' ), 'max-width', $this->measure() ) );
+					Block_Tree::set_css( $only, Block_Tree::with_css( (string) ( $only['attrs']['dxuiCss'] ?? '' ), 'max-width', $this->measure() ) );
 				}
 				unset( $only );
 			}
@@ -2686,7 +2686,7 @@ final class Page_Composer {
 		}
 		$seen = array();
 		$walk = static function ( array $b ) use ( &$walk, &$seen ): void {
-			if ( in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/paragraph', 'dxai-ui/text', 'core/group' ), true ) && preg_match( '/(^|;)max-width:(\d{3})px/', Block_Tree::css_of( $b ), $m ) && (int) $m[2] >= 560 && (int) $m[2] <= 900 ) {
+			if ( in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/paragraph', 'dx-ui/text', 'core/group' ), true ) && preg_match( '/(^|;)max-width:(\d{3})px/', Block_Tree::css_of( $b ), $m ) && (int) $m[2] >= 560 && (int) $m[2] <= 900 ) {
 				$seen[ $m[2] ] = ( $seen[ $m[2] ] ?? 0 ) + 1;
 			}
 			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $inner ) {
@@ -2716,15 +2716,15 @@ final class Page_Composer {
 			return;
 		}
 		$grid = &Block_Tree::at( $block, $path );
-		foreach ( array_keys( (array) ( $grid['attrs']['dxaiData'] ?? array() ) ) as $attr ) {
+		foreach ( array_keys( (array) ( $grid['attrs']['dxuiData'] ?? array() ) ) as $attr ) {
 			if ( ! preg_match( '/^data-[a-z0-9-]+$/i', (string) $attr ) || ! preg_match_all( '/\[' . preg_quote( (string) $attr, '/' ) . '(?:[=~|^$*][^\]]*)?\][^{]*\{[^}]*grid-template-columns\s*:\s*repeat\(\s*(\d+)\s*,/i', $this->design_css, $m ) ) {
 				continue;
 			}
 			foreach ( $m[1] as $cols ) {
 				if ( (int) $cols > 1 && $count % (int) $cols !== 0 ) {
-					unset( $grid['attrs']['dxaiData'][ $attr ] );
-					if ( $grid['attrs']['dxaiData'] === array() ) {
-						unset( $grid['attrs']['dxaiData'] );
+					unset( $grid['attrs']['dxuiData'][ $attr ] );
+					if ( $grid['attrs']['dxuiData'] === array() ) {
+						unset( $grid['attrs']['dxuiData'] );
 					}
 					$strip = static fn( $part ) => is_string( $part ) ? (string) preg_replace( '/^(\s*<[a-z][a-z0-9-]*\b[^>]*?)\s' . preg_quote( (string) $attr, '/' ) . '(="[^"]*")?/i', '$1', $part, 1 ) : $part;
 					$grid['innerHTML'] = $strip( (string) $grid['innerHTML'] );
@@ -2755,7 +2755,7 @@ final class Page_Composer {
 	 */
 	private function full_rows( array &$block, array $path, int $count ): void {
 		$grid   = &Block_Tree::at( $block, $path );
-		$css    = (string) ( $grid['attrs']['dxaiCss'] ?? '' );
+		$css    = (string) ( $grid['attrs']['dxuiCss'] ?? '' );
 		$widths = self::widths_of( $block, $path );
 		if ( $count < 3 || $widths === array() || preg_match( self::AUTO_GRID, $css, $own ) !== 1 ) {
 			unset( $grid );
@@ -2810,7 +2810,7 @@ final class Page_Composer {
 		}
 		$found = array();
 		$walk  = static function ( array $b ) use ( &$walk, &$found ): void {
-			if ( preg_match( self::AUTO_GRID, (string) ( $b['attrs']['dxaiCss'] ?? '' ), $m ) === 1 ) {
+			if ( preg_match( self::AUTO_GRID, (string) ( $b['attrs']['dxuiCss'] ?? '' ), $m ) === 1 ) {
 				$found[ $m[0] ] = true;
 			}
 			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $inner ) {
@@ -2865,7 +2865,7 @@ final class Page_Composer {
 
 	/** @param array<string, mixed> $b */
 	private static function is_container( array $b ): bool {
-		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box', 'core/list', 'core/columns', 'core/column', 'dxai-ui/link' ), true )
+		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dx-ui/box', 'core/list', 'core/columns', 'core/column', 'dx-ui/link' ), true )
 			&& strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) !== 'img';
 	}
 
@@ -2876,11 +2876,11 @@ final class Page_Composer {
 	 */
 	private static function is_empty( array $b ): bool {
 		$name = (string) ( $b['blockName'] ?? '' );
-		if ( in_array( $name, array( 'dxai-ui/image', 'core/image', 'dxai-ui/html' ), true ) || ( $name === 'dxai-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'img' ) ) {
+		if ( in_array( $name, array( 'dx-ui/image', 'core/image', 'dx-ui/html' ), true ) || ( $name === 'dx-ui/box' && strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) === 'img' ) ) {
 			return false;
 		}
 		if ( empty( $b['innerBlocks'] ) ) {
-			return $name === 'dxai-ui/svg' ? true : Block_Tree::own_text( $b ) === '' && self::is_container( $b );
+			return $name === 'dx-ui/svg' ? true : Block_Tree::own_text( $b ) === '' && self::is_container( $b );
 		}
 		foreach ( $b['innerBlocks'] as $inner ) {
 			if ( ! self::is_empty( $inner ) ) {
@@ -2892,7 +2892,7 @@ final class Page_Composer {
 	}
 
 	/** @param array<string, mixed> $block */
-	private static function clear_marks( array &$block, array $keys = array( '__dxai_drop', '__dxai_image', '__dxai_drawing', '__dxai_cols' ) ): void {
+	private static function clear_marks( array &$block, array $keys = array( '__dxui_drop', '__dxui_image', '__dxui_drawing', '__dxui_cols' ) ): void {
 		foreach ( $keys as $key ) {
 			unset( $block['attrs'][ $key ] );
 		}

@@ -2,12 +2,12 @@
 /**
  * The frame a design's pages have: the group around its header, main and footer, when it has one.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * A design written as one group around everything (a Claude Design export, Clean Joe) puts rules on that group: the Home's is

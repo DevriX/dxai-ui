@@ -2,12 +2,12 @@
 /**
  * The sizes WordPress makes of a picture, made after an import in steps rather than while it reads the archive.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Every picture the media library takes is cut into each size the site registers — thirteen on American Restoration (WordPress's
@@ -22,10 +22,10 @@ namespace DXAI_UI\Media;
 final class Pending_Sizes {
 
 	/** Post meta on an attachment added without its sizes. */
-	public const META = '_dxai_ui_sizes_pending';
+	public const META = '_dx_ui_sizes_pending';
 
 	/** Cron: the next step, when no screen is making them. */
-	public const HOOK = 'dxai_ui_pending_sizes';
+	public const HOOK = 'dx_ui_pending_sizes';
 
 	/** Seconds one step may spend: a third of WP Engine's 60. */
 	public const BUDGET = 20.0;

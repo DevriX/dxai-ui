@@ -17,7 +17,7 @@
  * theme//slug id instead and the harness opens the site editor:
  *
  *   node bin/editor-roundtrip.cjs \
- *        --template-part 'twentytwentyfive//dxai-header-my-page' \
+ *        --template-part 'twentytwentyfive//dxui-header-my-page' \
  *        --cookie-name <name> --cookie-value <value> \
  *        --admin-url http://site.local/wp-admin/post.php
  *
@@ -27,7 +27,7 @@
 const os = require('os');
 const path = require('path');
 
-const CHROME = process.env.DXAI_CHROME
+const CHROME = process.env.DXUI_CHROME
   || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PUPPETEER = path.join(__dirname, '..', 'node_modules', 'puppeteer-core');
 
@@ -73,7 +73,7 @@ function arg(name, fallback) {
    */
   const profile = path.join(
     os.tmpdir(),
-    'dxai-editor-roundtrip-' + process.pid + '-' + Math.abs(Number(process.hrtime.bigint() % 100000n))
+    'dxui-editor-roundtrip-' + process.pid + '-' + Math.abs(Number(process.hrtime.bigint() % 100000n))
   );
 
   const browser = await puppeteer.launch({
@@ -124,12 +124,12 @@ function arg(name, fallback) {
      * happens BEFORE our blocks-editor.js has registered anything — and a
      * block whose type is not registered yet reads as `core/missing`. One run
      * caught a page in exactly that window and reported `unregistered=18`,
-     * which was its 8 dxai-ui/text + 8 dxai-ui/html + 2 dxai-ui/link: every
+     * which was its 8 dx-ui/text + 8 dx-ui/html + 2 dx-ui/link: every
      * block we define, "missing" because the definitions had not arrived. The
      * same page re-measured clean, so the harness was accusing the conversion
      * of a fault that was its own timing.
      *
-     * `dxai-ui/form` is the LAST type blocks-editor.js registers, so its
+     * `dx-ui/form` is the LAST type blocks-editor.js registers, so its
      * presence means that file ran to the end. An `unregistered` after this
      * gate is a real one.
      */
@@ -138,7 +138,7 @@ function arg(name, fallback) {
         const sel = window.wp && window.wp.data && window.wp.data.select('core/block-editor');
         if (!sel || !sel.getBlocks || !sel.getBlocks().length) { return false; }
         const blocks = window.wp && window.wp.blocks;
-        return !!(blocks && blocks.getBlockType && blocks.getBlockType('dxai-ui/form'));
+        return !!(blocks && blocks.getBlockType && blocks.getBlockType('dx-ui/form'));
       },
       { timeout, polling: 500 }
     );

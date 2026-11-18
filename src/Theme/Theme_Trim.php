@@ -2,16 +2,16 @@
 /**
  * The theme's inline stylesheet, cut down to what the page can use.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Support\Css_Trim;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Support\Css_Trim;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A DevriX theme prints its whole stylesheet inline in every page's head (american-restoration: 1.1 MB, 1.9 MB once
@@ -25,7 +25,7 @@ use DXAI_UI\Support\Upload_Paths;
  * page renders as it did.
  *
  * The result depends only on the page's tokens that the sheet has a name for (Css_Trim::vocabulary()), so it is
- * cached by exactly those, in uploads/dxai-ui/trim/<sheet>/: a request that finds its file only reads the page for
+ * cached by exactly those, in uploads/dx-ui/trim/<sheet>/: a request that finds its file only reads the page for
  * its tokens, and a page whose markup changes (a new post in a list, a menu item) is trimmed again on its own.
  * Nothing here is content: the files are made again whenever they are missing. Every doubt serves the theme's
  * whole sheet as before — an unreadable sheet, a document flushed in pieces, a cache that cannot be written, a
@@ -33,14 +33,14 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * Only for a visitor who is not logged in (the admin bar and the editor's tools are not what a visitor sees), on a
  * page that shows a design and still carries the theme's stylesheet (a design page on the blank template carries
- * none). `dxai_ui_trim_theme_css` (bool, post id) and the setting `dxai_ui_trim_theme` turn it off.
+ * none). `dx_ui_trim_theme_css` (bool, post id) and the setting `dx_ui_trim_theme` turn it off.
  */
 final class Theme_Trim {
 
-	public const OPTION = 'dxai_ui_trim_theme';
+	public const OPTION = 'dx_ui_trim_theme';
 
 	/** Where the last results are kept for the Library's account of it: page id => sizes. */
-	public const STATS = 'dxai_ui_trim_stats';
+	public const STATS = 'dx_ui_trim_stats';
 
 	/** A style block is looked at from this size (bytes). */
 	private const MIN_BYTES = 131072;
@@ -74,7 +74,7 @@ final class Theme_Trim {
 			return false;
 		}
 
-		return (bool) apply_filters( 'dxai_ui_trim_theme_css', true, $id );
+		return (bool) apply_filters( 'dx_ui_trim_theme_css', true, $id );
 	}
 
 	public static function start(): void {
@@ -93,8 +93,8 @@ final class Theme_Trim {
 	public static function filter( $html, $phase = 0 ) {
 		// Only a document that arrives whole: a page flushed in pieces has its head out before its body is known.
 		$whole = ( $phase & PHP_OUTPUT_HANDLER_START ) && ( $phase & PHP_OUTPUT_HANDLER_FINAL );
-		// `dxai_ui_trim_min_bytes`: the smallest page, in bytes, whose unused theme CSS is trimmed (never under 16 KB).
-		$min   = max( 16384, (int) apply_filters( 'dxai_ui_trim_min_bytes', self::MIN_BYTES ) );
+		// `dx_ui_trim_min_bytes`: the smallest page, in bytes, whose unused theme CSS is trimmed (never under 16 KB).
+		$min   = max( 16384, (int) apply_filters( 'dx_ui_trim_min_bytes', self::MIN_BYTES ) );
 		if ( ! $whole || ! is_string( $html ) || strlen( $html ) < $min || stripos( $html, '<style' ) === false || stripos( $html, '</html>' ) === false ) {
 			return $html;
 		}
@@ -196,7 +196,7 @@ final class Theme_Trim {
 		if ( $cut === null || $cut === '' || strlen( $cut ) > strlen( $css ) * 0.9 ) {
 			return null;
 		}
-		$cut = "\n/* DXAI-UI: the part of the theme's stylesheet this page can use (" . $stats['kept'] . ' of ' . $stats['rules'] . ' rules, ' . strlen( $cut ) . ' of ' . strlen( $css ) . " bytes) */\n" . $cut;
+		$cut = "\n/* DX-UI: the part of the theme's stylesheet this page can use (" . $stats['kept'] . ' of ' . $stats['rules'] . ' rules, ' . strlen( $cut ) . ' of ' . strlen( $css ) . " bytes) */\n" . $cut;
 		if ( ! self::write( $file, $cut ) ) {
 			return null;
 		}
@@ -406,7 +406,7 @@ final class Theme_Trim {
 	 */
 	private static function churning( string $key ): bool {
 		$id    = (int) get_queried_object_id();
-		$label = 'dxai_ui_trim_seen_' . $id;
+		$label = 'dx_ui_trim_seen_' . $id;
 		$seen  = get_transient( $label );
 		$seen  = is_array( $seen ) ? $seen : array();
 		if ( in_array( $key, $seen, true ) ) {
@@ -448,10 +448,10 @@ final class Theme_Trim {
 				wp_delete_file( (string) $old );
 			}
 		}
-		if ( get_transient( 'dxai_ui_trim_tidied' ) ) {
+		if ( get_transient( 'dx_ui_trim_tidied' ) ) {
 			return;
 		}
-		set_transient( 'dxai_ui_trim_tidied', 1, DAY_IN_SECONDS );
+		set_transient( 'dx_ui_trim_tidied', 1, DAY_IN_SECONDS );
 		foreach ( (array) glob( dirname( $dir ) . '/*', GLOB_ONLYDIR ) as $other ) {
 			if ( is_string( $other ) && $other !== $dir && filemtime( $other ) < time() - 2 * WEEK_IN_SECONDS ) {
 				foreach ( (array) glob( $other . '/*' ) as $f ) {

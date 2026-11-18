@@ -2,12 +2,12 @@
 /**
  * Text-level reading and editing of a block's saved HTML.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Sections;
+namespace DX_UI\Sections;
 
 /**
  * The page builder changes a section's copy without knowing how each block
@@ -377,7 +377,7 @@ final class Section_Markup {
 	 * The fragment with the located run replaced by $replacement (HTML,
 	 * already escaped or sanitized). The whitespace before the first and
 	 * after the last replaced run is kept, as is everything outside them. A
-	 * `data-dxai-text-*` state label on the element holding a replaced run
+	 * `data-dxui-text-*` state label on the element holding a replaced run
 	 * (the runtime swaps a button's text from it) gets the new text too.
 	 *
 	 * @param array{how:string, from:int, to:int, anchor:int, loose:bool} $at
@@ -409,7 +409,7 @@ final class Section_Markup {
 			}
 			// State labels on the element that holds the run.
 			$parent = (int) $tokens[ $from ]['parent'];
-			if ( $parent >= 0 && isset( $tokens[ $parent ] ) && str_contains( $tokens[ $parent ]['raw'], 'data-dxai-text-' ) ) {
+			if ( $parent >= 0 && isset( $tokens[ $parent ] ) && str_contains( $tokens[ $parent ]['raw'], 'data-dxui-text-' ) ) {
 				$tokens[ $parent ]['raw'] = self::relabel( $tokens[ $parent ]['raw'], $old, $plain );
 			}
 		}
@@ -452,11 +452,11 @@ final class Section_Markup {
 	}
 
 	/**
-	 * An element's `data-dxai-text-*` JSON labels with $old swapped for $new.
+	 * An element's `data-dxui-text-*` JSON labels with $old swapped for $new.
 	 */
 	private static function relabel( string $tag, string $old, string $new ): string {
 		return (string) preg_replace_callback(
-			'/(\sdata-dxai-text-[a-z0-9_-]+=)(\'[^\']*\'|"[^"]*")/i',
+			'/(\sdata-dxui-text-[a-z0-9_-]+=)(\'[^\']*\'|"[^"]*")/i',
 			static function ( array $m ) use ( $old, $new ): string {
 				$quote = $m[2][0];
 				$json  = html_entity_decode( substr( $m[2], 1, -1 ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
@@ -700,7 +700,7 @@ final class Section_Markup {
 		return $groups;
 	}
 
-	/** A class attribute with numbered classes folded (`dxai-sh-38` → `dxai-sh-#`), sorted. */
+	/** A class attribute with numbered classes folded (`dxui-sh-38` → `dxui-sh-#`), sorted. */
 	public static function class_sig( string $tag ): string {
 		if ( preg_match( '/\sclass\s*=\s*("([^"]*)"|\'([^\']*)\')/i', $tag, $m ) !== 1 ) {
 			return '';

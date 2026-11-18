@@ -2,18 +2,18 @@
 /**
  * A converted design's header, read as a template with menu slots.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
 /**
  * The design supplies the header's structure and styling; its CONTENT comes
  * from Appearance > Menus. This reads the header's block markup — what
  * Structure_Repository saved as the header part, every element a block with
- * its dxaiCss — and finds the places a menu fills:
+ * its dxuiCss — and finds the places a menu fills:
  *
  * - every navigation list (the desktop bar AND the mobile drawer; both are
  *   filled from `primary-navigation`), with each dropdown's trigger and
@@ -42,23 +42,23 @@ final class Header_Template {
 	 * Site option holding the site's header: the design installed last
 	 * (Header_Menus::install()), whose menus the theme locations hold.
 	 */
-	public const OPTION = 'dxai_ui_site_header';
+	public const OPTION = 'dx_ui_site_header';
 
 	/**
 	 * Option prefix (plus the design's scope id) holding each installed
 	 * design's own header.
 	 *
 	 * A converted page renders the header of ITS design, not the site's. Its
-	 * stylesheet is scoped to its own page (`.dxai-ui--{scope}`, Page_Scope):
+	 * stylesheet is scoped to its own page (`.dx-ui--{scope}`, Page_Scope):
 	 * the responsive show/hide of the desktop and mobile rows and the hover
 	 * rules its header needs are in it, and another design's header markup
-	 * matches none of them (`dxai-sh-16` is a different element in each
+	 * matches none of them (`dxui-sh-16` is a different element in each
 	 * design). So importing a second design must not swap the header of the
 	 * first design's pages; each keeps its own, filled from its own menus,
 	 * while the theme locations follow the brand (the last import).
 	 * Not autoloaded: only that design's pages read it.
 	 */
-	public const SCOPE_OPTION = 'dxai_ui_site_header_';
+	public const SCOPE_OPTION = 'dx_ui_site_header_';
 
 	/**
 	 * Shape of the stored spec. A spec stored by another version is read
@@ -119,7 +119,7 @@ final class Header_Template {
 	 * @return array<string, mixed>|null
 	 */
 	public static function for_post( int $post_id ): ?array {
-		$scope = $post_id > 0 ? (int) get_post_meta( $post_id, \DXAI_UI\Structures\Page_Scope::META, true ) : 0;
+		$scope = $post_id > 0 ? (int) get_post_meta( $post_id, \DX_UI\Structures\Page_Scope::META, true ) : 0;
 		// A page of a design's site drawn with its Home's header (Page_Chrome::adopt_site_chrome()): that Home's, whichever is the site's.
 		$home = null === self::scoped( $scope ) ? Page_Chrome::adopted( $post_id, 'header' ) : 0;
 
@@ -1431,7 +1431,7 @@ final class Header_Template {
 	 * - `link`: a link, or a paragraph / list item around the one link that
 	 *   carries all its text
 	 * - `dropdown`: a trigger plus a panel of links (Semper Dry's
-	 *   `dxai-toggle-openMenu--services` box)
+	 *   `dxui-toggle-openMenu--services` box)
 	 * - `text`: a leaf with words in it
 	 * - `sep`: a leaf with no words — a rule, a dot, a bar
 	 * - `button`: a button (a drawer toggle); structure, never an item
@@ -1536,7 +1536,7 @@ final class Header_Template {
 	 */
 	private static function picture_in( array $block ): ?array {
 		foreach ( self::kids( $block ) as $kid ) {
-			$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
+			$shape = \DX_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
 			if ( $shape !== array() ) {
 				$attrs = (array) ( $kid['attrs'] ?? array() );
 
@@ -1571,8 +1571,8 @@ final class Header_Template {
 	 * A dropdown's trigger and panel, as paths relative to it, or null when
 	 * the block is not one.
 	 *
-	 * Either the runtime marked it — a `dxai-toggle-*` / `data-dxai-hover`
-	 * wrapper, a `dxai-on-*` or hidden panel — or it has the shape
+	 * Either the runtime marked it — a `dxui-toggle-*` / `data-dxui-hover`
+	 * wrapper, a `dxui-on-*` or hidden panel — or it has the shape
 	 * Menu_Tree reads as a dropdown: a trigger followed by one panel holding
 	 * at least two links.
 	 *
@@ -1613,7 +1613,7 @@ final class Header_Template {
 			}
 		}
 
-		$marked  = str_contains( (string) ( $root['attrs']['class'] ?? '' ), 'dxai-toggle-' ) || isset( $root['attrs']['data-dxai-hover'] );
+		$marked  = str_contains( (string) ( $root['attrs']['class'] ?? '' ), 'dxui-toggle-' ) || isset( $root['attrs']['data-dxui-hover'] );
 		$trigger = null;
 		$panel   = null;
 		foreach ( $kids as $i => $kid ) {
@@ -1640,7 +1640,7 @@ final class Header_Template {
 		}
 		$panel_root = self::root_tag( $kids[ $panel ] );
 		$class      = ' ' . (string) ( $panel_root['attrs']['class'] ?? '' ) . ' ';
-		$hidden     = str_contains( $class, ' hidden ' ) || str_contains( $class, 'dxai-on-' ) || isset( $panel_root['attrs']['hidden'] );
+		$hidden     = str_contains( $class, ' hidden ' ) || str_contains( $class, 'dxui-on-' ) || isset( $panel_root['attrs']['hidden'] );
 		if ( ! $marked && ! $hidden && self::link_count( $kids[ $panel ] ) < 2 ) {
 			return null;
 		}
@@ -1753,7 +1753,7 @@ final class Header_Template {
 	/**
 	 * What makes two items look alike: the element and its classes, less
 	 * the ones that differ per item without changing the look — a hover
-	 * class numbered per element (`dxai-sh-16`), a state value
+	 * class numbered per element (`dxui-sh-16`), a state value
 	 * (`--services`), and `hidden`.
 	 *
 	 * @param array<string, mixed> $block
@@ -1763,10 +1763,10 @@ final class Header_Template {
 		$classes = preg_split( '/\s+/', trim( (string) ( $root['attrs']['class'] ?? '' ) ) );
 		$keep    = array();
 		foreach ( is_array( $classes ) ? $classes : array() as $class ) {
-			if ( $class === '' || $class === 'hidden' || preg_match( '/^dxai-sh-\d+$/', $class ) ) {
+			if ( $class === '' || $class === 'hidden' || preg_match( '/^dxui-sh-\d+$/', $class ) ) {
 				continue;
 			}
-			$keep[] = preg_replace( '/^(dxai-(?:toggle|on|off|cls)-[A-Za-z0-9_]+)--.+$/', '$1', $class ) ?? $class;
+			$keep[] = preg_replace( '/^(dxui-(?:toggle|on|off|cls)-[A-Za-z0-9_]+)--.+$/', '$1', $class ) ?? $class;
 		}
 		sort( $keep );
 

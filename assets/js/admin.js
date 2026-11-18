@@ -1,6 +1,6 @@
-/* global dxaiUI */
+/* global dxUI */
 ( function ( wp ) {
-	const root = document.getElementById( 'dxai-ui-app' );
+	const root = document.getElementById( 'dx-ui-app' );
 	if ( ! root || ! wp.element ) {
 		return;
 	}
@@ -8,8 +8,8 @@
 	wp.element.createRoot( root ).render(
 		el(
 			'div',
-			{ className: 'dxai-panel' },
+			{ className: 'dxui-panel' },
 			el( 'p', null, 'DX Convert needs a built admin bundle. Run npm run build in the plugin directory.' )
 		)
 	);
-}( window.wp, window.dxaiUI ) );
+}( window.wp, window.dxUI ) );

@@ -2,22 +2,22 @@
 /**
  * "Make the rest from this page": a finished page made again for the other services or cities.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
-use DXAI_UI\Blocks\Style_Rules;
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Compiler\Design_Tokens;
-use DXAI_UI\Connectors\Live_Page_Fetcher;
-use DXAI_UI\Pages\Content_Extractor;
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Site_Pages;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Blocks\Style_Rules;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Compiler\Design_Tokens;
+use DX_UI\Connectors\Live_Page_Fetcher;
+use DX_UI\Pages\Content_Extractor;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Site_Pages;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * The team designs one service page (or one city page) by hand, then copies it onto the other services and rewrites
@@ -42,16 +42,16 @@ use DXAI_UI\Structures\Page_Scope;
 final class Page_Copies {
 
 	/** On a copy: the page it was made from. */
-	public const OF = '_dxai_ui_copy_of';
+	public const OF = '_dx_ui_copy_of';
 
 	/** On a copy: its content before (compressed), when it had one. */
-	public const BEFORE = '_dxai_ui_copies_before';
+	public const BEFORE = '_dx_ui_copies_before';
 
 	/** On a copy: the hash of the content the run left (a later edit is not undone). */
-	public const HASH = '_dxai_ui_copies_hash';
+	public const HASH = '_dx_ui_copies_hash';
 
 	/** On a copy: 1 when the run made the page. */
-	public const MADE = '_dxai_ui_copies_made';
+	public const MADE = '_dx_ui_copies_made';
 
 	/** The states, as the end of a city page's address. */
 	private const STATES = 'al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy';
@@ -74,7 +74,7 @@ final class Page_Copies {
 	 * @return array<int, string>
 	 */
 	private static function design_meta(): array {
-		return array( '_wp_page_template', Page_Scope::META, '_dxai_ui_generated_page', '_dxai_ui_css_url', '_dxai_ui_js_url', '_dxai_ui_font_urls', '_dxai_ui_wrapper_class', '_dxai_ui_static_html', Design_Tokens::META, Page_Chrome::PART_KEY_META, Page_Chrome::MODE_META );
+		return array( '_wp_page_template', Page_Scope::META, '_dx_ui_generated_page', '_dx_ui_css_url', '_dx_ui_js_url', '_dx_ui_font_urls', '_dx_ui_wrapper_class', '_dx_ui_static_html', Design_Tokens::META, Page_Chrome::PART_KEY_META, Page_Chrome::MODE_META );
 	}
 
 	/**
@@ -713,22 +713,22 @@ final class Page_Copies {
 				++$places;
 				$opening = (string) $b['innerContent'][0];
 				/* translators: 1: what the page is about, 2: the original's question */
-				$b['attrs']['placeholder'] = sprintf( __( 'A question about %1$s. The original asks: %2$s', 'dxai-ui' ), $for, mb_strimwidth( $was, 0, 160, '…' ) );
+				$b['attrs']['placeholder'] = sprintf( __( 'A question about %1$s. The original asks: %2$s', 'dx-ui' ), $for, mb_strimwidth( $was, 0, 160, '…' ) );
 				$b['innerContent'][0]      = $m[1] . $m[3];
 				$b['innerHTML']            = str_replace( $opening, $m[1] . $m[3], (string) ( $b['innerHTML'] ?? '' ) );
 				unset( $b['attrs']['summary'] );
 			}
 		}
-		$open = $name === 'core/paragraph' || $name === 'core/list-item' || $name === 'dxai-ui/text' || ( $name === 'core/heading' && $lvl >= 3 );
+		$open = $name === 'core/paragraph' || $name === 'core/list-item' || $name === 'dx-ui/text' || ( $name === 'core/heading' && $lvl >= 3 );
 		if ( $open && empty( $b['innerBlocks'] ) && is_string( $b['innerContent'][0] ?? null ) && preg_match( '/^(\s*<([a-z][a-z0-9]*)\b[^>]*>)(.*)(<\/\2>\s*)$/s', (string) $b['innerContent'][0], $m ) === 1 ) {
 			$was = trim( html_entity_decode( wp_strip_all_tags( $m[3] ), ENT_QUOTES, 'UTF-8' ) );
 			if ( preg_match( '/\p{L}{2}/u', $was ) === 1 && self::own_line( $m[3], $was, $strict, $stale, $pairs ) ) {
 				++$places;
 				/* translators: 1: what the page is about, 2: the original's words */
-				$b['attrs']['placeholder'] = sprintf( __( 'Write for %1$s. The original says: %2$s', 'dxai-ui' ), $for, mb_strimwidth( $was, 0, 220, '…' ) );
+				$b['attrs']['placeholder'] = sprintf( __( 'Write for %1$s. The original says: %2$s', 'dx-ui' ), $for, mb_strimwidth( $was, 0, 220, '…' ) );
 				$b['innerContent'][0]      = $m[1] . $m[4];
 				$b['innerHTML']            = $m[1] . $m[4];
-				if ( $name === 'dxai-ui/text' && isset( $b['attrs']['content'] ) ) {
+				if ( $name === 'dx-ui/text' && isset( $b['attrs']['content'] ) ) {
 					$b['attrs']['content'] = '';
 				}
 			}
@@ -809,7 +809,7 @@ final class Page_Copies {
 	public static function old_page( int $page_id ): array {
 		$home   = self::home_of( $page_id );
 		$origin = $home > 0 ? untrailingslashit( (string) get_post_meta( $home, Site_Pages::ORIGIN_META, true ) ) : '';
-		$route  = trim( (string) get_post_meta( $page_id, '_dxai_ui_source_route', true ), '/' );
+		$route  = trim( (string) get_post_meta( $page_id, '_dx_ui_source_route', true ), '/' );
 		if ( $route === '' ) {
 			$route = trim( (string) wp_parse_url( (string) get_permalink( $page_id ), PHP_URL_PATH ), '/' );
 			$base  = trim( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ), '/' );
@@ -822,7 +822,7 @@ final class Page_Copies {
 			);
 		}
 		$url = $origin . '/' . $route . '/';
-		$got = apply_filters( 'dxai_ui_copies_old_page', null, $url );
+		$got = apply_filters( 'dx_ui_copies_old_page', null, $url );
 		if ( ! is_array( $got ) ) {
 			$got = ( new Live_Page_Fetcher() )->fetch( $url, 20, $origin );
 		}
@@ -910,7 +910,7 @@ final class Page_Copies {
 	public static function make( int $source, array $target, array $plan, array $opts = array() ) {
 		$src = get_post( $source );
 		if ( ! $src instanceof \WP_Post || $src->post_type !== 'page' ) {
-			return new \WP_Error( 'dxai_copies_source', __( 'The page to make the copies from is not there.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_copies_source', __( 'The page to make the copies from is not there.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$id    = (int) ( $target['id'] ?? 0 );
 		$made  = false;
@@ -918,11 +918,11 @@ final class Page_Copies {
 		if ( $id > 0 ) {
 			$post = get_post( $id );
 			if ( ! $post instanceof \WP_Post || $post->post_type !== 'page' || $id === $source ) {
-				return new \WP_Error( 'dxai_copies_target', __( 'That page cannot be made from this one.', 'dxai-ui' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'dxui_copies_target', __( 'That page cannot be made from this one.', 'dx-ui' ), array( 'status' => 400 ) );
 			}
 			$title = html_entity_decode( (string) $post->post_title, ENT_QUOTES, 'UTF-8' );
 		} elseif ( $title === '' ) {
-			return new \WP_Error( 'dxai_copies_target', __( 'A new page needs a title.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxui_copies_target', __( 'A new page needs a title.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$engine  = ( $opts['words'] ?? 'auto' ) === 'outline' ? null : Copy_Writer::engine();
 		$use_ai  = $engine !== null && ! is_wp_error( $engine );
@@ -979,9 +979,9 @@ final class Page_Copies {
 			$names = self::names( $title, $kind );
 			$topic = $kind === 'location'
 				/* translators: %s: a city */
-				? sprintf( __( 'The company\'s services in %s: the same kind of page as the one it was made from, for this city.', 'dxai-ui' ), $names['full'] )
+				? sprintf( __( 'The company\'s services in %s: the same kind of page as the one it was made from, for this city.', 'dx-ui' ), $names['full'] )
 				/* translators: %s: a service */
-				: sprintf( __( '%s: the same kind of page as the one it was made from, for this service.', 'dxai-ui' ), $names['full'] );
+				: sprintf( __( '%s: the same kind of page as the one it was made from, for this service.', 'dx-ui' ), $names['full'] );
 			$asked = Copy_Writer::propose(
 				$id,
 				array(
@@ -1103,7 +1103,7 @@ final class Page_Copies {
 				array(
 					'topic'          => $kind === 'location'
 						/* translators: %s: a city */
-						? sprintf( __( 'The company\'s services in %s.', 'dxai-ui' ), $name )
+						? sprintf( __( 'The company\'s services in %s.', 'dx-ui' ), $name )
 						: $title,
 					'reference'      => $old['url'],
 					'reference_text' => $old['text'],
@@ -1173,10 +1173,10 @@ final class Page_Copies {
 	 */
 	public static function give_back( int $id ) {
 		if ( (int) get_post_meta( $id, self::OF, true ) < 1 ) {
-			return new \WP_Error( 'dxai_copies_none', __( 'This page was not made from another page.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxui_copies_none', __( 'This page was not made from another page.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		if ( ! self::can_give_back( $id ) ) {
-			return new \WP_Error( 'dxai_copies_edited', __( 'This page was edited after it was made, so it is left as it is.', 'dxai-ui' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'dxui_copies_edited', __( 'This page was edited after it was made, so it is left as it is.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 		$keys = array( self::OF, self::HASH, self::BEFORE, self::MADE, Copy_Writer::KEEP, Copy_Writer::BEFORE, Copy_Writer::HASH );
 		if ( get_post_meta( $id, self::MADE, true ) === '1' ) {

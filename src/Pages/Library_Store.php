@@ -2,17 +2,17 @@
 /**
  * The team libraries (templates) a site keeps in its uploads: made from the team's exports, built here, trained with more.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 /**
- * A stored library is a folder under uploads/dxai-ui/templates/<slug>/: `template.json` (what it is: label, themes, what it extends,
+ * A stored library is a folder under uploads/dx-ui/templates/<slug>/: `template.json` (what it is: label, themes, what it extends,
  * its sources, the last build's report), `exports/` (the files uploaded, kept as they came: the library is built from all of them,
  * again, every time), `library.json` and `blocks/` (what Layout_Builder made of them). It is a template (Template::all()): a site whose
  * theme it names takes its sections, before the built-in one's; one that extends the built-in template has its sections too.
@@ -103,7 +103,7 @@ final class Library_Store {
 	public static function create( string $label, array $themes, string $extends = '', string $slug = '' ) {
 		$label = sanitize_text_field( $label );
 		if ( $label === '' ) {
-			return new \WP_Error( 'dxai_ui_library_label', __( 'Give the library a name.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_label', __( 'Give the library a name.', 'dx-ui' ) );
 		}
 		$slug = sanitize_key( $slug !== '' ? $slug : sanitize_title( $label ) );
 		if ( $slug === '' ) {
@@ -116,15 +116,15 @@ final class Library_Store {
 		}
 		$themes = array_values( array_unique( array_filter( array_map( 'sanitize_key', $themes ) ) ) );
 		if ( $themes === array() ) {
-			return new \WP_Error( 'dxai_ui_library_theme', __( 'Say which theme the library is for.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_theme', __( 'Say which theme the library is for.', 'dx-ui' ) );
 		}
 		$extends = sanitize_key( $extends );
 		if ( $extends !== '' && ! isset( Template::all()[ $extends ] ) ) {
-			return new \WP_Error( 'dxai_ui_library_extends', __( 'There is no such template to extend.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_extends', __( 'There is no such template to extend.', 'dx-ui' ) );
 		}
 		$dir = self::dir( $slug );
 		if ( $dir === '' || ! wp_mkdir_p( $dir . '/exports' ) || ! wp_mkdir_p( $dir . '/blocks' ) ) {
-			return new \WP_Error( 'dxai_ui_library_dir', __( 'The uploads folder cannot be written.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_dir', __( 'The uploads folder cannot be written.', 'dx-ui' ) );
 		}
 		$meta = array(
 			'slug'    => $slug,
@@ -153,13 +153,13 @@ final class Library_Store {
 	public static function add_source( string $slug, string $tmp, string $name ) {
 		$lib = self::get( $slug );
 		if ( $lib === null ) {
-			return new \WP_Error( 'dxai_ui_library_none', __( 'There is no such library.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_none', __( 'There is no such library.', 'dx-ui' ) );
 		}
 		if ( ! is_readable( $tmp ) || (int) filesize( $tmp ) < 1 ) {
-			return new \WP_Error( 'dxai_ui_library_file', __( 'No file was uploaded.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_file', __( 'No file was uploaded.', 'dx-ui' ) );
 		}
 		if ( (int) filesize( $tmp ) > self::MAX_BYTES ) {
-			return new \WP_Error( 'dxai_ui_library_size', sprintf( /* translators: %s: a size. */ __( 'The file is larger than %s.', 'dxai-ui' ), size_format( self::MAX_BYTES ) ) );
+			return new \WP_Error( 'dx_ui_library_size', sprintf( /* translators: %s: a size. */ __( 'The file is larger than %s.', 'dx-ui' ), size_format( self::MAX_BYTES ) ) );
 		}
 		$head  = (string) file_get_contents( $tmp, false, null, 0, 262144 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$kind  = '';
@@ -172,7 +172,7 @@ final class Library_Store {
 			$pages = 1;
 		}
 		if ( $kind === '' || $pages === 0 ) {
-			return new \WP_Error( 'dxai_ui_library_kind', __( 'The file is neither a WordPress export with pages in it nor a file of block markup.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_kind', __( 'The file is neither a WordPress export with pages in it nor a file of block markup.', 'dx-ui' ) );
 		}
 		$safe = sanitize_file_name( $name );
 		$safe = $safe !== '' ? $safe : 'export.' . ( $kind === 'wxr' ? 'xml' : 'html' );
@@ -180,7 +180,7 @@ final class Library_Store {
 		$file = sprintf( '%02d-%s', $n, $safe );
 		$dest = self::dir( $slug ) . '/exports/' . $file;
 		if ( ! copy( $tmp, $dest ) ) {
-			return new \WP_Error( 'dxai_ui_library_copy', __( 'The file could not be kept.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_copy', __( 'The file could not be kept.', 'dx-ui' ) );
 		}
 		$meta              = self::read_meta( $slug );
 		$meta['sources'][] = array(
@@ -206,7 +206,7 @@ final class Library_Store {
 	public static function build( string $slug ) {
 		$lib = self::get( $slug );
 		if ( $lib === null ) {
-			return new \WP_Error( 'dxai_ui_library_none', __( 'There is no such library.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_none', __( 'There is no such library.', 'dx-ui' ) );
 		}
 		$pages = array();
 		$names = array();
@@ -231,7 +231,7 @@ final class Library_Store {
 			}
 		}
 		if ( $pages === array() ) {
-			return new \WP_Error( 'dxai_ui_library_empty', __( 'The library has no export to build from.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_library_empty', __( 'The library has no export to build from.', 'dx-ui' ) );
 		}
 		$names[ $slug ] = array_values( array_unique( array_merge( (array) ( $names[ $slug ] ?? array() ), array( (string) $lib['label'] ) ) ) );
 		if ( function_exists( 'set_time_limit' ) ) {

@@ -13,10 +13,10 @@ function keptRow( part, area ) {
 		key: isHeader ? 'menus' : 'widgets',
 		bad: area.refused || area.overridden,
 		kept: true,
-		title: isHeader ? __( 'Header', 'dxai-ui' ) : __( 'Footer', 'dxai-ui' ),
-		where: __( 'kept as a template part', 'dxai-ui' ),
+		title: isHeader ? __( 'Header', 'dx-ui' ) : __( 'Footer', 'dx-ui' ),
+		where: __( 'kept as a template part', 'dx-ui' ),
 		href: area.partUrl,
-		linkLabel: isHeader ? __( 'Edit the header', 'dxai-ui' ) : __( 'Edit the footer', 'dxai-ui' ),
+		linkLabel: isHeader ? __( 'Edit the header', 'dx-ui' ) : __( 'Edit the footer', 'dx-ui' ),
 		text: keptSentence( part, area ),
 	};
 }
@@ -37,12 +37,12 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 	if ( outcome.header.mode === CHROME_KEEP ) {
 		rows.push( keptRow( 'header', outcome.header ) );
 	} else if ( report.menusError ) {
-		rows.push( { key: 'menus', bad: true, title: __( 'Header menus', 'dxai-ui' ), where: __( 'Appearance › Menus', 'dxai-ui' ), href: menusUrl, text: report.menusError } );
+		rows.push( { key: 'menus', bad: true, title: __( 'Header menus', 'dx-ui' ), where: __( 'Appearance › Menus', 'dx-ui' ), href: menusUrl, text: report.menusError } );
 	} else if ( Array.isArray( report.menus ) && report.menus.length ) {
 		rows.push( {
 			key: 'menus',
-			title: __( 'Header menus', 'dxai-ui' ),
-			where: __( 'Appearance › Menus', 'dxai-ui' ),
+			title: __( 'Header menus', 'dx-ui' ),
+			where: __( 'Appearance › Menus', 'dx-ui' ),
 			href: menusUrl,
 			list: report.menus.map( ( m ) => ( {
 				name: m.name,
@@ -50,13 +50,13 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 				meta: [
 					m.where,
 					m.count !== null && m.count !== undefined
-						? sprintf( /* translators: %d: menu items */ _n( '%d item', '%d items', m.count, 'dxai-ui' ), m.count )
+						? sprintf( /* translators: %d: menu items */ _n( '%d item', '%d items', m.count, 'dx-ui' ), m.count )
 						: '',
 				].filter( Boolean ).join( ', ' ),
 			} ) ),
 			text: [
-				outcome.header.differs ? __( 'You chose to keep the site’s header and footer, but this server built the header in Appearance › Menus anyway.', 'dxai-ui' ) : '',
-				report.logoSet ? __( 'The design’s logo is now the site’s Site Logo.', 'dxai-ui' ) : '',
+				outcome.header.differs ? __( 'You chose to keep the site’s header and footer, but this server built the header in Appearance › Menus anyway.', 'dx-ui' ) : '',
+				report.logoSet ? __( 'The design’s logo is now the site’s Site Logo.', 'dx-ui' ) : '',
 			].filter( Boolean ).join( ' ' ),
 			bad: outcome.header.differs,
 		} );
@@ -64,22 +64,22 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 	if ( outcome.footer.mode === CHROME_KEEP ) {
 		rows.push( keptRow( 'footer', outcome.footer ) );
 	} else if ( report.widgetsError ) {
-		rows.push( { key: 'widgets', bad: true, title: __( 'Footer widgets', 'dxai-ui' ), where: __( 'Appearance › Widgets', 'dxai-ui' ), href: widgetsUrl, text: report.widgetsError } );
+		rows.push( { key: 'widgets', bad: true, title: __( 'Footer widgets', 'dx-ui' ), where: __( 'Appearance › Widgets', 'dx-ui' ), href: widgetsUrl, text: report.widgetsError } );
 	} else if ( Array.isArray( report.widgets ) && report.widgets.length ) {
 		rows.push( {
 			key: 'widgets',
-			title: __( 'Footer widgets', 'dxai-ui' ),
-			where: __( 'Appearance › Widgets', 'dxai-ui' ),
+			title: __( 'Footer widgets', 'dx-ui' ),
+			where: __( 'Appearance › Widgets', 'dx-ui' ),
 			href: widgetsUrl,
 			list: report.widgets.map( ( w ) => ( {
 				name: w.name,
 				url: '',
 				meta: w.count !== null && w.count !== undefined
-					? sprintf( /* translators: %d: widgets */ _n( '%d widget', '%d widgets', w.count, 'dxai-ui' ), w.count )
+					? sprintf( /* translators: %d: widgets */ _n( '%d widget', '%d widgets', w.count, 'dx-ui' ), w.count )
 					: '',
 			} ) ),
 			text: [
-				outcome.footer.differs ? __( 'You chose to keep the site’s header and footer, but this server built the footer in Appearance › Widgets anyway.', 'dxai-ui' ) : '',
+				outcome.footer.differs ? __( 'You chose to keep the site’s header and footer, but this server built the footer in Appearance › Widgets anyway.', 'dx-ui' ) : '',
 				report.widgetsMoved > 0
 					? sprintf(
 						/* translators: %d: number of widgets */
@@ -87,7 +87,7 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 							'%d widget that was already in these areas is now under Inactive Widgets — nothing was deleted.',
 							'%d widgets that were already in these areas are now under Inactive Widgets — nothing was deleted.',
 							report.widgetsMoved,
-							'dxai-ui'
+							'dx-ui'
 						),
 						report.widgetsMoved
 					)
@@ -102,17 +102,17 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 	return (
 		<>
 			{ rows.length > 0 && (
-				<ul className="dxai-done__chrome">
+				<ul className="dxui-done__chrome">
 					{ rows.map( ( row ) => (
 						<li key={ row.key } className={ [ row.bad ? 'is-bad' : '', row.kept ? 'is-kept' : '' ].filter( Boolean ).join( ' ' ) || undefined }>
-							<p className="dxai-done__chrome-head">
+							<p className="dxui-done__chrome-head">
 								<strong>{ row.title }</strong>
 								{ /* A kept part says so, then links to it; a built one links its screen. */ }
 								{ row.kept && <span>{ row.where }</span> }
 								{ ! row.kept && ( row.href ? <a href={ row.href }>{ row.where }</a> : <span>{ row.where }</span> ) }
 							</p>
 							{ row.kept && row.href && (
-								<p className="dxai-done__chrome-note"><a href={ row.href }>{ row.linkLabel }</a></p>
+								<p className="dxui-done__chrome-note"><a href={ row.href }>{ row.linkLabel }</a></p>
 							) }
 							{ row.list && (
 								<ul>
@@ -124,14 +124,14 @@ function ChromeRows( { report, outcome, menusUrl, widgetsUrl } ) {
 									) ) }
 								</ul>
 							) }
-							{ row.text && <p className="dxai-done__chrome-note">{ row.text }</p> }
+							{ row.text && <p className="dxui-done__chrome-note">{ row.text }</p> }
 						</li>
 					) ) }
 				</ul>
 			) }
 			{ /* What changed for other designs, and for the person's own menus (Converter_Controller::chrome_report()). */ }
 			{ report.notices.length > 0 && (
-				<ul className="dxai-done__chrome-notices">
+				<ul className="dxui-done__chrome-notices">
 					{ report.notices.map( ( text, i ) => <li key={ i }>{ text }</li> ) }
 				</ul>
 			) }
@@ -168,44 +168,44 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 	const footerEdit = saved?.page?.edit_footer && ! /widgets\.php/.test( saved.page.edit_footer ) ? saved.page.edit_footer : '';
 
 	return (
-		<section className="dxai-done" aria-labelledby="dxai-done-title">
-			<div className={ 'dxai-success-mark' + ( problems ? ' is-warn' : '' ) } aria-hidden="true" />
-			<h3 id="dxai-done-title" className="dxai-done__title" tabIndex={ -1 } ref={ headingRef }>
-				{ problems ? __( 'Saved — with problems to look at', 'dxai-ui' ) : __( 'It is in WordPress', 'dxai-ui' ) }
+		<section className="dxui-done" aria-labelledby="dxui-done-title">
+			<div className={ 'dxui-success-mark' + ( problems ? ' is-warn' : '' ) } aria-hidden="true" />
+			<h3 id="dxui-done-title" className="dxui-done__title" tabIndex={ -1 } ref={ headingRef }>
+				{ problems ? __( 'Saved — with problems to look at', 'dx-ui' ) : __( 'It is in WordPress', 'dx-ui' ) }
 			</h3>
-			<p className="dxai-done__lede">
+			<p className="dxui-done__lede">
 				{ elapsed > 0
 					? sprintf(
 						/* translators: %s: duration, e.g. 2:14 */
-						__( 'Saved as native blocks in %s.', 'dxai-ui' ),
+						__( 'Saved as native blocks in %s.', 'dx-ui' ),
 						formatDuration( elapsed )
 					)
-					: __( 'Saved as native blocks.', 'dxai-ui' ) }
+					: __( 'Saved as native blocks.', 'dx-ui' ) }
 				{ ' ' }
 				{ /* The site's front page (Network\Front_Page): made the Home when the site had none of its own, else kept, with one button. */ }
 				{ front && ( front.made || front.state === 'this' )
-					? __( 'The Home is the site’s front page now.', 'dxai-ui' )
+					? __( 'The Home is the site’s front page now.', 'dx-ui' )
 					: ( front && front.state === 'own'
-						? sprintf( /* translators: %s: the title of the site's front page */ __( 'The site’s front page is still “%s”.', 'dxai-ui' ), front.title )
-						: __( 'The site’s front page was not changed.', 'dxai-ui' ) ) }
+						? sprintf( /* translators: %s: the title of the site's front page */ __( 'The site’s front page is still “%s”.', 'dx-ui' ), front.title )
+						: __( 'The site’s front page was not changed.', 'dx-ui' ) ) }
 				{ front && front.state === 'own' && ! front.made && onFront && (
 					<>
 						{ ' ' }
-						<button type="button" className="dxai-link" onClick={ onFront }>{ __( 'Make the Home the front page', 'dxai-ui' ) }</button>
+						<button type="button" className="dxui-link" onClick={ onFront }>{ __( 'Make the Home the front page', 'dx-ui' ) }</button>
 					</>
 				) }
 			</p>
 
-			<ul className="dxai-done__counts">
+			<ul className="dxui-done__counts">
 				<li>
 					<strong>{ counts.pages }</strong>
-					<span>{ _n( 'page created', 'pages created', counts.pages, 'dxai-ui' ) }</span>
+					<span>{ _n( 'page created', 'pages created', counts.pages, 'dx-ui' ) }</span>
 					{ ( counts.extra > 0 || counts.crawled > 0 ) && (
 						<em>
 							{ [
-								counts.main ? __( '1 design page', 'dxai-ui' ) : '',
-								counts.extra ? sprintf( /* translators: %d: route pages */ _n( '%d route', '%d routes', counts.extra, 'dxai-ui' ), counts.extra ) : '',
-								counts.crawled ? sprintf( /* translators: %d: pages built from the menu */ _n( '%d from the menu', '%d from the menu', counts.crawled, 'dxai-ui' ), counts.crawled ) : '',
+								counts.main ? __( '1 design page', 'dx-ui' ) : '',
+								counts.extra ? sprintf( /* translators: %d: route pages */ _n( '%d route', '%d routes', counts.extra, 'dx-ui' ), counts.extra ) : '',
+								counts.crawled ? sprintf( /* translators: %d: pages built from the menu */ _n( '%d from the menu', '%d from the menu', counts.crawled, 'dx-ui' ), counts.crawled ) : '',
 							].filter( Boolean ).join( ' · ' ) }
 						</em>
 					) }
@@ -215,11 +215,11 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 						<strong>{ counts.restyled }</strong>
 						<span>
 							{ counts.restyleEngine === 'design' || counts.restyleEngine === ''
-								? _n( 'page built from the design’s sections', 'pages built from the design’s sections', counts.restyled, 'dxai-ui' )
-								: _n( 'page rebuilt with AI', 'pages rebuilt with AI', counts.restyled, 'dxai-ui' ) }
+								? _n( 'page built from the design’s sections', 'pages built from the design’s sections', counts.restyled, 'dx-ui' )
+								: _n( 'page rebuilt with AI', 'pages rebuilt with AI', counts.restyled, 'dx-ui' ) }
 						</span>
 						{ counts.crawled > counts.restyled && (
-							<em>{ sprintf( /* translators: %d: pages kept as the old site had them */ _n( '%d kept as on the old site', '%d kept as on the old site', counts.crawled - counts.restyled, 'dxai-ui' ), counts.crawled - counts.restyled ) }</em>
+							<em>{ sprintf( /* translators: %d: pages kept as the old site had them */ _n( '%d kept as on the old site', '%d kept as on the old site', counts.crawled - counts.restyled, 'dx-ui' ), counts.crawled - counts.restyled ) }</em>
 						) }
 					</li>
 				) }
@@ -227,30 +227,30 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				{ Array.isArray( report.menus ) && report.menus.length > 0 && (
 					<li>
 						<strong>{ report.menus.length }</strong>
-						<span>{ _n( 'header menu', 'header menus', report.menus.length, 'dxai-ui' ) }</span>
-						<em>{ __( 'in Appearance › Menus', 'dxai-ui' ) }</em>
+						<span>{ _n( 'header menu', 'header menus', report.menus.length, 'dx-ui' ) }</span>
+						<em>{ __( 'in Appearance › Menus', 'dx-ui' ) }</em>
 					</li>
 				) }
 				{ Array.isArray( report.widgets ) && report.widgets.length > 0 && (
 					<li>
 						<strong>{ report.widgets.length }</strong>
-						<span>{ _n( 'footer widget area', 'footer widget areas', report.widgets.length, 'dxai-ui' ) }</span>
-						<em>{ __( 'in Appearance › Widgets', 'dxai-ui' ) }</em>
+						<span>{ _n( 'footer widget area', 'footer widget areas', report.widgets.length, 'dx-ui' ) }</span>
+						<em>{ __( 'in Appearance › Widgets', 'dx-ui' ) }</em>
 					</li>
 				) }
 				<li className={ counts.errors ? 'is-bad' : '' }>
 					<strong>{ counts.errors }</strong>
-					<span>{ _n( 'error', 'errors', counts.errors, 'dxai-ui' ) }</span>
+					<span>{ _n( 'error', 'errors', counts.errors, 'dx-ui' ) }</span>
 				</li>
 				{ /* The design's document: what the import read of the design (Designs › the design › Overview). An older server says nothing. */ }
 				{ saved?.document && (
 					<li>
 						<strong>{ saved.document.sections }</strong>
-						<span>{ _n( 'section read in the design', 'sections read in the design', saved.document.sections, 'dxai-ui' ) }</span>
+						<span>{ _n( 'section read in the design', 'sections read in the design', saved.document.sections, 'dx-ui' ) }</span>
 						<em>
 							{ sprintf(
 								/* translators: 1: number of pages, 2: number of navigation items, 3: number of behaviours the page does not carry. */
-								__( '%1$d page(s), %2$d menu items, %3$d behaviour(s) not carried · Designs › the design › Overview', 'dxai-ui' ),
+								__( '%1$d page(s), %2$d menu items, %3$d behaviour(s) not carried · Designs › the design › Overview', 'dx-ui' ),
 								saved.document.pages,
 								saved.document.nav_items,
 								saved.document.behaviours_left
@@ -261,54 +261,54 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 				{ counts.skipped > 0 && (
 					<li>
 						<strong>{ counts.skipped }</strong>
-						<span>{ _n( 'page kept as edited', 'pages kept as edited', counts.skipped, 'dxai-ui' ) }</span>
+						<span>{ _n( 'page kept as edited', 'pages kept as edited', counts.skipped, 'dx-ui' ) }</span>
 					</li>
 				) }
 			</ul>
 
 			{ crawlStopped && (
-				<p className="dxai-done__warn" role="note">{ crawlStopped }</p>
+				<p className="dxui-done__warn" role="note">{ crawlStopped }</p>
 			) }
 
 			<ChromeRows report={ report } outcome={ outcome } menusUrl={ menusUrl } widgetsUrl={ widgetsUrl } />
 
 			{ created.length > 0 ? (
-				<p className="dxai-done__next" role="note">
-					{ __( 'Next: open one service page, finish it as you want the others, then choose “Make the other services from this page” in its editor (the Page tab): the others get its build and look, and their own words.', 'dxai-ui' ) }
+				<p className="dxui-done__next" role="note">
+					{ __( 'Next: open one service page, finish it as you want the others, then choose “Make the other services from this page” in its editor (the Page tab): the others get its build and look, and their own words.', 'dx-ui' ) }
 				</p>
 			) : ( outcome.header.mode === CHROME_INSTALL && links?.designs && (
-				<p className="dxai-done__next" role="note">
-					{ __( 'Next: the header menu names the pages of the site. On the design’s page (Designs › this design › Pages) they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dxai-ui' ) }
+				<p className="dxui-done__next" role="note">
+					{ __( 'Next: the header menu names the pages of the site. On the design’s page (Designs › this design › Pages) they are made at the menu’s own addresses, in the look of this Home, so the menu opens them.', 'dx-ui' ) }
 				</p>
 			) ) }
 
-			<div className="dxai-actions dxai-done__actions">
-				{ saved?.page?.view && <a className="components-button is-primary" href={ saved.page.view }>{ __( 'View page', 'dxai-ui' ) }</a> }
-				{ saved?.page?.edit && <a className="components-button is-secondary" href={ saved.page.edit }>{ __( 'Edit page', 'dxai-ui' ) }</a> }
+			<div className="dxui-actions dxui-done__actions">
+				{ saved?.page?.view && <a className="components-button is-primary" href={ saved.page.view }>{ __( 'View page', 'dx-ui' ) }</a> }
+				{ saved?.page?.edit && <a className="components-button is-secondary" href={ saved.page.edit }>{ __( 'Edit page', 'dx-ui' ) }</a> }
 				{ /* A part kept as a template part is edited there; one built in Menus / Widgets through the screen buttons after these. */ }
-				{ headerEdit && <a className="components-button is-secondary" href={ headerEdit }>{ __( 'Edit header', 'dxai-ui' ) }</a> }
-				{ footerEdit && <a className="components-button is-secondary" href={ footerEdit }>{ __( 'Edit footer', 'dxai-ui' ) }</a> }
-				{ menusUrl && headerBuilt && <a className="components-button is-secondary" href={ menusUrl }>{ __( 'Appearance › Menus', 'dxai-ui' ) }</a> }
-				{ widgetsUrl && footerBuilt && <a className="components-button is-secondary" href={ widgetsUrl }>{ __( 'Appearance › Widgets', 'dxai-ui' ) }</a> }
-				{ links?.designs && <a className="components-button is-secondary" href={ links.designs + ( saved?.page?.id ? '#/design/' + saved.page.id : '' ) }>{ __( 'Open the design', 'dxai-ui' ) }</a> }
-				<button type="button" className="components-button is-tertiary" onClick={ onReset }>{ __( 'Convert another', 'dxai-ui' ) }</button>
+				{ headerEdit && <a className="components-button is-secondary" href={ headerEdit }>{ __( 'Edit header', 'dx-ui' ) }</a> }
+				{ footerEdit && <a className="components-button is-secondary" href={ footerEdit }>{ __( 'Edit footer', 'dx-ui' ) }</a> }
+				{ menusUrl && headerBuilt && <a className="components-button is-secondary" href={ menusUrl }>{ __( 'Appearance › Menus', 'dx-ui' ) }</a> }
+				{ widgetsUrl && footerBuilt && <a className="components-button is-secondary" href={ widgetsUrl }>{ __( 'Appearance › Widgets', 'dx-ui' ) }</a> }
+				{ links?.designs && <a className="components-button is-secondary" href={ links.designs + ( saved?.page?.id ? '#/design/' + saved.page.id : '' ) }>{ __( 'Open the design', 'dx-ui' ) }</a> }
+				<button type="button" className="components-button is-tertiary" onClick={ onReset }>{ __( 'Convert another', 'dx-ui' ) }</button>
 			</div>
 
 			{ created.length > 0 && (
-				<details className="dxai-done__list" open={ created.length <= 8 }>
+				<details className="dxui-done__list" open={ created.length <= 8 }>
 					<summary>
-						{ sprintf( /* translators: %d: pages built from the menu */ _n( '%d page built from the menu', '%d pages built from the menu', created.length, 'dxai-ui' ), created.length ) }
+						{ sprintf( /* translators: %d: pages built from the menu */ _n( '%d page built from the menu', '%d pages built from the menu', created.length, 'dx-ui' ), created.length ) }
 					</summary>
 					<ul>
 						{ created.map( ( page ) => (
 							<li key={ page.id || page.path }>
-								<span className="dxai-done__name">{ page.label || page.path }</span>
+								<span className="dxui-done__name">{ page.label || page.path }</span>
 								{ page.path && <code>{ page.path }</code> }
 								{ page.id > 0 && (
-									<span className="dxai-done__links">
+									<span className="dxui-done__links">
 										{ /* The server's own links when it sends them; this screen sits in wp-admin, so the fallbacks resolve there. */ }
-										<a href={ page.edit || 'post.php?post=' + page.id + '&action=edit' }>{ __( 'Edit', 'dxai-ui' ) }</a>
-										<a href={ page.view || '../?page_id=' + page.id }>{ __( 'View', 'dxai-ui' ) }</a>
+										<a href={ page.edit || 'post.php?post=' + page.id + '&action=edit' }>{ __( 'Edit', 'dx-ui' ) }</a>
+										<a href={ page.view || '../?page_id=' + page.id }>{ __( 'View', 'dx-ui' ) }</a>
 									</span>
 								) }
 							</li>
@@ -318,16 +318,16 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 			) }
 
 			{ errors.length > 0 && (
-				<details className="dxai-done__list is-bad" open>
+				<details className="dxui-done__list is-bad" open>
 					<summary>
-						{ sprintf( /* translators: %d: number of errors */ _n( '%d page could not be built', '%d problems while building the menu pages', errors.length, 'dxai-ui' ), errors.length ) }
+						{ sprintf( /* translators: %d: number of errors */ _n( '%d page could not be built', '%d problems while building the menu pages', errors.length, 'dx-ui' ), errors.length ) }
 					</summary>
 					<ul>
 						{ errors.map( ( err, i ) => (
 							<li key={ ( err.url || '' ) + i }>
-								{ err.label && <span className="dxai-done__name">{ err.label }</span> }
+								{ err.label && <span className="dxui-done__name">{ err.label }</span> }
 								{ err.url && <code>{ err.url }</code> }
-								<span className="dxai-done__msg">{ err.message }</span>
+								<span className="dxui-done__msg">{ err.message }</span>
 							</li>
 						) ) }
 					</ul>
@@ -335,17 +335,17 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 			) }
 
 			{ kept.length > 0 && (
-				<details className="dxai-done__list">
+				<details className="dxui-done__list">
 					<summary>
-						{ sprintf( /* translators: %d: pages left alone */ _n( '%d page left as it was', '%d pages left as they were', kept.length, 'dxai-ui' ), kept.length ) }
+						{ sprintf( /* translators: %d: pages left alone */ _n( '%d page left as it was', '%d pages left as they were', kept.length, 'dx-ui' ), kept.length ) }
 					</summary>
 					<ul>
 						{ kept.map( ( page, i ) => (
 							<li key={ ( page.path || '' ) + i }>
-								<span className="dxai-done__name">{ page.label || page.path }</span>
+								<span className="dxui-done__name">{ page.label || page.path }</span>
 								{ page.path && <code>{ page.path }</code> }
-								<span className="dxai-done__msg">
-									{ page.reason === 'edited' ? __( 'Edited since the last import, so the import left it alone.', 'dxai-ui' ) : page.reason }
+								<span className="dxui-done__msg">
+									{ page.reason === 'edited' ? __( 'Edited since the last import, so the import left it alone.', 'dx-ui' ) : page.reason }
 								</span>
 							</li>
 						) ) }
@@ -355,8 +355,8 @@ export default function ImportSummary( { saved, links, elapsed, crawlStopped, cr
 
 			{ /* What the compiler measured (coverage, raw HTML, Tailwind, the checks): for whoever wants it, not in the way. */ }
 			{ children && (
-				<details className="dxai-done__details">
-					<summary>{ __( 'Details', 'dxai-ui' ) }</summary>
+				<details className="dxui-done__details">
+					<summary>{ __( 'Details', 'dx-ui' ) }</summary>
 					{ children }
 				</details>
 			) }

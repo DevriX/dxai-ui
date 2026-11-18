@@ -5,7 +5,7 @@
  *
  *   node bin/build-icons.cjs
  *
- * A layout names a drawing (`dxaiIcon`: check, phone, …) and Block_Library::icon() makes a media file of it on the site the
+ * A layout names a drawing (`dxuiIcon`: check, phone, …) and Block_Library::icon() makes a media file of it on the site the
  * page is made on. This is a developer tool: the files it writes are shipped, the runtime is read, nothing is downloaded.
  */
 const fs = require( 'fs' );

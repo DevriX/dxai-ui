@@ -18,38 +18,38 @@ function Group( { title, items, empty, onRestore, exportUrl } ) {
 	const list = items || [];
 	const shown = all || list.length <= ROWS_SHOWN + 2 ? list : list.slice( 0, ROWS_SHOWN );
 	return (
-		<section className="dxai-library-group dxai-section">
-			<div className="dxai-section-head">
+		<section className="dxui-library-group dxui-section">
+			<div className="dxui-section-head">
 				<div>
 					<h3>{ title }</h3>
 				</div>
-				<span className="dxai-pill">{ list.length }</span>
+				<span className="dxui-pill">{ list.length }</span>
 			</div>
 			{ list.length === 0 ? (
-				<p className="dxai-muted">{ empty }</p>
+				<p className="dxui-muted">{ empty }</p>
 			) : (
-				<table className="wp-list-table widefat fixed striped dxai-collection">
+				<table className="wp-list-table widefat fixed striped dxui-collection">
 					<thead>
 						<tr>
-							<th scope="col">{ __( 'Title', 'dxai-ui' ) }</th>
-							<th scope="col" className="dxai-collection__type">{ __( 'Type', 'dxai-ui' ) }</th>
-							<th scope="col" className="dxai-collection__id">ID</th>
-							<th scope="col" className="dxai-collection__actions">{ __( 'Actions', 'dxai-ui' ) }</th>
+							<th scope="col">{ __( 'Title', 'dx-ui' ) }</th>
+							<th scope="col" className="dxui-collection__type">{ __( 'Type', 'dx-ui' ) }</th>
+							<th scope="col" className="dxui-collection__id">ID</th>
+							<th scope="col" className="dxui-collection__actions">{ __( 'Actions', 'dx-ui' ) }</th>
 						</tr>
 					</thead>
 					<tbody>
 						{ shown.map( ( item ) => (
 							<tr key={ ( item.type || 'item' ) + '-' + item.id }>
-								<td><strong>{ item.title || __( '(no title)', 'dxai-ui' ) }</strong></td>
-								<td className="dxai-collection__type">{ item.type || 'pattern' }</td>
-								<td className="dxai-collection__id">{ item.id }</td>
-								<td className="dxai-collection__actions">
-									{ item.view && <a href={ item.view }>{ __( 'View', 'dxai-ui' ) }</a> }
+								<td><strong>{ item.title || __( '(no title)', 'dx-ui' ) }</strong></td>
+								<td className="dxui-collection__type">{ item.type || 'pattern' }</td>
+								<td className="dxui-collection__id">{ item.id }</td>
+								<td className="dxui-collection__actions">
+									{ item.view && <a href={ item.view }>{ __( 'View', 'dx-ui' ) }</a> }
 									{ item.view && item.edit && ' · ' }
-									{ item.edit && <a href={ item.edit }>{ __( 'Edit', 'dxai-ui' ) }</a> }
+									{ item.edit && <a href={ item.edit }>{ __( 'Edit', 'dx-ui' ) }</a> }
 									{ exportUrl && item.type === 'page' && exportUrl( item ) && <> · <TransferExport url={ exportUrl( item ) } title={ item.title } /></> }
-									{ onRestore && item.type === 'dxai_conversion' && (
-										<> · <Button variant="link" onClick={ () => onRestore( item ) }>{ __( 'Restore', 'dxai-ui' ) }</Button></>
+									{ onRestore && item.type === 'dxui_conversion' && (
+										<> · <Button variant="link" onClick={ () => onRestore( item ) }>{ __( 'Restore', 'dx-ui' ) }</Button></>
 									) }
 								</td>
 							</tr>
@@ -58,9 +58,9 @@ function Group( { title, items, empty, onRestore, exportUrl } ) {
 				</table>
 			) }
 			{ shown.length < list.length && (
-				<p className="dxai-collection__more">
+				<p className="dxui-collection__more">
 					<Button variant="link" onClick={ () => setAll( true ) }>
-						{ /* translators: %d: number of items. */ sprintf( __( 'Show all %d', 'dxai-ui' ), list.length ) }
+						{ /* translators: %d: number of items. */ sprintf( __( 'Show all %d', 'dx-ui' ), list.length ) }
 					</Button>
 				</p>
 			) }
@@ -72,8 +72,8 @@ function Group( { title, items, empty, onRestore, exportUrl } ) {
 export function confirmRestore( item ) {
 	return window.confirm( sprintf(
 		/* translators: %s: the conversion's title. */
-		__( 'Restore “%s”?\n\nIts page is written again from this snapshot and published. Changes made to the page since are replaced; they stay in its revisions. If this conversion installed the site’s header and footer, they are installed again, replacing the site’s menus and footer widgets on every page.', 'dxai-ui' ),
-		item.title || __( '(no title)', 'dxai-ui' )
+		__( 'Restore “%s”?\n\nIts page is written again from this snapshot and published. Changes made to the page since are replaced; they stay in its revisions. If this conversion installed the site’s header and footer, they are installed again, replacing the site’s menus and footer widgets on every page.', 'dx-ui' ),
+		item.title || __( '(no title)', 'dx-ui' )
 	) );
 }
 
@@ -87,7 +87,7 @@ export default function Collections() {
 
 	function load() {
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/patterns' } )
+		apiFetch( { path: '/dx-ui/v1/patterns' } )
 			.then( ( res ) => setLibrary( {
 				patterns: res.patterns || [],
 				conversions: res.conversions || [],
@@ -95,7 +95,7 @@ export default function Collections() {
 				template_parts: res.template_parts || [],
 				navigations: res.navigations || [],
 			} ) )
-			.catch( ( err ) => setError( err.message || __( 'The collections could not be read.', 'dxai-ui' ) ) );
+			.catch( ( err ) => setError( err.message || __( 'The collections could not be read.', 'dx-ui' ) ) );
 		loadTransferInfo().then( setTransfer ).catch( () => setTransfer( null ) );
 	}
 
@@ -128,44 +128,44 @@ export default function Collections() {
 		setBusy( true );
 		setError( '' );
 		setMessage( '' );
-		apiFetch( { path: '/dxai-ui/v1/restore', method: 'POST', data: { conversion_id: item.id } } )
+		apiFetch( { path: '/dx-ui/v1/restore', method: 'POST', data: { conversion_id: item.id } } )
 			.then( () => {
-				setMessage( __( 'Conversion restored.', 'dxai-ui' ) );
+				setMessage( __( 'Conversion restored.', 'dx-ui' ) );
 				load();
 			} )
-			.catch( ( err ) => setError( err.message || __( 'Restore failed.', 'dxai-ui' ) ) )
+			.catch( ( err ) => setError( err.message || __( 'Restore failed.', 'dx-ui' ) ) )
 			.finally( () => setBusy( false ) );
 	}
 
 	return (
-		<div className="dxai-collections">
+		<div className="dxui-collections">
 			{ message && <Notice status="success" isDismissible={ false }>{ message }</Notice> }
 			{ error && <Notice status="error" isDismissible={ false }>{ error }</Notice> }
 			{ ! library && ! error && <Spinner /> }
 			{ filtered && (
 				<>
-					<div className="dxai-collections__search">
+					<div className="dxui-collections__search">
 						<SearchControl
-							label={ __( 'Search the collections', 'dxai-ui' ) }
+							label={ __( 'Search the collections', 'dx-ui' ) }
 							value={ query }
 							onChange={ setQuery }
-							placeholder={ __( 'Search pages, patterns, menus, conversions…', 'dxai-ui' ) }
+							placeholder={ __( 'Search pages, patterns, menus, conversions…', 'dx-ui' ) }
 							__nextHasNoMarginBottom
 						/>
 					</div>
 					<Group
-						title={ __( 'Generated pages', 'dxai-ui' ) }
+						title={ __( 'Generated pages', 'dx-ui' ) }
 						items={ filtered.pages }
-						empty={ __( 'No generated pages yet.', 'dxai-ui' ) }
+						empty={ __( 'No generated pages yet.', 'dx-ui' ) }
 						exportUrl={ transfer ? ( item ) => transfer.links[ item.id ] || '' : null }
 					/>
-					<Group title={ __( 'Synced patterns', 'dxai-ui' ) } items={ filtered.patterns } empty={ __( 'No patterns yet.', 'dxai-ui' ) } />
-					<Group title={ __( 'Headers / footers', 'dxai-ui' ) } items={ filtered.template_parts } empty={ __( 'No template parts yet.', 'dxai-ui' ) } />
-					<Group title={ __( 'Menus', 'dxai-ui' ) } items={ filtered.navigations } empty={ __( 'No menus yet.', 'dxai-ui' ) } />
+					<Group title={ __( 'Synced patterns', 'dx-ui' ) } items={ filtered.patterns } empty={ __( 'No patterns yet.', 'dx-ui' ) } />
+					<Group title={ __( 'Headers / footers', 'dx-ui' ) } items={ filtered.template_parts } empty={ __( 'No template parts yet.', 'dx-ui' ) } />
+					<Group title={ __( 'Menus', 'dx-ui' ) } items={ filtered.navigations } empty={ __( 'No menus yet.', 'dx-ui' ) } />
 					<Group
-						title={ __( 'Conversions', 'dxai-ui' ) }
+						title={ __( 'Conversions', 'dx-ui' ) }
 						items={ filtered.conversions }
-						empty={ __( 'No conversion snapshots yet.', 'dxai-ui' ) }
+						empty={ __( 'No conversion snapshots yet.', 'dx-ui' ) }
 						onRestore={ busy ? null : restore }
 					/>
 				</>

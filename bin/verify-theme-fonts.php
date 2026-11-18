@@ -3,21 +3,21 @@
  * A theme that lets the site choose its fonts draws the designs in them (Theme_Fonts): the roles of a design's fonts,
  * the rule printed with the page, a block's font-family bound to the theme's, the design's own fonts leaving its sheet
  * and coming back (Font_Host::adopt()), and the clean-up of the files nothing names. The theme is a stand-in given
- * through the filter `dxai_ui_theme_fonts`, Google is answered by a stand-in too.
+ * through the filter `dx_ui_theme_fonts`, Google is answered by a stand-in too.
  *
  *   bash bin/wp-php.sh bin/verify-theme-fonts.php        (or: wp eval-file bin/verify-theme-fonts.php --user=1)
  *
- * Writes under uploads/dxai-ui/ in files named for the test and removes them again; the pages it makes are trashed.
+ * Writes under uploads/dx-ui/ in files named for the test and removes them again; the pages it makes are trashed.
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Speed;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Theme_Fonts;
+use DX_UI\Media\Font_Host;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Speed;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Theme_Fonts;
 
 $fail   = 0;
 $pass   = 0;
@@ -42,7 +42,7 @@ $theme = array(
 );
 $provide = $theme; // array: what the theme gives; false: it manages nothing.
 add_filter(
-	'dxai_ui_theme_fonts',
+	'dx_ui_theme_fonts',
 	static function () use ( &$provide ) {
 		return $provide;
 	},
@@ -85,9 +85,9 @@ $files  = array();
 $design = static function ( string $css, array $meta = array() ) use ( &$made ): array {
 	$id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Vtx theme fonts', 'post_content' => '' ) );
 	update_post_meta( $id, Page_Scope::META, $id );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 	$rel = Upload_Paths::DIR . '/pattern-vtxtf' . $id . '.css';
-	update_post_meta( $id, '_dxai_ui_css_url', $rel );
+	update_post_meta( $id, '_dx_ui_css_url', $rel );
 	foreach ( $meta as $k => $v ) {
 		update_post_meta( $id, $k, $v );
 	}
@@ -98,7 +98,7 @@ $design = static function ( string $css, array $meta = array() ) use ( &$made ):
 
 	return array( $id, $path );
 };
-$scope = '.dxai-ui.dxai-ui--{ID}';
+$scope = '.dx-ui.dx-ui--{ID}';
 $sheet = "@import url(\"https://fonts.googleapis.com/css2?family=Vtx+Tfsans:wght@400%3B700&display=swap\");\n"
 	. "$scope { font-family: 'Vtx Tfsans', sans-serif; --font-display: 'Vtx Tfserif', serif; --font-sans: 'Vtx Tfsans', sans-serif; --font-mono: 'Vtx Tfmono', monospace; --font-size-base: 16px }\n"
 	. "$scope .hero { font-family: 'Vtx Tfserif', serif }\n"
@@ -115,15 +115,15 @@ $expect( 'a stack is read into its families, quotes and case aside', Theme_Fonts
 $expect( 'a comma inside a function does not split a family', Theme_Fonts::families( 'var(--a, "x y"), serif' ) === array( 'var(--a, x y)', 'serif' ) );
 $expect( 'the first name that is not a generic family is the font', Theme_Fonts::first_named( 'system-ui, "Vtx Sans", serif' ) === 'vtx sans' && Theme_Fonts::first_named( 'serif, monospace' ) === '' );
 $expect( 'an icon font is known, a text font is not one', Theme_Fonts::is_icon( 'material icons' ) && Theme_Fonts::is_icon( 'font awesome 6 free' ) && ! Theme_Fonts::is_icon( 'inter' ) );
-$expect( 'the page root\'s font is the body font', Theme_Fonts::map_stack( "'Vtx Tfsans', sans-serif", 'vtx tfsans' ) === 'var(--dxai-theme-body)' );
-$expect( 'any other font is a heading font', Theme_Fonts::map_stack( "'Vtx Tfserif', serif", 'vtx tfsans' ) === 'var(--dxai-theme-heading)' );
-$expect( 'with no root font known a font is the body font', Theme_Fonts::map_stack( "'Vtx Tfserif', serif", '' ) === 'var(--dxai-theme-body)' );
-$expect( 'a monospace web font is the body font: a mono label is text like any other', Theme_Fonts::map_stack( "'Vtx Tfmono', monospace", 'vtx tfsans' ) === 'var(--dxai-theme-body)' && Theme_Fonts::map_stack( "'JetBrains Mono'", 'inter' ) === 'var(--dxai-theme-body)' );
+$expect( 'the page root\'s font is the body font', Theme_Fonts::map_stack( "'Vtx Tfsans', sans-serif", 'vtx tfsans' ) === 'var(--dxui-theme-body)' );
+$expect( 'any other font is a heading font', Theme_Fonts::map_stack( "'Vtx Tfserif', serif", 'vtx tfsans' ) === 'var(--dxui-theme-heading)' );
+$expect( 'with no root font known a font is the body font', Theme_Fonts::map_stack( "'Vtx Tfserif', serif", '' ) === 'var(--dxui-theme-body)' );
+$expect( 'a monospace web font is the body font: a mono label is text like any other', Theme_Fonts::map_stack( "'Vtx Tfmono', monospace", 'vtx tfsans' ) === 'var(--dxui-theme-body)' && Theme_Fonts::map_stack( "'JetBrains Mono'", 'inter' ) === 'var(--dxui-theme-body)' );
 $expect( '… and the system\'s monospace in code', Theme_Fonts::map_stack( "'JetBrains Mono', monospace", 'inter', true ) === Theme_Fonts::SYSTEM_MONO );
 $expect( 'an icon font, a variable and a keyword are left alone', Theme_Fonts::map_stack( "'Material Icons'", 'x' ) === null && Theme_Fonts::map_stack( "'Material Icons', sans-serif", 'x' ) === null && Theme_Fonts::map_stack( 'var(--font-display)', 'x' ) === null && Theme_Fonts::map_stack( 'inherit', 'x' ) === null && Theme_Fonts::map_stack( 'initial', 'x' ) === null && Theme_Fonts::map_stack( '', 'x' ) === null );
-$expect( 'the browser\'s default font (generic families only) is the body font', Theme_Fonts::map_stack( 'sans-serif', 'inter' ) === 'var(--dxai-theme-body)' && Theme_Fonts::map_stack( 'system-ui, -apple-system, sans-serif', 'inter' ) === 'var(--dxai-theme-body)' && Theme_Fonts::map_stack( 'serif', 'inter' ) === 'var(--dxai-theme-body)' );
-$expect( 'so is a font every computer has (Arial), where a display face (Georgia) is a choice', Theme_Fonts::map_stack( 'Arial, Helvetica, sans-serif', 'inter' ) === 'var(--dxai-theme-body)' && Theme_Fonts::map_stack( 'Georgia, serif', 'inter' ) === 'var(--dxai-theme-heading)' );
-$expect( '!important does not change the role', Theme_Fonts::map_stack( "'Vtx Tfsans' !important", 'vtx tfsans' ) === 'var(--dxai-theme-body)' );
+$expect( 'the browser\'s default font (generic families only) is the body font', Theme_Fonts::map_stack( 'sans-serif', 'inter' ) === 'var(--dxui-theme-body)' && Theme_Fonts::map_stack( 'system-ui, -apple-system, sans-serif', 'inter' ) === 'var(--dxui-theme-body)' && Theme_Fonts::map_stack( 'serif', 'inter' ) === 'var(--dxui-theme-body)' );
+$expect( 'so is a font every computer has (Arial), where a display face (Georgia) is a choice', Theme_Fonts::map_stack( 'Arial, Helvetica, sans-serif', 'inter' ) === 'var(--dxui-theme-body)' && Theme_Fonts::map_stack( 'Georgia, serif', 'inter' ) === 'var(--dxui-theme-heading)' );
+$expect( '!important does not change the role', Theme_Fonts::map_stack( "'Vtx Tfsans' !important", 'vtx tfsans' ) === 'var(--dxui-theme-body)' );
 
 // --- the theme -----------------------------------------------------------------------------------------------------
 echo "\nThe theme\n";
@@ -143,7 +143,7 @@ $switch( $theme );
 // --- a design follows it -------------------------------------------------------------------------------------------
 echo "\nA design follows the theme\n";
 [ $id, $path ] = $design( $sheet );
-$expect( 'the fixture is a design', \DXAI_UI\Structures\Design_Attach::is_design( $id ) );
+$expect( 'the fixture is a design', \DX_UI\Structures\Design_Attach::is_design( $id ) );
 $expect( 'it follows the theme and its fonts can be replaced', Theme_Fonts::follows( $id ) && Theme_Fonts::adopts( $id ) );
 $a = Theme_Fonts::analysis( $id );
 $expect( 'the family its page is set in is its body font', $a['body'] === 'vtx tfsans', $a['body'] );
@@ -151,20 +151,20 @@ $expect( 'its font variables are told by their names', ( $a['vars']['--font-disp
 $expect( 'the rules that name a font are found, the variable and icon ones are not', count( $a['rules'] ) === 6, json_encode( array_column( $a['rules'], 's' ) ) );
 $css = Theme_Fonts::css( $id );
 $expect( 'the theme\'s font rules are printed with the design', str_contains( $css, '@font-face{font-family:"Vtx Head"' ) );
-$expect( 'its two stacks are given names the design cannot shadow', str_contains( $css, '--dxai-theme-heading:var(--font-heading,"Vtx Head", Georgia, serif)' ) && str_contains( $css, '--dxai-theme-body:var(--font-primary,"Vtx Body", Arial, sans-serif)' ) );
-$expect( 'the design\'s font variables are pointed at them by role', str_contains( $css, '--font-display:var(--dxai-theme-heading)' ) && str_contains( $css, '--font-sans:var(--dxai-theme-body)' ) && str_contains( $css, '--font-mono:var(--dxai-theme-body)' ) );
-$expect( 'its root takes the body font and its headings the heading font', str_contains( $css, '.dxai-ui.dxai-ui.dxai-ui{font-family:var(--dxai-theme-body)}' ) && str_contains( $css, ':is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading)}' ) );
-$expect( 'a class that names a font is written again with its role', str_contains( $css, ' .hero{font-family:var(--dxai-theme-heading)}' ) && str_contains( $css, ' .lead{font-family:var(--dxai-theme-body) !important}' ) );
-$expect( 'a class set in a monospace font gets the body font, not the system\'s monospace', str_contains( $css, ' .code{font-family:var(--dxai-theme-body)}' ) );
-$expect( 'a rule whose selectors are all code gets the system\'s monospace', str_contains( $css, ' pre, .dxai-ui.dxai-ui--' . $id . ' .snippet code{font-family:' . Theme_Fonts::SYSTEM_MONO . '}' ) );
+$expect( 'its two stacks are given names the design cannot shadow', str_contains( $css, '--dxui-theme-heading:var(--font-heading,"Vtx Head", Georgia, serif)' ) && str_contains( $css, '--dxui-theme-body:var(--font-primary,"Vtx Body", Arial, sans-serif)' ) );
+$expect( 'the design\'s font variables are pointed at them by role', str_contains( $css, '--font-display:var(--dxui-theme-heading)' ) && str_contains( $css, '--font-sans:var(--dxui-theme-body)' ) && str_contains( $css, '--font-mono:var(--dxui-theme-body)' ) );
+$expect( 'its root takes the body font and its headings the heading font', str_contains( $css, '.dx-ui.dx-ui.dx-ui{font-family:var(--dxui-theme-body)}' ) && str_contains( $css, ':is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxui-theme-heading)}' ) );
+$expect( 'a class that names a font is written again with its role', str_contains( $css, ' .hero{font-family:var(--dxui-theme-heading)}' ) && str_contains( $css, ' .lead{font-family:var(--dxui-theme-body) !important}' ) );
+$expect( 'a class set in a monospace font gets the body font, not the system\'s monospace', str_contains( $css, ' .code{font-family:var(--dxui-theme-body)}' ) );
+$expect( 'a rule whose selectors are all code gets the system\'s monospace', str_contains( $css, ' pre, .dx-ui.dx-ui--' . $id . ' .snippet code{font-family:' . Theme_Fonts::SYSTEM_MONO . '}' ) );
 $expect( 'code stays monospace whatever the design\'s variable says', str_contains( $css, ':is(pre,code,kbd,samp){font-family:' . Theme_Fonts::SYSTEM_MONO . '}' ) );
 $expect( 'an icon class and a variable are not touched', ! str_contains( $css, 'Material' ) && ! str_contains( $css, ' .keep{' ) );
-$expect( 'a rule inside a media query stays inside it', str_contains( $css, '@media (min-width: 600px){' . str_replace( '{ID}', (string) $id, $scope ) . ' .sub{font-family:var(--dxai-theme-heading)}}' ) );
+$expect( 'a rule inside a media query stays inside it', str_contains( $css, '@media (min-width: 600px){' . str_replace( '{ID}', (string) $id, $scope ) . ' .sub{font-family:var(--dxui-theme-heading)}}' ) );
 $expect( 'nothing in it can close a style element', ! str_contains( $css, '</' ) );
 // The page's head (Blocks\Assets): its brand CSS keeps the stacks, and the theme's web face waits for the end of the page (Late_Fonts).
 $let_go = static function (): void {
 	ob_start();
-	\DXAI_UI\Media\Late_Fonts::print_late();
+	\DX_UI\Media\Late_Fonts::print_late();
 	ob_end_clean();
 };
 $let_go();
@@ -172,23 +172,23 @@ $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
 $GLOBALS['post']         = get_post( $id );
 do_action( 'wp_enqueue_scripts' );
-$inline = implode( '', (array) wp_styles()->get_data( 'dxai-ui-page-' . $id, 'after' ) );
-$held   = \DXAI_UI\Media\Late_Fonts::held();
-$expect( 'on the design\'s page, its brand CSS keeps the stacks and the theme\'s web face waits for the end of the page (Late_Fonts)', str_contains( $inline, '--dxai-theme-heading' ) && ! str_contains( $inline, 'vtx-head.woff2' ) && str_contains( $held, 'vtx-head.woff2' ), substr( $inline, 0, 160 ) . ' | ' . $held );
-wp_dequeue_style( 'dxai-ui-page-' . $id );
+$inline = implode( '', (array) wp_styles()->get_data( 'dx-ui-page-' . $id, 'after' ) );
+$held   = \DX_UI\Media\Late_Fonts::held();
+$expect( 'on the design\'s page, its brand CSS keeps the stacks and the theme\'s web face waits for the end of the page (Late_Fonts)', str_contains( $inline, '--dxui-theme-heading' ) && ! str_contains( $inline, 'vtx-head.woff2' ) && str_contains( $held, 'vtx-head.woff2' ), substr( $inline, 0, 160 ) . ' | ' . $held );
+wp_dequeue_style( 'dx-ui-page-' . $id );
 $let_go();
-$footer_css = new ReflectionMethod( \DXAI_UI\Chrome\Site_Footer_Block::class, 'design_css' );
+$footer_css = new ReflectionMethod( \DX_UI\Chrome\Site_Footer_Block::class, 'design_css' );
 $footer_css->setAccessible( true );
 $fcss = (string) $footer_css->invoke( null, array( 'page_id' => $id, 'scope' => $id ) );
-$expect( '…and so does the design\'s footer on a page of the theme (Site_Footer_Block)', str_contains( $fcss, '--dxai-theme-heading' ) && ! str_contains( $fcss, 'vtx-head.woff2' ) && str_contains( \DXAI_UI\Media\Late_Fonts::held(), 'vtx-head.woff2' ), \DXAI_UI\Media\Late_Fonts::held() );
+$expect( '…and so does the design\'s footer on a page of the theme (Site_Footer_Block)', str_contains( $fcss, '--dxui-theme-heading' ) && ! str_contains( $fcss, 'vtx-head.woff2' ) && str_contains( \DX_UI\Media\Late_Fonts::held(), 'vtx-head.woff2' ), \DX_UI\Media\Late_Fonts::held() );
 $let_go();
 
 $prior = Theme_Fonts::use_design( $id );
 $bound = Theme_Fonts::bind_css( "color:red;font-family:'Vtx Tfserif', serif;margin:0" );
-$expect( 'a block\'s font-family is bound to the theme\'s role, the rest is as it was', $bound === 'color:red;font-family:var(--dxai-theme-heading);margin:0', $bound );
-$expect( 'the design\'s root font in a block is the body font', Theme_Fonts::bind_css( "font-family:'Vtx Tfsans'" ) === 'font-family:var(--dxai-theme-body)' );
+$expect( 'a block\'s font-family is bound to the theme\'s role, the rest is as it was', $bound === 'color:red;font-family:var(--dxui-theme-heading);margin:0', $bound );
+$expect( 'the design\'s root font in a block is the body font', Theme_Fonts::bind_css( "font-family:'Vtx Tfsans'" ) === 'font-family:var(--dxui-theme-body)' );
 $expect( 'a block that reads a variable, or names no font, is not touched', Theme_Fonts::bind_css( 'font-family:var(--x)' ) === 'font-family:var(--x)' && Theme_Fonts::bind_css( 'color:red' ) === 'color:red' );
-$expect( '!important is kept', str_contains( Theme_Fonts::bind_css( "font-family:'Vtx Tfserif' !important" ), 'var(--dxai-theme-heading) !important' ) );
+$expect( '!important is kept', str_contains( Theme_Fonts::bind_css( "font-family:'Vtx Tfserif' !important" ), 'var(--dxui-theme-heading) !important' ) );
 Theme_Fonts::use_design( 0 );
 $expect( 'with no design named, nothing is bound', Theme_Fonts::bind_css( "font-family:'Vtx Tfserif'" ) === "font-family:'Vtx Tfserif'" );
 Theme_Fonts::use_design( $prior );
@@ -201,11 +201,11 @@ $expect( 'a heading font with a bold of its own (700) is drawn as the design say
 $switch( array_merge( $theme, array( 'heading' => '"Vtx Head", Impact, sans-serif', 'faces' => $face( 'Vtx Head', '400' ) . $face( 'Vtx Body', '100 900' ) ) ) );
 $expect( 'a display face that comes in one weight (400, like Impact or Archivo Black) has no bold', Theme_Fonts::heading_lacks_bold() );
 $css = Theme_Fonts::css( $id );
-$expect( '…so its headings are not drawn bold by the browser (smeared strokes, heavier than the theme\'s own)', str_contains( $css, ':is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading);font-synthesis-weight:none}' ), substr( $css, 0, 300 ) );
-$expect( '…and so are the classes of the design that name a heading font', str_contains( $css, ' .hero{font-family:var(--dxai-theme-heading);font-synthesis-weight:none}' ) && str_contains( $css, ' .lead{font-family:var(--dxai-theme-body) !important}' ) );
+$expect( '…so its headings are not drawn bold by the browser (smeared strokes, heavier than the theme\'s own)', str_contains( $css, ':is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxui-theme-heading);font-synthesis-weight:none}' ), substr( $css, 0, 300 ) );
+$expect( '…and so are the classes of the design that name a heading font', str_contains( $css, ' .hero{font-family:var(--dxui-theme-heading);font-synthesis-weight:none}' ) && str_contains( $css, ' .lead{font-family:var(--dxui-theme-body) !important}' ) );
 $prior = Theme_Fonts::use_design( $id );
-$expect( 'a block set in the heading font says so in its own CSS', Theme_Fonts::bind_css( "font-family:'Vtx Tfserif', serif;font-weight:800" ) === 'font-family:var(--dxai-theme-heading);font-synthesis-weight:none;font-weight:800' );
-$expect( '…a block in the body font does not', Theme_Fonts::bind_css( "font-family:'Vtx Tfsans'" ) === 'font-family:var(--dxai-theme-body)' );
+$expect( 'a block set in the heading font says so in its own CSS', Theme_Fonts::bind_css( "font-family:'Vtx Tfserif', serif;font-weight:800" ) === 'font-family:var(--dxui-theme-heading);font-synthesis-weight:none;font-weight:800' );
+$expect( '…a block in the body font does not', Theme_Fonts::bind_css( "font-family:'Vtx Tfsans'" ) === 'font-family:var(--dxui-theme-body)' );
 Theme_Fonts::use_design( $prior );
 $expect( 'what the cached rules depend on changes with it', Theme_Fonts::signature( $id ) !== $sig );
 $switch( array_merge( $theme, array( 'heading' => '"Vtx Head", sans-serif', 'faces' => $face( 'Vtx Head', '100 900' ) ) ) );
@@ -231,10 +231,10 @@ Theme_Fonts::use_design( 0 );
 delete_post_meta( $id, Theme_Fonts::MODE_META );
 Theme_Fonts::reset();
 $expect( 'the cached rules of a block depend on whether the design follows', $sig !== '' && $sig === Theme_Fonts::signature( $id ) );
-add_filter( 'dxai_ui_theme_fonts_follow', '__return_false' );
+add_filter( 'dx_ui_theme_fonts_follow', '__return_false' );
 Theme_Fonts::reset();
 $expect( 'the filter can keep every design\'s own fonts', ! Theme_Fonts::follows( $id ) && Theme_Fonts::css( $id ) === '' );
-remove_filter( 'dxai_ui_theme_fonts_follow', '__return_false' );
+remove_filter( 'dx_ui_theme_fonts_follow', '__return_false' );
 Theme_Fonts::reset();
 $switch( false );
 $expect( 'a theme that manages no fonts leaves every design its own', ! Theme_Fonts::follows( $id ) && ! Theme_Fonts::adopts( $id ) && Theme_Fonts::css( $id ) === '' );
@@ -263,7 +263,7 @@ $purge = static function () use ( &$key_files ): void {
 	}
 };
 $purge();
-[ $fid, $fpath ] = $design( $sheet, array( '_dxai_ui_font_urls' => array( $google, $google2 ) ) );
+[ $fid, $fpath ] = $design( $sheet, array( '_dx_ui_font_urls' => array( $google, $google2 ) ) );
 $orig   = (string) file_get_contents( $fpath );
 $before = count( $hits );
 $r      = Font_Host::localize_design( $fid );
@@ -299,7 +299,7 @@ Theme_Fonts::migrate( $fid );
 $expect( 'the migration of a design that is in order changes nothing', Font_Host::design_state( $fid ) === 'theme' );
 
 // A sheet that lists fonts it does not import, and a sheet no Google fonts.
-[ $lid, $lpath ] = $design( "$scope { font-family: 'Vtx Tfsans' }\n", array( '_dxai_ui_font_urls' => array( $google ) ) );
+[ $lid, $lpath ] = $design( "$scope { font-family: 'Vtx Tfsans' }\n", array( '_dx_ui_font_urls' => array( $google ) ) );
 $r = Font_Host::adopt( $lpath, array( $google ) );
 $expect( 'a listed stylesheet the sheet does not import is recorded, the sheet drawn in the theme\'s', $r['changed'] && Font_Host::state( $lpath, array( $google ) ) === 'theme' );
 [ $nid, $npath ] = $design( "$scope { font-family: 'Vtx Tfsans' }\n" );
@@ -309,11 +309,11 @@ $expect( 'its own migration changes nothing', (function () use ( $nid, $npath ) 
 
 // Fonts put in by hand (the interim fix of the Semper page): they leave, the record keeps them.
 $hand = "/* Web fonts served from this site (fonts/), not from Google Fonts. */\n@font-face { font-family: 'Vtx Tfsans'; src: url(fonts/aaaaaaaaaaaaaaaaaaaa.woff2) format('woff2') }\n.keep-me{color:red}\n";
-[ $hid, $hpath ] = $design( $hand, array( '_dxai_ui_font_urls' => array( $google ) ) );
+[ $hid, $hpath ] = $design( $hand, array( '_dx_ui_font_urls' => array( $google ) ) );
 $horig = (string) file_get_contents( $hpath );
 $r     = Font_Host::adopt( $hpath, array( $google ) );
 $hnow  = (string) file_get_contents( $hpath );
-$outside = (string) preg_replace( '~/\*! dxai-ui local fonts .*?/\*! dxai-ui local fonts end \*/~s', '', $hnow );
+$outside = (string) preg_replace( '~/\*! dx-ui local fonts .*?/\*! dx-ui local fonts end \*/~s', '', $hnow );
 $expect( 'the rules written by hand leave the sheet, the rest stays', $r['changed'] && ! str_contains( $outside, '@font-face' ) && str_contains( $outside, '.keep-me{color:red}' ), $hnow );
 $expect( '… and reverting gives them back byte for byte', Font_Host::revert( $hpath ) && file_get_contents( $hpath ) === $horig );
 
@@ -336,7 +336,7 @@ $expect( 'a file a stylesheet names is kept', ! in_array( 'dddddddddddddddddddd.
 $expect( 'a file written a moment ago is kept (a copy may be in progress)', ! in_array( 'cccccccccccccccccccc.woff2', $dry['names'], true ) );
 $expect( 'a dry run removes nothing', is_file( $orphan ) && is_file( $fresh ) && is_file( $named ) );
 // A file named only by the record (what the sheet used to say) is not a use.
-[ $rid, $rpath ] = $design( $sheet, array( '_dxai_ui_font_urls' => array( $google, $google2 ) ) );
+[ $rid, $rpath ] = $design( $sheet, array( '_dx_ui_font_urls' => array( $google, $google2 ) ) );
 Font_Host::localize_sheet( $rpath, array( $google2 ) );
 preg_match_all( '#url\(fonts/([0-9a-f]{20}\.woff2)\)#', (string) file_get_contents( $rpath ), $m );
 $names_local = $m[1];
@@ -368,7 +368,7 @@ foreach ( $made as [ $pid, $ppath ] ) {
 	Font_Host::revert( $ppath );
 	wp_delete_file( $ppath );
 	wp_trash_post( $pid );
-	delete_transient( 'dxai_ui_fonts_wait_' . $pid );
+	delete_transient( 'dx_ui_fonts_wait_' . $pid );
 }
 $purge();
 foreach ( array( $orphan, $fresh, $named, $other_p ) as $f ) {
@@ -382,7 +382,7 @@ foreach ( $names_local as $n ) {
 	}
 }
 foreach ( array( $google, $google2 ) as $g ) {
-	delete_transient( 'dxai_ui_fonts_wait_' . Font_Host::key( $g ) );
+	delete_transient( 'dx_ui_fonts_wait_' . Font_Host::key( $g ) );
 }
 Theme_Fonts::reset();
 

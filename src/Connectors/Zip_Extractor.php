@@ -2,20 +2,20 @@
 /**
  * ZIP unpacker: entry by entry, allow-listed, into a private work folder.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * Unpacks a design archive so a connector can read it, and nothing more.
  *
  * It used to hand the whole archive to core unzip_file() inside
- * uploads/dxai-ui/tmp-XXXXXXXX and only afterwards walk the tree deleting
+ * uploads/dx-ui/tmp-XXXXXXXX and only afterwards walk the tree deleting
  * what it did not want. On a real host that went wrong four ways:
  *
  *  - every entry reached disk first, in a folder the web server serves: a
@@ -102,7 +102,7 @@ final class Zip_Extractor {
 	private const SKIPPED_DIRS = '#(^|/)(node_modules|\.next|dist|vendor|coverage|__MACOSX)(/|$)#';
 
 	/**
-	 * Default ceilings, each filterable through `dxai_ui_zip_limits`.
+	 * Default ceilings, each filterable through `dx_ui_zip_limits`.
 	 *
 	 * Measured on the 20 archives of the local corpus: at most 106 entries,
 	 * the largest single file 10.9 MB (a photo), the largest archive 82.7 MB
@@ -129,17 +129,17 @@ final class Zip_Extractor {
 	private const STALE_AFTER = 86400;
 
 	/** Work folder names under the temp directory: the prefix plus 16 hex digits. */
-	private const WORK_PREFIX = 'dxai-ui-tmp-';
+	private const WORK_PREFIX = 'dx-ui-tmp-';
 
 	/**
-	 * Work folder names in uploads/dxai-ui, the fallback. `tmp-` plus eight
+	 * Work folder names in uploads/dx-ui, the fallback. `tmp-` plus eight
 	 * letters and digits is what the old unpacker named them, so the sweep
 	 * matches that too and clears what it left behind.
 	 */
 	private const FALLBACK_PREFIX = 'tmp-';
 
 	/** Denies web access to a fallback work folder on Apache and LiteSpeed. */
-	private const DENY_RULES = "# DXAI-UI import work folder: private, removed when the request ends.\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n";
+	private const DENY_RULES = "# DX-UI import work folder: private, removed when the request ends.\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n";
 
 	/**
 	 * Work folders this request made and has not removed yet.
@@ -185,7 +185,7 @@ final class Zip_Extractor {
 	 */
 	public static function read_entries( string $path ): array|\WP_Error {
 		if ( '' === $path || ! is_readable( $path ) ) {
-			return new \WP_Error( 'dxai_ui_zip', __( 'The uploaded ZIP file could not be read.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_zip', __( 'The uploaded ZIP file could not be read.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		// PHP 8 deprecates opening an empty file as an archive; it is not one.
 		if ( 0 === (int) filesize( $path ) ) {
@@ -233,8 +233,8 @@ final class Zip_Extractor {
 
 		if ( ! function_exists( 'gzopen' ) ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
-				__( 'This server cannot read ZIP archives: PHP has neither the zip extension nor zlib, which the PclZip fallback in WordPress needs. Ask your host to enable the PHP zip extension.', 'dxai-ui' ),
+				'dx_ui_zip',
+				__( 'This server cannot read ZIP archives: PHP has neither the zip extension nor zlib, which the PclZip fallback in WordPress needs. Ask your host to enable the PHP zip extension.', 'dx-ui' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -284,7 +284,7 @@ final class Zip_Extractor {
 		}
 
 		if ( is_array( $file['tmp_name'] ?? null ) || is_array( $file['error'] ?? null ) ) {
-			return new \WP_Error( 'dxai_ui_zip', __( 'Upload one .zip file at a time.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_zip', __( 'Upload one .zip file at a time.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$code = (int) ( $file['error'] ?? UPLOAD_ERR_OK );
@@ -293,13 +293,13 @@ final class Zip_Extractor {
 			UPLOAD_ERR_OK         => null,
 			UPLOAD_ERR_INI_SIZE,
 			UPLOAD_ERR_FORM_SIZE  => self::too_large( $code ),
-			UPLOAD_ERR_PARTIAL    => new \WP_Error( 'dxai_ui_zip', __( 'The ZIP file was only partly uploaded. Try again; if it keeps happening, the connection or a proxy is cutting large uploads short.', 'dxai-ui' ), array( 'status' => 400 ) ),
-			UPLOAD_ERR_NO_FILE    => new \WP_Error( 'dxai_ui_zip', __( 'No ZIP file was uploaded.', 'dxai-ui' ), array( 'status' => 400 ) ),
-			UPLOAD_ERR_NO_TMP_DIR => new \WP_Error( 'dxai_ui_zip', __( 'The server has no temporary folder for uploads (PHP upload_tmp_dir). Ask your host to fix it.', 'dxai-ui' ), array( 'status' => 500 ) ),
-			UPLOAD_ERR_CANT_WRITE => new \WP_Error( 'dxai_ui_zip', __( 'The server could not write the uploaded ZIP file to disk. The disk may be full; ask your host.', 'dxai-ui' ), array( 'status' => 500 ) ),
-			UPLOAD_ERR_EXTENSION  => new \WP_Error( 'dxai_ui_zip', __( 'A PHP extension on the server stopped the upload. Ask your host which one.', 'dxai-ui' ), array( 'status' => 500 ) ),
+			UPLOAD_ERR_PARTIAL    => new \WP_Error( 'dx_ui_zip', __( 'The ZIP file was only partly uploaded. Try again; if it keeps happening, the connection or a proxy is cutting large uploads short.', 'dx-ui' ), array( 'status' => 400 ) ),
+			UPLOAD_ERR_NO_FILE    => new \WP_Error( 'dx_ui_zip', __( 'No ZIP file was uploaded.', 'dx-ui' ), array( 'status' => 400 ) ),
+			UPLOAD_ERR_NO_TMP_DIR => new \WP_Error( 'dx_ui_zip', __( 'The server has no temporary folder for uploads (PHP upload_tmp_dir). Ask your host to fix it.', 'dx-ui' ), array( 'status' => 500 ) ),
+			UPLOAD_ERR_CANT_WRITE => new \WP_Error( 'dx_ui_zip', __( 'The server could not write the uploaded ZIP file to disk. The disk may be full; ask your host.', 'dx-ui' ), array( 'status' => 500 ) ),
+			UPLOAD_ERR_EXTENSION  => new \WP_Error( 'dx_ui_zip', __( 'A PHP extension on the server stopped the upload. Ask your host which one.', 'dx-ui' ), array( 'status' => 500 ) ),
 			/* translators: %d: PHP upload error code. */
-			default               => new \WP_Error( 'dxai_ui_zip', sprintf( __( 'The upload failed (PHP upload error %d).', 'dxai-ui' ), $code ), array( 'status' => 400 ) ),
+			default               => new \WP_Error( 'dx_ui_zip', sprintf( __( 'The upload failed (PHP upload error %d).', 'dx-ui' ), $code ), array( 'status' => 400 ) ),
 		};
 	}
 
@@ -315,13 +315,13 @@ final class Zip_Extractor {
 
 		if ( empty( $file['tmp_name'] ) || ! is_uploaded_file( (string) $file['tmp_name'] ) ) {
 			if ( empty( $file['tmp_name'] ) || ! is_readable( (string) $file['tmp_name'] ) ) {
-				return new \WP_Error( 'dxai_ui_zip', __( 'No ZIP file was uploaded.', 'dxai-ui' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'dx_ui_zip', __( 'No ZIP file was uploaded.', 'dx-ui' ), array( 'status' => 400 ) );
 			}
 		}
 
 		$name = (string) ( $file['name'] ?? '' );
 		if ( ! str_ends_with( strtolower( $name ), '.zip' ) ) {
-			return new \WP_Error( 'dxai_ui_zip', __( 'Only .zip archives are accepted.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_zip', __( 'Only .zip archives are accepted.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$archive = (string) $file['tmp_name'];
@@ -459,9 +459,9 @@ final class Zip_Extractor {
 			}
 			if ( null === $path ) {
 				return new \WP_Error(
-					'dxai_ui_zip',
+					'dx_ui_zip',
 					/* translators: %s: the entry name. */
-					sprintf( __( 'The ZIP archive contains an unsafe path (%s), so nothing was unpacked.', 'dxai-ui' ), self::shown( $entry['name'] ) ),
+					sprintf( __( 'The ZIP archive contains an unsafe path (%s), so nothing was unpacked.', 'dx-ui' ), self::shown( $entry['name'] ) ),
 					array( 'status' => 400 )
 				);
 			}
@@ -475,9 +475,9 @@ final class Zip_Extractor {
 			$ext = strtolower( (string) pathinfo( $path, PATHINFO_EXTENSION ) );
 			if ( in_array( $ext, self::BLOCKED_EXTENSIONS, true ) ) {
 				return new \WP_Error(
-					'dxai_ui_zip',
+					'dx_ui_zip',
 					/* translators: %s: the entry name. */
-					sprintf( __( 'Uploaded archives may not contain PHP or other executable files (%s).', 'dxai-ui' ), self::shown( $path ) ),
+					sprintf( __( 'Uploaded archives may not contain PHP or other executable files (%s).', 'dx-ui' ), self::shown( $path ) ),
 					array( 'status' => 400 )
 				);
 			}
@@ -494,9 +494,9 @@ final class Zip_Extractor {
 
 			if ( $entry['encrypted'] ) {
 				return new \WP_Error(
-					'dxai_ui_zip',
+					'dx_ui_zip',
 					/* translators: %s: the entry name. */
-					sprintf( __( 'The ZIP archive is password-protected (%s). Export it again without a password.', 'dxai-ui' ), self::shown( $path ) ),
+					sprintf( __( 'The ZIP archive is password-protected (%s). Export it again without a password.', 'dx-ui' ), self::shown( $path ) ),
 					array( 'status' => 400 )
 				);
 			}
@@ -703,17 +703,17 @@ final class Zip_Extractor {
 		global $wp_filesystem;
 		if ( ! WP_Filesystem() || ! is_object( $wp_filesystem ) ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
+				'dx_ui_zip',
 				/* translators: %s: WordPress filesystem method, e.g. ftpext. */
-				sprintf( __( 'This server has no PHP zip extension, and WordPress could not start its filesystem layer (method "%s") to unpack the archive another way. Ask your host to enable the PHP zip extension.', 'dxai-ui' ), (string) get_filesystem_method() ),
+				sprintf( __( 'This server has no PHP zip extension, and WordPress could not start its filesystem layer (method "%s") to unpack the archive another way. Ask your host to enable the PHP zip extension.', 'dx-ui' ), (string) get_filesystem_method() ),
 				array( 'status' => 500 )
 			);
 		}
 		if ( 'direct' !== (string) ( $wp_filesystem->method ?? '' ) ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
+				'dx_ui_zip',
 				/* translators: %s: WordPress filesystem method, e.g. ftpext. */
-				sprintf( __( 'This server has no PHP zip extension, and WordPress writes files here through "%s" rather than directly, so an unpacked archive would belong to another account. Ask your host to enable the PHP zip extension.', 'dxai-ui' ), (string) ( $wp_filesystem->method ?? '' ) ),
+				sprintf( __( 'This server has no PHP zip extension, and WordPress writes files here through "%s" rather than directly, so an unpacked archive would belong to another account. Ask your host to enable the PHP zip extension.', 'dx-ui' ), (string) ( $wp_filesystem->method ?? '' ) ),
 				array( 'status' => 500 )
 			);
 		}
@@ -721,9 +721,9 @@ final class Zip_Extractor {
 		$unzipped = unzip_file( $archive, $dir );
 		if ( is_wp_error( $unzipped ) ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
+				'dx_ui_zip',
 				/* translators: %s: the reason WordPress gave. */
-				sprintf( __( 'Unable to unpack the ZIP archive: %s', 'dxai-ui' ), $unzipped->get_error_message() ),
+				sprintf( __( 'Unable to unpack the ZIP archive: %s', 'dx-ui' ), $unzipped->get_error_message() ),
 				array( 'status' => 400 )
 			);
 		}
@@ -796,8 +796,8 @@ final class Zip_Extractor {
 	 * A new, empty folder for one import.
 	 *
 	 * Under the system temp directory when PHP can write there, which the web
-	 * server does not serve; `dxai_ui_zip_work_root` moves it, for a host
-	 * whose temp directory is unusable. Otherwise in uploads/dxai-ui, which it
+	 * server does not serve; `dx_ui_zip_work_root` moves it, for a host
+	 * whose temp directory is unusable. Otherwise in uploads/dx-ui, which it
 	 * does serve. Either way the folder is made by PHP with mode 0700 and a
 	 * 64-bit random name, directly in the root (never inside a shared
 	 * subfolder another account could have pre-made on a shared /tmp), and
@@ -850,16 +850,16 @@ final class Zip_Extractor {
 
 		if ( null !== $short ) {
 			return new \WP_Error(
-				'dxai_ui_zip',
+				'dx_ui_zip',
 				/* translators: 1: bytes the archive needs, 2: bytes free. */
-				sprintf( __( 'Not enough free disk space to unpack the archive: it needs %1$s and %2$s is free.', 'dxai-ui' ), size_format( $need ), size_format( $short ) ),
+				sprintf( __( 'Not enough free disk space to unpack the archive: it needs %1$s and %2$s is free.', 'dx-ui' ), size_format( $need ), size_format( $short ) ),
 				array( 'status' => 507 )
 			);
 		}
 
 		return new \WP_Error(
-			'dxai_ui_zip',
-			__( 'No folder could be written to unpack the archive: neither the system temp directory nor wp-content/uploads is writable by PHP.', 'dxai-ui' ),
+			'dx_ui_zip',
+			__( 'No folder could be written to unpack the archive: neither the system temp directory nor wp-content/uploads is writable by PHP.', 'dx-ui' ),
 			array( 'status' => 500 )
 		);
 	}
@@ -873,7 +873,7 @@ final class Zip_Extractor {
 	private static function roots(): array {
 		$roots = array();
 
-		$temp = (string) apply_filters( 'dxai_ui_zip_work_root', get_temp_dir() );
+		$temp = (string) apply_filters( 'dx_ui_zip_work_root', get_temp_dir() );
 		if ( '' !== $temp ) {
 			$roots[] = array(
 				'dir'      => untrailingslashit( wp_normalize_path( $temp ) ),
@@ -897,8 +897,8 @@ final class Zip_Extractor {
 	}
 
 	/**
-	 * Whether a path is a work folder by its name: `dxai-ui-tmp-<hex>`
-	 * anywhere, or `tmp-<letters and digits>` directly inside a `dxai-ui`
+	 * Whether a path is a work folder by its name: `dx-ui-tmp-<hex>`
+	 * anywhere, or `tmp-<letters and digits>` directly inside a `dx-ui`
 	 * uploads folder. A bare `tmp-…` elsewhere - in /tmp, say - is not ours.
 	 */
 	private static function is_own_folder( string $dir ): bool {
@@ -1057,14 +1057,14 @@ final class Zip_Extractor {
 	}
 
 	/**
-	 * The ceilings, after `dxai_ui_zip_limits`; a missing, zero or negative
+	 * The ceilings, after `dx_ui_zip_limits`; a missing, zero or negative
 	 * value keeps the default rather than switching the guard off.
 	 *
 	 * @return array{entries:int, file_bytes:int, total_bytes:int}
 	 */
 	private static function limits(): array {
 		$limits   = self::LIMITS;
-		$filtered = apply_filters( 'dxai_ui_zip_limits', self::LIMITS );
+		$filtered = apply_filters( 'dx_ui_zip_limits', self::LIMITS );
 		if ( is_array( $filtered ) ) {
 			foreach ( self::LIMITS as $key => $default ) {
 				$value = isset( $filtered[ $key ] ) ? (int) $filtered[ $key ] : 0;
@@ -1093,8 +1093,8 @@ final class Zip_Extractor {
 
 	private static function not_a_zip( int $code = 0 ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
-			__( 'This file is not a ZIP archive, or it is damaged.', 'dxai-ui' ),
+			'dx_ui_zip',
+			__( 'This file is not a ZIP archive, or it is damaged.', 'dx-ui' ),
 			array(
 				'status'    => 400,
 				'zip_error' => $code,
@@ -1104,9 +1104,9 @@ final class Zip_Extractor {
 
 	private static function too_many( int $count, int $limit ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: 1: entries in the archive, 2: the limit. */
-			sprintf( __( 'The ZIP archive holds %1$s entries, more than the %2$s this site accepts. Zip the project without node_modules, or raise the limit with the dxai_ui_zip_limits filter.', 'dxai-ui' ), number_format_i18n( $count ), number_format_i18n( $limit ) ),
+			sprintf( __( 'The ZIP archive holds %1$s entries, more than the %2$s this site accepts. Zip the project without node_modules, or raise the limit with the dx_ui_zip_limits filter.', 'dx-ui' ), number_format_i18n( $count ), number_format_i18n( $limit ) ),
 			array( 'status' => 413 )
 		);
 	}
@@ -1115,39 +1115,39 @@ final class Zip_Extractor {
 		$max = size_format( wp_max_upload_size() );
 
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			UPLOAD_ERR_FORM_SIZE === $code
 				/* translators: %s: the largest upload this site accepts, e.g. 64 MB. */
-				? sprintf( __( 'The ZIP file is larger than the upload form allows. This site accepts uploads up to %s.', 'dxai-ui' ), $max )
+				? sprintf( __( 'The ZIP file is larger than the upload form allows. This site accepts uploads up to %s.', 'dx-ui' ), $max )
 				/* translators: %s: the largest upload this site accepts, e.g. 64 MB. */
-				: sprintf( __( 'The ZIP file is larger than this server accepts for an upload (%s). Upload a smaller archive, or ask your host to raise upload_max_filesize and post_max_size.', 'dxai-ui' ), $max ),
+				: sprintf( __( 'The ZIP file is larger than this server accepts for an upload (%s). Upload a smaller archive, or ask your host to raise upload_max_filesize and post_max_size.', 'dx-ui' ), $max ),
 			array( 'status' => 413 )
 		);
 	}
 
 	private static function over_file_limit( string $path, int $limit ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: 1: the entry name, 2: the per-file limit. */
-			sprintf( __( '%1$s in the ZIP archive unpacks to more than %2$s, the most one file may take. The archive was refused.', 'dxai-ui' ), self::shown( $path ), size_format( $limit ) ),
+			sprintf( __( '%1$s in the ZIP archive unpacks to more than %2$s, the most one file may take. The archive was refused.', 'dx-ui' ), self::shown( $path ), size_format( $limit ) ),
 			array( 'status' => 413 )
 		);
 	}
 
 	private static function over_total_limit( int $limit ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: %s: the total limit. */
-			sprintf( __( 'The ZIP archive unpacks to more than %s. Remove large media from it, or raise the limit with the dxai_ui_zip_limits filter.', 'dxai-ui' ), size_format( $limit ) ),
+			sprintf( __( 'The ZIP archive unpacks to more than %s. Remove large media from it, or raise the limit with the dx_ui_zip_limits filter.', 'dx-ui' ), size_format( $limit ) ),
 			array( 'status' => 413 )
 		);
 	}
 
 	private static function read_failed( string $path ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: %s: the entry name. */
-			sprintf( __( '%s could not be read from the ZIP archive; the archive may be damaged.', 'dxai-ui' ), self::shown( $path ) ),
+			sprintf( __( '%s could not be read from the ZIP archive; the archive may be damaged.', 'dx-ui' ), self::shown( $path ) ),
 			array( 'status' => 400 )
 		);
 	}
@@ -1174,23 +1174,23 @@ final class Zip_Extractor {
 
 	private static function path_clash( string $path ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: %s: the entry name. */
-			sprintf( __( 'The ZIP archive has a file and a folder with the same name (%s), so it cannot be unpacked. Export it again.', 'dxai-ui' ), self::shown( $path ) ),
+			sprintf( __( 'The ZIP archive has a file and a folder with the same name (%s), so it cannot be unpacked. Export it again.', 'dx-ui' ), self::shown( $path ) ),
 			array( 'status' => 400 )
 		);
 	}
 
 	private static function write_failed( string $path ): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_zip',
+			'dx_ui_zip',
 			/* translators: %s: the entry name. */
-			sprintf( __( '%s could not be written to the work folder. The disk may be full.', 'dxai-ui' ), self::shown( $path ) ),
+			sprintf( __( '%s could not be written to the work folder. The disk may be full.', 'dx-ui' ), self::shown( $path ) ),
 			array( 'status' => 500 )
 		);
 	}
 
 	private static function nothing_supported(): \WP_Error {
-		return new \WP_Error( 'dxai_ui_zip', __( 'The ZIP archive did not contain supported files.', 'dxai-ui' ), array( 'status' => 400 ) );
+		return new \WP_Error( 'dx_ui_zip', __( 'The ZIP archive did not contain supported files.', 'dx-ui' ), array( 'status' => 400 ) );
 	}
 }

@@ -37,10 +37,10 @@ jobs:
 
       - name: Build the ZIP (snapshot, version stamp, checks, lint, zip, the ZIP read back)
         run: |
-          export DXAI_PHP="$(command -v php)"
-          export DXAI_PHP_INI="$(php -r 'echo php_ini_loaded_file();')"
+          export DXUI_PHP="$(command -v php)"
+          export DXUI_PHP_INI="$(php -r 'echo php_ini_loaded_file();')"
           node bin/release.cjs "${{ steps.v.outputs.version }}"
-          cd dist && sha256sum "dxai-ui-${{ steps.v.outputs.version }}.zip" > "dxai-ui-${{ steps.v.outputs.version }}.zip.sha256"
+          cd dist && sha256sum "dx-ui-${{ steps.v.outputs.version }}.zip" > "dx-ui-${{ steps.v.outputs.version }}.zip.sha256"
 
       - name: Attach it to the release
         env:
@@ -52,4 +52,4 @@ jobs:
             case "$VERSION" in *-*) pre="--prerelease" ;; esac
             gh release create "$GITHUB_REF_NAME" $pre --title "DX $VERSION" --notes "DX $VERSION. The ZIP below is the plugin; its SHA-256 is in the .sha256 file."
           fi
-          gh release upload "$GITHUB_REF_NAME" "dist/dxai-ui-$VERSION.zip" "dist/dxai-ui-$VERSION.zip.sha256" --clobber
+          gh release upload "$GITHUB_REF_NAME" "dist/dx-ui-$VERSION.zip" "dist/dx-ui-$VERSION.zip.sha256" --clobber

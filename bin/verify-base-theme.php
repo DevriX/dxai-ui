@@ -16,13 +16,13 @@
  * site on it — and calls the site over HTTP as a visitor, so it needs a site that can reach itself. Makes pages and a post and removes them.
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Footer_Template;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Theme\Base_Theme;
-use DXAI_UI\Transfer\Package;
+use DX_UI\Chrome\Footer_Template;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Theme\Base_Theme;
+use DX_UI\Transfer\Package;
 
 $fail   = 0;
 $pass   = 0;
@@ -132,7 +132,7 @@ $menu_keys = static function ( string $php ): array {
 };
 $expect( 'it registers the locations a DX theme has, so a header installed on either theme lands in the same places', array( 'footer', 'primary-navigation', 'terms-and-conditions' ) === $menu_keys( $code['functions.php'] ), wp_json_encode( $menu_keys( $code['functions.php'] ) ) );
 $expect( 'its header.php and footer.php draw the site\'s header and footer, and every template goes through them', str_contains( $code['header.php'], 'dx_base_header()' ) && str_contains( $code['footer.php'], 'dx_base_footer()' ) && 4 === count( array_filter( array( 'index.php', 'page.php', 'single.php', '404.php' ), static fn( $n ) => str_contains( $code[ $n ], 'get_header()' ) && str_contains( $code[ $n ], 'get_footer()' ) ) ) );
-$expect( 'the plugin draws them when it is there, and the theme draws a plain header and footer from the same menu and widgets when it is not', str_contains( $code['functions.php'], "class_exists( '\\DXAI_UI\\Chrome\\Template_Chrome' )" ) && str_contains( $code['functions.php'], 'wp_nav_menu(' ) && str_contains( $code['functions.php'], 'dynamic_sidebar(' ) );
+$expect( 'the plugin draws them when it is there, and the theme draws a plain header and footer from the same menu and widgets when it is not', str_contains( $code['functions.php'], "class_exists( '\\DX_UI\\Chrome\\Template_Chrome' )" ) && str_contains( $code['functions.php'], 'wp_nav_menu(' ) && str_contains( $code['functions.php'], 'dynamic_sidebar(' ) );
 
 echo "\nCopying it\n";
 $up  = wp_upload_dir();
@@ -166,7 +166,7 @@ add_filter( 'theme_root', $half_root = static fn() => $tmp . '/half' );
 $mode_was = get_option( Base_Theme::OPTION );
 $r        = Base_Theme::install();
 remove_filter( 'theme_root', $half_root );
-$expect( 'install() says it when the copy stops in a folder that can be written (and does not list the theme beside the half copy)', is_wp_error( $r ) && 'dxai_ui_base_theme_copy' === $r->get_error_code() && get_option( Base_Theme::OPTION ) === $mode_was, is_wp_error( $r ) ? $r->get_error_code() : wp_json_encode( $r ) );
+$expect( 'install() says it when the copy stops in a folder that can be written (and does not list the theme beside the half copy)', is_wp_error( $r ) && 'dx_ui_base_theme_copy' === $r->get_error_code() && get_option( Base_Theme::OPTION ) === $mode_was, is_wp_error( $r ) ? $r->get_error_code() : wp_json_encode( $r ) );
 rmdir( $tmp . '/half/dx-base/theme.json' );
 $expect( '…and once what was in the way is gone the next copy is whole', Base_Theme::copy_to( $tmp . '/half' ) && $files( $tmp . '/half/dx-base' ) === $want );
 
@@ -207,14 +207,14 @@ $expect( '…and not when it was copied', ! in_array( wp_normalize_path( untrail
 $wp_theme_directories = $dirs;
 Base_Theme::install();
 $expect( 'the copy is put back as the record: copied', 'copied' === ( get_option( Base_Theme::OPTION )['mode'] ?? '' ) );
-$both = (string) file_get_contents( DXAI_UI_DIR . 'src/Theme/Base_Theme.php' ) . (string) file_get_contents( DXAI_UI_DIR . 'src/Support/Base_Theme_Cli.php' );
+$both = (string) file_get_contents( DX_UI_DIR . 'src/Theme/Base_Theme.php' ) . (string) file_get_contents( DX_UI_DIR . 'src/Support/Base_Theme_Cli.php' );
 $expect( 'nothing in it deletes: no file, no folder, no theme', 0 === preg_match( '/\b(unlink|rmdir|wp_delete_file|delete_theme|remove_dir|rrmdir|wp_delete_post|wp_delete_term)\s*\(/', $both ) );
-$expect( '…and the site is switched to it in one place only: activate(), which the person asks for', 1 === substr_count( (string) file_get_contents( DXAI_UI_DIR . 'src/Theme/Base_Theme.php' ), 'switch_theme(' ) );
+$expect( '…and the site is switched to it in one place only: activate(), which the person asks for', 1 === substr_count( (string) file_get_contents( DX_UI_DIR . 'src/Theme/Base_Theme.php' ), 'switch_theme(' ) );
 // Where the themes folder already holds another theme named dx-base, install() says so and touches nothing.
 add_filter( 'theme_root', $other_root = static fn() => $tmp . '/other' );
 $r = Base_Theme::install();
 remove_filter( 'theme_root', $other_root );
-$expect( 'install() into a folder that has another theme named dx-base refuses and says why, and changes nothing there', is_wp_error( $r ) && 'dxai_ui_base_theme_taken' === $r->get_error_code() && '<?php // theirs' === file_get_contents( $tmp . '/other/dx-base/functions.php' ) && 'copied' === ( get_option( Base_Theme::OPTION )['mode'] ?? '' ), is_wp_error( $r ) ? $r->get_error_code() : wp_json_encode( $r ) );
+$expect( 'install() into a folder that has another theme named dx-base refuses and says why, and changes nothing there', is_wp_error( $r ) && 'dx_ui_base_theme_taken' === $r->get_error_code() && '<?php // theirs' === file_get_contents( $tmp . '/other/dx-base/functions.php' ) && 'copied' === ( get_option( Base_Theme::OPTION )['mode'] ?? '' ), is_wp_error( $r ) ? $r->get_error_code() : wp_json_encode( $r ) );
 $expect( 'status() knows the theme of this site is DX Base, not somebody\'s', false === Base_Theme::status()['foreign'] );
 
 echo "\nWhere the site does not let plugins change its files\n";
@@ -229,7 +229,7 @@ Base_Theme::install();
 $expect( '…and when files may be changed again the next install copies it', 'copied' === ( get_option( Base_Theme::OPTION )['mode'] ?? '' ) );
 
 echo "\nThe route of the Library screen (Library > Template)\n";
-$ns   = DXAI_UI_REST_NAMESPACE;
+$ns   = DX_UI_REST_NAMESPACE;
 $rest = static function ( string $method, array $params = array() ) use ( $ns ): array {
 	$request = new WP_REST_Request( $method, '/' . $ns . '/template' );
 	foreach ( $params as $key => $value ) {
@@ -242,7 +242,7 @@ $rest = static function ( string $method, array $params = array() ) use ( $ns ):
 $here = $rest( 'GET' );
 $d    = $here['data'];
 $expect( 'it answers what the screen shows: the theme, DX Base, the header, the footer, the fonts, the logo and the links', 200 === $here['status'] && isset( $d['theme']['name'], $d['theme']['slug'], $d['base']['installed'], $d['base']['version'], $d['links']['menus'], $d['links']['widgets'], $d['links']['logo'] ) && array_key_exists( 'header', $d ) && array_key_exists( 'footer', $d ) && array_key_exists( 'fonts', $d ) && array_key_exists( 'logo', $d ), wp_json_encode( array_keys( $d ) ) );
-$expect( '…the theme is the site\'s, and whether it is a DX theme', ( $d['theme']['slug'] ?? '' ) === (string) get_stylesheet() && ( $d['theme']['dx'] ?? null ) === \DXAI_UI\Theme\Theme_Compat::is_dx_theme() && false === ( $d['theme']['base'] ?? null ) );
+$expect( '…the theme is the site\'s, and whether it is a DX theme', ( $d['theme']['slug'] ?? '' ) === (string) get_stylesheet() && ( $d['theme']['dx'] ?? null ) === \DX_UI\Theme\Theme_Compat::is_dx_theme() && false === ( $d['theme']['base'] ?? null ) );
 $expect( '…DX Base is installed at the version the plugin carries, with nothing to update, and this person may install it and switch to it', true === ( $d['base']['installed'] ?? null ) && ( $d['base']['version'] ?? '' ) === $version && ( $d['base']['bundled'] ?? '' ) === $version && false === ( $d['base']['update'] ?? null ) && true === ( $d['base']['can_install'] ?? null ) && true === ( $d['base']['can_activate'] ?? null ) );
 $site_h = null !== Header_Template::stored();
 $site_f = Footer_Template::get() !== array();
@@ -256,13 +256,13 @@ add_filter( 'map_meta_cap', $no_install, 10, 2 );
 $refused = $rest( 'POST', array( 'action' => 'base-install' ) );
 $told    = $rest( 'GET' );
 remove_filter( 'map_meta_cap', $no_install, 10 );
-$expect( 'a person who may not install themes is refused (403) and nothing is changed', 403 === $refused['status'] && 'dxai_ui_cannot_install_themes' === ( $refused['data']['code'] ?? '' ) && get_option( Base_Theme::OPTION ) === $mode_was, wp_json_encode( array( $refused['status'], $refused['data']['code'] ?? '' ) ) );
+$expect( 'a person who may not install themes is refused (403) and nothing is changed', 403 === $refused['status'] && 'dx_ui_cannot_install_themes' === ( $refused['data']['code'] ?? '' ) && get_option( Base_Theme::OPTION ) === $mode_was, wp_json_encode( array( $refused['status'], $refused['data']['code'] ?? '' ) ) );
 $expect( '…and the screen is told so, with the reason, before the button is pressed', false === ( $told['data']['base']['can_install'] ?? null ) && '' !== (string) ( $told['data']['base']['install_note'] ?? '' ) );
 $no_switch = static fn( array $caps, string $cap ): array => 'switch_themes' === $cap ? array( 'do_not_allow' ) : $caps;
 add_filter( 'map_meta_cap', $no_switch, 10, 2 );
 $refused = $rest( 'POST', array( 'action' => 'base-activate' ) );
 remove_filter( 'map_meta_cap', $no_switch, 10 );
-$expect( 'a person who may not switch themes is refused (403) and the site\'s theme stays', 403 === $refused['status'] && 'dxai_ui_cannot_switch_themes' === ( $refused['data']['code'] ?? '' ) && (string) get_stylesheet() === $before, wp_json_encode( array( $refused['status'], $refused['data']['code'] ?? '' ) ) );
+$expect( 'a person who may not switch themes is refused (403) and the site\'s theme stays', 403 === $refused['status'] && 'dx_ui_cannot_switch_themes' === ( $refused['data']['code'] ?? '' ) && (string) get_stylesheet() === $before, wp_json_encode( array( $refused['status'], $refused['data']['code'] ?? '' ) ) );
 add_filter( 'file_mod_allowed', '__return_false', 99 );
 $listed = $rest( 'POST', array( 'action' => 'base-install' ) );
 $told   = $rest( 'GET' );
@@ -282,15 +282,15 @@ $new = $rest( 'POST', array( 'action' => 'base-install' ) );
 $expect( '…and installing brings it up to date, the file as the plugin carries it', false === ( $new['data']['base']['update'] ?? null ) && $version === ( $new['data']['base']['version'] ?? '' ) && $good === (string) file_get_contents( $installed_css ) );
 
 echo "\nThe structure\n";
-$locations = \DXAI_UI\Chrome\Header_Menus::locations();
+$locations = \DX_UI\Chrome\Header_Menus::locations();
 $expect( 'the header locations the plugin writes into are the ones a DX theme names', isset( $locations['primary-navigation'], $locations['header-top'], $locations['header-actions'] ), wp_json_encode( array_keys( $locations ) ) );
-$expect( 'it is a DX theme: an import installs the design\'s header and footer by itself, and keeps what the site already has there', in_array( 'dx-base', \DXAI_UI\Theme\Theme_Compat::dx_themes(), true ) );
+$expect( 'it is a DX theme: an import installs the design\'s header and footer by itself, and keeps what the site already has there', in_array( 'dx-base', \DX_UI\Theme\Theme_Compat::dx_themes(), true ) );
 $expect( 'what the import screen is told of it: nothing on a DX theme, or when the plugin carries none; installed or available on any other', '' === Base_Theme::offer_for( true, true, true ) && '' === Base_Theme::offer_for( true, true, false ) && '' === Base_Theme::offer_for( false, false, false ) && 'available' === Base_Theme::offer_for( false, true, false ) && 'installed' === Base_Theme::offer_for( false, true, true ) );
-$info = \DXAI_UI\API\Converter_Controller::import_info_payload();
-$expect( '…import-info carries it: whether the theme is a DX theme, and the offer', ( $info['dx_theme'] ?? null ) === \DXAI_UI\Theme\Theme_Compat::is_dx_theme() && ( $info['base_theme'] ?? null ) === Base_Theme::offer(), wp_json_encode( array( $info['dx_theme'] ?? null, $info['base_theme'] ?? null ) ) );
-add_filter( 'dxai_ui_dx_themes', $other_dx = static fn() => array( 'some-other-theme' ), 99 );
-$info = \DXAI_UI\API\Converter_Controller::import_info_payload();
-remove_filter( 'dxai_ui_dx_themes', $other_dx, 99 );
+$info = \DX_UI\API\Converter_Controller::import_info_payload();
+$expect( '…import-info carries it: whether the theme is a DX theme, and the offer', ( $info['dx_theme'] ?? null ) === \DX_UI\Theme\Theme_Compat::is_dx_theme() && ( $info['base_theme'] ?? null ) === Base_Theme::offer(), wp_json_encode( array( $info['dx_theme'] ?? null, $info['base_theme'] ?? null ) ) );
+add_filter( 'dx_ui_dx_themes', $other_dx = static fn() => array( 'some-other-theme' ), 99 );
+$info = \DX_UI\API\Converter_Controller::import_info_payload();
+remove_filter( 'dx_ui_dx_themes', $other_dx, 99 );
 $expect( '…on a theme that is no DX theme, with DX Base installed, it says to switch to it', false === ( $info['dx_theme'] ?? null ) && 'installed' === ( $info['base_theme'] ?? null ), wp_json_encode( array( $info['dx_theme'] ?? null, $info['base_theme'] ?? null ) ) );
 
 // Fixtures: a page that is not a design's and a post, with the site's header and footer as they are.
@@ -301,7 +301,7 @@ $spec  = Header_Template::stored();
 $scope = null === $spec ? 0 : Header_Template::scope_of( $spec );
 $has_h = null !== $spec;
 $has_f = Footer_Template::get() !== array();
-$lead  = $scope > 0 ? (string) get_post_meta( $scope, \DXAI_UI\Chrome\Template_Chrome::LEAD_META, true ) : '';
+$lead  = $scope > 0 ? (string) get_post_meta( $scope, \DX_UI\Chrome\Template_Chrome::LEAD_META, true ) : '';
 echo '  (this site: ' . ( $has_h ? 'a header is installed, from "' . get_the_title( $scope ) . '"' : 'no header installed' ) . '; ' . ( $has_f ? 'a footer is installed' : 'no footer installed' ) . '; ' . ( $lead !== '' ? 'the design kept its opening blocks' : 'no opening blocks kept' ) . ")\n";
 
 $get = static function ( string $url ): array {
@@ -323,7 +323,7 @@ $shape_of    = static function ( string $html ): string {
 	libxml_use_internal_errors( true );
 	$doc->loadHTML( '<?xml encoding="utf-8" ?>' . $html );
 	libxml_clear_errors();
-	$root = $doc->getElementById( 'dxai-root' );
+	$root = $doc->getElementById( 'dxui-root' );
 	if ( ! $root instanceof \DOMElement ) {
 		return '';
 	}
@@ -360,10 +360,10 @@ $expect( '…with its title as the heading and its text, between a header and a 
 $main_at = (int) $at( $html, '<main id="main"' );
 $expect( '…the header before the content and the footer after it', $main_at > 0 && ( ! $has_h || (int) $at( $html, '<header' ) < $main_at ) && ( ! $has_f || (int) strrpos( $html, '<footer' ) > (int) strpos( $html, '</main>' ) ), (string) $main_at );
 if ( $has_h ) {
-	$expect( '…the design\'s header is the one drawn, in the scope element of the design it came from, once', 1 === substr_count( $html, '<header' ) && str_contains( $html, 'dxai-ui--' . $scope ), (string) substr_count( $html, '<header' ) );
+	$expect( '…the design\'s header is the one drawn, in the scope element of the design it came from, once', 1 === substr_count( $html, '<header' ) && str_contains( $html, 'dx-ui--' . $scope ), (string) substr_count( $html, '<header' ) );
 }
 if ( $has_h && $lead !== '' ) {
-	$space = (int) $at( $html, 'dxai-dc-1' );
+	$space = (int) $at( $html, 'dxui-dc-1' );
 	$expect( '…and under a fixed header the title is not hidden: the design\'s spacer is drawn before the content, and its skip link once', false !== $space && $space < $main_at && 1 === substr_count( $html, 'Skip to content' ), (string) $space );
 	$expect( '…and the skip link is hidden by the design\'s own rule', str_contains( $html, 'left:-9999px' ) );
 }
@@ -382,7 +382,7 @@ if ( $design_url !== '' ) {
 	$now = $get( $design_url );
 	$was = $shape_of( $design_was['body'] );
 	$is  = $shape_of( $now['body'] );
-	$expect( 'the design\'s own page is drawn by the plugin, not by this theme: 200, its own document, no theme wrapper, none of the theme\'s style sheet', 200 === $now['code'] && ! str_contains( $now['body'], 'dx-base-main' ) && ! str_contains( $now['body'], 'dx-base.css' ) && ! str_contains( $now['body'], 'dx-base-css' ) && 1 === substr_count( $now['body'], '<div id="dxai-root"' ) && 1 === substr_count( $now['body'], '<main' ), $now['code'] . ' ' . $now['error'] );
+	$expect( 'the design\'s own page is drawn by the plugin, not by this theme: 200, its own document, no theme wrapper, none of the theme\'s style sheet', 200 === $now['code'] && ! str_contains( $now['body'], 'dx-base-main' ) && ! str_contains( $now['body'], 'dx-base.css' ) && ! str_contains( $now['body'], 'dx-base-css' ) && 1 === substr_count( $now['body'], '<div id="dxui-root"' ) && 1 === substr_count( $now['body'], '<main' ), $now['code'] . ' ' . $now['error'] );
 	$expect( '…and it is made of the same elements and the same words as on the theme the site had (the pictures aside)', $was !== '' && $was === $is, $was . ' vs ' . $is );
 }
 
@@ -390,7 +390,7 @@ echo "\nWithout the plugin's header and footer\n";
 // The theme's own fallback, drawn when the plugin has no header or footer to give: the same menu and the same widgets, in a plain frame.
 add_filter( 'pre_option_' . Header_Template::OPTION, static fn() => array(), 99 );
 add_filter( 'pre_option_' . Footer_Template::OPTION, static fn() => array(), 99 );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 $menu = (int) wp_create_nav_menu( 'DX Base suite menu ' . wp_generate_password( 6, false ) );
 wp_update_nav_menu_item( $menu, 0, array( 'menu-item-title' => 'Suite item', 'menu-item-url' => home_url( '/suite-item/' ), 'menu-item-status' => 'publish' ) );
 add_filter( 'theme_mod_nav_menu_locations', $loc = static fn( $v ) => array_merge( (array) $v, array( 'primary-navigation' => $menu ) ), 99 );
@@ -410,10 +410,10 @@ $expect( 'with no header installed it draws a plain one: the site\'s name and th
 $expect( 'with no footer installed it draws a plain one from the widgets of the footer areas, when there are any', ! is_active_sidebar( 'footer-column-1' ) && ! is_active_sidebar( 'footer-column-2' ) && ! is_active_sidebar( 'footer-column-3' ) && ! is_active_sidebar( 'footer-column-4' ) && ! is_active_sidebar( 'footer-copyright' ) ? str_contains( $plain_footer, 'class="dx-base-footer"' ) : ( str_contains( $plain_footer, 'class="dx-base-footer"' ) && str_contains( $plain_footer, 'dx-base-footer__area' ) ), substr( $plain_footer, 0, 200 ) );
 remove_all_filters( 'pre_option_' . Header_Template::OPTION, 99 );
 remove_all_filters( 'pre_option_' . Footer_Template::OPTION, 99 );
-\DXAI_UI\Chrome\Site_Header_Block::forget();
+\DX_UI\Chrome\Site_Header_Block::forget();
 if ( $loaded_here ) {
 	// The theme's own filter, added by loading its functions: it is the active theme's only while the theme is active.
-	remove_filter( 'dxai_ui_install_chrome', '__return_true' );
+	remove_filter( 'dx_ui_install_chrome', '__return_true' );
 }
 wp_delete_nav_menu( $menu );
 

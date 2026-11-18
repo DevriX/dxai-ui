@@ -2,12 +2,12 @@
 /**
  * The team's own sections as block patterns in the editor.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * The library (Block_Library) is what the pages made from a Home are built from. It is also what a person building a page by hand
@@ -21,7 +21,7 @@ namespace DXAI_UI\Pages;
 final class Library_Patterns {
 
 	/** The inserter's category. */
-	public const CATEGORY = 'dxai-library';
+	public const CATEGORY = 'dxui-library';
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'add' ) );
@@ -36,17 +36,17 @@ final class Library_Patterns {
 		register_block_pattern_category(
 			self::CATEGORY,
 			array(
-				'label'       => __( 'DX Library', 'dxai-ui' ),
-				'description' => __( 'The team\'s own sections: the questions, the steps of the work, the places, the call to action.', 'dxai-ui' ),
+				'label'       => __( 'DX Library', 'dx-ui' ),
+				'description' => __( 'The team\'s own sections: the questions, the steps of the work, the places, the call to action.', 'dx-ui' ),
 			)
 		);
 		foreach ( Block_Library::entries() as $id => $entry ) {
-			$file = DXAI_UI_DIR . Block_Library::DIR . 'patterns/' . $id . '.php';
+			$file = DX_UI_DIR . Block_Library::DIR . 'patterns/' . $id . '.php';
 			if ( ! is_readable( $file ) ) {
 				continue;
 			}
 			register_block_pattern(
-				'dxai-ui/library-' . $id,
+				'dx-ui/library-' . $id,
 				array(
 					'title'         => (string) $entry['label'],
 					'description'   => (string) $entry['label'],

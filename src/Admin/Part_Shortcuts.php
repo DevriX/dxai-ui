@@ -2,12 +2,12 @@
 /**
  * "Edit header" / "Edit footer" shortcuts for converted pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Admin;
+namespace DX_UI\Admin;
 
 /**
  * Where a converted page's header and footer are edited, one click from the
@@ -15,8 +15,8 @@ namespace DXAI_UI\Admin;
  * last screen.
  *
  * An import builds the header in Appearance > Menus and the footer in
- * Appearance > Widgets (the page holds the dxai-ui/site-header and
- * dxai-ui/site-footer blocks), and the links go there. A design whose header
+ * Appearance > Widgets (the page holds the dx-ui/site-header and
+ * dx-ui/site-footer blocks), and the links go there. A design whose header
  * or footer could not be built that way keeps it as a block template part,
  * edited once and shown on every page that references it; that link opens
  * the part — in the Site Editor on a block theme, in the post editor on a
@@ -33,14 +33,14 @@ final class Part_Shortcuts {
 			return;
 		}
 		$page_id = (int) get_queried_object_id();
-		if ( $page_id < 1 || ! get_post_meta( $page_id, '_dxai_ui_generated_page', true ) ) {
+		if ( $page_id < 1 || ! get_post_meta( $page_id, '_dx_ui_generated_page', true ) ) {
 			return;
 		}
 		foreach ( self::edit_links( $page_id ) as $area => $link ) {
 			$bar->add_node(
 				array(
-					'id'    => 'dxai-ui-edit-' . $area,
-					'title' => 'header' === $area ? __( 'Edit header', 'dxai-ui' ) : __( 'Edit footer', 'dxai-ui' ),
+					'id'    => 'dx-ui-edit-' . $area,
+					'title' => 'header' === $area ? __( 'Edit header', 'dx-ui' ) : __( 'Edit footer', 'dx-ui' ),
 					'href'  => $link['url'],
 					'meta'  => array( 'title' => $link['title'] ),
 				)
@@ -58,17 +58,17 @@ final class Part_Shortcuts {
 	public static function edit_links( int $page_id ): array {
 		$out     = array();
 		// The header and footer the page renders, stored in it or added around a body-only page (Page_Chrome).
-		$content = \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) );
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Header_Block::NAME ) ) {
+		$content = \DX_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) );
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Header_Block::NAME ) ) {
 			$out['header'] = array(
 				'url'   => admin_url( 'nav-menus.php' ),
-				'title' => __( 'The header’s links are in Appearance > Menus', 'dxai-ui' ),
+				'title' => __( 'The header’s links are in Appearance > Menus', 'dx-ui' ),
 			);
 		}
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Footer_Block::NAME ) ) {
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Footer_Block::NAME ) ) {
 			$out['footer'] = array(
 				'url'   => admin_url( 'widgets.php' ),
-				'title' => __( 'The footer’s content is in Appearance > Widgets', 'dxai-ui' ),
+				'title' => __( 'The footer’s content is in Appearance > Widgets', 'dx-ui' ),
 			);
 		}
 		foreach ( self::parts_of( $page_id ) as $area => $part ) {
@@ -103,7 +103,7 @@ final class Part_Shortcuts {
 	 */
 	public static function parts_of( int $page_id ): array {
 		$out = array();
-		foreach ( parse_blocks( \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) ) ) as $block ) {
+		foreach ( parse_blocks( \DX_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) get_post_field( 'post_content', $page_id ) ) ) as $block ) {
 			self::collect( $block, $out );
 		}
 
@@ -117,7 +117,7 @@ final class Part_Shortcuts {
 	private static function collect( array $block, array &$out ): void {
 		if ( ( $block['blockName'] ?? '' ) === 'core/template-part' ) {
 			$slug = (string) ( $block['attrs']['slug'] ?? '' );
-			$area = str_starts_with( $slug, 'dxai-header' ) ? 'header' : ( str_starts_with( $slug, 'dxai-footer' ) ? 'footer' : '' );
+			$area = str_starts_with( $slug, 'dxui-header' ) ? 'header' : ( str_starts_with( $slug, 'dxui-footer' ) ? 'footer' : '' );
 			if ( $area !== '' && ! isset( $out[ $area ] ) ) {
 				$found = get_posts(
 					array(

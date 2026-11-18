@@ -7,7 +7,7 @@ export function extractClasses( markup ) {
 			.split( /\s+/ )
 			.forEach( ( token ) => {
 				const value = token.trim();
-				if ( value && ! value.startsWith( 'wp-' ) && ! value.startsWith( 'dxai-ui' ) ) {
+				if ( value && ! value.startsWith( 'wp-' ) && ! value.startsWith( 'dx-ui' ) ) {
 					set.add( value );
 				}
 			} );

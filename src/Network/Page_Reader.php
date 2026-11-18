@@ -2,12 +2,12 @@
 /**
  * One page of a team site, read as its sections.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * What a page of a site in the network is made of, the way the research of 2026-10-22 read 637 pages of 25 team sites
@@ -50,7 +50,7 @@ final class Page_Reader {
 		$out  = array(
 			'words'    => 0,
 			'h1'       => '',
-			'design'   => str_contains( $html, 'dxai-ui' ),
+			'design'   => str_contains( $html, 'dx-ui' ),
 			'bytes'    => strlen( $html ),
 			'sections' => array(),
 		);
@@ -78,9 +78,9 @@ final class Page_Reader {
 	 * @return array<string, mixed>
 	 */
 	public static function one( string $html, int $index = 1 ): array {
-		$doc  = self::document( '<div class="dxai-network-one">' . $html . '</div>' );
+		$doc  = self::document( '<div class="dxui-network-one">' . $html . '</div>' );
 		$xp   = new \DOMXPath( $doc );
-		$list = $xp->query( '//body/div[@class="dxai-network-one"]' );
+		$list = $xp->query( '//body/div[@class="dxui-network-one"]' );
 		$root = $list !== false && $list->length > 0 ? $list->item( 0 ) : null;
 		if ( ! $root instanceof \DOMElement ) {
 			return array();
@@ -270,7 +270,7 @@ final class Page_Reader {
 		foreach ( $frames as $src ) {
 			$kinds[] = preg_match( '/youtube|vimeo|google|maps|wistia|calendly|form/', $src, $m ) === 1 ? $m[0] : 'other';
 		}
-		$keep = array_values( array_filter( self::classes( $el ), static fn( string $c ): bool => preg_match( '/^(wp-block-[a-z-]+|amr-[a-z-]+|alignfull|has-[a-z-]+-background-color|dxai-[a-z-]+)$/', $c ) === 1 ) );
+		$keep = array_values( array_filter( self::classes( $el ), static fn( string $c ): bool => preg_match( '/^(wp-block-[a-z-]+|amr-[a-z-]+|alignfull|has-[a-z-]+-background-color|dxui-[a-z-]+)$/', $c ) === 1 ) );
 
 		return array(
 			'role'       => self::role( $xp, $el, $index, $raw, $head, $frames ),

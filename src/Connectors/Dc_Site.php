@@ -2,12 +2,12 @@
 /**
  * A Claude Design export that is a whole site: several `.dc.html` pages, and the parts they share.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
 /**
  * Claude Design keeps a site as one `.dc.html` per page, and what every page shares — the header, the footer — as

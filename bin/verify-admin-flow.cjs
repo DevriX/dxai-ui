@@ -18,7 +18,7 @@ const fs = require( 'fs' );
 const os = require( 'os' );
 const path = require( 'path' );
 
-const CHROME = process.env.DXAI_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.DXUI_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PUPPETEER = path.join( __dirname, '..', 'node_modules', 'puppeteer-core' );
 
 function arg( name, fallback ) {
@@ -58,7 +58,7 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 	const admin = base + '/wp-admin/admin.php?page=';
 
 	const puppeteer = require( PUPPETEER );
-	const profile = path.join( os.tmpdir(), 'dxai-admin-flow-' + process.pid );
+	const profile = path.join( os.tmpdir(), 'dxui-admin-flow-' + process.pid );
 	const browser = await puppeteer.launch( { executablePath: CHROME, headless: 'shell', userDataDir: profile, args: [ '--no-sandbox' ] } );
 	const page = await browser.newPage();
 	await page.setViewport( { width: 1440, height: 900 } );
@@ -82,8 +82,8 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		const until = Date.now() + ms;
 		while ( Date.now() < until ) {
 			const done = await page.evaluate( () => {
-				const app = document.getElementById( 'dxai-ui-app' );
-				return !! ( app && app.querySelector( '.dxai-page' ) && ! app.querySelector( '.components-spinner' ) && ! app.querySelector( '.dxai-ui-php-fallback' ) );
+				const app = document.getElementById( 'dx-ui-app' );
+				return !! ( app && app.querySelector( '.dxui-page' ) && ! app.querySelector( '.components-spinner' ) && ! app.querySelector( '.dx-ui-php-fallback' ) );
 			} );
 			if ( done ) {
 				await sleep( 300 );
@@ -112,7 +112,7 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 			for ( let i = st.length - 1; i >= 0; i-- ) g = over( st[ i ], g );
 			return g;
 		};
-		const app = document.getElementById( 'dxai-ui-app' );
+		const app = document.getElementById( 'dx-ui-app' );
 		const low = [];
 		for ( const el of app ? app.querySelectorAll( '*' ) : [] ) {
 			const own = [ ...el.childNodes ].filter( ( n ) => n.nodeType === 3 ).map( ( n ) => n.textContent ).join( '' ).replace( /\s+/g, ' ' ).trim();
@@ -144,7 +144,7 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		await page.goto( url, { waitUntil: 'networkidle2', timeout: 120000 } );
 		const ok = await settled();
 		const h = await height();
-		const title = await page.evaluate( () => ( document.querySelector( '#dxai-ui-app h1' ) || {} ).textContent || '' );
+		const title = await page.evaluate( () => ( document.querySelector( '#dx-ui-app h1' ) || {} ).textContent || '' );
 		expect( what + ' opens (h1 "' + title.trim() + '", ' + h + ' px)', ok && title.trim() !== '', ok ? 'no title' : 'the app did not settle' );
 		expect( what + ': no error in the console', errors.length === 0, errors.join( ' | ' ) );
 		const low = await unreadable();
@@ -156,54 +156,54 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 	};
 
 	console.log( '\n1. The screens' );
-	await open( admin + 'dxai-ui', 'Designs', 2000 );
+	await open( admin + 'dx-ui', 'Designs', 2000 );
 	await shot( 'designs' );
-	const rows = await page.evaluate( () => document.querySelectorAll( '.dxai-designs tbody tr .dxai-designs__title' ).length );
-	const empty = await page.evaluate( () => !! document.querySelector( '.dxai-empty' ) );
+	const rows = await page.evaluate( () => document.querySelectorAll( '.dxui-designs tbody tr .dxui-designs__title' ).length );
+	const empty = await page.evaluate( () => !! document.querySelector( '.dxui-empty' ) );
 	expect( 'the list has designs, or says there are none', rows > 0 || empty, rows + ' rows' );
-	const chips = await page.evaluate( () => document.querySelectorAll( '.dxai-designs tbody tr:first-child .dxai-chip' ).length );
+	const chips = await page.evaluate( () => document.querySelectorAll( '.dxui-designs tbody tr:first-child .dxui-chip' ).length );
 	if ( rows > 0 ) {
 		expect( 'a row says where its design is (six chips)', chips === 6, chips + ' chips' );
 	}
-	for ( const [ slug, name ] of [ [ 'dxai-ui-convert', 'Convert' ], [ 'dxai-ui-site', 'Site' ], [ 'dxai-ui-forms', 'Form entries' ], [ 'dxai-ui-settings', 'Settings' ] ] ) {
+	for ( const [ slug, name ] of [ [ 'dx-ui-convert', 'Convert' ], [ 'dx-ui-site', 'Site' ], [ 'dx-ui-forms', 'Form entries' ], [ 'dx-ui-settings', 'Settings' ] ] ) {
 		await open( admin + slug, name );
 		await shot( slug );
 	}
 	errors = [];
-	await page.goto( admin + 'dxai-ui-library', { waitUntil: 'networkidle2', timeout: 120000 } );
-	expect( 'the old Library address lands on Designs', /page=dxai-ui(?:#.*)?$/.test( page.url() ), page.url() );
+	await page.goto( admin + 'dx-ui-library', { waitUntil: 'networkidle2', timeout: 120000 } );
+	expect( 'the old Library address lands on Designs', /page=dx-ui(?:#.*)?$/.test( page.url() ), page.url() );
 
 	console.log( '\n2. A design and its tabs' );
 	if ( rows === 0 ) {
 		console.log( '  skip  no design on this site' );
 	} else {
-		await page.goto( admin + 'dxai-ui', { waitUntil: 'networkidle2', timeout: 120000 } );
+		await page.goto( admin + 'dx-ui', { waitUntil: 'networkidle2', timeout: 120000 } );
 		await settled();
 		// Click 1: the menu's Designs (we are on it). Click 2: the design. Click 3: a tab.
-		const picked = wanted > 0 ? '#/design/' + wanted : await page.evaluate( () => document.querySelector( '.dxai-designs tbody tr:first-child .dxai-designs__title' ).getAttribute( 'href' ) );
+		const picked = wanted > 0 ? '#/design/' + wanted : await page.evaluate( () => document.querySelector( '.dxui-designs tbody tr:first-child .dxui-designs__title' ).getAttribute( 'href' ) );
 		errors = [];
-		await page.click( '.dxai-designs tbody tr:first-child .dxai-designs__title' );
+		await page.click( '.dxui-designs tbody tr:first-child .dxui-designs__title' );
 		if ( wanted > 0 ) {
 			await page.evaluate( ( h ) => { window.location.hash = h; }, picked );
 		}
 		const ok = await settled();
-		const title = await page.evaluate( () => ( document.querySelector( '#dxai-ui-app h1' ) || {} ).textContent || '' );
+		const title = await page.evaluate( () => ( document.querySelector( '#dx-ui-app h1' ) || {} ).textContent || '' );
 		expect( 'a design opens from the list, in two clicks from the menu (h1 "' + title.trim() + '")', ok && title.trim() !== '' && page.url().includes( picked ), page.url() );
 		expect( 'the design: no error in the console', errors.length === 0, errors.join( ' | ' ) );
-		const nChips = await page.evaluate( () => document.querySelectorAll( '.dxai-page--design > .dxai-chips .dxai-chip' ).length );
+		const nChips = await page.evaluate( () => document.querySelectorAll( '.dxui-page--design > .dxui-chips .dxui-chip' ).length );
 		expect( 'the design says where it is (six chips)', nChips === 6, nChips + ' chips' );
-		const tabs = await page.evaluate( () => Array.from( document.querySelectorAll( '.dxai-tabs__tab' ) ).map( ( a ) => a.getAttribute( 'href' ).split( '/' ).pop().replace( /^\d+$/, 'overview' ) ) );
+		const tabs = await page.evaluate( () => Array.from( document.querySelectorAll( '.dxui-tabs__tab' ) ).map( ( a ) => a.getAttribute( 'href' ).split( '/' ).pop().replace( /^\d+$/, 'overview' ) ) );
 		expect( 'eight tabs: overview, pages, look, blocks, words, speed, transfer, history', tabs.join( ',' ) === 'overview,pages,look,blocks,words,speed,transfer,history', tabs.join( ',' ) );
-		const crumbs = await page.evaluate( () => document.querySelectorAll( '.dxai-page__crumbs a' ).length );
+		const crumbs = await page.evaluate( () => document.querySelectorAll( '.dxui-page__crumbs a' ).length );
 		expect( 'a breadcrumb back to Designs', crumbs === 1 );
 		// A tab has opened when it is the current one, nothing in it is still loading, and it has something to read.
 		const tabOpened = async ( tab, ms = 45000 ) => {
 			const until = Date.now() + ms;
 			while ( Date.now() < until ) {
 				const state = await page.evaluate( ( name ) => {
-					const current = ( document.querySelector( '.dxai-tabs__tab.is-current' ) || {} ).textContent || '';
-					const panel = document.querySelector( '.dxai-tab' );
-					const app = document.getElementById( 'dxai-ui-app' );
+					const current = ( document.querySelector( '.dxui-tabs__tab.is-current' ) || {} ).textContent || '';
+					const panel = document.querySelector( '.dxui-tab' );
+					const app = document.getElementById( 'dx-ui-app' );
 					return {
 						current: current.toLowerCase().startsWith( name ),
 						loading: !! ( app && app.querySelector( '.components-spinner' ) ),
@@ -220,7 +220,7 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		};
 		for ( const tab of tabs ) {
 			errors = [];
-			await page.click( '.dxai-tabs__tab[href$="' + ( tab === 'overview' ? picked : picked + '/' + tab ) + '"]' );
+			await page.click( '.dxui-tabs__tab[href$="' + ( tab === 'overview' ? picked : picked + '/' + tab ) + '"]' );
 			const opened = await tabOpened( tab );
 			const h = await height();
 			expect( 'tab ' + tab + ' opens in one click (' + h + ' px)', opened === 'opened', opened );
@@ -233,16 +233,16 @@ const sleep = ( ms ) => new Promise( ( r ) => setTimeout( r, ms ) );
 		// The browser's back button is the way back through the tabs.
 		await page.goBack();
 		await settled();
-		const back = await page.evaluate( () => ( document.querySelector( '.dxai-tabs__tab.is-current' ) || {} ).textContent || '' );
+		const back = await page.evaluate( () => ( document.querySelector( '.dxui-tabs__tab.is-current' ) || {} ).textContent || '' );
 		expect( 'the back button goes to the tab before', back.toLowerCase().startsWith( tabs[ tabs.length - 2 ] ), back );
 		// A reload lands on the same tab.
 		await page.reload( { waitUntil: 'networkidle2' } );
 		await settled();
-		const kept = await page.evaluate( () => ( document.querySelector( '.dxai-tabs__tab.is-current' ) || {} ).textContent || '' );
+		const kept = await page.evaluate( () => ( document.querySelector( '.dxui-tabs__tab.is-current' ) || {} ).textContent || '' );
 		expect( 'a reload keeps the tab', kept === back, kept );
-		await page.click( '.dxai-page__crumbs a' );
+		await page.click( '.dxui-page__crumbs a' );
 		await settled();
-		expect( 'the breadcrumb goes back to the list', /page=dxai-ui#\/?$/.test( page.url() ) && await page.evaluate( () => !! document.querySelector( '.dxai-designs' ) ), page.url() );
+		expect( 'the breadcrumb goes back to the list', /page=dx-ui#\/?$/.test( page.url() ) && await page.evaluate( () => !! document.querySelector( '.dxui-designs' ) ), page.url() );
 	}
 
 	await browser.close();

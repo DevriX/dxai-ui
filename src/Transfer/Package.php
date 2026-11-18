@@ -2,20 +2,20 @@
 /**
  * The page package format: one converted page with everything it needs.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Transfer;
+namespace DX_UI\Transfer;
 
-use DXAI_UI\Media\Sideloader;
+use DX_UI\Media\Sideloader;
 
 /**
  * A converted page does not carry its look in its blocks. The blocks hold
- * `dxaiCss` / `dxaiInner` and `dxs-` classes whose rules the plugin writes
+ * `dxuiCss` / `dxuiInner` and `dxs-` classes whose rules the plugin writes
  * when the page renders (Style_Rules), the design's stylesheet is a file in
- * uploads scoped to the page (`.dxai-ui.dxai-ui--{scope}`), its tokens,
+ * uploads scoped to the page (`.dx-ui.dx-ui--{scope}`), its tokens,
  * fonts and runtime script are post meta, its images are attachments, and its
  * header and footer are template parts or the site header and footer blocks.
  * Copying the blocks from one editor into another site's editor carries none
@@ -25,7 +25,7 @@ use DXAI_UI\Media\Sideloader;
  * A package is a ZIP holding `manifest.json` and a `files/` folder:
  *
  * - manifest.json: the format and plugin version, the source site, the page
- *   (title, slug, content, template, every `_dxai_ui_*` meta), its scope, the
+ *   (title, slug, content, template, every `_dx_ui_*` meta), its scope, the
  *   template parts, synced patterns and navigation posts it references, the
  *   header and footer it renders (the header template and its menus' items,
  *   the footer frame and its widgets), whether it was the source's brand,
@@ -50,7 +50,7 @@ use DXAI_UI\Media\Sideloader;
 final class Package {
 
 	/** What `manifest.format` says for a page package. */
-	public const FORMAT = 'dxai-ui-page';
+	public const FORMAT = 'dx-ui-page';
 
 	/** The newest manifest layout this code reads and the one it writes. */
 	public const VERSION = 1;
@@ -61,7 +61,7 @@ final class Package {
 	public const MANIFEST_MAX = 33554432;
 
 	/** What an exported package's file name ends in. */
-	public const SUFFIX = '.dxai.zip';
+	public const SUFFIX = '.dxui.zip';
 
 	/**
 	 * Post meta on everything an import writes: which package item it is
@@ -69,16 +69,16 @@ final class Package {
 	 * kind and source id for a part, pattern or navigation post). A second
 	 * import of the same package finds it and updates it in place.
 	 */
-	public const KEY_META = '_dxai_ui_transfer_key';
+	public const KEY_META = '_dx_ui_transfer_key';
 
 	/** Post meta on an imported page: where it came from (site, page id, plugin version). */
-	public const SOURCE_META = '_dxai_ui_transfer_source';
+	public const SOURCE_META = '_dx_ui_transfer_source';
 
 	/** At most this many template parts, patterns and navigation posts are followed. */
 	public const MAX_ITEMS = 200;
 
 	/** Template file names an imported page may be given. */
-	public const TEMPLATES = array( 'dxai-blank.php', 'dxai-template.php' );
+	public const TEMPLATES = array( 'dxui-blank.php', 'dxui-template.php' );
 
 	/** Temporary folders made in this request, removed at shutdown if still there. */
 	private static array $temp = array();
@@ -173,7 +173,7 @@ final class Package {
 	/**
 	 * A private temporary folder: under the system temp directory when PHP
 	 * can write there (the web server does not serve it), else under
-	 * uploads/dxai-ui behind a deny rule. Removed at shutdown if the caller
+	 * uploads/dx-ui behind a deny rule. Removed at shutdown if the caller
 	 * did not remove it.
 	 */
 	public static function temp_dir( string $prefix ): string|\WP_Error {
@@ -184,7 +184,7 @@ final class Package {
 		}
 		$uploads = wp_upload_dir();
 		if ( empty( $uploads['error'] ) ) {
-			$roots[] = untrailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . '/' . \DXAI_UI\Support\Upload_Paths::DIR;
+			$roots[] = untrailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . '/' . \DX_UI\Support\Upload_Paths::DIR;
 		}
 		foreach ( $roots as $i => $root ) {
 			if ( ! is_dir( $root ) ) {
@@ -193,7 +193,7 @@ final class Package {
 			if ( ! is_dir( $root ) || ! wp_is_writable( $root ) || ! self::listable( $root ) ) {
 				continue;
 			}
-			$dir = $root . '/dxai-ui-' . $prefix . '-' . bin2hex( random_bytes( 8 ) );
+			$dir = $root . '/dx-ui-' . $prefix . '-' . bin2hex( random_bytes( 8 ) );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- private work folder.
 			if ( ! @mkdir( $dir, 0700 ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 				continue;
@@ -210,7 +210,7 @@ final class Package {
 			return $dir;
 		}
 
-		return new \WP_Error( 'dxai_ui_transfer', __( 'No writable temporary folder: neither the system temp directory nor wp-content/uploads can be written to.', 'dxai-ui' ), array( 'status' => 500 ) );
+		return new \WP_Error( 'dx_ui_transfer', __( 'No writable temporary folder: neither the system temp directory nor wp-content/uploads can be written to.', 'dx-ui' ), array( 'status' => 500 ) );
 	}
 
 	/**
@@ -323,13 +323,13 @@ final class Package {
 		if ( class_exists( \ZipArchive::class ) ) {
 			$zip = new \ZipArchive();
 			if ( true !== $zip->open( $zip_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) ) {
-				return new \WP_Error( 'dxai_ui_transfer', __( 'The package could not be created (ZipArchive refused to open it).', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_transfer', __( 'The package could not be created (ZipArchive refused to open it).', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 			foreach ( $entries as $name => $path ) {
 				if ( ! $zip->addFile( $path, $name ) ) {
 					$zip->close();
 					/* translators: %s: entry name. */
-					return new \WP_Error( 'dxai_ui_transfer', sprintf( __( 'The package could not be written (%s).', 'dxai-ui' ), $name ), array( 'status' => 500 ) );
+					return new \WP_Error( 'dx_ui_transfer', sprintf( __( 'The package could not be written (%s).', 'dx-ui' ), $name ), array( 'status' => 500 ) );
 				}
 				if ( method_exists( $zip, 'setMtimeName' ) ) {
 					$zip->setMtimeName( $name, $mtime );
@@ -340,14 +340,14 @@ final class Package {
 				}
 			}
 			if ( ! $zip->close() ) {
-				return new \WP_Error( 'dxai_ui_transfer', __( 'The package could not be written to disk.', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_transfer', __( 'The package could not be written to disk.', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 
 			return true;
 		}
 
 		if ( ! function_exists( 'gzopen' ) ) {
-			return new \WP_Error( 'dxai_ui_transfer', __( 'This server cannot write ZIP archives: PHP has neither the zip extension nor zlib. Ask your host to enable the PHP zip extension.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_transfer', __( 'This server cannot write ZIP archives: PHP has neither the zip extension nor zlib. Ask your host to enable the PHP zip extension.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 		require_once ABSPATH . 'wp-admin/includes/class-pclzip.php';
 
@@ -365,7 +365,7 @@ final class Package {
 			if ( ! copy( $path, $to ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
 				self::remove_dir( $stage );
 				/* translators: %s: entry name. */
-				return new \WP_Error( 'dxai_ui_transfer', sprintf( __( 'The package could not be written (%s).', 'dxai-ui' ), $name ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_transfer', sprintf( __( 'The package could not be written (%s).', 'dx-ui' ), $name ), array( 'status' => 500 ) );
 			}
 			touch( $to, $mtime ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_touch
 			$list[] = $to;
@@ -374,7 +374,7 @@ final class Package {
 		$made    = $archive->create( $list, PCLZIP_OPT_REMOVE_PATH, $stage );
 		self::remove_dir( $stage );
 		if ( 0 === $made ) {
-			return new \WP_Error( 'dxai_ui_transfer', __( 'The package could not be written (PclZip).', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_transfer', __( 'The package could not be written (PclZip).', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
 		return true;

@@ -106,15 +106,15 @@ const READ = () => {
 	}),
 	// The same selector as ACCORDION, which this page-side function cannot see.
 	accordions: [...document.querySelectorAll('button[aria-expanded]:not([role]):not([aria-haspopup])')].map((t) => {
-		const host = t.closest('[data-dxai-accordion]');
+		const host = t.closest('[data-dxui-accordion]');
 		return {
 			id: t.id,
 			expanded: t.getAttribute('aria-expanded'),
 			state: t.getAttribute('data-state'),
 			radix: t.hasAttribute('data-state'),
 			// Which accordion it belongs to, and whether that one stacks.
-			group: host ? (host.getAttribute('data-dxai-accordion') || 'single') : '',
-			root: host ? [...document.querySelectorAll('[data-dxai-accordion]')].indexOf(host) : -1,
+			group: host ? (host.getAttribute('data-dxui-accordion') || 'single') : '',
+			root: host ? [...document.querySelectorAll('[data-dxui-accordion]')].indexOf(host) : -1,
 		};
 	}),
 	combos: [...document.querySelectorAll('[role="combobox"]')].map((c) => ({
@@ -485,7 +485,7 @@ async function check(browser, url, chrome) {
 		await settle();
 		/*
 		 * Found the way a person finds it, not by our own marker: the button
-		 * inside the dialog that says "Close". `data-dxai-dismiss` is what the
+		 * inside the dialog that says "Close". `data-dxui-dismiss` is what the
 		 * converted page carries and Radix does not, so requiring it made the
 		 * REAL app fail this assertion — the one thing a contract check must
 		 * never do.
@@ -493,7 +493,7 @@ async function check(browser, url, chrome) {
 		const close = await page.evaluateHandle((t) => {
 			const dialog = document.getElementById(t.getAttribute('aria-controls') || '');
 			if (!dialog) { return null; }
-			return dialog.querySelector('[data-dxai-dismiss]')
+			return dialog.querySelector('[data-dxui-dismiss]')
 				|| [...dialog.querySelectorAll('button')].find((b) => /\bclose\b/i.test(b.textContent || ''))
 				|| null;
 		}, trig);

@@ -2,12 +2,12 @@
 /**
  * What a design's Home is made of, read once, for the sections that are not the Home's own.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * A page made from a Home takes the Home's sections as they are (Team_Pages). Some sections a page needs the Home does not have
@@ -24,7 +24,7 @@ namespace DXAI_UI\Pages;
 final class Home_Kit {
 
 	/** The block attributes that decide how a block looks (the colour, the spacing, the type): a new section may use only values the Home does. */
-	private const LOOK = array( 'className', 'dxaiCss', 'style', 'textColor', 'backgroundColor', 'gradient', 'borderColor', 'fontSize', 'fontFamily' );
+	private const LOOK = array( 'className', 'dxuiCss', 'style', 'textColor', 'backgroundColor', 'gradient', 'borderColor', 'fontSize', 'fontFamily' );
 
 	/**
 	 * @param array<int, array<string, mixed>> $library Section_Library::for_page() of the Home.
@@ -49,13 +49,13 @@ final class Home_Kit {
 	public static function facts( int $home ): array {
 		$html = (string) get_post_field( 'post_content', $home );
 		// A header and a footer kept as the design's template parts are the Home's too: the footer is where an address is.
-		$key = \DXAI_UI\Chrome\Page_Chrome::part_key_for( $home );
+		$key = \DX_UI\Chrome\Page_Chrome::part_key_for( $home );
 		if ( $key !== '' ) {
 			foreach ( array( 'header', 'footer' ) as $area ) {
 				$part = get_posts(
 					array(
 						'post_type'      => 'wp_template_part',
-						'name'           => \DXAI_UI\Structures\Template_Part_Factory::slug( $area, $key ),
+						'name'           => \DX_UI\Structures\Template_Part_Factory::slug( $area, $key ),
 						'post_status'    => array( 'publish', 'draft', 'private' ),
 						'posts_per_page' => 1,
 						'no_found_rows'  => true,
@@ -253,7 +253,7 @@ final class Home_Kit {
 		// The design shows some of its cards on one size of screen only (data-mob, data-desk): not a set to rebuild.
 		$parent = Block_Tree::at( $component['block'], (array) $rep['path'] );
 		foreach ( (array) $rep['items'] as $index ) {
-			$data = (array) ( $parent['innerBlocks'][ $index ]['attrs']['dxaiData'] ?? array() );
+			$data = (array) ( $parent['innerBlocks'][ $index ]['attrs']['dxuiData'] ?? array() );
 			if ( array_intersect( array( 'data-mob', 'data-desk' ), array_keys( $data ) ) !== array() ) {
 				return false;
 			}
@@ -264,7 +264,7 @@ final class Home_Kit {
 
 	/**
 	 * The paths of what a "show more" button reveals in a block: the blocks the design's script shows and hides by a state
-	 * (the class dxai-on-<state>). Empty when the block has no such button.
+	 * (the class dxui-on-<state>). Empty when the block has no such button.
 	 *
 	 * @param array<string, mixed> $block
 	 * @return array<int, array<int, int>>
@@ -272,7 +272,7 @@ final class Home_Kit {
 	public static function show_more( array $block ): array {
 		$out  = array();
 		$walk = static function ( array $b, array $path ) use ( &$walk, &$out ): void {
-			if ( preg_match( '/(?:^|\s)dxai-on-/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1 ) {
+			if ( preg_match( '/(?:^|\s)dxui-on-/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1 ) {
 				$out[] = $path;
 
 				return;
@@ -297,11 +297,11 @@ final class Home_Kit {
 	 */
 	public static function is_icon( array $block ): bool {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		if ( preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', (string) ( $attrs['className'] ?? '' ) ) === 1
+		if ( preg_match( '/(?:^|\s)dxui-icon(?:\s|$)/', (string) ( $attrs['className'] ?? '' ) ) === 1
 			|| preg_match( '/\.svg(?:\?|$)/i', (string) ( $attrs['url'] ?? $attrs['src'] ?? '' ) ) === 1 ) {
 			return true;
 		}
-		$hidden = (string) ( $attrs['ariaHidden'] ?? ( $attrs['dxaiData']['aria-hidden'] ?? '' ) );
+		$hidden = (string) ( $attrs['ariaHidden'] ?? ( $attrs['dxuiData']['aria-hidden'] ?? '' ) );
 		if ( $hidden !== 'true' ) {
 			return false;
 		}
@@ -315,7 +315,7 @@ final class Home_Kit {
 				$sizes[] = (int) $attrs[ $key ];
 			}
 		}
-		if ( preg_match_all( '/(?:^|;)\s*(?:width|height)\s*:\s*(\d+)px/i', (string) ( $attrs['dxaiCss'] ?? '' ), $m ) ) {
+		if ( preg_match_all( '/(?:^|;)\s*(?:width|height)\s*:\s*(\d+)px/i', (string) ( $attrs['dxuiCss'] ?? '' ), $m ) ) {
 			$sizes = array_merge( $sizes, array_map( 'intval', $m[1] ) );
 		}
 

@@ -2,20 +2,20 @@
 /**
  * Where a file the plugin wrote under uploads lives, as a URL and on disk.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 /**
  * One answer to "where is this page's stylesheet", whatever form it was
  * stored in.
  *
- * `_dxai_ui_css_url` and `_dxai_ui_js_url` used to hold ABSOLUTE URLs — on
+ * `_dx_ui_css_url` and `_dx_ui_js_url` used to hold ABSOLUTE URLs — on
  * this install all 1002 css rows and 35 js rows began
- * `http://dxai-ui.local/wp-content/uploads/` — and ten places turned such a
+ * `http://dx-ui.local/wp-content/uploads/` — and ten places turned such a
  * URL back into a file with `str_replace( baseurl, basedir, $url )`. That is
  * a guess that holds only while nothing about the site changes. Move it from
  * staging to production, from http to https, behind a multisite domain
@@ -27,7 +27,7 @@ namespace DXAI_UI\Support;
  * cache-buster falls back to the plugin version, so a CDN keeps serving the
  * stale sheet after a re-import.
  *
- * So the plugin stores the part AFTER the uploads base — `dxai-ui/pattern-
+ * So the plugin stores the part AFTER the uploads base — `dx-ui/pattern-
  * 123.css` — and builds the URL and the path from whatever `wp_upload_dir()`
  * says right now. Values stored before this change are still absolute URLs;
  * relative() maps those too, including ones whose scheme and host belong to
@@ -41,10 +41,10 @@ namespace DXAI_UI\Support;
 final class Upload_Paths {
 
 	/** The plugin's own directory inside uploads. */
-	public const DIR = 'dxai-ui';
+	public const DIR = 'dx-ui';
 
 	/**
-	 * The location relative to the uploads base, e.g. `dxai-ui/pattern-123.css`.
+	 * The location relative to the uploads base, e.g. `dx-ui/pattern-123.css`.
 	 *
 	 * Accepts an absolute URL of any scheme and host (or protocol-relative), a
 	 * root-relative URL path, a filesystem path, or a value that is already
@@ -118,8 +118,8 @@ final class Upload_Paths {
 	 * An absolute URL relative() cannot place under uploads (a foreign host
 	 * with no uploads path in it) keeps the old treatment, esc_url_raw(); a
 	 * scheme-less value is taken as relative already. esc_url_raw() must never
-	 * see the relative form: it reads `dxai-ui/pattern-1.css` as a host name
-	 * and returns `http://dxai-ui/pattern-1.css`.
+	 * see the relative form: it reads `dx-ui/pattern-1.css` as a host name
+	 * and returns `http://dx-ui/pattern-1.css`.
 	 */
 	public static function for_storage( string $url_or_path ): string {
 		$relative = self::relative( $url_or_path );
@@ -141,7 +141,7 @@ final class Upload_Paths {
 			return (string) $time;
 		}
 
-		return defined( 'DXAI_UI_VERSION' ) ? (string) DXAI_UI_VERSION : '';
+		return defined( 'DX_UI_VERSION' ) ? (string) DX_UI_VERSION : '';
 	}
 
 	/**
@@ -221,12 +221,12 @@ final class Upload_Paths {
 			$relative = self::from_url_path( $path, $uploads['base_path'] );
 			/*
 			 * The relative form after esc_url_raw() has been at it: esc_url_raw(
-			 * 'dxai-ui/pattern-1.js' ) reads the directory as a host and returns
-			 * `http://dxai-ui/pattern-1.js`. bin/re-restyle-live-pages.php and
+			 * 'dx-ui/pattern-1.js' ) reads the directory as a host and returns
+			 * `http://dx-ui/pattern-1.js`. bin/re-restyle-live-pages.php and
 			 * bin/fix-home-and-empty-pages.php copy a Home's meta onto its child
 			 * pages exactly that way, and any other code that "sanitises" the
 			 * value as a URL would too. Only when nothing above placed it, so a
-			 * site that really is served from a host called `dxai-ui` still maps
+			 * site that really is served from a host called `dx-ui` still maps
 			 * its own absolute URLs through the uploads anchor.
 			 */
 			if ( $relative === '' && strtolower( (string) wp_parse_url( $value, PHP_URL_HOST ) ) === self::DIR ) {
@@ -250,13 +250,13 @@ final class Upload_Paths {
 	 *
 	 * The plugin's own directory is the anchor tried first, and deliberately
 	 * ahead of the current base path: a network subsite exported to a single
-	 * site stored `/wp-content/uploads/sites/3/dxai-ui/…`, and migration tools
+	 * site stored `/wp-content/uploads/sites/3/dx-ui/…`, and migration tools
 	 * flatten `sites/3/` away, so the base-path match would yield
-	 * `sites/3/dxai-ui/…` — a file that is no longer there. Anchoring on
-	 * `/uploads/[sites/N/]dxai-ui/` yields `dxai-ui/…` on either side of such
+	 * `sites/3/dx-ui/…` — a file that is no longer there. Anchoring on
+	 * `/uploads/[sites/N/]dx-ui/` yields `dx-ui/…` on either side of such
 	 * a move, and cannot be fooled by a site installed in a directory that is
-	 * itself called `dxai-ui`. Then the current base path, which covers a
-	 * custom UPLOADS location for anything else. Then the last `/dxai-ui/` in
+	 * itself called `dx-ui`. Then the current base path, which covers a
+	 * custom UPLOADS location for anything else. Then the last `/dx-ui/` in
 	 * the path, for a custom location on the previous host.
 	 */
 	private static function from_url_path( string $path, string $base_path ): string {

@@ -2,16 +2,16 @@
 /**
  * REST: the theme colours a design follows.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Theme\Theme_Binding;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Theme\Theme_Binding;
+use DX_UI\Theme\Theme_Palette;
 
 /**
  * GET  /theme-colors          the theme's palette and, per design, its binding (Theme_Binding::report()).
@@ -22,7 +22,7 @@ final class Theme_Colors_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/theme-colors',
 			array(
 				array(
@@ -49,7 +49,7 @@ final class Theme_Colors_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/theme-colors/classes',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -69,7 +69,7 @@ final class Theme_Colors_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/theme-colors/propose',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -144,7 +144,7 @@ final class Theme_Colors_Controller {
 		if ( $home instanceof \WP_Error ) {
 			return $home;
 		}
-		$done = $request->get_param( 'action' ) === 'revert' ? \DXAI_UI\Theme\Theme_Class_Swap::revert( $home ) : \DXAI_UI\Theme\Theme_Class_Swap::apply( $home );
+		$done = $request->get_param( 'action' ) === 'revert' ? \DX_UI\Theme\Theme_Class_Swap::revert( $home ) : \DX_UI\Theme\Theme_Class_Swap::apply( $home );
 
 		return new \WP_REST_Response( Theme_Binding::report( $home ) + array( 'done' => $done ) );
 	}
@@ -153,7 +153,7 @@ final class Theme_Colors_Controller {
 	private function design( \WP_REST_Request $request ): int|\WP_Error {
 		$home = (int) $request->get_param( 'design' );
 		if ( ! Design_Attach::is_design( $home ) || ! current_user_can( 'edit_post', $home ) ) {
-			return new \WP_Error( 'dxai_ui_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return $home;

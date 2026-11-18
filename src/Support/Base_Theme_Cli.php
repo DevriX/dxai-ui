@@ -1,22 +1,22 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui base-theme.
+ * WP-CLI: wp dx-ui base-theme.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Theme\Base_Theme;
+use DX_UI\Theme\Base_Theme;
 
 /**
  * The DX Base theme from the command line:
  *
- *   wp dxai-ui base-theme status
- *   wp dxai-ui base-theme install     copy the theme into wp-content/themes (or, where that folder cannot be written, list it from the plugin)
- *   wp dxai-ui base-theme activate    switch the site to it
+ *   wp dx-ui base-theme status
+ *   wp dx-ui base-theme install     copy the theme into wp-content/themes (or, where that folder cannot be written, list it from the plugin)
+ *   wp dx-ui base-theme activate    switch the site to it
  *
  * Nothing here removes a theme: the plugin never deletes one.
  */
@@ -24,7 +24,7 @@ final class Base_Theme_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui base-theme',
+			'dx-ui base-theme',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'The DX Base theme the plugin carries for a site without a DX theme (status, install, activate).',

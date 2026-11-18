@@ -2,18 +2,18 @@
 /**
  * A link around other blocks: the theme's Link box.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
- * `dxai-ui/link` holding inner blocks (a card that is one link, a logo with a
- * heading), or `dxai-ui/box` written as an `<a>`, → the theme's own
+ * `dx-ui/link` holding inner blocks (a card that is one link, a logo with a
+ * heading), or `dx-ui/box` written as an `<a>`, → the theme's own
  * `amr/link-box` (american-restoration): "a box for any blocks, with an
  * optional link around the whole area". Its save() is one `<a>` with the inner
  * blocks in it, exactly what the custom block wrote, so the page keeps every
@@ -27,22 +27,22 @@ use DXAI_UI\Theme\Capabilities;
  */
 final class Link_Box extends Converter {
 
-	private const KNOWN = array( 'url', 'className', 'dxaiCss', 'hasInner', 'target', 'rel', 'ariaLabel', 'anchor', 'tagName', 'attrOrder' );
+	private const KNOWN = array( 'url', 'className', 'dxuiCss', 'hasInner', 'target', 'rel', 'ariaLabel', 'anchor', 'tagName', 'attrOrder' );
 
 	public function id(): string {
 		return 'link-box';
 	}
 
 	public function label(): string {
-		return __( 'Links around content → Link box', 'dxai-ui' );
+		return __( 'Links around content → Link box', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/link';
+		return 'dx-ui/link';
 	}
 
 	public function sources(): array {
-		return array( 'dxai-ui/link', 'dxai-ui/box' );
+		return array( 'dx-ui/link', 'dx-ui/box' );
 	}
 
 	public function target(): string {
@@ -56,7 +56,7 @@ final class Link_Box extends Converter {
 		if ( ! in_array( $name, $this->sources(), true ) || $url === '' || ! self::only( $attrs, self::KNOWN ) || ( $block['innerBlocks'] ?? array() ) === array() ) {
 			return null;
 		}
-		if ( $name === 'dxai-ui/link' ? empty( $attrs['hasInner'] ) || isset( $attrs['tagName'] ) : ( $attrs['tagName'] ?? '' ) !== 'a' ) {
+		if ( $name === 'dx-ui/link' ? empty( $attrs['hasInner'] ) || isset( $attrs['tagName'] ) : ( $attrs['tagName'] ?? '' ) !== 'a' ) {
 			return null;
 		}
 		// The theme's Link box sets `display:block`, `color:inherit` and no underline at a weight that beats an ordinary
@@ -81,7 +81,7 @@ final class Link_Box extends Converter {
 		if ( $open === null || array_diff( array_keys( $open ), array( 'class', 'href', 'target', 'rel', 'aria-label', 'id' ) ) !== array() ) {
 			return null;
 		}
-		$class = trim( ( $name === 'dxai-ui/link' ? 'wp-block-dxai-ui-link ' : '' ) . self::class_tail( $attrs ) );
+		$class = trim( ( $name === 'dx-ui/link' ? 'wp-block-dx-ui-link ' : '' ) . self::class_tail( $attrs ) );
 		if ( ( $open['class'] ?? '' ) !== $class || html_entity_decode( (string) ( $open['href'] ?? '' ), ENT_QUOTES, 'UTF-8' ) !== html_entity_decode( esc_url( $url ), ENT_QUOTES, 'UTF-8' ) ) {
 			return null;
 		}
@@ -100,7 +100,7 @@ final class Link_Box extends Converter {
 		if ( ! empty( $attrs['target'] ) ) {
 			$new['linkTarget'] = (string) $attrs['target'];
 		}
-		foreach ( array( 'rel', 'ariaLabel', 'anchor', 'className', 'dxaiCss' ) as $key ) {
+		foreach ( array( 'rel', 'ariaLabel', 'anchor', 'className', 'dxuiCss' ) as $key ) {
 			if ( isset( $attrs[ $key ] ) && (string) $attrs[ $key ] !== '' ) {
 				$new[ $key ] = $attrs[ $key ];
 			}

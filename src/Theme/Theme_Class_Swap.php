@@ -2,26 +2,26 @@
 /**
  * The theme's own colour classes in a design's content.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Color_Usage;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Compiler\Utility_Classes;
+use DX_UI\Compiler\Color_Usage;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Compiler\Utility_Classes;
 
 /**
  * Where a design's text colour follows a theme colour directly (Theme_Binding),
  * its blocks can carry the theme's own class for it instead of the plugin's:
- * `text-dxai-neutral-100` becomes american-restoration's `text-white`, and a
- * core paragraph or heading coloured `text-dxai-brand` gets core's colour
+ * `text-dxui-neutral-100` becomes american-restoration's `text-white`, and a
+ * core paragraph or heading coloured `text-dxui-brand` gets core's colour
  * setting `textColor: primary` (`has-primary-color`) — the colour a person
  * sees selected in the block's Colour panel, named as the theme names it.
  *
- * Only classes change; the blocks' CSS (`dxaiCss`, `dxaiInner`) and its hashes
+ * Only classes change; the blocks' CSS (`dxuiCss`, `dxuiInner`) and its hashes
  * stay, so every block stays valid. Not for a text colour kept or adjusted for
  * readability (it would no longer follow its contrast check), nor for a slug
  * the design also uses as a token of its own. A swapped class is still
@@ -37,10 +37,10 @@ use DXAI_UI\Compiler\Utility_Classes;
 final class Theme_Class_Swap {
 
 	/** On the design's Home: what was swapped, and in which posts. */
-	public const META = '_dxai_ui_theme_classes';
+	public const META = '_dx_ui_theme_classes';
 
 	/** On each swapped post: its content before the swap. */
-	public const BEFORE = '_dxai_ui_before_theme_classes';
+	public const BEFORE = '_dx_ui_before_theme_classes';
 
 	/** Core blocks with a text colour setting that take `textColor`. */
 	private const CORE_TEXT = array( 'core/paragraph', 'core/heading', 'core/list', 'core/group', 'core/quote' );
@@ -210,7 +210,7 @@ final class Theme_Class_Swap {
 		if ( ! is_array( $meta ) || empty( $meta['plan'] ) ) {
 			return '';
 		}
-		$scope = '.dxai-ui.dxai-ui--' . $home;
+		$scope = '.dx-ui.dx-ui--' . $home;
 		$out   = '';
 		foreach ( (array) $meta['plan'] as $token => $swap ) {
 			$token = sanitize_key( (string) $token );
@@ -218,7 +218,7 @@ final class Theme_Class_Swap {
 			if ( $token === '' || $sel === '.' || $sel === '.has--color' ) {
 				continue;
 			}
-			$out .= $scope . ' ' . $sel . '{color:var(--dxai-' . $token . '--fg,var(--dxai-' . $token . ')) !important}';
+			$out .= $scope . ' ' . $sel . '{color:var(--dxui-' . $token . '--fg,var(--dxui-' . $token . ')) !important}';
 		}
 
 		return $out;
@@ -232,7 +232,7 @@ final class Theme_Class_Swap {
 	private static function swap_block( array $block, array $plan, int &$count ): array {
 		$class = (string) ( $block['attrs']['className'] ?? '' );
 		foreach ( $plan as $token => $swap ) {
-			$from = 'text-dxai-' . $token;
+			$from = 'text-dxui-' . $token;
 			// On the block itself, or (a class swap) on a run inside its text.
 			if ( ! self::has_class( $class, $from ) && ! ( isset( $swap['class'] ) && str_contains( (string) ( $block['innerHTML'] ?? '' ), $from ) ) ) {
 				continue;
@@ -263,7 +263,7 @@ final class Theme_Class_Swap {
 	 */
 	private static function unswap_block( array $block, array $plan ): array {
 		foreach ( $plan as $token => $swap ) {
-			$to = 'text-dxai-' . $token;
+			$to = 'text-dxui-' . $token;
 			if ( isset( $swap['class'] ) && self::has_class( (string) ( $block['attrs']['className'] ?? '' ), (string) $swap['class'] ) ) {
 				$block = self::rename( $block, (string) $swap['class'], $to );
 			} elseif ( isset( $swap['text_color'] ) && ( $block['attrs']['textColor'] ?? '' ) === $swap['text_color'] ) {
@@ -310,11 +310,11 @@ final class Theme_Class_Swap {
 				$block['innerContent'][ $i ] = $i === 0 || ! $root_only ? $edit( $chunk ) : $chunk;
 			}
 		}
-		// Markup a block keeps in an attribute too (dxai-ui/text's `content`): save() writes it from there, so it
+		// Markup a block keeps in an attribute too (dx-ui/text's `content`): save() writes it from there, so it
 		// has to say the same as the stored HTML.
 		if ( ! $root_only ) {
 			foreach ( (array) ( $block['attrs'] ?? array() ) as $name => $value ) {
-				if ( is_string( $value ) && ! in_array( $name, array( 'className', 'dxaiCss', 'dxaiStyle' ), true ) && str_contains( $value, 'class=' ) ) {
+				if ( is_string( $value ) && ! in_array( $name, array( 'className', 'dxuiCss', 'dxuiStyle' ), true ) && str_contains( $value, 'class=' ) ) {
 					$block['attrs'][ $name ] = $edit( $value );
 				}
 			}

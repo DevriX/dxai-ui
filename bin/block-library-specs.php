@@ -11,10 +11,10 @@
  * Tokens: {{company}} {{company_short}} {{phone}} {{phone_url}} {{email}} {{address}} {{region|default}} {{title|default}}
  * {{contact_url|default}} and, in a repeated item, {{row:title}} {{row:url}} {{row:text}}.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-$leaf_blocks = array( 'core/heading', 'core/paragraph', 'amr/span', 'core/button', 'core/list-item', 'dxai-ui/text' );
+$leaf_blocks = array( 'core/heading', 'core/paragraph', 'amr/span', 'core/button', 'core/list-item', 'dx-ui/text' );
 
 $forbidden = array(
 	'a company name'                          => '/\b(arcus|archer|aarcher)\b/i',
@@ -150,8 +150,8 @@ $specs = array(
 		'pages'   => array( 'service', 'areas', 'location', 'about', 'contact' ),
 		'links'   => array( '0.0.0.0.2.0.0' => '{{row:url}}' ),
 		'attrs'   => array(
-			'0.0.0.1.0.2.0' => array( 'dxaiIf' => 'phone' ),
-			'0.0.0.1.0.2.1' => array( 'dxaiIf' => 'contact_url' ),
+			'0.0.0.1.0.2.0' => array( 'dxuiIf' => 'phone' ),
+			'0.0.0.1.0.2.1' => array( 'dxuiIf' => 'contact_url' ),
 		),
 		'icons'   => array( '0.0.0.0.2.0.0.0' => 'pin' ),
 		'drop'    => array( '0.0.0.1.0.1' ),

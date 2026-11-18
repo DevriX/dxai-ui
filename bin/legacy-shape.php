@@ -21,7 +21,7 @@
  * resolves to the wrong value, or when the ZIP does not carry the config
  * through the connector and the compiler.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ $zip_path  = $root . '/.verify/legacy-vite-spa.zip';
  * Pack the fixture directory the way a Lovable export is packed: forward
  * slashes, no wrapper directory, node_modules and build output left out.
  */
-function dxai_pack_fixture( string $dir, string $out ): int {
+function dxui_pack_fixture( string $dir, string $out ): int {
 	wp_mkdir_p( dirname( $out ) );
 	if ( file_exists( $out ) ) {
 		unlink( $out );
@@ -74,7 +74,7 @@ function dxai_pack_fixture( string $dir, string $out ): int {
 	return $count;
 }
 
-$packed = dxai_pack_fixture( $project, $zip_path );
+$packed = dxui_pack_fixture( $project, $zip_path );
 echo 'zip=' . $zip_path . ' files=' . $packed . "\n";
 if ( $zip_only ) {
 	exit( 0 );
@@ -119,8 +119,8 @@ $walk   = static function ( string $dir ) use ( &$walk, &$markup ): void {
 };
 $walk( $project . '/src' );
 
-$theme  = DXAI_UI\Compiler\Tailwind\Theme::from_css( $css, $config );
-$engine = new DXAI_UI\Compiler\Tailwind\Engine( $theme );
+$theme  = DX_UI\Compiler\Tailwind\Theme::from_css( $css, $config );
+$engine = new DX_UI\Compiler\Tailwind\Engine( $theme );
 
 /*
  * `className="a b c"` and cva/cn string arguments both hold class lists, and
@@ -141,7 +141,7 @@ if ( preg_match_all( '/"([^"\n]{2,400})"|\'([^\'\n]{2,400})\'/', $markup, $match
 	foreach ( array_merge( $matches[1], $matches[2] ) as $run ) {
 		foreach ( preg_split( '/\s+/', (string) $run ) ?: array() as $class ) {
 			$class = trim( $class );
-			if ( $class === '' || ! DXAI_UI\Compiler\Tailwind\Engine::looks_like_utility( $class ) ) {
+			if ( $class === '' || ! DX_UI\Compiler\Tailwind\Engine::looks_like_utility( $class ) ) {
 				continue;
 			}
 			// Import specifiers and cva variant keys read as utilities to a
@@ -164,7 +164,7 @@ if ( preg_match_all( '/"([^"\n]{2,400})"|\'([^\'\n]{2,400})\'/', $markup, $match
 	}
 }
 
-$sheet = $engine->compile( '<div class="' . implode( ' ', array_keys( $classes ) ) . '"></div>', '.dxai-ui' );
+$sheet = $engine->compile( '<div class="' . implode( ' ', array_keys( $classes ) ) . '"></div>', '.dx-ui' );
 
 $unresolved = array();
 foreach ( $engine->unresolved() as $class ) {
@@ -198,7 +198,7 @@ $expect = array(
 
 $wrong = array();
 foreach ( $expect as $class => $needle ) {
-	$one  = ( new DXAI_UI\Compiler\Tailwind\Engine( $theme ) )->compile( '<div class="' . $class . '"></div>', '.dxai-ui' );
+	$one  = ( new DX_UI\Compiler\Tailwind\Engine( $theme ) )->compile( '<div class="' . $class . '"></div>', '.dx-ui' );
 	$body = '';
 	if ( preg_match( '/\{([^{}]*)\}/', $one, $m ) ) {
 		$body = trim( (string) $m[1] );
@@ -220,8 +220,8 @@ foreach ( $wrong as $line ) {
  * the animation's absent first frame would have been, which for the accordion
  * is a panel that never opens.
  */
-$frames  = ( new DXAI_UI\Compiler\Tailwind\Engine( $theme ) )
-	->compile( '<div class="animate-rise-in animate-accordion-down"></div>', '.dxai-ui' );
+$frames  = ( new DX_UI\Compiler\Tailwind\Engine( $theme ) )
+	->compile( '<div class="animate-rise-in animate-accordion-down"></div>', '.dx-ui' );
 $missing_frames = array();
 foreach ( array( 'rise-in', 'accordion-down' ) as $name ) {
 	if ( ! preg_match( '/@keyframes\s+' . preg_quote( $name, '/' ) . '\b/', $frames ) ) {
@@ -238,10 +238,10 @@ echo 'keyframes_missing=' . count( $missing_frames )
  * page actually loads is built from the CSS alone — this is the same
  * measurement with the config withheld, which is what ships today.
  */
-$bare   = DXAI_UI\Compiler\Tailwind\Theme::from_css( $css );
+$bare   = DX_UI\Compiler\Tailwind\Theme::from_css( $css );
 $as_shipped = array();
 foreach ( $expect as $class => $needle ) {
-	$one = ( new DXAI_UI\Compiler\Tailwind\Engine( $bare ) )->compile( '<div class="' . $class . '"></div>', '.dxai-ui' );
+	$one = ( new DX_UI\Compiler\Tailwind\Engine( $bare ) )->compile( '<div class="' . $class . '"></div>', '.dx-ui' );
 	if ( ! str_contains( $one, $needle ) ) {
 		$as_shipped[] = $class;
 	}
@@ -257,8 +257,8 @@ echo 'without_config_wrong=' . count( $as_shipped ) . '/' . count( $expect )
  * by `Design_Css::prepare()`. Asserting the prepared CSS instead reported a
  * failure that was not one and would have hidden a real one later.
  */
-$prepared = DXAI_UI\Compiler\Design_Css::prepare( $css );
-$sheet    = ( new DXAI_UI\Compiler\Tailwind_Purger() )->compile(
+$prepared = DX_UI\Compiler\Design_Css::prepare( $css );
+$sheet    = ( new DX_UI\Compiler\Tailwind_Purger() )->compile(
 	'<div class="' . implode( ' ', array_keys( $classes ) ) . '"></div>',
 	$prepared,
 	0,
@@ -305,7 +305,7 @@ foreach ( $lost as $line ) {
  * `Structure_Repository` did not pass it — three separate hops, each of which
  * looked fine on its own. So take the real path from a real archive.
  */
-$doc = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip(
+$doc = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip(
 	array(
 		'name'     => basename( $zip_path ),
 		'tmp_name' => $zip_path,
@@ -319,7 +319,7 @@ if ( is_wp_error( $doc ) ) {
 	$wiring[] = 'connector refused the fixture: ' . $doc->get_error_message();
 	$compiled = array();
 } else {
-	$compiled = ( new DXAI_UI\Compiler\Source_Compiler() )->compile( $doc );
+	$compiled = ( new DX_UI\Compiler\Source_Compiler() )->compile( $doc );
 	if ( (string) ( $compiled['tailwind_config'] ?? '' ) === '' ) {
 		$wiring[] = 'the compiler result carries no tailwind_config';
 	}
@@ -340,7 +340,7 @@ if ( $compiled !== array() ) {
 	foreach ( $compiled['structures'] ?? array() as $structure ) {
 		$markup .= (string) ( $structure['markup'] ?? $structure['gutenberg_markup'] ?? '' ) . "\n";
 	}
-	$page_sheet = ( new DXAI_UI\Compiler\Tailwind_Purger() )->compile(
+	$page_sheet = ( new DX_UI\Compiler\Tailwind_Purger() )->compile(
 		$markup,
 		(string) ( $compiled['custom_css'] ?? '' ),
 		0,

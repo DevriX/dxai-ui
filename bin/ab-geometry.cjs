@@ -17,7 +17,7 @@
  *   node bin/ab-geometry.cjs diff <a.json> <b.json> [--floor <noise.json>] [--json <out>]
  *   node bin/ab-geometry.cjs noise <url> <out.json> [--widths 1280,768,390]
  *
- * Common options: --root <selector> (default .dxai-ui), --chrome <path>,
+ * Common options: --root <selector> (default .dx-ui), --chrome <path>,
  * --show <n> rows of examples per width (default 8), --live-clock to leave
  * infinite animations running instead of pausing them at t=0 (see snapshot()).
  *
@@ -49,7 +49,7 @@
  * same class-strip rule and the same core-wrapper pass-through, so an inserted
  * wrapper is reported as a wrapper and its children still pair.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 'use strict';
@@ -68,7 +68,7 @@ const repo = path.resolve(__dirname, '..');
  * misses the other is printed rather than silently producing keys that no
  * longer agree between the two instruments.
  */
-const WP = /^(wp-block|is-layout|has-|is-style|dxai-|alignfull|alignwide|entry-|wp-image-|wp-elements|is-armed|is-in|lucide|wp-element-|wp-container-|wp-states-|wp-custom-css-|wp-settings-|wp-duotone-|wp-lightbox-|is-vertical|is-horizontal|is-nowrap|is-content-justification-|is-position-|items-justified-|is-responsive|open-on-|open-always|hidden-by-default|is-menu-open|aligncenter|alignleft|alignright|alignnone)|^scp[0-9a-z]+$|^sc-host$/;
+const WP = /^(wp-block|is-layout|has-|is-style|dxui-|alignfull|alignwide|entry-|wp-image-|wp-elements|is-armed|is-in|lucide|wp-element-|wp-container-|wp-states-|wp-custom-css-|wp-settings-|wp-duotone-|wp-lightbox-|is-vertical|is-horizontal|is-nowrap|is-content-justification-|is-position-|items-justified-|is-responsive|open-on-|open-always|hidden-by-default|is-menu-open|aligncenter|alignleft|alignright|alignnone)|^scp[0-9a-z]+$|^sc-host$/;
 const CORE_WRAPPERS = [
 	'wp-block-buttons',
 	'wp-block-button',
@@ -95,13 +95,13 @@ function parseArgs(argv) {
 const args = parseArgs(process.argv.slice(2));
 const [command, first, second] = args._;
 const chrome = args.chrome || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const rootSelector = typeof args.root === 'string' ? args.root : '.dxai-ui';
+const rootSelector = typeof args.root === 'string' ? args.root : '.dx-ui';
 const show = parseInt(args.show, 10) || 8;
 const widths = String(args.widths || '1280,768,390').split(',')
 	.map((w) => parseInt(w.trim(), 10)).filter((w) => w > 0);
 
 function usage() {
-	console.error('usage: node bin/ab-geometry.cjs capture <url> <out.json> [--widths 1280,768,390] [--root .dxai-ui]');
+	console.error('usage: node bin/ab-geometry.cjs capture <url> <out.json> [--widths 1280,768,390] [--root .dx-ui]');
 	console.error('       node bin/ab-geometry.cjs diff <a.json> <b.json> [--floor <noise.json>] [--json <out.json>]');
 	console.error('       node bin/ab-geometry.cjs noise <url> <out.json> [--widths 1280,768,390]');
 	process.exit(2);
@@ -150,7 +150,7 @@ function collect(rootSel, wpSource, wrapperNames) {
 	 * mints it per instance (`modal-1`, `modal-1-content`), and a second
 	 * navigation block above the first would renumber it.
 	 */
-	const GENERATED = /^(?:radix-|headlessui-|react-aria|:r[0-9a-z]+:|«r|_[Rr]_[0-9a-z]*_|dxai-id-|dxai-rx-|modal-\d)/;
+	const GENERATED = /^(?:radix-|headlessui-|react-aria|:r[0-9a-z]+:|«r|_[Rr]_[0-9a-z]*_|dxui-id-|dxui-rx-|modal-\d)/;
 	const sig = (el) => {
 		if (el.id && !GENERATED.test(el.id)) { return '#' + el.id; }
 		if (el.tagName === 'IMG') {

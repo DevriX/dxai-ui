@@ -38,7 +38,7 @@
  *              nothing about the next one
  *   --only     narrow --surface to a regex, e.g. "^mask-" — much faster loop
  *   --explain  print every entry both sides recorded for one class
- *   --scope    the prefix our side applies (default .dxai-ui.dxai-ui--0)
+ *   --scope    the prefix our side applies (default .dx-ui.dx-ui--0)
  *   --show     how many differing classes to print        (default 25)
  *   --wp       WordPress root                     (required with --zip)
  *   --php      PHP binary                                 (default: php)
@@ -70,7 +70,7 @@ if (!args.dir) {
 }
 
 const dir = path.resolve(args.dir);
-const scope = String(args.scope || '.dxai-ui.dxai-ui--0');
+const scope = String(args.scope || '.dx-ui.dx-ui--0');
 const show = parseInt(args.show, 10) || 25;
 
 /** Run the PHP emitter, optionally over a given class list. */
@@ -531,11 +531,11 @@ function index(css, prefix) {
 
 			/*
 			 * Our own runtime, not a utility. Motion_Runtime keys the reveal
-			 * animation on `[class*='dxai-on-']`, which no Tailwind output can
+			 * animation on `[class*='dxui-on-']`, which no Tailwind output can
 			 * contain, so upstream has nothing to compare and the extra line
 			 * reported `hidden` as divergent on four designs.
 			 */
-			if (shape.includes('dxai-')) { continue; }
+			if (shape.includes('dxui-')) { continue; }
 
 			if (!byClass.has(owner.name)) { byClass.set(owner.name, []); }
 			byClass.get(owner.name).push({ shape, props, condition: when });

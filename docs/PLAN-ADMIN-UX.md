@@ -58,7 +58,7 @@ DX
 │       Blocks           native pass (Native blocks) · Interactivity (състояние на региона)
 │       Words            copy prompt / Write with AI
 │       Speed            листът на темата (trim), шрифтовете като файлове
-│       Transfer         export (.dxai.zip) · import package
+│       Transfer         export (.dxui.zip) · import package
 │       History          conversion snapshots · restore · revisions
 ├── Convert              съветникът (3 стъпки, т. 5.3)
 ├── Site                 шаблонът на сайта: тема, хедър (Menus), футър (Widgets), лого, шрифтове, DX Base
@@ -104,7 +104,7 @@ DataViews таблица с филтри (страница, дата), прег�
 
 ## 6. Визуална система
 
-- **Токените и компонентите на WordPress Design System** (skill `wpds`): цветове на wp-admin и на избраната цветова схема на профила; `prefers-color-scheme` не се ползва (wp-admin е светъл); собствените `--dxai-*` токени (19 днес) се свеждат до семантични псевдоними на WPDS токени за състоянието (`--dxai-ok/warn/danger`) и изчезват от оформлението.
+- **Токените и компонентите на WordPress Design System** (skill `wpds`): цветове на wp-admin и на избраната цветова схема на профила; `prefers-color-scheme` не се ползва (wp-admin е светъл); собствените `--dxui-*` токени (19 днес) се свеждат до семантични псевдоними на WPDS токени за състоянието (`--dxui-ok/warn/danger`) и изчезват от оформлението.
 - **Типография:** системният шрифт на wp-admin; без display/mono шрифтове за числа; скала: заглавие на екрана, заглавие на карта, текст, помощен текст; `tabular-nums` за колони с числа.
 - **Компоненти:** `Card`/`CardHeader`/`CardBody`, `TabPanel`, `Button` (primary / secondary / tertiary / link, destructive), `Notice` + `SnackbarList` (`@wordpress/notices`), `Modal` за потвърждения, `Panel`/`PanelBody` за сгъваемите секции, `DataViews` за списъците, `ProgressBar`, `Spinner` само в бутони, `@wordpress/icons`. Собственият CSS пада от ~3 300 реда към оформление на страниците и нищо друго (цел: под 800).
 - **Цвят само за състояние:** зелено/жълто/червено за чипове и notices; акцентът на WordPress за основното действие; всичко друго неутрално.
@@ -123,7 +123,7 @@ DataViews таблица с филтри (страница, дата), прег�
 
 ## 8. Технически подход
 
-- **Shell:** `Chrome.js` отпада; `App.js` рендерира екрана по `dxaiUI.screen` + hash маршрут (`#/design/56/look`) в един wp-admin екран „Designs“; заглавията идват от WordPress (`add_submenu_page`), breadcrumb-ът — от маршрута.
+- **Shell:** `Chrome.js` отпада; `App.js` рендерира екрана по `dxUI.screen` + hash маршрут (`#/design/56/look`) в един wp-admin екран „Designs“; заглавията идват от WordPress (`add_submenu_page`), breadcrumb-ът — от маршрута.
 - **Данни:** `@wordpress/data` store за дизайните (списък + документ + статуси), `apiFetch` както днес; `@wordpress/dataviews` (WP ≥ 6.6; prodtest2 е 7.1) за Designs и Entries. **Решение в U1:** DataViews не е скрипт на ядрото (WordPress 7.1 няма `wp-dataviews`; `dependency-extraction-webpack-plugin` го пакетира в бандъла), а npm пакетът (20.0) иска `@wordpress/components` 42 и `@wordpress/element` 9 — по-нови от това, което сайтът дава на runtime (components се взима от `wp.components` на сайта), така че пакетиран в плъгина ще зависи от версията на WordPress на всеки сайт на екипа. Списъкът на Designs е WordPress list table (`wp-list-table`) с търсене, два филтъра и страници на клиента; смяна към DataViews е подмяна на един компонент (`DesignsScreen`), когато ядрото го носи като скрипт или екипът реши да пакетира фиксирана версия. Въпрос 5 от т. 11 остава.
 - **REST:** същите маршрути; `GET /design` връща за всеки дизайн и `status` (imported_at, compiler, native: applied/none, colours: follow/keep, fonts: theme/own, interactivity: on/off, exported_at, pages, menu_pages) — обобщение на днешните `/native-blocks`, `/theme-colors`, `/speed`, `/template` отговори, пресметнато на сървъра (`Design\Document_Store` + `Design_Attach`); `GET /design/{id}/next` — предложенията „what's next“ (правилата в PHP, тествани). Нови маршрути влизат в таблицата на `verify-rest-routes`.
 - **Компонентите за действия** (9) се запазват; получават `design` от контекст (React context), губят селектора и заглавието, изход в същия REST.

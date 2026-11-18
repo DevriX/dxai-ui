@@ -12,12 +12,12 @@
  *
  * Makes four pages and deletes them, also when a check dies half-way. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Network\Page_Quality;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Network\Page_Quality;
+use DX_UI\Structures\Page_Scope;
 
 $fail   = 0;
 $pass   = 0;

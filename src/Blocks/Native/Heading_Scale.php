@@ -2,12 +2,12 @@
 /**
  * The same style for the same kind of heading across a design's pages.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
 /**
  * Every title of a section (an H2) has the same size, weight, line height, spacing of its letters and font, on every page of the
@@ -36,14 +36,14 @@ final class Heading_Scale extends Style_Harmony {
 	private const TYPE_TOKEN = '/^(?:text-(?:xs|sm|base|lg|xl|[2-9]xl)|text-\d+(?:-\d+)?|text-\[[^\]]*(?:px|rem|em|vw|vh|%|clamp|calc)[^\]]*\]|fw-\d+|font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|lh-[\w-]+|leading-[\w.\[\]%-]+|ls-[\w-]+|tracking-[\w.\[\]-]+|uppercase|lowercase|capitalize|normal-case|italic|not-italic|font-(?:sans|serif|mono|display|heading|body)|text-balance|text-pretty|has-[\w-]+-font-size)$/';
 
 	/** What it is not: spacing, layout, colour, effects and the classes the system writes. Anything else is a style class of the design's own. */
-	private const OTHER_TOKEN = '/^(?:-?(?:m|p)[trblxyse]?-\S+|space-[xy]-\S+|gap(?:-[xy])?-\S+|(?:w|h|min-w|min-h|max-w|max-h|size|basis|grow|shrink|flex|order|col|row|grid|aspect|columns|inset|top|right|bottom|left|start|end|z|overflow|overscroll|object|float|clear|isolate)(?:-\S+)?|items-\S+|justify-\S+|content-\S+|self-\S+|place-\S+|d-\S+|block|inline|inline-block|inline-flex|flex-inline|hidden|contents|table|static|fixed|absolute|relative|sticky|(?:bg|border|rounded|shadow|ring|outline|opacity|blur|backdrop|fill|stroke|from|via|to|accent|caret|decoration|transition|duration|delay|ease|animate|transform|translate|rotate|scale|skew|origin|cursor|select|pointer-events|list|align|whitespace|break|truncate|underline|no-underline|line-through|divide|sr-only|not-sr-only|will-change|mix-blend|bg-blend)(?:-\S+)?|text-\S+|reveal|is-\S+|has-\S+|wp-\S+|align\S*|dxai-\S+|dxs-\S+|sc-\S+|mobile-\S+|desktop-\S+|container|lazy|loaded)$/';
+	private const OTHER_TOKEN = '/^(?:-?(?:m|p)[trblxyse]?-\S+|space-[xy]-\S+|gap(?:-[xy])?-\S+|(?:w|h|min-w|min-h|max-w|max-h|size|basis|grow|shrink|flex|order|col|row|grid|aspect|columns|inset|top|right|bottom|left|start|end|z|overflow|overscroll|object|float|clear|isolate)(?:-\S+)?|items-\S+|justify-\S+|content-\S+|self-\S+|place-\S+|d-\S+|block|inline|inline-block|inline-flex|flex-inline|hidden|contents|table|static|fixed|absolute|relative|sticky|(?:bg|border|rounded|shadow|ring|outline|opacity|blur|backdrop|fill|stroke|from|via|to|accent|caret|decoration|transition|duration|delay|ease|animate|transform|translate|rotate|scale|skew|origin|cursor|select|pointer-events|list|align|whitespace|break|truncate|underline|no-underline|line-through|divide|sr-only|not-sr-only|will-change|mix-blend|bg-blend)(?:-\S+)?|text-\S+|reveal|is-\S+|has-\S+|wp-\S+|align\S*|dxui-\S+|dxs-\S+|sc-\S+|mobile-\S+|desktop-\S+|container|lazy|loaded)$/';
 
 	public function id(): string {
 		return 'heading_scale';
 	}
 
 	public function label(): string {
-		return __( 'The same style for the same kind of heading', 'dxai-ui' );
+		return __( 'The same style for the same kind of heading', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -82,7 +82,7 @@ final class Heading_Scale extends Style_Harmony {
 				$class = implode( ' ', array_merge( $sig['rest_class'], $dom['mine_class'] ) );
 				$css   = implode( ';', array_merge( $sig['rest_css'], $dom['mine_css'] ) );
 				$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-				if ( $class === trim( (string) ( $attrs['className'] ?? '' ) ) && $css === trim( (string) ( $attrs['dxaiCss'] ?? '' ) ) ) {
+				if ( $class === trim( (string) ( $attrs['className'] ?? '' ) ) && $css === trim( (string) ( $attrs['dxuiCss'] ?? '' ) ) ) {
 					return null;
 				}
 				$new = self::restyle( $block, $class, $css );
@@ -172,7 +172,7 @@ final class Heading_Scale extends Style_Harmony {
 			return null;
 		}
 		$class = self::split_class( (string) ( $attrs['className'] ?? '' ), static fn( string $t ): bool => self::is_type( $t ) );
-		$css   = self::split_css( (string) ( $attrs['dxaiCss'] ?? '' ), static fn( string $p ): bool => in_array( $p, self::TYPE_PROPS, true ) );
+		$css   = self::split_css( (string) ( $attrs['dxuiCss'] ?? '' ), static fn( string $p ): bool => in_array( $p, self::TYPE_PROPS, true ) );
 		$sizes = array();
 		foreach ( $class['mine'] as $token ) {
 			$size = self::class_size( $token );
@@ -180,7 +180,7 @@ final class Heading_Scale extends Style_Harmony {
 				$sizes[] = $size;
 			}
 		}
-		foreach ( \DXAI_UI\Compiler\Utility_Classes::declarations( implode( ';', $css['mine'] ) ) as $d ) {
+		foreach ( \DX_UI\Compiler\Utility_Classes::declarations( implode( ';', $css['mine'] ) ) as $d ) {
 			if ( $d['prop'] === 'font-size' ) {
 				$size = self::px( $d['value'] );
 				if ( $size !== null ) {

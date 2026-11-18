@@ -2,12 +2,12 @@
 /**
  * REST bootstrap.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
 final class Rest_Registrar {
 
@@ -17,7 +17,7 @@ final class Rest_Registrar {
 			static function (): void {
 				// While the plugin is deactivated and only kept rendering, the forms
 				// on converted pages still submit; nothing else is served.
-				if ( \DXAI_UI\Support\Runtime::render_only() ) {
+				if ( \DX_UI\Support\Runtime::render_only() ) {
 					( new Form_Controller() )->register_routes();
 					return;
 				}

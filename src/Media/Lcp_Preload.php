@@ -2,22 +2,22 @@
 /**
  * The picture a design's page opens on, asked for first.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Seo\Page_Meta;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Seo\Page_Meta;
 
 /**
  * A design's hero is often a section with a photograph behind it, written as CSS (`background-image` in the block's own CSS, a
  * cover, a group's background). A browser finds such a picture only once it has read the stylesheet that names it, and on a phone
  * on slow 4G that is the page's Largest Contentful Paint: H2O Away's hero at 5.1–9.6 s (docs/PLAN-PERFECT-PAGES.md, T5.1). The page
  * says so in its head: `<link rel="preload" as="image" fetchpriority="high">` for the picture behind its first section, so the
- * browser asks for it with the HTML. Only on a design's page, only the first section's picture; `dxai_ui_lcp_preload` changes the
+ * browser asks for it with the HTML. Only on a design's page, only the first section's picture; `dx_ui_lcp_preload` changes the
  * address or removes it with ''.
  */
 final class Lcp_Preload {
@@ -27,7 +27,7 @@ final class Lcp_Preload {
 	}
 
 	/** Post meta: the pictures read from the page's stylesheet, with the sheet they were read from. */
-	public const SHEET_META = '_dxai_ui_lcp_sheet';
+	public const SHEET_META = '_dx_ui_lcp_sheet';
 
 	/** The preload, on a design's page that opens on a picture. */
 	public static function print_preload(): void {
@@ -51,7 +51,7 @@ final class Lcp_Preload {
 		 *                    the one of the widest screen).
 		 * @param int    $id  The page.
 		 */
-		$filtered = (string) apply_filters( 'dxai_ui_lcp_preload', $url !== '' ? $url : $base, $id );
+		$filtered = (string) apply_filters( 'dx_ui_lcp_preload', $url !== '' ? $url : $base, $id );
 		if ( $filtered === '' ) {
 			return;
 		}
@@ -76,7 +76,7 @@ final class Lcp_Preload {
 	 * @return array<int, array{url: string, media: string}>
 	 */
 	public static function sheet_pictures( int $id, string $content ): array {
-		$sheet = \DXAI_UI\Support\Upload_Paths::for_meta( $id, '_dxai_ui_css_url' );
+		$sheet = \DX_UI\Support\Upload_Paths::for_meta( $id, '_dx_ui_css_url' );
 		$path  = $sheet['path'];
 		if ( $path === '' || ! is_readable( $path ) ) {
 			return array();
@@ -143,7 +143,7 @@ final class Lcp_Preload {
 		}
 		// Max width of the range (0 = no condition) => the picture there ('' = none).
 		$by = array();
-		foreach ( \DXAI_UI\Compiler\Page_Css_Trim::rules( $css ) as $rule ) {
+		foreach ( \DX_UI\Compiler\Page_Css_Trim::rules( $css ) as $rule ) {
 			if ( preg_match( '/background(?:-image)?\s*:([^;]*)/i', $rule['body'], $bg ) !== 1 || ! self::names_section( $rule['selector'], $mine, $tell, $own['id'] ) ) {
 				continue;
 			}
@@ -260,7 +260,7 @@ final class Lcp_Preload {
 				)
 			);
 			$first = $real[0] ?? null;
-			if ( ! is_array( $first ) || ! in_array( (string) $first['blockName'], array( 'core/group', 'dxai-ui/box' ), true ) ) {
+			if ( ! is_array( $first ) || ! in_array( (string) $first['blockName'], array( 'core/group', 'dx-ui/box' ), true ) ) {
 				return $real;
 			}
 			$kids = array_values( array_filter( (array) ( $first['innerBlocks'] ?? array() ), static fn( $b ) => is_array( $b ) && ! empty( $b['blockName'] ) ) );
@@ -279,7 +279,7 @@ final class Lcp_Preload {
 	/** @param array<string, mixed> $block */
 	private static function picture_in( array $block, int $depth ): string {
 		$attrs = (array) ( $block['attrs'] ?? array() );
-		if ( preg_match( '/background(?:-image)?\s*:[^;]*url\(\s*[\'"]?([^\'")]+)[\'"]?\s*\)/i', (string) ( $attrs['dxaiCss'] ?? '' ), $m ) === 1 ) {
+		if ( preg_match( '/background(?:-image)?\s*:[^;]*url\(\s*[\'"]?([^\'")]+)[\'"]?\s*\)/i', (string) ( $attrs['dxuiCss'] ?? '' ), $m ) === 1 ) {
 			return trim( $m[1] );
 		}
 		if ( ( $block['blockName'] ?? '' ) === 'core/cover' && ! empty( $attrs['url'] ) && ( $attrs['backgroundType'] ?? 'image' ) === 'image' ) {

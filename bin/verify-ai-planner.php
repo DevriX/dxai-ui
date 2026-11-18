@@ -1,29 +1,29 @@
 <?php
 /**
  * The optional AI steps of the pages — the planner of a page's sections, the notes on a page, what they cost — against an engine
- * made for the purpose. Nothing here asks a provider: the engine is a stand-in given through the `dxai_ui_copy_engine` filter,
+ * made for the purpose. Nothing here asks a provider: the engine is a stand-in given through the `dx_ui_copy_engine` filter,
  * the same way the copy writer is tested, and a check at the start refuses to go on if another engine would answer.
  *
  *   bash bin/wp-php.sh bin/verify-ai-planner.php        (or: wp eval-file bin/verify-ai-planner.php --user=1)
  *
  * Makes a Home and the pages made for it and removes them again, and puts back the prices it set. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Pages\Ai_Budget;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Page_Critic;
-use DXAI_UI\Pages\Page_Planner;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Pages\Ai_Budget;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Page_Critic;
+use DX_UI\Pages\Page_Planner;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
 
 // These checks are of the pages made in the Home's own look (the library where the Home has nothing): the usual run, where the library
 // holds the team's layouts, is checked by verify-team-pages.php and verify-block-library.php.
-add_filter( 'dxai_ui_team_library', static fn() => 'fill' );
+add_filter( 'dx_ui_team_library', static fn() => 'fill' );
 
 $fail   = 0;
 $pass   = 0;
@@ -38,8 +38,8 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 };
 
 /** An engine that answers what it is told to and counts what it is asked. */
-if ( ! class_exists( 'Dxai_Mock_Engine' ) ) {
-	final class Dxai_Mock_Engine implements LLM_Provider_Interface {
+if ( ! class_exists( 'Dxui_Mock_Engine' ) ) {
+	final class Dxui_Mock_Engine implements LLM_Provider_Interface {
 		/** @var array<int, array{system:string, user:string}> */
 		public static array $calls = array();
 		/** @var mixed A string, a WP_Error, or a callable( string $user ): string|WP_Error. */
@@ -65,15 +65,15 @@ if ( ! class_exists( 'Dxai_Mock_Engine' ) ) {
 		}
 	}
 }
-$engine = new Dxai_Mock_Engine();
-add_filter( 'dxai_ui_copy_engine', static fn() => $engine );
+$engine = new Dxui_Mock_Engine();
+add_filter( 'dx_ui_copy_engine', static fn() => $engine );
 $expect( 'the engine that answers is the stand-in (nothing here can ask a provider)', Copy_Writer::engine() === $engine );
 if ( Copy_Writer::engine() !== $engine ) {
 	exit( 1 );
 }
 $set = static function ( $reply ) use ( &$engine ): void {
-	Dxai_Mock_Engine::$calls = array();
-	Dxai_Mock_Engine::$reply = $reply;
+	Dxui_Mock_Engine::$calls = array();
+	Dxui_Mock_Engine::$reply = $reply;
 };
 
 $heading = static fn( string $t, int $l = 2 ): string => '<!-- wp:heading {"level":' . $l . '} --><h' . $l . ' class="wp-block-heading">' . $t . '</h' . $l . '><!-- /wp:heading -->';
@@ -113,8 +113,8 @@ if ( ! is_int( $home_id ) || $home_id < 1 ) {
 	exit( 1 );
 }
 update_post_meta( $home_id, Page_Scope::META, $home_id );
-update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home_id, '_dxai_ui_css_url', 'dxai-ui/fixture-ai.css' );
+update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home_id, '_dx_ui_css_url', 'dx-ui/fixture-ai.css' );
 $track = static function ( $out ) use ( &$made ): array {
 	foreach ( is_wp_error( $out ) ? array() : (array) $out['pages'] as $p ) {
 		$made[] = (int) $p['id'];
@@ -188,7 +188,7 @@ echo "\nAsking\n";
 $budget = new Ai_Budget( 100000 );
 $set( wp_json_encode( $ok( array( array( 'role' => 'hero', 'home' => 1 ), array( 'role' => 'cards', 'home' => 2 ), array( 'role' => 'cta', 'home' => 6 ) ) ) ) );
 $r = Page_Planner::run( $engine, $ctx, $budget );
-$expect( 'one request, and a plan', count( Dxai_Mock_Engine::$calls ) === 1 && $r['plan'] !== null && $r['requested'] && $r['reason'] === '', json_encode( $r ) );
+$expect( 'one request, and a plan', count( Dxui_Mock_Engine::$calls ) === 1 && $r['plan'] !== null && $r['requested'] && $r['reason'] === '', json_encode( $r ) );
 $expect( 'and the run says what it spent', $budget->spent()['requests'] === 1 && $budget->spent()['tokens'] > 0 );
 $set( 'I would start with the hero and then the cards.' );
 $r = Page_Planner::run( $engine, $ctx, $budget );
@@ -204,7 +204,7 @@ $expect( 'an answer that breaks a rule is dropped, with the rule', $r['plan'] ==
 $set( wp_json_encode( $ok( array( array( 'role' => 'hero', 'home' => 1 ), array( 'role' => 'cards', 'home' => 2 ), array( 'role' => 'cta', 'home' => 6 ) ) ) ) );
 $small = new Ai_Budget( 50 );
 $r     = Page_Planner::run( $engine, $ctx, $small );
-$expect( 'a run over its ceiling asks nothing', Dxai_Mock_Engine::$calls === array() && $r['plan'] === null && ! $r['requested'] && str_contains( $r['reason'], 'ceiling' ), json_encode( $r ) );
+$expect( 'a run over its ceiling asks nothing', Dxui_Mock_Engine::$calls === array() && $r['plan'] === null && ! $r['requested'] && str_contains( $r['reason'], 'ceiling' ), json_encode( $r ) );
 
 echo "\nThe pages made with a plan\n";
 $services = array(
@@ -222,7 +222,7 @@ $set(
 );
 $none = Team_Pages::build( $home_id, $services );
 $track( $none );
-$expect( 'without asking for an AI, none is asked', Dxai_Mock_Engine::$calls === array() && ! is_wp_error( $none ) && $none['ai']['asked'] === false && $none['ai']['spent'] === null );
+$expect( 'without asking for an AI, none is asked', Dxui_Mock_Engine::$calls === array() && ! is_wp_error( $none ) && $none['ai']['asked'] === false && $none['ai']['spent'] === null );
 $usual_water = (string) get_post_field( 'post_content', (int) ( $none['pages'][0]['id'] ?? 0 ) );
 $set(
 	static function ( string $user ) use ( $ok ) {
@@ -238,7 +238,7 @@ $by  = array();
 foreach ( $pg as $p ) {
 	$by[ $p['title'] ] = $p;
 }
-$expect( 'asked to, one request for each page, no more', ! is_wp_error( $out ) && count( Dxai_Mock_Engine::$calls ) === 3 && $out['ai']['spent']['requests'] === 3, (string) count( Dxai_Mock_Engine::$calls ) );
+$expect( 'asked to, one request for each page, no more', ! is_wp_error( $out ) && count( Dxui_Mock_Engine::$calls ) === 3 && $out['ai']['spent']['requests'] === 3, (string) count( Dxui_Mock_Engine::$calls ) );
 $expect( 'two plans were used and one was not (it broke a rule): the summary says so', $out['ai']['accepted'] === 2 && $out['ai']['rejected'] === 1 && $out['ai']['skipped'] === 0, json_encode( $out['ai'] ) );
 $expect( 'the log says why the plan was not used, and that the usual one was', (bool) array_filter( $out['log'], static fn( $l ) => str_contains( $l, 'Fire Damage: the AI plan was not used' ) && str_contains( $l, 'cannot play' ) && str_contains( $l, 'the usual plan' ) ) );
 $expect( 'the log says what the AI planned', (bool) array_filter( $out['log'], static fn( $l ) => str_contains( $l, 'Water Damage: the AI planned the sections (a short page' ) ) );
@@ -248,7 +248,7 @@ $expect( 'the list is the made one: it links the other services', str_contains( 
 $expect( 'the page says it was planned by an AI, and the one that was not, why', str_contains( (string) get_post_meta( (int) $by['Water Damage']['id'], Team_Pages::AI_META, true ), '"plan":"ai"' ) && str_contains( (string) get_post_meta( (int) $by['Fire Damage']['id'], Team_Pages::AI_META, true ), 'cannot play' ) && ( $by['Water Damage']['planned'] ?? '' ) === 'ai' && ( $by['Fire Damage']['planned'] ?? '' ) === 'usual' );
 $expect( 'a page whose plan was not used is the usual page', $titles_of( (int) $by['Fire Damage']['id'] ) !== array() && count( $titles_of( (int) $by['Fire Damage']['id'] ) ) >= 3 );
 $expect( 'the page is valid blocks and the Home\'s look all the same (the quality measure reads it clean)', ( function () use ( $home_id ) {
-	$q = \DXAI_UI\Pages\Team_Quality::measure( $home_id );
+	$q = \DX_UI\Pages\Team_Quality::measure( $home_id );
 	return ( $q['gates']['G1'] ?? array() ) === array() && ( $q['gates']['G7'] ?? array() ) === array() && ( $q['gates']['G9'] ?? array() ) === array();
 } )() );
 $again = Team_Pages::build( $home_id, $services, true );
@@ -262,13 +262,13 @@ $expect( 'an engine that fails costs the pages nothing: they are made the usual 
 $set( wp_json_encode( $ok( array( array( 'role' => 'hero', 'home' => 1 ), array( 'role' => 'cards', 'home' => 2 ), array( 'role' => 'cta', 'home' => 6 ) ) ) ) );
 $cap = Team_Pages::build( $home_id, $services, true, array( 'ai' => true, 'cap' => 10 ) );
 $track( $cap );
-$expect( 'a ceiling too low for the requests stops them: none is made, every page is the usual one', Dxai_Mock_Engine::$calls === array() && $cap['ai']['skipped'] === 3 && count( $cap['pages'] ) === 3 );
+$expect( 'a ceiling too low for the requests stops them: none is made, every page is the usual one', Dxui_Mock_Engine::$calls === array() && $cap['ai']['skipped'] === 3 && count( $cap['pages'] ) === 3 );
 
 echo "\nWhat it would cost, before it is asked\n";
 $set( '' );
 Ai_Budget::save_prices( 3.0, 15.0 );
 $est = Team_Pages::estimate( $home_id, $services );
-$expect( 'a request for each page, worked out from the requests that would be made, and nothing sent', ! is_wp_error( $est ) && $est['requests'] === 3 && $est['pages'] === 3 && $est['input'] > 600 && $est['output'] === 3 * Ai_Budget::PLAN_OUT && Dxai_Mock_Engine::$calls === array(), json_encode( $est ) );
+$expect( 'a request for each page, worked out from the requests that would be made, and nothing sent', ! is_wp_error( $est ) && $est['requests'] === 3 && $est['pages'] === 3 && $est['input'] > 600 && $est['output'] === 3 * Ai_Budget::PLAN_OUT && Dxui_Mock_Engine::$calls === array(), json_encode( $est ) );
 $expect( 'with the cost, since the price was typed in; and the engine that would answer', is_float( $est['cost'] ) && $est['cost'] > 0 && $est['engine'] === 'Mock engine' && $est['within'] === true );
 Ai_Budget::save_prices( 0, 0 );
 $expect( 'without the price, in tokens alone', Team_Pages::estimate( $home_id, $services )['cost'] === null );
@@ -319,19 +319,19 @@ clean_post_cache( $page );
 $set( wp_json_encode( array( 'notes' => array( 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight' ) ) ) );
 $cb2 = new Ai_Budget( 100000 );
 $an  = Page_Critic::ask( $engine, $page, array(), $cb2 );
-$expect( 'the AI\'s notes are taken: at most six, one request', is_array( $an ) && count( $an ) === 6 && count( Dxai_Mock_Engine::$calls ) === 1, json_encode( $an ) );
-$expect( 'the request holds the outline of the page and the checks', str_contains( Dxai_Mock_Engine::$calls[0]['user'], '"role":"hero"' ) && str_contains( Dxai_Mock_Engine::$calls[0]['user'], 'Do not rewrite anything' ) );
+$expect( 'the AI\'s notes are taken: at most six, one request', is_array( $an ) && count( $an ) === 6 && count( Dxui_Mock_Engine::$calls ) === 1, json_encode( $an ) );
+$expect( 'the request holds the outline of the page and the checks', str_contains( Dxui_Mock_Engine::$calls[0]['user'], '"role":"hero"' ) && str_contains( Dxui_Mock_Engine::$calls[0]['user'], 'Do not rewrite anything' ) );
 $set( 'no idea' );
 $expect( 'an answer that is not notes is an error, and writes nothing', is_wp_error( Page_Critic::ask( $engine, $page, array(), new Ai_Budget( 100000 ) ) ) && (string) get_post_field( 'post_content', $page ) === $orig );
 $set( wp_json_encode( array( 'notes' => array( 'x' ) ) ) );
-$expect( 'over the ceiling nothing is asked', is_wp_error( Page_Critic::ask( $engine, $page, array(), new Ai_Budget( 10 ) ) ) && Dxai_Mock_Engine::$calls === array() );
+$expect( 'over the ceiling nothing is asked', is_wp_error( Page_Critic::ask( $engine, $page, array(), new Ai_Budget( 10 ) ) ) && Dxui_Mock_Engine::$calls === array() );
 $ce = Page_Critic::estimate( $page, array() );
 $expect( 'what it would cost is known before asking', $ce['requests'] === 1 && $ce['input'] > 100 && $ce['output'] === Ai_Budget::NOTES_OUT );
 
 echo "\nOver REST\n";
 wp_set_current_user( 1 );
 $post = static function ( string $route, array $params ): WP_REST_Response {
-	$r = new WP_REST_Request( 'POST', '/dxai-ui/v1/' . $route );
+	$r = new WP_REST_Request( 'POST', '/dx-ui/v1/' . $route );
 	foreach ( $params as $k => $v ) {
 		$r->set_param( $k, $v );
 	}
@@ -341,20 +341,20 @@ $post = static function ( string $route, array $params ): WP_REST_Response {
 $set( '' );
 $res = $post( 'team-pages', array( 'action' => 'estimate', 'design' => $home_id, 'wanted' => $services, 'price_in' => 3, 'price_out' => 15 ) );
 $d   = $res->get_data();
-$expect( 'the estimate is asked for over REST: the price is kept, the cost comes back, and nothing is sent', $res->get_status() === 200 && ( $d['estimate']['requests'] ?? 0 ) === 3 && is_float( $d['estimate']['cost'] ?? null ) && ( $d['prices']['in'] ?? 0 ) === 3.0 && Dxai_Mock_Engine::$calls === array(), json_encode( $d ) );
+$expect( 'the estimate is asked for over REST: the price is kept, the cost comes back, and nothing is sent', $res->get_status() === 200 && ( $d['estimate']['requests'] ?? 0 ) === 3 && is_float( $d['estimate']['cost'] ?? null ) && ( $d['prices']['in'] ?? 0 ) === 3.0 && Dxui_Mock_Engine::$calls === array(), json_encode( $d ) );
 Ai_Budget::save_prices( 0, 0 );
 $set( wp_json_encode( $ok( array( array( 'role' => 'hero', 'home' => 1 ), array( 'role' => 'cards', 'home' => 2 ), array( 'role' => 'cta', 'home' => 6 ) ) ) ) );
 $res = $post( 'team-pages', array( 'action' => 'build', 'design' => $home_id, 'wanted' => array( $services[0] ), 'force' => true, 'ai' => true ) );
 $d   = $res->get_data();
 $track( is_array( $d ) && isset( $d['pages'] ) ? $d : array() );
-$expect( 'a build with the AI over REST: planned, and the summary comes back', $res->get_status() === 200 && ( $d['ai']['accepted'] ?? 0 ) === 1 && ( $d['pages'][0]['planned'] ?? '' ) === 'ai' && count( Dxai_Mock_Engine::$calls ) === 1, json_encode( $d['ai'] ?? $d ) );
+$expect( 'a build with the AI over REST: planned, and the summary comes back', $res->get_status() === 200 && ( $d['ai']['accepted'] ?? 0 ) === 1 && ( $d['pages'][0]['planned'] ?? '' ) === 'ai' && count( Dxui_Mock_Engine::$calls ) === 1, json_encode( $d['ai'] ?? $d ) );
 $set( wp_json_encode( array( 'notes' => array( 'Mention the service area in the hero.' ) ) ) );
 $res = $post( 'copy/' . $page, array( 'action' => 'critique' ) );
 $d   = $res->get_data();
-$expect( 'the notes on a page over REST: the free checks and the cost; no AI unless asked', $res->get_status() === 200 && is_array( $d['checks'] ?? null ) && ( $d['estimate']['requests'] ?? 0 ) === 1 && $d['notes'] === null && Dxai_Mock_Engine::$calls === array() );
+$expect( 'the notes on a page over REST: the free checks and the cost; no AI unless asked', $res->get_status() === 200 && is_array( $d['checks'] ?? null ) && ( $d['estimate']['requests'] ?? 0 ) === 1 && $d['notes'] === null && Dxui_Mock_Engine::$calls === array() );
 $res = $post( 'copy/' . $page, array( 'action' => 'critique', 'ai' => true ) );
 $d   = $res->get_data();
-$expect( 'and with the AI asked: its note, one request', $res->get_status() === 200 && ( $d['notes'][0] ?? '' ) === 'Mention the service area in the hero.' && count( Dxai_Mock_Engine::$calls ) === 1 );
+$expect( 'and with the AI asked: its note, one request', $res->get_status() === 200 && ( $d['notes'][0] ?? '' ) === 'Mention the service area in the hero.' && count( Dxui_Mock_Engine::$calls ) === 1 );
 
 $fin();
 

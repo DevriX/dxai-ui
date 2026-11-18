@@ -2,14 +2,14 @@
 /**
  * REST: the imported Home as the site's front page.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Network\Front_Page;
+use DX_UI\Network\Front_Page;
 
 /**
  * GET  /front-page?home=<id>   what the front page is now for that Home (0: before one is saved; Network\Front_Page::state()).
@@ -22,7 +22,7 @@ final class Front_Page_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/front-page',
 			array(
 				array(
@@ -70,7 +70,7 @@ final class Front_Page_Controller {
 	public function show( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = (int) $request->get_param( 'home' );
 		if ( $home !== 0 && get_post_type( $home ) !== 'page' ) {
-			return new \WP_Error( 'dxai_front_home', __( 'There is no such page.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_front_home', __( 'There is no such page.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return rest_ensure_response( Front_Page::state( $home, (string) $request->get_param( 'archive' ) ) );
@@ -81,11 +81,11 @@ final class Front_Page_Controller {
 		if ( $action === 'restore' ) {
 			return Front_Page::restore()
 				? rest_ensure_response( array( 'ok' => true ) )
-				: new \WP_Error( 'dxai_front_restore', __( 'The front page was changed since; it is left as it is.', 'dxai-ui' ), array( 'status' => 409 ) );
+				: new \WP_Error( 'dxui_front_restore', __( 'The front page was changed since; it is left as it is.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 		$home = (int) $request->get_param( 'home' );
 		if ( get_post_type( $home ) !== 'page' || get_post_status( $home ) !== 'publish' ) {
-			return new \WP_Error( 'dxai_front_home', __( 'That page is not a published page.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxui_front_home', __( 'That page is not a published page.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return rest_ensure_response( Front_Page::adopt( $home, $action === 'force' ) );

@@ -2,15 +2,15 @@
 /**
  * The button styles a theme gives core's Button block.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Color_Math;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A DevriX theme styles core/button through block styles — `is-style-primary-button`, `secondary-button`,
@@ -28,7 +28,7 @@ final class Theme_Buttons {
 	/** The block styles that mean a call to action, in the order a design's buttons are matched to them. */
 	public const KNOWN = array( 'primary-button', 'secondary-button', 'link-button', 'small-primary-button' );
 
-	private const OPTION = 'dxai_ui_theme_buttons';
+	private const OPTION = 'dx_ui_theme_buttons';
 
 	/** Theme stylesheets are read up to this size. */
 	private const MAX_BYTES = 6291456;
@@ -72,16 +72,16 @@ final class Theme_Buttons {
 	/** Load the rules on this page. */
 	public static function enqueue(): void {
 		$url = self::url();
-		if ( $url === '' || wp_style_is( 'dxai-ui-theme-buttons', 'enqueued' ) ) {
+		if ( $url === '' || wp_style_is( 'dx-ui-theme-buttons', 'enqueued' ) ) {
 			return;
 		}
 		$path = Upload_Paths::path( self::state()['file'] );
-		wp_enqueue_style( 'dxai-ui-theme-buttons', $url, array(), $path !== '' && is_readable( $path ) ? Upload_Paths::version( $path ) : DXAI_UI_VERSION );
+		wp_enqueue_style( 'dx-ui-theme-buttons', $url, array(), $path !== '' && is_readable( $path ) ? Upload_Paths::version( $path ) : DX_UI_VERSION );
 		// The radius the site's owner chose in Theme Global Settings (when they did: otherwise the rules' own default holds). The theme prints
 		// it with its stylesheet, which is not on a page like this one; it is not in the file above because that is made once for a theme.
 		$radius = Theme_Options::radius_css();
 		if ( $radius !== '' ) {
-			wp_add_inline_style( 'dxai-ui-theme-buttons', $radius );
+			wp_add_inline_style( 'dx-ui-theme-buttons', $radius );
 		}
 	}
 
@@ -198,7 +198,7 @@ final class Theme_Buttons {
 		if ( $styles !== array() && $rules !== '' ) {
 			$file = Upload_Paths::DIR . '/theme/buttons-' . substr( $key, 0, 12 ) . '.css';
 			$out  = Upload_Paths::path( $file );
-			$head = '/* The button styles of ' . wp_get_theme()->get( 'Name' ) . ', for the pages that do not load its stylesheet (DXAI-UI). */' . "\n";
+			$head = '/* The button styles of ' . wp_get_theme()->get( 'Name' ) . ', for the pages that do not load its stylesheet (DX-UI). */' . "\n";
 			if ( $out === '' || ! wp_mkdir_p( dirname( $out ) ) || false === file_put_contents( $out, $head . $rules ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 				$file   = '';
 				$styles = array();

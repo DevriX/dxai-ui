@@ -2,15 +2,15 @@
 /**
  * Text that nearly reads on its backgrounds, in the nearest colour that does.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Color_Usage;
-use DXAI_UI\Support\Color_Math;
+use DX_UI\Compiler\Color_Usage;
+use DX_UI\Support\Color_Math;
 
 /**
  * Lighthouse's accessibility audit asks normal text for 4.5:1 against its background (3:1 for large text). H2O Away's muted grey,
@@ -18,12 +18,12 @@ use DXAI_UI\Support\Color_Math;
  * (docs/PLAN-PERFECT-PAGES.md, T5.5). A text colour that nearly reads on every background it sits on (Color_Usage's pairs, at their
  * values on this request: Theme_Binding::values()) — within NEAR of what it needs everywhere — was meant to read, and is given the
  * nearest colour that does: the same hue and chroma, moved away from the background it reads worst on (darker on a light one,
- * lighter on a dark one) by the least step that reaches the ratio on all of them, at most MAX_STEP of OKLCH lightness. It goes on the token's text channel only (`--dxai-<token>--fg`, which
+ * lighter on a dark one) by the least step that reaches the ratio on all of them, at most MAX_STEP of OKLCH lightness. It goes on the token's text channel only (`--dxui-<token>--fg`, which
  * the design's text, fill and stroke read; Token_Styles::fg_channel()), so its backgrounds and borders keep the design's value. A colour
  * further off is the design's decision and is left as it is. A token whose text the theme binding chose (Theme_Binding::text_values():
  * a theme colour kept readable on the backgrounds it saw) is read in that colour, as the page shows it, and nudged the same way when it
  * nearly reads — Semper Dry's white on the theme's #1a7aca was 4.48:1, Arcus's ink on the theme's orange 4.38:1. The rule comes after
- * the binding's, so its value wins. `dxai_ui_legible_text` turns it off.
+ * the binding's, so its value wins. `dx_ui_legible_text` turns it off.
  */
 final class Legible_Text {
 
@@ -54,7 +54,7 @@ final class Legible_Text {
 		 * @param bool $on   Default true.
 		 * @param int  $home The design's Home.
 		 */
-		if ( ! (bool) apply_filters( 'dxai_ui_legible_text', true, $home ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_legible_text', true, $home ) ) {
 			return '';
 		}
 		$usage = get_post_meta( $home, Color_Usage::META, true );
@@ -68,9 +68,9 @@ final class Legible_Text {
 		if ( ! isset( self::$memo[ $key ] ) ) {
 			$decls = array();
 			foreach ( self::adjust( $values, $pairs, array(), $text ) as $token => $hex ) {
-				$decls[] = '--dxai-' . $token . '--fg:' . $hex;
+				$decls[] = '--dxui-' . $token . '--fg:' . $hex;
 			}
-			self::$memo[ $key ] = $decls === array() ? '' : '.dxai-ui.dxai-ui--' . $home . '{' . implode( ';', $decls ) . '}';
+			self::$memo[ $key ] = $decls === array() ? '' : '.dx-ui.dx-ui--' . $home . '{' . implode( ';', $decls ) . '}';
 		}
 
 		return self::$memo[ $key ];

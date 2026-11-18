@@ -2,12 +2,12 @@
 /**
  * Merge per-chunk LLM generation results.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Generation_Merger {
 
@@ -79,7 +79,7 @@ final class Generation_Merger {
 		$js  = array_values( array_unique( array_filter( $js ) ) );
 
 		return array(
-			'block_title'      => $first_title !== '' ? $first_title : __( 'DX UI Pattern', 'dxai-ui' ),
+			'block_title'      => $first_title !== '' ? $first_title : __( 'DX UI Pattern', 'dx-ui' ),
 			'gutenberg_markup' => implode( "\n\n", $body ),
 			'structures'       => $structures,
 			'custom_css'       => implode( "\n\n", $css ),

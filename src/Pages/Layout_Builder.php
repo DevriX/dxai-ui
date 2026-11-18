@@ -2,20 +2,20 @@
 /**
  * The builder of the team's layouts: a site's pages in, the layouts of their sections out (data/block-library, or a template's folder).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
  * A layout is a section of a team page with every word taken out and a slot left in its place: a heading, a paragraph, a list item,
  * a label and a button each become a token the page maker fills ({{t:h2-m}}: a heading of middle length; {{row:title}} in a repeated
  * card), every picture a slot for one of the Home's pictures ({{image_url:1}}), every small drawing a marker for one of the plugin's own
- * (dxaiIcon), a set of cards, steps, reviews or questions one card marked to be repeated (dxaiRepeat), a phone link the Home's phone,
+ * (dxuiIcon), a set of cards, steps, reviews or questions one card marked to be repeated (dxuiRepeat), a phone link the Home's phone,
  * any other link the page the maker names. The blocks, their classes, their spacing, their colours (as the theme's names for them) and
  * their alignment stay as the team set them: that is what makes the section the team's. A line that says nothing of one site stays in
  * its slot as its first words. Nothing else of the site it came from is kept — not a name, a number, an address, a picture, a form, a
@@ -160,7 +160,7 @@ final class Layout_Builder {
 			'content' => 'items',
 		);
 		$banned_blocks = array( 'core/shortcode', 'core/html', 'core/freeform', 'core/embed', 'core/code', 'core/video', 'core/audio', 'core/file', 'core/table', 'core/query', 'core/post-content', 'core/template-part', 'core/navigation', 'core/social-links' );
-		$leaf_text     = array_merge( array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dxai-ui/text', 'core/details' ), \DXAI_UI\Theme\Capabilities::blocks( 'span' ) );
+		$leaf_text     = array_merge( array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dx-ui/text', 'core/details' ), \DX_UI\Theme\Capabilities::blocks( 'span' ) );
 
 		// --- 1. The sections, by role and structure. -----------------------------------------------------------------------------------
 
@@ -206,7 +206,7 @@ final class Layout_Builder {
 		$specs_from = ( static function (): array {
 			$specs     = array();
 			$forbidden = array();
-			$file      = DXAI_UI_DIR . 'bin/block-library-specs.php';
+			$file      = DX_UI_DIR . 'bin/block-library-specs.php';
 			if ( is_readable( $file ) ) {
 				require $file;
 			}
@@ -405,7 +405,7 @@ final class Layout_Builder {
 		// site, a widget, a name the list knows) is not kept: the slot gets provisional words instead.
 		$specs_forbidden = ( static function (): array {
 			$forbidden = array();
-			$file      = DXAI_UI_DIR . 'bin/block-library-specs.php';
+			$file      = DX_UI_DIR . 'bin/block-library-specs.php';
 			if ( is_readable( $file ) ) {
 				require $file;
 			}
@@ -536,7 +536,7 @@ final class Layout_Builder {
 			/** The text blocks of a box, counted by kind: how its words are laid out, whatever boxes they sit in. */
 			$leaf_kinds = static function ( array $x ) use ( &$leaf_kinds ): array {
 				$out = array();
-				if ( in_array( (string) ( $x['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dxai-ui/text', 'core/details' ), true ) || Capabilities::is_block( (string) ( $x['blockName'] ?? '' ), 'span' ) ) {
+				if ( in_array( (string) ( $x['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'core/list-item', 'core/button', 'dx-ui/text', 'core/details' ), true ) || Capabilities::is_block( (string) ( $x['blockName'] ?? '' ), 'span' ) ) {
 					$out[ (string) $x['blockName'] ] = 1;
 				}
 				foreach ( (array) ( $x['innerBlocks'] ?? array() ) as $c ) {
@@ -576,16 +576,16 @@ final class Layout_Builder {
 							for ( $j = count( $iidx ) - 1; $j >= 1; $j-- ) {
 								Block_Tree::drop( $col, $iidx[ $j ] );
 							}
-							$col['innerBlocks'][ $iidx[0] ]['attrs']['dxaiRepeat'] = $name;
-							$col['innerBlocks'][ $iidx[0] ]['attrs']['dxaiSlice']  = array( $k, $cols );
+							$col['innerBlocks'][ $iidx[0] ]['attrs']['dxuiRepeat'] = $name;
+							$col['innerBlocks'][ $iidx[0] ]['attrs']['dxuiSlice']  = array( $k, $cols );
 							$in_rows[ $path . '.' . $ci . '.' . $iidx[0] ]          = $name;
 							unset( $col );
 						}
 						// As many cards as the team's grid held.
 						foreach ( $idx as $ci ) {
 							foreach ( $b['innerBlocks'][ $ci ]['innerBlocks'] as &$card ) {
-								if ( isset( $card['attrs']['dxaiRepeat'] ) ) {
-									$card['attrs']['dxaiCount'] = min( 12, $total );
+								if ( isset( $card['attrs']['dxuiRepeat'] ) ) {
+									$card['attrs']['dxuiCount'] = min( 12, $total );
 								}
 							}
 							unset( $card );
@@ -605,9 +605,9 @@ final class Layout_Builder {
 							$also[] = $j;
 						}
 					}
-					$b['innerBlocks'][ $idx[0] ]['attrs']['dxaiRepeat'] = $name;
+					$b['innerBlocks'][ $idx[0] ]['attrs']['dxuiRepeat'] = $name;
 					// As many items as the team's section held, so the row keeps its shape.
-					$b['innerBlocks'][ $idx[0] ]['attrs']['dxaiCount']  = min( 12, count( $idx ) + count( $also ) );
+					$b['innerBlocks'][ $idx[0] ]['attrs']['dxuiCount']  = min( 12, count( $idx ) + count( $also ) );
 					if ( $also !== array() ) {
 						foreach ( array_reverse( $also ) as $j ) {
 							Block_Tree::drop( $b, $j );
@@ -620,8 +620,8 @@ final class Layout_Builder {
 					// A logo is drawn at a logo's size wherever the layout puts it (the theme sized the team's by its own rules): the item says it is one.
 					if ( $name === 'logos' ) {
 						$logo = &$b['innerBlocks'][ $idx[0] ];
-						$logo['attrs']['className'] = trim( (string) ( $logo['attrs']['className'] ?? '' ) . ' dxai-logo' );
-						$mark = static fn( string $s ): string => preg_match( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', $s ) ? (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxai-logo ', $s, 1 ) : (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*)\b/i', '$1 class="dxai-logo"', $s, 1 );
+						$logo['attrs']['className'] = trim( (string) ( $logo['attrs']['className'] ?? '' ) . ' dxui-logo' );
+						$mark = static fn( string $s ): string => preg_match( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', $s ) ? (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxui-logo ', $s, 1 ) : (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*)\b/i', '$1 class="dxui-logo"', $s, 1 );
 						$logo['innerHTML']          = $mark( (string) $logo['innerHTML'] );
 						foreach ( $logo['innerContent'] as $k => $part ) {
 							if ( is_string( $part ) && trim( $part ) !== '' ) {
@@ -643,7 +643,7 @@ final class Layout_Builder {
 						continue;
 					}
 					// Inside an item nothing is repeated again (its ticks are its own), except a list of ticks, which is the item's list of points.
-					if ( isset( $c['attrs']['dxaiRepeat'] ) ) {
+					if ( isset( $c['attrs']['dxuiRepeat'] ) ) {
 						continue;
 					}
 					$repeat( $c, $path . '.' . $i );
@@ -656,8 +656,8 @@ final class Layout_Builder {
 			$deal = static function ( array &$b ) use ( &$deal ): void {
 				$holders = array(); // list name => array( child index => path to the marked block inside it )
 				$find    = static function ( array $x, array $path ) use ( &$find ): ?array {
-					if ( isset( $x['attrs']['dxaiRepeat'] ) ) {
-						return array( (string) $x['attrs']['dxaiRepeat'], $path );
+					if ( isset( $x['attrs']['dxuiRepeat'] ) ) {
+						return array( (string) $x['attrs']['dxuiRepeat'], $path );
 					}
 					foreach ( (array) ( $x['innerBlocks'] ?? array() ) as $i => $c ) {
 						if ( ! empty( $c['blockName'] ) ) {
@@ -671,7 +671,7 @@ final class Layout_Builder {
 					return null;
 				};
 				foreach ( $b['innerBlocks'] as $i => $c ) {
-					if ( empty( $c['blockName'] ) || isset( $c['attrs']['dxaiRepeat'] ) ) {
+					if ( empty( $c['blockName'] ) || isset( $c['attrs']['dxuiRepeat'] ) ) {
 						continue;
 					}
 					$hit = $find( $c, array( $i ) );
@@ -690,15 +690,15 @@ final class Layout_Builder {
 					$k = 0;
 					foreach ( $paths as $path ) {
 						$marked = &Block_Tree::at( $b, $path );
-						if ( ! isset( $marked['attrs']['dxaiSlice'] ) ) {
-							$marked['attrs']['dxaiSlice'] = array( $k, $n );
+						if ( ! isset( $marked['attrs']['dxuiSlice'] ) ) {
+							$marked['attrs']['dxuiSlice'] = array( $k, $n );
 						}
 						unset( $marked );
 						++$k;
 					}
 				}
 				foreach ( $b['innerBlocks'] as &$c ) {
-					if ( ! empty( $c['blockName'] ) && ! isset( $c['attrs']['dxaiRepeat'] ) ) {
+					if ( ! empty( $c['blockName'] ) && ! isset( $c['attrs']['dxuiRepeat'] ) ) {
 						$deal( $c );
 					}
 				}
@@ -792,9 +792,9 @@ final class Layout_Builder {
 				$kids = $b['innerBlocks'];
 				foreach ( $kids as $i => $c ) {
 					$next = $kids[ $i + 1 ] ?? null;
-					$n    = ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/paragraph', 'dxai-ui/text' ), true ) || Capabilities::is_block( (string) ( $c['blockName'] ?? '' ), 'span' ) ) ?$words( (string) $c['innerHTML'] ) : 0;
+					$n    = ( in_array( (string) ( $c['blockName'] ?? '' ), array( 'core/paragraph', 'dx-ui/text' ), true ) || Capabilities::is_block( (string) ( $c['blockName'] ?? '' ), 'span' ) ) ?$words( (string) $c['innerHTML'] ) : 0;
 					if ( $n >= 1 && $n <= 4 && is_array( $next ) && (string) ( $next['blockName'] ?? '' ) === 'core/heading' ) {
-						$b['innerBlocks'][ $i ]['attrs']['dxaiEyebrow'] = true;
+						$b['innerBlocks'][ $i ]['attrs']['dxuiEyebrow'] = true;
 					}
 					if ( ! empty( $c['blockName'] ) ) {
 						$mark_eyebrows( $b['innerBlocks'][ $i ] );
@@ -1069,7 +1069,7 @@ final class Layout_Builder {
 					if ( $in_row && $path === $item && ( in_array( $name, array( 'core/group', 'core/column' ), true ) || Capabilities::is_block( $name, 'link_box' ) ) ) {
 						$st = (array) ( $b['attrs']['style'] ?? array() );
 						if ( isset( $b['attrs']['backgroundColor'] ) || isset( $st['color']['background'] ) || isset( $st['border'] ) || isset( $st['shadow'] ) || preg_match( '/(^|\s)(bg-|shadow|rounded|border)/', (string) ( $b['attrs']['className'] ?? '' ) ) === 1 ) {
-							$add_own_class( $b, 'dxai-lib-card' );
+							$add_own_class( $b, 'dxui-lib-card' );
 						}
 					}
 					// Inside a grid of repeated items but not in an item (the site's featured first card, say): a picture there is the site's.
@@ -1094,18 +1094,18 @@ final class Layout_Builder {
 							'core/heading'   => 'h' . (int) ( $a['level'] ?? 2 ),
 							'core/paragraph' => 'p',
 							'core/list-item' => 'li',
-							'dxai-ui/text'   => 'p',
+							'dx-ui/text'   => 'p',
 							'core/details'   => 'h3',
 							default          => 'button',
 						};
 						$token = '{{t:' . $kind . '-' . $len( $n ) . '}}';
 						$href  = null;
 						// The section's eyebrow: the label slot, and the mark for the Home's eyebrow look.
-						$eyebrow = ! empty( $b['attrs']['dxaiEyebrow'] );
-						unset( $b['attrs']['dxaiEyebrow'] );
+						$eyebrow = ! empty( $b['attrs']['dxuiEyebrow'] );
+						unset( $b['attrs']['dxuiEyebrow'] );
 						if ( ! $in_row && ( $eyebrow || $kind === 'label' ) ) {
 							$token = '{{t:label-s}}';
-							$add_own_class( $b, 'dxai-lib-eyebrow' );
+							$add_own_class( $b, 'dxui-lib-eyebrow' );
 						}
 						if ( $name === 'core/button' ) {
 							$url = (string) ( $a['url'] ?? '' );
@@ -1200,7 +1200,7 @@ final class Layout_Builder {
 							unset( $b['attrs']['linkDestination'], $b['attrs']['href'] );
 						} elseif ( $small ) {
 							$icon = $in_row ? '{{row:icon|' . $icon_name( $src, $alt ) . '}}' : $icon_name( $src, $alt );
-							$b['attrs']['dxaiIcon'] = $icon;
+							$b['attrs']['dxuiIcon'] = $icon;
 							$swap = static fn( string $s ): string => (string) preg_replace( array( '/\ssrc="[^"]*"/i', '/\salt="[^"]*"/i', '/\bwp-image-\d+/', '/\ssrcset="[^"]*"/i', '/\ssizes="[^"]*"/i' ), array( ' src="{{icon_url:' . $icon . '}}"', ' alt=""', 'wp-image-{{icon_id:' . $icon . '}}', '', '' ), $s );
 							$b['innerHTML'] = $swap( (string) $b['innerHTML'] );
 							foreach ( $b['innerContent'] as $k => $part ) {
@@ -1213,7 +1213,7 @@ final class Layout_Builder {
 						} elseif ( $in_row || $in_grid || $decor( $a ) ) {
 							// A photograph in every card is the site's, and so is one in a featured card beside them, and a picture laid under a
 							// section (positioned, faded, named a background): the card and the section do without.
-							$b['attrs']['dxaiDrop'] = true;
+							$b['attrs']['dxuiDrop'] = true;
 							++$slots['dropped'];
 							if ( ! $in_row && $tile( $a ) ) {
 								++$slots['tiles'];
@@ -1229,7 +1229,7 @@ final class Layout_Builder {
 								}
 							}
 							$b['attrs']['id']     = '{{image_id:' . $n2 . '}}';
-							$b['attrs']['dxaiIf'] = array( 'image_url:' . $n2 );
+							$b['attrs']['dxuiIf'] = array( 'image_url:' . $n2 );
 							unset( $b['attrs']['linkDestination'], $b['attrs']['href'] );
 							++$slots['image'];
 						}
@@ -1244,7 +1244,7 @@ final class Layout_Builder {
 								unset( $b['attrs'][ $k ] );
 							}
 						} elseif ( $in_row || $in_grid || $decor( $a ) ) {
-							$b['attrs']['dxaiDrop'] = true;
+							$b['attrs']['dxuiDrop'] = true;
 							++$slots['dropped'];
 							if ( ! $in_row && $tile( $a ) ) {
 								++$slots['tiles'];
@@ -1261,7 +1261,7 @@ final class Layout_Builder {
 							foreach ( array( 'mobileImageId', 'mobileImageUrl', 'mobileImageWidth', 'mobileImageHeight', 'priority' ) as $k ) {
 								unset( $b['attrs'][ $k ] );
 							}
-							$b['attrs']['dxaiIf'] = array( 'image_url:' . $n2 );
+							$b['attrs']['dxuiIf'] = array( 'image_url:' . $n2 );
 							++$slots['image'];
 						}
 					}
@@ -1270,7 +1270,7 @@ final class Layout_Builder {
 			// The cards' own photographs, dropped (marked above, so paths stayed true while walking).
 			$drop = static function ( array &$b ) use ( &$drop ): void {
 				for ( $i = count( $b['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
-					if ( ! empty( $b['innerBlocks'][ $i ]['attrs']['dxaiDrop'] ) ) {
+					if ( ! empty( $b['innerBlocks'][ $i ]['attrs']['dxuiDrop'] ) ) {
 						Block_Tree::drop( $b, $i );
 						continue;
 					}
@@ -1284,7 +1284,7 @@ final class Layout_Builder {
 				for ( $i = count( $b['innerBlocks'] ) - 1; $i >= 0; $i-- ) {
 					$prune( $b['innerBlocks'][ $i ] );
 					$child = $b['innerBlocks'][ $i ];
-					if ( in_array( (string) $child['blockName'], array( 'core/group', 'core/column', 'core/columns', 'core/cover', 'dxai-ui/box' ), true ) && $child['innerBlocks'] === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' ) {
+					if ( in_array( (string) $child['blockName'], array( 'core/group', 'core/column', 'core/columns', 'core/cover', 'dx-ui/box' ), true ) && $child['innerBlocks'] === array() && trim( wp_strip_all_tags( (string) $child['innerHTML'] ) ) === '' ) {
 						Block_Tree::drop( $b, $i );
 					}
 				}
@@ -1294,9 +1294,9 @@ final class Layout_Builder {
 			$walk(
 				$root,
 				static function ( array &$b ): void {
-					if ( (string) $b['blockName'] === 'core/column' && count( $b['innerBlocks'] ) === 1 && isset( $b['innerBlocks'][0]['attrs']['dxaiIf'] ) && ( 'core/image' === (string) $b['innerBlocks'][0]['blockName'] || Capabilities::is_block( (string) $b['innerBlocks'][0]['blockName'], 'picture' ) ) ) {
-						$b['attrs']['dxaiIf'] = $b['innerBlocks'][0]['attrs']['dxaiIf'];
-						unset( $b['innerBlocks'][0]['attrs']['dxaiIf'] );
+					if ( (string) $b['blockName'] === 'core/column' && count( $b['innerBlocks'] ) === 1 && isset( $b['innerBlocks'][0]['attrs']['dxuiIf'] ) && ( 'core/image' === (string) $b['innerBlocks'][0]['blockName'] || Capabilities::is_block( (string) $b['innerBlocks'][0]['blockName'], 'picture' ) ) ) {
+						$b['attrs']['dxuiIf'] = $b['innerBlocks'][0]['attrs']['dxuiIf'];
+						unset( $b['innerBlocks'][0]['attrs']['dxuiIf'] );
 					}
 				}
 			);
@@ -1308,7 +1308,7 @@ final class Layout_Builder {
 					}
 					foreach ( $v as $k => &$x ) {
 						$clean( $x );
-						if ( is_array( $x ) && $x === array() && ! in_array( (string) $k, array( 'dxaiIf' ), true ) ) {
+						if ( is_array( $x ) && $x === array() && ! in_array( (string) $k, array( 'dxuiIf' ), true ) ) {
 							unset( $v[ $k ] );
 						}
 					}
@@ -1323,12 +1323,12 @@ final class Layout_Builder {
 			$prune( $root );
 			// The section itself: the library's mark, and the name a person sees in the editor.
 			$cls = trim( (string) ( $root['attrs']['className'] ?? '' ) );
-			if ( ! preg_match( '/\bdxai-lib\b/', $cls ) ) {
-				$root['attrs']['className'] = trim( $cls . ' dxai-lib' );
-				$root['innerHTML']          = (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxai-lib ', (string) $root['innerHTML'], 1 );
+			if ( ! preg_match( '/\bdxui-lib\b/', $cls ) ) {
+				$root['attrs']['className'] = trim( $cls . ' dxui-lib' );
+				$root['innerHTML']          = (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxui-lib ', (string) $root['innerHTML'], 1 );
 				foreach ( $root['innerContent'] as $k => $part ) {
 					if ( is_string( $part ) && trim( $part ) !== '' ) {
-						$root['innerContent'][ $k ] = (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxai-lib ', $part, 1 );
+						$root['innerContent'][ $k ] = (string) preg_replace( '/^(\s*<[a-z][a-z0-9]*\b[^>]*\sclass=")/i', '$1dxui-lib ', $part, 1 );
 						break;
 					}
 				}
@@ -1364,7 +1364,7 @@ final class Layout_Builder {
 		};
 
 		// --- 4. Write. -------------------------------------------------------------------------------------------------------------------
-		$out_dir = rtrim( (string) ( $opts['out_dir'] ?? DXAI_UI_DIR . 'data/block-library' ), '/\\' );
+		$out_dir = rtrim( (string) ( $opts['out_dir'] ?? DX_UI_DIR . 'data/block-library' ), '/\\' );
 		$index   = array();
 		$made    = 0;
 		$taken   = array(); // role => how many layouts of it were written (a gallery left out does not take a number)
@@ -1409,7 +1409,7 @@ final class Layout_Builder {
 				// A section of a list (the reviews, the steps, the questions, the badges, the places, the related pages) whose rows were a
 				// widget, a shortcode or a picture is a heading and a line without them: not a layout of its role, and left out quietly.
 				// (The rows must be in the layout as written: a list marked and then pruned with its box — a widget's column — is no list.)
-				if ( in_array( $role, array( 'reviews', 'process', 'faq', 'trust', 'areas', 'related' ), true ) && ( $lay['slots']['repeat'] === 0 || ! str_contains( $html, '"dxaiRepeat"' ) ) ) {
+				if ( in_array( $role, array( 'reviews', 'process', 'faq', 'trust', 'areas', 'related' ), true ) && ( $lay['slots']['repeat'] === 0 || ! str_contains( $html, '"dxuiRepeat"' ) ) ) {
 					$say( sprintf( "\n%-32s %-10s site %-20s SKIPPED: a %s section with no rows of its own (%d dropped)\n", $id, $role, $hosts[ $pick['site'] ] ?? $pick['site'], $labels[ $role ] ?? $role, $lay['slots']['dropped'] ) );
 					continue;
 				}

@@ -2,12 +2,12 @@
 /**
  * The team's layouts on a page of a design: what they are filled with.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * A layout (bin/build-layouts.php: a section of one of the team's pages with its words, pictures and links taken out) is a section
@@ -41,7 +41,7 @@ final class Layouts {
 	private static array $seen = array();
 
 	/** The leaf blocks that hold words. */
-	private const TEXT = array( 'core/heading', 'core/paragraph', 'core/list-item', 'dxai-ui/text', 'dxai-ui/html', 'core/button', 'core/details' );
+	private const TEXT = array( 'core/heading', 'core/paragraph', 'core/list-item', 'dx-ui/text', 'dx-ui/html', 'core/button', 'core/details' );
 
 	/** Words that are a mark, not a sentence (a row of stars, a tick). */
 	private const MARKS = '/^[★☆✔✓•·\-\s]+$/u';
@@ -73,7 +73,7 @@ final class Layouts {
 			switch ( $role ) {
 				case 'process':
 					foreach ( $rows as $n => $r ) {
-						$r['eyebrow']   = (string) ( $r['eyebrow'] ?? '' ) !== '' ? (string) $r['eyebrow'] : sprintf( /* translators: %d: the number of the step. */ __( 'Step %d', 'dxai-ui' ), $n + 1 );
+						$r['eyebrow']   = (string) ( $r['eyebrow'] ?? '' ) !== '' ? (string) $r['eyebrow'] : sprintf( /* translators: %d: the number of the step. */ __( 'Step %d', 'dx-ui' ), $n + 1 );
 						$r['icon']      = 'check';
 						$out['steps'][] = $r;
 					}
@@ -94,7 +94,7 @@ final class Layouts {
 							}
 						}
 						if ( $who === '' ) {
-							$who = (string) ( $short[ count( $short ) - 1 ] ?? __( 'A customer', 'dxai-ui' ) );
+							$who = (string) ( $short[ count( $short ) - 1 ] ?? __( 'A customer', 'dx-ui' ) );
 						}
 						$rest = array_values( array_filter( $short, static fn( $t ) => $t !== $who ) );
 						$out['reviews'][] = array( 'title' => $who, 'text' => $said, 'meta' => (string) ( $rest[ count( $rest ) - 1 ] ?? '' ), 'url' => '', 'icon' => 'star' ) + $r;
@@ -121,14 +121,14 @@ final class Layouts {
 				case 'trust':
 					foreach ( self::images( $block, (array) $component['images'] ) as $img ) {
 						// A logo, not a drawing: the plugin's own icon files and anything tiny are not what a trust row shows.
-						if ( str_contains( $img['url'], '/dxai-ui/icons/' ) || preg_match( '/\.svg(\?|$)/i', $img['url'] ) === 1 ) {
+						if ( str_contains( $img['url'], '/dx-ui/icons/' ) || preg_match( '/\.svg(\?|$)/i', $img['url'] ) === 1 ) {
 							continue;
 						}
 						$meta = $img['id'] > 0 ? wp_get_attachment_metadata( $img['id'] ) : null;
 						if ( is_array( $meta ) && (int) ( $meta['width'] ?? 0 ) > 0 && (int) $meta['width'] < 100 ) {
 							continue;
 						}
-						$out['logos'][] = array( 'title' => $img['alt'] !== '' ? $img['alt'] : __( 'Logo', 'dxai-ui' ), 'text' => '', 'url' => '', 'image_url' => $img['url'], 'image_id' => (string) $img['id'], 'image_alt' => $img['alt'], 'icon' => 'award' );
+						$out['logos'][] = array( 'title' => $img['alt'] !== '' ? $img['alt'] : __( 'Logo', 'dx-ui' ), 'text' => '', 'url' => '', 'image_url' => $img['url'], 'image_id' => (string) $img['id'], 'image_alt' => $img['alt'], 'icon' => 'award' );
 					}
 					break;
 				default:
@@ -194,10 +194,10 @@ final class Layouts {
 		} elseif ( $facts['kind'] === 'location' && $title !== '' && preg_match( '/\sin\s/iu', $title ) !== 1 ) {
 			// A place's own page ("Anchorage, AK", "Wasilla & Mat-Su Valley"): the company's trade, in that place. Its title is no service:
 			// "Taylored Restoration handles anchorage, ak for homes and businesses in Anchorage, AK" (the team's network, 2026-10-16).
-			$subject = __( 'restoration', 'dxai-ui' );
+			$subject = __( 'restoration', 'dx-ui' );
 			$region  = $title;
 		} elseif ( ! in_array( $facts['kind'], array( 'service', 'location', '' ), true ) ) {
-			$subject = __( 'restoration', 'dxai-ui' );
+			$subject = __( 'restoration', 'dx-ui' );
 		}
 		$facts['subject'] = $subject;
 		// Where on the page this section is (its seed): two sections of one role start their words at different lines.
@@ -223,9 +223,9 @@ final class Layouts {
 			if ( trim( $text ) === '' && $t !== '' ) {
 				$text = $region !== ''
 					/* translators: 1: a page's title, 2: the company's name, 3: a place. */
-					? sprintf( __( '%1$s from %2$s, for homes and businesses in %3$s.', 'dxai-ui' ), $t, $short_name !== '' ? $short_name : __( 'our team', 'dxai-ui' ), $region )
+					? sprintf( __( '%1$s from %2$s, for homes and businesses in %3$s.', 'dx-ui' ), $t, $short_name !== '' ? $short_name : __( 'our team', 'dx-ui' ), $region )
 					/* translators: 1: a page's title, 2: the company's name. */
-					: sprintf( __( '%1$s from %2$s, for homes and businesses.', 'dxai-ui' ), $t, $short_name !== '' ? $short_name : __( 'our team', 'dxai-ui' ) );
+					: sprintf( __( '%1$s from %2$s, for homes and businesses.', 'dx-ui' ), $t, $short_name !== '' ? $short_name : __( 'our team', 'dx-ui' ) );
 			}
 
 			return array( 'title' => $t, 'text' => $text, 'url' => (string) ( $r['url'] ?? '' ), 'icon' => self::icon_for( $t ) );
@@ -473,7 +473,7 @@ final class Layouts {
 	 * @param array<string, mixed> $block
 	 */
 	public static function hear( array $facts, array $block ): void {
-		if ( in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'span' ) ) {
+		if ( in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/heading', 'core/paragraph', 'dx-ui/text' ), true ) || \DX_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'span' ) ) {
 			self::said( $facts, Block_Tree::own_text( $block ) );
 		}
 		// …and its pictures as shown.
@@ -482,7 +482,7 @@ final class Layouts {
 				self::saw( $facts, (string) $src );
 			}
 		}
-		if ( is_string( $block['attrs']['url'] ?? null ) && \DXAI_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'picture' ) ) {
+		if ( is_string( $block['attrs']['url'] ?? null ) && \DX_UI\Theme\Capabilities::is_block( (string) ( $block['blockName'] ?? '' ), 'picture' ) ) {
 			self::saw( $facts, (string) $block['attrs']['url'] );
 		}
 		foreach ( (array) ( $block['innerBlocks'] ?? array() ) as $c ) {
@@ -522,83 +522,83 @@ final class Layouts {
 		$about   = trim( (string) ( $facts['about'] ?? '' ) );
 		$topic   = (string) ( $facts['subject'] ?? '' );
 		if ( $topic === '' ) {
-			$topic = $title !== '' ? $title : __( 'restoration', 'dxai-ui' );
+			$topic = $title !== '' ? $title : __( 'restoration', 'dx-ui' );
 		}
 		// Headings and labels are counted by their role (two headings of one role differ); paragraphs and points by the page (they rotate through the page).
 		$nth     = (int) ( (int) ( $facts['slot_seed'] ?? 0 ) % 5 ) + self::nth( $facts, (string) ( $facts['slot_seed'] ?? '' ) . ( in_array( $kind, array( 'p', 'li' ), true ) ? $kind : $kind . $role ) );
 		$pick    = static fn( array $lines ): string => $lines[ $nth % count( $lines ) ];
-		$where   = $region !== '' ? sprintf( /* translators: %s: a place. */ __( ' in %s', 'dxai-ui' ), $region ) : '';
+		$where   = $region !== '' ? sprintf( /* translators: %s: a place. */ __( ' in %s', 'dx-ui' ), $region ) : '';
 		switch ( $kind ) {
 			case 'call':
-				return $phone !== '' ? sprintf( /* translators: %s: a phone number. */ __( 'Call %s', 'dxai-ui' ), $phone ) : __( 'Call us', 'dxai-ui' );
+				return $phone !== '' ? sprintf( /* translators: %s: a phone number. */ __( 'Call %s', 'dx-ui' ), $phone ) : __( 'Call us', 'dx-ui' );
 			case 'button':
 				return $pick( match ( $role ) {
-					'cta'     => array( __( 'Get help now', 'dxai-ui' ), __( 'Request a callback', 'dxai-ui' ) ),
-					'related' => array( __( 'See all services', 'dxai-ui' ) ),
-					'areas'   => array( __( 'Find your area', 'dxai-ui' ) ),
-					default   => array( __( 'Contact us', 'dxai-ui' ), __( 'Get in touch', 'dxai-ui' ) ),
+					'cta'     => array( __( 'Get help now', 'dx-ui' ), __( 'Request a callback', 'dx-ui' ) ),
+					'related' => array( __( 'See all services', 'dx-ui' ) ),
+					'areas'   => array( __( 'Find your area', 'dx-ui' ) ),
+					default   => array( __( 'Contact us', 'dx-ui' ), __( 'Get in touch', 'dx-ui' ) ),
 				} );
 			case 'label':
 				return $pick( match ( $role ) {
-					'process' => array( __( 'How it works', 'dxai-ui' ), __( 'What to expect', 'dxai-ui' ) ),
-					'two-col' => array( __( 'Why choose us', 'dxai-ui' ), __( 'Our promise', 'dxai-ui' ) ),
-					'cards'   => array( __( 'What we do', 'dxai-ui' ), __( 'What sets us apart', 'dxai-ui' ) ),
-					'reviews' => array( __( 'Reviews', 'dxai-ui' ) ),
-					'faq'     => array( __( 'Questions', 'dxai-ui' ) ),
-					'cta'     => array( __( 'Here to help', 'dxai-ui' ) ),
-					'trust'   => array( __( 'Trusted', 'dxai-ui' ) ),
-					'areas'   => array( __( 'Where we work', 'dxai-ui' ) ),
-					'related' => array( __( 'More services', 'dxai-ui' ) ),
-					default   => array( __( 'Overview', 'dxai-ui' ) ),
+					'process' => array( __( 'How it works', 'dx-ui' ), __( 'What to expect', 'dx-ui' ) ),
+					'two-col' => array( __( 'Why choose us', 'dx-ui' ), __( 'Our promise', 'dx-ui' ) ),
+					'cards'   => array( __( 'What we do', 'dx-ui' ), __( 'What sets us apart', 'dx-ui' ) ),
+					'reviews' => array( __( 'Reviews', 'dx-ui' ) ),
+					'faq'     => array( __( 'Questions', 'dx-ui' ) ),
+					'cta'     => array( __( 'Here to help', 'dx-ui' ) ),
+					'trust'   => array( __( 'Trusted', 'dx-ui' ) ),
+					'areas'   => array( __( 'Where we work', 'dx-ui' ) ),
+					'related' => array( __( 'More services', 'dx-ui' ) ),
+					default   => array( __( 'Overview', 'dx-ui' ) ),
 				} );
 			case 'h1':
 			case 'h2':
 				return $pick( match ( $role ) {
-					'process' => array( sprintf( /* translators: %s: the page's topic. */ __( 'How %s work moves forward', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the page's topic. */ __( 'What to expect from %s', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'From the first call to the last walk-through', 'dxai-ui' ) ),
-					'two-col' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Why property owners%1$s choose %2$s', 'dxai-ui' ), $where, $short ), sprintf( /* translators: %s: the company. */ __( 'What sets %s apart', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'The %s work, done the way it should be', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Help with the claim, not just the damage', 'dxai-ui' ) ),
+					'process' => array( sprintf( /* translators: %s: the page's topic. */ __( 'How %s work moves forward', 'dx-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the page's topic. */ __( 'What to expect from %s', 'dx-ui' ), mb_strtolower( $topic ) ), __( 'From the first call to the last walk-through', 'dx-ui' ) ),
+					'two-col' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Why property owners%1$s choose %2$s', 'dx-ui' ), $where, $short ), sprintf( /* translators: %s: the company. */ __( 'What sets %s apart', 'dx-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'The %s work, done the way it should be', 'dx-ui' ), mb_strtolower( $topic ) ), __( 'Help with the claim, not just the damage', 'dx-ui' ) ),
 					// (Cards of the Home's points — "About 60 min arrival", "In-house crews" — are about the company, not about what the service includes.)
 					'cards'   => in_array( 'items', (array) ( $facts['section_lists'] ?? array() ), true )
-						? array( sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), __( 'What our customers count on', 'dxai-ui' ), sprintf( /* translators: %s: the company. */ __( 'Why property owners call %s', 'dxai-ui' ), $short ) )
-						: array( sprintf( /* translators: %s: the page's topic. */ __( 'What %s includes', 'dxai-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dxai-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'Signs you need %s help', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'What our customers count on', 'dxai-ui' ) ),
-					'reviews' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Property owners%1$s trust %2$s', 'dxai-ui' ), $where, $short ) ),
-					'faq'     => array( sprintf( /* translators: %s: the page's topic. */ __( '%s questions, answered', 'dxai-ui' ), mb_strtoupper( mb_substr( $topic, 0, 1 ) ) . mb_substr( $topic, 1 ) ) ),
-					'cta'     => array( sprintf( /* translators: %s: the page's topic. */ __( 'Need %s help now?', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'Talk to a real person', 'dxai-ui' ) ),
-					'trust'   => array( __( 'Trusted in the restoration industry', 'dxai-ui' ) ),
-					'areas'   => array( $region !== '' ? sprintf( /* translators: %s: a place. */ __( 'Serving %s and the surrounding area', 'dxai-ui' ), $region ) : __( 'Where we work', 'dxai-ui' ) ),
-					'related' => array( __( 'Related services', 'dxai-ui' ) ),
-					default   => array( sprintf( /* translators: 1: the page's topic, 2: the company. */ __( '%1$s with %2$s', 'dxai-ui' ), $topic, $short ) ),
+						? array( sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dx-ui' ), $short ), __( 'What our customers count on', 'dx-ui' ), sprintf( /* translators: %s: the company. */ __( 'Why property owners call %s', 'dx-ui' ), $short ) )
+						: array( sprintf( /* translators: %s: the page's topic. */ __( 'What %s includes', 'dx-ui' ), mb_strtolower( $topic ) ), sprintf( /* translators: %s: the company. */ __( 'What %s brings to the job', 'dx-ui' ), $short ), sprintf( /* translators: %s: the page's topic. */ __( 'Signs you need %s help', 'dx-ui' ), mb_strtolower( $topic ) ), __( 'What our customers count on', 'dx-ui' ) ),
+					'reviews' => array( sprintf( /* translators: 1: a place, 2: the company. */ __( 'Property owners%1$s trust %2$s', 'dx-ui' ), $where, $short ) ),
+					'faq'     => array( sprintf( /* translators: %s: the page's topic. */ __( '%s questions, answered', 'dx-ui' ), mb_strtoupper( mb_substr( $topic, 0, 1 ) ) . mb_substr( $topic, 1 ) ) ),
+					'cta'     => array( sprintf( /* translators: %s: the page's topic. */ __( 'Need %s help now?', 'dx-ui' ), mb_strtolower( $topic ) ), __( 'Talk to a real person', 'dx-ui' ) ),
+					'trust'   => array( __( 'Trusted in the restoration industry', 'dx-ui' ) ),
+					'areas'   => array( $region !== '' ? sprintf( /* translators: %s: a place. */ __( 'Serving %s and the surrounding area', 'dx-ui' ), $region ) : __( 'Where we work', 'dx-ui' ) ),
+					'related' => array( __( 'Related services', 'dx-ui' ) ),
+					default   => array( sprintf( /* translators: 1: the page's topic, 2: the company. */ __( '%1$s with %2$s', 'dx-ui' ), $topic, $short ) ),
 				} );
 			case 'h3':
 			case 'h4':
 			case 'h5':
 			case 'h6':
-				return $pick( array( __( 'What to expect', 'dxai-ui' ), __( 'Our promise', 'dxai-ui' ), __( 'Fast response', 'dxai-ui' ), __( 'Clear communication', 'dxai-ui' ) ) );
+				return $pick( array( __( 'What to expect', 'dx-ui' ), __( 'Our promise', 'dx-ui' ), __( 'Fast response', 'dx-ui' ), __( 'Clear communication', 'dx-ui' ) ) );
 			case 'li':
 				$items = (array) ( $facts['lists']['items'] ?? array() );
 				if ( $items !== array() ) {
 					return (string) $items[ $nth % count( $items ) ]['title'];
 				}
 
-				return $pick( array( sprintf( /* translators: %s: the page's topic. */ __( 'Assessment of the %s', 'dxai-ui' ), mb_strtolower( $topic ) ), __( 'A written plan before work starts', 'dxai-ui' ), __( 'Documentation for your claim', 'dxai-ui' ), __( 'One crew from start to finish', 'dxai-ui' ) ) );
+				return $pick( array( sprintf( /* translators: %s: the page's topic. */ __( 'Assessment of the %s', 'dx-ui' ), mb_strtolower( $topic ) ), __( 'A written plan before work starts', 'dx-ui' ), __( 'Documentation for your claim', 'dx-ui' ), __( 'One crew from start to finish', 'dx-ui' ) ) );
 			default:
 				$lines = array();
 				if ( $about !== '' ) {
 					$lines[] = $about;
 				}
-				$lines[] = sprintf( /* translators: 1: the company, 2: the page's topic, 3: a place. */ __( '%1$s handles %2$s for homes and businesses%3$s.', 'dxai-ui' ), $company, mb_strtolower( $topic ), $where );
+				$lines[] = sprintf( /* translators: 1: the company, 2: the page's topic, 3: a place. */ __( '%1$s handles %2$s for homes and businesses%3$s.', 'dx-ui' ), $company, mb_strtolower( $topic ), $where );
 				if ( $phone !== '' ) {
-					$lines[] = sprintf( /* translators: 1: a phone number, 2: the company. */ __( 'Call %1$s to talk to the %2$s team about what you are seeing.', 'dxai-ui' ), $phone, $short );
+					$lines[] = sprintf( /* translators: 1: a phone number, 2: the company. */ __( 'Call %1$s to talk to the %2$s team about what you are seeing.', 'dx-ui' ), $phone, $short );
 				}
-				$lines[] = __( 'You will know what is being done, why, and what comes next, before anything starts.', 'dxai-ui' );
-				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'The scope of the %s work is written down and agreed before it begins, and the site is walked with you when it ends.', 'dxai-ui' ), mb_strtolower( $topic ) );
-				$lines[] = sprintf( /* translators: %s: the company. */ __( 'One %s crew stays with the job from the first visit to the last, so nothing is lost between hands.', 'dxai-ui' ), $short );
-				$lines[] = __( 'What was found, what was done and what it cost are documented for you and for anyone else who needs to see it.', 'dxai-ui' );
-				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'Every %s job starts with an inspection and a written plan, so the cost is clear before the work begins.', 'dxai-ui' ), mb_strtolower( $topic ) );
-				$lines[] = __( 'Readings and photos are taken at each step, so your insurance company sees what we see.', 'dxai-ui' );
-				$lines[] = __( 'What can be saved is protected first; what cannot is removed safely and replaced.', 'dxai-ui' );
-				$lines[] = __( 'You hear how long the work will take before it starts, and you are told at once if anything changes.', 'dxai-ui' );
-				$lines[] = __( 'When the work is done, the rooms are clean, dry and ready to be lived or worked in again.', 'dxai-ui' );
-				$lines[] = sprintf( /* translators: %s: the company. */ __( '%s keeps you informed from the first call to the final walkthrough.', 'dxai-ui' ), $short );
+				$lines[] = __( 'You will know what is being done, why, and what comes next, before anything starts.', 'dx-ui' );
+				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'The scope of the %s work is written down and agreed before it begins, and the site is walked with you when it ends.', 'dx-ui' ), mb_strtolower( $topic ) );
+				$lines[] = sprintf( /* translators: %s: the company. */ __( 'One %s crew stays with the job from the first visit to the last, so nothing is lost between hands.', 'dx-ui' ), $short );
+				$lines[] = __( 'What was found, what was done and what it cost are documented for you and for anyone else who needs to see it.', 'dx-ui' );
+				$lines[] = sprintf( /* translators: %s: the page's topic. */ __( 'Every %s job starts with an inspection and a written plan, so the cost is clear before the work begins.', 'dx-ui' ), mb_strtolower( $topic ) );
+				$lines[] = __( 'Readings and photos are taken at each step, so your insurance company sees what we see.', 'dx-ui' );
+				$lines[] = __( 'What can be saved is protected first; what cannot is removed safely and replaced.', 'dx-ui' );
+				$lines[] = __( 'You hear how long the work will take before it starts, and you are told at once if anything changes.', 'dx-ui' );
+				$lines[] = __( 'When the work is done, the rooms are clean, dry and ready to be lived or worked in again.', 'dx-ui' );
+				$lines[] = sprintf( /* translators: %s: the company. */ __( '%s keeps you informed from the first call to the final walkthrough.', 'dx-ui' ), $short );
 				// A paragraph of provisional words is short (a line, two at the longest): a page has many of them, each says its own.
 				$take    = $len === 'l' ? 2 : 1;
 				$from    = $nth % count( $lines );
@@ -790,7 +790,7 @@ final class Layouts {
 		$out  = array();
 		$walk = static function ( array $b ) use ( &$walk, &$out ): void {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( in_array( $name, self::TEXT, true ) || \DXAI_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
+			if ( in_array( $name, self::TEXT, true ) || \DX_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
 				$html = '';
 				foreach ( (array) ( $b['innerContent'] ?? array() ) as $part ) {
 					if ( is_string( $part ) ) {
@@ -841,7 +841,7 @@ final class Layouts {
 	private static function picture_of( array $block ): ?array {
 		$name  = (string) ( $block['blockName'] ?? '' );
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( $name );
+		$shape = \DX_UI\Theme\Capabilities::picture_shape( $name );
 		if ( $shape !== array() ) {
 			$id  = (int) ( $attrs[ $shape['id'] ] ?? 0 );
 			$url = (string) ( $attrs[ $shape['url'] ] ?? '' );
@@ -1051,7 +1051,7 @@ final class Layouts {
 		$leaves = array();
 		$walk   = static function ( array $b ) use ( &$walk, &$leaves ): void {
 			$name = (string) ( $b['blockName'] ?? '' );
-			if ( in_array( $name, array( 'core/heading', 'core/paragraph', 'dxai-ui/text' ), true ) || \DXAI_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
+			if ( in_array( $name, array( 'core/heading', 'core/paragraph', 'dx-ui/text' ), true ) || \DX_UI\Theme\Capabilities::is_block( $name, 'span' ) ) {
 				$t = Block_Tree::own_text( $b );
 				if ( $t !== '' ) {
 					$leaves[] = $t;
@@ -1102,7 +1102,7 @@ final class Layouts {
 			$name = (string) ( $b['blockName'] ?? '' );
 			// A point is an item of a list, or a line that opens with a tick: the pills over a hero ("24/7 Emergency Response · Olympia"),
 			// its buttons ("Call now: (855) 560-7463"), the labels under its figures ("800+ Google reviews") and a label block are not points.
-			if ( in_array( $name, array( 'core/list-item', 'core/paragraph', 'dxai-ui/text' ), true ) ) {
+			if ( in_array( $name, array( 'core/list-item', 'core/paragraph', 'dx-ui/text' ), true ) ) {
 				$t      = Block_Tree::own_text( $b );
 				$ticked = preg_match( '/^[✓✔✅•▪►➜→-]\s*/u', $t ) === 1;
 				$t      = trim( (string) preg_replace( '/^[✓✔✅•▪►➜→-]\s*/u', '', $t ) );

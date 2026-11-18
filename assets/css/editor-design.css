@@ -5,18 +5,18 @@
  * blocks-editor.js marks the canvas's `.editor-styles-wrapper` — the iframe's
  * <body>, or the <div> of that class where the editor is not iframed (an
  * older WordPress with meta boxes on the screen) — with:
- *   dxai-ui-canvas          the post is a converted page;
- *   dxai-ui dxai-ui--{id}   the design's scope classes (Page_Scope). On the
+ *   dx-ui-canvas          the post is a converted page;
+ *   dx-ui dx-ui--{id}   the design's scope classes (Page_Scope). On the
  *                           front end they sit on a <div> around the content;
  *                           here they sit on that wrapper, so the rules
  *                           below name it where blank-canvas.css names the
  *                           <div>. A page stored with its own scope group
  *                           (before Page_Scope) has them on that group
  *                           instead, and each rule names that form too;
- *   dxai-ui-static          a Claude Design export (the front end's body class);
- *   dxai-ui-blank           the page renders on the plugin's blank template.
+ *   dx-ui-static          a Claude Design export (the front end's body class);
+ *   dx-ui-blank           the page renders on the plugin's blank template.
  *
- * Every rule is keyed on those classes or on a dxai-ui block's own element,
+ * Every rule is keyed on those classes or on a dx-ui block's own element,
  * so no other post's content changes. The sheet loads after the design's
  * (Design_Blocks::enqueue_editor_canvas()), as blank-canvas.css does on the
  * front end.
@@ -30,28 +30,28 @@
 /* The post title above the content: 4rem of margin and a heading the page
    does not have. The title stays editable through the Rename action in
    the page's settings panel (core offers it for any type with a title). */
-.editor-styles-wrapper.dxai-ui-blank .editor-visual-editor__post-title-wrapper {
+.editor-styles-wrapper.dx-ui-blank .editor-visual-editor__post-title-wrapper {
 	display: none;
 }
 
 /* The root block list is the page's content box, as the scope <div> is on
    the front end: no theme padding, width cap or margin. */
-.editor-styles-wrapper.dxai-ui-blank .block-editor-block-list__layout.is-root-container {
+.editor-styles-wrapper.dx-ui-blank .block-editor-block-list__layout.is-root-container {
 	margin: 0;
 	padding: 0;
 	max-width: none;
 }
 
 /* blank-canvas.css's own reset of the page, at element specificity so the
-   design's rules for its scope (`.dxai-ui.dxai-ui--{id} { margin: 0 … }`)
+   design's rules for its scope (`.dx-ui.dx-ui--{id} { margin: 0 … }`)
    still decide, as they do for the scope <div>. */
-:is(body, div):where(.editor-styles-wrapper.dxai-ui-blank) {
+:is(body, div):where(.editor-styles-wrapper.dx-ui-blank) {
 	margin: 0;
 	padding: 0;
 }
 
-.editor-styles-wrapper.dxai-ui-canvas.dxai-ui,
-.editor-styles-wrapper.dxai-ui-canvas .dxai-ui {
+.editor-styles-wrapper.dx-ui-canvas.dx-ui,
+.editor-styles-wrapper.dx-ui-canvas .dx-ui {
 	--wp--style--block-gap: 0;
 }
 
@@ -63,7 +63,7 @@
    the non-iframed editor's <div> — at the one type selector's specificity
    the front end's `body` has. */
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) :where(
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank:not(.dx-ui-static)) :where(
 	.wp-block-group,
 	.wp-block-image,
 	.wp-block-list,
@@ -73,7 +73,7 @@
 	.wp-block-quote,
 	.wp-block-table
 ),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui :where(
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank:not(.dx-ui-static)) .dx-ui :where(
 	.wp-block-group,
 	.wp-block-image,
 	.wp-block-list,
@@ -88,91 +88,91 @@
 }
 
 /* A Buttons block's row (see blank-canvas.css). */
-:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-buttons.is-layout-flex),
-:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-group.is-layout-flex),
-:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-buttons.is-layout-flex),
-:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-group.is-layout-flex) {
+:where(:is(body, div).editor-styles-wrapper.dx-ui.dx-ui-blank .wp-block-buttons.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dx-ui.dx-ui-blank .wp-block-group.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dx-ui-blank .dx-ui .wp-block-buttons.is-layout-flex),
+:where(:is(body, div).editor-styles-wrapper.dx-ui-blank .dx-ui .wp-block-group.is-layout-flex) {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 }
 
 /* A button made from the design's link keeps its longest word whole (see blank-canvas.css). */
-:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank .wp-block-button__link,
-:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui .wp-block-button__link {
+:is(body, div).editor-styles-wrapper.dx-ui.dx-ui-blank .wp-block-button__link,
+:is(body, div).editor-styles-wrapper.dx-ui-blank .dx-ui .wp-block-button__link {
 	word-break: normal;
 }
 
 /* Not the root block list's children: on the front end the page's top-level
    blocks are children of the scope <div> itself, which this rule never
    reaches. */
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) :where(.is-layout-flow:not(.is-root-container)) > *,
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui :where(.is-layout-flow) > * {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank:not(.dx-ui-static)) :where(.is-layout-flow:not(.is-root-container)) > *,
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank:not(.dx-ui-static)) .dx-ui :where(.is-layout-flow) > * {
 	margin-block-start: 0;
 	margin-block-end: 0;
 }
 
-/* A figure marked dxai-part-img is a native image the plugin converted (Native_Blocks): the design's classes and CSS
+/* A figure marked dxui-part-img is a native image the plugin converted (Native_Blocks): the design's classes and CSS
    are written for the image inside it (Style_Rules::PARTS), so none of the figure rules apply to it. */
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image:not(.dxai-part-img)),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img)) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) :where(figure.wp-block-image:not(.dxui-part-img)),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui :where(figure.wp-block-image:not(.dxui-part-img)) {
 	display: block;
 	line-height: 0;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image:not(.dxai-part-img) > img),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image:not(.dxai-part-img) > img) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) :where(figure.wp-block-image:not(.dxui-part-img) > img),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui :where(figure.wp-block-image:not(.dxui-part-img) > img) {
 	display: block;
 	width: 100%;
 	height: 100%;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-cover > img),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-cover > img) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) :where(figure.wp-block-image.object-cover > img),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui :where(figure.wp-block-image.object-cover > img) {
 	object-fit: cover;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-contain > img),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-contain > img) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) :where(figure.wp-block-image.object-contain > img),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui :where(figure.wp-block-image.object-contain > img) {
 	object-fit: contain;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) :where(figure.wp-block-image.object-fill > img),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui :where(figure.wp-block-image.object-fill > img) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) :where(figure.wp-block-image.object-fill > img),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui :where(figure.wp-block-image.object-fill > img) {
 	object-fit: fill;
 }
 
-/* An ordinary page with sections copied from a design (the canvas has dxai-ui-attached): the front end puts them in a plain element of
+/* An ordinary page with sections copied from a design (the canvas has dx-ui-attached): the front end puts them in a plain element of
    the design's scope, as wide as the page's content area (Page_Scope::wrap_runs()), and not in the theme's content column. The canvas's
    root layout would centre each of them at the theme's content width, so a copied section is let out of it; the page's own blocks, the
    theme's, keep the column. */
-.editor-styles-wrapper.dxai-ui-attached .is-root-container > :is([class*="dxai-"], [class*="dxs-"], [data-type^="dxai-ui/"]) {
+.editor-styles-wrapper.dx-ui-attached .is-root-container > :is([class*="dxui-"], [class*="dxs-"], [data-type^="dx-ui/"]) {
 	max-width: none !important;
 	margin-left: 0 !important;
 	margin-right: 0 !important;
 }
 
-/* A DX Picture the plugin made from the design's image (dxai-part-img, Native\Picture): the theme's edit UI draws a preview and
+/* A DX Picture the plugin made from the design's image (dxui-part-img, Native\Picture): the theme's edit UI draws a preview and
    chips that say which crop is in use (its own editor stylesheet is not in the canvas: Assets::drop_theme_styles() on the front
-   end, dxaiDropThemeSheets() here). The design's layout has room for the picture only — a header's logo next to its name — and
+   end, dxuiDropThemeSheets() here). The design's layout has room for the picture only — a header's logo next to its name — and
    the crop is in the block's settings. The preview wrapper takes no box, so the picture is laid out as the design's image was. */
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) .wp-block-dx-picture.dxai-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image),
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui .wp-block-dx-picture.dxai-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image) {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) .wp-block-dx-picture.dxui-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image),
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui .wp-block-dx-picture.dxui-part-img :is(.dx-picture-edit__meta, .dx-picture-edit__warning, .dx-picture-edit__mobile-image) {
 	display: none;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank) .wp-block-dx-picture.dxai-part-img .dx-picture-edit__preview,
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank) .dxai-ui .wp-block-dx-picture.dxai-part-img .dx-picture-edit__preview {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank) .wp-block-dx-picture.dxui-part-img .dx-picture-edit__preview,
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank) .dx-ui .wp-block-dx-picture.dxui-part-img .dx-picture-edit__preview {
 	display: contents;
 }
 
-:is(body, div).editor-styles-wrapper.dxai-ui:where(.dxai-ui-blank:not(.dxai-ui-static)) p,
-:is(body, div).editor-styles-wrapper:where(.dxai-ui-blank:not(.dxai-ui-static)) .dxai-ui p {
+:is(body, div).editor-styles-wrapper.dx-ui:where(.dx-ui-blank:not(.dx-ui-static)) p,
+:is(body, div).editor-styles-wrapper:where(.dx-ui-blank:not(.dx-ui-static)) .dx-ui p {
 	margin: 0;
 }
 
-:where(:is(body, div).editor-styles-wrapper.dxai-ui.dxai-ui-blank p.dxai-not-p),
-:where(:is(body, div).editor-styles-wrapper.dxai-ui-blank .dxai-ui p.dxai-not-p) {
+:where(:is(body, div).editor-styles-wrapper.dx-ui.dx-ui-blank p.dxui-not-p),
+:where(:is(body, div).editor-styles-wrapper.dx-ui-blank .dx-ui p.dxui-not-p) {
 	margin: 0;
 }
 
@@ -190,7 +190,7 @@
    fills the <li> as its one item, across every track the <li> defines (a
    <li> with two explicit rows and a row gap was 8px taller in the canvas
    while its <div> sat in the first row only). blocks-editor.js names those
-   <li>s with data-dxai-li, from their computed display, and renames them
+   <li>s with data-dxui-li, from their computed display, and renames them
    when a viewport, a stylesheet or a block's CSS changes it.
 
    Every other <li> — `display: list-item`, the default — keeps core's
@@ -198,7 +198,7 @@
    <ol> too, so an ordered list counted every row twice (1, 3, 5, 7 in the
    canvas against 1, 2, 3, 4 on the page) and a design's counter(list-item)
    with it. Except where the marker is inside (`list-style-position:
-   inside`, data-dxai-li="inside"): the marker is the first thing on the
+   inside`, data-dxui-li="inside"): the marker is the first thing on the
    <li>'s first line, and a block <div> after it put the text on a line of
    its own — every item a line taller (38px against the page's 19px). An
    inline <div> keeps the text on the marker's line, as the page has it.
@@ -207,7 +207,7 @@
    with no box of its own cannot take focus: a click on a list item's text
    selected the <li> and every key typed after it went nowhere (measured:
    the store unchanged after clicking and typing). */
-.editor-styles-wrapper.dxai-ui-canvas li[data-type="core/list-item"][data-dxai-li]:not([data-dxai-li="inside"]) > .block-editor-rich-text__editable {
+.editor-styles-wrapper.dx-ui-canvas li[data-type="core/list-item"][data-dxui-li]:not([data-dxui-li="inside"]) > .block-editor-rich-text__editable {
 	display: inherit;
 	flex-direction: inherit;
 	flex-wrap: inherit;
@@ -231,15 +231,15 @@
 	min-width: 0;
 }
 
-.editor-styles-wrapper.dxai-ui-canvas li[data-type="core/list-item"][data-dxai-li="inside"] > .block-editor-rich-text__editable {
+.editor-styles-wrapper.dx-ui-canvas li[data-type="core/list-item"][data-dxui-li="inside"] > .block-editor-rich-text__editable {
 	display: inline;
 }
 
 /* core stops pointer events on every image and icon inside a block so a
    click selects the block around it; when the image or icon IS the block
-   (dxai-ui/image, an <img> dxai-ui/box, dxai-ui/svg) that left it
+   (dx-ui/image, an <img> dx-ui/box, dx-ui/svg) that left it
    unselectable in the canvas. */
-.editor-styles-wrapper :is(img, svg).block-editor-block-list__block[data-type^="dxai-ui/"] {
+.editor-styles-wrapper :is(img, svg).block-editor-block-list__block[data-type^="dx-ui/"] {
 	pointer-events: auto;
 }
 
@@ -262,12 +262,12 @@
    covers the subtree and pointer-events is still inherited — and drops
    only the box (measured: a click on the header or on a footer link
    selects the block and navigates nowhere). Any post's canvas, not only a
-   converted page's: the blocks can be inserted anywhere. `.dxai-ui-ssr` is
+   converted page's: the blocks can be inserted anywhere. `.dx-ui-ssr` is
    the same for any block that names its ServerSideRender wrapper with it. */
-.editor-styles-wrapper .dxai-ui-ssr,
-.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled,
-.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div:not([class]),
-.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]),
-.editor-styles-wrapper :is([data-type="dxai-ui/site-header"], [data-type="dxai-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]) > div:not([class]) {
+.editor-styles-wrapper .dx-ui-ssr,
+.editor-styles-wrapper :is([data-type="dx-ui/site-header"], [data-type="dx-ui/site-footer"]) > .components-disabled,
+.editor-styles-wrapper :is([data-type="dx-ui/site-header"], [data-type="dx-ui/site-footer"]) > .components-disabled > div:not([class]),
+.editor-styles-wrapper :is([data-type="dx-ui/site-header"], [data-type="dx-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]),
+.editor-styles-wrapper :is([data-type="dx-ui/site-header"], [data-type="dx-ui/site-footer"]) > .components-disabled > div[style*="relative"]:not([class]) > div[style*="opacity"]:not([class]) > div:not([class]) {
 	display: contents;
 }

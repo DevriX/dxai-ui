@@ -12,10 +12,10 @@
  *
  * Compiles small pages through the compiler's own method; writes nothing. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
+use DX_UI\Compiler\Source_Compiler;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

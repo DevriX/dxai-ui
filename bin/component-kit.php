@@ -99,7 +99,7 @@ foreach ( $rungs as [ $label, $code, $needle ] ) {
 	$page = "import { Box } from \"@/components/C\";\n\n"
 		. "export default function Page() {\n  return (\n    <section>\n      <Box className=\"extra\" tone=\"solid\">INNERTEXT</Box>\n    </section>\n  );\n}\n";
 
-	$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+	$compiler = new DX_UI\Compiler\Jsx_Compiler();
 	try {
 		$html = implode( '', array_column(
 			$compiler->compile_file( $page, array(), array( 'src/components/C.tsx' => $code, 'src/lib/utils.ts' => $cn ) ),
@@ -155,7 +155,7 @@ TSX;
 
 $page = "import { Pricing } from \"@/components/Pricing\";\n\nexport default function Page() {\n  return (\n    <main>\n      <Pricing />\n    </main>\n  );\n}\n";
 
-$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+$compiler = new DX_UI\Compiler\Jsx_Compiler();
 $kit      = implode( "\n", array_column( $compiler->compile_file( $page, array(), $files ), 'html' ) );
 
 /* [ label, pattern, expected count ] — a count, because "at least one" hid a
@@ -172,7 +172,7 @@ $kit_checks = array(
 	array( 'button label kept', '/GetStarted/', 1 ),
 	array( 'second label kept', '/LearnMore/', 1 ),
 	array( 'no dotted tag emitted', '/<[a-zA-Z]+\.[a-zA-Z]/', 0 ),
-	array( 'no marker leaked', '/__dxai_/', 0 ),
+	array( 'no marker leaked', '/__dxui_/', 0 ),
 );
 
 printf( "\n--- 2. the real shadcn kit (%s) ---\n", basename( dirname( $root ) ) );
@@ -202,7 +202,7 @@ foreach ( $overlays as $label => [ $secret, $imports, $module, $markup ] ) {
 
 	$page = "import { Overlay } from \"@/components/Overlay\";\n\nexport default function Page() {\n  return (\n    <main>\n      <Overlay />\n    </main>\n  );\n}\n";
 
-	$c = new DXAI_UI\Compiler\Jsx_Compiler();
+	$c = new DX_UI\Compiler\Jsx_Compiler();
 	try {
 		$html = implode( "\n", array_column( $c->compile_file( $page, array(), $set ), 'html' ) );
 	} catch ( Throwable $e ) {
@@ -225,7 +225,7 @@ foreach ( $overlays as $label => [ $secret, $imports, $module, $markup ] ) {
 		for ( $node = $nodes->item( 0 ); $node instanceof DOMElement; $node = $node->parentNode ) {
 			$style = str_replace( ' ', '', strtolower( $node->getAttribute( 'style' ) ) );
 			if ( $node->hasAttribute( 'hidden' ) || str_contains( $style, 'display:none' )
-				|| $node->getAttribute( 'aria-hidden' ) === 'true' || $node->hasAttribute( 'data-dxai-portal' ) ) {
+				|| $node->getAttribute( 'aria-hidden' ) === 'true' || $node->hasAttribute( 'data-dxui-portal' ) ) {
 				$guarded = true;
 				break;
 			}

@@ -9,14 +9,14 @@
  *
  * Makes two pictures and a stylesheet and removes them again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Variants;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Variants;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 $fail   = 0;
 $pass   = 0;
@@ -90,7 +90,7 @@ $expect( 'and numbers out of order (3, 1, 2) are not a sequence', $try( 'rotate'
 echo "\nThe questions\n";
 $qa = '';
 for ( $i = 1; $i <= 6; $i++ ) {
-	$qa .= $group( 'qa', '<!-- wp:dxai-ui/text {"tagName":"summary"} --><summary>Question ' . $i . '</summary><!-- /wp:dxai-ui/text -->' . $para( 'Answer ' . $i ), 'details' );
+	$qa .= $group( 'qa', '<!-- wp:dx-ui/text {"tagName":"summary"} --><summary>Question ' . $i . '</summary><!-- /wp:dx-ui/text -->' . $para( 'Answer ' . $i ), 'details' );
 }
 $faq = $section( $heading( 'Questions' ) . $group( 'list', $qa ) );
 $r   = $try( 'faq', $faq, $ctx );
@@ -98,7 +98,7 @@ $left = $r === null ? 0 : preg_match_all( '/Question \d/', serialize_block( $r['
 $expect( 'six questions become four or five', $r !== null && $left >= 4 && $left <= 5, (string) $left );
 $expect( 'the first question stays', $r !== null && str_contains( serialize_block( $r['block'] ), 'Question 1<' ) );
 $expect( 'the answers go with their questions', $r !== null && preg_match_all( '/Answer \d/', serialize_block( $r['block'] ) ) === $left );
-$expect( 'four questions are all there are', $try( 'faq', $section( $heading( 'Questions' ) . $group( 'list', $group( 'qa', '<!-- wp:dxai-ui/text {"tagName":"summary"} --><summary>Q</summary><!-- /wp:dxai-ui/text -->' . $para( 'A' ), 'details' ) . $group( 'qa', '<!-- wp:dxai-ui/text {"tagName":"summary"} --><summary>Q</summary><!-- /wp:dxai-ui/text -->' . $para( 'A' ), 'details' ) ) ), $ctx ) === null );
+$expect( 'four questions are all there are', $try( 'faq', $section( $heading( 'Questions' ) . $group( 'list', $group( 'qa', '<!-- wp:dx-ui/text {"tagName":"summary"} --><summary>Q</summary><!-- /wp:dx-ui/text -->' . $para( 'A' ), 'details' ) . $group( 'qa', '<!-- wp:dx-ui/text {"tagName":"summary"} --><summary>Q</summary><!-- /wp:dx-ui/text -->' . $para( 'A' ), 'details' ) ) ), $ctx ) === null );
 
 echo "\nWhat a section can do without\n";
 $list = '<!-- wp:list --><ul class="wp-block-list"><!-- wp:list-item --><li>Free estimate</li><!-- /wp:list-item --><!-- wp:list-item --><li>24/7</li><!-- /wp:list-item --><!-- wp:list-item --><li>Insured</li><!-- /wp:list-item --></ul><!-- /wp:list -->';
@@ -136,8 +136,8 @@ echo "\nThe picture\n";
 $up   = wp_upload_dir();
 $mk   = static function ( string $name, int $w, int $h ) use ( $up ): int {
 	$id = wp_insert_post( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'post_title' => $name, 'post_mime_type' => 'image/jpeg' ) );
-	update_post_meta( $id, '_wp_attached_file', 'dxai-ui/' . $name . '.jpg' );
-	update_post_meta( $id, '_wp_attachment_metadata', array( 'width' => $w, 'height' => $h, 'file' => 'dxai-ui/' . $name . '.jpg' ) );
+	update_post_meta( $id, '_wp_attached_file', 'dx-ui/' . $name . '.jpg' );
+	update_post_meta( $id, '_wp_attachment_metadata', array( 'width' => $w, 'height' => $h, 'file' => 'dx-ui/' . $name . '.jpg' ) );
 	update_post_meta( $id, '_wp_attachment_image_alt', 'Alt of ' . $name );
 
 	return (int) $id;
@@ -183,12 +183,12 @@ $expect( 'no style is added: no inline style', ! str_contains( serialize_block( 
 echo "\nThe classes a design styles by place\n";
 $home = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Variants', 'post_content' => '' ) );
 update_post_meta( $home, Page_Scope::META, $home );
-update_post_meta( $home, '_dxai_ui_css_url', 'dxai-ui/fixture-variants-none.css' );
+update_post_meta( $home, '_dx_ui_css_url', 'dx-ui/fixture-variants-none.css' );
 $expect( 'a stylesheet that is not there gives null: nothing is moved', Section_Variants::positional_classes( $home ) === null );
 $path = Upload_Paths::path( Upload_Paths::DIR . '/fixture-variants.css' );
 wp_mkdir_p( dirname( $path ) );
 file_put_contents( $path, ".grid > .card:first-child { grid-column: span 2 }\n.row .tile:nth-child(2n+1){margin:0}\n/* .ghost:last-child { x:y } */\n.plain { color: red }\n@media (min-width: 600px) { .list > .qa:last-child { border: 0 } }\n.cls\\:x:only-child{a:b}\n" );
-update_post_meta( $home, '_dxai_ui_css_url', Upload_Paths::DIR . '/fixture-variants.css' );
+update_post_meta( $home, '_dx_ui_css_url', Upload_Paths::DIR . '/fixture-variants.css' );
 $pos = Section_Variants::positional_classes( $home );
 $expect( 'the classes in a rule about a place are found, those of a comment and of other rules are not', is_array( $pos ) && isset( $pos['card'], $pos['tile'], $pos['qa'], $pos['grid'] ) && ! isset( $pos['ghost'] ) && ! isset( $pos['plain'] ), json_encode( $pos ) );
 wp_delete_file( $path );

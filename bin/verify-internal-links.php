@@ -4,7 +4,7 @@
  * of the map's spellings gave, in every place a link is written, and fast on a site's worth of pages.
  * Run: wp eval-file bin/verify-internal-links.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -46,7 +46,7 @@ $each = static function ( string $markup, array $map ): string {
 
 	return $markup;
 };
-$links   = new DXAI_UI\Compiler\Internal_Links();
+$links   = new DX_UI\Compiler\Internal_Links();
 $one     = new ReflectionMethod( $links, 'rewrite_markup' );
 $one->setAccessible( true );
 $lookup  = static fn( string $markup, array $map ): string => (string) $one->invoke( $links, $markup, $map );

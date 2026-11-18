@@ -2,18 +2,18 @@
 /**
  * The template's fonts: the design's, hosted on this site and set as the site's.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Media\Font_Metrics;
-use DXAI_UI\Media\Late_Fonts;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Media\Font_Host;
+use DX_UI\Media\Font_Metrics;
+use DX_UI\Media\Late_Fonts;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A DX theme lets the site choose its two fonts from a short list that lives inside the theme (Theme Global Settings > Fonts: a headline
@@ -23,12 +23,12 @@ use DXAI_UI\Support\Upload_Paths;
  * its header in Menus and its footer in Widgets (Chrome_Choice) — brings its fonts with it, as a template does:
  *
  *  - the faces are fetched once, from the address the design loads them from (Font_Host::copy(), Google Fonts), the Latin ones are kept
- *    (a Hind face for Devanagari is not text this site has), and the files are copied into uploads/dxai-ui/template-fonts, a folder
+ *    (a Hind face for Devanagari is not text this site has), and the files are copied into uploads/dx-ui/template-fonts, a folder
  *    Font_Host's clean-up does not look at: they belong to the site, not to a design's stylesheet;
  *  - the record says which family is the headline font and which the body font (the one the design's page root is set in is the body
  *    font, any other named web font is a headline font: the rule Theme_Fonts reads a design by), their stacks as the design wrote
  *    them, and the @font-face rules to print;
- *  - they stand in for the theme's choice (the filter `dxai_ui_theme_fonts`), so every design that follows the theme's fonts is drawn in
+ *  - they stand in for the theme's choice (the filter `dx_ui_theme_fonts`), so every design that follows the theme's fonts is drawn in
  *    them, and they are printed on every other page of the site with the two variables the theme draws its own pages from
  *    (`--font-heading`, `--font-primary`) and in the block editor;
  *  - what a person chose in Theme Global Settings wins: while either font is chosen there, the template's are not used.
@@ -43,13 +43,13 @@ use DXAI_UI\Support\Upload_Paths;
 final class Template_Fonts {
 
 	/** Option: the record (autoloaded: every page of the site reads it). */
-	public const OPTION = 'dxai_ui_template_fonts';
+	public const OPTION = 'dx_ui_template_fonts';
 
-	/** The folder of the files, under uploads/dxai-ui. */
+	/** The folder of the files, under uploads/dx-ui. */
 	public const DIR = 'template-fonts';
 
 	/** The event that reads the numbers of fonts installed before they were read at install. */
-	public const MEASURE_HOOK = 'dxai_ui_template_fonts_measure';
+	public const MEASURE_HOOK = 'dx_ui_template_fonts_measure';
 
 	/** The record's version. */
 	private const VERSION = 1;
@@ -62,7 +62,7 @@ final class Template_Fonts {
 
 	public function register(): void {
 		// After the theme's own answer (priority 10 would be the theme's, the default), before nothing else asks.
-		add_filter( 'dxai_ui_theme_fonts', array( self::class, 'as_theme_fonts' ), 20 );
+		add_filter( 'dx_ui_theme_fonts', array( self::class, 'as_theme_fonts' ), 20 );
 		add_action( 'wp_head', array( self::class, 'print_site' ), 99 );
 		add_filter( 'block_editor_settings_all', array( self::class, 'editor_settings' ), 20 );
 		add_filter( 'dx_fonts_preload_urls', array( self::class, 'preload' ), 20 );
@@ -108,7 +108,7 @@ final class Template_Fonts {
 		 *
 		 * @param array<string, string> $out The choice read from the DevriX theme's settings.
 		 */
-		$out = apply_filters( 'dxai_ui_template_fonts_choice', $out );
+		$out = apply_filters( 'dx_ui_template_fonts_choice', $out );
 
 		return array_filter( array_map( 'strval', is_array( $out ) ? $out : array() ), static fn( $v ) => $v !== '' );
 	}
@@ -129,7 +129,7 @@ final class Template_Fonts {
 		 * @param bool                 $live The default: installed, and no choice in the theme's settings.
 		 * @param array<string, mixed> $r    The record.
 		 */
-		return (bool) apply_filters( 'dxai_ui_template_fonts_live', true, $r ) ? $r : null;
+		return (bool) apply_filters( 'dx_ui_template_fonts_live', true, $r ) ? $r : null;
 	}
 
 	/** The files the record names, by name. @return array<int, string> */
@@ -236,7 +236,7 @@ final class Template_Fonts {
 		 *
 		 * @param bool $on Default true.
 		 */
-		return (bool) apply_filters( 'dxai_ui_font_fallbacks', true );
+		return (bool) apply_filters( 'dx_ui_font_fallbacks', true );
 	}
 
 	/**
@@ -257,7 +257,7 @@ final class Template_Fonts {
 		if ( $t === null || is_admin() || Theme_Compat::is_converted_page() ) {
 			return;
 		}
-		echo '<style id="dxai-template-fonts">' . Late_Fonts::hold( self::site_css( $t ) ) . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the faces and stacks are made here and validated when read.
+		echo '<style id="dxui-template-fonts">' . Late_Fonts::hold( self::site_css( $t ) ) . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the faces and stacks are made here and validated when read.
 	}
 
 	/**
@@ -349,24 +349,24 @@ final class Template_Fonts {
 	 */
 	public static function install( int $home ) {
 		if ( $home < 1 || ! Design_Attach::is_design( $home ) ) {
-			return new \WP_Error( 'dxai_ui_fonts_design', __( 'That is not an imported design.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_fonts_design', __( 'That is not an imported design.', 'dx-ui' ) );
 		}
 		$urls = array();
-		foreach ( (array) get_post_meta( $home, '_dxai_ui_font_urls', true ) as $url ) {
+		foreach ( (array) get_post_meta( $home, '_dx_ui_font_urls', true ) as $url ) {
 			if ( is_string( $url ) && Font_Host::is_google( $url ) ) {
 				$urls[] = Font_Host::normal( $url );
 			}
 		}
 		$urls = array_values( array_unique( $urls ) );
 		if ( $urls === array() ) {
-			return new \WP_Error( 'dxai_ui_fonts_none', __( 'The design loads no Google font, so there is nothing to host for the template.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_fonts_none', __( 'The design loads no Google font, so there is nothing to host for the template.', 'dx-ui' ) );
 		}
 		$faces    = array();
 		$complete = true;
 		foreach ( $urls as $url ) {
 			$copy = Font_Host::copy( $url );
 			if ( $copy === null ) {
-				return new \WP_Error( 'dxai_ui_fonts_fetch', __( 'Google Fonts could not be reached, so the design\'s fonts were not copied. Nothing was changed.', 'dxai-ui' ) );
+				return new \WP_Error( 'dx_ui_fonts_fetch', __( 'Google Fonts could not be reached, so the design\'s fonts were not copied. Nothing was changed.', 'dx-ui' ) );
 			}
 			$complete = $complete && $copy['complete'];
 			foreach ( self::faces_of( $copy['css'] ) as $face ) {
@@ -381,7 +381,7 @@ final class Template_Fonts {
 		// Only what is on this disk: a file that could not be fetched keeps Google's address in the copy and is not a face here.
 		$dir = Upload_Paths::path( Upload_Paths::DIR . '/' . self::DIR );
 		if ( $dir === '' || ! wp_mkdir_p( $dir ) ) {
-			return new \WP_Error( 'dxai_ui_fonts_dir', __( 'The uploads folder for the template\'s fonts could not be made.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_fonts_dir', __( 'The uploads folder for the template\'s fonts could not be made.', 'dx-ui' ) );
 		}
 		$rules   = array();
 		$files   = array();
@@ -406,7 +406,7 @@ final class Template_Fonts {
 			}
 		}
 		if ( $rules === array() ) {
-			return new \WP_Error( 'dxai_ui_fonts_faces', __( 'Google answered, but no font face of the design could be kept.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_fonts_faces', __( 'Google answered, but no font face of the design could be kept.', 'dx-ui' ) );
 		}
 		// Which family is which: the design's page is set in the body font, any other named web font is a headline font.
 		$families = array_keys( $names );
@@ -427,7 +427,7 @@ final class Template_Fonts {
 		$record = array(
 			'v'              => self::VERSION,
 			'design'         => $home,
-			'source'         => (string) get_post_meta( $home, '_dxai_ui_source_zip', true ),
+			'source'         => (string) get_post_meta( $home, '_dx_ui_source_zip', true ),
 			'title'          => html_entity_decode( get_the_title( $home ), ENT_QUOTES, 'UTF-8' ),
 			'heading'        => self::stack_of( $heading, $home, 'heading' ),
 			'body'           => self::stack_of( $body, $home, 'body' ),
@@ -608,7 +608,7 @@ final class Template_Fonts {
 	 * A family's stack as the design wrote it (its fallbacks included), or a plain one made from its name.
 	 */
 	private static function stack_of( string $family, int $home, string $role ): string {
-		$sheet = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' );
+		$sheet = Upload_Paths::for_meta( $home, '_dx_ui_css_url' );
 		$path  = (string) ( $sheet['path'] ?? '' );
 		if ( $path !== '' && is_readable( $path ) ) {
 			$css = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents

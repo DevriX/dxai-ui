@@ -7,11 +7,11 @@
  *
  * Reads nothing from the site's content and writes nothing. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Page_Order;
-use DXAI_UI\Pages\Section_Roles;
+use DX_UI\Pages\Page_Order;
+use DX_UI\Pages\Section_Roles;
 
 $fail   = 0;
 $pass   = 0;
@@ -25,7 +25,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$group = static fn( string $name, string $inner, string $css = '' ): string => '<!-- wp:group {"metadata":{"name":"' . $name . '"}' . ( $css !== '' ? ',"dxaiCss":"' . $css . '"' : '' ) . '} --><div class="wp-block-group">' . $inner . '</div><!-- /wp:group -->';
+$group = static fn( string $name, string $inner, string $css = '' ): string => '<!-- wp:group {"metadata":{"name":"' . $name . '"}' . ( $css !== '' ? ',"dxuiCss":"' . $css . '"' : '' ) . '} --><div class="wp-block-group">' . $inner . '</div><!-- /wp:group -->';
 $head  = static fn( string $t, int $l = 2 ): string => '<!-- wp:heading {"level":' . $l . '} --><h' . $l . ' class="wp-block-heading">' . $t . '</h' . $l . '><!-- /wp:heading -->';
 $para  = static fn( string $t = 'Text' ): string => '<!-- wp:paragraph --><p>' . $t . '</p><!-- /wp:paragraph -->';
 $box   = '<!-- wp:amr/link-box --><a class="wp-block-amr-link-box" href="#"><!-- wp:paragraph --><p>Service</p><!-- /wp:paragraph --></a><!-- /wp:amr/link-box -->';

@@ -2,16 +2,16 @@
 /**
  * The theme's own components, in the sections copied onto one of its pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Support\Css_Trim;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Support\Css_Trim;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A page of the theme that holds sections copied from a design page shows the theme's stylesheets fenced off them
@@ -23,18 +23,18 @@ use DXAI_UI\Support\Upload_Paths;
  *
  * So a class that the page's blocks carry and only the theme defines — not the design's sheet, not a utility the
  * plugin supplies (Utility_Classes), not one of WordPress's — gets its rules from the theme back, for the elements
- * inside the sections: the same rules at the same weight, narrowed to `:where(.dxai-ui)` (Css_Trim::components()),
+ * inside the sections: the same rules at the same weight, narrowed to `:where(.dx-ui)` (Css_Trim::components()),
  * in one small sheet printed after the theme's, as it is on the page they were copied from. The states a script
  * adds to a component (`faq-question--expanded`) are found by their name: a class that starts with the component's
  * name and `--` or `__`.
  *
  * The rules are read from the theme's own compiled stylesheets, so nothing is named after a theme. The sheet is
- * made once for a set of classes and kept in uploads/dxai-ui/theme/; it is made again when the theme changes.
+ * made once for a set of classes and kept in uploads/dx-ui/theme/; it is made again when the theme changes.
  */
 final class Theme_Components {
 
 	/** Classes that are WordPress's or the plugin's own, never a theme's component. */
-	private const NOT_COMPONENTS = '/^(?:wp-|has-|is-layout-|is-content-|is-vertical$|is-nowrap$|is-resized$|is-style-[\w-]*button$|align|size-|screen-reader|admin-bar|current-|menu-|page-|post-|attachment-|dxai-|dxs-|sc-)/';
+	private const NOT_COMPONENTS = '/^(?:wp-|has-|is-layout-|is-content-|is-vertical$|is-nowrap$|is-resized$|is-style-[\w-]*button$|align|size-|screen-reader|admin-bar|current-|menu-|page-|post-|attachment-|dxui-|dxs-|sc-)/';
 
 	/** @var array<string, array<string, true>> Design sheet path + time => its class names. */
 	private static array $designs = array();
@@ -59,7 +59,7 @@ final class Theme_Components {
 		}
 		$path = Upload_Paths::path( $file );
 		$deps = wp_style_is( 'theme_style', 'registered' ) ? array( 'theme_style' ) : array();
-		wp_enqueue_style( 'dxai-ui-theme-components', Upload_Paths::url( $file ), $deps, $path !== '' ? Upload_Paths::version( $path ) : DXAI_UI_VERSION );
+		wp_enqueue_style( 'dx-ui-theme-components', Upload_Paths::url( $file ), $deps, $path !== '' ? Upload_Paths::version( $path ) : DX_UI_VERSION );
 	}
 
 	/**
@@ -98,7 +98,7 @@ final class Theme_Components {
 		 * @param array<int, string> $classes The classes found.
 		 * @param string             $markup  The page's content.
 		 */
-		$out = (array) apply_filters( 'dxai_ui_theme_components', array_map( 'strval', array_keys( $out ) ), $markup );
+		$out = (array) apply_filters( 'dx_ui_theme_components', array_map( 'strval', array_keys( $out ) ), $markup );
 		sort( $out, SORT_STRING );
 
 		return array_values( array_unique( array_map( 'strval', $out ) ) );
@@ -122,12 +122,12 @@ final class Theme_Components {
 		$css = '';
 		foreach ( Theme_Buttons::sheets() as $sheet ) {
 			$text = (string) file_get_contents( $sheet ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$cut  = Css_Trim::components( $text, $classes, ':where(.dxai-ui)' );
+			$cut  = Css_Trim::components( $text, $classes, ':where(.dx-ui)' );
 			if ( $cut !== null && $cut !== '' ) {
 				$css .= $cut;
 			}
 		}
-		$head = '/* The theme\'s components on this page, inside the design\'s sections: ' . implode( ' ', array_slice( $classes, 0, 12 ) ) . ( count( $classes ) > 12 ? ' …' : '' ) . " (DXAI-UI). */\n";
+		$head = '/* The theme\'s components on this page, inside the design\'s sections: ' . implode( ' ', array_slice( $classes, 0, 12 ) ) . ( count( $classes ) > 12 ? ' …' : '' ) . " (DX-UI). */\n";
 		if ( ! wp_mkdir_p( dirname( $out ) ) || false === file_put_contents( $out, $css === '' ? $head : $head . $css ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			return '';
 		}

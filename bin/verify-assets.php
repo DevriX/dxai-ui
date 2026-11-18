@@ -3,18 +3,18 @@
  * Harvest images/videos/fonts/links from a generated ZIP without an LLM.
  * Run: wp eval-file bin/verify-assets.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
-$dxai_snapshot = dxai_verify_snapshot();
+require DX_UI_DIR . 'bin/verify-cleanup.php';
+$dxui_snapshot = dxui_verify_snapshot();
 
 $upload = wp_upload_dir();
-$dir    = trailingslashit( $upload['basedir'] ) . 'dxai-ui';
+$dir    = trailingslashit( $upload['basedir'] ) . 'dx-ui';
 wp_mkdir_p( $dir );
 $zip_path = $dir . '/verify-assets.zip';
 if ( file_exists( $zip_path ) ) {
@@ -57,7 +57,7 @@ $zip->addFromString( 'brand.woff2', 'wOFF2' );
 $zip->addFromString( 'hero.mp4', 'ftypmp42' );
 $zip->close();
 
-$doc = ( new DXAI_UI\Connectors\Generated_Design_Connector() )->import_zip(
+$doc = ( new DX_UI\Connectors\Generated_Design_Connector() )->import_zip(
 	array(
 		'tmp_name' => $zip_path,
 		'name'     => 'verify-assets.zip',
@@ -66,7 +66,7 @@ $doc = ( new DXAI_UI\Connectors\Generated_Design_Connector() )->import_zip(
 
 if ( is_wp_error( $doc ) ) {
 	echo '  FAIL  the test archive is read: ' . $doc->get_error_message() . PHP_EOL;
-	dxai_verify_cleanup( $dxai_snapshot );
+	dxui_verify_cleanup( $dxui_snapshot );
 	exit( 1 );
 }
 
@@ -80,9 +80,9 @@ echo 'links=' . (int) ( $summary['links'] ?? 0 ) . PHP_EOL;
 $css_out = (string) ( $harvest['css'] ?? '' );
 echo 'has_font_face=' . ( str_contains( $css_out, '@font-face' ) || str_contains( $css_out, '@import' ) ? 'yes' : 'no' ) . PHP_EOL;
 $rewritten = (string) ( $doc->payload['styles']['style.css'] ?? '' );
-echo 'css_rewritten=' . ( str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dxai-ui/assets' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'css_rewritten=' . ( str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dx-ui/assets' ) ? 'yes' : 'no' ) . PHP_EOL;
 
-$figma = ( new DXAI_UI\Media\Asset_Harvester() )->from_figma(
+$figma = ( new DX_UI\Media\Asset_Harvester() )->from_figma(
 	array(
 		'name'       => 'Hero',
 		'style'      => array(
@@ -112,13 +112,13 @@ echo 'figma_fonts=' . count( $figma['fonts'] ?? array() ) . PHP_EOL;
 echo 'figma_links=' . count( $figma['links'] ?? array() ) . PHP_EOL;
 echo 'figma_colors=' . count( $figma['tokens']['colors'] ?? array() ) . PHP_EOL;
 
-$paste = ( new DXAI_UI\Media\Asset_Harvester() )->from_text(
+$paste = ( new DX_UI\Media\Asset_Harvester() )->from_text(
 	'<a href="https://example.com/jobs">Jobs</a><img src="https://example.com/x.png" />',
 	"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap');\n.hero{color:#111}"
 );
 echo 'paste_fonts=' . (int) ( $paste['summary']['fonts'] ?? 0 ) . PHP_EOL;
 echo 'paste_links=' . (int) ( $paste['summary']['links'] ?? 0 ) . PHP_EOL;
-dxai_verify_cleanup( $dxai_snapshot );
+dxui_verify_cleanup( $dxui_snapshot );
 
 // What the archive and the two other sources hold is known: each must come across.
 $fail   = 0;
@@ -130,7 +130,7 @@ $expect = static function ( string $what, bool $ok ) use ( &$fail, &$pass ): voi
 $expect( 'the archive is read as a generated design', 'generated-zip' === $doc->kind );
 $expect( 'its two images, its video, its fonts (the hosted family and the @font-face) and its link are harvested', (int) ( $summary['images'] ?? 0 ) >= 2 && (int) ( $summary['videos'] ?? 0 ) >= 1 && (int) ( $summary['fonts'] ?? 0 ) >= 2 && (int) ( $summary['links'] ?? 0 ) >= 1 );
 $expect( 'the font declarations reach the harvested CSS', str_contains( $css_out, '@font-face' ) || str_contains( $css_out, '@import' ) );
-$expect( 'the stylesheet\'s url() points at the uploaded copies', str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dxai-ui/assets' ) );
+$expect( 'the stylesheet\'s url() points at the uploaded copies', str_contains( $rewritten, '/wp-content/uploads/' ) || str_contains( $rewritten, 'dx-ui/assets' ) );
 $expect( 'a Figma node gives its font, its link and its fill colour', count( $figma['fonts'] ?? array() ) >= 1 && count( $figma['links'] ?? array() ) >= 1 && count( $figma['tokens']['colors'] ?? array() ) >= 1 );
 $expect( 'pasted code gives its imported font and its link', (int) ( $paste['summary']['fonts'] ?? 0 ) >= 1 && (int) ( $paste['summary']['links'] ?? 0 ) >= 1 );
 /*
@@ -146,7 +146,7 @@ for ( $i = 0; $i < 1600; $i++ ) {
 	$map[ 'wp-content/uploads/2025/06/photo-' . $i . '.jpg' ]  = $url;
 	$map[ 'photo-' . $i . '.jpg' ]                          = $url;
 }
-$rewrite  = new ReflectionMethod( DXAI_UI\Media\Asset_Harvester::class, 'apply_rewrites' );
+$rewrite  = new ReflectionMethod( DX_UI\Media\Asset_Harvester::class, 'apply_rewrites' );
 $warnings = 0;
 set_error_handler(
 	static function () use ( &$warnings ): bool {
@@ -155,12 +155,12 @@ set_error_handler(
 		return true;
 	}
 );
-$page = $rewrite->invoke( new DXAI_UI\Media\Asset_Harvester(), '<img src="/wp-content/uploads/2025/06/photo-7.jpg"><img src="photo-12.jpg">', $map );
+$page = $rewrite->invoke( new DX_UI\Media\Asset_Harvester(), '<img src="/wp-content/uploads/2025/06/photo-7.jpg"><img src="photo-12.jpg">', $map );
 $css  = '';
 for ( $i = 0; $i < 600; $i++ ) {
 	$css .= '.b' . $i . '{background:url(/wp-content/uploads/2025/06/photo-' . $i . '.jpg)}';
 }
-$sheet = $rewrite->invoke( new DXAI_UI\Media\Asset_Harvester(), $css, $map );
+$sheet = $rewrite->invoke( new DX_UI\Media\Asset_Harvester(), $css, $map );
 restore_error_handler();
 $expect( 'a page naming 2 of 4800 spellings gets both uploaded URLs, each once', str_contains( (string) $page, 'src="https://example.test/wp-content/uploads/2026/10/photo-7.webp"' ) && str_contains( (string) $page, 'src="https://example.test/wp-content/uploads/2026/10/photo-12.webp"' ) && ! str_contains( (string) $page, '2026/10/https' ) );
 $expect( 'a stylesheet naming 600 files gets all 600 uploaded URLs, none left behind', substr_count( (string) $sheet, 'https://example.test/wp-content/uploads/2026/10/photo-' ) === 600 && ! str_contains( (string) $sheet, '2025/06' ) );

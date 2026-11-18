@@ -11,11 +11,11 @@
  * Nothing leaves the machine: the font is made here (a TrueType file with known numbers) and Google's answers too (pre_http_request).
  * The site's template fonts record, if any, is put back as it was. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Font_Metrics;
-use DXAI_UI\Theme\Template_Fonts;
+use DX_UI\Media\Font_Metrics;
+use DX_UI\Theme\Template_Fonts;
 
 $fail   = 0;
 $pass   = 0;
@@ -154,9 +154,9 @@ $expect( 'the stack names the fallback face right after the font', '\'Tf Body\',
 $expect( '…and a font without numbers is left as it is', '"Tf Display", Impact, sans-serif' === Template_Fonts::stack( $with, 'heading' ) && "'Tf Body', system-ui, sans-serif" === Template_Fonts::stack( $record, 'body' ) );
 $expect( 'the faces carry the fallback face', str_contains( Template_Fonts::faces( $with ), 'font-family:"Tf Body Fallback"' ) && str_starts_with( Template_Fonts::faces( $with ), (string) $record['faces'] ) );
 $expect( 'what the site prints: the faces and the variables with the fallback', str_contains( Template_Fonts::site_css( $with ), '--font-primary:\'Tf Body\', "Tf Body Fallback", system-ui, sans-serif;' ) && str_contains( Template_Fonts::site_css( $with ), '"Tf Body Fallback";font-style:normal' ) );
-add_filter( 'dxai_ui_font_fallbacks', '__return_false' );
+add_filter( 'dx_ui_font_fallbacks', '__return_false' );
 $expect( 'none of it when the filter says no', "'Tf Body', system-ui, sans-serif" === Template_Fonts::stack( $with, 'body' ) && ! str_contains( Template_Fonts::faces( $with ), 'Fallback' ) );
-remove_filter( 'dxai_ui_font_fallbacks', '__return_false' );
+remove_filter( 'dx_ui_font_fallbacks', '__return_false' );
 
 echo "\nFonts installed before\n";
 $before = get_option( Template_Fonts::OPTION, null );

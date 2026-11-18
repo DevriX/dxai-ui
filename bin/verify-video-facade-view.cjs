@@ -11,7 +11,7 @@
  * Enter key each swap in the player of youtube-nocookie.com, with the video's id and title; and the script and the theme's own script,
  * both loaded, still make one player. Needs no site and no network (what YouTube would answer is faked). Exit code 1 when a check fails.
  *
- * Chrome: $DXAI_CHROME, else the usual places. puppeteer-core comes from node_modules.
+ * Chrome: $DXUI_CHROME, else the usual places. puppeteer-core comes from node_modules.
  */
 const fs = require('fs');
 const path = require('path');
@@ -20,9 +20,9 @@ const puppeteer = require('puppeteer-core');
 const ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
 const themeScript = args.includes('--theme-script') ? args[args.indexOf('--theme-script') + 1] : '';
-const CHROME = process.env.DXAI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
+const CHROME = process.env.DXUI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
 if (!CHROME) {
-	console.error('no Chrome found (set DXAI_CHROME)');
+	console.error('no Chrome found (set DXUI_CHROME)');
 	process.exit(2);
 }
 const JS = path.join(ROOT, 'assets/js/youtube-facade.js');

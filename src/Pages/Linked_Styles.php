@@ -11,14 +11,14 @@
  * stylesheets — a few, small, cached — and keeps only the rules that set a
  * background picture, for Content_Extractor::extract().
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Http\Browser_Headers;
+use DX_UI\Http\Browser_Headers;
 
 final class Linked_Styles {
 
@@ -41,7 +41,7 @@ final class Linked_Styles {
 		$start  = microtime( true );
 		$budget = min( (float) self::BUDGET, $budget );
 		foreach ( array_slice( self::sheets( $html, $page_url ), 0, self::MAX_SHEETS ) as $url ) {
-			$key    = 'dxai_ui_bgcss_' . md5( $url );
+			$key    = 'dx_ui_bgcss_' . md5( $url );
 			$cached = get_transient( $key );
 			if ( is_string( $cached ) ) {
 				$out[] = $cached;

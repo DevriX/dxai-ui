@@ -2,12 +2,12 @@
 /**
  * What an AI step may cost: counted before it is asked, and stopped at a ceiling.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * The AI steps of the pages (the planner, the critic; the words have their own button) are off until a person asks, and never
@@ -18,10 +18,10 @@ namespace DXAI_UI\Pages;
 final class Ai_Budget {
 
 	/** Option: the price of a million tokens, array{in:float, out:float}, as the person typed it. */
-	public const PRICES = 'dxai_ui_ai_prices';
+	public const PRICES = 'dx_ui_ai_prices';
 
 	/** Option: the most tokens one run may spend (a run is one press of a button). */
-	public const CAP = 'dxai_ui_ai_cap';
+	public const CAP = 'dx_ui_ai_cap';
 
 	/** The ceiling when none is set: about forty pages planned. */
 	public const DEFAULT_CAP = 150000;

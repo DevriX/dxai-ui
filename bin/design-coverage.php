@@ -23,20 +23,20 @@
  * always has them, because it does the import itself.
  *
  * usage: bin/wp-php.sh bin/design-coverage.php ["<zip>"...]        every corpus archive by default
- *        DXAI_COVERAGE_KEEP=1 …   leave the imported pages in place
+ *        DXUI_COVERAGE_KEEP=1 …   leave the imported pages in place
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Connectors\Zip_Router;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Verification\Design_Coverage;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Connectors\Zip_Router;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Verification\Design_Coverage;
 
 $zips = array_slice( $argv, 1 );
 if ( $zips === array() ) {
@@ -157,7 +157,7 @@ foreach ( $zips as $zip_path ) {
 		++$failed;
 	}
 
-	if ( getenv( 'DXAI_COVERAGE_VERBOSE' ) ) {
+	if ( getenv( 'DXUI_COVERAGE_VERBOSE' ) ) {
 		foreach ( $report['rows'] as $row ) {
 			printf(
 				'    %-24s %6s -> %-6d %s%s' . PHP_EOL,

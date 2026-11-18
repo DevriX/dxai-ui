@@ -2,15 +2,15 @@
 /**
  * Web fonts served from this site's uploads instead of Google's.
  *
- * @package DXAI_UI\Media
+ * @package DX_UI\Media
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Theme_Fonts;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Theme_Fonts;
 
 /**
  * A design that loads Google Fonts asks for them in a chain: the page, then its stylesheet, whose first line is an
@@ -18,7 +18,7 @@ use DXAI_UI\Theme\Theme_Fonts;
  * answered — on a phone, more than two seconds of the first paint of the Semper Dry pages. A DevriX theme also strips
  * the `<link>` of Google's stylesheet from its pages, so the design's fonts came through the `@import` or not at all.
  *
- * This copies the fonts here, once. The font files go to uploads/dxai-ui/fonts/, Google's stylesheet for them (with
+ * This copies the fonts here, once. The font files go to uploads/dx-ui/fonts/, Google's stylesheet for them (with
  * the files' local names) is kept beside them, and the design's own stylesheet gets the `@font-face` rules in place
  * of its `@import` — so the browser needs the page and one stylesheet, from this host, and asks for a font file only
  * when a glyph is drawn in it. The rules are Google's own, subset by subset (`unicode-range`, `font-display`), so the
@@ -30,18 +30,18 @@ use DXAI_UI\Theme\Theme_Fonts;
  * which is how the page knows not to load Google's link as well, how the copy is undone (revert()), and how an export
  * gets the sheet as it was (portable()). Nothing here runs while a visitor waits: the copy is made when a design is
  * imported, by cron after the first view of a page that still asks Google, from the Library, or by
- * `wp dxai-ui speed apply`.
+ * `wp dx-ui speed apply`.
  */
 final class Font_Host {
 
-	public const HOOK = 'dxai_ui_localize_fonts';
+	public const HOOK = 'dx_ui_localize_fonts';
 
 	/** Cron: the files no sheet names any more go (after a design took the theme's fonts). */
-	public const CLEAN_HOOK = 'dxai_ui_clean_fonts';
+	public const CLEAN_HOOK = 'dx_ui_clean_fonts';
 
 	/** Where the sheet's record of the copy begins and ends. */
-	private const OPEN  = '/*! dxai-ui local fonts ';
-	private const CLOSE = '/*! dxai-ui local fonts end */';
+	private const OPEN  = '/*! dx-ui local fonts ';
+	private const CLOSE = '/*! dx-ui local fonts end */';
 
 	/** An address on Google's font CDN, in a stylesheet's url(). */
 	private const REMOTE = '#url\(\s*[\'"]?https://fonts\.gstatic\.com/#i';
@@ -129,9 +129,9 @@ final class Font_Host {
 	/** Copy one stylesheet's fonts by cron (the cron event the plugin has always used for it). */
 	public static function queue_copy( string $url ): void {
 		$url = self::normal( $url );
-		if ( self::is_google( $url ) && ! get_transient( 'dxai_ui_fonts_wait_' . self::key( $url ) ) && ! wp_next_scheduled( 'dxai_ui_copy_font_css', array( $url ) ) ) {
-			set_transient( 'dxai_ui_fonts_wait_' . self::key( $url ), 1, 10 * MINUTE_IN_SECONDS );
-			wp_schedule_single_event( time(), 'dxai_ui_copy_font_css', array( $url ) );
+		if ( self::is_google( $url ) && ! get_transient( 'dx_ui_fonts_wait_' . self::key( $url ) ) && ! wp_next_scheduled( 'dx_ui_copy_font_css', array( $url ) ) ) {
+			set_transient( 'dx_ui_fonts_wait_' . self::key( $url ), 1, 10 * MINUTE_IN_SECONDS );
+			wp_schedule_single_event( time(), 'dx_ui_copy_font_css', array( $url ) );
 		}
 	}
 
@@ -140,8 +140,8 @@ final class Font_Host {
 	 * hours while Google cannot be reached).
 	 */
 	public static function queue_design( int $post_id ): void {
-		if ( $post_id > 0 && ! get_transient( 'dxai_ui_fonts_wait_' . $post_id ) && ! wp_next_scheduled( self::HOOK, array( $post_id ) ) ) {
-			set_transient( 'dxai_ui_fonts_wait_' . $post_id, 1, 10 * MINUTE_IN_SECONDS );
+		if ( $post_id > 0 && ! get_transient( 'dx_ui_fonts_wait_' . $post_id ) && ! wp_next_scheduled( self::HOOK, array( $post_id ) ) ) {
+			set_transient( 'dx_ui_fonts_wait_' . $post_id, 1, 10 * MINUTE_IN_SECONDS );
 			wp_schedule_single_event( time(), self::HOOK, array( $post_id ) );
 		}
 	}
@@ -162,7 +162,7 @@ final class Font_Host {
 		 * @param bool $on   Copy.
 		 * @param int  $home The design's Home.
 		 */
-		if ( $home < 1 || ! apply_filters( 'dxai_ui_fonts_on_import', true, $home ) ) {
+		if ( $home < 1 || ! apply_filters( 'dx_ui_fonts_on_import', true, $home ) ) {
 			return;
 		}
 		try {
@@ -182,7 +182,7 @@ final class Font_Host {
 
 	/**
 	 * Put the fonts of a design into its stylesheet: the `@import`s of Google's stylesheet become the `@font-face`
-	 * rules with local files, and the stylesheets the design lists (`_dxai_ui_font_urls`) that its sheet does not
+	 * rules with local files, and the stylesheets the design lists (`_dx_ui_font_urls`) that its sheet does not
 	 * import come with them. What the rules replace is kept in the record at their head, so unlocalize() gives the
 	 * sheet back byte for byte.
 	 *
@@ -290,16 +290,16 @@ final class Font_Host {
 		if ( Theme_Fonts::adopts( $post_id ) ) {
 			return self::adopt_design( $post_id );
 		}
-		$sheet   = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
+		$sheet   = Upload_Paths::for_meta( $post_id, '_dx_ui_css_url' );
 		if ( $sheet['path'] === '' ) {
 			return array( 'changed' => false, 'complete' => true, 'urls' => array(), 'note' => 'no sheet' );
 		}
-		$listed = get_post_meta( $post_id, '_dxai_ui_font_urls', true );
+		$listed = get_post_meta( $post_id, '_dx_ui_font_urls', true );
 		$result = self::localize_sheet( $sheet['path'], is_array( $listed ) ? array_map( 'strval', $listed ) : array(), $budget );
 		if ( $result['complete'] ) {
-			delete_transient( 'dxai_ui_fonts_wait_' . $post_id );
+			delete_transient( 'dx_ui_fonts_wait_' . $post_id );
 		} elseif ( $result['note'] !== 'no Google fonts' ) {
-			set_transient( 'dxai_ui_fonts_wait_' . $post_id, 1, 6 * HOUR_IN_SECONDS );
+			set_transient( 'dx_ui_fonts_wait_' . $post_id, 1, 6 * HOUR_IN_SECONDS );
 		}
 
 		return $result;
@@ -439,8 +439,8 @@ final class Font_Host {
 
 	/** The state of a design's sheet (state()). */
 	public static function design_state( int $post_id ): string {
-		$sheet  = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
-		$listed = get_post_meta( $post_id, '_dxai_ui_font_urls', true );
+		$sheet  = Upload_Paths::for_meta( $post_id, '_dx_ui_css_url' );
+		$listed = get_post_meta( $post_id, '_dx_ui_font_urls', true );
 
 		return self::state( (string) $sheet['path'], is_array( $listed ) ? array_map( 'strval', $listed ) : array() );
 	}
@@ -531,14 +531,14 @@ final class Font_Host {
 	 * @return array{changed:bool, complete:bool, urls:array<int, string>, note:string}
 	 */
 	public static function adopt_design( int $post_id ): array {
-		$sheet  = Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' );
-		$listed = get_post_meta( $post_id, '_dxai_ui_font_urls', true );
+		$sheet  = Upload_Paths::for_meta( $post_id, '_dx_ui_css_url' );
+		$listed = get_post_meta( $post_id, '_dx_ui_font_urls', true );
 		$listed = is_array( $listed ) ? array_map( 'strval', $listed ) : array();
 		$result = self::adopt( (string) $sheet['path'], $listed );
 		if ( ! $result['complete'] ) {
 			return self::localize_sheet( (string) $sheet['path'], $listed );
 		}
-		delete_transient( 'dxai_ui_fonts_wait_' . $post_id );
+		delete_transient( 'dx_ui_fonts_wait_' . $post_id );
 		if ( $result['changed'] && ! wp_next_scheduled( self::CLEAN_HOOK ) ) {
 			// Some minutes later: a file fetched a moment ago is not looked at (clean_files()).
 			wp_schedule_single_event( time() + 11 * MINUTE_IN_SECONDS, self::CLEAN_HOOK );
@@ -577,7 +577,7 @@ final class Font_Host {
 			}
 		}
 		global $wpdb;
-		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s", '_dxai_ui_css_url' ) ) as $stored ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s", '_dx_ui_css_url' ) ) as $stored ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$path = Upload_Paths::path( Upload_Paths::relative( (string) $stored ) );
 			if ( $path !== '' && is_file( $path ) ) {
 				$sheets[ wp_normalize_path( $path ) ] = true;
@@ -657,7 +657,7 @@ final class Font_Host {
 		if ( ! function_exists( 'wp_tempnam' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
-		$tmp = wp_tempnam( 'dxai-sheet.css' );
+		$tmp = wp_tempnam( 'dxui-sheet.css' );
 		if ( $tmp === '' || false === file_put_contents( $tmp, self::unlocalize( (string) file_get_contents( $path ) ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			return $path;
 		}

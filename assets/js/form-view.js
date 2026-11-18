@@ -2,13 +2,13 @@
 	function bind( form ) {
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
-			const status = form.querySelector( '.dxai-form-status' );
+			const status = form.querySelector( '.dxui-form-status' );
 			const data = new window.FormData( form );
 			const payload = {};
 			data.forEach( function ( value, key ) {
 				payload[ key ] = value;
 			} );
-			const url = ( window.dxaiUIForm && window.dxaiUIForm.restUrl ) || form.getAttribute( 'action' );
+			const url = ( window.dxUIForm && window.dxUIForm.restUrl ) || form.getAttribute( 'action' );
 			window.fetch( url, {
 				method: 'POST',
 				// A public endpoint: sending the visitor's cookies without the
@@ -34,5 +34,5 @@
 		} );
 	}
 
-	document.querySelectorAll( 'form[data-dxai-form]' ).forEach( bind );
+	document.querySelectorAll( 'form[data-dxui-form]' ).forEach( bind );
 }() );

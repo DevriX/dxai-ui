@@ -2,16 +2,16 @@
 /**
  * The theme's stylesheets stop at the design's sections on an ordinary page.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Support\Css_Fence;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Support\Css_Fence;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A page of the theme that holds sections copied from a design page
@@ -24,7 +24,7 @@ use DXAI_UI\Support\Upload_Paths;
  * its theme.json block gap put 20px between the FAQ rows.
  *
  * So on such a page each of the theme's stylesheets is served fenced
- * (Css_Fence): the same rules, none of them reaching inside `.dxai-ui`. Which
+ * (Css_Fence): the same rules, none of them reaching inside `.dx-ui`. Which
  * sheets are the theme's is recorded, not guessed: every style the theme's own
  * callbacks register or enqueue, and every inline block they add to another
  * handle (a DevriX theme prints its whole stylesheet inline, under a handle
@@ -49,7 +49,7 @@ use DXAI_UI\Support\Upload_Paths;
  * theme's stylesheet. A page the team built under the theme's CSS keeps it. The theme's own blocks among the design's (its Span, its
  * Picture) keep their block styles there, as on the canvas.
  *
- * The custom field `_dxai_ui_fence_theme` (1 or 0) of a page, or the filter `dxai_ui_fence_theme` (bool, post id), sets it for a page.
+ * The custom field `_dx_ui_fence_theme` (1 or 0) of a page, or the filter `dx_ui_fence_theme` (bool, post id), sets it for a page.
  */
 final class Theme_Fence {
 
@@ -106,16 +106,16 @@ final class Theme_Fence {
 		if ( ! Design_Attach::attached( $post_id ) ) {
 			return self::draws_own_design( $post_id ) && self::fences_own( $post_id );
 		}
-		// A page can say so itself (custom field _dxai_ui_fence_theme: 1 fences, 0 does not).
-		$own = (string) get_post_meta( $post_id, '_dxai_ui_fence_theme', true );
+		// A page can say so itself (custom field _dx_ui_fence_theme: 1 fences, 0 does not).
+		$own = (string) get_post_meta( $post_id, '_dx_ui_fence_theme', true );
 		if ( $own === '1' || $own === '0' ) {
-			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
+			return (bool) apply_filters( 'dx_ui_fence_theme', $own === '1', $post_id );
 		}
 		// A copy looks like its source page.
 		$source  = Design_Attach::source_for( $post_id );
 		$default = Blank_Template::is_canvas( $source ) || ( self::draws_own_design( $source ) && self::fences_own( $source ) );
 
-		return (bool) apply_filters( 'dxai_ui_fence_theme', $default, $post_id );
+		return (bool) apply_filters( 'dx_ui_fence_theme', $default, $post_id );
 	}
 
 	/**
@@ -123,15 +123,15 @@ final class Theme_Fence {
 	 * it is a static design): the editor's canvas follows the template picked in the inspector with it.
 	 */
 	public static function fences_own( int $post_id ): bool {
-		if ( $post_id < 1 || Design_Attach::attached( $post_id ) || ! Blank_Template::is_design_page( $post_id ) || '' === (string) get_post_meta( $post_id, '_dxai_ui_css_url', true ) ) {
+		if ( $post_id < 1 || Design_Attach::attached( $post_id ) || ! Blank_Template::is_design_page( $post_id ) || '' === (string) get_post_meta( $post_id, '_dx_ui_css_url', true ) ) {
 			return false;
 		}
-		$own = (string) get_post_meta( $post_id, '_dxai_ui_fence_theme', true );
+		$own = (string) get_post_meta( $post_id, '_dx_ui_fence_theme', true );
 		if ( $own === '1' || $own === '0' ) {
-			return (bool) apply_filters( 'dxai_ui_fence_theme', $own === '1', $post_id );
+			return (bool) apply_filters( 'dx_ui_fence_theme', $own === '1', $post_id );
 		}
 
-		return (bool) apply_filters( 'dxai_ui_fence_theme', '' !== (string) get_post_meta( $post_id, '_dxai_ui_static_html', true ), $post_id );
+		return (bool) apply_filters( 'dx_ui_fence_theme', '' !== (string) get_post_meta( $post_id, '_dx_ui_static_html', true ), $post_id );
 	}
 
 	/**
@@ -142,7 +142,7 @@ final class Theme_Fence {
 		return $post_id > 0
 			&& Blank_Template::is_design_page( $post_id )
 			&& ! Blank_Template::is_canvas( $post_id )
-			&& '' !== (string) get_post_meta( $post_id, '_dxai_ui_css_url', true );
+			&& '' !== (string) get_post_meta( $post_id, '_dx_ui_css_url', true );
 	}
 
 	/** Wrap each of the theme's callbacks on the style hooks, to record what it registers and adds. */
@@ -185,10 +185,10 @@ final class Theme_Fence {
 		$styles = wp_styles();
 		$roots  = array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) );
 		// On a design's own page the theme's blocks among the design's keep their block styles, as the canvas keeps them (Assets).
-		$blocks = self::draws_own_design( (int) get_queried_object_id() ) ? array_flip( \DXAI_UI\Blocks\Design_Blocks::theme_block_style_handles() ) : array();
+		$blocks = self::draws_own_design( (int) get_queried_object_id() ) ? array_flip( \DX_UI\Blocks\Design_Blocks::theme_block_style_handles() ) : array();
 		foreach ( self::needed( $styles ) as $handle ) {
 			$style = $styles->registered[ $handle ] ?? null;
-			if ( ! $style instanceof \_WP_Dependency || str_starts_with( $handle, 'dxai-ui' ) || isset( $blocks[ $handle ] ) ) {
+			if ( ! $style instanceof \_WP_Dependency || str_starts_with( $handle, 'dx-ui' ) || isset( $blocks[ $handle ] ) ) {
 				continue;
 			}
 			$src   = is_string( $style->src ) ? $style->src : '';

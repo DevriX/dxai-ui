@@ -15,14 +15,14 @@ const vm = require( 'vm' );
 
 /*
  * The editor's own escape-html bundle, in the WordPress install under test.
- * Its location is a fact about the checkout: DXAI_WP_ROOT names the site's
+ * Its location is a fact about the checkout: DXUI_WP_ROOT names the site's
  * public directory, and `.verify/wp-root` is the local convention — the same
  * two bin/wp-boot.php reads, so one setting serves the whole pack. This used
  * to be one machine's absolute path.
  */
 const WP = ( () => {
 	const roots = [];
-	if ( process.env.DXAI_WP_ROOT ) { roots.push( process.env.DXAI_WP_ROOT ); }
+	if ( process.env.DXUI_WP_ROOT ) { roots.push( process.env.DXUI_WP_ROOT ); }
 	const marker = path.join( __dirname, '..', '.verify', 'wp-root' );
 	if ( fs.existsSync( marker ) ) { roots.push( fs.readFileSync( marker, 'utf8' ).trim() ); }
 	if ( process.env.APPDATA ) {
@@ -39,7 +39,7 @@ const WP = ( () => {
 		const dist = path.join( String( root ).replace( /\\/g, '/' ), 'wp-includes', 'js', 'dist' );
 		if ( fs.existsSync( path.join( dist, 'escape-html.js' ) ) ) { return dist; }
 	}
-	console.error( 'escaper-parity: could not find wp-includes/js/dist. Set DXAI_WP_ROOT or write .verify/wp-root.' );
+	console.error( 'escaper-parity: could not find wp-includes/js/dist. Set DXUI_WP_ROOT or write .verify/wp-root.' );
 	process.exit( 2 );
 	return '';
 } )();
@@ -57,7 +57,7 @@ if ( ! api ) {
 	process.exit( 1 );
 }
 
-const rows = JSON.parse( fs.readFileSync( path.join( require( 'os' ).tmpdir(), 'dxai-escaper-parity.json' ), 'utf8' ) );
+const rows = JSON.parse( fs.readFileSync( path.join( require( 'os' ).tmpdir(), 'dxui-escaper-parity.json' ), 'utf8' ) );
 
 const pad = ( s, n ) => String( s ).padEnd( n );
 const q = ( s ) => JSON.stringify( s );

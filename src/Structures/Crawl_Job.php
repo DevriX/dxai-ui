@@ -2,12 +2,12 @@
 /**
  * The site-from-menu crawl as a job that advances a little per request.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
 /**
  * Crawling a design's menu used to run inside the import request itself:
@@ -50,11 +50,11 @@ namespace DXAI_UI\Structures;
  */
 final class Crawl_Job {
 
-	private const PREFIX = 'dxai_ui_crawl_job_';
+	private const PREFIX = 'dx_ui_crawl_job_';
 
-	private const LOCK_PREFIX = 'dxai_ui_crawl_lock_';
+	private const LOCK_PREFIX = 'dx_ui_crawl_lock_';
 
-	public const CRON_HOOK = 'dxai_ui_crawl_tick';
+	public const CRON_HOOK = 'dx_ui_crawl_tick';
 
 	/**
 	 * Longer than any single step can take: the longest is an AI restyle, two
@@ -500,8 +500,8 @@ final class Crawl_Job {
 			'url'     => (string) ( $candidate['url'] ?? '' ),
 			'message' => sprintf(
 				/* translators: %s: why the step stopped */
-				__( 'Sorry — this page was not built: building it stopped twice before it could finish (%s). Build it again from the Library.', 'dxai-ui' ),
-				$why !== '' ? $why : __( 'the server ended the request — most likely the host’s time limit', 'dxai-ui' )
+				__( 'Sorry — this page was not built: building it stopped twice before it could finish (%s). Build it again from the Library.', 'dx-ui' ),
+				$why !== '' ? $why : __( 'the server ended the request — most likely the host’s time limit', 'dx-ui' )
 			),
 		);
 		$crawl['index']   = $index + 1;
@@ -538,8 +538,8 @@ final class Crawl_Job {
 			try {
 				$state['crawl']  = $menu->finish( $state['crawl'] );
 				// A job the Library started for chosen pages ends with their links only (Pages\Site_Pages).
-				$state['result'] = ( $state['tail']['mode'] ?? '' ) === \DXAI_UI\Pages\Site_Pages::MODE
-					? \DXAI_UI\Pages\Site_Pages::finish( $state )
+				$state['result'] = ( $state['tail']['mode'] ?? '' ) === \DX_UI\Pages\Site_Pages::MODE
+					? \DX_UI\Pages\Site_Pages::finish( $state )
 					: ( new Structure_Repository() )->finish_crawl( $state );
 			} catch ( \Throwable $e ) {
 				$state['attempt']['why'] = self::reason( $e );
@@ -572,8 +572,8 @@ final class Crawl_Job {
 			'url'     => (string) ( $summary['origin'] ?? '' ),
 			'message' => sprintf(
 				/* translators: %s: why the finishing pass stopped */
-				__( 'Sorry — the pages were built, but the finishing pass (menus, links, colour tokens) stopped twice before it could finish (%s). Import the design again to run it.', 'dxai-ui' ),
-				$why !== '' ? $why : __( 'the server ended the request — most likely the host’s time limit', 'dxai-ui' )
+				__( 'Sorry — the pages were built, but the finishing pass (menus, links, colour tokens) stopped twice before it could finish (%s). Import the design again to run it.', 'dx-ui' ),
+				$why !== '' ? $why : __( 'the server ended the request — most likely the host’s time limit', 'dx-ui' )
 			),
 		);
 

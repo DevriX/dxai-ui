@@ -7,7 +7,7 @@
  *
  * For each page: the four scores (Performance, Accessibility, Best Practices, SEO), FCP, LCP, TBT, CLS and Speed Index, the
  * LCP element, and every audit that does not pass, with what it would save. With --runs the median run by Performance is
- * kept (Lighthouse varies from run to run). Reads only. Chrome: $DXAI_CHROME, else the usual places. Exit code 0.
+ * kept (Lighthouse varies from run to run). Reads only. Chrome: $DXUI_CHROME, else the usual places. Exit code 0.
  *
  * What is the host's and not the page's — the time to the first byte, HTTP/2, HTTPS, cache headers, compression — is listed
  * apart. With --warm the site is served as a good host serves it (warm()): from memory, gzipped, static files cached for a
@@ -62,7 +62,7 @@ async function warm( url ) {
 	return { url: local, close: () => server.close() };
 }
 
-const CHROME = process.env.DXAI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
+const CHROME = process.env.DXUI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
 const args = process.argv.slice( 2 );
 const opt = ( name, fallback ) => { const i = args.indexOf( '--' + name ); return i >= 0 ? args[ i + 1 ] : fallback; };
 const urls = args.filter( ( a, i ) => /^https?:\/\//.test( a ) && ! [ '--runs', '--out', '--lhr' ].includes( args[ i - 1 ] ) );
@@ -98,7 +98,7 @@ function summary( lhr ) {
 
 ( async () => {
 	if ( ! CHROME || urls.length === 0 ) {
-		console.error( ! CHROME ? 'no Chrome found (set DXAI_CHROME)' : 'usage: node bin/page-speed.cjs <url>... [--runs 3] [--desktop] [--out report.json]' );
+		console.error( ! CHROME ? 'no Chrome found (set DXUI_CHROME)' : 'usage: node bin/page-speed.cjs <url>... [--runs 3] [--desktop] [--out report.json]' );
 		process.exit( 2 );
 	}
 	const { default: lighthouse } = await import( 'lighthouse' );
@@ -112,7 +112,7 @@ function summary( lhr ) {
 		let failed = '';
 		for ( let i = 0, tries = 0; runs.length < RUNS && tries < RUNS + 2; i++, tries++ ) {
 			// A profile of its own: the launcher removes a profile it made itself, and on Windows Chrome may still hold it (EPERM).
-			const profile = fs.mkdtempSync( path.join( os.tmpdir(), 'dxai-page-speed-' ) );
+			const profile = fs.mkdtempSync( path.join( os.tmpdir(), 'dxui-page-speed-' ) );
 			const chrome = await chromeLauncher.launch( { chromePath: CHROME, userDataDir: profile, chromeFlags: [ '--headless=new', '--no-sandbox', '--disable-gpu' ] } );
 			try {
 				const flags = { port: chrome.port, output: 'json', logLevel: 'error', onlyCategories: CATEGORIES };

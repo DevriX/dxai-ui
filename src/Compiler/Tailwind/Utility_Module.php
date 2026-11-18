@@ -2,12 +2,12 @@
 /**
  * Contract for one namespace of Tailwind utilities.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * Modules are consulted in registration order and the first non-null answer

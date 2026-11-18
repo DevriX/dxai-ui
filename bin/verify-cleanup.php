@@ -10,29 +10,29 @@
  *
  * Include it, snapshot before the script does anything, clean up at the end:
  *
- *     require DXAI_UI_DIR . 'bin/verify-cleanup.php';
- *     $snapshot = dxai_verify_snapshot();
+ *     require DX_UI_DIR . 'bin/verify-cleanup.php';
+ *     $snapshot = dxui_verify_snapshot();
  *     … the check …
- *     dxai_verify_cleanup( $snapshot );
+ *     dxui_verify_cleanup( $snapshot );
  *
  * The snapshot is every post id that existed, so cleanup removes exactly what
  * appeared in between whatever the script chose to create — no name matching to
  * keep in step with the fixtures.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! function_exists( 'dxai_verify_upload_files' ) ) {
+if ( ! function_exists( 'dxui_verify_upload_files' ) ) {
 	/**
 	 * Every file under uploads, keyed by path.
 	 *
 	 * @return array<string, true>
 	 */
-	function dxai_verify_upload_files(): array {
+	function dxui_verify_upload_files(): array {
 		$base = trailingslashit( wp_upload_dir()['basedir'] );
 		$out  = array();
 		foreach ( array( $base . '*', $base . '*/*', $base . '*/*/*' ) as $pattern ) {
@@ -47,7 +47,7 @@ if ( ! function_exists( 'dxai_verify_upload_files' ) ) {
 	}
 }
 
-if ( ! function_exists( 'dxai_verify_snapshot' ) ) {
+if ( ! function_exists( 'dxui_verify_snapshot' ) ) {
 	/**
 	 * What exists right now: every post id, and every file under uploads.
 	 *
@@ -58,7 +58,7 @@ if ( ! function_exists( 'dxai_verify_snapshot' ) ) {
 	 *
 	 * @return array{posts: array<int, true>, files: array<string, true>}
 	 */
-	function dxai_verify_snapshot(): array {
+	function dxui_verify_snapshot(): array {
 		global $wpdb;
 
 		return array(
@@ -66,12 +66,12 @@ if ( ! function_exists( 'dxai_verify_snapshot' ) ) {
 				array_map( 'intval', (array) $wpdb->get_col( "SELECT ID FROM {$wpdb->posts}" ) ),
 				true
 			),
-			'files' => dxai_verify_upload_files(),
+			'files' => dxui_verify_upload_files(),
 		);
 	}
 }
 
-if ( ! function_exists( 'dxai_verify_cleanup' ) ) {
+if ( ! function_exists( 'dxui_verify_cleanup' ) ) {
 	/**
 	 * Delete every post created since the snapshot, and any upload orphaned by
 	 * doing so.
@@ -79,7 +79,7 @@ if ( ! function_exists( 'dxai_verify_cleanup' ) ) {
 	 * @param array{posts: array<int, true>, files: array<string, true>} $snapshot
 	 * @param bool                                                       $report Print a one-line summary.
 	 */
-	function dxai_verify_cleanup( array $snapshot, bool $report = true ): int {
+	function dxui_verify_cleanup( array $snapshot, bool $report = true ): int {
 		global $wpdb;
 
 		$known_posts = is_array( $snapshot['posts'] ?? null ) ? $snapshot['posts'] : array();
@@ -144,7 +144,7 @@ if ( ! function_exists( 'dxai_verify_cleanup' ) ) {
 		}
 
 		$files = 0;
-		foreach ( array_keys( dxai_verify_upload_files() ) as $path ) {
+		foreach ( array_keys( dxui_verify_upload_files() ) as $path ) {
 			if ( isset( $known_files[ $path ] ) || isset( $owned[ basename( $path ) ] ) ) {
 				continue;
 			}

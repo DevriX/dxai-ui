@@ -2,23 +2,23 @@
 /**
  * Where a design is, in one record: the facts the Designs list and a design's page show as chips, and what to do next.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Blocks\Interactivity;
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Pages\Menu_Pages;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Theme_Binding;
-use DXAI_UI\Theme\Theme_Fonts;
-use DXAI_UI\Theme\Theme_Palette;
-use DXAI_UI\Transfer\Transfer_Admin;
+use DX_UI\Blocks\Interactivity;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Content\Content_Types;
+use DX_UI\Pages\Menu_Pages;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Theme_Binding;
+use DX_UI\Theme\Theme_Fonts;
+use DX_UI\Theme\Theme_Palette;
+use DX_UI\Transfer\Transfer_Admin;
 
 /**
  * The status is read, never stored: each fact comes from the record that owns it (the native pass, the theme binding, the
@@ -34,7 +34,7 @@ use DXAI_UI\Transfer\Transfer_Admin;
 final class Design_Status {
 
 	/** On a design's Home: when its package was last downloaded (a Unix time). */
-	public const EXPORTED_META = '_dxai_ui_exported_at';
+	public const EXPORTED_META = '_dx_ui_exported_at';
 
 	/** The keys of()'s answer always has, so a screen can rely on them. */
 	public const KEYS = array( 'document', 'source', 'archive', 'imported_at', 'built_with', 'sections', 'native', 'colours', 'palette', 'fonts', 'fonts_managed', 'states', 'interactivity', 'exported_at', 'pages', 'team_pages', 'site_pages', 'home', 'edit', 'export' );
@@ -64,7 +64,7 @@ final class Design_Status {
 		$out      = array(
 			'document'      => $doc !== null,
 			'source'        => (string) ( $source['kind'] ?? '' ),
-			'archive'       => (string) get_post_meta( $home, '_dxai_ui_source_zip', true ),
+			'archive'       => (string) get_post_meta( $home, '_dx_ui_source_zip', true ),
 			'imported_at'   => self::imported_at( $home ),
 			'built_with'    => (string) ( $built['plugin'] ?? '' ),
 			'sections'      => $doc !== null ? (int) ( $doc->summary()['sections'] ?? 0 ) : 0,
@@ -105,7 +105,7 @@ final class Design_Status {
 				'posts_per_page' => 50,
 				'orderby'        => 'ID',
 				'order'          => 'DESC',
-				'meta_key'       => '_dxai_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_dx_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		) as $post ) {
@@ -137,8 +137,8 @@ final class Design_Status {
 		if ( ! $status['document'] ) {
 			$out[] = array(
 				'key'   => 'document',
-				'title' => __( 'Build the design’s document', 'dxai-ui' ),
-				'why'   => __( 'The design was imported before documents were kept. The report, the pages from its menu and the style variation read it.', 'dxai-ui' ),
+				'title' => __( 'Build the design’s document', 'dx-ui' ),
+				'why'   => __( 'The design was imported before documents were kept. The report, the pages from its menu and the style variation read it.', 'dx-ui' ),
 				'tab'   => 'overview',
 			);
 		}
@@ -147,10 +147,10 @@ final class Design_Status {
 			if ( (int) ( $summary['blocks'] ?? 0 ) > 0 ) {
 				$out[] = array(
 					'key'   => 'native',
-					'title' => __( 'Apply native blocks', 'dxai-ui' ),
+					'title' => __( 'Apply native blocks', 'dx-ui' ),
 					'why'   => sprintf(
 						/* translators: %d: number of blocks. */
-						_n( '%d block of the design can be the theme’s own block, editable with the theme’s settings.', '%d blocks of the design can be the theme’s own blocks, editable with the theme’s settings.', (int) $summary['blocks'], 'dxai-ui' ),
+						_n( '%d block of the design can be the theme’s own block, editable with the theme’s settings.', '%d blocks of the design can be the theme’s own blocks, editable with the theme’s settings.', (int) $summary['blocks'], 'dx-ui' ),
 						(int) $summary['blocks']
 					),
 					'tab'   => 'blocks',
@@ -160,32 +160,32 @@ final class Design_Status {
 		if ( $status['palette'] && $status['colours'] === 'keep' ) {
 			$out[] = array(
 				'key'   => 'colours',
-				'title' => __( 'Follow the theme’s colours', 'dxai-ui' ),
-				'why'   => __( 'The theme has a palette; the design keeps its own colours until it is bound to it.', 'dxai-ui' ),
+				'title' => __( 'Follow the theme’s colours', 'dx-ui' ),
+				'why'   => __( 'The theme has a palette; the design keeps its own colours until it is bound to it.', 'dx-ui' ),
 				'tab'   => 'look',
 			);
 		}
 		if ( $status['fonts'] === 'own' ) {
 			$out[] = array(
 				'key'   => 'fonts',
-				'title' => __( 'Use the theme’s fonts', 'dxai-ui' ),
-				'why'   => __( 'The theme manages the site’s fonts; the design loads its own.', 'dxai-ui' ),
+				'title' => __( 'Use the theme’s fonts', 'dx-ui' ),
+				'why'   => __( 'The theme manages the site’s fonts; the design loads its own.', 'dx-ui' ),
 				'tab'   => 'speed',
 			);
 		}
 		if ( $status['document'] && $status['team_pages'] === 0 && self::menu_names_pages( $home ) ) {
 			$out[] = array(
 				'key'   => 'menu-pages',
-				'title' => __( 'Make the pages the menu names', 'dxai-ui' ),
-				'why'   => __( 'The design’s header links to pages that are not there yet. They are made in the Home’s look, at the menu’s own addresses.', 'dxai-ui' ),
+				'title' => __( 'Make the pages the menu names', 'dx-ui' ),
+				'why'   => __( 'The design’s header links to pages that are not there yet. They are made in the Home’s look, at the menu’s own addresses.', 'dx-ui' ),
 				'tab'   => 'pages',
 			);
 		}
 		if ( $status['exported_at'] === '' && $status['export'] !== '' ) {
 			$out[] = array(
 				'key'   => 'export',
-				'title' => __( 'Export for the live site', 'dxai-ui' ),
-				'why'   => __( 'Nothing of this design has been packaged yet. A package carries the page with its styles, pictures, header and footer; the live site’s DX imports it in one step.', 'dxai-ui' ),
+				'title' => __( 'Export for the live site', 'dx-ui' ),
+				'why'   => __( 'Nothing of this design has been packaged yet. A package carries the page with its styles, pictures, header and footer; the live site’s DX imports it in one step.', 'dx-ui' ),
 				'tab'   => 'transfer',
 			);
 		}
@@ -228,7 +228,7 @@ final class Design_Status {
 			$kind = 'own';
 			if ( $id === $home ) {
 				$kind = 'home';
-			} elseif ( get_post_meta( $id, '_dxai_ui_from_live_menu', true ) ) {
+			} elseif ( get_post_meta( $id, '_dx_ui_from_live_menu', true ) ) {
 				$kind = 'site';
 			} elseif ( (string) get_post_meta( $id, Team_Pages::META, true ) !== '' ) {
 				$kind = 'team';
@@ -256,7 +256,7 @@ final class Design_Status {
 				'orderby'        => 'ID',
 				'order'          => 'DESC',
 				'fields'         => 'ids',
-				'meta_key'       => '_dxai_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_dx_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);

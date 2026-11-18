@@ -10,19 +10,19 @@
  * steps per request), after which the menus, the footer and every page that
  * linked to the old URLs point at the new pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Chrome\Footer_Template;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Compiler\Internal_Links;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Structures\Crawl_Job;
-use DXAI_UI\Structures\Site_From_Menu;
+use DX_UI\Chrome\Footer_Template;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Compiler\Internal_Links;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Structures\Crawl_Job;
+use DX_UI\Structures\Site_From_Menu;
 
 final class Site_Pages {
 
@@ -30,8 +30,8 @@ final class Site_Pages {
 	public const MODE = 'site-pages';
 
 	/** Home meta: the old site's address and its pages as first found (links to them change once they are built). */
-	public const ORIGIN_META = '_dxai_ui_site_origin';
-	public const PAGES_META  = '_dxai_ui_site_pages';
+	public const ORIGIN_META = '_dx_ui_site_origin';
+	public const PAGES_META  = '_dx_ui_site_pages';
 
 	/**
 	 * Links to the old site: the menus in the theme's locations, the footer widgets and the Home's content.
@@ -93,8 +93,8 @@ final class Site_Pages {
 				$label = html_entity_decode( wp_strip_all_tags( (string) $item->title ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 				// A menu item that opens a page built from the old site still names that old page.
 				$built = (string) ( $item->type ?? '' ) === 'post_type' && (string) ( $item->object ?? '' ) === 'page' ? (int) $item->object_id : 0;
-				$route = $built > 0 ? trim( (string) get_post_meta( $built, '_dxai_ui_source_route', true ), '/' ) : '';
-				if ( $route !== '' && $origin !== '' && (int) get_post_meta( $built, \DXAI_UI\Structures\Page_Scope::META, true ) === $home_id ) {
+				$route = $built > 0 ? trim( (string) get_post_meta( $built, '_dx_ui_source_route', true ), '/' ) : '';
+				if ( $route !== '' && $origin !== '' && (int) get_post_meta( $built, \DX_UI\Structures\Page_Scope::META, true ) === $home_id ) {
 					$add( $label, $origin . '/' . $route . '/', true );
 					continue;
 				}
@@ -241,7 +241,7 @@ final class Site_Pages {
 			// Pages built earlier are on the list whatever links to them now.
 			$have = array_map( static fn( $r ) => Site_Origin::path_of( (string) $r['url'] ), $tree );
 			foreach ( self::built( $home_id ) as $page ) {
-				$route = trim( (string) get_post_meta( $page->ID, '_dxai_ui_source_route', true ), '/' );
+				$route = trim( (string) get_post_meta( $page->ID, '_dx_ui_source_route', true ), '/' );
 				if ( $route !== '' && ! in_array( Site_Origin::path_of( '/' . $route ), $have, true ) ) {
 					$tree[] = array(
 						'label'    => '',
@@ -298,11 +298,11 @@ final class Site_Pages {
 				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				'meta_query'     => array(
 					array(
-						'key'   => '_dxai_ui_from_live_menu',
+						'key'   => '_dx_ui_from_live_menu',
 						'value' => '1',
 					),
 					array(
-						'key'   => \DXAI_UI\Structures\Page_Scope::META,
+						'key'   => \DX_UI\Structures\Page_Scope::META,
 						'value' => (string) $home_id,
 					),
 				),
@@ -324,11 +324,11 @@ final class Site_Pages {
 				'meta_query'     => array_merge(
 					array(
 						array(
-							'key'   => '_dxai_ui_source_route',
+							'key'   => '_dx_ui_source_route',
 							'value' => $route,
 						),
 						array(
-							'key'   => '_dxai_ui_from_live_menu',
+							'key'   => '_dx_ui_from_live_menu',
 							'value' => '1',
 						),
 					),
@@ -339,18 +339,18 @@ final class Site_Pages {
 		$found = $query(
 			array(
 				array(
-					'key'   => \DXAI_UI\Structures\Page_Scope::META,
+					'key'   => \DX_UI\Structures\Page_Scope::META,
 					'value' => (string) $home_id,
 				),
 			)
 		);
 		// A page that came over in an export package has its own scope; it is this design's page by its archive.
-		$archive = (string) get_post_meta( $home_id, '_dxai_ui_source_zip', true );
+		$archive = (string) get_post_meta( $home_id, '_dx_ui_source_zip', true );
 		if ( $found === array() && $archive !== '' ) {
 			$found = $query(
 				array(
 					array(
-						'key'   => '_dxai_ui_source_zip',
+						'key'   => '_dx_ui_source_zip',
 						'value' => $archive,
 					),
 				)
@@ -368,30 +368,30 @@ final class Site_Pages {
 	 */
 	public static function start( int $home_id, array $paths, string $engine = 'design', bool $rebuild_edited = false ) {
 		if ( get_post_type( $home_id ) !== 'page' ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'That design page no longer exists.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_site_pages', __( 'That design page no longer exists.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		// The import of this design may still be building its pages (a crawl job of its own): starting here would
 		// cancel it, and leave its menus and parts half done.
 		foreach ( Crawl_Job::unfinished_for( $home_id ) as $job ) {
 			if ( ( $job['tail']['mode'] ?? '' ) !== self::MODE ) {
-				return new \WP_Error( 'dxai_ui_site_pages_busy', __( 'The import of this design is still building its pages. Let it finish (the import screen shows its progress), then build more pages here.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_site_pages_busy', __( 'The import of this design is still building its pages. Let it finish (the import screen shows its progress), then build more pages here.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 		}
 		$tree   = self::menu_tree( $home_id );
 		$origin = (string) get_post_meta( $home_id, self::ORIGIN_META, true );
 		if ( $tree === array() && $origin === '' ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'The design does not link to any page of an old site. Enter the old site’s address.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_site_pages', __( 'The design does not link to any page of an old site. Enter the old site’s address.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$paths = array_values( array_filter( array_map( static fn( $p ) => Site_Origin::path_of( (string) $p ), $paths ) ) );
 		if ( $paths === array() ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'Choose at least one page.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_site_pages', __( 'Choose at least one page.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$context = array(
 			'home_id'        => $home_id,
 			'home_slug'      => '/',
 			'part_key'       => '',
-			'source_archive' => (string) get_post_meta( $home_id, '_dxai_ui_source_zip', true ),
-			'wrapper_class'  => (string) get_post_meta( $home_id, '_dxai_ui_wrapper_class', true ),
+			'source_archive' => (string) get_post_meta( $home_id, '_dx_ui_source_zip', true ),
+			'wrapper_class'  => (string) get_post_meta( $home_id, '_dx_ui_wrapper_class', true ),
 			'home_title'     => get_the_title( $home_id ),
 			'only_paths'     => $paths,
 			'pages_engine'   => $engine,
@@ -403,7 +403,7 @@ final class Site_Pages {
 		);
 		$plan    = ( new Site_From_Menu() )->prepare( $context, $tree );
 		if ( empty( $plan['candidates'] ) ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'None of the chosen pages is on the old site the design links to.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_site_pages', __( 'None of the chosen pages is on the old site the design links to.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return Crawl_Job::create(
@@ -474,7 +474,7 @@ final class Site_Pages {
 		$links->rewrite_posts( $targets );
 
 		// The pages this run wrote are the Home's design, with the Home's design names (Style_Hoister::share_design_names()).
-		\DXAI_UI\Compiler\Style_Hoister::share_design_names( $home_id, array_column( (array) ( $summary['pages_created'] ?? array() ), 'id' ) );
+		\DX_UI\Compiler\Style_Hoister::share_design_names( $home_id, array_column( (array) ( $summary['pages_created'] ?? array() ), 'id' ) );
 
 		// Menu items that are custom links to an old page become links to its new page; links to a section of the
 		// Home ("#about") open it from every page, not only from the Home.
@@ -497,9 +497,9 @@ final class Site_Pages {
 		}
 
 		// The new pages count for the design's colour use (Theme_Binding).
-		\DXAI_UI\Theme\Theme_Binding::after_import( $home_id, false );
-		\DXAI_UI\Blocks\Native\Native_Blocks::after_import( $home_id, false );
-		\DXAI_UI\Media\Font_Host::after_import( $home_id );
+		\DX_UI\Theme\Theme_Binding::after_import( $home_id, false );
+		\DX_UI\Blocks\Native\Native_Blocks::after_import( $home_id, false );
+		\DX_UI\Media\Font_Host::after_import( $home_id );
 
 		return array(
 			'mode'          => self::MODE,
@@ -525,7 +525,7 @@ final class Site_Pages {
 		$origin = (string) get_post_meta( $home_id, self::ORIGIN_META, true );
 		$rows   = array();
 		foreach ( $origin === '' ? array() : self::built( $home_id ) as $page ) {
-			$route = trim( (string) get_post_meta( $page->ID, '_dxai_ui_source_route', true ), '/' );
+			$route = trim( (string) get_post_meta( $page->ID, '_dx_ui_source_route', true ), '/' );
 			if ( $route !== '' ) {
 				$rows[] = array(
 					'id'    => (int) $page->ID,
@@ -784,10 +784,10 @@ final class Site_Pages {
 			}
 		}
 		// The DX template draws the design's header and footer itself, with no template-part block in the Home: its parts are the ones
-		// named after the design's part key (dxai-header-<key>, dxai-footer-<key>).
-		$key = sanitize_title( (string) get_post_meta( $home_id, '_dxai_ui_part_key', true ) );
+		// named after the design's part key (dxui-header-<key>, dxui-footer-<key>).
+		$key = sanitize_title( (string) get_post_meta( $home_id, '_dx_ui_part_key', true ) );
 		if ( $key !== '' ) {
-			foreach ( array( 'dxai-header-' . $key, 'dxai-footer-' . $key ) as $slug ) {
+			foreach ( array( 'dxui-header-' . $key, 'dxui-footer-' . $key ) as $slug ) {
 				foreach ( get_posts( array( 'post_type' => 'wp_template_part', 'name' => $slug, 'post_status' => 'publish', 'posts_per_page' => 5, 'fields' => 'ids' ) ) as $id ) {
 					$ids[] = (int) $id;
 				}

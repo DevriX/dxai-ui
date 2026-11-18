@@ -9,11 +9,11 @@
  * must be left alone is checked as much as what changes: a label, a card's title, a title set by hand, the header and the footer, a
  * hero, a thin bar, a section padded by a class on every side. Writes only the Home, and removes it. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Compiler\Style_Hoister;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Compiler\Style_Hoister;
 
 $fail   = 0;
 $pass   = 0;
@@ -29,13 +29,13 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 
 // ---- Markup ---------------------------------------------------------------------------------------------------------------------
 $h = static function ( int $level, string $class, string $css, string $text = 'A title', array $extra = array() ): string {
-	$attrs     = array( 'level' => $level ) + ( $class !== '' ? array( 'className' => $class ) : array() ) + ( $css !== '' ? array( 'dxaiCss' => $css ) : array() ) + $extra;
+	$attrs     = array( 'level' => $level ) + ( $class !== '' ? array( 'className' => $class ) : array() ) + ( $css !== '' ? array( 'dxuiCss' => $css ) : array() ) + $extra;
 	$tag_class = trim( 'wp-block-heading ' . $class . ' ' . ( $css !== '' ? Style_Hoister::css_class( $css ) : '' ) );
 
 	return '<!-- wp:heading ' . wp_json_encode( $attrs ) . ' --><h' . $level . ' class="' . $tag_class . '">' . $text . '</h' . $level . '><!-- /wp:heading -->';
 };
 $g = static function ( string $class, string $css, string $inner, string $tag = 'section', array $extra = array() ): string {
-	$attrs     = ( $class !== '' ? array( 'className' => $class ) : array() ) + ( $css !== '' ? array( 'dxaiCss' => $css ) : array() ) + array( 'tagName' => $tag ) + $extra;
+	$attrs     = ( $class !== '' ? array( 'className' => $class ) : array() ) + ( $css !== '' ? array( 'dxuiCss' => $css ) : array() ) + array( 'tagName' => $tag ) + $extra;
 	$tag_class = trim( 'wp-block-group ' . $class . ' ' . ( $css !== '' ? Style_Hoister::css_class( $css ) : '' ) );
 
 	return '<!-- wp:group ' . wp_json_encode( $attrs ) . ' --><' . $tag . ' class="' . $tag_class . '">' . $inner . '</' . $tag . '><!-- /wp:group -->';
@@ -51,7 +51,7 @@ $PAD   = $PAD_T . ';' . $PAD_B;
 $home_content = implode(
 	"\n\n",
 	array(
-		$g( 'bg-dxai-brand', 'padding-top:clamp(60px,8vw,110px);padding-bottom:clamp(40px,5vw,70px)', $h( 1, 'mb-5 uppercase fw-800 lh-1-02', "font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,64px)", 'The Home' ) ),
+		$g( 'bg-dxui-brand', 'padding-top:clamp(60px,8vw,110px);padding-bottom:clamp(40px,5vw,70px)', $h( 1, 'mb-5 uppercase fw-800 lh-1-02', "font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,64px)", 'The Home' ) ),
 		$g( '', $PAD, $h( 2, 'mb-3 uppercase fw-800 lh-1', $TITLE ) . $p ),
 		$g( '', $PAD, $h( 2, 'mb-3 uppercase fw-800 lh-1', $TITLE ) . $h( 2, 'mb-2 uppercase text-13 fw-800 ls-0-16em', '', 'A label' ) . $p ),
 		$g( '', $PAD, $h( 2, 'mb-3 uppercase fw-800 lh-1', $TITLE ) . $p ),
@@ -89,9 +89,9 @@ $page = $g( '', '', $h( 2, 'mb-4 text-3xl font-bold md:text-5xl', 'font-size:40p
 $r    = $run( $page );
 $out  = $blocks_of( $r['content'] );
 $a    = $first( array( $out[0] ), 'core/heading' );
-$expect( 'a title with a style of its own takes the Home\'s: its size, weight, line height, case and font', ( $a['attrs']['className'] ?? '' ) === 'mb-4 uppercase fw-800 lh-1' && str_contains( (string) ( $a['attrs']['dxaiCss'] ?? '' ), 'font-size:clamp(32px,4vw,52px)' ) && str_contains( (string) ( $a['attrs']['dxaiCss'] ?? '' ), "'Barlow Condensed'" ), wp_json_encode( $a['attrs'] ?? null ) );
-$expect( '…what is not typography stays: its margin class and its colour', str_contains( (string) ( $a['attrs']['className'] ?? '' ), 'mb-4' ) && str_contains( (string) ( $a['attrs']['dxaiCss'] ?? '' ), 'color:#123456' ) );
-$expect( '…and the tag follows: the new classes and the hash of the new CSS, the old ones gone', $tag_class( $a ) === 'wp-block-heading mb-4 uppercase fw-800 lh-1 ' . Style_Hoister::css_class( (string) $a['attrs']['dxaiCss'] ), $tag_class( $a ) );
+$expect( 'a title with a style of its own takes the Home\'s: its size, weight, line height, case and font', ( $a['attrs']['className'] ?? '' ) === 'mb-4 uppercase fw-800 lh-1' && str_contains( (string) ( $a['attrs']['dxuiCss'] ?? '' ), 'font-size:clamp(32px,4vw,52px)' ) && str_contains( (string) ( $a['attrs']['dxuiCss'] ?? '' ), "'Barlow Condensed'" ), wp_json_encode( $a['attrs'] ?? null ) );
+$expect( '…what is not typography stays: its margin class and its colour', str_contains( (string) ( $a['attrs']['className'] ?? '' ), 'mb-4' ) && str_contains( (string) ( $a['attrs']['dxuiCss'] ?? '' ), 'color:#123456' ) );
+$expect( '…and the tag follows: the new classes and the hash of the new CSS, the old ones gone', $tag_class( $a ) === 'wp-block-heading mb-4 uppercase fw-800 lh-1 ' . Style_Hoister::css_class( (string) $a['attrs']['dxuiCss'] ), $tag_class( $a ) );
 $expect( 'one that is the Home\'s already is left as it is', ( $r['counts']['heading_scale'] ?? 0 ) === 1, wp_json_encode( $r['counts'] ) );
 $again = $run( $r['content'] );
 $expect( 'a second pass changes nothing', $again['counts'] === array() && $again['content'] === $r['content'], wp_json_encode( $again['counts'] ) );
@@ -107,7 +107,7 @@ $keep( $h( 2, 'text-24 fw-800', '', 'A card' ), 'a card\'s title written as an H
 $keep( $h( 2, '', 'font-size:90px', 'Huge' ), 'a title far above the Home\'s' );
 $keep( $h( 2, 'text-3xl', '', 'Set by hand', array( 'fontSize' => 'large' ) ), 'a title whose size was chosen in the Typography panel' );
 $keep( $h( 3, 'text-3xl font-bold', '', 'Level three' ), 'a heading of level three' );
-$r = $run( $g( 'bg-dxai-brand', '', $h( 2, 'text-3xl', '', 'In a footer' ), 'footer' ) );
+$r = $run( $g( 'bg-dxui-brand', '', $h( 2, 'text-3xl', '', 'In a footer' ), 'footer' ) );
 $expect( 'a title in the footer', ( $r['counts']['heading_scale'] ?? 0 ) === 0 );
 $r = $run( $g( '', '', $h( 2, 'text-3xl', '', 'In the nav' ), 'nav' ) );
 $expect( '…and in the navigation', ( $r['counts']['heading_scale'] ?? 0 ) === 0 );
@@ -122,12 +122,12 @@ $expect( 'a variant of a state (hover:) is not part of the style: it stays', str
 $coloured = preg_replace( '/(<h2 class="[^"]*)"/', '$1 has-primary-color has-text-color"', $h( 2, 'mb-3 text-4xl', 'font-size:40px', 'Coloured', array( 'textColor' => 'primary' ) ) );
 $r        = $run( $g( '', '', $coloured ) );
 $f        = $first( $blocks_of( $r['content'] ), 'core/heading' );
-$expect( 'a title coloured in the Colour panel takes the Home\'s style too, and keeps the colour\'s classes where they were', ( $r['counts']['heading_scale'] ?? 0 ) === 1 && $tag_class( $f ) === 'wp-block-heading mb-3 uppercase fw-800 lh-1 ' . Style_Hoister::css_class( (string) ( $f['attrs']['dxaiCss'] ?? '' ) ) . ' has-primary-color has-text-color', $tag_class( $f ) );
+$expect( 'a title coloured in the Colour panel takes the Home\'s style too, and keeps the colour\'s classes where they were', ( $r['counts']['heading_scale'] ?? 0 ) === 1 && $tag_class( $f ) === 'wp-block-heading mb-3 uppercase fw-800 lh-1 ' . Style_Hoister::css_class( (string) ( $f['attrs']['dxuiCss'] ?? '' ) ) . ' has-primary-color has-text-color', $tag_class( $f ) );
 
 echo "\nThe page's title\n";
 $r = $run( $g( '', '', $h( 1, 'text-5xl font-semibold', 'font-size:70px', 'Another page' ) ) );
 $f = $first( $blocks_of( $r['content'] ), 'core/heading' );
-$expect( 'a page title has the style of the Home\'s page title', ( $f['attrs']['className'] ?? '' ) === 'uppercase fw-800 lh-1-02' && str_contains( (string) ( $f['attrs']['dxaiCss'] ?? '' ), 'clamp(36px,5vw,64px)' ), wp_json_encode( $f['attrs'] ?? null ) );
+$expect( 'a page title has the style of the Home\'s page title', ( $f['attrs']['className'] ?? '' ) === 'uppercase fw-800 lh-1-02' && str_contains( (string) ( $f['attrs']['dxuiCss'] ?? '' ), 'clamp(36px,5vw,64px)' ), wp_json_encode( $f['attrs'] ?? null ) );
 
 echo "\nA design that styles its titles by class\n";
 $by_class_home = implode( "\n\n", array( $g( '', '', $h( 2, 'display display-lg mt-8', '' ) ), $g( '', '', $h( 2, 'display display-lg', '' ) ), $g( '', '', $h( 2, 'display display-lg max-w-3xl', '' ) ), $g( '', '', $h( 2, 'display display-md', '' ) ) ) );
@@ -138,10 +138,10 @@ $expect( 'the design\'s own style class is the title\'s style: display-xl become
 wp_update_post( array( 'ID' => $home_id, 'post_content' => wp_slash( $home_content ) ) );
 
 echo "\nSwitched off, and without a Home\n";
-add_filter( 'dxai_ui_harmony', '__return_false' );
+add_filter( 'dx_ui_harmony', '__return_false' );
 $r = $run( $page );
 $expect( 'a design can switch it off', ( $r['counts']['heading_scale'] ?? 0 ) === 0 && ( $r['counts']['section_spacing'] ?? 0 ) === 0 );
-remove_filter( 'dxai_ui_harmony', '__return_false' );
+remove_filter( 'dx_ui_harmony', '__return_false' );
 $r = Native_Blocks::convert_content( $page, array( 'home' => 0, 'post' => 0 ) );
 $expect( 'a page with no design to judge by is left as it is', ( $r['counts']['heading_scale'] ?? 0 ) === 0 && ( $r['counts']['section_spacing'] ?? 0 ) === 0 );
 
@@ -150,7 +150,7 @@ echo "\nSections\n";
 $sections = implode(
 	"\n\n",
 	array(
-		$g( 'bg-dxai-brand', 'padding-top:clamp(90px,10vw,150px);padding-bottom:clamp(60px,8vw,110px)', $h( 1, '', '', 'Its hero' ) ),
+		$g( 'bg-dxui-brand', 'padding-top:clamp(90px,10vw,150px);padding-bottom:clamp(60px,8vw,110px)', $h( 1, '', '', 'Its hero' ) ),
 		$g( 'px-0', 'padding-top:clamp(52px,7vw,130px);padding-bottom:clamp(40px,5vw,92px);background:#fff', $p ),
 		$g( '', 'padding:clamp(40px,5vw,76px) 24px', $p ),
 		$g( 'py-24 mx-auto', '', $p ),
@@ -164,7 +164,7 @@ $sections = implode(
 );
 $r      = $run( $sections );
 $blocks = $blocks_of( $r['content'] );
-$css    = static fn( int $i ): string => (string) ( $blocks[ $i ]['attrs']['dxaiCss'] ?? '' );
+$css    = static fn( int $i ): string => (string) ( $blocks[ $i ]['attrs']['dxuiCss'] ?? '' );
 $cls    = static fn( int $i ): string => (string) ( $blocks[ $i ]['attrs']['className'] ?? '' );
 $expect( 'a section padded another way takes the Home\'s padding, above and below', str_contains( $css( 1 ), $PAD_T ) && str_contains( $css( 1 ), $PAD_B ) && ! str_contains( $css( 1 ), '130px' ), $css( 1 ) );
 $expect( '…and keeps the rest of its own CSS and classes', str_contains( $css( 1 ), 'background:#fff' ) && $cls( 1 ) === 'px-0' );
@@ -197,8 +197,8 @@ $odd_pads = implode( "\n\n", array( $g( '', 'padding-top:20px;padding-bottom:30p
 wp_update_post( array( 'ID' => $home_id, 'post_content' => wp_slash( $odd_pads ) ) );
 $r      = $run( $g( '', 'padding-top:90px;padding-bottom:60px', $p ) . "\n\n" . $g( '', 'padding-top:10px;padding-bottom:10px', $p ) );
 $blocks = $blocks_of( $r['content'] );
-$expect( 'sections padded by hand, each its own: the one in the middle is the rhythm (60px above, 50px below)', str_contains( (string) ( $blocks[0]['attrs']['dxaiCss'] ?? '' ), 'padding-top:60px' ) && str_contains( (string) ( $blocks[0]['attrs']['dxaiCss'] ?? '' ), 'padding-bottom:50px' ), (string) ( $blocks[0]['attrs']['dxaiCss'] ?? '' ) );
-$expect( '…and a thin bar stays a thin bar', str_contains( (string) ( $blocks[1]['attrs']['dxaiCss'] ?? '' ), 'padding-top:10px' ) );
+$expect( 'sections padded by hand, each its own: the one in the middle is the rhythm (60px above, 50px below)', str_contains( (string) ( $blocks[0]['attrs']['dxuiCss'] ?? '' ), 'padding-top:60px' ) && str_contains( (string) ( $blocks[0]['attrs']['dxuiCss'] ?? '' ), 'padding-bottom:50px' ), (string) ( $blocks[0]['attrs']['dxuiCss'] ?? '' ) );
+$expect( '…and a thin bar stays a thin bar', str_contains( (string) ( $blocks[1]['attrs']['dxuiCss'] ?? '' ), 'padding-top:10px' ) );
 
 wp_delete_post( $home_id, true );
 echo "\n$pass passed, $fail failed\n";

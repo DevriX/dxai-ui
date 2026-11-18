@@ -12,7 +12,7 @@
  *
  * Run: wp eval-file bin/block-parity.php [out.json]
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -34,7 +34,7 @@ $registered = WP_Block_Type_Registry::get_instance()->get_all_registered();
 $blocks     = array();
 
 foreach ( $registered as $name => $type ) {
-	if ( ! str_starts_with( (string) $name, 'dxai-ui/' ) ) {
+	if ( ! str_starts_with( (string) $name, 'dx-ui/' ) ) {
 		continue;
 	}
 

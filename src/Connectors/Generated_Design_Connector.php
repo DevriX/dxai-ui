@@ -2,14 +2,14 @@
 /**
  * Claude / generic frontend ZIP (HTML/CSS/JS, Vue, React, Next.js).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Media\Asset_Harvester;
+use DX_UI\Media\Asset_Harvester;
 
 final class Generated_Design_Connector {
 
@@ -78,7 +78,7 @@ final class Generated_Design_Connector {
 		Zip_Extractor::cleanup( $unpacked['dir'] );
 
 		if ( $sources === array() && $styles === array() ) {
-			return new \WP_Error( 'dxai_ui_zip', __( 'No HTML/CSS/JS, Vue, React, or Next.js source was found in the ZIP.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_zip', __( 'No HTML/CSS/JS, Vue, React, or Next.js source was found in the ZIP.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$stack   = $this->detect_stack( $pkg, array_keys( $sources ) );

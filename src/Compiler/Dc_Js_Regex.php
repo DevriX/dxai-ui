@@ -2,12 +2,12 @@
 /**
  * A JavaScript regular-expression literal, for `.replace(/\D/g, '')`.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Dc_Js_Regex {
 

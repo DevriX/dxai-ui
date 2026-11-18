@@ -2,12 +2,12 @@
 /**
  * The order of the sections of a new page, learned from the team's live sites.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * data/team-pages.json holds what 283 pages of eleven live sites say about the order of sections (bin/build-team-model.cjs):
@@ -42,7 +42,7 @@ final class Page_Recipes {
 	 */
 	public static function model(): array {
 		if ( self::$model === null ) {
-			$file        = DXAI_UI_DIR . 'data/team-pages.json';
+			$file        = DX_UI_DIR . 'data/team-pages.json';
 			$data        = is_readable( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			self::$model = is_array( $data ) && is_array( $data['types'] ?? null ) ? $data : array( 'types' => array() );
 		}

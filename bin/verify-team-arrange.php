@@ -9,17 +9,17 @@
  *
  * Makes a Home and its pages and removes them again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Pages\Team_Run;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Pages\Team_Run;
+use DX_UI\Structures\Page_Scope;
 
 // These checks are of the pages made in the Home's own look (the library where the Home has nothing): the usual run, where the library
 // holds the team's layouts, is checked by verify-team-pages.php and verify-block-library.php.
-add_filter( 'dxai_ui_team_library', static fn() => 'fill' );
+add_filter( 'dx_ui_team_library', static fn() => 'fill' );
 
 $fail   = 0;
 $pass   = 0;
@@ -70,8 +70,8 @@ if ( ! is_int( $home_id ) || $home_id < 1 ) {
 	exit( 1 );
 }
 update_post_meta( $home_id, Page_Scope::META, $home_id );
-update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home_id, '_dxai_ui_css_url', 'dxai-ui/fixture-home.css' );
+update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home_id, '_dx_ui_css_url', 'dx-ui/fixture-home.css' );
 
 if ( ! current_user_can( 'manage_options' ) ) {
 	wp_set_current_user( 1 );
@@ -221,18 +221,18 @@ $expect( 'places that are not a role (markup, numbers, lists) are dropped, the o
 $choices = Team_Pages::choices( $home_id );
 $expect( 'what can be added: the Home\'s sections but its hero, each with its number, role and title; the library\'s, each with its id, role and what it is', count( $choices['home'] ) === 5 && array_column( $choices['home'], 'home' ) === array( 2, 3, 4, 5, 6 ) && ! in_array( 'hero', array_column( $choices['home'], 'role' ), true ) && $choices['home'][3]['label'] === 'Frequently asked questions' && count( array_filter( $choices['library'], static fn( $c ) => ! isset( $c['id'], $c['role'], $c['label'] ) || $c['role'] === 'hero' ) ) === 0, wp_json_encode( $choices['home'] ) );
 $rest_plan = rest_do_request( ( static function () use ( $home_id, $asked, $by_hand ): WP_REST_Request {
-	$r = new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$r = new WP_REST_Request( 'POST', '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 	$r->set_body_params( array( 'action' => 'plan', 'design' => $home_id, 'library' => 'fill', 'wanted' => array( $by_hand( $asked ) ) ) );
 
 	return $r;
 } )() );
 $rest_data = (array) $rest_plan->get_data();
 $expect( 'the panel\'s request carries the places to the plan, and the panel is given what it can add', 200 === $rest_plan->get_status() && ( $rest_data['plan'][0]['arrangement']['roles'] ?? null ) === array_column( $asked, 'role' ) && isset( rest_do_request( ( static function () use ( $home_id ): WP_REST_Request {
-	$g = new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$g = new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 	$g->set_query_params( array( 'design' => $home_id ) );
 
 	return $g;
-} )() )->get_data()['choices']['home'] ), (string) $rest_plan->get_status() . ' ' . wp_json_encode( $rest_data['plan'][0]['arrangement'] ?? $rest_data ) . ' GET keys: ' . implode( ',', array_keys( (array) rest_do_request( new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages?design=' . $home_id ) )->get_data() ) ) );
+} )() )->get_data()['choices']['home'] ), (string) $rest_plan->get_status() . ' ' . wp_json_encode( $rest_data['plan'][0]['arrangement'] ?? $rest_data ) . ' GET keys: ' . implode( ',', array_keys( (array) rest_do_request( new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . '/team-pages?design=' . $home_id ) )->get_data() ) ) );
 
 echo "\nThe three modes\n";
 $made_in = static fn( array $pl ): int => count( array_filter( $pl, static fn( $p ) => count( array_filter( $p['strip'], static fn( $x ) => $x['source'] === 'new' ) ) > 0 ) );
@@ -275,15 +275,15 @@ foreach ( $rep as $r ) {
 }
 $expect( 'the pages are in the Home\'s frame, valid, and have nothing foreign', $bad_g === array(), implode( ' | ', $bad_g ) );
 $expect( 'a gate is ok when it found nothing, and says what it found when it is red', count( array_filter( $rep[0]['gates'], static fn( $g ) => $g['ok'] === ( $g['problems'] === array() ) ) ) === 5 );
-$expect( 'the rules that need a browser are named, not pretended', array_keys( \DXAI_UI\Pages\Team_Quality::BROWSER_GATES ) === array( 'G2', 'G3', 'G4', 'G5', 'G6', 'G10' ) );
+$expect( 'the rules that need a browser are named, not pretended', array_keys( \DX_UI\Pages\Team_Quality::BROWSER_GATES ) === array( 'G2', 'G3', 'G4', 'G5', 'G6', 'G10' ) );
 
 echo "\nGiving it back\n";
 $h2_html = str_replace( 'Restoration in Tyler', 'Restoration In Tyler', $home );
 $h2      = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Give Back', 'post_content' => wp_slash( $h2_html ) ) );
 $made[]  = (int) $h2;
 update_post_meta( $h2, Page_Scope::META, $h2 );
-update_post_meta( $h2, '_dxai_ui_generated_page', '1' );
-update_post_meta( $h2, '_dxai_ui_css_url', 'dxai-ui/fixture-back.css' );
+update_post_meta( $h2, '_dx_ui_generated_page', '1' );
+update_post_meta( $h2, '_dx_ui_css_url', 'dx-ui/fixture-back.css' );
 $h2_before = (string) get_post_field( 'post_content', $h2 );
 $set       = array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Fire Damage' ), array( 'type' => 'about', 'title' => '' ) );
 $r1        = Team_Pages::build( $h2, $set );
@@ -324,7 +324,7 @@ $summary = $r3['run']['pages'] ?? array();
 $expect( 'and says which it made and which it only changed', count( array_filter( $summary, static fn( $p ) => $p['created'] ) ) === 1 && count( array_filter( $summary, static fn( $p ) => ! $p['created'] ) ) >= 1 );
 $new_id  = (int) ( $r3new[0] ?? 0 );
 $refused = Team_Run::put_back( $h2, $new_id );
-$expect( 'a page the run made cannot be put back by itself: the Home\'s menu opens it, it goes with the run', is_wp_error( $refused ) && $refused->get_error_code() === 'dxai_ui_team_run_new' );
+$expect( 'a page the run made cannot be put back by itself: the Home\'s menu opens it, it goes with the run', is_wp_error( $refused ) && $refused->get_error_code() === 'dx_ui_team_run_new' );
 $back = Team_Run::put_back( $h2, $by2['service|water-damage'] );
 $expect( 'a page that was there is put back as it was', ! is_wp_error( $back ) && (string) get_post_field( 'post_content', $by2['service|water-damage'] ) === $wd_before );
 $expect( 'its records follow: it is not "edited", and has the arrangement it had', ! is_wp_error( $back ) && (string) get_post_meta( $by2['service|water-damage'], Team_Pages::HASH, true ) === md5( $wd_before ) && (string) get_post_meta( $by2['service|water-damage'], Team_Pages::ARR_META, true ) === '' );
@@ -332,7 +332,7 @@ $expect( 'it is out of the run', ! in_array( $by2['service|water-damage'], array
 $expect( 'the same page is not put back twice', is_wp_error( Team_Run::put_back( $h2, $by2['service|water-damage'] ) ) );
 wp_update_post( array( 'ID' => $by2['service|fire-damage'], 'post_content' => (string) get_post_field( 'post_content', $by2['service|fire-damage'] ) . "\n<!-- wp:paragraph --><p>Added by a person.</p><!-- /wp:paragraph -->" ) );
 $stale = Team_Run::put_back( $h2, $by2['service|fire-damage'] );
-$expect( 'a page changed after the run is left as it is', is_wp_error( $stale ) && $stale->get_error_code() === 'dxai_ui_team_run_changed' && str_contains( (string) get_post_field( 'post_content', $by2['service|fire-damage'] ), 'Added by a person.' ) );
+$expect( 'a page changed after the run is left as it is', is_wp_error( $stale ) && $stale->get_error_code() === 'dx_ui_team_run_changed' && str_contains( (string) get_post_field( 'post_content', $by2['service|fire-damage'] ), 'Added by a person.' ) );
 $all = Team_Run::undo( $h2 );
 $expect( 'giving the whole run back leaves it too, and says so', ! is_wp_error( $all ) && count( $all['skipped'] ) === 1 && $all['skipped'][0]['id'] === $by2['service|fire-damage'] && str_contains( (string) get_post_field( 'post_content', $by2['service|fire-damage'] ), 'Added by a person.' ) );
 $expect( 'and the page the run made is in the trash', get_post_status( $new_id ) === 'trash' );
@@ -340,7 +340,7 @@ $expect( 'and the Home is as it was', (string) get_post_field( 'post_content', $
 
 echo "\nThe request, through the REST route\n";
 $call = static function ( array $params ) use ( $h2 ): array {
-	$req = new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$req = new WP_REST_Request( 'POST', '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 	foreach ( $params + array( 'design' => $h2 ) as $k => $v ) {
 		$req->set_param( $k, $v );
 	}
@@ -358,7 +358,7 @@ foreach ( (array) ( $b_r['data']['pages'] ?? array() ) as $p ) {
 	$made[] = (int) $p['id'];
 }
 $expect( 'build returns the report and what the run did', $b_r['status'] === 200 && count( $b_r['data']['report'] ?? array() ) >= 1 && ( $b_r['data']['run']['at'] ?? 0 ) > 0 );
-$ix_req = new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+$ix_req = new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 $ix_req->set_param( 'design', $h2 );
 $expect( 'the index carries the last run, for the panel to offer to undo it', isset( rest_do_request( $ix_req )->get_data()['run']['pages'] ) );
 $u_r = $call( array( 'action' => 'undo' ) );

@@ -2,15 +2,15 @@
 /**
  * DeepSeek engine.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
-use DXAI_UI\Compiler\Schema;
-use DXAI_UI\Http\Remote_Client;
+use DX_UI\Compiler\Schema;
+use DX_UI\Http\Remote_Client;
 
 final class DeepSeek_Engine extends Abstract_Engine {
 
@@ -29,7 +29,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 
 	public function test_connection(): bool|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$response = Remote_Client::post_json(
@@ -48,7 +48,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek connection failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek connection failed.', 'dx-ui' ) );
 		}
 
 		return true;
@@ -56,7 +56,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$max     = isset( $args['max_tokens'] ) ? (int) $args['max_tokens'] : 16384;
@@ -71,7 +71,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 			'response_format' => array(
 				'type'        => 'json_schema',
 				'json_schema' => array(
-					'name'   => 'dxai_ui_block',
+					'name'   => 'dx_ui_block',
 					'strict' => true,
 					'schema' => Schema::generation(),
 				),
@@ -100,7 +100,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek generation failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek generation failed.', 'dx-ui' ) );
 		}
 
 		$decoded = Remote_Client::decode_body( $response['body'] );
@@ -135,10 +135,10 @@ final class DeepSeek_Engine extends Abstract_Engine {
 				}
 			}
 			return new \WP_Error(
-				'dxai_ui_engine_parse',
+				'dx_ui_engine_parse',
 				sprintf(
 					/* translators: %s: original parse error */
-					__( 'The model hit the output token limit before finishing JSON. %s', 'dxai-ui' ),
+					__( 'The model hit the output token limit before finishing JSON. %s', 'dx-ui' ),
 					$parsed->get_error_message()
 				),
 				array( 'status' => 502 )
@@ -150,7 +150,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 
 	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'DeepSeek API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$max      = isset( $args['max_tokens'] ) ? (int) $args['max_tokens'] : 16384;
 		$response = Remote_Client::post_json(
@@ -170,7 +170,7 @@ final class DeepSeek_Engine extends Abstract_Engine {
 			return $response;
 		}
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek did not answer.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'DeepSeek did not answer.', 'dx-ui' ) );
 		}
 		$decoded = Remote_Client::decode_body( $response['body'] );
 		if ( is_wp_error( $decoded ) ) {

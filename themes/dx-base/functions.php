@@ -43,7 +43,7 @@ add_action(
  * This theme has no colours, no fonts and no header or footer of its own to keep: the design's header and footer are installed from the
  * import, and the design's colours are the site's (the plugin follows a theme's palette only where the theme has one).
  */
-add_filter( 'dxai_ui_install_chrome', '__return_true' );
+add_filter( 'dx_ui_install_chrome', '__return_true' );
 
 /**
  * The theme's own stylesheet: a plain reading layout for what the design does not draw (a post, an archive, the 404 page). The design's
@@ -60,8 +60,8 @@ add_action(
  * The site's header: the design's own, built from Appearance > Menus (DX UI), else a plain one from the same menu.
  */
 function dx_base_header(): void {
-	if ( class_exists( '\DXAI_UI\Chrome\Template_Chrome' ) ) {
-		$html = \DXAI_UI\Chrome\Template_Chrome::site_header();
+	if ( class_exists( '\DX_UI\Chrome\Template_Chrome' ) ) {
+		$html = \DX_UI\Chrome\Template_Chrome::site_header();
 		if ( '' !== $html ) {
 			echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own markup, rendered by the plugin.
 
@@ -89,8 +89,8 @@ function dx_base_header(): void {
  * The site's footer: the design's frame around the widgets of Appearance > Widgets (DX UI), else the widgets in a plain frame.
  */
 function dx_base_footer(): void {
-	if ( class_exists( '\DXAI_UI\Chrome\Template_Chrome' ) ) {
-		$html = \DXAI_UI\Chrome\Template_Chrome::site_footer();
+	if ( class_exists( '\DX_UI\Chrome\Template_Chrome' ) ) {
+		$html = \DX_UI\Chrome\Template_Chrome::site_footer();
 		if ( '' !== $html ) {
 			echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the design's own markup, rendered by the plugin.
 

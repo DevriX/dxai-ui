@@ -2,12 +2,12 @@
 /**
  * The installed header, filled from the current menus.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
 /**
  * Renders the header template (Header_Template) with every slot holding the
@@ -23,8 +23,8 @@ namespace DXAI_UI\Chrome;
  * the template's own, and the output is the part's output.
  *
  * Behaviour survives cloning. The design's dropdowns are driven by the
- * runtime (Motion_Runtime) through `dxai-toggle-<state>--<value>` on the
- * trigger and `dxai-on-<state>--<value>` on the panel; the runtime reads the
+ * runtime (Motion_Runtime) through `dxui-toggle-<state>--<value>` on the
+ * trigger and `dxui-on-<state>--<value>` on the panel; the runtime reads the
  * states and their values out of the DOM when the page loads. An item drawn
  * at its own design position keeps the design's value; a clone gets a value
  * of its own, so a dropdown someone adds in Appearance > Menus opens and
@@ -36,8 +36,8 @@ final class Header_Renderer {
 	public const MAX_DEPTH = 3;
 
 	/** Classes the synthesized flyout carries (assets/css/site-header-front.css). */
-	public const FLYOUT       = 'dxai-hdr-flyout';
-	public const FLYOUT_PANEL = 'dxai-hdr-flyout__panel';
+	public const FLYOUT       = 'dxui-hdr-flyout';
+	public const FLYOUT_PANEL = 'dxui-hdr-flyout__panel';
 
 	/** @var array<string, mixed> */
 	private array $spec;
@@ -604,7 +604,7 @@ final class Header_Renderer {
 
 		$trigger = $this->fill( $leaf, $leaf_pos, $item, false );
 		// Where the design put the toggle on its trigger rather than on the
-		// dropdown's box (Arcus Restoration's `<button class="dxai-toggle-…">`),
+		// dropdown's box (Arcus Restoration's `<button class="dxui-toggle-…">`),
 		// the link that replaces the trigger carries it, or nothing opens the flyout.
 		$trigger = self::carry_toggle( Header_Template::node_in( $block, (array) $pos['trigger'] ), $trigger );
 		$block   = $this->patch( $block, (array) $pos['trigger'], static fn(): array => $trigger );
@@ -618,7 +618,7 @@ final class Header_Renderer {
 			array( 'depth' => (int) $ctx['depth'] + 1 )
 		);
 		$block = $this->rebuild( $block, array(), $plans ) ?? $block;
-		$block = $this->reclone( $block, (string) ( $item->title ?? '' ), 'dxaiFly' . (int) $ctx['depth'] );
+		$block = $this->reclone( $block, (string) ( $item->title ?? '' ), 'dxuiFly' . (int) $ctx['depth'] );
 		$block = $this->patch( $block, array(), static fn( array $b ): array => self::chunk_class( $b, self::FLYOUT ) );
 		$block = $this->patch( $block, (array) $pos['panel_root'], static fn( array $b ): array => self::chunk_class( $b, self::FLYOUT_PANEL ) );
 
@@ -629,7 +629,7 @@ final class Header_Renderer {
 
 	/**
 	 * $to with the runtime toggle $from's own element carries: its
-	 * `dxai-toggle-*` classes and the attributes that say how it toggles.
+	 * `dxui-toggle-*` classes and the attributes that say how it toggles.
 	 *
 	 * @param array<string, mixed> $from
 	 * @param array<string, mixed> $to
@@ -638,7 +638,7 @@ final class Header_Renderer {
 	private static function carry_toggle( array $from, array $to ): array {
 		$tag     = Header_Template::root_tag( $from );
 		$classes = preg_split( '/\s+/', (string) ( $tag['attrs']['class'] ?? '' ) ) ?: array();
-		$toggles = array_values( array_filter( $classes, static fn( string $c ): bool => str_starts_with( $c, 'dxai-toggle-' ) ) );
+		$toggles = array_values( array_filter( $classes, static fn( string $c ): bool => str_starts_with( $c, 'dxui-toggle-' ) ) );
 		if ( $toggles === array() ) {
 			return $to;
 		}
@@ -650,7 +650,7 @@ final class Header_Renderer {
 			$p->add_class( $class );
 		}
 		foreach ( (array) ( $tag['attrs'] ?? array() ) as $name => $value ) {
-			if ( in_array( $name, array( 'aria-expanded', 'aria-haspopup' ), true ) || str_starts_with( (string) $name, 'data-dxai-' ) ) {
+			if ( in_array( $name, array( 'aria-expanded', 'aria-haspopup' ), true ) || str_starts_with( (string) $name, 'data-dxui-' ) ) {
 				$p->set_attribute( (string) $name, (string) $value );
 			}
 		}
@@ -938,7 +938,7 @@ final class Header_Renderer {
 	private function reclone( array $block, string $label, string $state = '' ): array {
 		$html = Header_Template::html( $block );
 		$map  = array();
-		if ( preg_match_all( '/\bdxai-(?:toggle|on|off|cls)-([A-Za-z_][A-Za-z0-9_]*)--([A-Za-z0-9_-]+)/', $html, $marks, PREG_SET_ORDER ) ) {
+		if ( preg_match_all( '/\bdxui-(?:toggle|on|off|cls)-([A-Za-z_][A-Za-z0-9_]*)--([A-Za-z0-9_-]+)/', $html, $marks, PREG_SET_ORDER ) ) {
 			$base = sanitize_title( remove_accents( Header_Html::norm( $label ) ) );
 			$base = preg_replace( '/[^a-z0-9-]/', '', $base ) ?? '';
 			$base = $base !== '' ? $base : 'item';
@@ -969,9 +969,9 @@ final class Header_Renderer {
 					$quoted = preg_quote( $from, '/' );
 					list( $from_state, $from_value ) = explode( '--', $from, 2 );
 					list( $to_state, $to_value )     = explode( '--', $to, 2 );
-					$chunk = preg_replace( '/\bdxai-(toggle|on|off|cls)-' . $quoted . '(?![A-Za-z0-9_-])/', 'dxai-$1-' . $to, $chunk ) ?? $chunk;
-					// Per-value projection attributes: data-dxai-on-openFaq-2.
-					$chunk = preg_replace( '/\bdata-dxai-(on|off)-' . preg_quote( $from_state . '-' . $from_value, '/' ) . '(?=[\s=>])/', 'data-dxai-$1-' . $to_state . '-' . $to_value, $chunk ) ?? $chunk;
+					$chunk = preg_replace( '/\bdxui-(toggle|on|off|cls)-' . $quoted . '(?![A-Za-z0-9_-])/', 'dxui-$1-' . $to, $chunk ) ?? $chunk;
+					// Per-value projection attributes: data-dxui-on-openFaq-2.
+					$chunk = preg_replace( '/\bdata-dxui-(on|off)-' . preg_quote( $from_state . '-' . $from_value, '/' ) . '(?=[\s=>])/', 'data-dxui-$1-' . $to_state . '-' . $to_value, $chunk ) ?? $chunk;
 				}
 				foreach ( $ids as $from => $to ) {
 					$q     = preg_quote( $from, '/' );
@@ -1003,7 +1003,7 @@ final class Header_Renderer {
 	 */
 	private function seed( string $markup ): void {
 		$this->used = array();
-		if ( preg_match_all( '/\bdxai-(?:toggle|on|off|cls)-([A-Za-z_][A-Za-z0-9_]*)--([A-Za-z0-9_-]+)/', $markup, $marks, PREG_SET_ORDER ) ) {
+		if ( preg_match_all( '/\bdxui-(?:toggle|on|off|cls)-([A-Za-z_][A-Za-z0-9_]*)--([A-Za-z0-9_-]+)/', $markup, $marks, PREG_SET_ORDER ) ) {
 			foreach ( $marks as $mark ) {
 				$this->used[ $mark[1] ][ $mark[2] ] = true;
 			}
@@ -1063,7 +1063,7 @@ final class Header_Renderer {
 	 */
 	private static function retarget_pictures( array $block, string $url, string $alt, int $id ): array {
 		foreach ( Header_Template::kids( $block ) as $i => $kid ) {
-			$shape = \DXAI_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
+			$shape = \DX_UI\Theme\Capabilities::picture_shape( (string) ( $kid['blockName'] ?? '' ) );
 			if ( $shape !== array() ) {
 				$attrs                   = (array) ( $kid['attrs'] ?? array() );
 				$attrs[ $shape['url'] ] = $url;

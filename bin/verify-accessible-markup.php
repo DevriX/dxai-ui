@@ -11,10 +11,10 @@
  *
  * Makes two pages and deletes them, also when a check dies half-way. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Seo\Accessible_Markup;
+use DX_UI\Seo\Accessible_Markup;
 
 $fail   = 0;
 $pass   = 0;
@@ -71,7 +71,7 @@ $home  = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'p
 $page  = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Accessible markup fixture', 'post_content' => $body ) );
 $plain = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Accessible markup fixture (no design)', 'post_content' => $body ) );
 $made  = array_filter( array( $home, $page, $plain ) );
-update_post_meta( $page, '_dxai_ui_scope_id', (string) $home );
+update_post_meta( $page, '_dx_ui_scope_id', (string) $home );
 $render = static function ( int $id ): string {
 	$GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $id ) );
 	$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
@@ -90,9 +90,9 @@ Accessible_Markup::watch();
 $expect( '…and its document is not buffered for it', false === has_filter( 'wp_template_enhancement_output_buffer', array( Accessible_Markup::class, 'document' ) ) );
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $page ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
-add_filter( 'dxai_ui_accessible_markup', '__return_false' );
+add_filter( 'dx_ui_accessible_markup', '__return_false' );
 $expect( 'nothing when the filter says no', str_contains( $render( $page ), 'aria-expanded' ) );
-remove_filter( 'dxai_ui_accessible_markup', '__return_false' );
+remove_filter( 'dx_ui_accessible_markup', '__return_false' );
 
 $clean();
 echo "\n{$pass} passed, {$fail} failed\n";

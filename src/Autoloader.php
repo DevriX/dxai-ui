@@ -1,17 +1,17 @@
 <?php
 /**
- * PSR-4 autoloader for the DXAI_UI namespace.
+ * PSR-4 autoloader for the DX_UI namespace.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI;
+namespace DX_UI;
 
 final class Autoloader {
 
-	private const PREFIX = 'DXAI_UI\\';
+	private const PREFIX = 'DX_UI\\';
 
 	/**
 	 * Class names whose files do not match PSR-4 1:1.
@@ -34,7 +34,7 @@ final class Autoloader {
 		$relative = substr( $class, strlen( self::PREFIX ) );
 		$key      = str_replace( '/', '\\', $relative );
 		$mapped   = self::ALIASES[ $key ] ?? ( str_replace( '\\', '/', $relative ) . '.php' );
-		$path     = DXAI_UI_DIR . 'src/' . $mapped;
+		$path     = DX_UI_DIR . 'src/' . $mapped;
 		$path     = str_replace( array( '/', '\\' ), DIRECTORY_SEPARATOR, $path );
 
 		if ( is_readable( $path ) ) {

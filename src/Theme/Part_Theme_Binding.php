@@ -2,16 +2,16 @@
 /**
  * Keeps the generated header and footer attached to whichever theme is active.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
 /**
  * A generated page references its header and footer as
- * `<!-- wp:template-part {"slug":"dxai-header-…","theme":"twentytwentyfive"} /-->`,
+ * `<!-- wp:template-part {"slug":"dxui-header-…","theme":"twentytwentyfive"} /-->`,
  * and the part itself is a wp_template_part post tagged with that theme.
  * Core renders the reference only when BOTH match the active theme
  * (wp-includes/blocks/template-part.php): its "theme" attribute must equal
@@ -31,13 +31,13 @@ namespace DXAI_UI\Theme;
  *    the stored references are rewritten to name it, so the block editor —
  *    which reads the attribute as stored — finds them too.
  *
- * Only `dxai-` parts that this plugin generated are touched; a theme's own
+ * Only `dxui-` parts that this plugin generated are touched; a theme's own
  * parts and anything a person made are left alone.
  */
 final class Part_Theme_Binding {
 
 	/** The stylesheet the generated parts were last bound to. */
-	public const OPTION = 'dxai_ui_parts_theme';
+	public const OPTION = 'dx_ui_parts_theme';
 
 	public function register(): void {
 		add_filter( 'render_block_data', array( $this, 'bind_reference' ) );
@@ -53,7 +53,7 @@ final class Part_Theme_Binding {
 			return $block;
 		}
 		$slug = (string) ( $block['attrs']['slug'] ?? '' );
-		if ( ! str_starts_with( $slug, 'dxai-' ) ) {
+		if ( ! str_starts_with( $slug, 'dxui-' ) ) {
 			return $block;
 		}
 		$block['attrs']['theme'] = get_stylesheet();
@@ -109,7 +109,7 @@ final class Part_Theme_Binding {
 				'post_status'    => array( 'publish', 'draft', 'private' ),
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
-				'meta_key'       => '_dxai_ui_generated',
+				'meta_key'       => '_dx_ui_generated',
 				'meta_value'     => '1',
 			)
 		);
@@ -123,7 +123,7 @@ final class Part_Theme_Binding {
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s AND post_type <> 'revision' AND post_status <> 'trash'",
-				'%' . $wpdb->esc_like( '"slug":"dxai-' ) . '%'
+				'%' . $wpdb->esc_like( '"slug":"dxui-' ) . '%'
 			)
 		);
 		foreach ( (array) $ids as $id ) {
@@ -133,7 +133,7 @@ final class Part_Theme_Binding {
 				'/<!--\s+wp:template-part\s+(\{.*?\})\s+\/-->/',
 				static function ( array $m ) use ( $theme ): string {
 					$attrs = json_decode( $m[1], true );
-					if ( ! is_array( $attrs ) || ! str_starts_with( (string) ( $attrs['slug'] ?? '' ), 'dxai-' ) || ( $attrs['theme'] ?? '' ) === $theme ) {
+					if ( ! is_array( $attrs ) || ! str_starts_with( (string) ( $attrs['slug'] ?? '' ), 'dxui-' ) || ( $attrs['theme'] ?? '' ) === $theme ) {
 						return $m[0];
 					}
 					$attrs['theme'] = $theme;

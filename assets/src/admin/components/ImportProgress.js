@@ -18,13 +18,13 @@ import './import.css';
  */
 
 const STATE_TEXT = {
-	pending: __( 'Not started', 'dxai-ui' ),
-	active: __( 'In progress', 'dxai-ui' ),
-	waiting: __( 'Waiting for you', 'dxai-ui' ),
-	done: __( 'Done', 'dxai-ui' ),
-	warn: __( 'Done, with a problem', 'dxai-ui' ),
-	skipped: __( 'Skipped', 'dxai-ui' ),
-	error: __( 'Failed', 'dxai-ui' ),
+	pending: __( 'Not started', 'dx-ui' ),
+	active: __( 'In progress', 'dx-ui' ),
+	waiting: __( 'Waiting for you', 'dx-ui' ),
+	done: __( 'Done', 'dx-ui' ),
+	warn: __( 'Done, with a problem', 'dx-ui' ),
+	skipped: __( 'Skipped', 'dx-ui' ),
+	error: __( 'Failed', 'dx-ui' ),
 };
 
 function useClock( running ) {
@@ -44,7 +44,7 @@ export function Meter( { value, max, label, text } ) {
 	const pct = max > 0 ? Math.max( 0, Math.min( 100, ( value / max ) * 100 ) ) : 0;
 	return (
 		<div
-			className="dxai-meter"
+			className="dxui-meter"
 			role="progressbar"
 			aria-label={ label }
 			aria-valuemin={ 0 }
@@ -52,7 +52,7 @@ export function Meter( { value, max, label, text } ) {
 			aria-valuenow={ value }
 			aria-valuetext={ text }
 		>
-			<span className="dxai-meter__fill" style={ { width: pct + '%' } } />
+			<span className="dxui-meter__fill" style={ { width: pct + '%' } } />
 		</div>
 	);
 }
@@ -60,8 +60,8 @@ export function Meter( { value, max, label, text } ) {
 export function Working( { label } ) {
 	// No aria-valuenow: an indeterminate progressbar, which is the truth.
 	return (
-		<div className="dxai-meter is-indeterminate" role="progressbar" aria-label={ label } aria-valuetext={ __( 'Working, no estimate available', 'dxai-ui' ) }>
-			<span className="dxai-meter__fill" />
+		<div className="dxui-meter is-indeterminate" role="progressbar" aria-label={ label } aria-valuetext={ __( 'Working, no estimate available', 'dx-ui' ) }>
+			<span className="dxui-meter__fill" />
 		</div>
 	);
 }
@@ -112,13 +112,13 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 	}, [ stepKey ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
-		<div className="dxai-crawl">
+		<div className="dxui-crawl">
 			{ running && total > 0 && ! p.finishing && (
-				<p className="dxai-crawl__now">
-					<span className="dxai-crawl__count">
+				<p className="dxui-crawl__now">
+					<span className="dxui-crawl__count">
 						{ sprintf(
 							/* translators: 1: page number, 2: page count */
-							__( 'Page %1$d of %2$d', 'dxai-ui' ),
+							__( 'Page %1$d of %2$d', 'dx-ui' ),
 							Math.min( finished + 1, total ),
 							total
 						) }
@@ -128,10 +128,10 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 				</p>
 			) }
 			{ running && (
-				<p className="dxai-crawl__step">
-					{ total === 0 && ! p.finishing ? __( 'Planning the pages from the menu…', 'dxai-ui' ) : crawlStepText( p, engine ) }
+				<p className="dxui-crawl__step">
+					{ total === 0 && ! p.finishing ? __( 'Planning the pages from the menu…', 'dx-ui' ) : crawlStepText( p, engine ) }
 					{ ' ' }
-					<span className="dxai-crawl__clock">{ formatDuration( now - stepSince.at ) }</span>
+					<span className="dxui-crawl__clock">{ formatDuration( now - stepSince.at ) }</span>
 				</p>
 			) }
 			{ total > 0 && (
@@ -139,73 +139,73 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 					<Meter
 						value={ finished }
 						max={ total }
-						label={ __( 'Menu pages', 'dxai-ui' ) }
+						label={ __( 'Menu pages', 'dx-ui' ) }
 						text={ sprintf(
 							/* translators: 1: pages finished, 2: page count */
-							__( '%1$d of %2$d pages finished', 'dxai-ui' ),
+							__( '%1$d of %2$d pages finished', 'dx-ui' ),
 							finished,
 							total
 						) }
 					/>
-					<p className="dxai-crawl__tally">
+					<p className="dxui-crawl__tally">
 						<span>
 							{ sprintf(
 								/* translators: 1: pages finished, 2: page count */
-								__( '%1$d of %2$d pages finished', 'dxai-ui' ),
+								__( '%1$d of %2$d pages finished', 'dx-ui' ),
 								finished,
 								total
 							) }
 						</span>
-						<span>{ sprintf( /* translators: %d: pages created */ _n( '%d created', '%d created', p.created || 0, 'dxai-ui' ), p.created || 0 ) }</span>
+						<span>{ sprintf( /* translators: %d: pages created */ _n( '%d created', '%d created', p.created || 0, 'dx-ui' ), p.created || 0 ) }</span>
 						{ p.ai !== false && (
 							<span>
 								{ ! p.engine || p.engine === 'design'
-									? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 )
-									: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ) }
+									? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dx-ui' ), p.restyled || 0 )
+									: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dx-ui' ), p.restyled || 0 ) }
 							</span>
 						) }
-						<span className={ p.errors ? 'is-bad' : '' }>{ sprintf( /* translators: %d: pages that failed */ _n( '%d error', '%d errors', p.errors || 0, 'dxai-ui' ), p.errors || 0 ) }</span>
+						<span className={ p.errors ? 'is-bad' : '' }>{ sprintf( /* translators: %d: pages that failed */ _n( '%d error', '%d errors', p.errors || 0, 'dx-ui' ), p.errors || 0 ) }</span>
 					</p>
 				</>
 			) }
 			{ running && p.busy && (
-				<p className="dxai-crawl__note">
-					{ __( 'The previous step is still running on the server (an AI answer can take a couple of minutes). Waiting for it to finish.', 'dxai-ui' ) }
+				<p className="dxui-crawl__note">
+					{ __( 'The previous step is still running on the server (an AI answer can take a couple of minutes). Waiting for it to finish.', 'dx-ui' ) }
 				</p>
 			) }
 			{ running && p.retrying > 0 && (
-				<p className="dxai-crawl__note is-retry">
+				<p className="dxui-crawl__note is-retry">
 					{ sprintf(
 						/* translators: 1: attempt number, 2: what went wrong */
-						__( 'The last request did not come back (attempt %1$d: %2$s). The server keeps working on the page; trying again in 5 seconds.', 'dxai-ui' ),
+						__( 'The last request did not come back (attempt %1$d: %2$s). The server keeps working on the page; trying again in 5 seconds.', 'dx-ui' ),
 						p.retrying,
-						p.lastError || __( 'no answer', 'dxai-ui' )
+						p.lastError || __( 'no answer', 'dx-ui' )
 					) }
 				</p>
 			) }
 			{ queue.length > 0 && (
-				<details className="dxai-crawl__queue" open={ queue.length <= 12 }>
+				<details className="dxui-crawl__queue" open={ queue.length <= 12 }>
 					<summary>
 						{ sprintf(
 							/* translators: %d: number of pages */
-							_n( 'The %d page from the menu', 'All %d pages from the menu', queue.length, 'dxai-ui' ),
+							_n( 'The %d page from the menu', 'All %d pages from the menu', queue.length, 'dx-ui' ),
 							queue.length
 						) }
 					</summary>
 					<ol>
 						{ queue.map( ( row, i ) => (
 							<li key={ ( row.path || '' ) + i } className={ 'is-' + ( row.state || 'pending' ) }>
-								<span className="dxai-crawl__dot" aria-hidden="true" />
-								<span className="dxai-crawl__label">{ row.label || row.path }</span>
+								<span className="dxui-crawl__dot" aria-hidden="true" />
+								<span className="dxui-crawl__label">{ row.label || row.path }</span>
 								{ row.path && <code>{ row.path }</code> }
-								<span className="dxai-crawl__state">
+								<span className="dxui-crawl__state">
 									{ {
-										created: __( 'created', 'dxai-ui' ),
-										done: __( 'done', 'dxai-ui' ),
-										skipped: row.reason === 'edited' ? __( 'kept — edited since the last import', 'dxai-ui' ) : ( row.reason === 'home' ? __( 'the home page', 'dxai-ui' ) : __( 'skipped', 'dxai-ui' ) ),
-										error: row.message || __( 'failed', 'dxai-ui' ),
-										current: entry?.state === 'error' ? __( 'stopped here', 'dxai-ui' ) : __( 'working on it', 'dxai-ui' ),
-										pending: __( 'waiting', 'dxai-ui' ),
+										created: __( 'created', 'dx-ui' ),
+										done: __( 'done', 'dx-ui' ),
+										skipped: row.reason === 'edited' ? __( 'kept — edited since the last import', 'dx-ui' ) : ( row.reason === 'home' ? __( 'the home page', 'dx-ui' ) : __( 'skipped', 'dx-ui' ) ),
+										error: row.message || __( 'failed', 'dx-ui' ),
+										current: entry?.state === 'error' ? __( 'stopped here', 'dx-ui' ) : __( 'working on it', 'dx-ui' ),
+										pending: __( 'waiting', 'dx-ui' ),
 									}[ row.state ] || '' }
 								</span>
 							</li>
@@ -214,8 +214,8 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 				</details>
 			) }
 			{ running && (
-				<p className="dxai-crawl__note">
-					{ __( 'Keep this tab open to watch it. If you close it, WordPress carries on in the background (when WP-Cron runs) and the pages appear in Designs.', 'dxai-ui' ) }
+				<p className="dxui-crawl__note">
+					{ __( 'Keep this tab open to watch it. If you close it, WordPress carries on in the background (when WP-Cron runs) and the pages appear in Designs.', 'dx-ui' ) }
 				</p>
 			) }
 		</div>
@@ -224,21 +224,21 @@ function CrawlPanel( { crawl, engine, entry, now } ) {
 
 function PhaseError( { failure, actions, titleRef } ) {
 	return (
-		<div className="dxai-phase-error" role="alert">
-			<p className="dxai-phase-error__title" tabIndex={ -1 } ref={ titleRef }>
+		<div className="dxui-phase-error" role="alert">
+			<p className="dxui-phase-error__title" tabIndex={ -1 } ref={ titleRef }>
 				{ failure.title }
 			</p>
-			<p className="dxai-phase-error__message">
-				<span className="dxai-phase-error__k">{ __( 'The server said:', 'dxai-ui' ) }</span> { failure.message }
+			<p className="dxui-phase-error__message">
+				<span className="dxui-phase-error__k">{ __( 'The server said:', 'dx-ui' ) }</span> { failure.message }
 				{ failure.code && <code>{ failure.code }{ failure.status ? ' · HTTP ' + failure.status : '' }</code> }
 			</p>
 			{ failure.hint && (
-				<p className="dxai-phase-error__hint">
-					<span className="dxai-phase-error__k">{ __( 'What to do:', 'dxai-ui' ) }</span> { failure.hint }
+				<p className="dxui-phase-error__hint">
+					<span className="dxui-phase-error__k">{ __( 'What to do:', 'dx-ui' ) }</span> { failure.hint }
 				</p>
 			) }
 			{ actions && actions.length > 0 && (
-				<div className="dxai-actions dxai-phase-error__actions">
+				<div className="dxui-actions dxui-phase-error__actions">
 					{ actions.map( ( action ) => ( action.href ? (
 						<a key={ action.label } className={ 'components-button ' + ( action.primary ? 'is-primary' : 'is-secondary' ) } href={ action.href }>
 							{ action.label }
@@ -267,7 +267,7 @@ function announcementFor( plan, progress, crawl, engine ) {
 	if ( id === 'crawl' && crawl && crawl.total > 0 && ! crawl.finishing ) {
 		return sprintf(
 			/* translators: 1: page number, 2: page count, 3: page name */
-			__( 'Building page %1$d of %2$d: %3$s', 'dxai-ui' ),
+			__( 'Building page %1$d of %2$d: %3$s', 'dx-ui' ),
 			Math.min( ( crawl.index || 0 ) + 1, crawl.total ),
 			crawl.total,
 			crawl.label || crawl.path || ''
@@ -276,7 +276,7 @@ function announcementFor( plan, progress, crawl, engine ) {
 	// While a lost answer is looked for, the detail carries a clock that
 	// changes every few seconds: announce what is happening once, not the clock.
 	if ( entry.watching ) {
-		return phase.label + '. ' + __( 'The connection was cut; asking WordPress how the save is going.', 'dxai-ui' );
+		return phase.label + '. ' + __( 'The connection was cut; asking WordPress how the save is going.', 'dx-ui' );
 	}
 	// The upload's byte count changes many times a second; announce the phase, not the bytes.
 	return phase.label + ( entry.detail && ! entry.meter ? '. ' + entry.detail : '' );
@@ -314,36 +314,36 @@ export default function ImportProgress( { plan, progress, crawl, engine, failure
 	const failed = plan.find( ( p ) => progress.phases[ p.id ]?.state === 'error' );
 	const allDone = ! active && ! failed && plan.every( ( p ) => [ 'done', 'skipped', 'warn' ].includes( progress.phases[ p.id ]?.state ) );
 
-	let headline = __( 'Getting ready…', 'dxai-ui' );
+	let headline = __( 'Getting ready…', 'dx-ui' );
 	if ( failed ) {
 		headline = sprintf(
 			/* translators: %s: the phase that failed */
-			__( 'Stopped while %s', 'dxai-ui' ),
+			__( 'Stopped while %s', 'dx-ui' ),
 			failed.label.charAt( 0 ).toLowerCase() + failed.label.slice( 1 )
 		);
 	} else if ( active && activeEntry?.state === 'waiting' ) {
-		headline = __( 'Ready for your review', 'dxai-ui' );
+		headline = __( 'Ready for your review', 'dx-ui' );
 	} else if ( active ) {
 		headline = active.label + '…';
 	} else if ( allDone ) {
-		headline = __( 'Import finished', 'dxai-ui' );
+		headline = __( 'Import finished', 'dx-ui' );
 	}
 
 	const elapsed = workingTime( progress, now );
 
 	if ( compact ) {
 		return (
-			<nav className="dxai-progress dxai-progress--compact" aria-label={ __( 'Import progress', 'dxai-ui' ) }>
-				<ol className="dxai-chips">
+			<nav className="dxui-progress dxui-progress--compact" aria-label={ __( 'Import progress', 'dx-ui' ) }>
+				<ol className="dxui-chips">
 					{ plan.map( ( phase ) => {
 						const entry = progress.phases[ phase.id ] || { state: 'pending' };
 						const time = phaseTime( entry, now );
 						return (
-							<li key={ phase.id } className={ 'dxai-chipstep is-' + entry.state } aria-current={ entry.state === 'waiting' || entry.state === 'active' ? 'step' : undefined }>
-								<span className="dxai-phase__mark" aria-hidden="true" />
-								<span className="dxai-chipstep__label">{ phase.label }</span>
+							<li key={ phase.id } className={ 'dxui-chipstep is-' + entry.state } aria-current={ entry.state === 'waiting' || entry.state === 'active' ? 'step' : undefined }>
+								<span className="dxui-phase__mark" aria-hidden="true" />
+								<span className="dxui-chipstep__label">{ phase.label }</span>
 								<span className="screen-reader-text">{ ', ' + STATE_TEXT[ entry.state ] }</span>
-								{ time && <span className="dxai-chipstep__time">{ time }</span> }
+								{ time && <span className="dxui-chipstep__time">{ time }</span> }
 							</li>
 						);
 					} ) }
@@ -353,22 +353,22 @@ export default function ImportProgress( { plan, progress, crawl, engine, failure
 	}
 
 	return (
-		<section className={ 'dxai-progress' + ( failed ? ' has-error' : '' ) } aria-labelledby="dxai-progress-title">
-			<header className="dxai-progress__head">
+		<section className={ 'dxui-progress' + ( failed ? ' has-error' : '' ) } aria-labelledby="dxui-progress-title">
+			<header className="dxui-progress__head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Import progress', 'dxai-ui' ) }</p>
-					<h3 id="dxai-progress-title" className="dxai-progress__title" tabIndex={ -1 } ref={ headingRef }>
+					<p className="dxui-section-kicker">{ __( 'Import progress', 'dx-ui' ) }</p>
+					<h3 id="dxui-progress-title" className="dxui-progress__title" tabIndex={ -1 } ref={ headingRef }>
 						{ headline }
 					</h3>
 				</div>
 				{ progress.startedAt > 0 && (
-					<p className="dxai-progress__clock">
-						<span>{ __( 'Elapsed', 'dxai-ui' ) }</span>
+					<p className="dxui-progress__clock">
+						<span>{ __( 'Elapsed', 'dx-ui' ) }</span>
 						<strong>{ formatDuration( elapsed ) }</strong>
 					</p>
 				) }
 			</header>
-			<ol className="dxai-phases">
+			<ol className="dxui-phases">
 				{ plan.map( ( phase, index ) => {
 					const entry = progress.phases[ phase.id ] || { state: 'pending' };
 					const time = phaseTime( entry, now );
@@ -376,21 +376,21 @@ export default function ImportProgress( { plan, progress, crawl, engine, failure
 					return (
 						<li
 							key={ phase.id }
-							className={ 'dxai-phase is-' + entry.state }
+							className={ 'dxui-phase is-' + entry.state }
 							aria-current={ entry.state === 'active' || entry.state === 'waiting' ? 'step' : undefined }
 						>
-							<span className="dxai-phase__mark" aria-hidden="true">
-								<span className="dxai-phase__num">{ index + 1 }</span>
+							<span className="dxui-phase__mark" aria-hidden="true">
+								<span className="dxui-phase__num">{ index + 1 }</span>
 							</span>
-							<div className="dxai-phase__body">
-								<div className="dxai-phase__line">
-									<span className="dxai-phase__label">{ phase.label }</span>
-									{ phase.where && <span className="dxai-phase__where">{ phase.where }</span> }
+							<div className="dxui-phase__body">
+								<div className="dxui-phase__line">
+									<span className="dxui-phase__label">{ phase.label }</span>
+									{ phase.where && <span className="dxui-phase__where">{ phase.where }</span> }
 									<span className="screen-reader-text">{ ', ' + STATE_TEXT[ entry.state ] }</span>
-									{ time && <span className="dxai-phase__time">{ time }</span> }
+									{ time && <span className="dxui-phase__time">{ time }</span> }
 								</div>
 								{ entry.detail && ! ( isCrawl && entry.state === 'active' ) && (
-									<p className="dxai-phase__detail">{ entry.detail }</p>
+									<p className="dxui-phase__detail">{ entry.detail }</p>
 								) }
 								{ entry.state === 'active' && ! isCrawl && entry.meter && entry.meter.max > 0 && (
 									<Meter value={ entry.meter.value } max={ entry.meter.max } label={ phase.label } text={ entry.meter.text } />
@@ -398,17 +398,17 @@ export default function ImportProgress( { plan, progress, crawl, engine, failure
 								{ entry.state === 'active' && ! isCrawl && ! entry.meter && <Working label={ phase.label } /> }
 								{ /* Not while a lost answer is being looked for: the detail then says what is known. */ }
 								{ entry.state === 'active' && ! isCrawl && ! entry.watching && entry.started && now - entry.started > 45000 && (
-									<p className="dxai-phase__patience">
+									<p className="dxui-phase__patience">
 										{ now - entry.started > 180000
-											? __( 'This is taking longer than usual. The server has not answered yet and nothing has failed; if the host cuts the request off, this screen will say so and what to do next.', 'dxai-ui' )
-											: __( 'Still working — the server has not answered yet. Large designs take longer on shared hosting. Keep this tab open.', 'dxai-ui' ) }
+											? __( 'This is taking longer than usual. The server has not answered yet and nothing has failed; if the host cuts the request off, this screen will say so and what to do next.', 'dx-ui' )
+											: __( 'Still working — the server has not answered yet. Large designs take longer on shared hosting. Keep this tab open.', 'dx-ui' ) }
 									</p>
 								) }
 								{ isCrawl && ( entry.state === 'active' || entry.state === 'done' || entry.state === 'warn' || entry.state === 'error' ) && (
 									<CrawlPanel crawl={ crawl } engine={ engine } entry={ entry } now={ now } />
 								) }
 								{ entry.link && entry.link.href && entry.state !== 'active' && (
-									<a className="dxai-phase__link" href={ entry.link.href }>{ entry.link.label }</a>
+									<a className="dxui-phase__link" href={ entry.link.href }>{ entry.link.label }</a>
 								) }
 								{ entry.state === 'error' && failure && failure.phase === phase.id && (
 									<PhaseError failure={ failure } actions={ actions } titleRef={ errorRef } />

@@ -2,12 +2,12 @@
 /**
  * A font's line metrics and average width, read from its TrueType/OpenType file, and the fallback face that matches them.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Text is drawn in a fallback font until a web font arrives (`font-display: swap`), and then drawn again. When the two fonts have other

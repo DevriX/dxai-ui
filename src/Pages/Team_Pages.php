@@ -2,15 +2,15 @@
 /**
  * New pages of a design, made the way the team makes theirs, in the look of the design's Home.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Blank_Template;
 
 /**
  * The team builds the pages of a site (a service, a place, About, Contact, the questions, the reviews) by hand, from
@@ -27,25 +27,25 @@ use DXAI_UI\Theme\Blank_Template;
 final class Team_Pages {
 
 	/** On each page: "<kind>|<slug>" of the page it is. */
-	public const META = '_dxai_ui_team_page';
+	public const META = '_dx_ui_team_page';
 
 	/** On each page: the hash of the content this wrote (a later edit is not overwritten). */
-	public const HASH = '_dxai_ui_team_hash';
+	public const HASH = '_dx_ui_team_hash';
 
 	/**
 	 * The key every page of an import has (archive#slug). A page made here has one too, "team#<home>#<kind>|<slug>", so that
 	 * an import of another design with the same address (/contact-us) is told it is not free to take.
 	 */
-	public const KEY_META = '_dxai_ui_page_key';
+	public const KEY_META = '_dx_ui_page_key';
 
 	/** On each page: how each of its sections was varied (Section_Variants), one list of names per section, in page order. */
-	public const OPS_META = '_dxai_ui_team_ops';
+	public const OPS_META = '_dx_ui_team_ops';
 
 	/** On a page: how its plan was made (the usual one, or an AI's), and why an AI's was not used. */
-	public const AI_META = '_dxai_ui_team_ai';
+	public const AI_META = '_dx_ui_team_ai';
 
 	/** What a person shuffled and locked on a page: {shuffle, recipe, locks}. Kept so the page is made the same way again. */
-	public const ARR_META = '_dxai_ui_team_arr';
+	public const ARR_META = '_dx_ui_team_arr';
 
 	/** How far a page is built from the Home: only its sections as they are; also the sections made in its cards and the team's own (Block_Library) where the Home has none; with an AI choosing the sections. */
 	public const MODES = array( 'home', 'new', 'ai' );
@@ -63,7 +63,7 @@ final class Team_Pages {
 	public const KEEP_ROLES = array( 'reviews', 'form', 'trust', 'cta' );
 
 	/** Option: the version of the key stamping (upgrade()). */
-	public const KEYS_DONE = 'dxai_ui_team_keys_done';
+	public const KEYS_DONE = 'dx_ui_team_keys_done';
 
 	/**
 	 * The kinds of page that can be made, with the model they follow and the title a general page gets.
@@ -157,7 +157,7 @@ final class Team_Pages {
 			'services' => array(),
 			'places'   => array(),
 		);
-		$doc = \DXAI_UI\Design\Document_Store::load( $home );
+		$doc = \DX_UI\Design\Document_Store::load( $home );
 		if ( $doc === null ) {
 			return $out;
 		}
@@ -255,7 +255,7 @@ final class Team_Pages {
 		 *
 		 * @param string $policy 'team' (the team's layouts), 'fill', 'prefer' or 'off'.
 		 */
-		$policy = (string) apply_filters( 'dxai_ui_team_library', $policy );
+		$policy = (string) apply_filters( 'dx_ui_team_library', $policy );
 
 		return in_array( $policy, self::LIBRARY, true ) ? $policy : 'fill';
 	}
@@ -524,8 +524,8 @@ final class Team_Pages {
 	 * @return array{pages:array<int, array<string, mixed>>, kept:array<int, array<string, mixed>>, log:array<int, string>, menu:array{pages:int, links:int}, chrome:int, ai:array<string, mixed>, report:array<int, array<string, mixed>>, run:array<string, mixed>}|\WP_Error
 	 */
 	public static function build( int $home, array $wanted, bool $force = false, array $options = array() ) {
-		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
-			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+		if ( $home < 1 || ! \DX_UI\Structures\Design_Attach::is_design( $home ) ) {
+			return new \WP_Error( 'dx_ui_team_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		self::$network = self::network_wanted( $options );
 		$mode  = self::mode( $options );
@@ -533,11 +533,11 @@ final class Team_Pages {
 		// The pages that list others first, so the pages they list can sit under them; a page at an address after the page above it.
 		usort( $items, static fn( $x, $y ) => self::rank( $x ) <=> self::rank( $y ) );
 		if ( $items === array() ) {
-			return new \WP_Error( 'dxai_ui_team_none', __( 'Nothing was asked for.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_team_none', __( 'Nothing was asked for.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$library = Section_Library::for_page( $home );
 		if ( $library === array() ) {
-			return new \WP_Error( 'dxai_ui_team_library', __( 'The Home has no sections to build the pages from.', 'dxai-ui' ), array( 'status' => 422 ) );
+			return new \WP_Error( 'dx_ui_team_library', __( 'The Home has no sections to build the pages from.', 'dx-ui' ), array( 'status' => 422 ) );
 		}
 		$seed  = self::seed( $home );
 		$roles = self::home_roles( $library );
@@ -582,7 +582,7 @@ final class Team_Pages {
 			if ( $id < 1 ) {
 				$id = self::shell( $home, $item, $items );
 				if ( is_wp_error( $id ) ) {
-					if ( $id->get_error_code() === 'dxai_ui_team_parent' ) {
+					if ( $id->get_error_code() === 'dx_ui_team_parent' ) {
 						// The page it sits under is not there (not asked for, or not made): this one waits, the others go on.
 						$kept[] = array(
 							'id'    => 0,
@@ -668,7 +668,7 @@ final class Team_Pages {
 			// The page's own words, asked for (`words` => `write`): no section says the Home's words on a page about something else.
 			$wrote_words = null;
 			if ( ( $options['words'] ?? '' ) === 'write' ) {
-				$wrote_words = \DXAI_UI\Network\Page_Copies::write_own_words( $id, self::KEEP_ROLES );
+				$wrote_words = \DX_UI\Network\Page_Copies::write_own_words( $id, self::KEEP_ROLES );
 				// The plugin wrote them: the page is not one a person edited.
 				update_post_meta( $id, self::HASH, md5( (string) get_post_field( 'post_content', $id ) ) );
 				$log[] = $item['title'] . ': ' . ( $wrote_words['words'] === 'ai'
@@ -731,13 +731,13 @@ final class Team_Pages {
 	 * @return array{requests:int, input:int, output:int, tokens:int, cost:float|null, cap:int, within:bool, pages:int, engine:string}|\WP_Error
 	 */
 	public static function estimate( int $home, array $wanted ) {
-		if ( $home < 1 || ! \DXAI_UI\Structures\Design_Attach::is_design( $home ) ) {
-			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+		if ( $home < 1 || ! \DX_UI\Structures\Design_Attach::is_design( $home ) ) {
+			return new \WP_Error( 'dx_ui_team_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$items   = self::clean_wanted( $wanted );
 		$library = Section_Library::for_page( $home );
 		if ( $items === array() || $library === array() ) {
-			return new \WP_Error( 'dxai_ui_team_none', __( 'Nothing was asked for.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_team_none', __( 'Nothing was asked for.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$seed  = self::seed( $home );
 		$roles = self::home_roles( $library );
@@ -895,12 +895,12 @@ final class Team_Pages {
 
 	/**
 	 * Whether a run lays its pages out the way the network's sites lay out theirs (Network\Network_Model::recipe()): asked for
-	 * (`recipe` => `network`), or this site's network has been read (`wp dxai-ui network learn`).
+	 * (`recipe` => `network`), or this site's network has been read (`wp dx-ui network learn`).
 	 *
 	 * @param array<string, mixed> $options
 	 */
 	private static function network_wanted( array $options ): bool {
-		return ( $options['recipe'] ?? '' ) === 'network' || \DXAI_UI\Network\Network_Model::stored() !== null;
+		return ( $options['recipe'] ?? '' ) === 'network' || \DX_UI\Network\Network_Model::stored() !== null;
 	}
 
 	/**
@@ -922,7 +922,7 @@ final class Team_Pages {
 		if ( ! self::$network || $kind === '' || str_contains( $variant, '~' ) ) {
 			return null;
 		}
-		$r = \DXAI_UI\Network\Network_Model::recipe( $kind );
+		$r = \DX_UI\Network\Network_Model::recipe( $kind );
 		if ( $r === null || count( $r['roles'] ) < 3 ) {
 			return null;
 		}
@@ -1164,7 +1164,7 @@ final class Team_Pages {
 			if ( count( $rows ) >= 2 ) {
 				$refused = array();
 				$again   = $locked( 'contact', 'new' );
-				$contact = Section_Blueprints::contact( (array) $vary['kit'], $library, $rows, __( 'Get in touch', 'dxai-ui' ), ( $again !== null ? $seed_of( (int) $again['n'] ) : $seed ) . '|contact', $refused, $wanted, $again !== null ? (int) $again['index'] : null );
+				$contact = Section_Blueprints::contact( (array) $vary['kit'], $library, $rows, __( 'Get in touch', 'dx-ui' ), ( $again !== null ? $seed_of( (int) $again['n'] ) : $seed ) . '|contact', $refused, $wanted, $again !== null ? (int) $again['index'] : null );
 				foreach ( $refused as $why ) {
 					$log[] = 'contact: not made from ' . $why;
 				}
@@ -1547,7 +1547,7 @@ final class Team_Pages {
 		$of   = static fn( string $t ): array => array_values( array_filter( $links, static fn( $l, $k ) => $k !== $key && $l['type'] === $t, ARRAY_FILTER_USE_BOTH ) );
 		if ( $type === 'areas' ) {
 			$pages   = $of( 'location' );
-			$heading = __( 'Where we work', 'dxai-ui' );
+			$heading = __( 'Where we work', 'dx-ui' );
 		} else {
 			$pages = $of( 'service' );
 			if ( $type !== 'services' ) {
@@ -1557,7 +1557,7 @@ final class Team_Pages {
 					}
 				}
 			}
-			$heading = $type === 'service' ? __( 'Our other services', 'dxai-ui' ) : __( 'Our services', 'dxai-ui' );
+			$heading = $type === 'service' ? __( 'Our other services', 'dx-ui' ) : __( 'Our services', 'dx-ui' );
 		}
 		$rows = array();
 		foreach ( $pages as $p ) {
@@ -2010,9 +2010,9 @@ final class Team_Pages {
 				$parent = self::page_at( (string) $item['parent_path'] );
 				if ( $parent < 1 ) {
 					return new \WP_Error(
-						'dxai_ui_team_parent',
+						'dx_ui_team_parent',
 						/* translators: %s: the address of the page above. */
-						sprintf( __( 'The page at %s, which this one sits under, is not there.', 'dxai-ui' ), (string) $item['parent_path'] ),
+						sprintf( __( 'The page at %s, which this one sits under, is not there.', 'dx-ui' ), (string) $item['parent_path'] ),
 						array( 'status' => 422 )
 					);
 				}
@@ -2030,7 +2030,7 @@ final class Team_Pages {
 			array(
 				'post_type'    => 'page',
 				/** This filter is documented in src/Structures/Site_From_Menu.php */
-				'post_status'  => (string) apply_filters( 'dxai_ui_new_page_status', 'publish', $home ),
+				'post_status'  => (string) apply_filters( 'dx_ui_new_page_status', 'publish', $home ),
 				'post_title'   => wp_slash( $item['title'] ),
 				'post_name'    => (string) ( $item['name'] ?? $item['slug'] ),
 				'post_parent'  => $parent,
@@ -2060,7 +2060,7 @@ final class Team_Pages {
 		// the page carries its own copy, as a page the importer makes does, so the rules for their blocks are written for it.
 		// A template part or the site's header block is added around the page when it is shown.
 		$chrome = Section_Library::chrome_markup( $home );
-		$embed  = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dxai-ui/site-' );
+		$embed  = static fn( string $m ): bool => $m !== '' && ! str_contains( $m, '<!-- wp:template-part' ) && ! str_contains( $m, '<!-- wp:dx-ui/site-' );
 		$blocks = static fn( string $m ): array => array_values( array_filter( parse_blocks( $m ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
 		// What the Home has fixed over the page (a call bar for phones) is on this page too, after its sections, as on the Home.
 		$sections = array_merge( $sections, Section_Library::floating( $home ) );
@@ -2074,20 +2074,20 @@ final class Team_Pages {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $markup ), array( 'ID' => $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $id );
+		\DX_UI\Blocks\Style_Rules::forget( $id );
 		update_post_meta( $id, self::HASH, md5( $markup ) );
 		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
-		update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+		update_post_meta( $id, '_dx_ui_generated_page', '1' );
 		update_post_meta( $id, Page_Scope::META, $home );
 		foreach ( array(
-			'_dxai_ui_css_url',
-			'_dxai_ui_js_url',
-			'_dxai_ui_font_urls',
-			'_dxai_ui_wrapper_class',
-			'_dxai_ui_static_html',
-			\DXAI_UI\Compiler\Design_Tokens::META,
-			\DXAI_UI\Chrome\Page_Chrome::PART_KEY_META,
-			\DXAI_UI\Chrome\Page_Chrome::MODE_META,
+			'_dx_ui_css_url',
+			'_dx_ui_js_url',
+			'_dx_ui_font_urls',
+			'_dx_ui_wrapper_class',
+			'_dx_ui_static_html',
+			\DX_UI\Compiler\Design_Tokens::META,
+			\DX_UI\Chrome\Page_Chrome::PART_KEY_META,
+			\DX_UI\Chrome\Page_Chrome::MODE_META,
 		) as $key ) {
 			$value = get_post_meta( $home, $key, true );
 			if ( $value === '' || $value === array() || $value === false ) {

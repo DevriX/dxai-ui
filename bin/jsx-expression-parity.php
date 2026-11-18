@@ -160,7 +160,7 @@ foreach ( $cases as [ $expr, $want ] ) {
 	$got = array();
 	foreach ( $positions as $name => $build ) {
 		++$total_n;
-		$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+		$compiler = new DX_UI\Compiler\Jsx_Compiler();
 		try {
 			$sections = $compiler->compile_file( $page, array(), array( 'src/components/P.tsx' => $build( $expr ) ) );
 			$html     = implode( "\n", array_column( $sections, 'html' ) );

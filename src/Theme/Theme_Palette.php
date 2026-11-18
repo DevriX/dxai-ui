@@ -2,14 +2,14 @@
 /**
  * The active theme's colour settings.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Support\Color_Math;
+use DX_UI\Support\Color_Math;
 
 /**
  * What colours the site's theme defines, read the way WordPress itself reads
@@ -153,7 +153,7 @@ final class Theme_Palette {
 		if ( $page < 1 ) {
 			return array();
 		}
-		$palette = get_post_meta( $page, \DXAI_UI\Compiler\Token_Styles::META, true );
+		$palette = get_post_meta( $page, \DX_UI\Compiler\Token_Styles::META, true );
 		$out     = array();
 		foreach ( array( 'colors', 'vars' ) as $key ) {
 			foreach ( is_array( $palette[ $key ] ?? null ) ? $palette[ $key ] : array() as $row ) {

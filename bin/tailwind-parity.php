@@ -7,7 +7,7 @@
  *
  * Run: wp eval-file bin/tailwind-parity.php <zip-path> <out-dir>
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,7 +33,7 @@ require_once ABSPATH . 'wp-admin/includes/image.php';
 
 wp_mkdir_p( $out );
 
-$source = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip(
+$source = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip(
 	array(
 		'name'     => basename( $zip ),
 		'tmp_name' => $zip,
@@ -46,7 +46,7 @@ if ( is_wp_error( $source ) ) {
 	return;
 }
 
-$result = ( new DXAI_UI\Compiler\Source_Compiler() )->compile( $source );
+$result = ( new DX_UI\Compiler\Source_Compiler() )->compile( $source );
 
 // Every class the design actually uses, from the compiled markup and from the
 // source HTML each structure kept — a class only present in a raw-HTML island
@@ -92,15 +92,15 @@ if ( $list !== '' && is_readable( $list ) ) {
  *
  * The pattern id is what the scope is built from; 0 makes it predictable.
  */
-$scope = '.dxai-ui.dxai-ui--0';
-$css   = ( new DXAI_UI\Compiler\Tailwind_Purger() )->compile( $markup, (string) ( $result['custom_css'] ?? '' ), 0, '', $raw_css );
+$scope = '.dx-ui.dx-ui--0';
+$css   = ( new DX_UI\Compiler\Tailwind_Purger() )->compile( $markup, (string) ( $result['custom_css'] ?? '' ), 0, '', $raw_css );
 
 $classes = array();
 if ( preg_match_all( '/class(?:Name)?="([^"]*)"/i', $markup, $matches ) ) {
 	foreach ( $matches[1] as $list ) {
 		foreach ( preg_split( '/\s+/', $list ) ?: array() as $token ) {
 			$token = trim( $token );
-			if ( $token === '' || str_starts_with( $token, 'wp-' ) || str_starts_with( $token, 'dxai-' ) ) {
+			if ( $token === '' || str_starts_with( $token, 'wp-' ) || str_starts_with( $token, 'dxui-' ) ) {
 				continue;
 			}
 			$classes[ $token ] = true;

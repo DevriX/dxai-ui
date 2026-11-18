@@ -12,26 +12,26 @@
  * outside the adapters spells a theme's name or a theme's block. Nothing on the site is written; the adapter assumed for a check is put
  * back, in a shutdown function as well. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Library_View;
-use DXAI_UI\Blocks\Native\Link_Box;
-use DXAI_UI\Blocks\Native\Picture;
-use DXAI_UI\Blocks\Native\Sizes;
-use DXAI_UI\Blocks\Native\Span;
-use DXAI_UI\Blocks\Native\Text_Color;
-use DXAI_UI\Blocks\Youtube_Facade_View;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Section_Roles;
-use DXAI_UI\Theme\Adapters\Amr_Adapter;
-use DXAI_UI\Theme\Adapters\Block_Theme_Adapter;
-use DXAI_UI\Theme\Adapters\Classic_Adapter;
-use DXAI_UI\Theme\Adapters\Dx_Base_Adapter;
-use DXAI_UI\Theme\Adapters\Theme_Adapter;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Compat;
-use DXAI_UI\Transfer\Page_Export;
+use DX_UI\Blocks\Library_View;
+use DX_UI\Blocks\Native\Link_Box;
+use DX_UI\Blocks\Native\Picture;
+use DX_UI\Blocks\Native\Sizes;
+use DX_UI\Blocks\Native\Span;
+use DX_UI\Blocks\Native\Text_Color;
+use DX_UI\Blocks\Youtube_Facade_View;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Section_Roles;
+use DX_UI\Theme\Adapters\Amr_Adapter;
+use DX_UI\Theme\Adapters\Block_Theme_Adapter;
+use DX_UI\Theme\Adapters\Classic_Adapter;
+use DX_UI\Theme\Adapters\Dx_Base_Adapter;
+use DX_UI\Theme\Adapters\Theme_Adapter;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Compat;
+use DX_UI\Transfer\Page_Export;
 
 $fail   = 0;
 $pass   = 0;
@@ -46,7 +46,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 };
 register_shutdown_function( static function (): void {
 	Capabilities::assume( null );
-	remove_theme_support( 'dxai-youtube-facade' );
+	remove_theme_support( 'dxui-youtube-facade' );
 } );
 
 echo "The contract on this theme\n";
@@ -57,7 +57,7 @@ $expect( 'exactly one of the four adapters reads a theme, and the four are the f
 $expect( 'is_dx() is what Theme_Compat says, and the adapter of a DX theme says so too', Capabilities::is_dx() === Theme_Compat::is_dx_theme() && ( ! Capabilities::is_dx() || $adapter->is_dx() ) );
 $picture = Capabilities::theme_block( 'picture' );
 $expect( 'the picture block a theme names is first among the picture blocks, and the one to make is it when registered, else core\'s', $picture !== '' && Capabilities::blocks( 'picture' )[0] === $picture && Capabilities::block( 'picture' ) === ( Capabilities::has_block( $picture ) ? $picture : 'core/image' ) && Capabilities::picture_block() === Capabilities::block( 'picture' ), $picture . ' → ' . Capabilities::block( 'picture' ) );
-$expect( 'the blocks that are pictures on a site: core\'s, the plugin\'s own, then the themes\'', array( 'core/image', 'dxai-ui/image' ) === array_slice( Capabilities::image_blocks(), 0, 2 ) && in_array( $picture, Capabilities::image_blocks(), true ) && Capabilities::is_block( $picture, 'picture' ) && ! Capabilities::is_block( 'core/image', 'picture' ) );
+$expect( 'the blocks that are pictures on a site: core\'s, the plugin\'s own, then the themes\'', array( 'core/image', 'dx-ui/image' ) === array_slice( Capabilities::image_blocks(), 0, 2 ) && in_array( $picture, Capabilities::image_blocks(), true ) && Capabilities::is_block( $picture, 'picture' ) && ! Capabilities::is_block( 'core/image', 'picture' ) );
 $span = Capabilities::theme_block( 'span' );
 $expect( 'a theme\'s label block says how it is written (its tag and its own classes); a core block is no theme\'s', $span !== '' && is_array( Capabilities::markup_of( $span ) ) && 'span' === Capabilities::markup_of( $span )['tag'] && Capabilities::markup_of( $span )['classes'] !== array() && null === Capabilities::markup_of( 'core/paragraph' ), wp_json_encode( Capabilities::markup_of( $span ) ) );
 $shape = Capabilities::picture_shape( $picture );
@@ -66,9 +66,9 @@ $expect( 'the attributes that hold an attachment: a transfer learns the theme\'s
 $expect( 'a feature nobody declared is not brought; a theme support any theme declares makes it brought', ! Capabilities::brings( 'nothing-of-the-kind' ) && ( static function (): bool {
 	Capabilities::assume( new Classic_Adapter() );
 	$before = Capabilities::brings( 'video-facade' );
-	add_theme_support( 'dxai-youtube-facade' );
+	add_theme_support( 'dxui-youtube-facade' );
 	$with = Capabilities::brings( 'video-facade' );
-	remove_theme_support( 'dxai-youtube-facade' );
+	remove_theme_support( 'dxui-youtube-facade' );
 	Capabilities::assume( null );
 
 	return ! $before && $with;
@@ -158,12 +158,12 @@ $spelled = static function ( string $code ): array {
 $allowed = array( 'src/Theme/Adapters/', 'src/Theme/Base_Theme.php' );
 $hits    = array();
 $files   = 0;
-$it      = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( DXAI_UI_DIR . 'src', FilesystemIterator::SKIP_DOTS ) );
+$it      = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( DX_UI_DIR . 'src', FilesystemIterator::SKIP_DOTS ) );
 foreach ( $it as $file ) {
 	if ( ! $file instanceof SplFileInfo || $file->getExtension() !== 'php' ) {
 		continue;
 	}
-	$rel = str_replace( '\\', '/', substr( (string) $file->getPathname(), strlen( DXAI_UI_DIR ) ) );
+	$rel = str_replace( '\\', '/', substr( (string) $file->getPathname(), strlen( DX_UI_DIR ) ) );
 	$ok  = false;
 	foreach ( $allowed as $prefix ) {
 		if ( str_starts_with( $rel, $prefix ) ) {

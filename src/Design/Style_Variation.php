@@ -2,18 +2,18 @@
 /**
  * A design's tokens as a theme.json style variation: the design's look as the site's.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Design_Theme_Json;
-use DXAI_UI\Theme\Template_Fonts;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Design_Theme_Json;
+use DX_UI\Theme\Template_Fonts;
 
 /**
  * WordPress keeps a site's look in theme.json, and a theme's alternative looks as style variations: one JSON file each in its
@@ -34,7 +34,7 @@ use DXAI_UI\Theme\Template_Fonts;
 final class Style_Variation {
 
 	/** The design whose variation is the site's: { design: int, at: string }. */
-	public const OPTION = 'dxai_ui_style_variation';
+	public const OPTION = 'dx_ui_style_variation';
 
 	/** The slugs the brand design's tokens are registered under (Design_Theme_Json), token role => slug. */
 	public const ROLE_SLUGS = array(
@@ -109,7 +109,7 @@ final class Style_Variation {
 		$home = Document_Store::home_of( $home );
 		$doc  = $home > 0 ? Document_Store::load( $home ) : null;
 		if ( $doc === null ) {
-			return new \WP_Error( 'dxai_ui_no_document', __( 'The design has no document to make a style variation from: build it first.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_no_document', __( 'The design has no document to make a style variation from: build it first.', 'dx-ui' ) );
 		}
 		$tokens  = $doc->get( 'tokens' );
 		$roles   = is_array( $tokens['roles'] ?? null ) ? $tokens['roles'] : array();
@@ -124,7 +124,7 @@ final class Style_Variation {
 			'color'      => array( 'palette' => $palette ),
 			'typography' => array( 'fontFamilies' => $fonts ),
 			'custom'     => array(
-				'dxai' => array(
+				'dxui' => array(
 					'design' => $home,
 					'radius' => $radius,
 				),
@@ -134,11 +134,11 @@ final class Style_Variation {
 			$settings['layout'] = $layout;
 		}
 		$styles = array();
-		if ( in_array( 'dxai-body', $families, true ) ) {
-			$styles['typography'] = array( 'fontFamily' => 'var(--wp--preset--font-family--dxai-body)' );
+		if ( in_array( 'dxui-body', $families, true ) ) {
+			$styles['typography'] = array( 'fontFamily' => 'var(--wp--preset--font-family--dxui-body)' );
 		}
-		if ( in_array( 'dxai-heading', $families, true ) ) {
-			$styles['elements']['heading'] = array( 'typography' => array( 'fontFamily' => 'var(--wp--preset--font-family--dxai-heading)' ) );
+		if ( in_array( 'dxui-heading', $families, true ) ) {
+			$styles['elements']['heading'] = array( 'typography' => array( 'fontFamily' => 'var(--wp--preset--font-family--dxui-heading)' ) );
 		}
 		if ( in_array( 'brand', $slugs, true ) ) {
 			$button = array( 'color' => array( 'background' => 'var(--wp--preset--color--brand)' ) );
@@ -171,14 +171,14 @@ final class Style_Variation {
 		}
 		$json = wp_json_encode( $v, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 
-		return is_string( $json ) ? $json . "\n" : new \WP_Error( 'dxai_ui_variation_json', __( 'The variation could not be written as JSON.', 'dxai-ui' ) );
+		return is_string( $json ) ? $json . "\n" : new \WP_Error( 'dx_ui_variation_json', __( 'The variation could not be written as JSON.', 'dx-ui' ) );
 	}
 
-	/** The file a theme would list it from: `dxai-<design>.json`. */
+	/** The file a theme would list it from: `dxui-<design>.json`. */
 	public static function file_name( int $home ): string {
 		$slug = sanitize_title( (string) get_the_title( $home ) );
 
-		return 'dxai-' . ( $slug !== '' ? $slug : (string) $home ) . '.json';
+		return 'dxui-' . ( $slug !== '' ? $slug : (string) $home ) . '.json';
 	}
 
 	/**
@@ -189,7 +189,7 @@ final class Style_Variation {
 	 */
 	public static function apply( int $home ): array|\WP_Error {
 		$home = Document_Store::home_of( $home );
-		$v    = $home > 0 ? self::build( $home ) : new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ) );
+		$v    = $home > 0 ? self::build( $home ) : new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ) );
 		if ( is_wp_error( $v ) ) {
 			return $v;
 		}
@@ -202,11 +202,11 @@ final class Style_Variation {
 			false
 		);
 		// A person chose this: the design is the brand design whatever the theme would do on its own at import (Design_Theme_Json::adopt()
-		// asks `dxai_ui_adopt_brand`, which a classic theme answers no to, so that an import does not take over its global styles unasked).
+		// asks `dx_ui_adopt_brand`, which a classic theme answers no to, so that an import does not take over its global styles unasked).
 		$chosen = static fn(): bool => true;
-		add_filter( 'dxai_ui_adopt_brand', $chosen, 99 );
-		Design_Theme_Json::adopt( $home, (string) get_post_meta( $home, '_dxai_ui_source_zip', true ) );
-		remove_filter( 'dxai_ui_adopt_brand', $chosen, 99 );
+		add_filter( 'dx_ui_adopt_brand', $chosen, 99 );
+		Design_Theme_Json::adopt( $home, (string) get_post_meta( $home, '_dx_ui_source_zip', true ) );
+		remove_filter( 'dx_ui_adopt_brand', $chosen, 99 );
 		Design_Theme_Json::flush();
 
 		return self::status( $home );
@@ -245,7 +245,7 @@ final class Style_Variation {
 	 */
 	public static function write( int $home ): array|\WP_Error {
 		if ( ! Capabilities::styles_writable() ) {
-			return new \WP_Error( 'dxai_ui_variation_not_ours', __( 'The theme\'s styles folder is not one the plugin may write into: only the plugin\'s own theme (DX Base) takes a variation file, and only when the site lets files be changed. Download the JSON instead.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_variation_not_ours', __( 'The theme\'s styles folder is not one the plugin may write into: only the plugin\'s own theme (DX Base) takes a variation file, and only when the site lets files be changed. Download the JSON instead.', 'dx-ui' ) );
 		}
 
 		return self::write_to( $home, Capabilities::styles_dir() );
@@ -263,11 +263,11 @@ final class Style_Variation {
 		}
 		$dir = wp_normalize_path( rtrim( $dir, '/' ) );
 		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
-			return new \WP_Error( 'dxai_ui_variation_dir', __( 'The styles folder could not be made.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_variation_dir', __( 'The styles folder could not be made.', 'dx-ui' ) );
 		}
 		$path = $dir . '/' . self::file_name( $home );
 		if ( false === file_put_contents( $path, $json ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			return new \WP_Error( 'dxai_ui_variation_write', __( 'The variation file could not be written.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_variation_write', __( 'The variation file could not be written.', 'dx-ui' ) );
 		}
 
 		return array(
@@ -376,15 +376,15 @@ final class Style_Variation {
 		$out   = array();
 		$taken = array();
 		$names = array(
-			'brand'     => __( 'Brand', 'dxai-ui' ),
-			'accent'    => __( 'Accent', 'dxai-ui' ),
-			'button_fg' => __( 'Text on accent', 'dxai-ui' ),
-			'ink'       => __( 'Ink', 'dxai-ui' ),
-			'body'      => __( 'Body text', 'dxai-ui' ),
-			'muted'     => __( 'Muted', 'dxai-ui' ),
-			'surface'   => __( 'Surface', 'dxai-ui' ),
-			'border'    => __( 'Border', 'dxai-ui' ),
-			'danger'    => __( 'Danger', 'dxai-ui' ),
+			'brand'     => __( 'Brand', 'dx-ui' ),
+			'accent'    => __( 'Accent', 'dx-ui' ),
+			'button_fg' => __( 'Text on accent', 'dx-ui' ),
+			'ink'       => __( 'Ink', 'dx-ui' ),
+			'body'      => __( 'Body text', 'dx-ui' ),
+			'muted'     => __( 'Muted', 'dx-ui' ),
+			'surface'   => __( 'Surface', 'dx-ui' ),
+			'border'    => __( 'Border', 'dx-ui' ),
+			'danger'    => __( 'Danger', 'dx-ui' ),
 		);
 		foreach ( self::ROLE_SLUGS as $role => $slug ) {
 			$hex = sanitize_hex_color( (string) ( $roles[ $role ] ?? '' ) );
@@ -420,7 +420,7 @@ final class Style_Variation {
 	}
 
 	/**
-	 * The design's fonts as font families: the heading's and the body's (`dxai-heading`, `dxai-body`), with their faces when the site
+	 * The design's fonts as font families: the heading's and the body's (`dxui-heading`, `dxui-body`), with their faces when the site
 	 * hosts them for this design (Template_Fonts), else by name alone; then any other family the document lists.
 	 *
 	 * @return array<int, array<string, mixed>>
@@ -443,7 +443,7 @@ final class Style_Variation {
 		if ( $heading !== '' ) {
 			$out[] = array_filter(
 				array(
-					'slug'       => 'dxai-heading',
+					'slug'       => 'dxui-heading',
 					'name'       => $heading,
 					'fontFamily' => $stack( $heading, $hosted ? (string) ( $record['heading'] ?? '' ) : '' ),
 					'fontFace'   => array_values( array_filter( $faces, static fn( array $face ): bool => strcasecmp( $face['fontFamily'], $heading ) === 0 ) ),
@@ -454,7 +454,7 @@ final class Style_Variation {
 		if ( $body !== '' ) {
 			$out[] = array_filter(
 				array(
-					'slug'       => 'dxai-body',
+					'slug'       => 'dxui-body',
 					'name'       => $body,
 					'fontFamily' => $stack( $body, $hosted ? (string) ( $record['body'] ?? '' ) : '' ),
 					'fontFace'   => array_values( array_filter( $faces, static fn( array $face ): bool => strcasecmp( $face['fontFamily'], $body ) === 0 ) ),
@@ -468,7 +468,7 @@ final class Style_Variation {
 				continue;
 			}
 			$out[] = array(
-				'slug'       => 'dxai-font-' . ++$n,
+				'slug'       => 'dxui-font-' . ++$n,
 				'name'       => $family,
 				'fontFamily' => $stack( $family, '' ),
 			);

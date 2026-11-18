@@ -77,10 +77,10 @@
 	function bind( facade ) {
 		var id = facade.getAttribute( 'data-video-id' );
 		// One that is bound already (by this script, or by the theme's: it has its play button) is left to whoever did.
-		if ( ! id || facade.getAttribute( 'data-dxai-facade' ) || facade.querySelector( '.youtube-facade__play' ) ) {
+		if ( ! id || facade.getAttribute( 'data-dxui-facade' ) || facade.querySelector( '.youtube-facade__play' ) ) {
 			return;
 		}
-		facade.setAttribute( 'data-dxai-facade', '1' );
+		facade.setAttribute( 'data-dxui-facade', '1' );
 		build( facade, id );
 
 		function activate() {

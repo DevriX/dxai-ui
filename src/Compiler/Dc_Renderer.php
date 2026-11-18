@@ -2,12 +2,12 @@
 /**
  * Render a Claude Design template to static, responsive, interactive HTML.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * The runtime renders the template once per state and re-renders on every
@@ -21,10 +21,10 @@ namespace DXAI_UI\Compiler;
  *     that differs between the two lives in a class with a media override
  *     instead of inline, because inline would win over the override;
  *   - handler state (`menuOpen`, `dropdown`, `openFaq`, `formStep`…) →
- *     Motion_Runtime's state machine: triggers carry `dxai-toggle-<state>`,
- *     gated blocks `dxai-on-<state>[--value]`, and an element whose style or
+ *     Motion_Runtime's state machine: triggers carry `dxui-toggle-<state>`,
+ *     gated blocks `dxui-on-<state>[--value]`, and an element whose style or
  *     text depends on the state carries a class projection
- *     (`dxai-cls-<state>` + the classes to add per value) or a text map;
+ *     (`dxui-cls-<state>` + the classes to add per value) or a text map;
  *   - scroll state and click-outside dismissal → declared on the root for
  *     the runtime, since no template attribute says so.
  *
@@ -77,7 +77,7 @@ final class Dc_Renderer {
 	/** @var array<int, string> */
 	private array $notes = array();
 
-	/** @var array<string, bool> state keys that got a data-dxai-init already */
+	/** @var array<string, bool> state keys that got a data-dxui-init already */
 	private array $init_done = array();
 
 	/** @var array<int, array{selector: string, attr: string, done: bool}> Attributes componentDidMount sets on the first match. */
@@ -108,7 +108,7 @@ final class Dc_Renderer {
 
 	/**
 	 * Number classes on from another renderer of the same design: an imported part's and every page's classes land in one
-	 * stylesheet, and `dxai-sh-1` of the header and `dxai-sh-1` of the page were two rules for one class.
+	 * stylesheet, and `dxui-sh-1` of the header and `dxui-sh-1` of the page were two rules for one class.
 	 */
 	public function continue_from( int $seq ): self {
 		$this->seq = max( $this->seq, $seq );
@@ -151,14 +151,14 @@ final class Dc_Renderer {
 
 		$root_attrs = array();
 		if ( $this->outside !== array() ) {
-			$root_attrs['data-dxai-outside'] = implode( ' ', $this->outside );
+			$root_attrs['data-dxui-outside'] = implode( ' ', $this->outside );
 		}
 		foreach ( $this->scroll as $key => $threshold ) {
-			$root_attrs['data-dxai-scroll'] = trim( ( $root_attrs['data-dxai-scroll'] ?? '' ) . ' ' . $key . ':' . $threshold );
+			$root_attrs['data-dxui-scroll'] = trim( ( $root_attrs['data-dxui-scroll'] ?? '' ) . ' ' . $key . ':' . $threshold );
 		}
 		if ( $this->breakpoint > 0 ) {
-			$this->css .= '@media (max-width: ' . $this->breakpoint . "px) { .dxai-dc-desktop { display: none !important; } }\n";
-			$this->css .= '@media (min-width: ' . ( $this->breakpoint + 1 ) . "px) { .dxai-dc-mobile { display: none !important; } }\n";
+			$this->css .= '@media (max-width: ' . $this->breakpoint . "px) { .dxui-dc-desktop { display: none !important; } }\n";
+			$this->css .= '@media (min-width: ' . ( $this->breakpoint + 1 ) . "px) { .dxui-dc-mobile { display: none !important; } }\n";
 		}
 
 		return array(
@@ -427,12 +427,12 @@ final class Dc_Renderer {
 		foreach ( $sub->notes() as $note ) {
 			$this->notes[] = $note;
 		}
-		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxai-outside'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $key ) {
+		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxui-outside'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $key ) {
 			if ( ! in_array( $key, $this->outside, true ) ) {
 				$this->outside[] = $key;
 			}
 		}
-		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxai-scroll'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $pair ) {
+		foreach ( preg_split( '/\s+/', (string) ( $out['root_attrs']['data-dxui-scroll'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $pair ) {
 			$at = strrpos( $pair, ':' );
 			if ( $at !== false ) {
 				$this->scroll[ substr( $pair, 0, $at ) ] = (int) substr( $pair, $at + 1 );
@@ -724,7 +724,7 @@ final class Dc_Renderer {
 		if ( $class['media'] && ! isset( $gate['mobile'] ) ) {
 			// Truthy on one side of the breakpoint only.
 			$mobile_side = ! $class['on_primary'];
-			$marks[]     = $mobile_side ? 'dxai-dc-mobile' : 'dxai-dc-desktop';
+			$marks[]     = $mobile_side ? 'dxui-dc-mobile' : 'dxui-dc-desktop';
 			$sub_gate['mobile'] = $mobile_side;
 			if ( $mobile_side ) {
 				$sub_primary = $this->variant_index( true, null, null );
@@ -737,19 +737,19 @@ final class Dc_Renderer {
 			if ( $class['on_primary'] ) {
 				// Shown now, hidden for these values → the block is "off" for them.
 				if ( $kind === 'bool' ) {
-					$marks[] = $this->base_state_bool( $key, $sub_primary ) ? 'dxai-on-' . $key : 'dxai-off-' . $key;
+					$marks[] = $this->base_state_bool( $key, $sub_primary ) ? 'dxui-on-' . $key : 'dxui-off-' . $key;
 				} else {
 					// Shown at the primary value, so gate on it.
 					$pv      = $this->variants[ $sub_primary ]['state'][ $key ] ?? null;
-					$marks[] = $pv === null || $pv === false ? 'dxai-off-' . $key : 'dxai-on-' . $key . '--' . self::slug( $pv );
+					$marks[] = $pv === null || $pv === false ? 'dxui-off-' . $key : 'dxui-on-' . $key . '--' . self::slug( $pv );
 				}
 			} else {
 				$hidden = true;
 				if ( $kind === 'bool' ) {
-					$marks[] = in_array( true, $on_values, true ) ? 'dxai-on-' . $key : 'dxai-off-' . $key;
+					$marks[] = in_array( true, $on_values, true ) ? 'dxui-on-' . $key : 'dxui-off-' . $key;
 				} else {
 					foreach ( $on_values as $v ) {
-						$marks[] = $v === null || $v === false ? 'dxai-off-' . $key : 'dxai-on-' . $key . '--' . self::slug( $v );
+						$marks[] = $v === null || $v === false ? 'dxui-off-' . $key : 'dxui-on-' . $key . '--' . self::slug( $v );
 					}
 				}
 				// Render the branch as it looks when it IS shown.
@@ -1179,7 +1179,7 @@ final class Dc_Renderer {
 				$inline[ $prop ] = $val;
 			}
 		}
-		$cls = 'dxai-dc-' . $id;
+		$cls = 'dxui-dc-' . $id;
 		$classes[] = $cls;
 		if ( $moved !== array() ) {
 			$this->css .= '.' . $cls . ' { ' . self::join_declarations( $moved ) . " }\n";
@@ -1196,8 +1196,8 @@ final class Dc_Renderer {
 				$entry  = reset( $per_value );
 				$vc     = $cls . '--' . $key . '-' . ( $on_now ? 'off' : 'on' );
 				$this->css .= '.' . $vc . ' { ' . self::join_declarations( $entry['decls'] ) . " }\n";
-				$classes[]  = 'dxai-cls-' . $key;
-				$data[ 'data-dxai-' . ( $on_now ? 'off' : 'on' ) . '-' . $key ] = $vc;
+				$classes[]  = 'dxui-cls-' . $key;
+				$data[ 'data-dxui-' . ( $on_now ? 'off' : 'on' ) . '-' . $key ] = $vc;
 				continue;
 			}
 			foreach ( $per_value as $slug => $entry ) {
@@ -1205,12 +1205,12 @@ final class Dc_Renderer {
 				$this->css .= '.' . $vc . ' { ' . self::join_declarations( $entry['decls'] ) . " }\n";
 				if ( $entry['value'] === null || $entry['value'] === false ) {
 					// The "none" value: applied while no valued projection holds.
-					$classes[] = 'dxai-cls-' . $key;
-					$data[ 'data-dxai-off-' . $key ] = $vc;
+					$classes[] = 'dxui-cls-' . $key;
+					$data[ 'data-dxui-off-' . $key ] = $vc;
 					continue;
 				}
-				$classes[] = 'dxai-cls-' . $key . '--' . $slug;
-				$data[ 'data-dxai-on-' . $key . '-' . $slug ] = $vc;
+				$classes[] = 'dxui-cls-' . $key . '--' . $slug;
+				$data[ 'data-dxui-on-' . $key . '-' . $slug ] = $vc;
 			}
 		}
 
@@ -1227,9 +1227,9 @@ final class Dc_Renderer {
 		return implode( ';', $out );
 	}
 
-	/** `style-hover="…"` → `.dxai-sh-N:hover { … !important }`, as the runtime does. */
+	/** `style-hover="…"` → `.dxui-sh-N:hover { … !important }`, as the runtime does. */
 	private function pseudo_class( string $pseudo, string $decls ): string {
-		$class = 'dxai-sh-' . ( ++$this->seq );
+		$class = 'dxui-sh-' . ( ++$this->seq );
 		$parts = array();
 		foreach ( self::declarations( $decls ) as $prop => $val ) {
 			$parts[] = $prop . ':' . $val . ( in_array( $pseudo, array( 'before', 'after' ), true ) ? '' : ' !important' );
@@ -1279,44 +1279,44 @@ final class Dc_Renderer {
 			if ( $hover === 'leave' ) {
 				// Leaving closes: the wrap's mouseleave handles a hover-opened
 				// value; a leave handler on the trigger itself is marked so.
-				$data['data-dxai-hover-self'] = '1';
-				if ( ! in_array( 'dxai-toggle-' . $key, $classes, true ) && ! self::has_prefix( $classes, 'dxai-toggle-' . $key . '--' ) ) {
-					$classes[] = 'dxai-toggle-' . $key;
-					$data['data-dxai-set'] = 'null';
-					$data['data-dxai-hover'] = 'leave';
+				$data['data-dxui-hover-self'] = '1';
+				if ( ! in_array( 'dxui-toggle-' . $key, $classes, true ) && ! self::has_prefix( $classes, 'dxui-toggle-' . $key . '--' ) ) {
+					$classes[] = 'dxui-toggle-' . $key;
+					$data['data-dxui-set'] = 'null';
+					$data['data-dxui-hover'] = 'leave';
 				}
 				continue;
 			}
 			if ( $step !== null ) {
-				$classes[]              = 'dxai-toggle-' . $key;
-				$data['data-dxai-step'] = (string) $step['step'];
+				$classes[]              = 'dxui-toggle-' . $key;
+				$data['data-dxui-step'] = (string) $step['step'];
 				if ( isset( $step['clamp'] ) ) {
-					$data['data-dxai-clamp'] = '1';
+					$data['data-dxui-clamp'] = '1';
 				}
 				$this->init_marker( $key, $data );
 			} elseif ( $flip ) {
-				$classes[] = 'dxai-toggle-' . $key;
+				$classes[] = 'dxui-toggle-' . $key;
 				$attrs['aria-expanded'] = Dc_Js::truthy( $this->base_state[ $key ] ) ? 'true' : 'false';
 			} else {
 				$nulls  = array_filter( $sets, static fn( $v ) => $v === null || $v === false );
 				$values = array_values( array_filter( $sets, static fn( $v ) => $v !== null && $v !== false ) );
 				if ( $values === array() ) {
-					$classes[]             = 'dxai-toggle-' . $key;
-					$data['data-dxai-set'] = 'null';
+					$classes[]             = 'dxui-toggle-' . $key;
+					$data['data-dxui-set'] = 'null';
 				} elseif ( count( $values ) === 1 && $values[0] === true ) {
-					$classes[]             = 'dxai-toggle-' . $key;
-					$data['data-dxai-set'] = 'true';
+					$classes[]             = 'dxui-toggle-' . $key;
+					$data['data-dxui-set'] = 'true';
 				} else {
-					$classes[] = 'dxai-toggle-' . $key . '--' . self::slug( $values[0] );
+					$classes[] = 'dxui-toggle-' . $key . '--' . self::slug( $values[0] );
 					if ( $nulls !== array() ) {
-						$data['data-dxai-mode'] = 'toggle';
+						$data['data-dxui-mode'] = 'toggle';
 					}
 					$attrs['aria-expanded'] = $this->same( $this->base_state[ $key ], $values[0] ) ? 'true' : 'false';
 					$this->init_marker( $key, $data );
 				}
 			}
 			if ( $hover === 'enter' ) {
-				$data['data-dxai-hover'] = 'enter';
+				$data['data-dxui-hover'] = 'enter';
 			}
 		}
 	}
@@ -1347,7 +1347,7 @@ final class Dc_Renderer {
 			return;
 		}
 		$this->init_done[ $key ]  = true;
-		$data['data-dxai-init']   = Dc_Js::to_string( $v );
+		$data['data-dxui-init']   = Dc_Js::to_string( $v );
 	}
 
 	/** A state value as a class-safe token. */
@@ -1421,7 +1421,7 @@ final class Dc_Renderer {
 		$attrs = '';
 		foreach ( $maps as $key => $map ) {
 			$map[ self::machine_key( $this->base_state[ $key ] ?? null ) ] = $text;
-			$attrs .= ' data-dxai-text-' . $key . '="' . esc_attr( (string) wp_json_encode( $map ) ) . '"';
+			$attrs .= ' data-dxui-text-' . $key . '="' . esc_attr( (string) wp_json_encode( $map ) ) . '"';
 		}
 
 		return '<span class="sc-interp"' . $attrs . '>' . esc_html( $text ) . '</span>';

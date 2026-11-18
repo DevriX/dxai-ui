@@ -2,20 +2,20 @@
 /**
  * REST: new pages for a design, in the team's style and the Home's look.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Pages\Ai_Budget;
-use DXAI_UI\Pages\Block_Library;
-use DXAI_UI\Pages\Menu_Pages;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Pages\Team_Run;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Pages\Ai_Budget;
+use DX_UI\Pages\Block_Library;
+use DX_UI\Pages\Menu_Pages;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Pages\Team_Run;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * GET  /team-pages            the designs, and for one (`design`) what it could be asked for (the services and places its Home
@@ -32,7 +32,7 @@ final class Team_Pages_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/team-pages',
 			array(
 				array(
@@ -122,7 +122,7 @@ final class Team_Pages_Controller {
 		if ( $design < 1 && $designs !== array() ) {
 			$design = (int) $designs[0]['id'];
 			foreach ( $designs as $d ) {
-				if ( \DXAI_UI\Compiler\Token_Styles::is_brand( (int) $d['id'] ) ) {
+				if ( \DX_UI\Compiler\Token_Styles::is_brand( (int) $d['id'] ) ) {
 					$design = (int) $d['id'];
 					break;
 				}
@@ -163,7 +163,7 @@ final class Team_Pages_Controller {
 	public function run( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$design = (int) $request->get_param( 'design' );
 		if ( ! Design_Attach::is_design( $design ) || ! current_user_can( 'edit_post', $design ) ) {
-			return new \WP_Error( 'dxai_ui_team_design', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_team_design', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$wanted = array();
 		foreach ( (array) $request->get_param( 'wanted' ) as $row ) {
@@ -252,7 +252,7 @@ final class Team_Pages_Controller {
 		// Pages whose own words were written are measured against the team's pages of their kind (N3).
 		if ( (string) $request->get_param( 'words' ) === 'write' ) {
 			foreach ( $out['pages'] as $i => $p ) {
-				$out['pages'][ $i ]['quality'] = \DXAI_UI\Network\Page_Quality::of( (int) $p['id'] );
+				$out['pages'][ $i ]['quality'] = \DX_UI\Network\Page_Quality::of( (int) $p['id'] );
 			}
 		}
 

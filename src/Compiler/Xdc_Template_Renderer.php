@@ -2,12 +2,12 @@
 /**
  * Best-effort server-side renderer for Design.com x-dc templates.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Xdc_Template_Renderer {
 
@@ -61,7 +61,7 @@ final class Xdc_Template_Renderer {
 			'toggleCities'     => 'cities--more',
 		);
 		foreach ( $map as $handler => $toggle ) {
-			$class = 'dxai-toggle-' . $toggle;
+			$class = 'dxui-toggle-' . $toggle;
 			$html  = preg_replace_callback(
 				'/<([a-z0-9]+)([^>]*?)\s+onClick="\{\{\s*' . preg_quote( $handler, '/' ) . '\s*\}\}"([^>]*)>/i',
 				static function ( array $m ) use ( $class ): string {
@@ -231,7 +231,7 @@ final class Xdc_Template_Renderer {
 		if ( $html === '' ) {
 			return '';
 		}
-		$class = 'hidden dxai-on-' . sanitize_html_class( $name );
+		$class = 'hidden dxui-on-' . sanitize_html_class( $name );
 		if ( preg_match( '/^<([a-z0-9]+)(\s[^>]*)?>/i', $html, $m ) !== 1 ) {
 			return '<div class="' . esc_attr( $class ) . '">' . $html . '</div>';
 		}
@@ -298,7 +298,7 @@ final class Xdc_Template_Renderer {
 			'/<button([^>]*?)\s+onClick="\{\{\s*f\.toggle\s*\}\}"([^>]*)>/i',
 			static function ( array $m ) use ( $flag, $open ): string {
 				$attrs = $m[1] . $m[2];
-				$class = 'dxai-toggle-' . $flag;
+				$class = 'dxui-toggle-' . $flag;
 				if ( preg_match( '/\bclass=("|\')(.*?)\1/i', $attrs, $cm ) === 1 ) {
 					$attrs = preg_replace(
 						'/\bclass=("|\')(.*?)\1/i',
@@ -328,12 +328,12 @@ final class Xdc_Template_Renderer {
 	private function mark_faq_panel( string $html, int $index, array $item ): string {
 		$flag        = 'openFaq--' . $index;
 		$open        = ( (string) ( $item['sign'] ?? '' ) ) === '-';
-		$panel_class = 'dxai-on-' . $flag . ( $open ? '' : ' hidden' );
+		$panel_class = 'dxui-on-' . $flag . ( $open ? '' : ' hidden' );
 
 		return preg_replace_callback(
 			'/<div(\s+style="[^"]*max-height:[^"]*")>/i',
 			static function ( array $m ) use ( $panel_class ): string {
-				return '<div class="' . esc_attr( $panel_class ) . '" data-dxai-accordion="1" data-open-max="400px"' . $m[1] . '>';
+				return '<div class="' . esc_attr( $panel_class ) . '" data-dxui-accordion="1" data-open-max="400px"' . $m[1] . '>';
 			},
 			$html,
 			1

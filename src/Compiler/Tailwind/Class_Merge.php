@@ -2,12 +2,12 @@
 /**
  * tailwind-merge's conflict resolution, for the `cn()` every shadcn file uses.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * `cn()` is not a join. Every shadcn project defines it as

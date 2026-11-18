@@ -5,16 +5,16 @@
  * Dynamic UI (forms, live prose, CTAs) must consume these CSS variables —
  * never hard-code a client palette like H2O orange/blue.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Design_Tokens {
 
-	public const META = '_dxai_ui_design_tokens';
+	public const META = '_dx_ui_design_tokens';
 
 	/**
 	 * Neutral fallback — not a client brand. Returned only when the design
@@ -74,7 +74,7 @@ final class Design_Tokens {
 		/*
 		 * Never read our own output back. Structure_Repository appends
 		 * to_css_vars() to the compiled sheet on disk, and for_page() and
-		 * Live_Content_Shell resolve from that file again. `--dxai-brand` was
+		 * Live_Content_Shell resolve from that file again. `--dxui-brand` was
 		 * first on the brand list, so the second pass returned whatever the
 		 * first pass guessed: Arcus's pattern-88821.css declares no custom
 		 * property but that block, and came out source=css-vars with the
@@ -82,8 +82,8 @@ final class Design_Tokens {
 		 * imported pages resolved #2563EB this way). The literal hexes in the
 		 * block also fed heuristic_palette() — Arcus's muted #5F5F5F was its
 		 * own earlier muted. So a to_css_vars() block is dropped before
-		 * anything reads the sheet, and no `--dxai-*` name is ever a
-		 * candidate in a name lookup (pick_color / pick_var); `--dxai-*`
+		 * anything reads the sheet, and no `--dxui-*` name is ever a
+		 * candidate in a name lookup (pick_color / pick_var); `--dxui-*`
 		 * values stay available only to var() expansion — see
 		 * strip_own_tokens() for why.
 		 */
@@ -120,7 +120,7 @@ final class Design_Tokens {
 		 * shadcn's untouched slate-900 default oklch(0.208 0.042 265.755)
 		 * while painting --rv-green / --brand-green everywhere. Next, the
 		 * chromatic colour the design paints most as text colour at rest —
-		 * the role --dxai-brand is painted in downstream (links, eyebrows,
+		 * the role --dxui-brand is painted in downstream (links, eyebrows,
 		 * focus borders in dynamic.css). H2O sets #2F7FD1 as text 24 times
 		 * against #F2A34A's 11 and fills the orange 16 times against the
 		 * blue's 8: blue brand, orange CTA. Counted as raw hexes in the file
@@ -147,7 +147,7 @@ final class Design_Tokens {
 
 		/*
 		 * Accent: a declared accent hue, else the chromatic colour the design
-		 * uses most as a fill (--dxai-accent paints CTA backgrounds) in a hue
+		 * uses most as a fill (--dxui-accent paints CTA backgrounds) in a hue
 		 * family other than the brand's. Arcus fills #C51527 35 times and
 		 * #FCC931 11 times; the red is already the brand, so the accent is the
 		 * yellow. With no second hue anywhere the accent is the brand, as before.
@@ -241,19 +241,19 @@ final class Design_Tokens {
 	 * @param array<string, string> $tokens
 	 */
 	public static function to_css_vars( array $tokens, int $page_id ): string {
-		$scope = '.dxai-ui.dxai-ui--' . $page_id;
+		$scope = '.dx-ui.dx-ui--' . $page_id;
 		$map   = array(
-			'brand'     => '--dxai-brand',
-			'accent'    => '--dxai-accent',
-			'ink'       => '--dxai-ink',
-			'body'      => '--dxai-body',
-			'muted'     => '--dxai-muted',
-			'surface'   => '--dxai-surface',
-			'border'    => '--dxai-border',
-			'radius'    => '--dxai-radius',
-			'button_fg' => '--dxai-button-fg',
-			'danger'    => '--dxai-danger',
-			'font'      => '--dxai-font',
+			'brand'     => '--dxui-brand',
+			'accent'    => '--dxui-accent',
+			'ink'       => '--dxui-ink',
+			'body'      => '--dxui-body',
+			'muted'     => '--dxui-muted',
+			'surface'   => '--dxui-surface',
+			'border'    => '--dxui-border',
+			'radius'    => '--dxui-radius',
+			'button_fg' => '--dxui-button-fg',
+			'danger'    => '--dxui-danger',
+			'font'      => '--dxui-font',
 		);
 		$lines = array();
 		foreach ( $map as $key => $var ) {
@@ -286,8 +286,8 @@ final class Design_Tokens {
 		}
 
 		// Child live pages inherit Home tokens.
-		$home = (int) get_post_meta( $page_id, '_dxai_ui_from_live_menu', true ) === 1
-			? self::home_id_from_css_url( (string) get_post_meta( $page_id, '_dxai_ui_css_url', true ) )
+		$home = (int) get_post_meta( $page_id, '_dx_ui_from_live_menu', true ) === 1
+			? self::home_id_from_css_url( (string) get_post_meta( $page_id, '_dx_ui_css_url', true ) )
 			: 0;
 		if ( $home > 0 && $home !== $page_id ) {
 			$stored = get_post_meta( $home, self::META, true );
@@ -296,7 +296,7 @@ final class Design_Tokens {
 			}
 		}
 
-		$css_url = (string) get_post_meta( $page_id, '_dxai_ui_css_url', true );
+		$css_url = (string) get_post_meta( $page_id, '_dx_ui_css_url', true );
 		$css     = self::read_css_url( $css_url );
 		$html    = (string) get_post_field( 'post_content', $page_id );
 
@@ -322,19 +322,19 @@ final class Design_Tokens {
 	/**
 	 * Drop every rule block that holds nothing but to_css_vars() role
 	 * declarations: the block Structure_Repository appends to the compiled
-	 * sheet ("DXAI design tokens") and the one Live_Content_Shell::prose_css()
+	 * sheet ("DXUI design tokens") and the one Live_Content_Shell::prose_css()
 	 * prefixes to site-{id}.css. Those are an earlier resolve() speaking.
 	 *
 	 * Only those blocks. A tokenised sheet (pattern-88579.css as rewritten
-	 * on 2026-09-24) declares the design's own colours as a `--dxai-*`
-	 * palette — `:root,.dxai-ui.dxai-ui{--dxai-neutral-97:#f4f7fa;
-	 * --dxai-accent:#f2a34a;…}` — and its rules paint through them (83
-	 * `var(--dxai-accent)`), so dropping every `--dxai-*` declaration
+	 * on 2026-09-24) declares the design's own colours as a `--dxui-*`
+	 * palette — `:root,.dx-ui.dx-ui{--dxui-neutral-97:#f4f7fa;
+	 * --dxui-accent:#f2a34a;…}` — and its rules paint through them (83
+	 * `var(--dxui-accent)`), so dropping every `--dxui-*` declaration
 	 * would leave that sheet with no colour at all (it resolved to the
 	 * #2563EB default that way).
 	 */
 	private static function strip_own_tokens( string $css ): string {
-		return preg_replace( '/(?:^|(?<=[{}]))[^{}]*+\{\s*(?:--dxai-(?:brand|accent|ink|body|muted|surface|border|radius|button-fg|danger|font)\s*:[^;{}]*;?\s*)+\}/i', '', $css ) ?? $css;
+		return preg_replace( '/(?:^|(?<=[{}]))[^{}]*+\{\s*(?:--dxui-(?:brand|accent|ink|body|muted|surface|border|radius|button-fg|danger|font)\s*:[^;{}]*;?\s*)+\}/i', '', $css ) ?? $css;
 	}
 
 	/**
@@ -351,7 +351,7 @@ final class Design_Tokens {
 	 * colour, and in both cases the name, not the paint, would decide.
 	 */
 	private static function is_own_var( string $name ): bool {
-		return str_starts_with( $name, '--dxai-' );
+		return str_starts_with( $name, '--dxui-' );
 	}
 
 	/**
@@ -359,14 +359,14 @@ final class Design_Tokens {
 	 *
 	 * This used to be one regex over the raw text, `(--[\w-]+)\s*:\s*([^;]+);`,
 	 * which read selectors as declarations: H2O's compiled sheet has no custom
-	 * property at all, but `.dxai-ui--88022 .dxai-sh-134:focus, … { outline:3px
+	 * property at all, but `.dx-ui--88022 .dxui-sh-134:focus, … { outline:3px
 	 * solid #F2A34A !important;` parsed as a variable `--88022`, so every H2O
 	 * page reported source=css-vars. Declarations are now read only from rule
 	 * bodies.
 	 *
 	 * Which value a variable has follows the cascade: the last declaration on
 	 * the page root (`:root`, `:host`, `html`, `body`, `@theme`, or the
-	 * `.dxai-ui.dxai-ui--{id}` scope the compiler rewrites them to) wins.
+	 * `.dx-ui.dx-ui--{id}` scope the compiler rewrites them to) wins.
 	 * First-wins read Growth Story Hub's --primary as shadcn's slate default
 	 * (pattern-89173.css:347) although the design overrides it with its acid
 	 * green on the same scope at :417. Dark-mode scopes (`.dark`,
@@ -408,8 +408,8 @@ final class Design_Tokens {
 			 * A state rule (every selector :hover / :focus / :active /
 			 * :visited) is feedback, not the page at rest, and is kept out
 			 * of the colour tally. Every blue or orange text colour in H2O's
-			 * stylesheet is a :hover (`.dxai-sh-2:hover { color:#2F7FD1 }`,
-			 * `.dxai-sh-109:hover { color:#F2A34A }`), and 71 orange uses are
+			 * stylesheet is a :hover (`.dxui-sh-2:hover { color:#2F7FD1 }`,
+			 * `.dxui-sh-109:hover { color:#F2A34A }`), and 71 orange uses are
 			 * :focus outlines; counted, they made the orange the brand of
 			 * every H2O live page, whose own markup paints almost nothing.
 			 */
@@ -418,7 +418,7 @@ final class Design_Tokens {
 			$weight   = 1;
 			foreach ( explode( ',', $prelude ) as $selector ) {
 				$selector = trim( $selector );
-				if ( ! preg_match( '/^(?::root|:host|html|body|\.dxai-ui(?:\.dxai-ui--\d+)?|@theme(?:\s+[a-z-]+)*)$/i', $selector ) ) {
+				if ( ! preg_match( '/^(?::root|:host|html|body|\.dx-ui(?:\.dx-ui--\d+)?|@theme(?:\s+[a-z-]+)*)$/i', $selector ) ) {
 					$is_root = false;
 				}
 				if ( ! preg_match( '/:(?:hover|focus(?:-visible|-within)?|active|visited)(?![\w-])/i', $selector ) ) {
@@ -1149,7 +1149,7 @@ final class Design_Tokens {
 	 * What it paints depends on what lies under it — the corpus's translucent
 	 * values are hairlines and glows (shadcn's dark `--border: oklch(1 0 0 /
 	 * 10%)`, --rv-hair rgba(255,255,255,0.14), Arcus's rgba(252,201,49,0)
-	 * keyframe end) — and a token such as --dxai-brand is painted on its own.
+	 * keyframe end) — and a token such as --dxui-brand is painted on its own.
 	 * The caller then moves on to the next candidate. `#RRGGBBAA` used to be
 	 * truncated to its RGB (so #FFFFFF80 read as solid white); it follows the
 	 * same rule now.
@@ -1396,7 +1396,7 @@ final class Design_Tokens {
 		}
 		// Either stored form: relative to uploads, or an absolute URL that may
 		// carry the site's previous scheme and host. See Upload_Paths.
-		$path = \DXAI_UI\Support\Upload_Paths::path( $css_url );
+		$path = \DX_UI\Support\Upload_Paths::path( $css_url );
 
 		return $path !== '' && is_readable( $path ) ? (string) file_get_contents( $path ) : '';
 	}

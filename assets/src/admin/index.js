@@ -7,7 +7,7 @@ if ( config.nonce ) {
 	apiFetch.use( apiFetch.createNonceMiddleware( config.nonce ) );
 }
 
-const root = document.getElementById( 'dxai-ui-app' );
+const root = document.getElementById( 'dx-ui-app' );
 if ( root ) {
 	createRoot( root ).render( <App screen={ config.screen || 'designs' } /> );
 }

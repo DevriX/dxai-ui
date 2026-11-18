@@ -2,17 +2,17 @@
 /**
  * A DX theme: American Restoration and the themes built on it.
  *
- * @package DXAI_UI\Theme\Adapters
+ * @package DX_UI\Theme\Adapters
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme\Adapters;
+namespace DX_UI\Theme\Adapters;
 
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Theme\Theme_Compat;
 
 /**
- * The theme the team builds its sites on, and any child of it or theme the `dxai_ui_dx_themes` filter names (Theme_Compat::dx_themes()).
+ * The theme the team builds its sites on, and any child of it or theme the `dx_ui_dx_themes` filter names (Theme_Compat::dx_themes()).
  * It draws the site's header from Menus and its footer from Widgets on every page, registers the blocks its own pages are made of — DX
  * Picture (a server-rendered <picture> with the right file for the screen), Link box (a link around any blocks) and Span (an inline label)
  * — and brings the YouTube facade's script and styles and what the block library's sections need on its own pages.

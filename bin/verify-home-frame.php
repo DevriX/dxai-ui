@@ -13,11 +13,11 @@
  * its menu's name; the composer adds them when told the kind, and the crawl tells it. Makes one page (a Home) and deletes it.
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Network\Page_Copies;
-use DXAI_UI\Pages\Home_Frame;
+use DX_UI\Network\Page_Copies;
+use DX_UI\Pages\Home_Frame;
 
 $fail   = 0;
 $pass   = 0;
@@ -85,11 +85,11 @@ $expect( 'read from its address and its menu\'s name: a service, a service, a pl
 
 echo "Composed, and built by the crawl\n";
 // The composer, told the page's kind, ends with the frame; the crawl tells it the kind of the page its menu names.
-$analyzed = array_map( static fn( array $b, int $i ): array => DXAI_UI\Pages\Section_Library::analyze( $b, $i ), $home, array_keys( $home ) );
-$model    = ( new DXAI_UI\Pages\Content_Extractor() )->extract( '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage cleanup in Fairbanks, day or night, by our own crews.</p></section><section><h2>Smoke and soot</h2><p>' . $words . '</p></section></main></body></html>', 'https://old.example.test/services/fire/' );
-$composed = ( new DXAI_UI\Pages\Page_Composer( $analyzed, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )->kind( 'service' )->compose( $model );
+$analyzed = array_map( static fn( array $b, int $i ): array => DX_UI\Pages\Section_Library::analyze( $b, $i ), $home, array_keys( $home ) );
+$model    = ( new DX_UI\Pages\Content_Extractor() )->extract( '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage cleanup in Fairbanks, day or night, by our own crews.</p></section><section><h2>Smoke and soot</h2><p>' . $words . '</p></section></main></body></html>', 'https://old.example.test/services/fire/' );
+$composed = ( new DX_UI\Pages\Page_Composer( $analyzed, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )->kind( 'service' )->compose( $model );
 $expect( 'the composer, told the page is a service, adds the Home\'s badges, steps, reviews and form', count( array_intersect( array( 'badges', 'steps', 'reviews', 'form' ), $classes( $composed['sections'] ) ) ) === 4, implode( ' ', $classes( $composed['sections'] ) ) );
-$untold = ( new DXAI_UI\Pages\Page_Composer( $analyzed, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )->compose( $model );
+$untold = ( new DX_UI\Pages\Page_Composer( $analyzed, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )->compose( $model );
 $expect( '…and not told, adds none', array_intersect( array( 'badges', 'steps', 'form' ), $classes( $untold['sections'] ) ) === array(), implode( ' ', $classes( $untold['sections'] ) ) );
 $home_id = (int) wp_insert_post(
 	array(
@@ -100,7 +100,7 @@ $home_id = (int) wp_insert_post(
 	)
 );
 register_shutdown_function( static fn() => wp_delete_post( $home_id, true ) );
-$body = new ReflectionMethod( DXAI_UI\Structures\Site_From_Menu::class, 'compose_body' );
+$body = new ReflectionMethod( DX_UI\Structures\Site_From_Menu::class, 'compose_body' );
 $body->setAccessible( true );
 $summary = array();
 $markup  = (string) $body->invokeArgs( null, array( $home_id, $model, &$summary, '/services/fire-damage/', 'Fire Damage' ) );

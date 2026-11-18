@@ -237,7 +237,7 @@ for lock in package-lock.json npm-shrinkwrap.json package.json; do
 		break
 	fi
 done
-STAMP="node_modules/.dxai-react-oracle"
+STAMP="node_modules/.dxui-react-oracle"
 
 if [ "$REBUILD" = "1" ] || [ ! -d node_modules ] || [ ! -f "$STAMP" ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$LOCK_SIG" ]; then
 	echo "react-oracle: installing dependencies for $SLUG (this takes a few minutes)"

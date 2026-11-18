@@ -2,12 +2,12 @@
 /**
  * Whether an import installs the design's header and footer as the site's.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
 /**
  * The choice an import makes about the site's header and footer, asked of
@@ -67,7 +67,7 @@ final class Chrome_Choice {
 	 * the site already has in those places is the person's, as on any DX theme.
 	 */
 	public static function theme_draws_chrome(): bool {
-		return ! \DXAI_UI\Theme\Theme_Compat::may_install_chrome() || \DXAI_UI\Theme\Theme_Compat::is_base_theme();
+		return ! \DX_UI\Theme\Theme_Compat::may_install_chrome() || \DX_UI\Theme\Theme_Compat::is_base_theme();
 	}
 
 	/**
@@ -197,7 +197,7 @@ final class Chrome_Choice {
 		$owners    = self::owners();
 		$others    = self::held_by_others( $design, $owners );
 		$theme     = self::theme_draws_chrome();
-		$dx        = $theme && \DXAI_UI\Theme\Capabilities::is_dx();
+		$dx        = $theme && \DX_UI\Theme\Capabilities::is_dx();
 		$scope     = (string) ( $design['scope'] ?? 'site' );
 		$site      = array(
 			'menus'   => array(),
@@ -234,7 +234,7 @@ final class Chrome_Choice {
 		 * @param array<string, mixed> $design    The import (see resolve()).
 		 * @param string               $reason    Why.
 		 */
-		$filtered = (string) apply_filters( 'dxai_ui_chrome_mode', $mode, $requested, $design, $reason );
+		$filtered = (string) apply_filters( 'dx_ui_chrome_mode', $mode, $requested, $design, $reason );
 		if ( $filtered !== $mode && in_array( $filtered, array( self::INSTALL, self::KEEP ), true ) ) {
 			$mode   = $filtered;
 			$reason = 'filter';
@@ -281,7 +281,7 @@ final class Chrome_Choice {
 		foreach ( array_keys( Header_Menus::locations() ) as $location ) {
 			$id   = (int) ( $assigned[ $location ] ?? 0 );
 			$term = $id > 0 ? wp_get_nav_menu_object( $id ) : false;
-			if ( $term instanceof \WP_Term && '' === (string) get_term_meta( $id, \DXAI_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
+			if ( $term instanceof \WP_Term && '' === (string) get_term_meta( $id, \DX_UI\Structures\Navigation_Factory::HEADER_MENU_META, true ) ) {
 				$menus[ (string) $location ] = wp_specialchars_decode( $term->name, ENT_QUOTES );
 			}
 		}
@@ -346,48 +346,48 @@ final class Chrome_Choice {
 		$other = implode( ', ', $names );
 
 		if ( self::KEEP === $mode ) {
-			$kept = __( 'The site\'s header and footer stay as they are: Appearance › Menus and Widgets are not changed, and this design\'s header and footer are template parts on its pages.', 'dxai-ui' );
+			$kept = __( 'The site\'s header and footer stay as they are: Appearance › Menus and Widgets are not changed, and this design\'s header and footer are template parts on its pages.', 'dx-ui' );
 			if ( 'theme' === $reason ) {
-				return __( 'This theme draws the site\'s header and footer itself, from the menus and widget areas an install would write, so installing the design\'s would change every page of the site.', 'dxai-ui' ) . ' ' . $kept;
+				return __( 'This theme draws the site\'s header and footer itself, from the menus and widget areas an install would write, so installing the design\'s would change every page of the site.', 'dx-ui' ) . ' ' . $kept;
 			}
 			if ( 'one_page' === $reason ) {
-				return __( 'A one-page import does not change the site\'s header and footer.', 'dxai-ui' ) . ' ' . $kept;
+				return __( 'A one-page import does not change the site\'s header and footer.', 'dx-ui' ) . ' ' . $kept;
 			}
 			if ( 'dx_busy' === $reason ) {
 				return sprintf(
 					/* translators: %s: what the site already has in its menu locations and footer widget areas. */
-					__( 'This theme draws the site\'s header and footer from the menus and widget areas an install writes, and the site already has its own there (%s), so they stay as they are.', 'dxai-ui' ),
+					__( 'This theme draws the site\'s header and footer from the menus and widget areas an install writes, and the site already has its own there (%s), so they stay as they are.', 'dx-ui' ),
 					self::describe_site( $site )
-				) . ' ' . $kept . ' ' . __( 'Choose to install to replace them with this design\'s: the footer\'s widgets move to Inactive Widgets, nothing is deleted.', 'dxai-ui' );
+				) . ' ' . $kept . ' ' . __( 'Choose to install to replace them with this design\'s: the footer\'s widgets move to Inactive Widgets, nothing is deleted.', 'dx-ui' );
 			}
 			if ( 'owned' === $reason ) {
 				return sprintf(
 					/* translators: %s: title(s) of the design(s) whose header or footer the site shows. */
-					__( 'The site\'s header and footer are those of “%s”, imported earlier.', 'dxai-ui' ),
+					__( 'The site\'s header and footer are those of “%s”, imported earlier.', 'dx-ui' ),
 					$other
-				) . ' ' . $kept . ' ' . __( 'Choose to install to make this design\'s the site\'s.', 'dxai-ui' );
+				) . ' ' . $kept . ' ' . __( 'Choose to install to make this design\'s the site\'s.', 'dx-ui' );
 			}
 
 			return $kept;
 		}
 
-		$done = __( 'The design\'s header is built in Appearance › Menus and its footer in Appearance › Widgets, where you edit them.', 'dxai-ui' );
+		$done = __( 'The design\'s header is built in Appearance › Menus and its footer in Appearance › Widgets, where you edit them.', 'dx-ui' );
 		if ( 'own' === $reason ) {
-			$done = __( 'The site\'s header and footer are already this design\'s; Appearance › Menus and Widgets are updated in place.', 'dxai-ui' );
+			$done = __( 'The site\'s header and footer are already this design\'s; Appearance › Menus and Widgets are updated in place.', 'dx-ui' );
 		}
 		if ( 'dx' === $reason ) {
-			$done = __( 'This is a DX theme and Appearance › Menus and Widgets have nothing of the site\'s own in them yet, so the design\'s header is built in Menus and its footer in Widgets, where you edit them.', 'dxai-ui' );
+			$done = __( 'This is a DX theme and Appearance › Menus and Widgets have nothing of the site\'s own in them yet, so the design\'s header is built in Menus and its footer in Widgets, where you edit them.', 'dx-ui' );
 		}
 		$more = array();
 		if ( $other !== '' ) {
 			$more[] = sprintf(
 				/* translators: %s: title(s) of the design(s) whose header or footer the site showed. */
-				__( 'They replace those of “%s”, whose pages keep their own header, and their footer as a template part.', 'dxai-ui' ),
+				__( 'They replace those of “%s”, whose pages keep their own header, and their footer as a template part.', 'dx-ui' ),
 				$other
 			);
 		}
 		if ( $theme ) {
-			$more[] = __( 'This theme draws the site\'s header and footer itself from these menus and widget areas, so every page of the site shows them.', 'dxai-ui' );
+			$more[] = __( 'This theme draws the site\'s header and footer itself from these menus and widget areas, so every page of the site shows them.', 'dx-ui' );
 		}
 
 		return trim( $done . ' ' . implode( ' ', $more ) );
@@ -404,7 +404,7 @@ final class Chrome_Choice {
 		foreach ( (array) ( $site['menus'] ?? array() ) as $location => $name ) {
 			$parts[] = sprintf(
 				/* translators: 1: the name of a menu, 2: the menu location it is in. */
-				__( '“%1$s” in %2$s', 'dxai-ui' ),
+				__( '“%1$s” in %2$s', 'dx-ui' ),
 				(string) $name,
 				(string) ( $labels[ $location ] ?? $location )
 			);
@@ -412,7 +412,7 @@ final class Chrome_Choice {
 		$count = array_sum( array_map( 'intval', (array) ( $site['widgets'] ?? array() ) ) );
 		if ( $count > 0 ) {
 			/* translators: %d: number of widgets in the footer areas. */
-			$parts[] = sprintf( _n( '%d footer widget', '%d footer widgets', $count, 'dxai-ui' ), $count );
+			$parts[] = sprintf( _n( '%d footer widget', '%d footer widgets', $count, 'dx-ui' ), $count );
 		}
 
 		return implode( ', ', $parts );

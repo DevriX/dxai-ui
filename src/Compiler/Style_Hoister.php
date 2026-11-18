@@ -2,12 +2,12 @@
 /**
  * Takes a converted page's inline styles out of its markup.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * No `style=""` in stored markup.
@@ -19,11 +19,11 @@ namespace DXAI_UI\Compiler;
  * of it for anyone without unfiltered_html, and it is the first thing a
  * person trying to restyle a page runs into.
  *
- * So after tokenising (colours are `var(--dxai-…)` by then), each block's CSS
+ * So after tokenising (colours are `var(--dxui-…)` by then), each block's CSS
  * moves out of the HTML:
  *
- *  - A block's own CSS (core blocks' and this plugin's `dxaiStyle`,
- *    dxai-ui/link's `style`) moves to the block attribute `dxaiCss`, and the
+ *  - A block's own CSS (core blocks' and this plugin's `dxuiStyle`,
+ *    dx-ui/link's `style`) moves to the block attribute `dxuiCss`, and the
  *    element gets the class `dxs-{hash}` instead of the attribute. The
  *    attribute stays the block's editable source; the editor's save() writes
  *    the same class (assets/js/blocks-editor.js computes the same hash), and
@@ -36,18 +36,18 @@ namespace DXAI_UI\Compiler;
  *    brings core's `has-background` padding with it, which would move boxes.
  *  - A style on an element that is not a block's own root (inline runs in a
  *    paragraph, the inside of a raw-HTML island) becomes a `dxs-{hash}` class
- *    too, and its CSS is kept on the block, in `dxaiInner`, for Style_Rules.
+ *    too, and its CSS is kept on the block, in `dxuiInner`, for Style_Rules.
  *    Only inside blocks whose inner markup is content (CONTENT_BLOCKS,
  *    RAW_BLOCKS); markup a block's save() writes from attributes is left as
  *    it is written.
  *  - Whatever part of a block's own CSS one of the DevriX theme's utility
  *    classes declares exactly (`d-flex`, `p-4`, `gap-2-5`), or one of the
  *    plugin's own where the theme has none (`fw-900`, `text-14-5`,
- *    `text-dxai-ink` — Utility_Classes), becomes that class instead: added
+ *    `text-dxui-ink` — Utility_Classes), becomes that class instead: added
  *    to the block's className attribute, which is where each of these
  *    blocks' save() reads its class list from, and to its element's class
  *    list, so the stored markup is what save() writes. Only the rest stays
- *    in `dxaiCss`, with the dxs- hash of that rest; nothing left, no dxaiCss
+ *    in `dxuiCss`, with the dxs- hash of that rest; nothing left, no dxuiCss
  *    and no dxs- class. apply_utilities() does the same for markup hoisted
  *    before this step. The design's own class names are never chosen
  *    (design_names()), and they are the same names whether the header and
@@ -59,19 +59,19 @@ namespace DXAI_UI\Compiler;
  * utilities are `!important` single classes, which renders the same for the
  * reasons Utility_Classes sets out.
  *
- * dxai-ui/svg keeps its root attributes as an ordered list of pairs, so it
+ * dx-ui/svg keeps its root attributes as an ordered list of pairs, so it
  * is handled on its own (hoist_svg()): the style pair becomes a class pair.
  */
 final class Style_Hoister {
 
 	/** The block attribute that holds a block's own CSS once it is out of the markup. */
-	public const ATTR = 'dxaiCss';
+	public const ATTR = 'dxuiCss';
 
 	/**
 	 * Post meta: CSS of styled elements in markup that has no blocks to keep
 	 * it on (class => declarations). Blocks keep theirs in INNER_ATTR.
 	 */
-	public const INNER_META = '_dxai_ui_inner_css';
+	public const INNER_META = '_dx_ui_inner_css';
 
 	/**
 	 * The block attribute that holds the CSS of the styled elements inside a
@@ -80,7 +80,7 @@ final class Style_Hoister {
 	 * copy of the block — an unsynced pattern inserted into any page, a block
 	 * pasted elsewhere — brings its rules with it.
 	 */
-	public const INNER_ATTR = 'dxaiInner';
+	public const INNER_ATTR = 'dxuiInner';
 
 	/**
 	 * Post meta: the design's own class names that are also utility names
@@ -90,21 +90,21 @@ final class Style_Hoister {
 	 * cannot be read later (uploads offloaded to a CDN, a restore without
 	 * them): the design's `p-4` stays the design's.
 	 */
-	public const DESIGN_NAMES_META = '_dxai_ui_design_names';
+	public const DESIGN_NAMES_META = '_dx_ui_design_names';
 
 	/** Blocks whose whole markup is content (raw HTML kept as written). */
-	private const RAW_BLOCKS = array( 'core/html', 'dxai-ui/html' );
+	private const RAW_BLOCKS = array( 'core/html', 'dx-ui/html' );
 
 	/**
 	 * Blocks whose markup inside their own root element is content — rich
 	 * text parsed back out of the stored HTML — so a style in it can become
 	 * a class and the block still matches its save(). Every other block
 	 * writes its inner markup from attributes (core/image's <img> sizes,
-	 * core/button's <a> colours, dxai-ui/link's label): rewriting that would
+	 * core/button's <a> colours, dx-ui/link's label): rewriting that would
 	 * open the block as invalid, so it is left as the block wrote it. Each
 	 * one here (and in RAW_BLOCKS) registers INNER_ATTR in the editor.
 	 */
-	private const CONTENT_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'dxai-ui/text' );
+	private const CONTENT_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/list-item', 'dx-ui/text' );
 
 	/** Core blocks whose text colour can be a preset attribute. */
 	private const TEXT_COLOR_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/group', 'core/list' );
@@ -115,7 +115,7 @@ final class Style_Hoister {
 	 * written into the other: core's through the customClassName support,
 	 * this plugin's through their save() (assets/js/blocks-editor.js).
 	 */
-	private const UTILITY_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'dxai-ui/box', 'dxai-ui/text', 'dxai-ui/link', 'dxai-ui/image' );
+	private const UTILITY_BLOCKS = array( 'core/paragraph', 'core/heading', 'core/group', 'core/list', 'core/list-item', 'dx-ui/box', 'dx-ui/text', 'dx-ui/link', 'dx-ui/image' );
 
 	/**
 	 * This plugin's blocks whose opening tag is written entirely from
@@ -124,11 +124,11 @@ final class Style_Hoister {
 	 * class attribute lands where save() puts it (its position depends on
 	 * whether className is empty and on attrOrder).
 	 */
-	private const OWN_TAG_BLOCKS = array( 'dxai-ui/box', 'dxai-ui/text', 'dxai-ui/link', 'dxai-ui/image' );
+	private const OWN_TAG_BLOCKS = array( 'dx-ui/box', 'dx-ui/text', 'dx-ui/link', 'dx-ui/image' );
 
 	/**
 	 * The class a declaration list is written as: `dxs-` and the FNV-1a hash
-	 * of its exact text, in base 36. The editor computes the same (dxaiCssClass
+	 * of its exact text, in base 36. The editor computes the same (dxuiCssClass
 	 * in blocks-editor.js), so a block saved in either place names the same
 	 * rule.
 	 */
@@ -239,7 +239,7 @@ final class Style_Hoister {
 	 *                                             renders with, so the design's class names
 	 *                                             and animated properties are left alone;
 	 *                                             null (the default) leaves every
-	 *                                             declaration in dxaiCss. The markup's own
+	 *                                             declaration in dxuiCss. The markup's own
 	 *                                             design names are always avoided.
 	 * @return array{markup:string, inner:array<string, string>, blocks:int, presets:int, utilities:int}
 	 */
@@ -275,10 +275,10 @@ final class Style_Hoister {
 
 	/**
 	 * The utility step on its own, for markup whose styles were hoisted
-	 * before it existed: every block carrying dxaiCss has the part of it a
+	 * before it existed: every block carrying dxuiCss has the part of it a
 	 * utility declares exactly moved to that class (className and element),
-	 * dxaiCss and its dxs- class rewritten for the rest, or dropped when
-	 * nothing is left. Blocks without dxaiCss, and everything else in the
+	 * dxuiCss and its dxs- class rewritten for the rest, or dropped when
+	 * nothing is left. Blocks without dxuiCss, and everything else in the
 	 * markup, are returned byte for byte; so is the whole markup when no
 	 * block matches. Running it twice changes nothing the second time: what
 	 * is left over has no utility that fits it.
@@ -405,7 +405,7 @@ final class Style_Hoister {
 				$names[ $name ] = true;
 			}
 			if ( $recorded ) {
-				foreach ( array_unique( array_filter( array( $id, (int) get_post_meta( $id, \DXAI_UI\Structures\Page_Scope::META, true ) ) ) ) as $owner ) {
+				foreach ( array_unique( array_filter( array( $id, (int) get_post_meta( $id, \DX_UI\Structures\Page_Scope::META, true ) ) ) ) as $owner ) {
 					foreach ( (array) get_post_meta( (int) $owner, self::DESIGN_NAMES_META, true ) as $name ) {
 						if ( is_string( $name ) && $name !== '' ) {
 							$names[ $name ] = true;
@@ -446,7 +446,7 @@ final class Style_Hoister {
 	 * every class this one placed (a header stored after one import, read
 	 * into the next import's context, took 59 classes out of the page and
 	 * brought 22 others in). Markup as the converter wrote it — its styles
-	 * not hoisted yet (fresh(): inline styles, no dxaiCss) — holds nothing
+	 * not hoisted yet (fresh(): inline styles, no dxuiCss) — holds nothing
 	 * but the design's names, so there every utility name counts, and an
 	 * import records a design element's `d-flex` even where its stylesheet
 	 * gives it no rule.
@@ -485,8 +485,8 @@ final class Style_Hoister {
 
 	/**
 	 * Whether block markup is as the converter wrote it: it still carries the
-	 * attribute this step moves styles from (`dxaiStyle`, dxai-ui/link's
-	 * `style`) and none it moved them to (`dxaiCss`). hoist_markup() moves
+	 * attribute this step moves styles from (`dxuiStyle`, dx-ui/link's
+	 * `style`) and none it moved them to (`dxuiCss`). hoist_markup() moves
 	 * every block's in one pass, so markup that has been through it has no
 	 * source left. A `style=""` in the HTML proves nothing: core's style
 	 * supports write one from a block's attributes after hoisting too, on a
@@ -496,10 +496,10 @@ final class Style_Hoister {
 		if ( ! str_contains( $markup, '<!-- wp:' ) || str_contains( $markup, '"' . self::ATTR . '"' ) ) {
 			return false;
 		}
-		if ( str_contains( $markup, '"dxaiStyle"' ) ) {
+		if ( str_contains( $markup, '"dxuiStyle"' ) ) {
 			return true;
 		}
-		if ( str_contains( $markup, '<!-- wp:dxai-ui/link {' ) && preg_match_all( '#<!-- wp:dxai-ui/link (\{.*?\}) /?-->#', $markup, $m ) ) {
+		if ( str_contains( $markup, '<!-- wp:dx-ui/link {' ) && preg_match_all( '#<!-- wp:dx-ui/link (\{.*?\}) /?-->#', $markup, $m ) ) {
 			foreach ( $m[1] as $json ) {
 				$attrs = json_decode( $json, true );
 				if ( is_array( $attrs ) && is_string( $attrs['style'] ?? null ) && trim( $attrs['style'] ) !== '' ) {
@@ -606,7 +606,7 @@ final class Style_Hoister {
 
 	/**
 	 * One already-hoisted block with its matched utilities: className gains
-	 * them, dxaiCss becomes the remainder (gone when empty), and the element's
+	 * them, dxuiCss becomes the remainder (gone when empty), and the element's
 	 * class list trades the old dxs- class for the utilities and the
 	 * remainder's dxs- class. Null when the element does not carry the old
 	 * dxs- class — markup edited out of step with its attribute is left alone.
@@ -651,18 +651,18 @@ final class Style_Hoister {
 	}
 
 	/**
-	 * Whether a block must keep all of its CSS in dxaiCss.
+	 * Whether a block must keep all of its CSS in dxuiCss.
 	 *
 	 * Blocks outside UTILITY_BLOCKS have no className-driven class list. The
 	 * rest are left alone where the page's JavaScript writes inline styles
 	 * that an `!important` utility would override — Motion_Runtime:
 	 *
-	 *  - toggle panels and their triggers (`dxai-on-`/`dxai-off-`/`dxai-toggle-`
+	 *  - toggle panels and their triggers (`dxui-on-`/`dxui-off-`/`dxui-toggle-`
 	 *    classes: applyPanel sets max-height, opacity, grid-template-rows);
 	 *  - Radix parts, found by role and aria state (rxSelect positions a
 	 *    `[role=listbox]` with display/position/z-index/left/top/min-width,
 	 *    dialogs and popovers get display/position/left/top/z-index/width)
-	 *    and by the ids the converter mints for them (`dxai-rx-…`,
+	 *    and by the ids the converter mints for them (`dxui-rx-…`,
 	 *    `…-content-N`/`…-overlay-N`, whose overlay has no role);
 	 *  - a `data-state` element (Radix state), a `hidden` one (revealed by
 	 *    rxShow), the reveal mask `.rv-mask-in` (transform);
@@ -685,16 +685,16 @@ final class Style_Hoister {
 			}
 		}
 		$anchor = is_string( $attrs['anchor'] ?? null ) ? $attrs['anchor'] : '';
-		if ( $anchor !== '' && preg_match( '/^dxai-rx-|-(?:content|overlay|trigger)-/', $anchor ) === 1 ) {
+		if ( $anchor !== '' && preg_match( '/^dxui-rx-|-(?:content|overlay|trigger)-/', $anchor ) === 1 ) {
 			return true;
 		}
-		$data = is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array();
+		$data = is_array( $attrs['dxuiData'] ?? null ) ? $attrs['dxuiData'] : array();
 		if ( isset( $data['data-state'] ) ) {
 			return true;
 		}
 		$classes = preg_split( '/\s+/', (string) ( $attrs['className'] ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
 		foreach ( $classes as $class ) {
-			if ( $class === 'wp-block-button' || $class === 'rv-mask-in' || preg_match( '/^dxai-(?:on|off|toggle)-/', $class ) === 1 ) {
+			if ( $class === 'wp-block-button' || $class === 'rv-mask-in' || preg_match( '/^dxui-(?:on|off|toggle)-/', $class ) === 1 ) {
 				return true;
 			}
 		}
@@ -709,7 +709,7 @@ final class Style_Hoister {
 	 * declaration came from.
 	 *
 	 * Nor `display` on an element the converter hid until the runtime opens
-	 * it (`data-dxai-portal`, Jsx_Compiler::hide_element()) and that guarded()
+	 * it (`data-dxui-portal`, Jsx_Compiler::hide_element()) and that guarded()
 	 * lets through (a portalled component's own root): its `display:none`
 	 * would become the important `d-none`, which no display the runtime sets
 	 * inline (rxShow) can beat. Left in the dxs- rule, it can.
@@ -719,7 +719,7 @@ final class Style_Hoister {
 	 * @return array<string, mixed>
 	 */
 	private static function block_options( array $options, array $attrs ): array {
-		if ( is_array( $attrs['dxaiData'] ?? null ) && isset( $attrs['dxaiData']['data-dxai-portal'] ) ) {
+		if ( is_array( $attrs['dxuiData'] ?? null ) && isset( $attrs['dxuiData']['data-dxui-portal'] ) ) {
 			$options['avoid_props'] = array_merge( (array) ( $options['avoid_props'] ?? array() ), array( 'display' ) );
 		}
 		$design = array_fill_keys( array_map( 'strval', (array) ( $options['sheet_classes'] ?? array() ) ), true );
@@ -830,23 +830,23 @@ final class Style_Hoister {
 	/**
 	 * The opening tag this plugin's block's save() writes for $attrs: its PHP
 	 * mirror, fed the class list save() builds (className, then the dxs-
-	 * class of dxaiCss). '' for any other block.
+	 * class of dxuiCss). '' for any other block.
 	 *
 	 * @param array<string, mixed> $attrs
 	 */
 	private static function own_open_tag( string $name, array $attrs, bool $void ): string {
 		$css  = is_string( $attrs[ self::ATTR ] ?? null ) ? trim( $attrs[ self::ATTR ] ) : '';
 		$with = $attrs;
-		unset( $with['dxaiStyle'], $with['style'] );
+		unset( $with['dxuiStyle'], $with['style'] );
 		$with['className'] = trim( (string) ( $attrs['className'] ?? '' ) . ( $css !== '' ? ' ' . self::css_class( (string) $attrs[ self::ATTR ] ) : '' ) );
 		switch ( $name ) {
-			case 'dxai-ui/link':
+			case 'dx-ui/link':
 				return Html_To_Blocks::link_open_tag( $with );
-			case 'dxai-ui/image':
+			case 'dx-ui/image':
 				return Html_To_Blocks::image_html( $with );
-			case 'dxai-ui/box':
+			case 'dx-ui/box':
 				return '<' . Html_To_Blocks::box_tag( $with ) . Html_To_Blocks::box_attrs( $with ) . ( $void ? '/>' : '>' );
-			case 'dxai-ui/text':
+			case 'dx-ui/text':
 				return '<' . Html_To_Blocks::text_tag( $with ) . Html_To_Blocks::text_attrs( $with ) . '>';
 		}
 
@@ -896,7 +896,7 @@ final class Style_Hoister {
 	private static function hoist_blocks( array $blocks, array &$state, bool &$changed, array $parent = array() ): array {
 		foreach ( $blocks as $i => $block ) {
 			$name = (string) ( $block['blockName'] ?? '' );
-			if ( $name === 'dxai-ui/svg' ) {
+			if ( $name === 'dx-ui/svg' ) {
 				$outer          = $state['inner'];
 				$state['inner'] = array();
 				$blocks[ $i ]   = self::hoist_svg( $block, $state, $changed );
@@ -920,7 +920,7 @@ final class Style_Hoister {
 				if ( in_array( $name, self::TEXT_COLOR_BLOCKS, true ) && empty( $attrs['textColor'] ) ) {
 					$slug = self::preset_color( $css, $state['slugs'] );
 					// (A name whose class WordPress gives a meaning of its own stays the design's colour: `has-border-color` is a border.)
-					if ( $slug !== '' && \DXAI_UI\Theme\Capabilities::text_slug_ok( $slug ) ) {
+					if ( $slug !== '' && \DX_UI\Theme\Capabilities::text_slug_ok( $slug ) ) {
 						$attrs['textColor'] = $slug;
 						$css                = self::without( $css, 'color' );
 						$extra              = array( 'has-' . $slug . '-color', 'has-text-color' );
@@ -1023,7 +1023,7 @@ final class Style_Hoister {
 	}
 
 	/**
-	 * dxai-ui/svg. Its root attributes are an ordered list of pairs that its
+	 * dx-ui/svg. Its root attributes are an ordered list of pairs that its
 	 * save() writes in order, so a `style` pair becomes a `class` pair in the
 	 * same place (or joins the class pair it already has), with its CSS kept
 	 * in the block's INNER_ATTR (the caller adds it). The children string is hoisted
@@ -1129,10 +1129,10 @@ final class Style_Hoister {
 	 * @param array<string, mixed> $attrs
 	 */
 	private static function source_attr( string $name, array $attrs ): string {
-		if ( isset( $attrs['dxaiStyle'] ) && is_string( $attrs['dxaiStyle'] ) && trim( $attrs['dxaiStyle'] ) !== '' ) {
-			return 'dxaiStyle';
+		if ( isset( $attrs['dxuiStyle'] ) && is_string( $attrs['dxuiStyle'] ) && trim( $attrs['dxuiStyle'] ) !== '' ) {
+			return 'dxuiStyle';
 		}
-		if ( $name === 'dxai-ui/link' && isset( $attrs['style'] ) && is_string( $attrs['style'] ) && trim( $attrs['style'] ) !== '' ) {
+		if ( $name === 'dx-ui/link' && isset( $attrs['style'] ) && is_string( $attrs['style'] ) && trim( $attrs['style'] ) !== '' ) {
 			return 'style';
 		}
 
@@ -1231,7 +1231,7 @@ final class Style_Hoister {
 
 	/**
 	 * The preset slug of the declaration list's text colour, when it is
-	 * exactly `color:var(--dxai-{slug})` and that slug is a preset.
+	 * exactly `color:var(--dxui-{slug})` and that slug is a preset.
 	 *
 	 * @param array<string, bool> $slugs
 	 */
@@ -1239,7 +1239,7 @@ final class Style_Hoister {
 		if ( $slugs === array() ) {
 			return '';
 		}
-		if ( preg_match( '/(?:^|;)\s*color\s*:\s*var\(\s*--dxai-([a-z0-9-]+)\s*\)\s*(?:;|$)/i', $css, $m ) !== 1 ) {
+		if ( preg_match( '/(?:^|;)\s*color\s*:\s*var\(\s*--dxui-([a-z0-9-]+)\s*\)\s*(?:;|$)/i', $css, $m ) !== 1 ) {
 			return '';
 		}
 

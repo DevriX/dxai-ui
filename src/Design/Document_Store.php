@@ -2,15 +2,15 @@
 /**
  * Where a design's document is kept: on its Home.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * The document is one post meta on the design's Home, as JSON (a few tens of KB: sections are summaries, not markup). It is
@@ -22,10 +22,10 @@ use DXAI_UI\Structures\Page_Scope;
  */
 final class Document_Store {
 
-	public const META = '_dxai_ui_design_document';
+	public const META = '_dx_ui_design_document';
 
 	/** Why the last record() wrote nothing, when it did not. */
-	public const META_ERROR = '_dxai_ui_design_document_error';
+	public const META_ERROR = '_dx_ui_design_document_error';
 
 	/**
 	 * Build the document of a saved design and keep it. Called by Structure_Repository::save() with its own answer; a caller
@@ -65,29 +65,29 @@ final class Document_Store {
 	public static function rebuild( int $page_id ): Document|\WP_Error {
 		$home = self::home_of( $page_id );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ) );
 		}
 		$snapshots = get_posts(
 			array(
-				'post_type'      => \DXAI_UI\Content\Content_Types::CONVERSION,
+				'post_type'      => \DX_UI\Content\Content_Types::CONVERSION,
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
 				'orderby'        => 'ID',
 				'order'          => 'DESC',
-				'meta_key'       => '_dxai_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_dx_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
 		$snapshot  = $snapshots[0] ?? null;
-		$payload   = $snapshot instanceof \WP_Post ? \DXAI_UI\Structures\Conversion_Snapshot::decode( (string) $snapshot->post_content ) : null;
+		$payload   = $snapshot instanceof \WP_Post ? \DX_UI\Structures\Conversion_Snapshot::decode( (string) $snapshot->post_content ) : null;
 		if ( ! is_array( $payload ) || ! is_array( $payload['result'] ?? null ) ) {
-			return new \WP_Error( 'dxai_ui_no_snapshot', __( 'The design has no conversion snapshot to build its document from: import it again to get one.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_no_snapshot', __( 'The design has no conversion snapshot to build its document from: import it again to get one.', 'dx-ui' ) );
 		}
 		$created            = is_array( $payload['created'] ?? null ) ? $payload['created'] : array();
 		$created['page_id'] = $home;
 		$doc                = self::record( $payload['result'], $created );
 		if ( $doc === null ) {
-			return new \WP_Error( 'dxai_ui_no_document', self::error( $home ) !== '' ? self::error( $home ) : __( 'The document could not be built.', 'dxai-ui' ) );
+			return new \WP_Error( 'dx_ui_no_document', self::error( $home ) !== '' ? self::error( $home ) : __( 'The document could not be built.', 'dx-ui' ) );
 		}
 
 		return $doc;

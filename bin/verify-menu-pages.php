@@ -14,15 +14,15 @@
  * Against a Home and menus made for the purpose, at addresses of their own (mfx-…); makes pages, menus and options and removes them (the
  * pages a run makes are put in the trash by giving the run back, and deleted at the end, being this suite's own). Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Pages\Menu_Pages;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Pages\Team_Run;
-use DXAI_UI\Structures\Navigation_Factory;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Pages\Menu_Pages;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Pages\Team_Run;
+use DX_UI\Structures\Navigation_Factory;
+use DX_UI\Structures\Page_Scope;
 
 $fail   = 0;
 $pass   = 0;
@@ -278,8 +278,8 @@ if ( $home < 1 ) {
 $made[] = $home;
 $design = $home;
 update_post_meta( $home, Page_Scope::META, $home );
-update_post_meta( $home, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home, '_dxai_ui_css_url', 'dxai-ui/menu-fixture.css' );
+update_post_meta( $home, '_dx_ui_generated_page', '1' );
+update_post_meta( $home, '_dx_ui_css_url', 'dx-ui/menu-fixture.css' );
 
 $add = static function ( int $menu_id, string $title, string $url, int $parent = 0, string $desc = '' ): int {
 	return (int) wp_update_nav_menu_item(
@@ -313,7 +313,7 @@ $menus[] = $mine;
 $pfaq    = $add( $mine, 'FAQ', '#faq' );
 
 $spec = array_merge(
-	Header_Template::build( '<!-- wp:group {"tagName":"header","className":"h-x"} --><header class="wp-block-group h-x"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group"><!-- wp:dxai-ui/link {"url":"#a","text":"One"} --><a class="wp-block-dxai-ui-link" href="#a">One</a><!-- /wp:dxai-ui/link --></nav><!-- /wp:group --></header><!-- /wp:group -->' ),
+	Header_Template::build( '<!-- wp:group {"tagName":"header","className":"h-x"} --><header class="wp-block-group h-x"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group"><!-- wp:dx-ui/link {"url":"#a","text":"One"} --><a class="wp-block-dx-ui-link" href="#a">One</a><!-- /wp:dx-ui/link --></nav><!-- /wp:group --></header><!-- /wp:group -->' ),
 	array(
 		'menus'  => array(
 			'primary-navigation' => $menu,
@@ -380,7 +380,7 @@ foreach ( $out['pages'] as $row ) {
 }
 $expect( 'every page is made at its address, whatever the order it was asked for in (a service before the list that holds it, a place before the list of places)', 9 === count( $out['pages'] ) && isset( $by['mfx-service/water-damage'], $by['mfx-service/fire-damage'], $by['mfx-areas/tyler-tx'], $by['mfx-dallas-tx'], $by['mfx-areas'], $by['mfx-service'], $by['mfx-about'] ), wp_json_encode( array_keys( $by ) ) );
 $expect( 'a page sits under the page at the address above it, and a page at the top sits at the top', (int) $by['mfx-service'] === (int) get_post_field( 'post_parent', $by['mfx-service/water-damage'] ) && (int) $by['mfx-areas'] === (int) get_post_field( 'post_parent', $by['mfx-areas/tyler-tx'] ) && 0 === (int) get_post_field( 'post_parent', $by['mfx-dallas-tx'] ) && 0 === (int) get_post_field( 'post_parent', $by['mfx-service'] ) );
-$expect( 'a page is what it was made as: its kind and name, its design, the Home\'s template', 'service|water-damage' === get_post_meta( $by['mfx-service/water-damage'], Team_Pages::META, true ) && 'location|tyler-tx' === get_post_meta( $by['mfx-areas/tyler-tx'], Team_Pages::META, true ) && $home === (int) get_post_meta( $by['mfx-about'], Page_Scope::META, true ) && \DXAI_UI\Theme\Blank_Template::default_slug() === get_post_meta( $by['mfx-about'], '_wp_page_template', true ) );
+$expect( 'a page is what it was made as: its kind and name, its design, the Home\'s template', 'service|water-damage' === get_post_meta( $by['mfx-service/water-damage'], Team_Pages::META, true ) && 'location|tyler-tx' === get_post_meta( $by['mfx-areas/tyler-tx'], Team_Pages::META, true ) && $home === (int) get_post_meta( $by['mfx-about'], Page_Scope::META, true ) && \DX_UI\Theme\Blank_Template::default_slug() === get_post_meta( $by['mfx-about'], '_wp_page_template', true ) );
 $list = (string) get_post_field( 'post_content', $by['mfx-service'] );
 $expect( 'the page that lists the services lists the services made, at their addresses', str_contains( $list, (string) get_permalink( $by['mfx-service/water-damage'] ) ) && str_contains( $list, (string) get_permalink( $by['mfx-service/fire-damage'] ) ) );
 $abouts = get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => 20, 'meta_query' => array( array( 'key' => Team_Pages::META, 'value' => 'about|', 'compare' => 'LIKE' ), array( 'key' => Page_Scope::META, 'value' => (string) $home ) ) ) );
@@ -473,7 +473,7 @@ $expect( 'the page that is there is the page: written in place, its record as it
 
 echo "\nThrough the panel's route\n";
 $rest = static function ( string $method, array $params ): array {
-	$request = new WP_REST_Request( $method, '/' . DXAI_UI_REST_NAMESPACE . '/team-pages' );
+	$request = new WP_REST_Request( $method, '/' . DX_UI_REST_NAMESPACE . '/team-pages' );
 	foreach ( $params as $key => $value ) {
 		$request->set_param( $key, $value );
 	}
@@ -494,9 +494,9 @@ echo "\nA header kept as a template part: the design's document names the pages\
 $doc_home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Menu Fixture Document Home', 'post_content' => $body ) );
 $made[]   = $doc_home;
 update_post_meta( $doc_home, Page_Scope::META, $doc_home );
-update_post_meta( $doc_home, '_dxai_ui_generated_page', '1' );
-update_post_meta( $doc_home, '_dxai_ui_css_url', 'dxai-ui/menu-fixture-doc.css' );
-\DXAI_UI\Structures\Design_Attach::forget( $doc_home );
+update_post_meta( $doc_home, '_dx_ui_generated_page', '1' );
+update_post_meta( $doc_home, '_dx_ui_css_url', 'dx-ui/menu-fixture-doc.css' );
+\DX_UI\Structures\Design_Attach::forget( $doc_home );
 $nav_of = static function ( array $nodes ) use ( &$nav_of ): array {
 	return array_map(
 		static fn( array $n ): array => array(
@@ -508,9 +508,9 @@ $nav_of = static function ( array $nodes ) use ( &$nav_of ): array {
 		$nodes
 	);
 };
-$the_doc = \DXAI_UI\Design\Document::from_array(
+$the_doc = \DX_UI\Design\Document::from_array(
 	array(
-		'v'         => \DXAI_UI\Design\Document::VERSION,
+		'v'         => \DX_UI\Design\Document::VERSION,
 		'source'    => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture' ) ),
 		'title'     => 'Menu Fixture Document Home',
 		'home_slug' => '/',
@@ -522,7 +522,7 @@ $the_doc = \DXAI_UI\Design\Document::from_array(
 	)
 );
 $expect( 'a document with no menus written has no menu to read until the document is kept', '' === Menu_Pages::tree_of( $doc_home )['source'] );
-\DXAI_UI\Design\Document_Store::save( $doc_home, $the_doc );
+\DX_UI\Design\Document_Store::save( $doc_home, $the_doc );
 $from_doc = Menu_Pages::tree_of( $doc_home );
 $expect( 'the document\'s header navigation is read, as the document\'s, with no menu item behind the nodes', 'document' === $from_doc['source'] && array() === $from_doc['menus'] && $flat( $from_doc['tree'] ) === $flat( Menu_Pages::tree_of( $home )['tree'] ) && 0 === (int) ( $from_doc['tree'][0]['item'] ?? -1 ), wp_json_encode( $from_doc['source'] ) );
 $expect( 'the menus written for a design still come first: the document does not speak for a design that has them', 'menus' === Menu_Pages::tree_of( $home )['source'] );
@@ -556,13 +556,13 @@ $old_doc = $the_doc->with(
 		'regions' => array( 'header' => array( 'present' => true, 'placed' => 'part', 'nav' => $old_nav( Menu_Pages::tree_of( $home )['tree'] ), 'nav_source' => 'compiled', 'logo' => null, 'actions' => array() ), 'footer' => null ),
 	)
 );
-\DXAI_UI\Design\Document_Store::save( $doc_home, $old_doc );
+\DX_UI\Design\Document_Store::save( $doc_home, $old_doc );
 $old_report = Menu_Pages::for_design( $doc_home );
 $expect( 'the old site\'s addresses in a document that names the old site are this site\'s pages: the same pages, none "another site\'s"', count( $old_report['pages'] ) === count( $report_now['pages'] ) && array() === array_filter( $old_report['left_out'], static fn( array $l ): bool => 'external' === $l['why'] ), wp_json_encode( array( count( $old_report['pages'] ), array_column( $old_report['left_out'], 'why' ) ) ) );
-\DXAI_UI\Design\Document_Store::save( $doc_home, $old_doc->with( array( 'source' => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture old' ), 'origin' => '' ) ) ) );
+\DX_UI\Design\Document_Store::save( $doc_home, $old_doc->with( array( 'source' => array( 'kind' => 'test', 'name' => 'menu-fixture.zip', 'stack' => '', 'static_html' => true, 'hash' => sha1( 'menu fixture old' ), 'origin' => '' ) ) ) );
 $no_origin = Menu_Pages::for_design( $doc_home );
 $expect( '…and without the host they are another site\'s, as before', array() === $no_origin['pages'] && count( array_filter( $no_origin['left_out'], static fn( array $l ): bool => 'external' === $l['why'] ) ) >= 4 );
-\DXAI_UI\Design\Document_Store::forget( $doc_home );
+\DX_UI\Design\Document_Store::forget( $doc_home );
 
 $fin();
 echo "\n$pass passed, $fail failed\n";

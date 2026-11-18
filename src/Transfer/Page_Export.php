@@ -2,30 +2,30 @@
 /**
  * Export one converted page with everything its look depends on.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Transfer;
+namespace DX_UI\Transfer;
 
-use DXAI_UI\Chrome\Footer_Template;
-use DXAI_UI\Chrome\Footer_Widgets;
-use DXAI_UI\Chrome\Header_Menus;
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Chrome\Footer_Template;
+use DX_UI\Chrome\Footer_Widgets;
+use DX_UI\Chrome\Header_Menus;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * Builds a page package (see Package for the format).
  *
  * What a converted page needs, read from where the plugin keeps it:
  *
- * - the page: title, slug, status, content, template, every `_dxai_ui_*`
+ * - the page: title, slug, status, content, template, every `_dx_ui_*`
  *   meta (scope, wrapper class, static-HTML flag, SEO title, tokens, palette,
  *   design names, source archive and route, page key …);
- * - its design stylesheet and runtime script (`_dxai_ui_css_url`,
- *   `_dxai_ui_js_url`, through Upload_Paths) — a page crawled into another
+ * - its design stylesheet and runtime script (`_dx_ui_css_url`,
+ *   `_dx_ui_js_url`, through Upload_Paths) — a page crawled into another
  *   page's scope gets that page's sheet, since that is what styles it;
  * - every template part, synced pattern (with its own stylesheet) and
  *   navigation post its content references, followed through the content of
@@ -63,7 +63,7 @@ final class Page_Export {
 	 * @return array<string, array<int, string>>
 	 */
 	public static function media_id_attrs(): array {
-		return self::CORE_MEDIA_ID_ATTRS + \DXAI_UI\Theme\Capabilities::media_id_attrs();
+		return self::CORE_MEDIA_ID_ATTRS + \DX_UI\Theme\Capabilities::media_id_attrs();
 	}
 
 	/** Meta the target keeps for itself, never carried from a source. */
@@ -108,10 +108,10 @@ final class Page_Export {
 	public static function check( int $page_id ): true|\WP_Error {
 		$post = $page_id > 0 ? get_post( $page_id ) : null;
 		if ( ! $post instanceof \WP_Post || 'page' !== $post->post_type || in_array( $post->post_status, array( 'trash', 'auto-draft', 'inherit' ), true ) ) {
-			return new \WP_Error( 'dxai_ui_transfer_not_found', __( 'There is no such page to export.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_transfer_not_found', __( 'There is no such page to export.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
-		if ( ! get_post_meta( $page_id, '_dxai_ui_generated_page', true ) ) {
-			return new \WP_Error( 'dxai_ui_transfer_not_converted', __( 'Only pages converted by DX UI can be exported with their styles.', 'dxai-ui' ), array( 'status' => 400 ) );
+		if ( ! get_post_meta( $page_id, '_dx_ui_generated_page', true ) ) {
+			return new \WP_Error( 'dx_ui_transfer_not_converted', __( 'Only pages converted by DX UI can be exported with their styles.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return true;
@@ -135,7 +135,7 @@ final class Page_Export {
 		Package::made( $dir . '/' . Package::MANIFEST );
 		if ( $json === '' || false === file_put_contents( $dir . '/' . Package::MANIFEST, $json ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			Package::remove_dir( $dir );
-			return new \WP_Error( 'dxai_ui_transfer', __( 'The package manifest could not be written.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_transfer', __( 'The package manifest could not be written.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
 		$entries = array( Package::MANIFEST => $dir . '/' . Package::MANIFEST );
@@ -191,13 +191,13 @@ final class Page_Export {
 		$scope         = (int) get_post_meta( $page_id, Page_Scope::META, true );
 		$scope         = $scope > 0 ? $scope : $page_id;
 		// With the header and footer a body-only page renders around it (Page_Chrome), so the package carries them.
-		$content       = \DXAI_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) $post->post_content );
+		$content       = \DX_UI\Chrome\Page_Chrome::with_chrome( $page_id, (string) $post->post_content );
 		$meta          = self::own_meta( $page_id );
 
 		// A page crawled into its home's scope keeps its tokens and palette
 		// there; on its own on another site it needs them itself.
 		if ( $scope !== $page_id ) {
-			foreach ( array( '_dxai_ui_design_tokens', '_dxai_ui_palette', '_dxai_ui_font_urls', '_dxai_ui_static_html', '_dxai_ui_wrapper_class' ) as $key ) {
+			foreach ( array( '_dx_ui_design_tokens', '_dx_ui_palette', '_dx_ui_font_urls', '_dx_ui_static_html', '_dx_ui_wrapper_class' ) as $key ) {
 				if ( ! isset( $meta[ $key ] ) || $meta[ $key ] === '' || $meta[ $key ] === array() ) {
 					$from = get_post_meta( $scope, $key, true );
 					if ( $from !== '' && $from !== array() && $from !== false ) {
@@ -211,10 +211,10 @@ final class Page_Export {
 		$this->page_links = self::page_links( $page_id );
 
 		$design = array(
-			'css'         => $this->design_file( $page_id, $scope, '_dxai_ui_css_url', 'files/design/page.css' ),
-			'js'          => $this->design_file( $page_id, $scope, '_dxai_ui_js_url', 'files/design/page.js' ),
-			'fonts'       => array_values( array_filter( array_map( 'strval', (array) ( $meta['_dxai_ui_font_urls'] ?? array() ) ) ) ),
-			'static_html' => ! empty( $meta['_dxai_ui_static_html'] ),
+			'css'         => $this->design_file( $page_id, $scope, '_dx_ui_css_url', 'files/design/page.css' ),
+			'js'          => $this->design_file( $page_id, $scope, '_dx_ui_js_url', 'files/design/page.js' ),
+			'fonts'       => array_values( array_filter( array_map( 'strval', (array) ( $meta['_dx_ui_font_urls'] ?? array() ) ) ) ),
+			'static_html' => ! empty( $meta['_dx_ui_static_html'] ),
 		);
 		foreach ( array( 'css', 'js' ) as $kind ) {
 			if ( $design[ $kind ] !== '' ) {
@@ -225,7 +225,7 @@ final class Page_Export {
 			$this->scan_text( $font );
 		}
 		if ( $design['css'] === '' ) {
-			$this->warnings[] = __( 'The page has no design stylesheet on disk; the package carries its blocks without their design CSS.', 'dxai-ui' );
+			$this->warnings[] = __( 'The page has no design stylesheet on disk; the package carries its blocks without their design CSS.', 'dx-ui' );
 		}
 
 		$header = $this->header( $page_id, $content );
@@ -246,7 +246,7 @@ final class Page_Export {
 
 		if ( count( $this->parts ) + count( $this->patterns ) + count( $this->navigations ) >= Package::MAX_ITEMS ) {
 			/* translators: %d: limit. */
-			$this->warnings[] = sprintf( __( 'The page references more than %d template parts, patterns and menus; only the first ones are in the package.', 'dxai-ui' ), Package::MAX_ITEMS );
+			$this->warnings[] = sprintf( __( 'The page references more than %d template parts, patterns and menus; only the first ones are in the package.', 'dx-ui' ), Package::MAX_ITEMS );
 		}
 
 		$media = $this->media;
@@ -267,13 +267,13 @@ final class Page_Export {
 			$list             = array_slice( array_keys( $this->foreign ), 0, 5 );
 			$this->warnings[] = sprintf(
 				/* translators: 1: number of links, 2: examples. */
-				_n( '%1$d link points at another page of this site and keeps pointing here after an import: %2$s', '%1$d links point at other pages of this site and keep pointing here after an import: %2$s', count( $this->foreign ), 'dxai-ui' ),
+				_n( '%1$d link points at another page of this site and keeps pointing here after an import: %2$s', '%1$d links point at other pages of this site and keep pointing here after an import: %2$s', count( $this->foreign ), 'dx-ui' ),
 				count( $this->foreign ),
 				implode( ', ', $list )
 			);
 		}
 
-		$page_key = (string) ( $meta['_dxai_ui_page_key'] ?? '' );
+		$page_key = (string) ( $meta['_dx_ui_page_key'] ?? '' );
 		$files    = array();
 		$paths    = $this->files;
 		ksort( $paths, SORT_STRING );
@@ -288,7 +288,7 @@ final class Page_Export {
 		return array(
 			'format'         => Package::FORMAT,
 			'format_version' => Package::VERSION,
-			'plugin_version' => defined( 'DXAI_UI_VERSION' ) ? (string) DXAI_UI_VERSION : '',
+			'plugin_version' => defined( 'DX_UI_VERSION' ) ? (string) DX_UI_VERSION : '',
 			'source'         => array(
 				'site_url'  => home_url( '/' ),
 				'uploads'   => $this->uploads['baseurl'],
@@ -312,8 +312,8 @@ final class Page_Export {
 			),
 			'design'         => $design,
 			'brand'          => array(
-				'is_brand' => \DXAI_UI\Compiler\Token_Styles::is_brand( $page_id ),
-				'source'   => (string) ( $meta['_dxai_ui_source_zip'] ?? '' ),
+				'is_brand' => \DX_UI\Compiler\Token_Styles::is_brand( $page_id ),
+				'source'   => (string) ( $meta['_dx_ui_source_zip'] ?? '' ),
 			),
 			'chrome'         => array(
 				'header' => $header,
@@ -337,7 +337,7 @@ final class Page_Export {
 		foreach ( array_unique( array( $page_id, $scope ) ) as $id ) {
 			$file = Upload_Paths::for_meta( (int) $id, $key );
 			if ( $file['path'] !== '' && is_readable( $file['path'] ) && is_file( $file['path'] ) ) {
-				$this->files[ $as ] = \DXAI_UI\Media\Font_Host::portable( $file['path'] );
+				$this->files[ $as ] = \DX_UI\Media\Font_Host::portable( $file['path'] );
 
 				return $as;
 			}
@@ -352,10 +352,10 @@ final class Page_Export {
 	 * @return array<string, mixed>
 	 */
 	private function header( int $page_id, string $content ): array {
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Header_Block::NAME ) ) {
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Header_Block::NAME ) ) {
 			$spec = Header_Template::for_post( $page_id );
 			if ( null === $spec ) {
-				$this->warnings[] = __( 'The page shows the site header block, but no header is installed on this site; the package has no header.', 'dxai-ui' );
+				$this->warnings[] = __( 'The page shows the site header block, but no header is installed on this site; the package has no header.', 'dx-ui' );
 
 				return array( 'mode' => 'none' );
 			}
@@ -401,10 +401,10 @@ final class Page_Export {
 	 * @return array<string, mixed>
 	 */
 	private function footer( string $content, int $scope ): array {
-		if ( str_contains( $content, '<!-- wp:' . \DXAI_UI\Chrome\Site_Footer_Block::NAME ) ) {
+		if ( str_contains( $content, '<!-- wp:' . \DX_UI\Chrome\Site_Footer_Block::NAME ) ) {
 			$record = Footer_Template::get();
 			if ( $record === array() ) {
-				$this->warnings[] = __( 'The page shows the site footer block, but no footer is installed on this site; the package has no footer.', 'dxai-ui' );
+				$this->warnings[] = __( 'The page shows the site footer block, but no footer is installed on this site; the package has no footer.', 'dx-ui' );
 
 				return array( 'mode' => 'none' );
 			}
@@ -422,14 +422,14 @@ final class Page_Export {
 			if ( $legacy > 0 ) {
 				$this->warnings[] = sprintf(
 					/* translators: %d: number of widgets. */
-					_n( '%d footer widget is not a block widget (a menu or plugin widget) and is not in the package.', '%d footer widgets are not block widgets (menu or plugin widgets) and are not in the package.', $legacy, 'dxai-ui' ),
+					_n( '%d footer widget is not a block widget (a menu or plugin widget) and is not in the package.', '%d footer widgets are not block widgets (menu or plugin widgets) and are not in the package.', $legacy, 'dx-ui' ),
 					$legacy
 				);
 			}
 			if ( (int) ( $record['scope'] ?? 0 ) !== $scope ) {
 				$this->warnings[] = sprintf(
 					/* translators: %s: design title. */
-					__( 'The footer this page shows belongs to another design (%s); it is packaged as it renders here.', 'dxai-ui' ),
+					__( 'The footer this page shows belongs to another design (%s); it is packaged as it renders here.', 'dx-ui' ),
 					(string) ( $record['title'] ?? '' )
 				);
 			}
@@ -463,7 +463,7 @@ final class Page_Export {
 	}
 
 	/**
-	 * The slug of the first `dxai-` template part of an area the content
+	 * The slug of the first `dxui-` template part of an area the content
 	 * references (by slug prefix, else by its area attribute).
 	 */
 	public static function part_ref( string $content, string $area ): string {
@@ -474,10 +474,10 @@ final class Page_Export {
 		foreach ( $m[1] as $json ) {
 			$attrs = json_decode( $json, true );
 			$slug  = is_array( $attrs ) ? (string) ( $attrs['slug'] ?? '' ) : '';
-			if ( ! str_starts_with( $slug, 'dxai-' ) ) {
+			if ( ! str_starts_with( $slug, 'dxui-' ) ) {
 				continue;
 			}
-			if ( str_starts_with( $slug, 'dxai-' . $area . '-' ) || $slug === 'dxai-' . $area ) {
+			if ( str_starts_with( $slug, 'dxui-' . $area . '-' ) || $slug === 'dxui-' . $area ) {
 				return $slug;
 			}
 			if ( $by_area === '' && ( $attrs['area'] ?? '' ) === $area ) {
@@ -546,12 +546,12 @@ final class Page_Export {
 			$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 			if ( $name === 'core/template-part' ) {
 				$slug = (string) ( $attrs['slug'] ?? '' );
-				if ( str_starts_with( $slug, 'dxai-' ) ) {
+				if ( str_starts_with( $slug, 'dxui-' ) ) {
 					$this->add_part( $slug, (string) ( $attrs['theme'] ?? '' ), (string) ( $attrs['area'] ?? '' ) );
 				}
 			} elseif ( $name === 'core/block' ) {
 				$this->add_pattern( (int) ( $attrs['ref'] ?? 0 ) );
-			} elseif ( $name === 'dxai-ui/pattern' ) {
+			} elseif ( $name === 'dx-ui/pattern' ) {
 				$this->add_pattern( (int) ( $attrs['patternId'] ?? 0 ) );
 			} elseif ( $name === 'core/navigation' ) {
 				$this->add_navigation( (int) ( $attrs['ref'] ?? 0 ) );
@@ -579,11 +579,11 @@ final class Page_Export {
 		if ( ! $post instanceof \WP_Post ) {
 			$this->missing[ $slug ] = true;
 			/* translators: %s: template part slug. */
-			$this->warnings[] = sprintf( __( 'The template part %s the page references does not exist here; the page is packaged without it.', 'dxai-ui' ), $slug );
+			$this->warnings[] = sprintf( __( 'The template part %s the page references does not exist here; the page is packaged without it.', 'dx-ui' ), $slug );
 
 			return;
 		}
-		$area = $area !== '' ? $area : (string) get_post_meta( $post->ID, '_dxai_ui_area', true );
+		$area = $area !== '' ? $area : (string) get_post_meta( $post->ID, '_dx_ui_area', true );
 		if ( $area === '' ) {
 			$terms = wp_get_post_terms( $post->ID, 'wp_template_part_area', array( 'fields' => 'slugs' ) );
 			$area  = is_array( $terms ) && isset( $terms[0] ) ? (string) $terms[0] : 'uncategorized';
@@ -644,16 +644,16 @@ final class Page_Export {
 		$post = get_post( $id );
 		if ( ! $post instanceof \WP_Post || 'wp_block' !== $post->post_type || 'trash' === $post->post_status ) {
 			/* translators: %d: pattern id. */
-			$this->warnings[] = sprintf( __( 'Synced pattern %d the page references does not exist here; the page is packaged without it.', 'dxai-ui' ), $id );
+			$this->warnings[] = sprintf( __( 'Synced pattern %d the page references does not exist here; the page is packaged without it.', 'dx-ui' ), $id );
 
 			return;
 		}
 		$meta = self::own_meta( $id, array( 'wp_pattern_sync_status' ) );
-		$css  = Upload_Paths::for_meta( $id, '_dxai_ui_css_url' );
+		$css  = Upload_Paths::for_meta( $id, '_dx_ui_css_url' );
 		$file = '';
 		if ( $css['path'] !== '' && is_file( $css['path'] ) && is_readable( $css['path'] ) ) {
 			$file                 = 'files/patterns/pattern-' . $id . '.css';
-			$this->files[ $file ] = \DXAI_UI\Media\Font_Host::portable( $css['path'] );
+			$this->files[ $file ] = \DX_UI\Media\Font_Host::portable( $css['path'] );
 		}
 		$this->patterns[ $id ] = array(
 			'source_id' => $id,
@@ -744,13 +744,13 @@ final class Page_Export {
 		$path = $this->uploads['basedir'] . '/' . $relative;
 		if ( ! is_file( $path ) || ! is_readable( $path ) ) {
 			/* translators: %s: URL. */
-			$this->warnings[] = sprintf( __( 'The page points at %s, which is not on disk; the URL is packaged unchanged.', 'dxai-ui' ), $url );
+			$this->warnings[] = sprintf( __( 'The page points at %s, which is not on disk; the URL is packaged unchanged.', 'dx-ui' ), $url );
 
 			return;
 		}
 		if ( ! Package::media_allowed( $path ) ) {
 			/* translators: %s: URL. */
-			$this->warnings[] = sprintf( __( '%s is not an image, video, audio or font file, so it is not in the package; the URL is packaged unchanged.', 'dxai-ui' ), $url );
+			$this->warnings[] = sprintf( __( '%s is not an image, video, audio or font file, so it is not in the package; the URL is packaged unchanged.', 'dx-ui' ), $url );
 
 			return;
 		}
@@ -800,13 +800,13 @@ final class Page_Export {
 		}
 		if ( $path === '' || ! is_file( $path ) || ! is_readable( $path ) ) {
 			/* translators: %d: attachment id. */
-			$this->warnings[] = sprintf( __( 'Attachment %d has no file on disk and is not in the package.', 'dxai-ui' ), $id );
+			$this->warnings[] = sprintf( __( 'Attachment %d has no file on disk and is not in the package.', 'dx-ui' ), $id );
 
 			return false;
 		}
 		if ( ! Package::media_allowed( $path ) ) {
 			/* translators: %s: file name. */
-			$this->warnings[] = sprintf( __( '%s is not an image, video, audio or font file, so it is not in the package.', 'dxai-ui' ), wp_basename( $path ) );
+			$this->warnings[] = sprintf( __( '%s is not an image, video, audio or font file, so it is not in the package.', 'dx-ui' ), wp_basename( $path ) );
 
 			return false;
 		}
@@ -925,7 +925,7 @@ final class Page_Export {
 	}
 
 	/**
-	 * A post's `_dxai_ui_*` meta (and the extra keys named), sorted.
+	 * A post's `_dx_ui_*` meta (and the extra keys named), sorted.
 	 *
 	 * @param array<int, string> $extra
 	 * @return array<string, mixed>
@@ -934,7 +934,7 @@ final class Page_Export {
 		$out = array();
 		foreach ( (array) get_post_meta( $post_id ) as $key => $values ) {
 			$key = (string) $key;
-			if ( ( ! str_starts_with( $key, '_dxai_ui_' ) && ! in_array( $key, $extra, true ) ) || in_array( $key, self::SKIP_META, true ) ) {
+			if ( ( ! str_starts_with( $key, '_dx_ui_' ) && ! in_array( $key, $extra, true ) ) || in_array( $key, self::SKIP_META, true ) ) {
 				continue;
 			}
 			$value = maybe_unserialize( is_array( $values ) ? ( $values[0] ?? '' ) : $values );

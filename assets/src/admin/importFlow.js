@@ -24,7 +24,7 @@ export function engineLine( engine ) {
 /** The model's human name, e.g. "Claude Sonnet 5", for sentences. */
 export function engineModelName( engine ) {
 	if ( ! engine || ! engine.id ) {
-		return __( 'AI', 'dxai-ui' );
+		return __( 'AI', 'dx-ui' );
 	}
 	return engine.model_label || engine.model || engine.name || engine.id;
 }
@@ -47,27 +47,27 @@ export function engineModelName( engine ) {
  *                              { header, footer }: 'install' | 'keep' | … per row
  */
 export function planPhases( { path, crawl, engine, chrome } ) {
-	let read = __( 'Reading the archive', 'dxai-ui' );
+	let read = __( 'Reading the archive', 'dx-ui' );
 	if ( path === 'figma' ) {
-		read = __( 'Fetching the Figma file', 'dxai-ui' );
+		read = __( 'Fetching the Figma file', 'dx-ui' );
 	} else if ( path === 'code' ) {
-		read = __( 'Reading the component', 'dxai-ui' );
+		read = __( 'Reading the component', 'dx-ui' );
 	}
 	const list = [
 		{ id: 'read', label: read },
-		{ id: 'compile', label: __( 'Compiling the design', 'dxai-ui' ) },
-		{ id: 'review', label: __( 'Your review', 'dxai-ui' ) },
-		{ id: 'save', label: __( 'Saving the page', 'dxai-ui' ) },
+		{ id: 'compile', label: __( 'Compiling the design', 'dx-ui' ) },
+		{ id: 'review', label: __( 'Your review', 'dx-ui' ) },
+		{ id: 'save', label: __( 'Saving the page', 'dx-ui' ) },
 	];
 	if ( ! chrome || chrome.menus ) {
 		list.push( chrome && chrome.header === CHROME_KEEP
-			? { id: 'menus', label: __( 'Keeping the header as a template part', 'dxai-ui' ), where: __( 'with the design’s page', 'dxai-ui' ) }
-			: { id: 'menus', label: __( 'Creating the header menus', 'dxai-ui' ), where: __( 'Appearance › Menus', 'dxai-ui' ) } );
+			? { id: 'menus', label: __( 'Keeping the header as a template part', 'dx-ui' ), where: __( 'with the design’s page', 'dx-ui' ) }
+			: { id: 'menus', label: __( 'Creating the header menus', 'dx-ui' ), where: __( 'Appearance › Menus', 'dx-ui' ) } );
 	}
 	if ( ! chrome || chrome.widgets ) {
 		list.push( chrome && chrome.footer === CHROME_KEEP
-			? { id: 'widgets', label: __( 'Keeping the footer as a template part', 'dxai-ui' ), where: __( 'with the design’s page', 'dxai-ui' ) }
-			: { id: 'widgets', label: __( 'Creating the footer widgets', 'dxai-ui' ), where: __( 'Appearance › Widgets', 'dxai-ui' ) } );
+			? { id: 'widgets', label: __( 'Keeping the footer as a template part', 'dx-ui' ), where: __( 'with the design’s page', 'dx-ui' ) }
+			: { id: 'widgets', label: __( 'Creating the footer widgets', 'dx-ui' ), where: __( 'Appearance › Widgets', 'dx-ui' ) } );
 	}
 	if ( crawl ) {
 		list.push( {
@@ -75,15 +75,15 @@ export function planPhases( { path, crawl, engine, chrome } ) {
 			label: engine && engine.ai && engine.pages === 'ai'
 				? sprintf(
 					/* translators: %s: AI model name, e.g. Claude Sonnet 5 */
-					__( 'Building the menu pages with %s', 'dxai-ui' ),
+					__( 'Building the menu pages with %s', 'dx-ui' ),
 					engineModelName( engine )
 				)
-				: __( 'Building the menu pages', 'dxai-ui' ),
+				: __( 'Building the menu pages', 'dx-ui' ),
 			// The engine and model id that will spend the credit, as Settings names them.
-			where: engine && engine.ai && engine.pages === 'ai' ? engineLine( engine ) : __( 'from the live site, in this design’s sections', 'dxai-ui' ),
+			where: engine && engine.ai && engine.pages === 'ai' ? engineLine( engine ) : __( 'from the live site, in this design’s sections', 'dx-ui' ),
 		} );
 	}
-	list.push( { id: 'finish', label: __( 'Finishing', 'dxai-ui' ) } );
+	list.push( { id: 'finish', label: __( 'Finishing', 'dx-ui' ) } );
 	return list;
 }
 
@@ -177,7 +177,7 @@ export function formatDuration( ms ) {
 	if ( total < 60 ) {
 		return sprintf(
 			/* translators: %d: seconds */
-			__( '%d s', 'dxai-ui' ),
+			__( '%d s', 'dx-ui' ),
 			total
 		);
 	}
@@ -410,39 +410,39 @@ export function chromeCopy( chrome, choice = '' ) {
 	let intro;
 	if ( isChoice( choice ) ) {
 		// The choice itself is on the same screen; the intro only says it is one.
-		intro = __( 'You choose below whether the design’s header and footer go into Appearance › Menus and Widgets or stay with its page.', 'dxai-ui' );
+		intro = __( 'You choose below whether the design’s header and footer go into Appearance › Menus and Widgets or stay with its page.', 'dx-ui' );
 	} else if ( menus && widgets ) {
-		intro = __( 'The header is built in Appearance › Menus and the footer in Appearance › Widgets, where you edit them afterwards.', 'dxai-ui' );
+		intro = __( 'The header is built in Appearance › Menus and the footer in Appearance › Widgets, where you edit them afterwards.', 'dx-ui' );
 	} else if ( menus ) {
-		intro = __( 'The header is built in Appearance › Menus, where you edit it afterwards; the footer is saved with the page as a template part.', 'dxai-ui' );
+		intro = __( 'The header is built in Appearance › Menus, where you edit it afterwards; the footer is saved with the page as a template part.', 'dx-ui' );
 	} else if ( widgets ) {
-		intro = __( 'The footer is built in Appearance › Widgets, where you edit it afterwards; the header is saved with the page as a template part.', 'dxai-ui' );
+		intro = __( 'The footer is built in Appearance › Widgets, where you edit it afterwards; the header is saved with the page as a template part.', 'dx-ui' );
 	} else {
-		intro = __( 'The header and footer are saved with the page as template parts; the finished import links to both.', 'dxai-ui' );
+		intro = __( 'The header and footer are saved with the page as template parts; the finished import links to both.', 'dx-ui' );
 	}
-	intro += ' ' + __( 'The site’s homepage setting is never changed.', 'dxai-ui' );
+	intro += ' ' + __( 'The site’s homepage setting is never changed.', 'dx-ui' );
 
-	const header = menus ? __( 'its header menus', 'dxai-ui' ) : __( 'its header', 'dxai-ui' );
-	const footer = widgets ? __( 'its footer widgets', 'dxai-ui' ) : __( 'its footer', 'dxai-ui' );
+	const header = menus ? __( 'its header menus', 'dx-ui' ) : __( 'its header', 'dx-ui' );
+	const footer = widgets ? __( 'its footer widgets', 'dx-ui' ) : __( 'its footer', 'dx-ui' );
 	return {
 		intro,
 		page: sprintf(
 			/* translators: 1: "its header menus" or "its header", 2: "its footer widgets" or "its footer" */
-			__( 'The design as one WordPress page, every section an editable block, with %1$s and %2$s.', 'dxai-ui' ),
+			__( 'The design as one WordPress page, every section an editable block, with %1$s and %2$s.', 'dx-ui' ),
 			header,
 			footer
 		),
 		site: sprintf(
 			/* translators: 1: "its header menus" or "its header", 2: "its footer widgets" or "its footer" */
-			__( 'The page, %1$s and %2$s — and, if you like, every page the menu links to, built from this design’s sections with the live site’s own text and pictures.', 'dxai-ui' ),
+			__( 'The page, %1$s and %2$s — and, if you like, every page the menu links to, built from this design’s sections with the live site’s own text and pictures.', 'dx-ui' ),
 			header,
 			footer
 		),
 		save: sprintf(
 			/* translators: 1: "the header’s menus" or "its header", 2: "the footer’s widgets" or "its footer" */
-			__( 'Writing the page and its sections, %1$s and %2$s. This is one request and can take a minute on shared hosting.', 'dxai-ui' ),
-			menus ? __( 'the header’s menus', 'dxai-ui' ) : __( 'its header', 'dxai-ui' ),
-			widgets ? __( 'the footer’s widgets', 'dxai-ui' ) : __( 'its footer', 'dxai-ui' )
+			__( 'Writing the page and its sections, %1$s and %2$s. This is one request and can take a minute on shared hosting.', 'dx-ui' ),
+			menus ? __( 'the header’s menus', 'dx-ui' ) : __( 'its header', 'dx-ui' ),
+			widgets ? __( 'the footer’s widgets', 'dx-ui' ) : __( 'its footer', 'dx-ui' )
 		),
 	};
 }
@@ -643,33 +643,33 @@ export function chromeWarnings( facts ) {
 			key: 'theme',
 			text: sprintf(
 				/* translators: %s: theme name */
-				__( '%s draws the header and footer of every page of this site from Appearance › Menus and Appearance › Widgets. Installing puts this design’s navigation and footer widgets on every page the theme shows — the whole site, not only this design’s page. Widgets already in the footer areas are moved to Inactive Widgets; nothing is deleted.', 'dxai-ui' ),
-				f.themeName || __( 'This theme', 'dxai-ui' )
+				__( '%s draws the header and footer of every page of this site from Appearance › Menus and Appearance › Widgets. Installing puts this design’s navigation and footer widgets on every page the theme shows — the whole site, not only this design’s page. Widgets already in the footer areas are moved to Inactive Widgets; nothing is deleted.', 'dx-ui' ),
+				f.themeName || __( 'This theme', 'dx-ui' )
 			),
 		} );
 	}
 	( f.others || [] ).forEach( ( other ) => {
 		const both = other.parts.includes( 'header' ) && other.parts.includes( 'footer' );
-		const title = other.title || sprintf( /* translators: %d: page ID */ __( 'page %d', 'dxai-ui' ), other.pageId );
+		const title = other.title || sprintf( /* translators: %d: page ID */ __( 'page %d', 'dx-ui' ), other.pageId );
 		let text;
 		if ( both ) {
 			text = sprintf(
 				/* translators: %s: title of the design whose header and footer the site shows */
-				__( 'The site’s header and footer are now those of “%s” (its menus hold the theme’s menu locations, its widgets the footer areas). Installing replaces them with this design’s for the whole site; the pages of “%s” keep their own header and footer.', 'dxai-ui' ),
+				__( 'The site’s header and footer are now those of “%s” (its menus hold the theme’s menu locations, its widgets the footer areas). Installing replaces them with this design’s for the whole site; the pages of “%s” keep their own header and footer.', 'dx-ui' ),
 				title,
 				title
 			);
 		} else if ( other.parts.includes( 'header' ) ) {
 			text = sprintf(
 				/* translators: %s: title of the design whose header the site shows */
-				__( 'The site’s header is now that of “%s” (its menus hold the theme’s menu locations). Installing replaces it with this design’s for the whole site; the pages of “%s” keep their own header.', 'dxai-ui' ),
+				__( 'The site’s header is now that of “%s” (its menus hold the theme’s menu locations). Installing replaces it with this design’s for the whole site; the pages of “%s” keep their own header.', 'dx-ui' ),
 				title,
 				title
 			);
 		} else {
 			text = sprintf(
 				/* translators: %s: title of the design whose footer the site shows */
-				__( 'The site’s footer is now that of “%s” (its widgets fill the footer areas). Installing replaces it with this design’s for the whole site; the pages of “%s” keep their own footer, as a template part.', 'dxai-ui' ),
+				__( 'The site’s footer is now that of “%s” (its widgets fill the footer areas). Installing replaces it with this design’s for the whole site; the pages of “%s” keep their own footer, as a template part.', 'dx-ui' ),
 				title,
 				title
 			);
@@ -765,7 +765,7 @@ export function chromeOutcome( res, requested = '' ) {
 			// The install ran and failed (the header's menu slots could not be
 			// read, an exception): kept as a template part, with the server's reason.
 			refused: kept && Boolean( err ),
-			// Install was asked, and the site kept it anyway (a dxai_ui_chrome_mode filter).
+			// Install was asked, and the site kept it anyway (a dx_ui_chrome_mode filter).
 			overridden: kept && ! err && asked === CHROME_INSTALL,
 			// Chrome_Choice's reason for the mode: asked, theme, one_page, owned, free, own, filter.
 			cause,
@@ -919,7 +919,7 @@ function describeEntries( list, isMenus ) {
 	return list
 		.slice( 0, 6 )
 		.map( ( e ) => {
-			const bits = [ e.name || ( isMenus ? __( 'Menu', 'dxai-ui' ) : __( 'Widgets', 'dxai-ui' ) ) ];
+			const bits = [ e.name || ( isMenus ? __( 'Menu', 'dx-ui' ) : __( 'Widgets', 'dx-ui' ) ) ];
 			if ( e.where ) {
 				bits.push( '(' + e.where + ')' );
 			}
@@ -927,12 +927,12 @@ function describeEntries( list, isMenus ) {
 				bits.push( '· ' + ( isMenus
 					? sprintf(
 						/* translators: %d: number of menu items */
-						_n( '%d item', '%d items', e.count, 'dxai-ui' ),
+						_n( '%d item', '%d items', e.count, 'dx-ui' ),
 						e.count
 					)
 					: sprintf(
 						/* translators: %d: number of widgets */
-						_n( '%d widget', '%d widgets', e.count, 'dxai-ui' ),
+						_n( '%d widget', '%d widgets', e.count, 'dx-ui' ),
 						e.count
 					) ) );
 			}
@@ -959,22 +959,22 @@ export function keptSentence( part, area ) {
 		return sprintf(
 			/* translators: %s: why, as the server said it */
 			isHeader
-				? __( 'It could not be built in Appearance › Menus, so it was kept as a template part of the design’s page: %s', 'dxai-ui' )
-				: __( 'It could not be built in Appearance › Widgets, so it was kept as a template part of the design’s page: %s', 'dxai-ui' ),
-			a.reason || __( 'the server gave no reason.', 'dxai-ui' )
+				? __( 'It could not be built in Appearance › Menus, so it was kept as a template part of the design’s page: %s', 'dx-ui' )
+				: __( 'It could not be built in Appearance › Widgets, so it was kept as a template part of the design’s page: %s', 'dx-ui' ),
+			a.reason || __( 'the server gave no reason.', 'dx-ui' )
 		);
 	}
 	const plain = isHeader
-		? __( 'The header is a template part on this design’s pages; Appearance › Menus was not changed.', 'dxai-ui' )
-		: __( 'The footer is a template part on this design’s pages; Appearance › Widgets was not changed.', 'dxai-ui' );
+		? __( 'The header is a template part on this design’s pages; Appearance › Menus was not changed.', 'dx-ui' )
+		: __( 'The footer is a template part on this design’s pages; Appearance › Widgets was not changed.', 'dx-ui' );
 	const what = a.reason || plain;
 	if ( a.overridden ) {
 		return ( a.cause === 'filter'
-			? __( 'You chose to install it, but this site keeps it as a template part (the dxai_ui_chrome_mode filter decided so).', 'dxai-ui' )
-			: __( 'You chose to install it, but the server kept it as a template part.', 'dxai-ui' ) ) + ' ' + what;
+			? __( 'You chose to install it, but this site keeps it as a template part (the dx_ui_chrome_mode filter decided so).', 'dx-ui' )
+			: __( 'You chose to install it, but the server kept it as a template part.', 'dx-ui' ) ) + ' ' + what;
 	}
 	if ( a.cause === 'asked' || a.asked === CHROME_KEEP ) {
-		return __( 'You chose to keep the site’s header and footer.', 'dxai-ui' ) + ' ' + what;
+		return __( 'You chose to keep the site’s header and footer.', 'dx-ui' ) + ' ' + what;
 	}
 	return what;
 }
@@ -994,9 +994,9 @@ export function chromePhaseAction( part, report, links, area = null ) {
 	const list = isMenus ? report.menus : report.widgets;
 	const err = isMenus ? report.menusError : report.widgetsError;
 	const url = ( isMenus ? report.menusUrl : report.widgetsUrl ) || ( isMenus ? links?.menus : links?.widgets ) || '';
-	const link = url ? { href: url, label: isMenus ? __( 'Open Appearance › Menus', 'dxai-ui' ) : __( 'Open Appearance › Widgets', 'dxai-ui' ) } : null;
+	const link = url ? { href: url, label: isMenus ? __( 'Open Appearance › Menus', 'dx-ui' ) : __( 'Open Appearance › Widgets', 'dx-ui' ) } : null;
 	const partLink = area && area.partUrl
-		? { href: area.partUrl, label: isMenus ? __( 'Edit the header template part', 'dxai-ui' ) : __( 'Edit the footer template part', 'dxai-ui' ) }
+		? { href: area.partUrl, label: isMenus ? __( 'Edit the header template part', 'dx-ui' ) : __( 'Edit the footer template part', 'dx-ui' ) }
 		: null;
 	if ( area && area.mode === CHROME_KEEP ) {
 		return {
@@ -1013,14 +1013,14 @@ export function chromePhaseAction( part, report, links, area = null ) {
 		return {
 			type: 'skip',
 			id: part,
-			detail: __( 'Not reported by the server for this import.', 'dxai-ui' ),
+			detail: __( 'Not reported by the server for this import.', 'dx-ui' ),
 		};
 	}
 	if ( ! list.length ) {
 		return {
 			type: 'skip',
 			id: part,
-			detail: isMenus ? __( 'This design has no header menu to create.', 'dxai-ui' ) : __( 'This design has no footer widgets to create.', 'dxai-ui' ),
+			detail: isMenus ? __( 'This design has no header menu to create.', 'dx-ui' ) : __( 'This design has no footer widgets to create.', 'dx-ui' ),
 			link,
 		};
 	}
@@ -1029,11 +1029,11 @@ export function chromePhaseAction( part, report, links, area = null ) {
 	const differs = Boolean( area && area.differs && area.mode === CHROME_INSTALL );
 	if ( differs ) {
 		extra.push( isMenus
-			? __( 'You chose to keep the site’s header and footer, but this server built the header in Appearance › Menus anyway', 'dxai-ui' )
-			: __( 'You chose to keep the site’s header and footer, but this server built the footer in Appearance › Widgets anyway', 'dxai-ui' ) );
+			? __( 'You chose to keep the site’s header and footer, but this server built the header in Appearance › Menus anyway', 'dx-ui' )
+			: __( 'You chose to keep the site’s header and footer, but this server built the footer in Appearance › Widgets anyway', 'dx-ui' ) );
 	}
 	if ( isMenus && report.logoSet ) {
-		extra.push( __( 'The design’s logo is now the Site Logo.', 'dxai-ui' ) );
+		extra.push( __( 'The design’s logo is now the Site Logo.', 'dx-ui' ) );
 	}
 	if ( ! isMenus && report.widgetsMoved > 0 ) {
 		extra.push( sprintf(
@@ -1042,7 +1042,7 @@ export function chromePhaseAction( part, report, links, area = null ) {
 				'%d widget that was already in these areas was moved to Inactive Widgets — nothing was deleted.',
 				'%d widgets that were already in these areas were moved to Inactive Widgets — nothing was deleted.',
 				report.widgetsMoved,
-				'dxai-ui'
+				'dx-ui'
 			),
 			report.widgetsMoved
 		) );
@@ -1054,13 +1054,13 @@ export function chromePhaseAction( part, report, links, area = null ) {
 			isMenus
 				? sprintf(
 					/* translators: 1: number of menus, 2: list of menus */
-					_n( '%1$d menu: %2$s', '%1$d menus: %2$s', list.length, 'dxai-ui' ),
+					_n( '%1$d menu: %2$s', '%1$d menus: %2$s', list.length, 'dx-ui' ),
 					list.length,
 					describeEntries( list, true )
 				)
 				: sprintf(
 					/* translators: 1: number of widget areas, 2: list of areas */
-					_n( '%1$d widget area: %2$s', '%1$d widget areas: %2$s', list.length, 'dxai-ui' ),
+					_n( '%1$d widget area: %2$s', '%1$d widget areas: %2$s', list.length, 'dx-ui' ),
 					list.length,
 					describeEntries( list, false )
 				),
@@ -1105,13 +1105,13 @@ export function lostWhy( err ) {
 	const e = err && typeof err === 'object' ? err : {};
 	const status = Number( e.data?.status || e.status || 0 );
 	if ( fatalAnswer( e ) ) {
-		return __( 'WordPress stopped with a critical error', 'dxai-ui' );
+		return __( 'WordPress stopped with a critical error', 'dx-ui' );
 	}
 	if ( e.code === 'invalid_json' ) {
-		return __( 'the server or a proxy answered with an error page', 'dxai-ui' );
+		return __( 'the server or a proxy answered with an error page', 'dx-ui' );
 	}
 	if ( e.code === 'fetch_error' ) {
-		return __( 'the connection dropped', 'dxai-ui' );
+		return __( 'the connection dropped', 'dx-ui' );
 	}
 	// WordPress's own error says more than its status code.
 	if ( e.message && e.code && ! /^http_/.test( String( e.code ) ) ) {
@@ -1120,11 +1120,11 @@ export function lostWhy( err ) {
 	if ( status ) {
 		return sprintf(
 			/* translators: %d: HTTP status code */
-			__( 'HTTP %d', 'dxai-ui' ),
+			__( 'HTTP %d', 'dx-ui' ),
 			status
 		);
 	}
-	return String( e.message || '' ) || __( 'no answer', 'dxai-ui' );
+	return String( e.message || '' ) || __( 'no answer', 'dx-ui' );
 }
 
 /** A random token for one save attempt (Converter_Controller::save_pattern()). */
@@ -1166,50 +1166,50 @@ export function describeFailure( err, phase, context = {} ) {
 	const timedOut = TIMEOUT_CODES.includes( code ) || [ 502, 503, 504, 520, 522, 524 ].includes( status );
 
 	if ( code === 'invalid_json' ) {
-		message = __( 'The server answered with something other than WordPress’s response — usually an error page from PHP, the web server or a proxy.', 'dxai-ui' ) + ( status ? ' (HTTP ' + status + ')' : '' );
+		message = __( 'The server answered with something other than WordPress’s response — usually an error page from PHP, the web server or a proxy.', 'dx-ui' ) + ( status ? ' (HTTP ' + status + ')' : '' );
 	} else if ( code === 'fetch_error' ) {
-		message = __( 'The connection to the server was lost before it answered.', 'dxai-ui' );
+		message = __( 'The connection to the server was lost before it answered.', 'dx-ui' );
 	} else if ( ! message ) {
 		message = status ? sprintf(
 			/* translators: %d: HTTP status code */
-			__( 'The server answered HTTP %d.', 'dxai-ui' ),
+			__( 'The server answered HTTP %d.', 'dx-ui' ),
 			status
-		) : __( 'The request failed without a message.', 'dxai-ui' );
+		) : __( 'The request failed without a message.', 'dx-ui' );
 	}
 
-	if ( code === 'rest_cookie_invalid_nonce' || code === 'rest_forbidden' || ( status === 401 && code !== 'dxai_ui_unfiltered_html' ) ) {
-		hint = __( 'Your WordPress session has expired. Reload this page, sign in again if asked, and repeat the import.', 'dxai-ui' );
-	} else if ( code === 'dxai_ui_unfiltered_html' ) {
-		hint = __( 'Run the import as an administrator who may publish unfiltered HTML.', 'dxai-ui' );
+	if ( code === 'rest_cookie_invalid_nonce' || code === 'rest_forbidden' || ( status === 401 && code !== 'dx_ui_unfiltered_html' ) ) {
+		hint = __( 'Your WordPress session has expired. Reload this page, sign in again if asked, and repeat the import.', 'dx-ui' );
+	} else if ( code === 'dx_ui_unfiltered_html' ) {
+		hint = __( 'Run the import as an administrator who may publish unfiltered HTML.', 'dx-ui' );
 	} else if ( status === 413 || /too large|upload_max_filesize|post_max_size/i.test( message ) ) {
-		hint = __( 'Ask your host to raise upload_max_filesize and post_max_size, or export the design without unused assets.', 'dxai-ui' );
-	} else if ( phase === 'save' && code === 'dxai_ui_save_fatal' && /Allowed memory size/i.test( message ) ) {
+		hint = __( 'Ask your host to raise upload_max_filesize and post_max_size, or export the design without unused assets.', 'dx-ui' );
+	} else if ( phase === 'save' && code === 'dx_ui_save_fatal' && /Allowed memory size/i.test( message ) ) {
 		// The import's requests ask for the dashboard's memory (Converter_Controller::admin_memory()).
-		hint = __( 'PHP ran out of memory part-way through. The import uses the memory WordPress gives the dashboard, WP_MAX_MEMORY_LIMIT in wp-config.php: set it higher (for example define( \'WP_MAX_MEMORY_LIMIT\', \'512M\' );) or ask your host to, then try again — it updates the same page rather than adding a copy.', 'dxai-ui' );
-	} else if ( phase === 'save' && code === 'dxai_ui_save_fatal' ) {
-		hint = __( 'PHP ran out of memory or time part-way through. Ask your host to raise memory_limit or max_execution_time, then try again — it updates the same page rather than adding a copy.', 'dxai-ui' );
+		hint = __( 'PHP ran out of memory part-way through. The import uses the memory WordPress gives the dashboard, WP_MAX_MEMORY_LIMIT in wp-config.php: set it higher (for example define( \'WP_MAX_MEMORY_LIMIT\', \'512M\' );) or ask your host to, then try again — it updates the same page rather than adding a copy.', 'dx-ui' );
+	} else if ( phase === 'save' && code === 'dx_ui_save_fatal' ) {
+		hint = __( 'PHP ran out of memory or time part-way through. Ask your host to raise memory_limit or max_execution_time, then try again — it updates the same page rather than adding a copy.', 'dx-ui' );
 	} else if ( phase === 'save' && context.save === 'unknown' ) {
-		hint = __( 'WordPress has no record of receiving this save, so nothing was written. Trying again is safe.', 'dxai-ui' );
+		hint = __( 'WordPress has no record of receiving this save, so nothing was written. Trying again is safe.', 'dx-ui' );
 	} else if ( phase === 'save' && context.save === 'stuck' ) {
 		hint = context.crawl
-			? __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs first: if the page is there, the menu pages may already be building in the background, and saving again would build them twice and spend the API credit twice.', 'dxai-ui' )
-			: __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs; trying again updates the same page rather than adding a copy.', 'dxai-ui' );
+			? __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs first: if the page is there, the menu pages may already be building in the background, and saving again would build them twice and spend the API credit twice.', 'dx-ui' )
+			: __( 'WordPress started this save long ago and has not recorded its end — the host may have stopped it. Check Designs; trying again updates the same page rather than adding a copy.', 'dx-ui' );
 	} else if ( phase === 'save' && ( timedOut || context.save === 'unchecked' ) ) {
 		hint = context.crawl
-			? __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working, and this screen could not ask WordPress how the save ended. Check again in a moment, or check Designs. Saving again while the first save is still running would build the menu pages twice and spend the API credit twice.', 'dxai-ui' )
-			: __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working. The page may have been saved anyway: check Designs before you try again (trying again updates the same page rather than adding a copy).', 'dxai-ui' );
+			? __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working, and this screen could not ask WordPress how the save ended. Check again in a moment, or check Designs. Saving again while the first save is still running would build the menu pages twice and spend the API credit twice.', 'dx-ui' )
+			: __( 'Hosts and proxies often stop waiting after 60–100 seconds while WordPress keeps working. The page may have been saved anyway: check Designs before you try again (trying again updates the same page rather than adding a copy).', 'dx-ui' );
 	} else if ( phase === 'crawl' && timedOut ) {
-		hint = __( 'One page can take longer than a proxy waits. The server finishes the step anyway; keep trying and the crawl continues where it is.', 'dxai-ui' );
+		hint = __( 'One page can take longer than a proxy waits. The server finishes the step anyway; keep trying and the crawl continues where it is.', 'dx-ui' );
 	} else if ( timedOut ) {
-		hint = __( 'The server took too long or stopped answering. Try again; a large archive may need a host with a longer time limit.', 'dxai-ui' );
-	} else if ( code === 'dxai_ui_source_compile' ) {
-		hint = __( 'Export the source (with the src folder), not only the built dist folder, and drop that archive instead.', 'dxai-ui' );
-	} else if ( code === 'dxai_ui_crawl_job' ) {
-		hint = __( 'The page itself is saved. Start the import again to build the menu pages.', 'dxai-ui' );
+		hint = __( 'The server took too long or stopped answering. Try again; a large archive may need a host with a longer time limit.', 'dx-ui' );
+	} else if ( code === 'dx_ui_source_compile' ) {
+		hint = __( 'Export the source (with the src folder), not only the built dist folder, and drop that archive instead.', 'dx-ui' );
+	} else if ( code === 'dx_ui_crawl_job' ) {
+		hint = __( 'The page itself is saved. Start the import again to build the menu pages.', 'dx-ui' );
 	} else if ( phase === 'read' || phase === 'compile' ) {
-		hint = __( 'Check that the file is the design’s export and try again. “Show details” has the server’s log.', 'dxai-ui' );
+		hint = __( 'Check that the file is the design’s export and try again. “Show details” has the server’s log.', 'dx-ui' );
 	} else {
-		hint = __( 'Try again. If it keeps failing, the site’s PHP error log says why.', 'dxai-ui' );
+		hint = __( 'Try again. If it keeps failing, the site’s PHP error log says why.', 'dx-ui' );
 	}
 
 	return { phase, code, status, message, hint, timedOut };
@@ -1241,33 +1241,33 @@ export function crawlStepText( p, engine ) {
 		return '';
 	}
 	if ( p.finishing ) {
-		return __( 'Linking the menus to the new pages, rewriting links and applying the colour tokens…', 'dxai-ui' );
+		return __( 'Linking the menus to the new pages, rewriting links and applying the colour tokens…', 'dx-ui' );
 	}
 	switch ( p.phase ) {
 		case 'fetch':
-			return __( 'Fetching the live page…', 'dxai-ui' );
+			return __( 'Fetching the live page…', 'dx-ui' );
 		case 'images': {
 			const left = p.images?.left;
 			return typeof left === 'number' && left > 0
 				? sprintf(
 					/* translators: %d: images still to download */
-					_n( 'Downloading its images — %d left…', 'Downloading its images — %d left…', left, 'dxai-ui' ),
+					_n( 'Downloading its images — %d left…', 'Downloading its images — %d left…', left, 'dx-ui' ),
 					left
 				)
-				: __( 'Downloading its images…', 'dxai-ui' );
+				: __( 'Downloading its images…', 'dx-ui' );
 		}
 		case 'restyle':
 			return p.ai === false
-				? __( 'Arranging its text and pictures in the design’s sections…', 'dxai-ui' )
+				? __( 'Arranging its text and pictures in the design’s sections…', 'dx-ui' )
 				: sprintf(
 					/* translators: %s: AI model name */
-					__( 'Rebuilding it in this design with %s — usually 30 seconds to 2 minutes a page…', 'dxai-ui' ),
+					__( 'Rebuilding it in this design with %s — usually 30 seconds to 2 minutes a page…', 'dx-ui' ),
 					engineModelName( engine )
 				);
 		case 'save':
-			return __( 'Saving it as a WordPress page…', 'dxai-ui' );
+			return __( 'Saving it as a WordPress page…', 'dx-ui' );
 		default:
-			return __( 'Planning the pages…', 'dxai-ui' );
+			return __( 'Planning the pages…', 'dx-ui' );
 	}
 }
 

@@ -2,12 +2,12 @@
 /**
  * Keeps a converted page intact on a theme that renders the site itself.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
 /**
  * A converted page is rendered on the plugin's blank template: the design is
@@ -51,13 +51,13 @@ final class Theme_Compat {
 	 * The DX themes: the themes the team builds its sites on — american-restoration, and any child theme of it. They draw the site's header
 	 * and footer from the menu locations and widget areas an install writes (`primary-navigation`, `footer-column-1`…`4`,
 	 * `footer-copyright`): the header is a menu and the footer is widgets, edited in Appearance, never inside a page.
-	 * `dxai_ui_dx_themes` adds a theme to the list or takes one off it. DX Base, the theme this plugin carries for a site that has none
+	 * `dx_ui_dx_themes` adds a theme to the list or takes one off it. DX Base, the theme this plugin carries for a site that has none
 	 * of its own (Base_Theme), is on the list: it has the same locations and the same areas.
 	 *
 	 * @return array<int, string> Theme slugs.
 	 */
 	public static function dx_themes(): array {
-		$themes = apply_filters( 'dxai_ui_dx_themes', array_merge( Adapters\Amr_Adapter::SLUGS, array( Base_Theme::SLUG ) ) );
+		$themes = apply_filters( 'dx_ui_dx_themes', array_merge( Adapters\Amr_Adapter::SLUGS, array( Base_Theme::SLUG ) ) );
 
 		return array_values( array_unique( array_filter( array_map( 'strval', is_array( $themes ) ? $themes : array() ) ) ) );
 	}
@@ -102,9 +102,9 @@ final class Theme_Compat {
 		if ( ! is_string( $css ) || $css === '' ) {
 			return;
 		}
-		wp_register_style( 'dxai-ui-block-supports', false );
-		wp_add_inline_style( 'dxai-ui-block-supports', $css );
-		wp_print_styles( 'dxai-ui-block-supports' );
+		wp_register_style( 'dx-ui-block-supports', false );
+		wp_add_inline_style( 'dx-ui-block-supports', $css );
+		wp_print_styles( 'dx-ui-block-supports' );
 	}
 
 	/**
@@ -117,13 +117,13 @@ final class Theme_Compat {
 	 * theme — so installing there would replace the live site's navigation and
 	 * move its footer widgets to Inactive on every page. The design keeps its
 	 * own header and footer as template parts on its pages instead, and the
-	 * site's menus and widgets stay as they are. `dxai_ui_install_chrome`
+	 * site's menus and widgets stay as they are. `dx_ui_install_chrome`
 	 * overrides the answer.
 	 */
 	public static function may_install_chrome(): bool {
 		$default = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
 
-		return (bool) apply_filters( 'dxai_ui_install_chrome', $default );
+		return (bool) apply_filters( 'dx_ui_install_chrome', $default );
 	}
 
 	/** Whether the current request renders a converted page. */
@@ -151,7 +151,7 @@ final class Theme_Compat {
 		 * the footer (core hooks wp_enqueue_global_styles to wp_footer for
 		 * block styles loaded on demand), after Blank_Template dropped them from
 		 * <head>: american-restoration's body line-height and link weight came
-		 * back that way. The variables and presets stay (dxai-ui-tokens).
+		 * back that way. The variables and presets stay (dx-ui-tokens).
 		 */
 		remove_action( 'wp_footer', 'wp_enqueue_global_styles', 1 );
 		// Measured on american-restoration: its font-face and critical CSS printers
@@ -253,7 +253,7 @@ final class Theme_Compat {
 	/**
 	 * Whether a script of the page is the plugin's or one the plugin's scripts need: a file in its folder or in its folder in uploads (a
 	 * design's page script), a tag WordPress printed for a handle the plugin's scripts depend on (`<handle>-js` and its `-before`,
-	 * `-after`, `-extra` and `-translations` data), or a tag of its own (an id that starts with dxai-ui: its handles, its modules, its
+	 * `-after`, `-extra` and `-translations` data), or a tag of its own (an id that starts with dx-ui: its handles, its modules, its
 	 * inline scripts).
 	 */
 	public static function own_script( string $src, string $tag ): bool {
@@ -261,7 +261,7 @@ final class Theme_Compat {
 			// By the path alone: a network site on its own domain, or a CDN in front, changes the host and keeps the path.
 			$path    = (string) wp_parse_url( $src, PHP_URL_PATH );
 			$uploads = wp_upload_dir( null, false );
-			foreach ( array( DXAI_UI_URL, trailingslashit( (string) $uploads['baseurl'] ) . \DXAI_UI\Support\Upload_Paths::DIR . '/' ) as $base ) {
+			foreach ( array( DX_UI_URL, trailingslashit( (string) $uploads['baseurl'] ) . \DX_UI\Support\Upload_Paths::DIR . '/' ) as $base ) {
 				$own = (string) wp_parse_url( $base, PHP_URL_PATH );
 				if ( strlen( $own ) > 1 && str_starts_with( $path, $own ) ) {
 					return true;
@@ -272,7 +272,7 @@ final class Theme_Compat {
 			return false;
 		}
 		$id = (string) $m[2];
-		if ( str_starts_with( $id, 'dxai-ui' ) ) {
+		if ( str_starts_with( $id, 'dx-ui' ) ) {
 			return true;
 		}
 		$handle = (string) preg_replace( '/-js(?:-(?:before|after|extra|translations))?$/', '', $id );
@@ -305,7 +305,7 @@ final class Theme_Compat {
 			$handle = (string) $handle;
 			$dep    = $scripts->registered[ $handle ] ?? null;
 			$src    = $dep instanceof \_WP_Dependency && is_string( $dep->src ) ? $dep->src : '';
-			if ( str_starts_with( $handle, 'dxai-ui' ) || ( $src !== '' && self::own_script( $src, '' ) ) ) {
+			if ( str_starts_with( $handle, 'dx-ui' ) || ( $src !== '' && self::own_script( $src, '' ) ) ) {
 				$walk( $handle, 0 );
 			}
 		}

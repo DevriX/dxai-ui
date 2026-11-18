@@ -2,12 +2,12 @@
 /**
  * The `this` of a Claude Design `class Component extends DCLogic`.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * State, props, the instance fields the class declares (`vals = {}`) and its

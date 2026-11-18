@@ -2,12 +2,12 @@
 /**
  * The logic class of a Claude Design export, parsed and runnable.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * `<script type="text/x-dc" data-dc-script>` holds `class Component extends

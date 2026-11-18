@@ -1,28 +1,28 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui design.
+ * WP-CLI: wp dx-ui design.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Design\Document;
-use DXAI_UI\Design\Document_Store;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Design\Document;
+use DX_UI\Design\Document_Store;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * A design's document from the command line:
  *
- *   wp dxai-ui design <id>                   the summary: what the design is, in numbers
- *   wp dxai-ui design <id> --format=json     the whole document
- *   wp dxai-ui design list                   every design on the site and whether it has a document
- *   wp dxai-ui design rebuild <id>|all       build the document of a design imported before documents were kept, from its
+ *   wp dx-ui design <id>                   the summary: what the design is, in numbers
+ *   wp dx-ui design <id> --format=json     the whole document
+ *   wp dx-ui design list                   every design on the site and whether it has a document
+ *   wp dx-ui design rebuild <id>|all       build the document of a design imported before documents were kept, from its
  *                                            conversion snapshot (every save keeps one); `all` does every design that has none
- *   wp dxai-ui design variation <id>         the design's theme.json style variation, as the file it would be
- *   wp dxai-ui design variation <id> --apply | --clear | --write
+ *   wp dx-ui design variation <id>         the design's theme.json style variation, as the file it would be
+ *   wp dx-ui design variation <id> --apply | --clear | --write
  *                                            make it the site's style / the theme's own again / write it into the theme's styles folder
  *
  * list, the summary and the variation read only; rebuild writes the document on the design's Home, --apply an option, --write a file
@@ -32,7 +32,7 @@ final class Design_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui design',
+			'dx-ui design',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'The document of a design (the Design IR): its pages, sections, header, tokens, breakpoints, behaviours and report.',
@@ -91,7 +91,7 @@ final class Design_Cli {
 				\WP_CLI::error( 'No design has a page with this id.' );
 			}
 			if ( ! empty( $assoc['apply'] ) ) {
-				$done = \DXAI_UI\Design\Style_Variation::apply( $home );
+				$done = \DX_UI\Design\Style_Variation::apply( $home );
 				if ( is_wp_error( $done ) ) {
 					\WP_CLI::error( $done->get_error_message() );
 				}
@@ -100,12 +100,12 @@ final class Design_Cli {
 				return;
 			}
 			if ( ! empty( $assoc['clear'] ) ) {
-				\WP_CLI::success( \DXAI_UI\Design\Style_Variation::clear() ? 'The site\'s style is the theme\'s own again.' : 'No design\'s style was applied.' );
+				\WP_CLI::success( \DX_UI\Design\Style_Variation::clear() ? 'The site\'s style is the theme\'s own again.' : 'No design\'s style was applied.' );
 
 				return;
 			}
 			if ( ! empty( $assoc['write'] ) ) {
-				$done = \DXAI_UI\Design\Style_Variation::write( $home );
+				$done = \DX_UI\Design\Style_Variation::write( $home );
 				if ( is_wp_error( $done ) ) {
 					\WP_CLI::error( $done->get_error_message() );
 				}
@@ -113,7 +113,7 @@ final class Design_Cli {
 
 				return;
 			}
-			$json = \DXAI_UI\Design\Style_Variation::json( $home );
+			$json = \DX_UI\Design\Style_Variation::json( $home );
 			if ( is_wp_error( $json ) ) {
 				\WP_CLI::error( $json->get_error_message() );
 			}

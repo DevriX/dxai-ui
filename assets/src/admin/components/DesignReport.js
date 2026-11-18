@@ -12,43 +12,43 @@ import './design-report.css';
  */
 
 const PLACED = {
-	content: __( 'in the page', 'dxai-ui' ),
-	part: __( 'a template part', 'dxai-ui' ),
-	menus: __( 'Appearance › Menus', 'dxai-ui' ),
-	widgets: __( 'Appearance › Widgets', 'dxai-ui' ),
-	none: __( 'none', 'dxai-ui' ),
+	content: __( 'in the page', 'dx-ui' ),
+	part: __( 'a template part', 'dx-ui' ),
+	menus: __( 'Appearance › Menus', 'dx-ui' ),
+	widgets: __( 'Appearance › Widgets', 'dx-ui' ),
+	none: __( 'none', 'dx-ui' ),
 };
 
 const KINDS = {
-	handlers: __( 'event handlers', 'dxai-ui' ),
-	motion: __( 'animations', 'dxai-ui' ),
-	radix: __( 'interactive components', 'dxai-ui' ),
-	scroll: __( 'scroll state', 'dxai-ui' ),
-	lucide: __( 'icons', 'dxai-ui' ),
-	'media-query': __( 'layout by width', 'dxai-ui' ),
-	countup: __( 'counting numbers', 'dxai-ui' ),
-	form: __( 'forms', 'dxai-ui' ),
-	state: __( 'a state', 'dxai-ui' ),
-	reveal: __( 'sections that reveal', 'dxai-ui' ),
-	'radix-accordion': __( 'accordion', 'dxai-ui' ),
-	'radix-tabs': __( 'tabs', 'dxai-ui' ),
-	'radix-select': __( 'select', 'dxai-ui' ),
-	'radix-dialog': __( 'dialog', 'dxai-ui' ),
-	'radix-popover': __( 'popover', 'dxai-ui' ),
-	'radix-menu': __( 'menu', 'dxai-ui' ),
-	'radix-tooltip': __( 'tooltip', 'dxai-ui' ),
-	portal: __( 'portals', 'dxai-ui' ),
-	'hero-tabs': __( 'hero tabs', 'dxai-ui' ),
-	'method-rows': __( 'method rows', 'dxai-ui' ),
-	rail: __( 'a rail', 'dxai-ui' ),
-	'video-facade': __( 'video facade', 'dxai-ui' ),
+	handlers: __( 'event handlers', 'dx-ui' ),
+	motion: __( 'animations', 'dx-ui' ),
+	radix: __( 'interactive components', 'dx-ui' ),
+	scroll: __( 'scroll state', 'dx-ui' ),
+	lucide: __( 'icons', 'dx-ui' ),
+	'media-query': __( 'layout by width', 'dx-ui' ),
+	countup: __( 'counting numbers', 'dx-ui' ),
+	form: __( 'forms', 'dx-ui' ),
+	state: __( 'a state', 'dx-ui' ),
+	reveal: __( 'sections that reveal', 'dx-ui' ),
+	'radix-accordion': __( 'accordion', 'dx-ui' ),
+	'radix-tabs': __( 'tabs', 'dx-ui' ),
+	'radix-select': __( 'select', 'dx-ui' ),
+	'radix-dialog': __( 'dialog', 'dx-ui' ),
+	'radix-popover': __( 'popover', 'dx-ui' ),
+	'radix-menu': __( 'menu', 'dx-ui' ),
+	'radix-tooltip': __( 'tooltip', 'dx-ui' ),
+	portal: __( 'portals', 'dx-ui' ),
+	'hero-tabs': __( 'hero tabs', 'dx-ui' ),
+	'method-rows': __( 'method rows', 'dx-ui' ),
+	rail: __( 'a rail', 'dx-ui' ),
+	'video-facade': __( 'video facade', 'dx-ui' ),
 };
 
 /** What the Interactivity API could do about a behaviour (Behaviour_Reader): directives alone, with a store callback, or nothing without the runtime. */
 const LEVELS = {
-	full: __( 'directives', 'dxai-ui' ),
-	partial: __( 'directives + callback', 'dxai-ui' ),
-	none: __( 'runtime', 'dxai-ui' ),
+	full: __( 'directives', 'dx-ui' ),
+	partial: __( 'directives + callback', 'dx-ui' ),
+	none: __( 'runtime', 'dx-ui' ),
 };
 
 function Interactivity( { row } ) {
@@ -56,7 +56,7 @@ function Interactivity( { row } ) {
 		return null;
 	}
 	return (
-		<span className={ `dxai-report__level dxai-report__level--${ row.interactivity }` } title={ row.why || '' }>
+		<span className={ `dxui-report__level dxui-report__level--${ row.interactivity }` } title={ row.why || '' }>
 			{ LEVELS[ row.interactivity ] }
 		</span>
 	);
@@ -64,12 +64,12 @@ function Interactivity( { row } ) {
 
 function Carried( { value } ) {
 	if ( value === true ) {
-		return <span className="dxai-report__yes">{ __( 'carried', 'dxai-ui' ) }</span>;
+		return <span className="dxui-report__yes">{ __( 'carried', 'dx-ui' ) }</span>;
 	}
 	if ( value === false ) {
-		return <span className="dxai-report__no">{ __( 'not carried', 'dxai-ui' ) }</span>;
+		return <span className="dxui-report__no">{ __( 'not carried', 'dx-ui' ) }</span>;
 	}
-	return <span className="dxai-muted">{ __( 'not measured', 'dxai-ui' ) }</span>;
+	return <span className="dxui-muted">{ __( 'not measured', 'dx-ui' ) }</span>;
 }
 
 function Nav( { items, depth = 0 } ) {
@@ -77,7 +77,7 @@ function Nav( { items, depth = 0 } ) {
 		return null;
 	}
 	return (
-		<ul className={ 'dxai-report__nav' + ( depth ? ' is-child' : '' ) }>
+		<ul className={ 'dxui-report__nav' + ( depth ? ' is-child' : '' ) }>
 			{ items.map( ( item, i ) => (
 				<li key={ i }>
 					<span>{ item.label || item.url }</span>
@@ -104,13 +104,13 @@ function Variation( { design } ) {
 		setData( null );
 		setSaid( '' );
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/design/' + design + '/variation' } )
+		apiFetch( { path: '/dx-ui/v1/design/' + design + '/variation' } )
 			.then( setData )
 			.catch( ( e ) => setError( e.message || '' ) );
 	}, [ design ] );
 
 	if ( error ) {
-		return <p className="dxai-muted">{ error }</p>;
+		return <p className="dxui-muted">{ error }</p>;
 	}
 	if ( ! data ) {
 		return null;
@@ -120,46 +120,46 @@ function Variation( { design } ) {
 		setBusy( action );
 		setSaid( '' );
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/design/' + design + '/variation', method: 'POST', data: { action } } )
+		apiFetch( { path: '/dx-ui/v1/design/' + design + '/variation', method: 'POST', data: { action } } )
 			.then( ( res ) => {
 				setData( { ...data, ...res } );
 				if ( action === 'apply' ) {
-					setSaid( __( 'The site’s look is this design’s now: its colours and fonts are the theme’s presets, its buttons, links and headings the site’s. Its own pages are drawn as before.', 'dxai-ui' ) );
+					setSaid( __( 'The site’s look is this design’s now: its colours and fonts are the theme’s presets, its buttons, links and headings the site’s. Its own pages are drawn as before.', 'dx-ui' ) );
 				} else if ( action === 'clear' ) {
-					setSaid( __( 'The site’s look is the theme’s own again.', 'dxai-ui' ) );
+					setSaid( __( 'The site’s look is the theme’s own again.', 'dx-ui' ) );
 				} else if ( res.result && res.result.path ) {
-					setSaid( sprintf( /* translators: %s: file path. */ __( 'Written: %s', 'dxai-ui' ), res.result.path ) );
+					setSaid( sprintf( /* translators: %s: file path. */ __( 'Written: %s', 'dx-ui' ), res.result.path ) );
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'That did not work.', 'dxai-ui' ) ) )
+			.catch( ( e ) => setError( e.message || __( 'That did not work.', 'dx-ui' ) ) )
 			.finally( () => setBusy( '' ) );
 	}
 
 	const blob = 'data:application/json;charset=utf-8,' + encodeURIComponent( data.json || '' );
 
 	return (
-		<div className="dxai-report__variation">
-			<h4>{ __( 'Style variation', 'dxai-ui' ) }</h4>
-			<p className="dxai-muted">
-				{ __( 'The design’s colours, fonts and content width as a theme.json style variation. Applied, it is the site’s look: the presets everywhere, the styles on every page but the design’s own, which keep their pixel-for-pixel rules.', 'dxai-ui' ) }
+		<div className="dxui-report__variation">
+			<h4>{ __( 'Style variation', 'dx-ui' ) }</h4>
+			<p className="dxui-muted">
+				{ __( 'The design’s colours, fonts and content width as a theme.json style variation. Applied, it is the site’s look: the presets everywhere, the styles on every page but the design’s own, which keep their pixel-for-pixel rules.', 'dx-ui' ) }
 			</p>
 			<p>
 				{ data.applied
-					? <strong>{ __( 'Applied: the site’s look is this design’s.', 'dxai-ui' ) }</strong>
-					: <span className="dxai-muted">{ __( 'Not applied.', 'dxai-ui' ) }</span> }
-				{ data.written && <span className="dxai-muted"> · { sprintf( /* translators: %s: file name. */ __( 'in the theme as %s', 'dxai-ui' ), data.file_name ) }</span> }
+					? <strong>{ __( 'Applied: the site’s look is this design’s.', 'dx-ui' ) }</strong>
+					: <span className="dxui-muted">{ __( 'Not applied.', 'dx-ui' ) }</span> }
+				{ data.written && <span className="dxui-muted"> · { sprintf( /* translators: %s: file name. */ __( 'in the theme as %s', 'dx-ui' ), data.file_name ) }</span> }
 			</p>
-			<div className="dxai-actions">
-				{ ! data.applied && <Button variant="primary" onClick={ () => run( 'apply' ) } isBusy={ busy === 'apply' } disabled={ !! busy }>{ __( 'Apply as the site’s style', 'dxai-ui' ) }</Button> }
-				{ data.applied && <Button variant="secondary" onClick={ () => run( 'clear' ) } isBusy={ busy === 'clear' } disabled={ !! busy }>{ __( 'Back to the theme’s own', 'dxai-ui' ) }</Button> }
-				<a className="components-button is-secondary" href={ blob } download={ data.file_name }>{ __( 'Download the JSON', 'dxai-ui' ) }</a>
-				{ data.writable && <Button variant="secondary" onClick={ () => run( 'write' ) } isBusy={ busy === 'write' } disabled={ !! busy }>{ __( 'Write into the theme’s styles folder', 'dxai-ui' ) }</Button> }
+			<div className="dxui-actions">
+				{ ! data.applied && <Button variant="primary" onClick={ () => run( 'apply' ) } isBusy={ busy === 'apply' } disabled={ !! busy }>{ __( 'Apply as the site’s style', 'dx-ui' ) }</Button> }
+				{ data.applied && <Button variant="secondary" onClick={ () => run( 'clear' ) } isBusy={ busy === 'clear' } disabled={ !! busy }>{ __( 'Back to the theme’s own', 'dx-ui' ) }</Button> }
+				<a className="components-button is-secondary" href={ blob } download={ data.file_name }>{ __( 'Download the JSON', 'dx-ui' ) }</a>
+				{ data.writable && <Button variant="secondary" onClick={ () => run( 'write' ) } isBusy={ busy === 'write' } disabled={ !! busy }>{ __( 'Write into the theme’s styles folder', 'dx-ui' ) }</Button> }
 			</div>
 			{ ! data.writable && data.capabilities && (
-				<p className="dxai-muted">
+				<p className="dxui-muted">
 					{ data.capabilities.theme && data.capabilities.theme.base
-						? __( 'The styles folder cannot be written on this site.', 'dxai-ui' )
-						: sprintf( /* translators: %s: theme name. */ __( '%s is a team’s theme: the plugin does not write into it. Download the JSON and put it in the theme’s styles folder yourself, or apply it here.', 'dxai-ui' ), ( data.capabilities.theme && data.capabilities.theme.name ) || data.theme ) }
+						? __( 'The styles folder cannot be written on this site.', 'dx-ui' )
+						: sprintf( /* translators: %s: theme name. */ __( '%s is a team’s theme: the plugin does not write into it. Download the JSON and put it in the theme’s styles folder yourself, or apply it here.', 'dx-ui' ), ( data.capabilities.theme && data.capabilities.theme.name ) || data.theme ) }
 				</p>
 			) }
 			{ said && <Notice status="success" isDismissible={ false }>{ said }</Notice> }
@@ -176,14 +176,14 @@ export default function DesignReport( { design: fixed = 0 } ) {
 	const [ open, setOpen ] = useState( false );
 
 	useEffect( () => {
-		apiFetch( { path: '/dxai-ui/v1/design' } )
+		apiFetch( { path: '/dx-ui/v1/design' } )
 			.then( ( res ) => {
 				setList( res.designs || [] );
 				if ( ! fixed && res.designs && res.designs.length ) {
 					setDesign( res.designs[ 0 ].id );
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'The designs could not be read.', 'dxai-ui' ) ) );
+			.catch( ( e ) => setError( e.message || __( 'The designs could not be read.', 'dx-ui' ) ) );
 	}, [] );
 
 	useEffect( () => {
@@ -192,7 +192,7 @@ export default function DesignReport( { design: fixed = 0 } ) {
 		}
 		setData( null );
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/design/' + design } )
+		apiFetch( { path: '/dx-ui/v1/design/' + design } )
 			.then( setData )
 			.catch( ( e ) => {
 				setData( { none: true, message: e.message || '' } );
@@ -202,12 +202,12 @@ export default function DesignReport( { design: fixed = 0 } ) {
 	function rebuild() {
 		setBusy( true );
 		setError( '' );
-		apiFetch( { path: '/dxai-ui/v1/design/' + design, method: 'POST', data: { action: 'rebuild' } } )
+		apiFetch( { path: '/dx-ui/v1/design/' + design, method: 'POST', data: { action: 'rebuild' } } )
 			.then( ( res ) => {
 				setData( res );
 				setList( ( l ) => ( l || [] ).map( ( d ) => ( d.id === design ? { ...d, document: true, summary: res.summary, error: '' } : d ) ) );
 			} )
-			.catch( ( e ) => setError( e.message || __( 'The document could not be built.', 'dxai-ui' ) ) )
+			.catch( ( e ) => setError( e.message || __( 'The document could not be built.', 'dx-ui' ) ) )
 			.finally( () => setBusy( false ) );
 	}
 
@@ -225,21 +225,21 @@ export default function DesignReport( { design: fixed = 0 } ) {
 	const s = data && data.summary;
 
 	return (
-		<section className="dxai-section dxai-report" aria-labelledby="dxai-report-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-report" aria-labelledby="dxui-report-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your designs', 'dxai-ui' ) }</p>
-					<h3 id="dxai-report-title">{ __( 'Design report', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
-						{ __( 'What the import read of a design and what it made of it: its pages and their sections, its header and footer, its navigation, its tokens and fonts, what it does and what did not reach the page. Written at the end of every import; read by the pages in the team’s style.', 'dxai-ui' ) }
+					<p className="dxui-section-kicker">{ __( 'Your designs', 'dx-ui' ) }</p>
+					<h3 id="dxui-report-title">{ __( 'Design report', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
+						{ __( 'What the import read of a design and what it made of it: its pages and their sections, its header and footer, its navigation, its tokens and fonts, what it does and what did not reach the page. Written at the end of every import; read by the pages in the team’s style.', 'dx-ui' ) }
 					</p>
 				</div>
 			</div>
 			{ ! fixed && list.length > 1 && (
 				<SelectControl
-					label={ __( 'Design', 'dxai-ui' ) }
+					label={ __( 'Design', 'dx-ui' ) }
 					value={ String( design ) }
-					options={ list.map( ( d ) => ( { value: String( d.id ), label: d.title + ( d.document ? '' : ' — ' + __( 'no document', 'dxai-ui' ) ) } ) ) }
+					options={ list.map( ( d ) => ( { value: String( d.id ), label: d.title + ( d.document ? '' : ' — ' + __( 'no document', 'dx-ui' ) ) } ) ) }
 					onChange={ ( v ) => setDesign( parseInt( v, 10 ) ) }
 					__nextHasNoMarginBottom
 				/>
@@ -247,42 +247,42 @@ export default function DesignReport( { design: fixed = 0 } ) {
 			{ error && <Notice status="error" isDismissible={ false }>{ error }</Notice> }
 			{ ! data && <Spinner /> }
 			{ data && data.none && (
-				<div className="dxai-report__none">
-					<p>{ data.message || __( 'The design has no document yet.', 'dxai-ui' ) }</p>
+				<div className="dxui-report__none">
+					<p>{ data.message || __( 'The design has no document yet.', 'dx-ui' ) }</p>
 					<Button variant="secondary" onClick={ rebuild } isBusy={ busy } disabled={ busy }>
-						{ __( 'Build the document from the conversion snapshot', 'dxai-ui' ) }
+						{ __( 'Build the document from the conversion snapshot', 'dx-ui' ) }
 					</Button>
 				</div>
 			) }
 			{ doc && s && (
 				<>
-					<ul className="dxai-report__facts">
-						<li><strong>{ __( 'Source', 'dxai-ui' ) }</strong><span>{ doc.source.kind }{ doc.source.name ? ' · ' + doc.source.name : '' }</span></li>
-						<li><strong>{ __( 'Pages', 'dxai-ui' ) }</strong><span>{ sprintf( /* translators: 1: pages, 2: sections. */ __( '%1$d, with %2$d sections', 'dxai-ui' ), s.pages, s.sections ) }</span></li>
-						<li><strong>{ __( 'Header', 'dxai-ui' ) }</strong><span>{ PLACED[ s.header ] || s.header }{ s.nav_items ? ' · ' + sprintf( /* translators: %d: menu items. */ _n( '%d menu item', '%d menu items', s.nav_items, 'dxai-ui' ), s.nav_items ) : '' }</span></li>
-						<li><strong>{ __( 'Footer', 'dxai-ui' ) }</strong><span>{ PLACED[ s.footer ] || s.footer }</span></li>
-						<li><strong>{ __( 'Tokens', 'dxai-ui' ) }</strong><span>{ s.tokens || __( 'none', 'dxai-ui' ) }{ doc.tokens.roles.brand ? ' · ' + doc.tokens.roles.brand : '' }{ doc.tokens.roles.accent ? ' / ' + doc.tokens.roles.accent : '' }</span></li>
-						<li><strong>{ __( 'Fonts', 'dxai-ui' ) }</strong><span>{ doc.tokens.fonts.length ? doc.tokens.fonts.map( ( f ) => f.family ).join( ', ' ) : __( 'none of its own', 'dxai-ui' ) }</span></li>
-						<li><strong>{ __( 'Breakpoints', 'dxai-ui' ) }</strong><span>{ doc.breakpoints.length ? doc.breakpoints.map( ( px ) => px + 'px' ).join( ', ' ) : __( 'none recorded', 'dxai-ui' ) }</span></li>
-						<li><strong>{ __( 'Pictures', 'dxai-ui' ) }</strong><span>{ sprintf( /* translators: 1: images, 2: svg, 3: videos. */ __( '%1$d images, %2$d inline SVG, %3$d videos', 'dxai-ui' ), doc.assets.images, doc.assets.svg, doc.assets.videos ) }</span></li>
-						<li><strong>{ __( 'Fingerprint', 'dxai-ui' ) }</strong><span><code>{ s.fingerprint.slice( 0, 12 ) }</code></span></li>
+					<ul className="dxui-report__facts">
+						<li><strong>{ __( 'Source', 'dx-ui' ) }</strong><span>{ doc.source.kind }{ doc.source.name ? ' · ' + doc.source.name : '' }</span></li>
+						<li><strong>{ __( 'Pages', 'dx-ui' ) }</strong><span>{ sprintf( /* translators: 1: pages, 2: sections. */ __( '%1$d, with %2$d sections', 'dx-ui' ), s.pages, s.sections ) }</span></li>
+						<li><strong>{ __( 'Header', 'dx-ui' ) }</strong><span>{ PLACED[ s.header ] || s.header }{ s.nav_items ? ' · ' + sprintf( /* translators: %d: menu items. */ _n( '%d menu item', '%d menu items', s.nav_items, 'dx-ui' ), s.nav_items ) : '' }</span></li>
+						<li><strong>{ __( 'Footer', 'dx-ui' ) }</strong><span>{ PLACED[ s.footer ] || s.footer }</span></li>
+						<li><strong>{ __( 'Tokens', 'dx-ui' ) }</strong><span>{ s.tokens || __( 'none', 'dx-ui' ) }{ doc.tokens.roles.brand ? ' · ' + doc.tokens.roles.brand : '' }{ doc.tokens.roles.accent ? ' / ' + doc.tokens.roles.accent : '' }</span></li>
+						<li><strong>{ __( 'Fonts', 'dx-ui' ) }</strong><span>{ doc.tokens.fonts.length ? doc.tokens.fonts.map( ( f ) => f.family ).join( ', ' ) : __( 'none of its own', 'dx-ui' ) }</span></li>
+						<li><strong>{ __( 'Breakpoints', 'dx-ui' ) }</strong><span>{ doc.breakpoints.length ? doc.breakpoints.map( ( px ) => px + 'px' ).join( ', ' ) : __( 'none recorded', 'dx-ui' ) }</span></li>
+						<li><strong>{ __( 'Pictures', 'dx-ui' ) }</strong><span>{ sprintf( /* translators: 1: images, 2: svg, 3: videos. */ __( '%1$d images, %2$d inline SVG, %3$d videos', 'dx-ui' ), doc.assets.images, doc.assets.svg, doc.assets.videos ) }</span></li>
+						<li><strong>{ __( 'Fingerprint', 'dx-ui' ) }</strong><span><code>{ s.fingerprint.slice( 0, 12 ) }</code></span></li>
 					</ul>
 
-					<h4>{ __( 'Pages and their sections', 'dxai-ui' ) }</h4>
-					<ul className="dxai-report__pages">
+					<h4>{ __( 'Pages and their sections', 'dx-ui' ) }</h4>
+					<ul className="dxui-report__pages">
 						{ doc.pages.map( ( p ) => (
 							<li key={ p.slug }>
 								<div>
 									<strong>{ p.title || p.slug }</strong> <code>{ p.slug }</code>
-									{ p.id > 0 && <a href={ 'post.php?post=' + p.id + '&action=edit' }>{ __( 'Edit', 'dxai-ui' ) }</a> }
-									<span className="dxai-muted"> · { sprintf( /* translators: %d: words. */ _n( '%d word', '%d words', p.words, 'dxai-ui' ), p.words ) }</span>
+									{ p.id > 0 && <a href={ 'post.php?post=' + p.id + '&action=edit' }>{ __( 'Edit', 'dx-ui' ) }</a> }
+									<span className="dxui-muted"> · { sprintf( /* translators: %d: words. */ _n( '%d word', '%d words', p.words, 'dx-ui' ), p.words ) }</span>
 								</div>
-								<ol className="dxai-report__sections">
+								<ol className="dxui-report__sections">
 									{ p.sections.map( ( sec ) => (
 										<li key={ sec.index }>
-											<span className="dxai-report__role">{ sec.role }</span>
+											<span className="dxui-report__role">{ sec.role }</span>
 											{ sec.heading && <span>{ sec.heading }</span> }
-											{ sec.items && sec.items.length > 0 && <span className="dxai-muted"> · { sec.items.slice( 0, 6 ).join( ', ' ) }{ sec.items.length > 6 ? '…' : '' }</span> }
+											{ sec.items && sec.items.length > 0 && <span className="dxui-muted"> · { sec.items.slice( 0, 6 ).join( ', ' ) }{ sec.items.length > 6 ? '…' : '' }</span> }
 										</li>
 									) ) }
 								</ol>
@@ -292,18 +292,18 @@ export default function DesignReport( { design: fixed = 0 } ) {
 
 					{ doc.nav.length > 0 && (
 						<>
-							<h4>{ __( 'Navigation', 'dxai-ui' ) }</h4>
+							<h4>{ __( 'Navigation', 'dx-ui' ) }</h4>
 							<Nav items={ doc.nav } />
 						</>
 					) }
 
-					<h4>{ __( 'What the design does', 'dxai-ui' ) }</h4>
-					{ doc.behaviours.length === 0 && <p className="dxai-muted">{ __( 'Nothing its code declares.', 'dxai-ui' ) }</p> }
+					<h4>{ __( 'What the design does', 'dx-ui' ) }</h4>
+					{ doc.behaviours.length === 0 && <p className="dxui-muted">{ __( 'Nothing its code declares.', 'dx-ui' ) }</p> }
 					{ doc.behaviours.length > 0 && (
-						<ul className="dxai-report__behaviours">
+						<ul className="dxui-report__behaviours">
 							{ doc.behaviours.map( ( b ) => (
 								<li key={ b.name ? `${ b.kind }:${ b.name }` : b.kind }>
-									<span>{ b.kind === 'state' && b.name ? sprintf( /* translators: 1: the state's name, 2: its kind (boolean, value, index). */ __( 'state %1$s (%2$s)', 'dxai-ui' ), b.name, b.type ) : KINDS[ b.kind ] || b.kind }</span>
+									<span>{ b.kind === 'state' && b.name ? sprintf( /* translators: 1: the state's name, 2: its kind (boolean, value, index). */ __( 'state %1$s (%2$s)', 'dx-ui' ), b.name, b.type ) : KINDS[ b.kind ] || b.kind }</span>
 									<strong>{ b.count }</strong>
 									<Carried value={ b.compiled } />
 									<Interactivity row={ b } />
@@ -315,14 +315,14 @@ export default function DesignReport( { design: fixed = 0 } ) {
 					<Variation design={ design } />
 
 					<Button variant="link" onClick={ () => setOpen( ! open ) }>
-						{ open ? __( 'Hide the compiler’s report', 'dxai-ui' ) : __( 'Show the compiler’s report', 'dxai-ui' ) }
+						{ open ? __( 'Hide the compiler’s report', 'dx-ui' ) : __( 'Show the compiler’s report', 'dx-ui' ) }
 					</Button>
 					{ open && (
-						<div className="dxai-report__compiler">
+						<div className="dxui-report__compiler">
 							<p>
 								{ doc.report.unevaluated.length
-									? sprintf( /* translators: %d: rows. */ _n( '%d thing the compiler could not evaluate:', '%d things the compiler could not evaluate:', doc.report.unevaluated.length, 'dxai-ui' ), doc.report.unevaluated.length )
-									: __( 'The compiler evaluated everything it noticed.', 'dxai-ui' ) }
+									? sprintf( /* translators: %d: rows. */ _n( '%d thing the compiler could not evaluate:', '%d things the compiler could not evaluate:', doc.report.unevaluated.length, 'dx-ui' ), doc.report.unevaluated.length )
+									: __( 'The compiler evaluated everything it noticed.', 'dx-ui' ) }
 							</p>
 							{ doc.report.unevaluated.length > 0 && (
 								<ul>
@@ -333,7 +333,7 @@ export default function DesignReport( { design: fixed = 0 } ) {
 							) }
 							{ doc.report.coverage.filter( ( c ) => c.short ).length > 0 && (
 								<>
-									<p>{ __( 'Short of the design on the saved page:', 'dxai-ui' ) }</p>
+									<p>{ __( 'Short of the design on the saved page:', 'dx-ui' ) }</p>
 									<ul>
 										{ doc.report.coverage.filter( ( c ) => c.short ).map( ( c ) => (
 											<li key={ c.dimension }><code>{ c.dimension }</code> { c.page } / { c.source }</li>
@@ -346,10 +346,10 @@ export default function DesignReport( { design: fixed = 0 } ) {
 									{ doc.report.notes.map( ( n, i ) => <li key={ i }>{ n }</li> ) }
 								</ul>
 							) }
-							<p className="dxai-muted">
-								{ sprintf( /* translators: 1: plugin version, 2: time. */ __( 'Built by %1$s at %2$s.', 'dxai-ui' ), doc.built.plugin, doc.built.at ) }
+							<p className="dxui-muted">
+								{ sprintf( /* translators: 1: plugin version, 2: time. */ __( 'Built by %1$s at %2$s.', 'dx-ui' ), doc.built.plugin, doc.built.at ) }
 								{ ' ' }
-								<Button variant="link" onClick={ rebuild } isBusy={ busy } disabled={ busy }>{ __( 'Build it again', 'dxai-ui' ) }</Button>
+								<Button variant="link" onClick={ rebuild } isBusy={ busy } disabled={ busy }>{ __( 'Build it again', 'dx-ui' ) }</Button>
 							</p>
 						</div>
 					) }

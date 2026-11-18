@@ -2,16 +2,16 @@
 /**
  * What the plugin does for a design's page speed, and the controls for it.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Theme\Theme_Fonts;
-use DXAI_UI\Theme\Theme_Trim;
+use DX_UI\Media\Font_Host;
+use DX_UI\Theme\Theme_Fonts;
+use DX_UI\Theme\Theme_Trim;
 
 /**
  * Two things cost a design's pages their first paint, both measured on the Semper Dry pages (mobile 83, with both
@@ -34,8 +34,8 @@ final class Speed {
 	 * @return array{state:string, families:array<int, string>, files:int, bytes:int}
 	 */
 	public static function fonts( int $home ): array {
-		$sheet  = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' );
-		$listed = get_post_meta( $home, '_dxai_ui_font_urls', true );
+		$sheet  = Upload_Paths::for_meta( $home, '_dx_ui_css_url' );
+		$listed = get_post_meta( $home, '_dx_ui_font_urls', true );
 		$listed = is_array( $listed ) ? array_map( 'strval', $listed ) : array();
 		$state  = Font_Host::state( $sheet['path'], $listed );
 		$names  = array();
@@ -83,12 +83,12 @@ final class Speed {
 
 	/** Put a design's stylesheet back the way it was imported (its fonts from Google again). */
 	public static function revert_fonts( int $home ): bool {
-		$sheet = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' );
+		$sheet = Upload_Paths::for_meta( $home, '_dx_ui_css_url' );
 		if ( $sheet['path'] === '' ) {
 			return false;
 		}
 		// Kept off for a day, so the page does not copy them again the moment it is viewed.
-		set_transient( 'dxai_ui_fonts_wait_' . $home, 1, DAY_IN_SECONDS );
+		set_transient( 'dx_ui_fonts_wait_' . $home, 1, DAY_IN_SECONDS );
 		// Put back as imported means its own fonts, even where the theme would draw it in its own (Theme_Fonts).
 		if ( Theme_Fonts::managed() ) {
 			update_post_meta( $home, Theme_Fonts::MODE_META, 'keep' );
@@ -106,7 +106,7 @@ final class Speed {
 	public static function own_fonts( int $home ): array {
 		update_post_meta( $home, Theme_Fonts::MODE_META, 'keep' );
 		Theme_Fonts::reset();
-		delete_transient( 'dxai_ui_fonts_wait_' . $home );
+		delete_transient( 'dx_ui_fonts_wait_' . $home );
 
 		return Font_Host::localize_design( $home, 20 );
 	}

@@ -89,7 +89,7 @@ if ( $css_path !== '' && is_readable( $css_path ) ) {
 
 /* Both branches of scoped_preflight(): with and without a design that ships
  * its own `.rv-` resets. */
-$purger = new DXAI_UI\Compiler\Tailwind_Purger();
+$purger = new DX_UI\Compiler\Tailwind_Purger();
 $method = new ReflectionMethod( $purger, 'scoped_preflight' );
 $method->setAccessible( true );
 
@@ -107,9 +107,9 @@ $branches = array(
  */
 $resets = array();
 foreach ( $branches as $label => $design_css ) {
-	$resets[ $label ] = (string) $method->invoke( $purger, '.dxai-ui', $design_css );
+	$resets[ $label ] = (string) $method->invoke( $purger, '.dx-ui', $design_css );
 }
-$isolate = DXAI_UI_DIR . 'assets/css/frontend-isolate.css';
+$isolate = DX_UI_DIR . 'assets/css/frontend-isolate.css';
 if ( is_readable( $isolate ) ) {
 	// Flatten to one selector-list-per-line so the same parser reads it: the
 	// static file is authored across multiple lines.
@@ -136,7 +136,7 @@ foreach ( $resets as $label => $reset ) {
 		$selectors = strtolower( substr( $line, 0, $brace ) );
 		$body      = trim( (string) substr( $line, $brace + 1 ), " {}\t" );
 		foreach ( explode( ',', $selectors ) as $selector ) {
-			$selector = trim( str_replace( '.dxai-ui', '', $selector ) );
+			$selector = trim( str_replace( '.dx-ui', '', $selector ) );
 			if ( ! isset( $expected[ $selector ] ) ) {
 				continue;
 			}

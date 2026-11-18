@@ -14,11 +14,11 @@
  * of the source, because the source agreeing with itself is not the question:
  *
  *   server  WP_Block_Type_Registry, dumped by bin/block-parity.php
- *   editor  every editor script that registers a dxai-ui block, executed here
+ *   editor  every editor script that registers a dx-ui block, executed here
  *           against a stubbed `wp` that records each registerBlockType call:
  *           assets/js/blocks-editor.js (the design blocks) and
  *           assets/js/site-header-editor.js / site-footer-editor.js (the
- *           dynamic chrome blocks, dxai-ui/site-header and dxai-ui/site-footer)
+ *           dynamic chrome blocks, dx-ui/site-header and dx-ui/site-footer)
  *
  * Executing the bundle is what makes this exact. Each file is a plain IIFE
  * over `window.wp`, so a stub with the namespaces it touches is enough to reach
@@ -63,7 +63,7 @@ if (!args.server) {
 }
 
 /*
- * Every editor script that registers a dxai-ui block. A new one has to be
+ * Every editor script that registers a dx-ui block. A new one has to be
  * added here, or its block reads as "one side only" and escapes the check;
  * the report below names any server block that no source registered.
  */
@@ -209,12 +209,12 @@ const SUPPORTS_ON = new Set(['html', 'className', 'customClassName', 'customCSS'
  * Server-rendered blocks the converter writes into content, so the editor
  * has to know them. A dynamic block stores no markup, which is why one with
  * no editor registration is otherwise only noted ("ONE SIDE ONLY"): nothing
- * of it can be invalid. But a stored `<!-- wp:dxai-ui/site-header /-->` whose
+ * of it can be invalid. But a stored `<!-- wp:dx-ui/site-header /-->` whose
  * editor script is missing opens as "Your site doesn't include support for
  * this block" — so for these it is a failure, whatever list of sources the
- * run was given. dxai-ui/pattern is not here: nothing writes it any more.
+ * run was given. dx-ui/pattern is not here: nothing writes it any more.
  */
-const REQUIRED_EDITOR = new Set(['dxai-ui/site-header', 'dxai-ui/site-footer', 'dxai-ui/form']);
+const REQUIRED_EDITOR = new Set(['dx-ui/site-header', 'dx-ui/site-footer', 'dx-ui/form']);
 
 /*
  * Keys only the editor reads. The server never consults them when it renders,
@@ -283,7 +283,7 @@ function coreDerives(attr, supports, spec) {
 			return on('align');
 		/*
 		 * Discriminated by type, not by name, because we declare a `style` of
-		 * our own: `dxai-ui/link` carries the design's inline style as a
+		 * our own: `dx-ui/link` carries the design's inline style as a
 		 * STRING. Core's style-engine attribute is an OBJECT. Skipping the name
 		 * outright would have hidden a real mismatch on link's own attribute —
 		 * which is the whole failure this check exists to catch.

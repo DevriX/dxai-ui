@@ -16,13 +16,13 @@
  * Everything is deleted after, also when a check dies half-way, and the front page and the model are put back. Exit code
  * 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Network\Network_Model;
-use DXAI_UI\Network\Page_Copies;
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Site_Pages;
+use DX_UI\Network\Network_Model;
+use DX_UI\Network\Page_Copies;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Site_Pages;
 
 $fail   = 0;
 $pass   = 0;
@@ -43,15 +43,15 @@ $keep  = array(
 	'show_on_front' => get_option( 'show_on_front' ),
 	'page_on_front' => get_option( 'page_on_front' ),
 	'model'         => is_multisite() ? get_site_option( Network_Model::OPTION, null ) : get_option( Network_Model::OPTION, null ),
-	'front'         => get_option( DXAI_UI\Network\Front_Page::BEFORE, null ),
+	'front'         => get_option( DX_UI\Network\Front_Page::BEFORE, null ),
 );
 $clean = static function () use ( &$made, &$menu, $keep, $run ): void {
 	update_option( 'show_on_front', $keep['show_on_front'] );
 	update_option( 'page_on_front', $keep['page_on_front'] );
 	if ( $keep['front'] === null ) {
-		delete_option( DXAI_UI\Network\Front_Page::BEFORE );
+		delete_option( DX_UI\Network\Front_Page::BEFORE );
 	} else {
-		update_option( DXAI_UI\Network\Front_Page::BEFORE, $keep['front'], false );
+		update_option( DX_UI\Network\Front_Page::BEFORE, $keep['front'], false );
 	}
 	if ( $keep['model'] === null ) {
 		is_multisite() ? delete_site_option( Network_Model::OPTION ) : delete_option( Network_Model::OPTION );
@@ -59,7 +59,7 @@ $clean = static function () use ( &$made, &$menu, $keep, $run ): void {
 		is_multisite() ? update_site_option( Network_Model::OPTION, $keep['model'] ) : update_option( Network_Model::OPTION, $keep['model'], false );
 	}
 	// The pages of this run, and any page it made (a copy the menu named) — found by the run's name in their address too.
-	foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_key' => '_dxai_copies_suite', 'meta_value' => $run ) ) as $id ) {
+	foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids', 'meta_key' => '_dxui_copies_suite', 'meta_value' => $run ) ) as $id ) {
 		$made[] = (int) $id;
 	}
 	foreach ( array_unique( $made ) as $id ) {
@@ -90,7 +90,7 @@ $page = static function ( string $title, string $content, int $parent = 0, strin
 		exit( 1 );
 	}
 	$made[] = (int) $id;
-	update_post_meta( (int) $id, '_dxai_copies_suite', $run );
+	update_post_meta( (int) $id, '_dxui_copies_suite', $run );
 
 	return (int) $id;
 };
@@ -130,7 +130,7 @@ update_post_meta( $fire, '_wp_page_template', 'page-fixture.php' );
 // Mold Remediation: the fire page copied by hand, still saying "Fire Damage Restoration".
 $wpdb->update( $wpdb->posts, array( 'post_content' => $fire_content ), array( 'ID' => $mold ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 clean_post_cache( $mold );
-update_post_meta( $mold, '_dxai_ui_source_route', 'mold-remediation' );
+update_post_meta( $mold, '_dx_ui_source_route', 'mold-remediation' );
 
 $menu = (int) wp_create_nav_menu( 'Copies suite ' . $run );
 $top  = (int) wp_update_nav_menu_item( $menu, 0, array( 'menu-item-title' => 'Services', 'menu-item-url' => (string) get_permalink( $services ), 'menu-item-status' => 'publish', 'menu-item-type' => 'custom' ) );
@@ -187,7 +187,7 @@ $places = 0;
 $steps  = Page_Copies::outline( parse_blocks( $group( $p( 'Free inspections' ) ) )[0], 'Water Damage Restoration', $places, '', array(), true );
 $expect( '…in a FAQ or the steps of a process, every line waits', ! str_contains( serialize_block( $steps ), '>Free inspections<' ) && $places === 1 );
 $places = 0;
-$dx_text = Page_Copies::outline( parse_blocks( '<!-- wp:dxai-ui/text {"tagName":"p","className":"lead"} --><p class="lead">Smoke travels into rooms the fire never reached.</p><!-- /wp:dxai-ui/text -->' )[0], 'Water Damage Restoration', $places, '/fire|smoke|soot/' );
+$dx_text = Page_Copies::outline( parse_blocks( '<!-- wp:dx-ui/text {"tagName":"p","className":"lead"} --><p class="lead">Smoke travels into rooms the fire never reached.</p><!-- /wp:dx-ui/text -->' )[0], 'Water Damage Restoration', $places, '/fire|smoke|soot/' );
 $expect( '…a run of the design\'s own text (DX Text) too, with the original as its hint', str_contains( serialize_block( $dx_text ), '<p class="lead"></p>' ) && str_contains( (string) ( $dx_text['attrs']['placeholder'] ?? '' ), 'The original says: Smoke travels' ) && $places === 1, serialize_block( $dx_text ) );
 $city = $page( 'North Pole', '', 0, 'water-damage-north-pole-ak' );
 $expect( 'a page whose address ends with a state is a city\'s ("water-damage-north-pole-ak")', Page_Copies::kind( $city ) === 'location', Page_Copies::kind( $city ) );
@@ -214,12 +214,12 @@ $expect( 'the list of services: the card that led to Water Damage leads back to 
 $expect( 'the copy has the original\'s design records and knows where it comes from', get_post_meta( $water, '_wp_page_template', true ) === 'page-fixture.php' && (int) get_post_meta( $water, Page_Copies::OF, true ) === $fire && count( (array) get_post_meta( $water, Copy_Writer::KEEP, true ) ) === 4 );
 $expect( 'the AI would not be shown the shared sections: their words are not in the page\'s inventory', ! str_contains( (string) wp_json_encode( Copy_Writer::inventory( $water ) ), 'Polar Restoration came fast' ) && str_contains( (string) wp_json_encode( Copy_Writer::inventory( $water ) ), 'Our Water Damage Restoration Process' ) );
 $expect( 'made again later, it is "made from this page"', array_column( Page_Copies::targets( $fire ), 'state', 'title' )['Water Damage Restoration'] === 'made' );
-$q      = DXAI_UI\Network\Page_Quality::of( $water );
+$q      = DX_UI\Network\Page_Quality::of( $water );
 $states = array_column( $q['checks'], 'state', 'id' );
 $expect( 'measured against the team\'s pages, it is one to look at: lines still to write, the original\'s picture; its name is in place and no other page\'s', $q['grade'] === 'check' && ( $states['to-write'] ?? '' ) === 'bad' && ( $states['pictures'] ?? '' ) === 'warn' && ( $states['name'] ?? '' ) === 'ok' && ( $states['foreign'] ?? '' ) === 'ok', wp_json_encode( $q ) );
 
 echo "\nWith an AI\n";
-$stub = new class() extends DXAI_UI\Engines\Abstract_Engine {
+$stub = new class() extends DX_UI\Engines\Abstract_Engine {
 	public array $asked = array();
 	public function get_id(): string { return 'stub'; }
 	public function get_label(): string { return 'Stub'; }
@@ -231,10 +231,10 @@ $stub = new class() extends DXAI_UI\Engines\Abstract_Engine {
 		return (string) wp_json_encode( array( 'blocks' => array_map( static fn( array $b ): array => array( 'id' => $b['id'], 'text' => '[ai] ' . $b['text'] ), (array) $rows ), 'flags' => array( 'The hero picture shows a fire' ) ) );
 	}
 };
-add_filter( 'dxai_ui_copy_engine', static fn() => $stub );
+add_filter( 'dx_ui_copy_engine', static fn() => $stub );
 $old_url = '';
 add_filter(
-	'dxai_ui_copies_old_page',
+	'dx_ui_copies_old_page',
 	static function ( $got, string $url ) use ( &$old_url ) {
 		$old_url = $url;
 		return str_contains( $url, 'mold-remediation' ) ? array( 'raw' => '<html><body><main><section><h1>Mold Remediation in Fairbanks</h1><p>Black mold spreads behind drywall within 48 hours of a leak.</p></section></main></body></html>', 'url' => $url ) : new \WP_Error( 'x', '404' );
@@ -266,27 +266,27 @@ $expect( '…shown how the network writes a service page (length, questions, for
 $expect( '…and the client\'s old page for the same service, read from it', $old_url === 'https://old.example/mold-remediation/' && str_contains( $asked, 'Black mold spreads behind drywall' ) && $r['old_page'] === 'https://old.example/mold-remediation/', $old_url );
 $expect( '…never the shared sections', ! str_contains( $asked, 'Polar Restoration came fast' ) && ! str_contains( $asked, 'Tell us what happened' ) );
 $expect( 'the shared sections stay word for word, the AI\'s notes are reported', ! str_contains( $got, '[ai] What our neighbors say' ) && str_contains( $got, 'Polar Restoration came fast' ) && $r['flags'] === array( 'The hero picture shows a fire' ) );
-$q      = DXAI_UI\Network\Page_Quality::of( $mold );
+$q      = DX_UI\Network\Page_Quality::of( $mold );
 $states = array_column( $q['checks'], 'state', 'id' );
 $expect( 'with its words: nothing left to write, its name in its h1 and headings, no other page\'s name in its own sections', ( $states['to-write'] ?? '' ) === 'ok' && ( $states['name'] ?? '' ) === 'ok' && ( $states['foreign'] ?? '' ) === 'ok', wp_json_encode( $q ) );
 $expect( 'the questions of the FAQ (a details\' summary) are written too',str_contains( $got, '<summary>[ai] How long does mold remediation take?</summary>' ) && str_contains( $got, '<summary>[ai] Will the smoke smell come back?</summary>' ) );
-$broken = new class() extends DXAI_UI\Engines\Abstract_Engine {
+$broken = new class() extends DX_UI\Engines\Abstract_Engine {
 	public function get_id(): string { return 'broken'; }
 	public function get_label(): string { return 'Broken'; }
 	public function test_connection(): bool|\WP_Error { return true; }
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error { return new \WP_Error( 'x', 'no' ); }
-	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error { return new \WP_Error( 'dxai_test_down', 'The provider is down.' ); }
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error { return new \WP_Error( 'dxui_test_down', 'The provider is down.' ); }
 };
-remove_all_filters( 'dxai_ui_copy_engine' );
-add_filter( 'dxai_ui_copy_engine', static fn() => $broken );
+remove_all_filters( 'dx_ui_copy_engine' );
+add_filter( 'dx_ui_copy_engine', static fn() => $broken );
 $r     = Page_Copies::make( $fire, array( 'id' => $water ), $plan );
 $shown = '';
 foreach ( array_slice( array_values( array_filter( parse_blocks( (string) get_post_field( 'post_content', $water ) ), static fn( $b ) => ! empty( $b['blockName'] ) ) ), 0, 3 ) as $b ) {
 	$shown .= wp_strip_all_tags( render_block( $b ) );
 }
 $expect( 'when the AI fails, the page is the outline (nothing about fire shown) and the failure is said', ! is_wp_error( $r ) && $r['error'] === 'The provider is down.' && $r['words'] === 'outline' && $r['places'] > 0 && $shown !== '' && preg_match( '/fire|soot|smoke/i', $shown ) !== 1, is_wp_error( $r ) ? $r->get_error_message() : wp_json_encode( array( $r['error'], $r['words'], $r['places'], mb_substr( $shown, 0, 120 ) ) ) );
-remove_all_filters( 'dxai_ui_copy_engine' );
-add_filter( 'dxai_ui_copy_engine', static fn() => $stub );
+remove_all_filters( 'dx_ui_copy_engine' );
+add_filter( 'dx_ui_copy_engine', static fn() => $stub );
 
 echo "\nA page the menu names\n";
 $r      = Page_Copies::make( $fire, array( 'id' => 0, 'title' => 'Sewage Cleanup', 'link' => $sewage_url ), $plan );
@@ -295,7 +295,7 @@ if ( $sewage > 0 ) {
 	$made[] = $sewage;
 }
 $expect( 'is made under Services at the menu\'s address, its words written, and published like the original', $sewage > 0 && $r['made'] && (int) wp_get_post_parent_id( $sewage ) === $services && get_post_field( 'post_name', $sewage ) === 'sewage-cleanup-' . $run && get_post_status( $sewage ) === 'publish' && str_contains( (string) get_post_field( 'post_content', $sewage ), '[ai] Our Sewage Cleanup Process' ), is_wp_error( $r ) ? $r->get_error_message() : wp_json_encode( array( $r['made'], get_post_status( $sewage ), get_post_field( 'post_name', $sewage ) ) ) );
-remove_all_filters( 'dxai_ui_copy_engine' );
+remove_all_filters( 'dx_ui_copy_engine' );
 $r     = Page_Copies::make( $fire, array( 'id' => 0, 'title' => 'Biohazard Cleanup' ), $plan, array( 'words' => 'outline' ) );
 $draft = is_wp_error( $r ) ? 0 : (int) $r['id'];
 if ( $draft > 0 ) {
@@ -309,33 +309,33 @@ $expect( 'a page the run made goes to the trash', $sewage > 0 && Page_Copies::gi
 $wpdb->update( $wpdb->posts, array( 'post_content' => (string) get_post_field( 'post_content', $water ) . $p( 'A line a person wrote.' ) ), array( 'ID' => $water ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 clean_post_cache( $water );
 $back = Page_Copies::give_back( $water );
-$expect( 'a copy a person edited since is left as it is, and says why', is_wp_error( $back ) && $back->get_error_code() === 'dxai_copies_edited' && str_contains( (string) get_post_field( 'post_content', $water ), 'A line a person wrote.' ) );
+$expect( 'a copy a person edited since is left as it is, and says why', is_wp_error( $back ) && $back->get_error_code() === 'dxui_copies_edited' && str_contains( (string) get_post_field( 'post_content', $water ), 'A line a person wrote.' ) );
 $expect( 'a page that was not made from another says so', is_wp_error( Page_Copies::give_back( $storm ) ) );
 // The copy by hand, back as it was (it still says Fire Damage Restoration), measured as a copy of the fire page.
 update_post_meta( $mold, Page_Copies::OF, $fire );
-$q = DXAI_UI\Network\Page_Quality::of( $mold );
+$q = DX_UI\Network\Page_Quality::of( $mold );
 delete_post_meta( $mold, Page_Copies::OF );
 $expect( 'a copy that still says the original\'s service in its own sections is one to fix', ( array_column( $q['checks'], 'state', 'id' )['foreign'] ?? '' ) === 'bad' && $q['grade'] === 'check', wp_json_encode( $q ) );
 
 echo "\nThe Home as the front page (decision 8)\n";
 update_option( 'show_on_front', 'posts' );
-$a = DXAI_UI\Network\Front_Page::adopt( $home );
+$a = DX_UI\Network\Front_Page::adopt( $home );
 $expect( 'a site that shows its posts gets the Home as its front page', $a['state'] === 'none' && $a['made'] && get_option( 'show_on_front' ) === 'page' && (int) get_option( 'page_on_front' ) === $home, wp_json_encode( $a ) );
-$expect( '…which it then is', DXAI_UI\Network\Front_Page::state( $home )['state'] === 'this' && ! DXAI_UI\Network\Front_Page::adopt( $home )['made'] );
-$expect( '…and what was there can be put back', DXAI_UI\Network\Front_Page::restore() && get_option( 'show_on_front' ) === 'posts' );
+$expect( '…which it then is', DX_UI\Network\Front_Page::state( $home )['state'] === 'this' && ! DX_UI\Network\Front_Page::adopt( $home )['made'] );
+$expect( '…and what was there can be put back', DX_UI\Network\Front_Page::restore() && get_option( 'show_on_front' ) === 'posts' );
 $blank = $page( 'Welcome', '' );
 update_option( 'show_on_front', 'page' );
 update_option( 'page_on_front', $blank );
-$expect( 'an empty front page is not the site\'s own: the Home takes its place', DXAI_UI\Network\Front_Page::adopt( $home )['state'] === 'empty' && (int) get_option( 'page_on_front' ) === $home );
+$expect( 'an empty front page is not the site\'s own: the Home takes its place', DX_UI\Network\Front_Page::adopt( $home )['state'] === 'empty' && (int) get_option( 'page_on_front' ) === $home );
 update_option( 'page_on_front', $storm );
-$a = DXAI_UI\Network\Front_Page::adopt( $home );
-$expect( 'a front page with content of its own stays, unless a person chooses the Home', $a['state'] === 'own' && ! $a['made'] && (int) get_option( 'page_on_front' ) === $storm && DXAI_UI\Network\Front_Page::adopt( $home, true )['made'] && (int) get_option( 'page_on_front' ) === $home, wp_json_encode( $a ) );
-$expect( 'the front page is not given back once it was changed again', update_option( 'page_on_front', $blank ) && ! DXAI_UI\Network\Front_Page::restore() && (int) get_option( 'page_on_front' ) === $blank );
+$a = DX_UI\Network\Front_Page::adopt( $home );
+$expect( 'a front page with content of its own stays, unless a person chooses the Home', $a['state'] === 'own' && ! $a['made'] && (int) get_option( 'page_on_front' ) === $storm && DX_UI\Network\Front_Page::adopt( $home, true )['made'] && (int) get_option( 'page_on_front' ) === $home, wp_json_encode( $a ) );
+$expect( 'the front page is not given back once it was changed again', update_option( 'page_on_front', $blank ) && ! DX_UI\Network\Front_Page::restore() && (int) get_option( 'page_on_front' ) === $blank );
 // Before a re-import is saved: a front page imported from the same archive is the Home the import updates, not the site's own.
 update_option( 'page_on_front', $storm );
-update_post_meta( $storm, '_dxai_ui_source_zip', 'Polar homepage ' . $run . '.zip' );
-$expect( 'before the save, a front page from the same archive is this Home', DXAI_UI\Network\Front_Page::state( 0, 'Polar homepage ' . $run . '.zip' )['state'] === 'this' );
-$expect( '…and one from another archive is the site\'s own', DXAI_UI\Network\Front_Page::state( 0, 'Other ' . $run . '.zip' )['state'] === 'own' && DXAI_UI\Network\Front_Page::state( 0 )['state'] === 'own' );
+update_post_meta( $storm, '_dx_ui_source_zip', 'Polar homepage ' . $run . '.zip' );
+$expect( 'before the save, a front page from the same archive is this Home', DX_UI\Network\Front_Page::state( 0, 'Polar homepage ' . $run . '.zip' )['state'] === 'this' );
+$expect( '…and one from another archive is the site\'s own', DX_UI\Network\Front_Page::state( 0, 'Other ' . $run . '.zip' )['state'] === 'own' && DX_UI\Network\Front_Page::state( 0 )['state'] === 'own' );
 
 $clean();
 echo "\n$pass passed, $fail failed\n";

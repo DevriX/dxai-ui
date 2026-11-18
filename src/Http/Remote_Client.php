@@ -2,12 +2,12 @@
 /**
  * Shared HTTP client for provider APIs.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Http;
+namespace DX_UI\Http;
 
 final class Remote_Client {
 
@@ -57,7 +57,7 @@ final class Remote_Client {
 		$headers['Content-Type'] = $headers['Content-Type'] ?? 'application/json';
 		$encoded                   = wp_json_encode( $payload );
 		if ( false === $encoded ) {
-			return new \WP_Error( 'dxai_ui_json', __( 'Unable to encode JSON payload.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_json', __( 'Unable to encode JSON payload.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
 		return self::request( 'POST', $url, $headers, $encoded, array( 'timeout' => $timeout ) );
@@ -71,7 +71,7 @@ final class Remote_Client {
 		$trimmed = ltrim( $trimmed, "\n\r\t " );
 		$decoded = json_decode( $trimmed, true );
 		if ( ! is_array( $decoded ) ) {
-			return new \WP_Error( 'dxai_ui_bad_json', __( 'Provider returned invalid JSON.', 'dxai-ui' ), array( 'status' => 502 ) );
+			return new \WP_Error( 'dx_ui_bad_json', __( 'Provider returned invalid JSON.', 'dx-ui' ), array( 'status' => 502 ) );
 		}
 
 		return $decoded;

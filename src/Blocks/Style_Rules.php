@@ -2,22 +2,22 @@
 /**
  * The stylesheet a converted page's `dxs-` and utility classes point at.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * A converted page stores no `style=""` (Style_Hoister): each block keeps its
- * own CSS in its `dxaiCss` attribute and carries the class `dxs-{hash}`,
- * and the CSS of inline runs is kept on the block too, in `dxaiInner`
+ * own CSS in its `dxuiCss` attribute and carries the class `dxs-{hash}`,
+ * and the CSS of inline runs is kept on the block too, in `dxuiInner`
  * (older imports: the post's meta). This builds the
  * rules for those classes when the page is rendered — from the page, the
  * header and footer template parts it references and the synced patterns in
@@ -28,7 +28,7 @@ use DXAI_UI\Structures\Page_Scope;
  * the editor gets a new hash, and its rule comes with it on the next view.
  *
  * Every rule has the precedence an inline style had: the selector is
- * `:is(.dxs-…,#dxai-h)` three times over. `:is()` takes the specificity of
+ * `:is(.dxs-…,#dxui-h)` three times over. `:is()` takes the specificity of
  * its most specific argument, so each counts as an id — (3,0,0) in all —
  * while matching by the class alone (no element has that id). That beats any
  * rule of the design's own stylesheet, as the inline style did, and still
@@ -65,7 +65,7 @@ use DXAI_UI\Structures\Page_Scope;
  *
  * Markup that renders on the page without being stored in it — the site
  * header built from a menu, the footer's widgets — is added through the
- * `dxai_ui_style_rules_markup` filter, and its dxs- rules, dxaiInner rules
+ * `dx_ui_style_rules_markup` filter, and its dxs- rules, dxuiInner rules
  * and utility classes are written with the page's. Screens that edit such
  * markup outside any post (the Widgets screen) use css_for_markup().
  *
@@ -79,23 +79,23 @@ use DXAI_UI\Structures\Page_Scope;
  */
 final class Style_Rules {
 
-	private const HANDLE = 'dxai-ui-rules';
+	private const HANDLE = 'dx-ui-rules';
 
 	/** Rules for posts rendered after <head> was printed (see late()). */
-	private const LATE_HANDLE = 'dxai-ui-rules-late';
+	private const LATE_HANDLE = 'dx-ui-rules-late';
 
 	/** Transient name prefix for a post's computed rules (plus the post id). */
-	private const CACHE = 'dxai_ui_rules_';
+	private const CACHE = 'dx_ui_rules_';
 
 	/**
 	 * Option bumped whenever a template part or synced pattern is saved or
 	 * removed: they are pulled into other posts' rules, and a new part can
 	 * take over a slug another post references.
 	 */
-	private const GENERATION = 'dxai_ui_rules_generation';
+	private const GENERATION = 'dx_ui_rules_generation';
 
 	/** Option bumped whenever content holding this plugin's data changes (site_utilities()). */
-	private const SITE_GENERATION = 'dxai_ui_rules_site_generation';
+	private const SITE_GENERATION = 'dx_ui_rules_site_generation';
 
 	/** Bumped when the shape of the cached data changes. */
 	private const CACHE_SCHEMA = 17;
@@ -106,7 +106,7 @@ final class Style_Rules {
 	 * plugin's own image is a `<figure>` around the `<img>` the design's classes were written for, so its rules are
 	 * written for the image, and the figure takes no part in the layout (assets/css/dynamic.css).
 	 */
-	public const PARTS = array( 'dxai-part-img' => ' img' );
+	public const PARTS = array( 'dxui-part-img' => ' img' );
 
 	/** How long a computed stylesheet may sit unread. Validated on every read. */
 	private const CACHE_TTL = WEEK_IN_SECONDS;
@@ -166,7 +166,7 @@ final class Style_Rules {
 	/**
 	 * The rules for the page being viewed: any page holding this plugin's
 	 * blocks, not only a converted one — a generated pattern inserted into an
-	 * ordinary page (synced, or copied in with its dxaiCss/dxaiInner), or a
+	 * ordinary page (synced, or copied in with its dxuiCss/dxuiInner), or a
 	 * block whose CSS became utility classes entirely and carries nothing
 	 * else of this plugin's, needs its rules there just the same.
 	 */
@@ -185,7 +185,7 @@ final class Style_Rules {
 	private static function holds_rules( int $post_id ): bool {
 		$content = (string) get_post_field( 'post_content', $post_id );
 
-		return (bool) get_post_meta( $post_id, '_dxai_ui_generated_page', true ) || self::may_hold_rules( $content ) || Utility_Classes::in_class_names( $content );
+		return (bool) get_post_meta( $post_id, '_dx_ui_generated_page', true ) || self::may_hold_rules( $content ) || Utility_Classes::in_class_names( $content );
 	}
 
 	/**
@@ -325,7 +325,7 @@ final class Style_Rules {
 			update_option( self::GENERATION, (int) get_option( self::GENERATION, 0 ) + 1, false );
 		}
 		$content = $post instanceof \WP_Post ? $post->post_content : (string) get_post_field( 'post_content', $post_id );
-		if ( $type !== 'nav_menu_item' && $type !== 'revision' && ( $content === '' || str_contains( $content, 'dxai' ) ) ) {
+		if ( $type !== 'nav_menu_item' && $type !== 'revision' && ( $content === '' || str_contains( $content, 'dxui' ) ) ) {
 			update_option( self::SITE_GENERATION, (int) get_option( self::SITE_GENERATION, 0 ) + 1, false );
 		}
 	}
@@ -388,11 +388,11 @@ final class Style_Rules {
 	 * Whether stored content can carry dxs- rules: this plugin's CSS
 	 * attributes, a synced pattern / template part that may, or the site
 	 * header / footer blocks whose markup comes through the
-	 * `dxai_ui_style_rules_markup` filter. (A block whose CSS is all utility
+	 * `dx_ui_style_rules_markup` filter. (A block whose CSS is all utility
 	 * classes has none of these: front() asks Utility_Classes::in_class_names().)
 	 */
 	private static function may_hold_rules( string $content ): bool {
-		foreach ( array( '"' . Style_Hoister::ATTR . '"', '"' . Style_Hoister::INNER_ATTR . '"', '<!-- wp:block ', '<!-- wp:template-part ', '<!-- wp:dxai-ui/site-header', '<!-- wp:dxai-ui/site-footer' ) as $needle ) {
+		foreach ( array( '"' . Style_Hoister::ATTR . '"', '"' . Style_Hoister::INNER_ATTR . '"', '<!-- wp:block ', '<!-- wp:template-part ', '<!-- wp:dx-ui/site-header', '<!-- wp:dx-ui/site-footer' ) as $needle ) {
 			if ( str_contains( $content, $needle ) ) {
 				return true;
 			}
@@ -497,7 +497,7 @@ final class Style_Rules {
 
 	/**
 	 * The rules for markup that is not a post — a footer's widgets on the
-	 * Widgets screen, a header built from a menu: its dxs- and dxaiInner
+	 * Widgets screen, a header built from a menu: its dxs- and dxuiInner
 	 * rules, those of the synced patterns and template parts it references,
 	 * and the utility classes it uses. $scope_id names the converted page
 	 * whose design the markup belongs to, so the class names that design
@@ -551,12 +551,12 @@ final class Style_Rules {
 		// Content that renders as blocks: not the plugin's own conversion
 		// records (the design's source, not anything a person edits), form
 		// entries, menus or revisions.
-		$skip = "'revision','nav_menu_item','attachment','customize_changeset','oembed_cache','user_request','" . esc_sql( \DXAI_UI\Content\Content_Types::CONVERSION ) . "','" . esc_sql( \DXAI_UI\Content\Content_Types::FORM_ENTRY ) . "'";
+		$skip = "'revision','nav_menu_item','attachment','customize_changeset','oembed_cache','user_request','" . esc_sql( \DX_UI\Content\Content_Types::CONVERSION ) . "','" . esc_sql( \DX_UI\Content\Content_Types::FORM_ENTRY ) . "'";
 		for ( $offset = 0; $offset < self::SITE_SCAN; $offset += 50 ) {
 			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a bounded scan, cached until content changes.
 				$wpdb->prepare(
 					"SELECT ID, post_content FROM {$wpdb->posts} WHERE post_type NOT IN ({$skip}) AND post_status NOT IN ('trash','auto-draft','inherit') AND post_content LIKE %s ORDER BY post_modified_gmt DESC, ID DESC LIMIT %d, 50", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $skip is constants, escaped.
-					'%' . $wpdb->esc_like( 'dxai' ) . '%',
+					'%' . $wpdb->esc_like( 'dxui' ) . '%',
 					$offset
 				),
 				ARRAY_A
@@ -591,18 +591,18 @@ final class Style_Rules {
 	}
 
 	/**
-	 * GET dxai-ui/v1/utility-rules?classes=a,b&post=ID — the rules of utility
+	 * GET dx-ui/v1/utility-rules?classes=a,b&post=ID — the rules of utility
 	 * classes the editor has not got yet: a class a person types into
 	 * "Additional CSS class(es)" that no content on the site used before, in
 	 * the editor form by default, with the longhands each class sets (what a
 	 * Design CSS edit must take over, Utility_Classes::overlapping()).
 	 */
 	public static function routes(): void {
-		if ( ! defined( 'DXAI_UI_REST_NAMESPACE' ) ) {
+		if ( ! defined( 'DX_UI_REST_NAMESPACE' ) ) {
 			return;
 		}
 		register_rest_route(
-			(string) constant( 'DXAI_UI_REST_NAMESPACE' ),
+			(string) constant( 'DX_UI_REST_NAMESPACE' ),
 			'/utility-rules',
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
@@ -691,7 +691,7 @@ final class Style_Rules {
 		}
 
 		$acc  = self::accumulator();
-		$font = \DXAI_UI\Theme\Theme_Fonts::use_design( \DXAI_UI\Theme\Theme_Binding::home_of( $scope_id ) );
+		$font = \DX_UI\Theme\Theme_Fonts::use_design( \DX_UI\Theme\Theme_Binding::home_of( $scope_id ) );
 		self::collect_markup( $markup, $acc, 0 );
 		$posts     = array_values( array_unique( array_filter( array_merge( array( $scope_id ), array_map( 'intval', array_keys( $acc['seen'] ) ) ) ) ) );
 		$utilities = self::live_utilities( $acc['tokens'], $posts, $acc['toggles'] );
@@ -706,7 +706,7 @@ final class Style_Rules {
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
-		\DXAI_UI\Theme\Theme_Fonts::use_design( $font );
+		\DX_UI\Theme\Theme_Fonts::use_design( $font );
 		set_transient(
 			$name,
 			array(
@@ -752,7 +752,7 @@ final class Style_Rules {
 		}
 
 		$acc  = self::accumulator();
-		$font = \DXAI_UI\Theme\Theme_Fonts::use_design( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) );
+		$font = \DX_UI\Theme\Theme_Fonts::use_design( \DX_UI\Theme\Theme_Binding::home_of( $post_id ) );
 		self::collect_post( $post_id, $acc, 0 );
 		foreach ( $extra as $markup ) {
 			self::collect_markup( $markup, $acc, 1 );
@@ -765,7 +765,7 @@ final class Style_Rules {
 			'part_utilities' => $part_util,
 			'utility_css'    => Utility_Classes::css_for_classes( $utilities ) . self::part_utility_css( $part_util, false ),
 		);
-		\DXAI_UI\Theme\Theme_Fonts::use_design( $font );
+		\DX_UI\Theme\Theme_Fonts::use_design( $font );
 		$deps      = array_map( 'intval', array_keys( $acc['seen'] ) );
 		set_transient(
 			self::CACHE . $post_id,
@@ -797,7 +797,7 @@ final class Style_Rules {
 			$scope,
 			$scope > 0 ? md5( (string) wp_json_encode( get_post_meta( $scope, Style_Hoister::DESIGN_NAMES_META, true ) ) ) : '',
 			// The fonts the design's blocks are bound to (Theme_Fonts), empty for a design that keeps its own.
-			\DXAI_UI\Theme\Theme_Fonts::signature( \DXAI_UI\Theme\Theme_Binding::home_of( $post_id ) ),
+			\DX_UI\Theme\Theme_Fonts::signature( \DX_UI\Theme\Theme_Binding::home_of( $post_id ) ),
 		);
 		foreach ( $deps as $dep ) {
 			$dep     = (int) $dep;
@@ -821,7 +821,7 @@ final class Style_Rules {
 		 *
 		 * Markup the page renders that is not in its content or in a part or
 		 * pattern it references — the site header built from a menu, the
-		 * footer's widget contents. Each string's dxs- rules, dxaiInner rules
+		 * footer's widget contents. Each string's dxs- rules, dxuiInner rules
 		 * and utility classes are written with the page's rules, front
 		 * end and editor canvas. Part of the cache key, so return the same
 		 * strings for the same content.
@@ -829,7 +829,7 @@ final class Style_Rules {
 		 * @param array<int, string> $markup  Block markup strings.
 		 * @param int                $post_id The page being styled.
 		 */
-		$extra = apply_filters( 'dxai_ui_style_rules_markup', array(), $post_id );
+		$extra = apply_filters( 'dx_ui_style_rules_markup', array(), $post_id );
 		$out   = array();
 		foreach ( is_array( $extra ) ? $extra : array() as $markup ) {
 			if ( is_string( $markup ) && trim( $markup ) !== '' ) {
@@ -946,7 +946,7 @@ final class Style_Rules {
 		 * page's own tokens are still defined in its stylesheet, so point the
 		 * classes back at them, inside the page's scope only.
 		 */
-		$brand_of = \DXAI_UI\Structures\Design_Attach::attached( $post_id ) ? \DXAI_UI\Structures\Design_Attach::source_for( $post_id ) : $post_id;
+		$brand_of = \DX_UI\Structures\Design_Attach::attached( $post_id ) ? \DX_UI\Structures\Design_Attach::source_for( $post_id ) : $post_id;
 		if ( $presets !== array() && ! Token_Styles::is_brand( $brand_of ) ) {
 			$scope = self::preset_scope( $post_id );
 			// Only the design's own colours have a token to point at. A theme colour a block was given (a design
@@ -960,7 +960,7 @@ final class Style_Rules {
 				if ( $own !== array() && ! isset( $own[ $slug ] ) ) {
 					continue;
 				}
-				$out .= '.dxai-ui.dxai-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . ')) !important}';
+				$out .= '.dx-ui.dx-ui--' . $scope . ' .has-' . $slug . '-color{color:var(--dxui-' . $slug . '--fg,var(--dxui-' . $slug . ')) !important}';
 			}
 		}
 
@@ -975,11 +975,11 @@ final class Style_Rules {
 		// its hash are untouched, only the rule written from it.
 		$css = self::safe( Token_Styles::fg_channel( $css ) );
 		// A theme that lets the site choose its fonts gives the design its two (Theme_Fonts): a block's font-family is bound to them.
-		$css = \DXAI_UI\Theme\Theme_Fonts::bind_css( $css );
+		$css = \DX_UI\Theme\Theme_Fonts::bind_css( $css );
 		if ( $css === '' || preg_match( '/^dxs-[a-z0-9]+$/', $class ) !== 1 ) {
 			return '';
 		}
-		$one = ':is(.' . $class . ',#dxai-h)';
+		$one = ':is(.' . $class . ',#dxui-h)';
 		if ( $inner !== '' ) {
 			// The element inside a part is one the block editor writes inline styles on (core/image: `height:auto`);
 			// only !important keeps the design's declarations above them.
@@ -1009,7 +1009,7 @@ final class Style_Rules {
 	 * @param array<string, bool> $parts Markers on the page.
 	 */
 	private static function part_base_css( array $parts ): string {
-		if ( ! isset( $parts['dxai-part-img'] ) ) {
+		if ( ! isset( $parts['dxui-part-img'] ) ) {
 			return '';
 		}
 
@@ -1021,12 +1021,12 @@ final class Style_Rules {
 		// The same for the theme's DX Picture (Native\Picture): a figure around a picture around the image, and the block's own rules make the
 		// picture and the image blocks: here the figure and the picture take no box and the image is the
 		// design's again.
-		return '.wp-block-image.dxai-part-img,.wp-block-dx-picture.dxai-part-img{display:contents !important}'
-			. '.wp-block-dx-picture.dxai-part-img .dx-picture__picture{display:contents}'
-			. '.wp-block-dx-picture.dxai-part-img .dx-picture__picture source{display:none}'
-			. ':where(.wp-block-image.dxai-part-img img,.wp-block-dx-picture.dxai-part-img img){width:auto}'
-			. ':where(.dxai-ui) .wp-block-image.dxai-part-img img,:where(.dxai-ui) .wp-block-dx-picture.dxai-part-img img{vertical-align:baseline}'
-			. '.editor-styles-wrapper .wp-block-image.dxai-part-img,.editor-styles-wrapper .wp-block-dx-picture.dxai-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
+		return '.wp-block-image.dxui-part-img,.wp-block-dx-picture.dxui-part-img{display:contents !important}'
+			. '.wp-block-dx-picture.dxui-part-img .dx-picture__picture{display:contents}'
+			. '.wp-block-dx-picture.dxui-part-img .dx-picture__picture source{display:none}'
+			. ':where(.wp-block-image.dxui-part-img img,.wp-block-dx-picture.dxui-part-img img){width:auto}'
+			. ':where(.dx-ui) .wp-block-image.dxui-part-img img,:where(.dx-ui) .wp-block-dx-picture.dxui-part-img img{vertical-align:baseline}'
+			. '.editor-styles-wrapper .wp-block-image.dxui-part-img,.editor-styles-wrapper .wp-block-dx-picture.dxui-part-img{display:block !important;position:static !important;inset:auto !important;margin:0 !important;padding:0 !important;border:0 !important;width:auto !important;height:auto !important;min-height:0 !important;max-width:none !important;max-height:none !important;float:none !important;transform:none !important}';
 	}
 
 	/**
@@ -1039,9 +1039,9 @@ final class Style_Rules {
 		if ( empty( $acc['icons'] ) ) {
 			return '';
 		}
-		$design = \DXAI_UI\Structures\Design_Attach::source_for( $post_id );
+		$design = \DX_UI\Structures\Design_Attach::source_for( $post_id );
 
-		return \DXAI_UI\Blocks\Native\Svg_Image::mirrored_css( $design > 0 ? $design : $post_id );
+		return \DX_UI\Blocks\Native\Svg_Image::mirrored_css( $design > 0 ? $design : $post_id );
 	}
 
 	/**
@@ -1104,11 +1104,11 @@ final class Style_Rules {
 	/**
 	 * The scope a post's preset-colour fallbacks are written for: its own design scope, or — an ordinary page
 	 * holding blocks copied from a design page — that design's (Design_Attach). Written for the page's own id
-	 * there, `.dxai-ui--{page}` matched nothing, and every `has-brand-color` heading of a copied section lost
+	 * there, `.dx-ui--{page}` matched nothing, and every `has-brand-color` heading of a copied section lost
 	 * its colour.
 	 */
 	private static function preset_scope( int $post_id ): int {
-		$scope = \DXAI_UI\Structures\Design_Attach::scope_for( $post_id );
+		$scope = \DX_UI\Structures\Design_Attach::scope_for( $post_id );
 
 		return $scope > 0 ? $scope : $post_id;
 	}
@@ -1277,7 +1277,7 @@ final class Style_Rules {
 		$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$css   = $attrs[ Style_Hoister::ATTR ] ?? '';
 		$part  = self::part_of( $attrs );
-		if ( is_string( $attrs['className'] ?? null ) && preg_match( '/(?:^|\s)dxai-icon(?:\s|$)/', $attrs['className'] ) === 1 ) {
+		if ( is_string( $attrs['className'] ?? null ) && preg_match( '/(?:^|\s)dxui-icon(?:\s|$)/', $attrs['className'] ) === 1 ) {
 			$acc['icons'] = true;
 		}
 		if ( $part !== '' ) {

@@ -7,12 +7,12 @@
  * the listing itself becomes a dynamic Query Loop filtered by a category
  * created at import time.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Blog_Hydrator {
 
@@ -250,7 +250,7 @@ final class Blog_Hydrator {
 		}
 		// Prefer a stable category for related-article seeds.
 		$name = 'DX Articles';
-		$slug = 'dxai-articles';
+		$slug = 'dxui-articles';
 		$existing = get_term_by( 'slug', $slug, 'category' );
 		if ( $existing instanceof \WP_Term ) {
 			return array(
@@ -319,8 +319,8 @@ final class Blog_Hydrator {
 					// category as well (the card lists its categories).
 					'post_category' => array( $category_id ),
 					'meta_input'    => array(
-						'_dxai_ui_seeded' => '1',
-						'_dxai_ui_source' => $card['href'],
+						'_dx_ui_seeded' => '1',
+						'_dx_ui_source' => $card['href'],
 					),
 				),
 				true
@@ -361,7 +361,7 @@ final class Blog_Hydrator {
 				'fields'           => 'ids',
 				'orderby'          => 'ID',
 				'order'            => 'ASC',
-				'meta_key'         => '_dxai_ui_seeded', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'         => '_dx_ui_seeded', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'       => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'suppress_filters' => true,
 			)

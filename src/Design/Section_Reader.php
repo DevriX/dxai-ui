@@ -2,15 +2,15 @@
 /**
  * The sections of a page's block markup, as the Design IR records them.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Roles;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Roles;
 
 /**
  * Reads the top-level sections of a converted page out of its block markup, the way the team pages read a Home
@@ -23,7 +23,7 @@ use DXAI_UI\Pages\Section_Roles;
 final class Section_Reader {
 
 	/** Blocks that are the site's chrome wherever they stand, never a section. */
-	private const CHROME = array( 'core/template-part', 'dxai-ui/site-header', 'dxai-ui/site-footer', 'core/navigation' );
+	private const CHROME = array( 'core/template-part', 'dx-ui/site-header', 'dx-ui/site-footer', 'core/navigation' );
 
 	/**
 	 * @param int $offset How many sections of the page come before this markup (a page read structure by structure): the first section
@@ -43,7 +43,7 @@ final class Section_Reader {
 			if ( $name === '' || in_array( $name, self::CHROME, true ) || in_array( $i, $skip, true ) ) {
 				continue;
 			}
-			if ( $name === 'dxai-ui/link' && empty( $block['innerBlocks'] ) ) {
+			if ( $name === 'dx-ui/link' && empty( $block['innerBlocks'] ) ) {
 				continue; // the skip link
 			}
 			// A box fixed over the page (a phone's call bar) is no section of it, as the team pages read a Home (Section_Library::for_page()).
@@ -79,7 +79,7 @@ final class Section_Reader {
 
 	/** An `<img>`, or an image block of any kind: core's, the plugin's own, a theme's picture (Capabilities::image_blocks()). */
 	private static function image_pattern(): string {
-		$names = array_map( static fn( string $n ): string => preg_quote( (string) preg_replace( '#^core/#', '', $n ), '#' ), \DXAI_UI\Theme\Capabilities::image_blocks() );
+		$names = array_map( static fn( string $n ): string => preg_quote( (string) preg_replace( '#^core/#', '', $n ), '#' ), \DX_UI\Theme\Capabilities::image_blocks() );
 
 		return '#<img\b|wp:(?:' . implode( '|', $names ) . ')\b#';
 	}
@@ -146,7 +146,7 @@ final class Section_Reader {
 				$titles[] = $title;
 			}
 		};
-		foreach ( isset( $largest['shape'] ) ? \DXAI_UI\Pages\Team_Pages::item_titles( $block, $largest ) : array() as $title ) {
+		foreach ( isset( $largest['shape'] ) ? \DX_UI\Pages\Team_Pages::item_titles( $block, $largest ) : array() as $title ) {
 			$add( $title );
 		}
 		if ( $titles === array() ) {

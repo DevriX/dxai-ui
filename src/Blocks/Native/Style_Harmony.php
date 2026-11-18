@@ -2,16 +2,16 @@
 /**
  * Shared ground of the passes that give the same kind of element the same style.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Pages\Section_Library;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Pages\Section_Library;
 
 /**
  * A design written by hand or by a model is not even with itself: its sections' titles are 46px in one section and 40px in the
@@ -27,7 +27,7 @@ use DXAI_UI\Pages\Section_Library;
  * header, the footer and the navigation are not either. They are the Native blocks engine's, so they run on an import, on a page
  * made later for a design that has had them, in the Library, and they can be put back.
  *
- * `dxai_ui_harmony` (bool, the design's Home) switches them off.
+ * `dx_ui_harmony` (bool, the design's Home) switches them off.
  */
 abstract class Style_Harmony extends Converter {
 
@@ -78,7 +78,7 @@ abstract class Style_Harmony extends Converter {
 		 * @param bool $on   On by default.
 		 * @param int  $home The design's Home.
 		 */
-		return (bool) apply_filters( 'dxai_ui_harmony', true, $home ) ? $home : 0;
+		return (bool) apply_filters( 'dx_ui_harmony', true, $home ) ? $home : 0;
 	}
 
 	/**
@@ -205,7 +205,7 @@ abstract class Style_Harmony extends Converter {
 		$name = (string) ( $block['blockName'] ?? '' );
 
 		return in_array( $tag, array( 'header', 'footer', 'nav' ), true )
-			|| in_array( $name, array( 'core/navigation', 'core/template-part', 'dxai-ui/site-header', 'dxai-ui/site-footer' ), true );
+			|| in_array( $name, array( 'core/navigation', 'core/template-part', 'dx-ui/site-header', 'dx-ui/site-footer' ), true );
 	}
 
 	/**
@@ -316,7 +316,7 @@ abstract class Style_Harmony extends Converter {
 	/* ------------------------------------------------------------------------------------------- writing */
 
 	/**
-	 * The block with its own classes and its own CSS (className, dxaiCss) as given, and the tag as the editor would write it: the
+	 * The block with its own classes and its own CSS (className, dxuiCss) as given, and the tag as the editor would write it: the
 	 * generated classes first, then the block's, then the `dxs-` class that is the hash of its CSS. Null when the tag is not the one the
 	 * block's attributes say (someone edited it): a decline is always safe.
 	 *
@@ -326,7 +326,7 @@ abstract class Style_Harmony extends Converter {
 	protected static function restyle( array $block, string $class, string $css ): ?array {
 		$attrs     = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
 		$old_class = trim( (string) ( $attrs['className'] ?? '' ) );
-		$old_css   = trim( (string) ( $attrs['dxaiCss'] ?? '' ) );
+		$old_css   = trim( (string) ( $attrs['dxuiCss'] ?? '' ) );
 		$class     = trim( (string) preg_replace( '/\s+/', ' ', $class ) );
 		$css       = trim( $css );
 		if ( self::hazard( $class ) ) {
@@ -378,12 +378,12 @@ abstract class Style_Harmony extends Converter {
 			$open = $all === array() ? $m[4] : ' class="' . esc_attr( implode( ' ', $all ) ) . '"' . $m[4];
 		}
 		$next = $attrs;
-		unset( $next['className'], $next['dxaiCss'] );
+		unset( $next['className'], $next['dxuiCss'] );
 		if ( $class !== '' ) {
 			$next['className'] = $class;
 		}
 		if ( $css !== '' ) {
-			$next['dxaiCss'] = $css;
+			$next['dxuiCss'] = $css;
 		}
 
 		$content[ $at ]        = $m[1] . $m[2] . $open . $m[5] . substr( (string) $content[ $at ], strlen( $m[0] ) );

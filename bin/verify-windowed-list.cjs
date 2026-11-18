@@ -3,7 +3,7 @@
  * A list a design shows through a window — a testimonials slider written as `quotes.slice(start, start + 2)` with arrows that move
  * `start` — compiled and pressed in a real browser.
  *
- *   node bin/verify-windowed-list.cjs        (DXAI_PHP and DXAI_PHP_INI name php and its ini, as for bin/release.cjs; DXAI_CHROME names Chrome)
+ *   node bin/verify-windowed-list.cjs        (DXUI_PHP and DXUI_PHP_INI name php and its ini, as for bin/release.cjs; DXUI_CHROME names Chrome)
  *
  * The compiler used to render the starting window only: two of the nine cards on the page and arrows that did nothing (the one
  * that goes back was disabled for good). It keeps every card now, each one shown for the values of the state that put it in the window,
@@ -18,9 +18,9 @@ const { spawnSync } = require('child_process');
 const puppeteer = require('puppeteer-core');
 
 const ROOT = path.resolve(__dirname, '..');
-const PHP = process.env.DXAI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
-const INI = process.env.DXAI_PHP_INI || path.join(ROOT, '.verify/tools/dxai-cli.ini');
-const CHROME = process.env.DXAI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
+const PHP = process.env.DXUI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
+const INI = process.env.DXUI_PHP_INI || path.join(ROOT, '.verify/tools/dxui-cli.ini');
+const CHROME = process.env.DXUI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
 
 let pass = 0;
 let fail = 0;
@@ -77,7 +77,7 @@ export default function Page() {
 `;
 
 const compile = (source) => {
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dxai-window-'));
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dxui-window-'));
 	fs.mkdirSync(path.join(dir, 'src/routes'), { recursive: true });
 	fs.writeFileSync(path.join(dir, 'src/routes/index.tsx'), source);
 	const r = spawnSync(PHP, ['-c', INI, path.join(ROOT, 'bin/compile-tsx.php'), dir, 'src/routes/index.tsx'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -104,14 +104,14 @@ const compile = (source) => {
 	expect('every card is on the page, not the starting window only', figures.length === 9, String(figures.length));
 	const hidden = figures.filter((f) => /\bhidden\b/.test(f)).length;
 	expect('…the ones outside the starting window hidden: 7 of 9', hidden === 7, String(hidden));
-	const marks = (i) => (figures[i].match(/dxai-on-start--(\d+)/g) || []).map((m) => m.replace('dxai-on-start--', '')).join(',');
+	const marks = (i) => (figures[i].match(/dxui-on-start--(\d+)/g) || []).map((m) => m.replace('dxui-on-start--', '')).join(',');
 	expect('each card is shown for the values of start that put it in the window (card 4: 2 and 3)', marks(0) === '0' && marks(1) === '0,1' && marks(3) === '2,3' && marks(8) === '7', [0, 1, 3, 8].map(marks).join(' | '));
 	const buttons = html.match(/<button[^>]*>/g) || [];
 	const prev = buttons.find((b) => /Previous/.test(b)) || '';
 	const next = buttons.find((b) => /Next/.test(b)) || '';
-	expect('the arrow that goes back steps start by -2 and stops at the ends', /data-dxai-step="-2"/.test(prev) && /data-dxai-clamp/.test(prev) && /dxai-toggle-start\b/.test(prev), prev);
-	expect('the arrow that goes on steps it by 2', /data-dxai-step="2"/.test(next) && /data-dxai-clamp/.test(next) && /data-dxai-init="0"/.test(next), next);
-	expect('the arrows are off where the design had them off: back at 0, on at 7 (the last window)', /data-dxai-disabled="start:0"/.test(prev) && /data-dxai-disabled="start:7"/.test(next), prev + ' | ' + next);
+	expect('the arrow that goes back steps start by -2 and stops at the ends', /data-dxui-step="-2"/.test(prev) && /data-dxui-clamp/.test(prev) && /dxui-toggle-start\b/.test(prev), prev);
+	expect('the arrow that goes on steps it by 2', /data-dxui-step="2"/.test(next) && /data-dxui-clamp/.test(next) && /data-dxui-init="0"/.test(next), next);
+	expect('the arrows are off where the design had them off: back at 0, on at 7 (the last window)', /data-dxui-disabled="start:0"/.test(prev) && /data-dxui-disabled="start:7"/.test(next), prev + ' | ' + next);
 	expect('…and the one that goes back is disabled at the start, the other is not', /\sdisabled[\s>]/.test(prev) && !/\sdisabled[\s>]/.test(next));
 	expect('an arrow that opens nothing does not say it is collapsed (no aria-expanded)', !/aria-expanded/.test(prev) && !/aria-expanded/.test(next));
 	expect('nothing the compiler could not read', out.unevaluated === 0, String(out.unevaluated));
@@ -119,10 +119,10 @@ const compile = (source) => {
 	console.log('\nA window that nothing slides (no button writes the state)');
 	const still = compile(fixture(false));
 	const stillFigures = still.error ? [] : (still.sections.map((s) => s.html).join('').match(/<figure[^>]*>/g) || []);
-	expect('only the cards of the window are on the page, as before: nothing could show the others', !still.error && stillFigures.length === 2 && stillFigures.every((f) => !/dxai-on-/.test(f)), still.error || String(stillFigures.length));
+	expect('only the cards of the window are on the page, as before: nothing could show the others', !still.error && stillFigures.length === 2 && stillFigures.every((f) => !/dxui-on-/.test(f)), still.error || String(stillFigures.length));
 
 	if (!CHROME) {
-		console.error('no Chrome found (set DXAI_CHROME)');
+		console.error('no Chrome found (set DXUI_CHROME)');
 		process.exit(2);
 	}
 	console.log('\nIn a browser');
@@ -132,7 +132,7 @@ const compile = (source) => {
 	const errors = [];
 	page.on('pageerror', (e) => errors.push(String(e)));
 	await page.setContent(
-		`<!doctype html><html><head><meta charset="utf-8"><style>.flex{display:flex}.grid{display:grid}.hidden{display:none}button:disabled{opacity:.25}.md\\:grid-cols-2{grid-template-columns:1fr 1fr}</style></head><body><div class="dxai-ui">${html}</div><script>${out.runtime}</script></body></html>`,
+		`<!doctype html><html><head><meta charset="utf-8"><style>.flex{display:flex}.grid{display:grid}.hidden{display:none}button:disabled{opacity:.25}.md\\:grid-cols-2{grid-template-columns:1fr 1fr}</style></head><body><div class="dx-ui">${html}</div><script>${out.runtime}</script></body></html>`,
 		{ waitUntil: 'load' }
 	);
 	const shown = () => page.evaluate(() => [...document.querySelectorAll('figure')].filter((f) => getComputedStyle(f).display !== 'none').map((f) => f.textContent.trim().split(/\s+/)[0] === '' ? '' : f.querySelector('figcaption').textContent.trim()).join(','));
@@ -164,11 +164,11 @@ const compile = (source) => {
 	console.log('\nOn a page with several design scopes (a block of the page\'s own between two runs of sections)');
 	const css = '<style>.flex{display:flex}.grid{display:grid}.hidden{display:none}button:disabled{opacity:.25}</style>';
 	await page.setContent(`<!doctype html><html><head><meta charset="utf-8">${css}</head><body>
-<div class="dxai-ui" id="one"><p>the first run</p></div><p>a paragraph of the page</p>
-<div class="dxai-ui" id="two">${html}</div>
-<div class="dxai-ui" id="three"><div class="dxai-ui" id="inner">${html}</div></div>
+<div class="dx-ui" id="one"><p>the first run</p></div><p>a paragraph of the page</p>
+<div class="dx-ui" id="two">${html}</div>
+<div class="dx-ui" id="three"><div class="dx-ui" id="inner">${html}</div></div>
 <script>${out.runtime}</script></body></html>`, { waitUntil: 'load' });
-	const marked = await page.evaluate(() => [...document.querySelectorAll('.dxai-ui')].map((s) => s.id + ':' + s.classList.contains('dxai-motion')).join(' '));
+	const marked = await page.evaluate(() => [...document.querySelectorAll('.dx-ui')].map((s) => s.id + ':' + s.classList.contains('dxui-motion')).join(' '));
 	expect('every scope that is not inside another is armed (the nested one is part of its parent)', marked === 'one:true two:true three:true inner:false', marked);
 	const second = (sel) => page.evaluate((s) => [...document.querySelectorAll(s + ' figure')].filter((f) => getComputedStyle(f).display !== 'none').map((f) => f.querySelector('figcaption').textContent.trim()).join(','), sel);
 	await page.click('#two [aria-label="Next testimonials"]');

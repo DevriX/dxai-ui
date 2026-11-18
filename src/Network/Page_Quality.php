@@ -2,12 +2,12 @@
 /**
  * How a page measures against the team's pages of its kind.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * The quality gate of docs/PLAN-NETWORK-PAGES.md (N3), page by page: what the network's pages of the same kind have, and
@@ -61,16 +61,16 @@ final class Page_Quality {
 			$lo = max( 1, (int) ( $k['sections']['p25'] ?? 0 ) - 1 );
 			$hi = (int) ( $k['sections']['p75'] ?? 99 ) + 1;
 			/* translators: 1: sections of the page, 2: fewest, 3: most on the team's pages */
-			$add( 'sections', $n >= $lo && $n <= $hi ? 'ok' : 'warn', sprintf( __( '%1$d sections (the team\'s pages of this kind have %2$d to %3$d)', 'dxai-ui' ), $n, $lo, $hi ) );
+			$add( 'sections', $n >= $lo && $n <= $hi ? 'ok' : 'warn', sprintf( __( '%1$d sections (the team\'s pages of this kind have %2$d to %3$d)', 'dx-ui' ), $n, $lo, $hi ) );
 			$floor = (int) ( ( $k['words_design']['n'] ?? 0 ) > 0 ? ( $k['words_design']['p25'] ?? 0 ) : ( $k['words']['p25'] ?? 0 ) );
 			/* translators: 1: words of the page, 2: words of the team's pages */
-			$add( 'words', $read['words'] >= (int) round( 0.9 * $floor ) ? 'ok' : 'warn', sprintf( __( '%1$d words (the team\'s pages: %2$d or more)', 'dxai-ui' ), $read['words'], $floor ) );
+			$add( 'words', $read['words'] >= (int) round( 0.9 * $floor ) ? 'ok' : 'warn', sprintf( __( '%1$d words (the team\'s pages: %2$d or more)', 'dx-ui' ), $read['words'], $floor ) );
 			if ( in_array( $kind, array( 'service', 'location' ), true ) && ( $k['faq']['questions']['n'] ?? 0 ) > 0 ) {
 				$q   = array_sum( array_column( array_filter( $read['sections'], static fn( array $s ): bool => $s['role'] === 'faq' ), 'questions' ) );
 				$qlo = max( 1, (int) ( $k['faq']['questions']['p25'] ?? 0 ) - 1 );
 				$qhi = (int) ( $k['faq']['questions']['p75'] ?? 99 ) + 2;
 				/* translators: 1: questions of the page, 2: fewest, 3: most on the team's pages */
-				$add( 'questions', $q >= $qlo && $q <= $qhi ? 'ok' : ( $q === 0 ? 'bad' : 'warn' ), sprintf( __( '%1$d questions in its FAQ (the team\'s: %2$d to %3$d)', 'dxai-ui' ), $q, $qlo, $qhi ) );
+				$add( 'questions', $q >= $qlo && $q <= $qhi ? 'ok' : ( $q === 0 ? 'bad' : 'warn' ), sprintf( __( '%1$d questions in its FAQ (the team\'s: %2$d to %3$d)', 'dx-ui' ), $q, $qlo, $qhi ) );
 			}
 		}
 
@@ -80,32 +80,32 @@ final class Page_Quality {
 			$named = count( array_filter( $heads, $says ) );
 			if ( $says( $read['h1'] ) ) {
 				/* translators: 1: headings that name it, 2: what the page is about */
-				$add( 'name', $named >= 2 ? 'ok' : 'warn', sprintf( __( '%1$d of its headings say %2$s, its h1 too', 'dxai-ui' ), $named, $name ) );
+				$add( 'name', $named >= 2 ? 'ok' : 'warn', sprintf( __( '%1$d of its headings say %2$s, its h1 too', 'dx-ui' ), $named, $name ) );
 			} else {
 				/* translators: %s: what the page is about */
-				$add( 'name', 'bad', sprintf( __( 'its h1 does not say %s', 'dxai-ui' ), $name ) );
+				$add( 'name', 'bad', sprintf( __( 'its h1 does not say %s', 'dx-ui' ), $name ) );
 			}
 		}
 
 		$places = preg_match_all( '/"placeholder":"(?:Write for |A question about )/', $content );
 		/* translators: %d: lines left for a person */
-		$add( 'to-write', $places === 0 ? 'ok' : 'bad', $places === 0 ? __( 'no line left to write', 'dxai-ui' ) : sprintf( _n( '%d line still to write', '%d lines still to write', $places, 'dxai-ui' ), $places ) );
+		$add( 'to-write', $places === 0 ? 'ok' : 'bad', $places === 0 ? __( 'no line left to write', 'dx-ui' ) : sprintf( _n( '%d line still to write', '%d lines still to write', $places, 'dx-ui' ), $places ) );
 
 		$of = (int) get_post_meta( $page_id, Page_Copies::OF, true );
 		if ( $of > 0 ) {
 			$original = Page_Copies::names( html_entity_decode( (string) get_the_title( $of ), ENT_QUOTES, 'UTF-8' ), $kind );
 			$foreign  = $original['full'] !== '' && $original['full'] !== $name && mb_stripos( self::own_text( $page_id ), $original['full'] ) !== false;
 			/* translators: %s: the original's service or city */
-			$add( 'foreign', $foreign ? 'bad' : 'ok', $foreign ? sprintf( __( 'its own sections still say %s', 'dxai-ui' ), $original['full'] ) : __( 'no other page\'s name in its own sections', 'dxai-ui' ) );
+			$add( 'foreign', $foreign ? 'bad' : 'ok', $foreign ? sprintf( __( 'its own sections still say %s', 'dx-ui' ), $original['full'] ) : __( 'no other page\'s name in its own sections', 'dx-ui' ) );
 			$mine = self::pictures( $content );
 			$same = array_intersect( $mine, self::pictures( (string) get_post_field( 'post_content', $of ) ) );
 			/* translators: %d: pictures */
-			$add( 'pictures', $same === array() ? 'ok' : 'warn', $same === array() ? __( 'its pictures are its own', 'dxai-ui' ) : sprintf( _n( '%d picture is the original\'s', '%d pictures are the original\'s', count( $same ), 'dxai-ui' ), count( $same ) ) );
+			$add( 'pictures', $same === array() ? 'ok' : 'warn', $same === array() ? __( 'its pictures are its own', 'dx-ui' ) : sprintf( _n( '%d picture is the original\'s', '%d pictures are the original\'s', count( $same ), 'dx-ui' ), count( $same ) ) );
 		}
 
 		// Before a page goes live (docs/PLAN-NETWORK-PAGES.md, 11.5): it is its Home's build, every class of it has its rule, no
 		// place of it is empty, its words are about as long as the Home's in the same place.
-		$home = (int) get_post_meta( $page_id, \DXAI_UI\Structures\Page_Scope::META, true );
+		$home = (int) get_post_meta( $page_id, \DX_UI\Structures\Page_Scope::META, true );
 		if ( $home > 0 && $home !== $page_id && get_post_type( $home ) === 'page' ) {
 			foreach ( self::gates( $page_id, $home, $content, $read ) as $gate ) {
 				$add( $gate['id'], $gate['state'], $gate['text'] );
@@ -149,21 +149,21 @@ final class Page_Quality {
 			'id'    => 'build',
 			'state' => $foreign === 0 ? 'ok' : 'warn',
 			'text'  => $foreign === 0
-				? __( 'every section is built like one of the Home\'s', 'dxai-ui' )
+				? __( 'every section is built like one of the Home\'s', 'dx-ui' )
 				/* translators: 1: sections not built like the Home's, 2: sections */
-				: sprintf( _n( '%1$d of %2$d sections is not built like any of the Home\'s', '%1$d of %2$d sections are not built like any of the Home\'s', $foreign, 'dxai-ui' ), $foreign, count( $sections ) ),
+				: sprintf( _n( '%1$d of %2$d sections is not built like any of the Home\'s', '%1$d of %2$d sections are not built like any of the Home\'s', $foreign, 'dx-ui' ), $foreign, count( $sections ) ),
 		);
 
-		$names  = get_post_meta( $page_id, \DXAI_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true );
+		$names  = get_post_meta( $page_id, \DX_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true );
 		$names  = is_array( $names ) ? array_map( 'strval', $names ) : array();
 		$orphan = array_values( array_diff( $names, $h['names'] ) );
 		$out[]  = array(
 			'id'    => 'rules',
 			'state' => $orphan === array() ? 'ok' : 'bad',
 			'text'  => $orphan === array()
-				? __( 'every class has its rule', 'dxai-ui' )
+				? __( 'every class has its rule', 'dx-ui' )
 				/* translators: 1: classes, 2: a few of them */
-				: sprintf( _n( '%1$d class has no rule (%2$s): the page can break on a phone', '%1$d classes have no rule (%2$s): the page can break on a phone', count( $orphan ), 'dxai-ui' ), count( $orphan ), implode( ', ', array_slice( $orphan, 0, 4 ) ) ),
+				: sprintf( _n( '%1$d class has no rule (%2$s): the page can break on a phone', '%1$d classes have no rule (%2$s): the page can break on a phone', count( $orphan ), 'dx-ui' ), count( $orphan ), implode( ', ', array_slice( $orphan, 0, 4 ) ) ),
 		);
 
 		$empty = 0;
@@ -174,7 +174,7 @@ final class Page_Quality {
 			'id'    => 'empty',
 			'state' => $empty === 0 ? 'ok' : 'warn',
 			/* translators: %d: empty places */
-			'text'  => $empty === 0 ? __( 'no place is empty', 'dxai-ui' ) : sprintf( _n( '%d place is empty', '%d places are empty', $empty, 'dxai-ui' ), $empty ),
+			'text'  => $empty === 0 ? __( 'no place is empty', 'dx-ui' ) : sprintf( _n( '%d place is empty', '%d places are empty', $empty, 'dx-ui' ), $empty ),
 		);
 
 		$long = 0;
@@ -188,9 +188,9 @@ final class Page_Quality {
 			'id'    => 'measure',
 			'state' => $long === 0 ? 'ok' : 'warn',
 			'text'  => $long === 0
-				? __( 'its words fit the Home\'s places', 'dxai-ui' )
+				? __( 'its words fit the Home\'s places', 'dx-ui' )
 				/* translators: %d: sections */
-				: sprintf( _n( '%d section runs past the Home\'s length for it', '%d sections run past the Home\'s length for them', $long, 'dxai-ui' ), $long ),
+				: sprintf( _n( '%d section runs past the Home\'s length for it', '%d sections run past the Home\'s length for them', $long, 'dx-ui' ), $long ),
 		);
 
 		return $out;
@@ -217,7 +217,7 @@ final class Page_Quality {
 					$shapes[ $shape ] = (int) ( $s['words'] ?? 0 );
 				}
 			}
-			$names               = get_post_meta( $home, \DXAI_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true );
+			$names               = get_post_meta( $home, \DX_UI\Compiler\Style_Hoister::DESIGN_NAMES_META, true );
 			self::$homes[ $key ] = array(
 				'builds' => $builds,
 				'shapes' => $shapes,
@@ -250,7 +250,7 @@ final class Page_Quality {
 	 */
 	private static function build( array $b ): string {
 		$classes = preg_split( '/\s+/', trim( (string) ( $b['attrs']['className'] ?? '' ) ) ) ?: array();
-		$classes = array_values( array_filter( $classes, static fn( string $c ): bool => $c !== '' && preg_match( '/^(?:dxai-sh-\d+|dxs-[a-z0-9]+|(?:(?:sm|md|lg|xl|2xl)[:-])*bg-[\w.-]+|has-[\w-]+-background-color|has-background)$/', $c ) !== 1 ) );
+		$classes = array_values( array_filter( $classes, static fn( string $c ): bool => $c !== '' && preg_match( '/^(?:dxui-sh-\d+|dxs-[a-z0-9]+|(?:(?:sm|md|lg|xl|2xl)[:-])*bg-[\w.-]+|has-[\w-]+-background-color|has-background)$/', $c ) !== 1 ) );
 		sort( $classes );
 
 		return (string) ( $b['blockName'] ?? '' ) . '|' . strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) ) . '|' . implode( ' ', $classes );
@@ -279,7 +279,7 @@ final class Page_Quality {
 			return $text === '' && preg_match( '/<(?:img|svg|iframe|video)\b/i', $html ) !== 1 && ! isset( $b['attrs']['placeholder'] ) ? 1 : 0;
 		}
 		// A theme's picture block (the DX Picture on a DX theme) keeps its file where its adapter says (Capabilities::picture_shape()).
-		$shape = \DXAI_UI\Theme\Capabilities::picture_shape( $name );
+		$shape = \DX_UI\Theme\Capabilities::picture_shape( $name );
 		if ( 'core/image' === $name || $shape !== array() ) {
 			// core/image keeps its file in `url` and `id`.
 			$url_key = is_string( $shape['url'] ?? null ) ? $shape['url'] : 'url';

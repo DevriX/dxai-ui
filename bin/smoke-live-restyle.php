@@ -2,15 +2,15 @@
 /**
  * Smoke-test DeepSeek live page restyle.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-$wp_root = $argv[1] ?? 'C:\\Users\\DevriX\\Local Sites\\DXAI-UI\\app\\public';
+$wp_root = $argv[1] ?? 'C:\\Users\\DevriX\\Local Sites\\DX-UI\\app\\public';
 require rtrim( $wp_root, '/\\' ) . '/wp-load.php';
 
-$r = new DXAI_UI\Structures\Live_Page_Restyler();
+$r = new DX_UI\Structures\Live_Page_Restyler();
 $e = $r->engine();
 if ( is_wp_error( $e ) ) {
 	echo 'engine_err=' . $e->get_error_message() . PHP_EOL;

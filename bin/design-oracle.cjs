@@ -136,7 +136,7 @@ function fileUrl(p) {
  * Utility_Classes::parse_family() + KEYWORDS; being a superset is harmless,
  * because a name the design uses is never ignored.
  */
-const UTILITY_FAMILY = /^(?:fw-[1-9]00|text-\d{1,3}(?:-\d{1,4})?|lh-\d{1,2}(?:-\d{1,4})?|ls-\d{1,3}(?:-\d{1,4})?(?:em|px)|rounded-\d{1,4}px|rounded-circle|(?:max-w|min-h|min-w|w|h)-\d{1,5}px|(?:text|bg|shadow)-dxai-[a-z0-9]+(?:-[a-z0-9]+)*|whitespace-[a-z-]+|list-style-none|cursor-[a-z-]+|italic|not-italic|object-fit-[a-z-]+|text-overflow-[a-z]+|pointer-events-[a-z]+)$/;
+const UTILITY_FAMILY = /^(?:fw-[1-9]00|text-\d{1,3}(?:-\d{1,4})?|lh-\d{1,2}(?:-\d{1,4})?|ls-\d{1,3}(?:-\d{1,4})?(?:em|px)|rounded-\d{1,4}px|rounded-circle|(?:max-w|min-h|min-w|w|h)-\d{1,5}px|(?:text|bg|shadow)-dxui-[a-z0-9]+(?:-[a-z0-9]+)*|whitespace-[a-z-]+|list-style-none|cursor-[a-z-]+|italic|not-italic|object-fit-[a-z-]+|text-overflow-[a-z]+|pointer-events-[a-z]+)$/;
 function utilityNames() {
 	const file = path.join(repo, 'data', 'dx-utilities.php');
 	if (!fs.existsSync(file)) { return new Set(); }
@@ -205,7 +205,7 @@ function tailwindCli(major) {
 			? ['tailwindcss@3', 'tailwindcss-animate@1', 'postcss@8', 'autoprefixer@10']
 			: ['@tailwindcss/cli@4', 'tailwindcss@4'];
 		console.log('# installing ' + packages.join(' ') + ' into ' + dir);
-		fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'dxai-oracle', private: true, version: '1.0.0' }));
+		fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'dxui-oracle', private: true, version: '1.0.0' }));
 		execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm',
 			['install', '--silent', '--no-audit', '--no-fund', ...packages],
 			{ cwd: dir, stdio: 'inherit', shell: process.platform === 'win32' });
@@ -291,14 +291,14 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	 * Classes WordPress or our own runtime adds. They say nothing about the
 	 * design, and keeping them would stop a node matching its own counterpart.
 	 *
-	 * `dxai-` is a prefix rather than a list of names, and that matters for the
+	 * `dxui-` is a prefix rather than a list of names, and that matters for the
 	 * React oracle. Against the COMPILED oracle an unstripped class of ours was
 	 * harmless — that oracle's HTML also comes from Jsx_Compiler, so both sides
 	 * carried it and the keys still matched. Against a real React build only our
 	 * side has it, so every control the converter wires up read as a lost node
-	 * AND a spurious one: `dxai-toggle-open--practice` alone accounted for a
+	 * AND a spurious one: `dxui-toggle-open--practice` alone accounted for a
 	 * large share of a 98-lost / 307-extra report on ARA. The old list named
-	 * dxai-ui and dxai-reveal and missed dxai-toggle-*, dxai-motion, dxai-cls-*
+	 * dx-ui and dxui-reveal and missed dxui-toggle-*, dxui-motion, dxui-cls-*
 	 * and the rest.
 	 *
 	 * `is-*` is deliberately NOT widened past is-armed/is-in. Those two are
@@ -312,8 +312,8 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	 * design's: support.js mints one `scp0`, `scp1`, … class per
 	 * `style-hover="…"` attribute to carry the generated pseudo-class rule,
 	 * and `sc-host` is the component host it wraps the template in. The
-	 * converter's own hover classes are `dxai-sh-*`, already covered by
-	 * `dxai-`, so without this every hoverable node keyed differently on
+	 * converter's own hover classes are `dxui-sh-*`, already covered by
+	 * `dxui-`, so without this every hoverable node keyed differently on
 	 * the two sides. `sc-interp` is deliberately KEPT: it wraps every
 	 * interpolated string on the design side and the converter emits the
 	 * same span, so it is a design fact both sides share.
@@ -364,7 +364,7 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	 * alone: `size-full` is also a Tailwind utility, and core/image puts it on
 	 * the <figure>, which is transparent below anyway.
 	 */
-	const WP_NAMES = /^(wp-block|is-layout|has-|is-style|dxai-|alignfull|alignwide|entry-|wp-image-|wp-elements|is-armed|is-in|lucide|wp-element-|wp-container-|wp-states-|wp-custom-css-|wp-settings-|wp-duotone-|wp-lightbox-|is-vertical|is-horizontal|is-nowrap|is-content-justification-|is-position-|items-justified-|is-responsive|open-on-|open-always|hidden-by-default|is-menu-open|aligncenter|alignleft|alignright|alignnone)|^scp[0-9a-z]+$|^sc-host$|^dxs-[0-9a-z]+$/;
+	const WP_NAMES = /^(wp-block|is-layout|has-|is-style|dxui-|alignfull|alignwide|entry-|wp-image-|wp-elements|is-armed|is-in|lucide|wp-element-|wp-container-|wp-states-|wp-custom-css-|wp-settings-|wp-duotone-|wp-lightbox-|is-vertical|is-horizontal|is-nowrap|is-content-justification-|is-position-|items-justified-|is-responsive|open-on-|open-always|hidden-by-default|is-menu-open|aligncenter|alignleft|alignright|alignnone)|^scp[0-9a-z]+$|^sc-host$|^dxs-[0-9a-z]+$/;
 	/*
 	 * Plus the utility names measure() found on THIS side and not in the
 	 * design DOM (always empty on the design side); see UTILITY_FAMILY at the
@@ -388,16 +388,16 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 		 * every React 19 form field keyed by a counter.
 		 */
 		/*
-		 * `dxai-id-` is ours: the converter mints its own ids where the design
+		 * `dxui-id-` is ours: the converter mints its own ids where the design
 		 * used useId(), because the VALUE cannot be reproduced and only the
 		 * relationship matters — a label's `for` agreeing with its control's
 		 * `id`. Both sides' ids are generated, so neither can key a node.
 		 */
-		const GENERATED = /^(?:radix-|headlessui-|react-aria|:r[0-9a-z]+:|«r|_[Rr]_[0-9a-z]*_|dxai-id-|dxai-rx-)/;
+		const GENERATED = /^(?:radix-|headlessui-|react-aria|:r[0-9a-z]+:|«r|_[Rr]_[0-9a-z]*_|dxui-id-|dxui-rx-)/;
 		// An id the splitter moved off an unwrapped <main> onto its first band
-		// (data-dxai-anchor) is the <main>'s, not the band's: the band keys as
+		// (data-dxui-anchor) is the <main>'s, not the band's: the band keys as
 		// it does on the design side, where it had no id.
-		if (el.id && !GENERATED.test(el.id) && el.getAttribute('data-dxai-anchor') !== el.id) { return '#' + el.id; }
+		if (el.id && !GENERATED.test(el.id) && el.getAttribute('data-dxui-anchor') !== el.id) { return '#' + el.id; }
 		// core/image moves the design's classes onto the <figure> and leaves the
 		// <img> bare, so classes cannot key a picture. Its file can — minus the
 		// numeric suffix WordPress appends when the same name is uploaded twice,
@@ -461,7 +461,7 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	const isIcon = (el) => el.tagName === 'svg' || el.hasAttribute('data-lucide');
 	/*
 	 * The design's outermost element. On a converted page and on the compiled
-	 * oracle that is `.dxai-ui` — Jsx_Compiler hoists the design root's own
+	 * oracle that is `.dx-ui` — Jsx_Compiler hoists the design root's own
 	 * class and style onto it, so the wrapper IS the design's outer div.
 	 *
 	 * A real React build has no such wrapper: TanStack's RootShell renders
@@ -469,13 +469,13 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	 * the React oracle passes `body > div` and the two roots line up — same
 	 * element in the design, named differently by each host.
 	 */
-	const selector = rootSelector || '.dxai-ui';
+	const selector = rootSelector || '.dx-ui';
 	const root = document.querySelector(selector);
 	if (!root) { return { error: 'no ' + selector + ' root' }; }
 
 	// Reveal animations park content at opacity 0 / translated; settle them so
 	// geometry reflects the resting state on both sides.
-	root.querySelectorAll('.dxai-reveal').forEach((el) => {
+	root.querySelectorAll('.dxui-reveal').forEach((el) => {
 		el.classList.add('is-in');
 		el.classList.remove('is-armed');
 	});
@@ -719,7 +719,7 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 			 * `li.rv-gap-row` children of a revealing list report as opacity
 			 * and transform defects.
 			 */
-			reveal: el.closest('.dxai-reveal, [data-reveal]') !== null,
+			reveal: el.closest('.dxui-reveal, [data-reveal]') !== null,
 			// A CSS animation is mid-flight on both sides at different phases,
 			// so its transform is a clock reading, not a fidelity fact.
 			animated: style.animationName !== 'none' && style.animationName !== '',
@@ -780,13 +780,13 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 
 	/*
 	 * Which element is "the design root" depends on the host, not the design.
-	 * The converted page and the compiled oracle both wrap it in `.dxai-ui`; a
+	 * The converted page and the compiled oracle both wrap it in `.dx-ui`; a
 	 * real React build has no wrapper, so the route's own outermost element
 	 * sits directly under <body>. `--design-root` overrides the default for a
 	 * design whose shell nests deeper.
 	 */
 	const designRoot = args['design-root'] ? String(args['design-root']) : 'body > div';
-	const rootFor = (url) => (args['design-url'] && url === designUrl ? designRoot : '.dxai-ui');
+	const rootFor = (url) => (args['design-url'] && url === designUrl ? designRoot : '.dx-ui');
 	// Every class the design DOM carries, from the latest design-side measure().
 	let designClasses = new Set();
 	let ignoreReported = false;
@@ -803,7 +803,7 @@ function collector(sectionId, maxDepth, withPaint, rootSelector, ignoreList) {
 	 * the IntersectionObserver that flips them has not fired for anything below
 	 * the fold, so a section sits at `opacity-0 translate-y-8`. The converted
 	 * page is settled — the compiler resolves reveal flags to their visible
-	 * state and the collector forces `.dxai-reveal` to `is-in`. Comparing those
+	 * state and the collector forces `.dxui-reveal` to `is-in`. Comparing those
 	 * two states reports the whole revealed subtree as missing on one side and
 	 * spurious on the other: on ARA one 294px section plus its four KPI cards
 	 * and their labels accounted for most of a 45-node "missing" report, none of

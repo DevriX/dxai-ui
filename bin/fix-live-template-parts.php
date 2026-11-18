@@ -1,8 +1,8 @@
 <?php
 /**
- * Fix corrupted dxai template-part slugs on live-menu pages.
+ * Fix corrupted dxui template-part slugs on live-menu pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -16,8 +16,8 @@ if ( $home_id < 1 ) {
 }
 
 $home = (string) get_post_field( 'post_content', $home_id );
-preg_match( '/"slug":"(dxai-header-[^"]+)"/', $home, $h );
-preg_match( '/"slug":"(dxai-footer-[^"]+)"/', $home, $f );
+preg_match( '/"slug":"(dxui-header-[^"]+)"/', $home, $h );
+preg_match( '/"slug":"(dxui-footer-[^"]+)"/', $home, $f );
 $header_slug = $h[1] ?? '';
 $footer_slug = $f[1] ?? '';
 echo "header_slug={$header_slug}\nfooter_slug={$footer_slug}\n";
@@ -55,7 +55,7 @@ $children = get_posts(
 		'post_type'      => 'page',
 		'posts_per_page' => 50,
 		'post_status'    => 'publish',
-		'meta_key'       => '_dxai_ui_from_live_menu',
+		'meta_key'       => '_dx_ui_from_live_menu',
 		'meta_value'     => '1',
 	)
 );
@@ -66,13 +66,13 @@ foreach ( $children as $child ) {
 	// Strip any template-part blocks (broken or not).
 	$content = preg_replace( '/<!-- wp:template-part\b[^>]*\/-->\s*/', '', $content ) ?? $content;
 	// Ensure wrap group exists.
-	if ( ! str_contains( $content, 'dxai-ui--' . $home_id ) ) {
+	if ( ! str_contains( $content, 'dx-ui--' . $home_id ) ) {
 		continue;
 	}
 	// Insert header after opening group div, footer before closing group.
-	if ( preg_match( '/(<div class="wp-block-group alignfull dxai-ui dxai-ui--' . $home_id . '[^"]*">)/', $content, $m ) ) {
+	if ( preg_match( '/(<div class="wp-block-group alignfull dx-ui dx-ui--' . $home_id . '[^"]*">)/', $content, $m ) ) {
 		$content = preg_replace(
-			'/(<div class="wp-block-group alignfull dxai-ui dxai-ui--' . $home_id . '[^"]*">)/',
+			'/(<div class="wp-block-group alignfull dx-ui dx-ui--' . $home_id . '[^"]*">)/',
 			'$1' . "\n" . $header_ref . "\n",
 			$content,
 			1

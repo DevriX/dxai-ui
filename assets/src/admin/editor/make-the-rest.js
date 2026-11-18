@@ -13,20 +13,20 @@ import { Button, CheckboxControl, Notice, Spinner } from '@wordpress/components'
  * each — one page per request, so a host that ends a request after a minute never cuts one in half.
  */
 
-const PANEL = 'dxai-ui-make-the-rest';
+const PANEL = 'dx-ui-make-the-rest';
 
 /* How the editor names a plugin's panel when it keeps whether it is open: the plugin's name and the panel's. */
 const PANEL_ID = PANEL + '/' + PANEL;
 
 /* Opened from the list of pages: read now, the editor takes the address's own words off it as it starts. */
-const ASKED = /[?&]dxai-copies=1\b/.test( window.location.search );
+const ASKED = /[?&]dxui-copies=1\b/.test( window.location.search );
 
 const STATE = {
-	empty: __( 'empty', 'dxai-ui' ),
-	copy: __( 'a copy of this page', 'dxai-ui' ),
-	made: __( 'made from this page before', 'dxai-ui' ),
-	menu: __( 'in the menu, no page yet: it is made', 'dxai-ui' ),
-	own: __( 'has its own content', 'dxai-ui' ),
+	empty: __( 'empty', 'dx-ui' ),
+	copy: __( 'a copy of this page', 'dx-ui' ),
+	made: __( 'made from this page before', 'dx-ui' ),
+	menu: __( 'in the menu, no page yet: it is made', 'dx-ui' ),
+	own: __( 'has its own content', 'dx-ui' ),
 };
 
 function Result( { r, onBack } ) {
@@ -34,37 +34,37 @@ function Result( { r, onBack } ) {
 	const [ back, setBack ] = useState( '' );
 	const giveBack = () => {
 		setBusy( true );
-		apiFetch( { path: '/dxai-ui/v1/copies/' + r.id + '/give-back', method: 'POST' } )
+		apiFetch( { path: '/dx-ui/v1/copies/' + r.id + '/give-back', method: 'POST' } )
 			.then( () => {
-				setBack( __( 'Given back.', 'dxai-ui' ) );
+				setBack( __( 'Given back.', 'dx-ui' ) );
 				onBack();
 			} )
 			.catch( ( e ) => setBack( e.message ) )
 			.finally( () => setBusy( false ) );
 	};
 	return (
-		<li className="dxai-copies__result">
+		<li className="dxui-copies__result">
 			<strong>{ r.title }</strong>{ ' ' }
 			{ r.words === 'ai'
-				? __( 'written', 'dxai-ui' )
-				: sprintf( /* translators: %d: lines a person writes */ _n( '%d line to write', '%d lines to write', r.places, 'dxai-ui' ), r.places ) }
+				? __( 'written', 'dx-ui' )
+				: sprintf( /* translators: %d: lines a person writes */ _n( '%d line to write', '%d lines to write', r.places, 'dx-ui' ), r.places ) }
 			{ r.pictures > 0 && (
-				<span>{ ' · ' + sprintf( /* translators: %d: pictures */ _n( '%d picture is this page\'s', '%d pictures are this page\'s', r.pictures, 'dxai-ui' ), r.pictures ) }</span>
+				<span>{ ' · ' + sprintf( /* translators: %d: pictures */ _n( '%d picture is this page\'s', '%d pictures are this page\'s', r.pictures, 'dx-ui' ), r.pictures ) }</span>
 			) }
 			<br />
-			<a href={ r.link } target="_blank" rel="noreferrer">{ __( 'View', 'dxai-ui' ) }</a>{ ' · ' }
-			<a href={ r.edit }>{ __( 'Edit', 'dxai-ui' ) }</a>{ ' · ' }
-			<Button variant="link" onClick={ giveBack } disabled={ busy || back !== '' }>{ __( 'Give back', 'dxai-ui' ) }</Button>
+			<a href={ r.link } target="_blank" rel="noreferrer">{ __( 'View', 'dx-ui' ) }</a>{ ' · ' }
+			<a href={ r.edit }>{ __( 'Edit', 'dx-ui' ) }</a>{ ' · ' }
+			<Button variant="link" onClick={ giveBack } disabled={ busy || back !== '' }>{ __( 'Give back', 'dx-ui' ) }</Button>
 			{ back && <span>{ ' ' + back }</span> }
 			{ r.quality && (
-				<p className={ 'dxai-copies__quality is-' + r.quality.grade }>
-					{ r.quality.grade === 'good' ? __( 'Measures up to the team’s pages.', 'dxai-ui' ) : __( 'To look at:', 'dxai-ui' ) }
+				<p className={ 'dxui-copies__quality is-' + r.quality.grade }>
+					{ r.quality.grade === 'good' ? __( 'Measures up to the team’s pages.', 'dx-ui' ) : __( 'To look at:', 'dx-ui' ) }
 					{ r.quality.grade !== 'good' && ' ' + r.quality.checks.filter( ( c ) => c.state !== 'ok' ).map( ( c ) => c.text ).join( '; ' ) }
 				</p>
 			) }
 			{ r.error && <Notice status="warning" isDismissible={ false }>{ r.error }</Notice> }
 			{ r.flags && r.flags.length > 0 && (
-				<ul className="dxai-copies__flags">
+				<ul className="dxui-copies__flags">
 					{ r.flags.map( ( f, i ) => <li key={ i }>{ f }</li> ) }
 				</ul>
 			) }
@@ -94,7 +94,7 @@ function MakeTheRest() {
 		if ( type !== 'page' || ! id || saving ) {
 			return;
 		}
-		apiFetch( { path: '/dxai-ui/v1/copies/' + id } )
+		apiFetch( { path: '/dx-ui/v1/copies/' + id } )
 			.then( ( data ) => {
 				setInfo( data );
 				const pick = {};
@@ -139,7 +139,7 @@ function MakeTheRest() {
 			setRun( { ...state } );
 			try {
 				const r = await apiFetch( {
-					path: '/dxai-ui/v1/copies/' + id,
+					path: '/dx-ui/v1/copies/' + id,
 					method: 'POST',
 					data: { target: { id: t.id, title: t.title, link: t.link } },
 				} );
@@ -156,16 +156,16 @@ function MakeTheRest() {
 	};
 
 	return (
-		<PluginDocumentSettingPanel name={ PANEL } title={ info.kind === 'location' ? __( 'Make the other cities from this page', 'dxai-ui' ) : __( 'Make the other services from this page', 'dxai-ui' ) } className="dxai-copies">
+		<PluginDocumentSettingPanel name={ PANEL } title={ info.kind === 'location' ? __( 'Make the other cities from this page', 'dx-ui' ) : __( 'Make the other services from this page', 'dx-ui' ) } className="dxui-copies">
 			{ info.copy_of > 0 && (
 				<p>
-					{ sprintf( /* translators: %s: the page this one was made from */ __( 'This page was made from “%s”.', 'dxai-ui' ), info.copy_of_title || '#' + info.copy_of ) }{ ' ' }
+					{ sprintf( /* translators: %s: the page this one was made from */ __( 'This page was made from “%s”.', 'dx-ui' ), info.copy_of_title || '#' + info.copy_of ) }{ ' ' }
 					{ info.give_back && (
 						<Button
 							variant="link"
-							onClick={ () => apiFetch( { path: '/dxai-ui/v1/copies/' + id + '/give-back', method: 'POST' } ).then( () => window.location.reload() ).catch( ( e ) => setError( e.message ) ) }
+							onClick={ () => apiFetch( { path: '/dx-ui/v1/copies/' + id + '/give-back', method: 'POST' } ).then( () => window.location.reload() ).catch( ( e ) => setError( e.message ) ) }
 						>
-							{ __( 'Give it back', 'dxai-ui' ) }
+							{ __( 'Give it back', 'dx-ui' ) }
 						</Button>
 					) }
 				</p>
@@ -173,18 +173,18 @@ function MakeTheRest() {
 			<p>
 				{ sprintf(
 					/* translators: 1: sections written for each page, 2: sections kept as they are */
-					__( 'Each page gets this page\'s build and look. %1$d sections are written for each page; %2$d stay as they are — the reviews, what the site says the same way on its other pages (the form, the call to action), the list of the other pages, the pictures.', 'dxai-ui' ),
+					__( 'Each page gets this page\'s build and look. %1$d sections are written for each page; %2$d stay as they are — the reviews, what the site says the same way on its other pages (the form, the call to action), the list of the other pages, the pictures.', 'dx-ui' ),
 					own,
 					shared
 				) }
 			</p>
 			<p>
 				{ info.words.ai
-					? sprintf( /* translators: %s: the AI engine */ __( 'Words: written by %s with the team\'s prompt, from the client\'s old page for the same service when the old site has one.', 'dxai-ui' ), info.words.engine )
-					: __( 'No AI engine in DX › Settings: each page gets this page\'s headings with its own name, and its own lines are left empty for you to write — this page\'s words show as the hint in the editor, never on the page.', 'dxai-ui' ) }
+					? sprintf( /* translators: %s: the AI engine */ __( 'Words: written by %s with the team\'s prompt, from the client\'s old page for the same service when the old site has one.', 'dx-ui' ), info.words.engine )
+					: __( 'No AI engine in DX › Settings: each page gets this page\'s headings with its own name, and its own lines are left empty for you to write — this page\'s words show as the hint in the editor, never on the page.', 'dx-ui' ) }
 			</p>
-			{ dirty && <Notice status="info" isDismissible={ false }>{ __( 'Save the page first: the copies are made from what is saved.', 'dxai-ui' ) }</Notice> }
-			{ targets.length === 0 && <p>{ __( 'There are no other pages of this kind next to it, and the menu names none.', 'dxai-ui' ) }</p> }
+			{ dirty && <Notice status="info" isDismissible={ false }>{ __( 'Save the page first: the copies are made from what is saved.', 'dx-ui' ) }</Notice> }
+			{ targets.length === 0 && <p>{ __( 'There are no other pages of this kind next to it, and the menu names none.', 'dx-ui' ) }</p> }
 			{ targets.map( ( t, i ) => (
 				<CheckboxControl
 					key={ i }
@@ -198,17 +198,17 @@ function MakeTheRest() {
 			) ) }
 			{ targets.length > 0 && (
 				<Button variant="primary" onClick={ start } disabled={ picked.length === 0 || dirty || !! busy }>
-					{ sprintf( /* translators: %d: pages */ _n( 'Make %d page', 'Make %d pages', picked.length, 'dxai-ui' ), picked.length ) }
+					{ sprintf( /* translators: %d: pages */ _n( 'Make %d page', 'Make %d pages', picked.length, 'dx-ui' ), picked.length ) }
 				</Button>
 			) }
 			{ busy && (
 				<p>
 					<Spinner />
-					{ sprintf( /* translators: 1: pages done, 2: pages in all, 3: the page being made */ __( '%1$d of %2$d made; now %3$s…', 'dxai-ui' ), run.at, run.of, run.now ) }
+					{ sprintf( /* translators: 1: pages done, 2: pages in all, 3: the page being made */ __( '%1$d of %2$d made; now %3$s…', 'dx-ui' ), run.at, run.of, run.now ) }
 				</p>
 			) }
 			{ run && run.done.length > 0 && (
-				<ul className="dxai-copies__results">
+				<ul className="dxui-copies__results">
 					{ run.done.map( ( r, i ) => <Result key={ i } r={ r } onBack={ () => setReload( ( n ) => n + 1 ) } /> ) }
 				</ul>
 			) }

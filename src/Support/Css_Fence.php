@@ -2,16 +2,16 @@
 /**
  * A stylesheet that stops at the design's sections.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 /**
- * Rewrites a stylesheet so none of its rules reaches inside `.dxai-ui`: every
- * selector gets `:not(:where(.dxai-ui *))` on its subject. Nothing else
+ * Rewrites a stylesheet so none of its rules reaches inside `.dx-ui`: every
+ * selector gets `:not(:where(.dx-ui *))` on its subject. Nothing else
  * changes — `:where()` has no specificity, so the sheet's rules keep their
  * weight against each other and against every other sheet, and an element
  * outside a design section matches exactly what it matched before.
@@ -25,7 +25,7 @@ namespace DXAI_UI\Support;
  * block gap of its theme.json. With the fence the sections render under the
  * same CSS as on the design page, and the theme keeps everything around them.
  *
- * The element carrying `.dxai-ui` itself stays in the theme's reach (it is not
+ * The element carrying `.dx-ui` itself stays in the theme's reach (it is not
  * inside itself): it is one of the content's blocks, and the theme lays it out
  * in its column like any other. At-rules that hold rules (@media, @supports,
  * @layer, @container) are walked; the others (@font-face, @keyframes, @page…)
@@ -35,7 +35,7 @@ namespace DXAI_UI\Support;
 final class Css_Fence {
 
 	/** What goes on each selector's subject. */
-	public const FENCE = ':not(:where(.dxai-ui *))';
+	public const FENCE = ':not(:where(.dx-ui *))';
 
 	/** Bumped when the output changes, so cached copies are made again. */
 	public const VERSION = '1';

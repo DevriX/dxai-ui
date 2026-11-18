@@ -1,4 +1,4 @@
-/* global dxaiUI */
+/* global dxUI */
 import { useEffect, useState } from '@wordpress/element';
 
 /*
@@ -8,7 +8,7 @@ import { useEffect, useState } from '@wordpress/element';
  */
 
 /** What WordPress told the app: the screen, the admin links, the version, the import facts. */
-export const config = typeof dxaiUI !== 'undefined' ? dxaiUI : { restUrl: '', nonce: '', screen: 'designs', links: {}, labels: {} };
+export const config = typeof dxUI !== 'undefined' ? dxUI : { restUrl: '', nonce: '', screen: 'designs', links: {}, labels: {} };
 
 /** The admin URL of a screen (designs, convert, site, forms, settings, menus, widgets, themes), or '' when the site has none. */
 export function link( name ) {

@@ -2,14 +2,14 @@
 /**
  * An inline icon as a media-library file.
  *
- * @package DXAI_UI\Media
+ * @package DX_UI\Media
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * The team keeps its icons as SVG files in the media library, in Image blocks: swapped from the library, sized in the
@@ -25,7 +25,7 @@ use DXAI_UI\Support\Upload_Paths;
 final class Svg_Files {
 
 	/** On the attachment: the hash of the drawing it holds. */
-	public const META = '_dxai_ui_svg_hash';
+	public const META = '_dx_ui_svg_hash';
 
 	/** The sub-folder of the plugin's uploads folder. */
 	private const DIR = 'icons';

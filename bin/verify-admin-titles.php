@@ -8,11 +8,11 @@
  *
  * Makes one page named for the test and trashes it again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 $fail   = 0;
 $pass   = 0;
@@ -35,14 +35,14 @@ echo "\nTitles in the lists that choose a design\n";
 $title = 'Vtx Titles & Sons - "Test"';
 $id    = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => '' ) );
 update_post_meta( $id, Page_Scope::META, $id );
-update_post_meta( $id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $id, '_dxai_ui_css_url', Upload_Paths::DIR . '/pattern-vtxtitles' . $id . '.css' );
+update_post_meta( $id, '_dx_ui_generated_page', '1' );
+update_post_meta( $id, '_dx_ui_css_url', Upload_Paths::DIR . '/pattern-vtxtitles' . $id . '.css' );
 
 $expect( 'the fixture is texturized when WordPress prints it', get_the_title( $id ) !== $title && str_contains( get_the_title( $id ), '&#' ), get_the_title( $id ) );
 $plain = html_entity_decode( get_the_title( $id ), ENT_QUOTES, 'UTF-8' );
 
 $get = static function ( string $route ): array {
-	$res = rest_do_request( new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . $route ) );
+	$res = rest_do_request( new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . $route ) );
 
 	return $res->get_status() === 200 && is_array( $res->get_data() ) ? $res->get_data() : array();
 };

@@ -2,25 +2,25 @@
 /**
  * Create WordPress pages from live same-host menu URLs, reusing Home chrome.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
-use DXAI_UI\Compiler\Gutenberg_Mapper;
-use DXAI_UI\Connectors\Live_Page_Fetcher;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Media\Asset_Harvester;
-use DXAI_UI\Media\Sideloader;
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Content_Extractor;
-use DXAI_UI\Pages\Image_Fit;
-use DXAI_UI\Pages\Page_Composer;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Slot_Writer;
-use DXAI_UI\Theme\Blank_Template;
+use DX_UI\Compiler\Gutenberg_Mapper;
+use DX_UI\Connectors\Live_Page_Fetcher;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Media\Asset_Harvester;
+use DX_UI\Media\Sideloader;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Content_Extractor;
+use DX_UI\Pages\Image_Fit;
+use DX_UI\Pages\Page_Composer;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Slot_Writer;
+use DX_UI\Theme\Blank_Template;
 
 final class Site_From_Menu {
 
@@ -57,7 +57,7 @@ final class Site_From_Menu {
 	 * listens to `wp_insert_post` for the rest of the request and re-stamps
 	 * any page it stamped earlier; see restamp().
 	 */
-	public const IMPORTED_AT = '_dxai_ui_imported_at';
+	public const IMPORTED_AT = '_dx_ui_imported_at';
 
 	/**
 	 * Crawled pages this request's importer has written, so its own later
@@ -154,7 +154,7 @@ final class Site_From_Menu {
 			$run['summary']['crawl_errors'][] = array(
 				'label'   => '',
 				'url'     => '',
-				'message' => __( 'The design’s links do not show where the old site is. Enter its address to build its pages.', 'dxai-ui' ),
+				'message' => __( 'The design’s links do not show where the old site is. Enter its address to build its pages.', 'dx-ui' ),
 			);
 
 			return $run;
@@ -172,8 +172,8 @@ final class Site_From_Menu {
 		// Remembered on the Home: once the pages are built, the links that led to the old site lead to them
 		// instead, and the Library's page list (Pages\Site_Pages) still has to know the old site and its pages.
 		if ( $home_id > 0 && $candidates !== array() ) {
-			update_post_meta( $home_id, \DXAI_UI\Pages\Site_Pages::ORIGIN_META, $origin );
-			$known = (array) get_post_meta( $home_id, \DXAI_UI\Pages\Site_Pages::PAGES_META, true );
+			update_post_meta( $home_id, \DX_UI\Pages\Site_Pages::ORIGIN_META, $origin );
+			$known = (array) get_post_meta( $home_id, \DX_UI\Pages\Site_Pages::PAGES_META, true );
 			$urls  = array_column( array_filter( $known, 'is_array' ), 'url' );
 			foreach ( $candidates as $c ) {
 				if ( ! in_array( (string) $c['url'], $urls, true ) ) {
@@ -184,7 +184,7 @@ final class Site_From_Menu {
 					);
 				}
 			}
-			update_post_meta( $home_id, \DXAI_UI\Pages\Site_Pages::PAGES_META, array_values( $known ) );
+			update_post_meta( $home_id, \DX_UI\Pages\Site_Pages::PAGES_META, array_values( $known ) );
 		}
 		// The pages the person chose (the Library's page list), when they chose; then the run's cap.
 		if ( $chosen !== array() ) {
@@ -195,7 +195,7 @@ final class Site_From_Menu {
 			$run['summary']['crawl_errors'][] = array(
 				'label'   => '',
 				'url'     => $origin,
-				'message' => __( 'Sorry — the menu had no same-host page URLs to crawl.', 'dxai-ui' ),
+				'message' => __( 'Sorry — the menu had no same-host page URLs to crawl.', 'dx-ui' ),
 			);
 
 			return $run;
@@ -204,14 +204,14 @@ final class Site_From_Menu {
 		$parts    = new Template_Part_Factory();
 		$part_key = sanitize_title( trim( (string) ( $context['part_key'] ?? '' ), '/' ) );
 
-		$home_css_url = (string) get_post_meta( $home_id, '_dxai_ui_css_url', true );
-		$home_fonts   = get_post_meta( $home_id, '_dxai_ui_font_urls', true );
+		$home_css_url = (string) get_post_meta( $home_id, '_dx_ui_css_url', true );
+		$home_fonts   = get_post_meta( $home_id, '_dx_ui_font_urls', true );
 
 		$restyler   = new Live_Page_Restyler();
 		$design_css = (string) ( $context['design_css'] ?? '' );
 		if ( $design_css === '' && $home_css_url !== '' ) {
 			$uploads = wp_upload_dir();
-			$pattern = trailingslashit( (string) $uploads['basedir'] ) . 'dxai-ui/pattern-' . $home_id . '.css';
+			$pattern = trailingslashit( (string) $uploads['basedir'] ) . 'dx-ui/pattern-' . $home_id . '.css';
 			if ( is_readable( $pattern ) ) {
 				$design_css = (string) file_get_contents( $pattern );
 			}
@@ -219,7 +219,7 @@ final class Site_From_Menu {
 		$structures = is_array( $context['structures'] ?? null ) ? $context['structures'] : array();
 		if ( $structures === array() ) {
 			$home_body = (string) get_post_field( 'post_content', $home_id );
-			$home_body = preg_replace( '/<!--\s*wp:(?:template-part|dxai-ui\/site-header|dxai-ui\/site-footer)\b[^>]*-->/i', '', $home_body ) ?? $home_body;
+			$home_body = preg_replace( '/<!--\s*wp:(?:template-part|dx-ui\/site-header|dx-ui\/site-footer)\b[^>]*-->/i', '', $home_body ) ?? $home_body;
 			$structures = array(
 				array(
 					'type'        => 'section',
@@ -230,7 +230,7 @@ final class Site_From_Menu {
 		/*
 		 * The design's palette, computed once by Structure_Repository and shared
 		 * with the final tokenising pass, so a colour the restyler writes as
-		 * `var(--dxai-accent)` names the same token the rest of the design uses.
+		 * `var(--dxui-accent)` names the same token the rest of the design uses.
 		 * Two separately computed palettes could name one colour differently,
 		 * and a token that names nothing renders as no colour at all.
 		 */
@@ -267,9 +267,9 @@ final class Site_From_Menu {
 			'engine'     => self::engine( $context, $home_id ),
 			'site_css'   => is_string( $site_css ) ? $site_css : $home_css_url,
 			'home_fonts' => is_array( $home_fonts ) ? $home_fonts : array(),
-			'home_js'    => (string) get_post_meta( $home_id, '_dxai_ui_js_url', true ),
+			'home_js'    => (string) get_post_meta( $home_id, '_dx_ui_js_url', true ),
 			'home_wrap'  => $this->home_wrapper_class( $home_id, (string) ( $context['wrapper_class'] ?? '' ) ),
-			'static'     => (bool) get_post_meta( $home_id, '_dxai_ui_static_html', true ),
+			'static'     => (bool) get_post_meta( $home_id, '_dx_ui_static_html', true ),
 			// Build again the pages someone edited since their import too — only when the person asked.
 			'rebuild_edited' => ! empty( $context['rebuild_edited'] ),
 			'archive'    => (string) ( $context['source_archive'] ?? '' ),
@@ -282,7 +282,7 @@ final class Site_From_Menu {
 			 * paid calls off for the crawl, and so the crawl can be tested
 			 * end to end without spending anyone's credit.
 			 */
-			'ai_ok'      => (bool) apply_filters( 'dxai_ui_crawl_use_ai', ! is_wp_error( $restyler->engine() ), $home_id ),
+			'ai_ok'      => (bool) apply_filters( 'dx_ui_crawl_use_ai', ! is_wp_error( $restyler->engine() ), $home_id ),
 			/*
 			 * Paths already compiled from the imported ZIP / design routes.
 			 * When a menu candidate matches, keep that page — do not live-fetch.
@@ -302,8 +302,8 @@ final class Site_From_Menu {
 	 */
 	public static function engine( array $context, int $home_id ): string {
 		$engine = (string) ( $context['pages_engine'] ?? 'design' );
-		// `dxai_ui_pages_engine`: what builds the pages the design's menu links to — 'design' (from its own sections) or 'ai' — for this Home.
-		$engine = (string) apply_filters( 'dxai_ui_pages_engine', $engine === 'ai' ? 'ai' : 'design', $home_id );
+		// `dx_ui_pages_engine`: what builds the pages the design's menu links to — 'design' (from its own sections) or 'ai' — for this Home.
+		$engine = (string) apply_filters( 'dx_ui_pages_engine', $engine === 'ai' ? 'ai' : 'design', $home_id );
 
 		return $engine === 'ai' ? 'ai' : 'design';
 	}
@@ -446,8 +446,8 @@ final class Site_From_Menu {
 			// What the old site asks of crawlers (Crawl_Politeness): a path robots.txt disallows is not fetched, and
 			// requests are spaced by its Crawl-delay. A wait longer than one step may take yields; the next step
 			// comes back to this same page.
-			$robots = \DXAI_UI\Http\Crawl_Politeness::rules( $url );
-			if ( ! \DXAI_UI\Http\Crawl_Politeness::allowed( $url, $robots ) ) {
+			$robots = \DX_UI\Http\Crawl_Politeness::rules( $url );
+			if ( ! \DX_UI\Http\Crawl_Politeness::allowed( $url, $robots ) ) {
 				$run['summary']['pages_skipped'][] = array(
 					'label'  => $label,
 					'path'   => $path,
@@ -456,15 +456,15 @@ final class Site_From_Menu {
 
 				return $this->next_page( $run );
 			}
-			if ( ! \DXAI_UI\Http\Crawl_Politeness::wait( $url, $robots['delay'] ) ) {
+			if ( ! \DX_UI\Http\Crawl_Politeness::wait( $url, $robots['delay'] ) ) {
 				return true;
 			}
 
 			// Pinned to the design's own origin: a menu href — or a redirect it
 			// answers with — that leads anywhere else is refused, not crawled.
 			$fetched = ( new Live_Page_Fetcher() )->fetch( $url, 45, $origin );
-			$wait    = is_wp_error( $fetched ) && $fetched->get_error_code() === 'dxai_ui_live_rate_limited' ? (float) ( $fetched->get_error_data()['retry_after'] ?? 60 ) : 0.0;
-			\DXAI_UI\Http\Crawl_Politeness::mark( $url, max( $robots['delay'], $wait ) );
+			$wait    = is_wp_error( $fetched ) && $fetched->get_error_code() === 'dx_ui_live_rate_limited' ? (float) ( $fetched->get_error_data()['retry_after'] ?? 60 ) : 0.0;
+			\DX_UI\Http\Crawl_Politeness::mark( $url, max( $robots['delay'], $wait ) );
 			// Asked to slow down: this page is tried again after the wait, up to three times.
 			if ( $wait > 0 && (int) ( $run['slowed'] ?? 0 ) < 3 ) {
 				$run['slowed'] = (int) ( $run['slowed'] ?? 0 ) + 1;
@@ -473,11 +473,11 @@ final class Site_From_Menu {
 			}
 			$run['slowed'] = 0;
 			// Bot protection: the crawl stops here. The rest of the pages are reported, never fetched around it.
-			if ( is_wp_error( $fetched ) && $fetched->get_error_code() === 'dxai_ui_live_blocked' ) {
+			if ( is_wp_error( $fetched ) && $fetched->get_error_code() === 'dx_ui_live_blocked' ) {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
 					'url'     => $url,
-					'message' => $fetched->get_error_message() . ' ' . __( 'The page builder stopped: the old site does not allow automated requests. Allow this server in its firewall, or build the remaining pages by hand.', 'dxai-ui' ),
+					'message' => $fetched->get_error_message() . ' ' . __( 'The page builder stopped: the old site does not allow automated requests. Allow this server in its firewall, or build the remaining pages by hand.', 'dx-ui' ),
 				);
 				$total = count( $candidates );
 				for ( $rest = $index + 1; $rest < $total; $rest++ ) {
@@ -499,7 +499,7 @@ final class Site_From_Menu {
 					'url'     => $url,
 					'message' => sprintf(
 						/* translators: %s: error detail */
-						__( 'Sorry — could not fetch this page: %s', 'dxai-ui' ),
+						__( 'Sorry — could not fetch this page: %s', 'dx-ui' ),
 						$fetched->get_error_message()
 					),
 				);
@@ -511,7 +511,7 @@ final class Site_From_Menu {
 				$page_url = (string) ( $fetched['url'] ?? $url );
 				// The stylesheets' background pictures, within what is left of this request's time after the fetch.
 				$spent    = microtime( true ) - (float) ( $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime( true ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$model    = ( new Content_Extractor() )->extract( (string) $fetched['raw'], $page_url, \DXAI_UI\Pages\Linked_Styles::background_rules( (string) $fetched['raw'], $page_url, max( 0.0, 30.0 - $spent ) ) );
+				$model    = ( new Content_Extractor() )->extract( (string) $fetched['raw'], $page_url, \DX_UI\Pages\Linked_Styles::background_rules( (string) $fetched['raw'], $page_url, max( 0.0, 30.0 - $spent ) ) );
 				if ( $model['sections'] !== array() ) {
 					$pending = array();
 					foreach ( (array) $model['images'] as $img ) {
@@ -536,7 +536,7 @@ final class Site_From_Menu {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
 					'url'     => $url,
-					'message' => __( 'Sorry — no usable text or images found on the live page.', 'dxai-ui' ),
+					'message' => __( 'Sorry — no usable text or images found on the live page.', 'dx-ui' ),
 				);
 
 				return $this->next_page( $run );
@@ -613,7 +613,7 @@ final class Site_From_Menu {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
 					'url'     => $url,
-					'message' => __( 'Not built — the old page has nothing but its title, or none of its content fits a section of the design.', 'dxai-ui' ),
+					'message' => __( 'Not built — the old page has nothing but its title, or none of its content fits a section of the design.', 'dx-ui' ),
 				);
 
 				return $this->next_page( $run );
@@ -688,7 +688,7 @@ final class Site_From_Menu {
 				$run['summary']['crawl_errors'][] = array(
 					'label'   => $label,
 					'url'     => $url,
-					'message' => __( 'Sorry — content could not be converted to Gutenberg blocks.', 'dxai-ui' ),
+					'message' => __( 'Sorry — content could not be converted to Gutenberg blocks.', 'dx-ui' ),
 				);
 
 				return $this->next_page( $run );
@@ -705,7 +705,7 @@ final class Site_From_Menu {
 
 		// save — body only; Page_Chrome injects header/footer on the front.
 		$content = trim( (string) ( $current['body'] ?? '' ) );
-		$content = \DXAI_UI\Chrome\Page_Chrome::strip_blocks( $content );
+		$content = \DX_UI\Chrome\Page_Chrome::strip_blocks( $content );
 
 		$composed = ! empty( $current['composed'] );
 		$page_id  = $this->save_chrome_page(
@@ -723,7 +723,7 @@ final class Site_From_Menu {
 			new Gutenberg_Mapper()
 		);
 
-		if ( is_wp_error( $page_id ) && 'dxai_ui_page_edited' === $page_id->get_error_code() ) {
+		if ( is_wp_error( $page_id ) && 'dx_ui_page_edited' === $page_id->get_error_code() ) {
 			$edited_data = $page_id->get_error_data();
 			$edited      = get_post( (int) ( is_array( $edited_data ) ? ( $edited_data['id'] ?? 0 ) : 0 ) );
 			if ( $edited instanceof \WP_Post ) {
@@ -737,14 +737,14 @@ final class Site_From_Menu {
 			$run['summary']['crawl_errors'][] = array(
 				'label'   => $label,
 				'url'     => $url,
-				'message' => is_wp_error( $page_id ) ? $page_id->get_error_message() : __( 'Page save failed.', 'dxai-ui' ),
+				'message' => is_wp_error( $page_id ) ? $page_id->get_error_message() : __( 'Page save failed.', 'dx-ui' ),
 			);
 
 			return $this->next_page( $run );
 		}
 
 		if ( $composed && (string) ( $current['seo_title'] ?? '' ) !== '' ) {
-			update_post_meta( $page_id, \DXAI_UI\Support\Page_Title::SEO_META, sanitize_text_field( (string) $current['seo_title'] ) );
+			update_post_meta( $page_id, \DX_UI\Support\Page_Title::SEO_META, sanitize_text_field( (string) $current['seo_title'] ) );
 		}
 		$run['summary']['pages_created'][] = array(
 			'id'    => $page_id,
@@ -774,16 +774,16 @@ final class Site_From_Menu {
 		// The Home's stylesheet: the composer reads the column counts its responsive grids are made for.
 		static $sheets = array();
 		if ( ! isset( $sheets[ $home_id ] ) ) {
-			$file                = \DXAI_UI\Support\Upload_Paths::for_meta( $home_id, '_dxai_ui_css_url' )['path'];
+			$file                = \DX_UI\Support\Upload_Paths::for_meta( $home_id, '_dx_ui_css_url' )['path'];
 			$sheets[ $home_id ] = $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
 		// …and its grounds, so no two of the page's sections in a row stand on one. With an AI, the words are written after, place
 		// by place in the Home's measure (Slot_Writer): the composer keeps every place for it.
 		$engine = self::words_engine();
 		$out    = ( new Page_Composer( $libraries[ $home_id ], array( Image_Fit::class, 'fit' ), $sheets[ $home_id ] ) )
-			->grounds( \DXAI_UI\Blocks\Native\Library_Style::look( $home_id )['ground'] )
+			->grounds( \DX_UI\Blocks\Native\Library_Style::look( $home_id )['ground'] )
 			->write_slots( $engine !== null )
-			->kind( \DXAI_UI\Network\Page_Copies::kind_of_address( $path, $label !== '' ? $label : (string) ( $model['h1'][0] ?? '' ) ) )
+			->kind( \DX_UI\Network\Page_Copies::kind_of_address( $path, $label !== '' ? $label : (string) ( $model['h1'][0] ?? '' ) ) )
 			->compose( $model );
 		$summary['compose_log'][ $path ] = $out['log'];
 		if ( $out['sections'] === array() ) {
@@ -812,19 +812,19 @@ final class Site_From_Menu {
 	 * The AI that writes the words of a page built from an old site's page (Slot_Writer): the one chosen in Settings, when it
 	 * has a key; null for none (the composer's own words, as before).
 	 */
-	private static function words_engine(): ?\DXAI_UI\Engines\LLM_Provider_Interface {
+	private static function words_engine(): ?\DX_UI\Engines\LLM_Provider_Interface {
 		/**
 		 * Whether a page built from an old site's page has its words written by the AI chosen in Settings, place by place in the
 		 * measure of its Home's sections. Default: when an AI is chosen and has a key.
 		 *
 		 * @param bool $write true.
 		 */
-		if ( ! (bool) apply_filters( 'dxai_ui_crawl_words', true ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_crawl_words', true ) ) {
 			return null;
 		}
-		$engine = \DXAI_UI\Pages\Copy_Writer::engine();
+		$engine = \DX_UI\Pages\Copy_Writer::engine();
 
-		return $engine instanceof \DXAI_UI\Engines\LLM_Provider_Interface ? $engine : null;
+		return $engine instanceof \DX_UI\Engines\LLM_Provider_Interface ? $engine : null;
 	}
 
 	/**
@@ -844,8 +844,8 @@ final class Site_From_Menu {
 		static $seen = array();
 		$planned = (string) ( $setup[ $area ] ?? '' );
 		$home_id = (int) ( $setup['home_id'] ?? 0 );
-		$block   = 'header' === $area ? \DXAI_UI\Chrome\Site_Header_Block::MARKUP : \DXAI_UI\Chrome\Site_Footer_Block::MARKUP;
-		$needle  = 'header' === $area ? '<!-- wp:' . \DXAI_UI\Chrome\Site_Header_Block::NAME : '<!-- wp:' . \DXAI_UI\Chrome\Site_Footer_Block::NAME;
+		$block   = 'header' === $area ? \DX_UI\Chrome\Site_Header_Block::MARKUP : \DX_UI\Chrome\Site_Footer_Block::MARKUP;
+		$needle  = 'header' === $area ? '<!-- wp:' . \DX_UI\Chrome\Site_Header_Block::NAME : '<!-- wp:' . \DX_UI\Chrome\Site_Footer_Block::NAME;
 		if ( $home_id > 0 && str_contains( (string) get_post_field( 'post_content', $home_id ), $needle ) ) {
 			return $block;
 		}
@@ -859,7 +859,7 @@ final class Site_From_Menu {
 			// Read once per request and Home version: a run saves several pages in one request.
 			$key = $home_id . '@' . (string) get_post_field( 'post_modified_gmt', $home_id, 'raw' );
 			if ( ! isset( $seen[ $key ] ) ) {
-				$seen[ $key ] = \DXAI_UI\Pages\Section_Library::chrome_markup( $home_id );
+				$seen[ $key ] = \DX_UI\Pages\Section_Library::chrome_markup( $home_id );
 			}
 			$own = $seen[ $key ][ $area ];
 			if ( $own !== '' ) {
@@ -886,7 +886,7 @@ final class Site_From_Menu {
 			$run['summary']['crawl_errors'][] = array(
 				'label'   => '',
 				'url'     => (string) ( $run['summary']['origin'] ?? '' ),
-				'message' => __( 'Sorry — no additional pages were created from the live menu.', 'dxai-ui' ),
+				'message' => __( 'Sorry — no additional pages were created from the live menu.', 'dx-ui' ),
 			);
 		}
 		$run['settled'] = true;
@@ -920,13 +920,13 @@ final class Site_From_Menu {
 	 * Prefer the design root classes already on Home so child pages match chrome.
 	 */
 	private function home_wrapper_class( int $home_id, string $fallback ): string {
-		$meta = trim( (string) get_post_meta( $home_id, '_dxai_ui_wrapper_class', true ) );
+		$meta = trim( (string) get_post_meta( $home_id, '_dx_ui_wrapper_class', true ) );
 		if ( $meta !== '' ) {
 			return $meta;
 		}
 		$content = (string) get_post_field( 'post_content', $home_id );
-		if ( preg_match( '/class="[^"]*\bdxai-ui--' . $home_id . '\b([^"]*)"/', $content, $m ) ) {
-			$rest = trim( preg_replace( '/\b(?:wp-block-group|alignfull|dxai-ui|dxai-ui--\d+)\b/', '', $m[1] ) ?? '' );
+		if ( preg_match( '/class="[^"]*\bdx-ui--' . $home_id . '\b([^"]*)"/', $content, $m ) ) {
+			$rest = trim( preg_replace( '/\b(?:wp-block-group|alignfull|dx-ui|dx-ui--\d+)\b/', '', $m[1] ) ?? '' );
 
 			return trim( $fallback . ' ' . $rest );
 		}
@@ -956,7 +956,7 @@ final class Site_From_Menu {
 		$existing = $this->page_for_path( $path, $title, $archive );
 		if ( $existing instanceof \WP_Post ) {
 			// An earlier import's page keeps its key (it may carry the legacy slug).
-			$held = (string) get_post_meta( (int) $existing->ID, '_dxai_ui_page_key', true );
+			$held = (string) get_post_meta( (int) $existing->ID, '_dx_ui_page_key', true );
 			$key  = $held !== '' ? $held : $key;
 		}
 		// The update path used to run whatever the page held; a person's edit
@@ -964,8 +964,8 @@ final class Site_From_Menu {
 		// error into a pages_skipped row with reason 'edited'.
 		if ( $existing instanceof \WP_Post && ! $this->rebuild_edited && self::edited_since_import( $existing ) ) {
 			return new \WP_Error(
-				'dxai_ui_page_edited',
-				__( 'Kept as it is — this page was edited after it was imported.', 'dxai-ui' ),
+				'dx_ui_page_edited',
+				__( 'Kept as it is — this page was edited after it was imported.', 'dx-ui' ),
 				array( 'id' => (int) $existing->ID )
 			);
 		}
@@ -979,17 +979,17 @@ final class Site_From_Menu {
 			 * @param string $status  'publish'.
 			 * @param int    $home_id The design's Home.
 			 */
-			'post_status'  => $existing instanceof \WP_Post && $existing->post_status !== 'draft' ? 'publish' : (string) apply_filters( 'dxai_ui_new_page_status', 'publish', $home_id ),
+			'post_status'  => $existing instanceof \WP_Post && $existing->post_status !== 'draft' ? 'publish' : (string) apply_filters( 'dx_ui_new_page_status', 'publish', $home_id ),
 			'post_title'   => wp_slash( $title ),
 			'post_name'    => $slug,
 			'post_content' => wp_slash( $content ),
 			'meta_input'   => array(
-				'_dxai_ui_generated_page' => '1',
+				'_dx_ui_generated_page' => '1',
 			),
 		);
 		if ( $key !== '' ) {
-			$data['meta_input']['_dxai_ui_page_key']   = $key;
-			$data['meta_input']['_dxai_ui_source_zip'] = $archive;
+			$data['meta_input']['_dx_ui_page_key']   = $key;
+			$data['meta_input']['_dx_ui_source_zip'] = $archive;
 		}
 
 		if ( $existing instanceof \WP_Post ) {
@@ -1014,37 +1014,37 @@ final class Site_From_Menu {
 		update_post_meta( $id, Page_Scope::META, $home_id );
 
 		update_post_meta( $id, '_wp_page_template', Blank_Template::default_slug() );
-		update_post_meta( $id, '_dxai_ui_wrapper_class', $home_wrap );
-		update_post_meta( $id, '_dxai_ui_source_route', trim( $path, '/' ) );
-		update_post_meta( $id, '_dxai_ui_from_live_menu', '1' );
-		$part_key = sanitize_title( (string) get_post_meta( $home_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, true ) );
+		update_post_meta( $id, '_dx_ui_wrapper_class', $home_wrap );
+		update_post_meta( $id, '_dx_ui_source_route', trim( $path, '/' ) );
+		update_post_meta( $id, '_dx_ui_from_live_menu', '1' );
+		$part_key = sanitize_title( (string) get_post_meta( $home_id, \DX_UI\Chrome\Page_Chrome::PART_KEY_META, true ) );
 		if ( $part_key === '' ) {
-			$part_key = sanitize_title( (string) ( $this->home_id > 0 ? get_post_meta( $this->home_id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, true ) : '' ) );
+			$part_key = sanitize_title( (string) ( $this->home_id > 0 ? get_post_meta( $this->home_id, \DX_UI\Chrome\Page_Chrome::PART_KEY_META, true ) : '' ) );
 		}
 		if ( $part_key !== '' ) {
-			update_post_meta( $id, \DXAI_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
+			update_post_meta( $id, \DX_UI\Chrome\Page_Chrome::PART_KEY_META, $part_key );
 		}
-		$mode = (string) get_post_meta( $home_id, \DXAI_UI\Chrome\Page_Chrome::MODE_META, true );
+		$mode = (string) get_post_meta( $home_id, \DX_UI\Chrome\Page_Chrome::MODE_META, true );
 		if ( $mode !== '' ) {
-			update_post_meta( $id, \DXAI_UI\Chrome\Page_Chrome::MODE_META, $mode );
+			update_post_meta( $id, \DX_UI\Chrome\Page_Chrome::MODE_META, $mode );
 		}
 		// Relative to uploads, whichever form the Home's meta or
 		// persist_site_css() handed over — see Upload_Paths.
 		if ( $site_css !== '' ) {
-			update_post_meta( $id, '_dxai_ui_css_url', \DXAI_UI\Support\Upload_Paths::for_storage( $site_css ) );
+			update_post_meta( $id, '_dx_ui_css_url', \DX_UI\Support\Upload_Paths::for_storage( $site_css ) );
 		}
 		if ( $home_js !== '' ) {
-			update_post_meta( $id, '_dxai_ui_js_url', \DXAI_UI\Support\Upload_Paths::for_storage( $home_js ) );
+			update_post_meta( $id, '_dx_ui_js_url', \DX_UI\Support\Upload_Paths::for_storage( $home_js ) );
 		}
-		update_post_meta( $id, '_dxai_ui_font_urls', array_values( array_unique( array_map( 'strval', $font_urls ) ) ) );
-		$home_tokens = get_post_meta( $home_id, \DXAI_UI\Compiler\Design_Tokens::META, true );
+		update_post_meta( $id, '_dx_ui_font_urls', array_values( array_unique( array_map( 'strval', $font_urls ) ) ) );
+		$home_tokens = get_post_meta( $home_id, \DX_UI\Compiler\Design_Tokens::META, true );
 		if ( is_array( $home_tokens ) && $home_tokens !== array() ) {
-			update_post_meta( $id, \DXAI_UI\Compiler\Design_Tokens::META, $home_tokens );
+			update_post_meta( $id, \DX_UI\Compiler\Design_Tokens::META, $home_tokens );
 		}
 		if ( $static ) {
-			update_post_meta( $id, '_dxai_ui_static_html', '1' );
+			update_post_meta( $id, '_dx_ui_static_html', '1' );
 		} else {
-			delete_post_meta( $id, '_dxai_ui_static_html' );
+			delete_post_meta( $id, '_dx_ui_static_html' );
 		}
 
 		/*
@@ -1240,7 +1240,7 @@ final class Site_From_Menu {
 	}
 
 	/**
-	 * The crawled page's slug: its live path, dashed, under the `dxai-`
+	 * The crawled page's slug: its live path, dashed, under the `dxui-`
 	 * prefix — or its title when the path yields nothing.
 	 */
 	private function page_slug( string $path, string $title ): string {
@@ -1256,8 +1256,8 @@ final class Site_From_Menu {
 		if ( ! $taken instanceof \WP_Post ) {
 			return $last;
 		}
-		if ( (string) get_post_meta( $taken->ID, '_dxai_ui_generated_page', true ) === '1' ) {
-			$route = trim( (string) get_post_meta( $taken->ID, '_dxai_ui_source_route', true ), '/' );
+		if ( (string) get_post_meta( $taken->ID, '_dx_ui_generated_page', true ) === '1' ) {
+			$route = trim( (string) get_post_meta( $taken->ID, '_dx_ui_source_route', true ), '/' );
 			if ( $route === '' || $route === trim( $path, '/' ) ) {
 				return $last;
 			}
@@ -1266,14 +1266,14 @@ final class Site_From_Menu {
 		return $this->legacy_slug( $path, $title );
 	}
 
-	/** The slug earlier imports gave a crawled page: "dxai-" and the whole path. */
+	/** The slug earlier imports gave a crawled page: "dxui-" and the whole path. */
 	private function legacy_slug( string $path, string $title ): string {
 		$slug_base = sanitize_title( str_replace( '/', '-', trim( $path, '/' ) ) );
 		if ( $slug_base === '' ) {
 			$slug_base = sanitize_title( $title );
 		}
 
-		return str_starts_with( $slug_base, 'dxai-' ) ? $slug_base : 'dxai-' . $slug_base;
+		return str_starts_with( $slug_base, 'dxui-' ) ? $slug_base : 'dxui-' . $slug_base;
 	}
 
 	/** The page an earlier import made for a path, under its current or its legacy slug. */
@@ -1284,7 +1284,7 @@ final class Site_From_Menu {
 		 * never a second copy beside it.
 		 */
 		if ( $this->home_id > 0 ) {
-			$built = \DXAI_UI\Pages\Site_Pages::page_for( $this->home_id, $path );
+			$built = \DX_UI\Pages\Site_Pages::page_for( $this->home_id, $path );
 			if ( $built instanceof \WP_Post ) {
 				return $built;
 			}
@@ -1315,7 +1315,7 @@ final class Site_From_Menu {
 					'post_type'      => 'page',
 					'post_status'    => $statuses,
 					'posts_per_page' => 1,
-					'meta_key'       => '_dxai_ui_page_key',
+					'meta_key'       => '_dx_ui_page_key',
 					'meta_value'     => $key,
 				)
 			);
@@ -1328,13 +1328,13 @@ final class Site_From_Menu {
 					'name'           => $slug,
 					'post_status'    => $statuses,
 					'posts_per_page' => 1,
-					'meta_key'       => '_dxai_ui_generated_page',
+					'meta_key'       => '_dx_ui_generated_page',
 					'meta_value'     => '1',
 				)
 			);
 			$existing = $found[0] ?? null;
 			if ( $existing instanceof \WP_Post && $key !== '' ) {
-				$holder = (string) get_post_meta( (int) $existing->ID, '_dxai_ui_page_key', true );
+				$holder = (string) get_post_meta( (int) $existing->ID, '_dx_ui_page_key', true );
 				if ( $holder !== '' && $holder !== $key ) {
 					$existing = null;
 				}

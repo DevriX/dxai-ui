@@ -83,13 +83,13 @@ const AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHT
 // The design's outermost element in the hydrated DOM. The runtime replaces
 // `<x-dc>` with `#dc-root > .sc-host > <template wrapper>`, and it is the
 // wrapper whose children are the design's header / sections / footer — the
-// same level `.dxai-ui` holds on a converted page. `#dc-root` and `.sc-host`
+// same level `.dx-ui` holds on a converted page. `#dc-root` and `.sc-host`
 // are pinned to the viewport height by the runtime's own CSS, so keying
 // either of them would put the two sides one level apart and nothing would
 // match.
 const DESIGN_ROOT = '#dc-root > .sc-host > div';
 
-const CHROME = process.env.DXAI_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.DXUI_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 function parseArgs(argv) {
 	const out = {};

@@ -2,14 +2,14 @@
 /**
  * A template: a theme, or a kind of theme, and the team's sections made for it.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
  * The plugin carries one template, American Restoration's: the sections built by hand and the layouts (data/block-library), written in
@@ -20,7 +20,7 @@ use DXAI_UI\Theme\Capabilities;
 final class Template {
 
 	/** The built-in template's slug: the theme it is for. */
-	public const BUILT_IN = \DXAI_UI\Theme\Adapters\Amr_Adapter::SLUGS[0];
+	public const BUILT_IN = \DX_UI\Theme\Adapters\Amr_Adapter::SLUGS[0];
 
 	/** The generic library's slug. */
 	public const GENERIC = 'generic';
@@ -53,10 +53,10 @@ final class Template {
 				'themes'  => Block_Library::themes(),
 				'kinds'   => array( 'dx' ),
 				'extends' => '',
-				'dir'     => DXAI_UI_DIR . Block_Library::DIR,
+				'dir'     => DX_UI_DIR . Block_Library::DIR,
 				'generic' => false,
 				'stored'  => false,
-			) + Block_Library::layouts_in( DXAI_UI_DIR . Block_Library::DIR ),
+			) + Block_Library::layouts_in( DX_UI_DIR . Block_Library::DIR ),
 		);
 
 		/**
@@ -64,7 +64,7 @@ final class Template {
 		 *
 		 * @param array<string, array<string, mixed>> $all By slug.
 		 */
-		return (array) apply_filters( 'dxai_ui_templates', $all );
+		return (array) apply_filters( 'dx_ui_templates', $all );
 	}
 
 	/**
@@ -94,10 +94,10 @@ final class Template {
 	public static function generic(): array {
 		return array(
 			'slug'    => self::GENERIC,
-			'label'   => __( 'The generic library', 'dxai-ui' ),
+			'label'   => __( 'The generic library', 'dx-ui' ),
 			'themes'  => array(),
 			'kinds'   => array(),
-			'dir'     => DXAI_UI_DIR . Block_Library::DIR,
+			'dir'     => DX_UI_DIR . Block_Library::DIR,
 			'generic' => true,
 		);
 	}
@@ -113,7 +113,7 @@ final class Template {
 		 *
 		 * @param string $slug
 		 */
-		$slug = (string) apply_filters( 'dxai_ui_template', '' );
+		$slug = (string) apply_filters( 'dx_ui_template', '' );
 		if ( $slug === self::GENERIC ) {
 			return self::generic();
 		}

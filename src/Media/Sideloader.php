@@ -2,12 +2,12 @@
 /**
  * Sideload remote or local design assets into the Media Library / uploads.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 final class Sideloader {
 
@@ -22,14 +22,14 @@ final class Sideloader {
 	 * sends the same ZIP to process-source, to generate-block and again per
 	 * chunk, and each request unpacks and harvests from scratch, while the
 	 * harvester's own dedupe lasts one request. This install held 2666
-	 * attachments tagged `_dxai_ui_asset_kind`; hashed, they are 332
+	 * attachments tagged `_dx_ui_asset_kind`; hashed, they are 332
 	 * distinct files — 2334 redundant copies, 806 MB with their thumbnails,
 	 * one logo 92 times — each a fresh upload plus resizes: disk quota,
 	 * image-resize CPU and request time a shared host does not have. The key
 	 * is the content, not the name: `public/favicon.png` is 57 attachments
 	 * here, but several designs' different favicons among them.
 	 */
-	public const HASH_META = '_dxai_ui_asset_sha1';
+	public const HASH_META = '_dx_ui_asset_sha1';
 
 	/**
 	 * This request's stored assets by content, keyed `<blog id>:<sha1>`.
@@ -69,13 +69,13 @@ final class Sideloader {
 	 */
 	public static function from_url( string $url, string $filename = '', string $original = '' ): array|\WP_Error {
 		if ( ! Url_Guard::is_safe_http( $url ) ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'Remote asset URL is not allowed.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Remote asset URL is not allowed.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$known = self::fetched( $url );
 		if ( null !== $known ) {
-			$name = sanitize_file_name( $filename !== '' ? $filename : wp_basename( (string) ( wp_parse_url( $url, PHP_URL_PATH ) ?: 'dxai-asset.bin' ) ) );
-			$name = '' === $name ? 'dxai-asset.bin' : $name;
+			$name = sanitize_file_name( $filename !== '' ? $filename : wp_basename( (string) ( wp_parse_url( $url, PHP_URL_PATH ) ?: 'dxui-asset.bin' ) ) );
+			$name = '' === $name ? 'dxui-asset.bin' : $name;
 
 			return array_merge(
 				$known,
@@ -97,14 +97,14 @@ final class Sideloader {
 		$size = filesize( $tmp );
 		if ( false === $size || $size > self::max_bytes( $filename !== '' ? $filename : $url ) ) {
 			wp_delete_file( $tmp );
-			return new \WP_Error( 'dxai_ui_media', __( 'Remote asset is too large.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Remote asset is too large.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		if ( $filename === '' ) {
-			$filename = wp_basename( (string) ( wp_parse_url( $url, PHP_URL_PATH ) ?: 'dxai-asset.bin' ) );
+			$filename = wp_basename( (string) ( wp_parse_url( $url, PHP_URL_PATH ) ?: 'dxui-asset.bin' ) );
 		}
 		if ( $filename === '' || $filename === '/' ) {
-			$filename = 'dxai-asset.bin';
+			$filename = 'dxui-asset.bin';
 		}
 
 		$stored = self::from_path( $tmp, $filename, $original !== '' ? $original : $url, true );
@@ -127,7 +127,7 @@ final class Sideloader {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
 		if ( ! is_readable( $path ) ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'Asset file is not readable.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Asset file is not readable.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		if ( $filename === '' ) {
@@ -140,12 +140,12 @@ final class Sideloader {
 		if ( 'svg' === $ext ) {
 			$work = $is_temp ? $path : wp_tempnam( $filename );
 			if ( ! $is_temp && ! copy( $path, $work ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
-				return new \WP_Error( 'dxai_ui_media', __( 'Unable to copy SVG for sanitizing.', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_media', __( 'Unable to copy SVG for sanitizing.', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 			if ( ! Svg_Sanitizer::clean_file( $work ) ) {
 				wp_delete_file( $work );
 
-				return new \WP_Error( 'dxai_ui_media', __( 'This SVG could not be sanitized, so it was not imported.', 'dxai-ui' ), array( 'status' => 415 ) );
+				return new \WP_Error( 'dx_ui_media', __( 'This SVG could not be sanitized, so it was not imported.', 'dx-ui' ), array( 'status' => 415 ) );
 			}
 			$path    = $work;
 			$is_temp = true;
@@ -209,7 +209,7 @@ final class Sideloader {
 		} elseif ( ! $is_temp ) {
 			$tmp = wp_tempnam( $filename );
 			if ( ! copy( $path, $tmp ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
-				return new \WP_Error( 'dxai_ui_media', __( 'Unable to copy asset for sideload.', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_media', __( 'Unable to copy asset for sideload.', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 		}
 
@@ -250,9 +250,9 @@ final class Sideloader {
 			'original' => $original,
 			'filename' => $filename,
 		);
-		update_post_meta( (int) $id, '_dxai_ui_asset_kind', $kind );
+		update_post_meta( (int) $id, '_dx_ui_asset_kind', $kind );
 		if ( $original !== '' ) {
-			update_post_meta( (int) $id, '_dxai_ui_asset_original', $original );
+			update_post_meta( (int) $id, '_dx_ui_asset_original', $original );
 		}
 		if ( '' !== $stamp ) {
 			update_post_meta( (int) $id, self::HASH_META, $stamp );
@@ -291,29 +291,29 @@ final class Sideloader {
 		 */
 		$ext_raw = strtolower( (string) pathinfo( $filename, PATHINFO_EXTENSION ) );
 		if ( ! in_array( self::kind( $ext_raw ), array( 'image', 'video', 'audio', 'font', 'lottie' ), true ) ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'This kind of file is not stored as a design asset.', 'dxai-ui' ), array( 'status' => 415 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'This kind of file is not stored as a design asset.', 'dx-ui' ), array( 'status' => 415 ) );
 		}
 		if ( $ext_raw === 'svg' && ! Svg_Sanitizer::clean_file( $tmp ) ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'Unable to sanitize SVG.', 'dxai-ui' ), array( 'status' => 415 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Unable to sanitize SVG.', 'dx-ui' ), array( 'status' => 415 ) );
 		}
 
 		$upload = wp_upload_dir();
 		if ( ! empty( $upload['error'] ) ) {
-			return new \WP_Error( 'dxai_ui_media', (string) $upload['error'], array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_media', (string) $upload['error'], array( 'status' => 500 ) );
 		}
 
-		$dir = trailingslashit( $upload['basedir'] ) . 'dxai-ui/assets';
+		$dir = trailingslashit( $upload['basedir'] ) . 'dx-ui/assets';
 		wp_mkdir_p( $dir );
 		$safe = sanitize_file_name( $filename );
 		$hash = sha1_file( $tmp );
 		if ( ! is_string( $hash ) ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'Unable to read design asset.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Unable to read design asset.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
 		/*
 		 * Named by content, not by time. The prefix was md5 of the temp path
 		 * and microtime(), so every request stored another copy: this
-		 * install's dxai-ui/assets holds 309 files, 11.2 MB, with 2 distinct
+		 * install's dx-ui/assets holds 309 files, 11.2 MB, with 2 distinct
 		 * contents among them (script sources from before the media-only
 		 * rule above). Now the same bytes under the same name land on the
 		 * same file, and a request that finds it there — its SHA-1 checked,
@@ -334,13 +334,13 @@ final class Sideloader {
 				continue;
 			}
 			if ( ! self::write_whole( $tmp, $dest, $hash ) ) {
-				return new \WP_Error( 'dxai_ui_media', __( 'Unable to store design asset.', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_media', __( 'Unable to store design asset.', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 			$name = $candidate;
 			break;
 		}
 		if ( '' === $name ) {
-			return new \WP_Error( 'dxai_ui_media', __( 'Unable to store design asset.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_media', __( 'Unable to store design asset.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 		$dest = $dir . '/' . $name;
 
@@ -349,7 +349,7 @@ final class Sideloader {
 
 		return array(
 			'id'       => 0,
-			'url'      => trailingslashit( $upload['baseurl'] ) . 'dxai-ui/assets/' . $name,
+			'url'      => trailingslashit( $upload['baseurl'] ) . 'dx-ui/assets/' . $name,
 			'path'     => $dest,
 			'kind'     => $kind,
 			'mime'     => $mime,
@@ -401,7 +401,7 @@ final class Sideloader {
 		$legacy = (array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				"SELECT k.post_id FROM {$wpdb->postmeta} k LEFT JOIN {$wpdb->postmeta} h ON h.post_id = k.post_id AND h.meta_key = %s
-				WHERE k.meta_key = '_dxai_ui_asset_kind' AND h.meta_id IS NULL AND k.post_id > %d ORDER BY k.post_id ASC LIMIT %d",
+				WHERE k.meta_key = '_dx_ui_asset_kind' AND h.meta_id IS NULL AND k.post_id > %d ORDER BY k.post_id ASC LIMIT %d",
 				self::HASH_META,
 				$after_id,
 				max( 0, $max_files )
@@ -492,7 +492,7 @@ final class Sideloader {
 		$query['posts_per_page'] = 3;
 		$query['meta_query']     = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			array(
-				'key'     => '_dxai_ui_asset_original',
+				'key'     => '_dx_ui_asset_original',
 				'value'   => $original,
 				'compare' => '=',
 			),
@@ -600,7 +600,7 @@ final class Sideloader {
 			'id'       => $id,
 			'url'      => (string) wp_get_attachment_url( $id ),
 			'path'     => (string) get_attached_file( $id ),
-			'kind'     => (string) get_post_meta( $id, '_dxai_ui_asset_kind', true ),
+			'kind'     => (string) get_post_meta( $id, '_dx_ui_asset_kind', true ),
 			'mime'     => (string) get_post_mime_type( $id ),
 			'original' => '',
 			'filename' => '',
@@ -648,7 +648,7 @@ final class Sideloader {
 	}
 
 	private static function fetch_key( string $url ): string {
-		return 'dxai_ui_fetch_' . md5( $url );
+		return 'dx_ui_fetch_' . md5( $url );
 	}
 
 	/**

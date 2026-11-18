@@ -11,15 +11,15 @@
  * (Template_Fonts::print_site()), a design's footer on a theme's page (Site_Footer_Block) — and prints them at the end of the page in a
  * style element for print, which a few lines switch on once the page has loaded and its first contentful paint was shown, or
  * BACKSTOP ms after it loaded; again in <noscript>. The fallback faces (local fonts) stay where they were. Not in the admin, nor when
- * `dxai_ui_late_fonts` says no.
+ * `dx_ui_late_fonts` says no.
  *
  * Writes nothing: a record of the template's fonts is given for the run (pre_option). Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Late_Fonts;
-use DXAI_UI\Theme\Template_Fonts;
+use DX_UI\Media\Late_Fonts;
+use DX_UI\Theme\Template_Fonts;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -46,7 +46,7 @@ $printed = static function (): string {
 $printed();
 
 echo "What waits\n";
-$web   = '@font-face{font-family:"Lf Body";font-style:normal;font-weight:400;font-display:swap;src:url(https://example.test/uploads/dxai-ui/template-fonts/a.woff2) format("woff2");unicode-range:U+0000-00FF}';
+$web   = '@font-face{font-family:"Lf Body";font-style:normal;font-weight:400;font-display:swap;src:url(https://example.test/uploads/dx-ui/template-fonts/a.woff2) format("woff2");unicode-range:U+0000-00FF}';
 $both  = '@font-face{font-family:"Lf Head";font-weight:700;src:local("Lf Head Bold"),url(/fonts/head.woff2) format("woff2")}';
 $local = '@font-face{font-family:"Lf Body Fallback";font-style:normal;font-weight:100 500;src:local("Arial"),local("ArialMT");size-adjust:104.2%;ascent-override:90%}';
 $rest  = ':root{--font-primary:"Lf Body","Lf Body Fallback",sans-serif}';
@@ -66,9 +66,9 @@ $expect( 'nothing held can close the style element', ! str_contains( $printed(),
 $expect( 'CSS without faces is left as it is', 'a{color:red}' === Late_Fonts::hold( 'a{color:red}' ) && '' === Late_Fonts::held() );
 
 echo "\nWhere it does not\n";
-add_filter( 'dxai_ui_late_fonts', '__return_false' );
+add_filter( 'dx_ui_late_fonts', '__return_false' );
 $off = Late_Fonts::hold( $web . $local );
-remove_filter( 'dxai_ui_late_fonts', '__return_false' );
+remove_filter( 'dx_ui_late_fonts', '__return_false' );
 $expect( 'nothing when the filter says no: the faces print where they were', $off === $web . $local && '' === Late_Fonts::held() );
 set_current_screen( 'dashboard' );
 $admin = Late_Fonts::hold( $web );
@@ -90,19 +90,19 @@ $record = static fn() => array(
 		),
 	),
 	'files'          => array( 'a.woff2' ),
-	'preload'        => array( array( 'family' => 'Lf Body', 'url' => 'https://example.test/uploads/dxai-ui/template-fonts/a.woff2' ) ),
+	'preload'        => array( array( 'family' => 'Lf Body', 'url' => 'https://example.test/uploads/dx-ui/template-fonts/a.woff2' ) ),
 );
 add_filter( 'pre_option_' . Template_Fonts::OPTION, $record );
-add_filter( 'dxai_ui_template_fonts_choice', '__return_empty_array', 99 );
+add_filter( 'dx_ui_template_fonts_choice', '__return_empty_array', 99 );
 ob_start();
 Template_Fonts::print_site();
 $site = (string) ob_get_clean();
 $held = Late_Fonts::held();
 $printed();
-$expect( 'the page prints the stacks and the fallback face at once, and the web face waits for the end of the page', str_contains( $site, 'id="dxai-template-fonts"' ) && str_contains( $site, '--font-primary:' ) && str_contains( $site, '@font-face{font-family:"Lf Body Fallback"' ) && ! str_contains( $site, 'a.woff2' ) && $held === $web, $site . ' | ' . $held );
+$expect( 'the page prints the stacks and the fallback face at once, and the web face waits for the end of the page', str_contains( $site, 'id="dxui-template-fonts"' ) && str_contains( $site, '--font-primary:' ) && str_contains( $site, '@font-face{font-family:"Lf Body Fallback"' ) && ! str_contains( $site, 'a.woff2' ) && $held === $web, $site . ' | ' . $held );
 $theme_dir = trailingslashit( get_stylesheet_directory_uri() ) . 'assets/src/fonts/';
 $expect( 'and the theme is not asked to preload what waits', array( 'https://example.com/other.woff2' ) === Template_Fonts::preload( array( $theme_dir . 'x.woff2', 'https://example.com/other.woff2' ) ) );
-remove_filter( 'dxai_ui_template_fonts_choice', '__return_empty_array', 99 );
+remove_filter( 'dx_ui_template_fonts_choice', '__return_empty_array', 99 );
 remove_filter( 'pre_option_' . Template_Fonts::OPTION, $record );
 
 echo "\nThe plugin prints it\n";

@@ -2,16 +2,16 @@
 /**
  * REST: "make the rest from this page".
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Network\Network_Model;
-use DXAI_UI\Network\Page_Copies;
-use DXAI_UI\Pages\Copy_Writer;
+use DX_UI\Network\Network_Model;
+use DX_UI\Network\Page_Copies;
+use DX_UI\Pages\Copy_Writer;
 
 /**
  * GET  /copies                    the pages of the site made from another page, with their originals.
@@ -28,7 +28,7 @@ final class Copies_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/copies',
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
@@ -37,7 +37,7 @@ final class Copies_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/copies/(?P<id>\d+)',
 			array(
 				array(
@@ -64,7 +64,7 @@ final class Copies_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/copies/(?P<id>\d+)/give-back',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -84,7 +84,7 @@ final class Copies_Controller {
 	private static function page( int $id ): \WP_Post|\WP_Error {
 		$post = get_post( $id );
 		if ( ! $post instanceof \WP_Post || $post->post_type !== 'page' || ! current_user_can( 'edit_post', $id ) ) {
-			return new \WP_Error( 'dxai_copies_page', __( 'There is no such page.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_copies_page', __( 'There is no such page.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return $post;
@@ -158,7 +158,7 @@ final class Copies_Controller {
 			return $post;
 		}
 		if ( ! in_array( Page_Copies::kind( $id ), array( 'service', 'location' ), true ) ) {
-			return new \WP_Error( 'dxai_copies_kind', __( 'Copies are made from a service page or a city page.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dxui_copies_kind', __( 'Copies are made from a service page or a city page.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$t      = (array) $request->get_param( 'target' );
 		$target = array(
@@ -167,7 +167,7 @@ final class Copies_Controller {
 			'link'  => esc_url_raw( (string) ( $t['link'] ?? '' ) ),
 		);
 		if ( $target['id'] > 0 && ! current_user_can( 'edit_post', $target['id'] ) ) {
-			return new \WP_Error( 'dxai_copies_target', __( 'You cannot edit that page.', 'dxai-ui' ), array( 'status' => 403 ) );
+			return new \WP_Error( 'dxui_copies_target', __( 'You cannot edit that page.', 'dx-ui' ), array( 'status' => 403 ) );
 		}
 		$targets = Page_Copies::targets( $id );
 		$plan    = Page_Copies::sections( $id, array_column( array_filter( $targets, static fn( array $x ): bool => $x['state'] !== 'own' ), 'id' ) );
@@ -176,7 +176,7 @@ final class Copies_Controller {
 			return $out;
 		}
 		// How the copy measures against the team's pages of its kind (N3).
-		$out['quality'] = \DXAI_UI\Network\Page_Quality::of( (int) $out['id'] );
+		$out['quality'] = \DX_UI\Network\Page_Quality::of( (int) $out['id'] );
 
 		return rest_ensure_response( $out );
 	}
@@ -184,7 +184,7 @@ final class Copies_Controller {
 	public function give_back( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$id = (int) $request['id'];
 		if ( ! current_user_can( 'edit_post', $id ) || get_post_type( $id ) !== 'page' ) {
-			return new \WP_Error( 'dxai_copies_page', __( 'There is no such page.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_copies_page', __( 'There is no such page.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$done = Page_Copies::give_back( $id );
 

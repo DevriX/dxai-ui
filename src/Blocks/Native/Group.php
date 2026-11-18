@@ -2,15 +2,15 @@
 /**
  * A plain container: core's Group.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
 /**
- * `dxai-ui/box` written as a `div`, `section`, `header`, `footer`, `main`,
+ * `dx-ui/box` written as a `div`, `section`, `header`, `footer`, `main`,
  * `aside` or `article` → `core/group`. A group is one element of that tag with
  * the inner blocks in it, which is what the box wrote: the page keeps its
  * elements, classes and ARIA and gains the group's own controls (tag, layout,
@@ -26,18 +26,18 @@ final class Group extends Converter {
 
 	private const TAGS = array( 'div', 'section', 'header', 'footer', 'main', 'aside', 'article' );
 
-	private const KNOWN = array( 'tagName', 'className', 'dxaiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxaiData', 'attrOrder' );
+	private const KNOWN = array( 'tagName', 'className', 'dxuiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxuiData', 'attrOrder' );
 
 	public function id(): string {
 		return 'group';
 	}
 
 	public function label(): string {
-		return __( 'Containers → Group', 'dxai-ui' );
+		return __( 'Containers → Group', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/box';
+		return 'dx-ui/box';
 	}
 
 	public function target(): string {
@@ -65,7 +65,7 @@ final class Group extends Converter {
 				$html .= ' ' . $name . '="' . esc_attr( (string) $attrs[ $key ] ) . '"';
 			}
 		}
-		foreach ( is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array() as $name => $value ) {
+		foreach ( is_array( $attrs['dxuiData'] ?? null ) ? $attrs['dxuiData'] : array() as $name => $value ) {
 			$html .= ' ' . $name . '="' . esc_attr( (string) $value ) . '"';
 		}
 
@@ -122,7 +122,7 @@ final class Group extends Converter {
 		if ( ( $block['innerBlocks'] ?? array() ) === array() || ! in_array( $tag, self::TAGS, true ) || ! self::only( $attrs, self::KNOWN ) ) {
 			return null;
 		}
-		$data = is_array( $attrs['dxaiData'] ?? null ) ? $attrs['dxaiData'] : array();
+		$data = is_array( $attrs['dxuiData'] ?? null ) ? $attrs['dxuiData'] : array();
 		foreach ( $data as $name => $value ) {
 			if ( ! is_string( $name ) || preg_match( '/^data-[a-z][a-z0-9-]*$/', $name ) !== 1 || ! is_string( $value ) || self::hazard( $value ) ) {
 				return null;
@@ -180,13 +180,13 @@ final class Group extends Converter {
 		if ( $tag !== 'div' ) {
 			$new['tagName'] = $tag;
 		}
-		foreach ( array( 'className', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxaiCss' ) as $key ) {
+		foreach ( array( 'className', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxuiCss' ) as $key ) {
 			if ( isset( $attrs[ $key ] ) && (string) $attrs[ $key ] !== '' ) {
 				$new[ $key ] = $attrs[ $key ];
 			}
 		}
 		if ( $data !== array() ) {
-			$new['dxaiData'] = $data;
+			$new['dxuiData'] = $data;
 		}
 
 		$content[0] = self::open_tag( $tag, $new );

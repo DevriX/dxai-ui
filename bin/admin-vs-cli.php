@@ -2,7 +2,7 @@
 /**
  * The same ZIP, imported both ways, has to produce the same page.
  *
- * "При импорт през wp admin plugin DXAI резултата е доста по различен" — and it
+ * "При импорт през wp admin plugin DXUI резултата е доста по различен" — and it
  * was, for reasons nothing measured: the admin picked its connector from the
  * card someone clicked, dropped four fields the repository reads
  * (`static_html`, `tailwind_config`, `wrapper_style`, `source_html`) and shipped
@@ -29,17 +29,17 @@
  *        bin/wp-php.sh bin/admin-vs-cli.php --break=tailwind_config ...
  *                                                    (negative control: must DIFFER)
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Connectors\Zip_Router;
-use DXAI_UI\Structures\Structure_Repository;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Connectors\Zip_Router;
+use DX_UI\Structures\Structure_Repository;
 
 $args = array_slice( $argv, 1 );
 /*
@@ -95,7 +95,7 @@ $shape = static function ( int $page_id ): array {
 	 */
 	$css = '';
 	// Either stored form: relative to uploads (new) or an absolute URL (old).
-	$file = DXAI_UI\Support\Upload_Paths::for_meta( (int) $page_id, '_dxai_ui_css_url' )['path'];
+	$file = DX_UI\Support\Upload_Paths::for_meta( (int) $page_id, '_dx_ui_css_url' )['path'];
 	if ( $file !== '' && is_readable( $file ) ) {
 		$css = (string) file_get_contents( $file );
 	}
@@ -103,14 +103,14 @@ $shape = static function ( int $page_id ): array {
 	return array(
 		'content'  => $content,
 		'blocks'   => preg_match_all( '/<!--\s+wp:/', $content ),
-		'islands'  => preg_match_all( '#<!--\s+wp:(?:dxai-ui/html|html)[\s-]#', $content ),
+		'islands'  => preg_match_all( '#<!--\s+wp:(?:dx-ui/html|html)[\s-]#', $content ),
 		'css_len'  => strlen( $css ),
 		'css_hash' => $css === '' ? '' : md5( $css ),
 		'hash'     => md5( $content ),
-		'static'   => (string) get_post_meta( $page_id, '_dxai_ui_static_html', true ),
-		'wrapper'  => (string) get_post_meta( $page_id, '_dxai_ui_wrapper_class', true ),
-		'route'    => (string) get_post_meta( $page_id, '_dxai_ui_source_route', true ),
-		'fonts'    => (array) get_post_meta( $page_id, '_dxai_ui_font_urls', true ),
+		'static'   => (string) get_post_meta( $page_id, '_dx_ui_static_html', true ),
+		'wrapper'  => (string) get_post_meta( $page_id, '_dx_ui_wrapper_class', true ),
+		'route'    => (string) get_post_meta( $page_id, '_dx_ui_source_route', true ),
+		'fonts'    => (array) get_post_meta( $page_id, '_dx_ui_font_urls', true ),
 		'template' => (string) get_post_meta( $page_id, '_wp_page_template', true ),
 		/*
 		 * The archive the page came from.
@@ -121,7 +121,7 @@ $shape = static function ( int $page_id ): array {
 		 * anything imported through wp-admin could never be measured. Compared
 		 * here so the two paths cannot drift apart again in silence.
 		 */
-		'zip'      => (string) get_post_meta( $page_id, '_dxai_ui_source_zip', true ),
+		'zip'      => (string) get_post_meta( $page_id, '_dx_ui_source_zip', true ),
 	);
 };
 
@@ -152,7 +152,7 @@ $save_admin = static function ( array $result ) use ( $broken ): int|\WP_Error {
 	if ( $broken !== '' ) {
 		unset( $result[ $broken ] );
 	}
-	$request = new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/save-pattern' );
+	$request = new WP_REST_Request( 'POST', '/' . DX_UI_REST_NAMESPACE . '/save-pattern' );
 	$request->set_header( 'content-type', 'application/json' );
 	$request->set_body_params(
 		array_merge(

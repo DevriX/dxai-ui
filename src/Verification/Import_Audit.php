@@ -14,16 +14,16 @@
  * `bin/verify-import.cjs`; `report()` says so rather than implying the page is
  * fully verified.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Verification;
+namespace DX_UI\Verification;
 
 final class Import_Audit {
 
-	public const META = '_dxai_ui_audit';
+	public const META = '_dx_ui_audit';
 
 	/** Source-code shapes that must never reach rendered copy. */
 	private const LEAKED_SOURCE = '/(?:const\s+\w+\s*[:=]|=>\s*\{|\breturn\s*\(\s*<|\bimport\s+\w+\s+from\b|useState\(|className=\{)/';
@@ -77,7 +77,7 @@ final class Import_Audit {
 
 		$out = $this->result( $findings, 8, $notices );
 		// Tag histogram from the compile, when the page still carries it.
-		$islands = get_post_meta( $page_id, '_dxai_ui_islands', true );
+		$islands = get_post_meta( $page_id, '_dx_ui_islands', true );
 		if ( is_array( $islands ) && $islands !== array() ) {
 			$out['islands'] = $islands;
 		}
@@ -96,14 +96,14 @@ final class Import_Audit {
 			'checked'  => $checked,
 			'findings' => array_values( $findings ),
 			'notices'  => array_values( $notices ),
-			'note'     => __( 'Geometry, editor block validity and page behaviour are not covered here — run bin/verify-import.cjs for those.', 'dxai-ui' ),
+			'note'     => __( 'Geometry, editor block validity and page behaviour are not covered here — run bin/verify-import.cjs for those.', 'dx-ui' ),
 		);
 	}
 
 	/**
 	 * How much of the page a person can actually edit.
 	 *
-	 * A `dxai-ui/html` block is a box of markup: no controls, no child blocks,
+	 * A `dx-ui/html` block is a box of markup: no controls, no child blocks,
 	 * nothing editable but the HTML itself. Above 30% opaque blocks the audit
 	 * soft-fails so the import summary surfaces the gap; below that it stays a
 	 * notice (every design still has some islands we have not closed).
@@ -121,7 +121,7 @@ final class Import_Audit {
 				continue;
 			}
 			++$total;
-			if ( $name === 'dxai-ui/html' || $name === 'core/html' ) {
+			if ( $name === 'dx-ui/html' || $name === 'core/html' ) {
 				++$opaque;
 			}
 		}
@@ -135,7 +135,7 @@ final class Import_Audit {
 			'check'  => 'editability',
 			'detail' => sprintf(
 				/* translators: 1: opaque block count, 2: total blocks, 3: percentage. */
-				__( '%1$d of %2$d blocks (%3$d%%) are raw-HTML blocks, which cannot be edited in the editor beyond their markup.', 'dxai-ui' ),
+				__( '%1$d of %2$d blocks (%3$d%%) are raw-HTML blocks, which cannot be edited in the editor beyond their markup.', 'dx-ui' ),
 				$opaque,
 				$total,
 				$pct
@@ -164,8 +164,8 @@ final class Import_Audit {
 	/**
 	 * Controls that can be clicked against elements that can change.
 	 *
-	 * The runtime binds a click to a `dxai-toggle-*` marker and changes a
-	 * `dxai-on-*` / `dxai-off-*` target. A trigger with no target is a control
+	 * The runtime binds a click to a `dxui-toggle-*` marker and changes a
+	 * `dxui-on-*` / `dxui-off-*` target. A trigger with no target is a control
 	 * that responds to nothing — measured across the corpus at 390 triggers to
 	 * 22 targets, which the browser probe reported as 38 of 158 controls inert.
 	 *
@@ -176,12 +176,12 @@ final class Import_Audit {
 	 * @return array<int, array{check:string, detail:string}>
 	 */
 	private function note_controls( string $markup ): array {
-		$triggers = (int) preg_match_all( '/dxai-toggle-[a-z0-9_-]+/i', $markup );
+		$triggers = (int) preg_match_all( '/dxui-toggle-[a-z0-9_-]+/i', $markup );
 		if ( $triggers === 0 ) {
 			return array();
 		}
 
-		$targets = (int) preg_match_all( '/dxai-(?:on|off)-[a-z0-9_-]+/i', $markup );
+		$targets = (int) preg_match_all( '/dxui-(?:on|off)-[a-z0-9_-]+/i', $markup );
 		if ( $targets >= $triggers ) {
 			return array();
 		}
@@ -191,7 +191,7 @@ final class Import_Audit {
 				'check'  => 'controls',
 				'detail' => sprintf(
 					/* translators: 1: trigger count, 2: target count. */
-					__( '%1$d clickable control(s) but only %2$d element(s) the runtime can change, so some controls will do nothing.', 'dxai-ui' ),
+					__( '%1$d clickable control(s) but only %2$d element(s) the runtime can change, so some controls will do nothing.', 'dx-ui' ),
 					$triggers,
 					$targets
 				),
@@ -247,7 +247,7 @@ final class Import_Audit {
 				'check'  => 'inline-styles',
 				'detail' => sprintf(
 					/* translators: 1: lossy count, 2: total count. */
-					__( '%1$d of %2$d inline styles would lose a declaration if a user without unfiltered_html saved this page.', 'dxai-ui' ),
+					__( '%1$d of %2$d inline styles would lose a declaration if a user without unfiltered_html saved this page.', 'dx-ui' ),
 					$lossy,
 					$total
 				),
@@ -297,7 +297,7 @@ final class Import_Audit {
 				'check'  => 'not-empty',
 				'detail' => sprintf(
 					/* translators: %d: number of blocks found. */
-					__( 'The page holds %d block(s) — the conversion produced nothing to show.', 'dxai-ui' ),
+					__( 'The page holds %d block(s) — the conversion produced nothing to show.', 'dx-ui' ),
 					count( $blocks )
 				),
 			),
@@ -333,7 +333,7 @@ final class Import_Audit {
 				'check'  => 'blocks-registered',
 				'detail' => sprintf(
 					/* translators: %s: comma-separated block names. */
-					__( 'Unregistered block(s): %s. They render as nothing and cannot be edited.', 'dxai-ui' ),
+					__( 'Unregistered block(s): %s. They render as nothing and cannot be edited.', 'dx-ui' ),
 					implode( ', ', array_keys( $unknown ) )
 				),
 			);
@@ -343,7 +343,7 @@ final class Import_Audit {
 				'check'  => 'blocks-parse',
 				'detail' => sprintf(
 					/* translators: %d: number of fragments. */
-					__( '%d markup fragment(s) sit outside any block — the serialized output is malformed.', 'dxai-ui' ),
+					__( '%d markup fragment(s) sit outside any block — the serialized output is malformed.', 'dx-ui' ),
 					$orphans
 				),
 			);
@@ -372,7 +372,7 @@ final class Import_Audit {
 				'check'  => 'template-parts',
 				'detail' => sprintf(
 					/* translators: %s: comma-separated template part slugs. */
-					__( 'The page references template part(s) that do not exist: %s.', 'dxai-ui' ),
+					__( 'The page references template part(s) that do not exist: %s.', 'dx-ui' ),
 					implode( ', ', $missing )
 				),
 			),
@@ -408,7 +408,7 @@ final class Import_Audit {
 				'check'  => 'image-sources',
 				'detail' => sprintf(
 					/* translators: %d: number of images. */
-					__( '%d image(s) have no source — an asset import did not resolve.', 'dxai-ui' ),
+					__( '%d image(s) have no source — an asset import did not resolve.', 'dx-ui' ),
 					$empty
 				),
 			),
@@ -419,7 +419,7 @@ final class Import_Audit {
 	 * @return array<int, array{check:string, detail:string}>
 	 */
 	private function check_leaked_source( string $markup ): array {
-		// Only the text a visitor reads: a `dxai-ui/html` island legitimately
+		// Only the text a visitor reads: a `dx-ui/html` island legitimately
 		// contains markup, and block comments legitimately contain JSON.
 		$text = wp_strip_all_tags( (string) preg_replace( '/<!--.*?-->/s', '', $markup ) );
 		if ( ! preg_match( self::LEAKED_SOURCE, $text, $hit ) ) {
@@ -431,7 +431,7 @@ final class Import_Audit {
 				'check'  => 'no-leaked-source',
 				'detail' => sprintf(
 					/* translators: %s: the offending snippet. */
-					__( 'Component source is being rendered as page copy, near: %s', 'dxai-ui' ),
+					__( 'Component source is being rendered as page copy, near: %s', 'dx-ui' ),
 					trim( substr( $text, max( 0, (int) strpos( $text, $hit[0] ) - 20 ), 90 ) )
 				),
 			),
@@ -442,12 +442,12 @@ final class Import_Audit {
 	 * @return array<int, array{check:string, detail:string}>
 	 */
 	private function check_stylesheet( int $page_id ): array {
-		$url = (string) get_post_meta( $page_id, '_dxai_ui_css_url', true );
+		$url = (string) get_post_meta( $page_id, '_dx_ui_css_url', true );
 		if ( $url === '' ) {
 			return array(
 				array(
 					'check'  => 'stylesheet',
-					'detail' => __( 'No stylesheet was written for this page.', 'dxai-ui' ),
+					'detail' => __( 'No stylesheet was written for this page.', 'dx-ui' ),
 				),
 			);
 		}
@@ -455,14 +455,14 @@ final class Import_Audit {
 		// Either stored form — see Upload_Paths. The old str_replace() left a
 		// URL from the site's previous address untouched and reported a sheet
 		// that was on disk all along as missing.
-		$path = \DXAI_UI\Support\Upload_Paths::path( $url );
+		$path = \DX_UI\Support\Upload_Paths::path( $url );
 		if ( $path === '' || ! is_readable( $path ) ) {
 			return array(
 				array(
 					'check'  => 'stylesheet',
 					'detail' => sprintf(
 						/* translators: %s: stylesheet URL. */
-						__( 'The stylesheet is missing from disk: %s', 'dxai-ui' ),
+						__( 'The stylesheet is missing from disk: %s', 'dx-ui' ),
 						$url
 					),
 				),
@@ -483,7 +483,7 @@ final class Import_Audit {
 					'check'  => 'stylesheet-at-rules',
 					'detail' => sprintf(
 						/* translators: %s: the at-rule, e.g. @utility. */
-						__( '%s survived into the page stylesheet; a browser ignores it, so those rules never apply.', 'dxai-ui' ),
+						__( '%s survived into the page stylesheet; a browser ignores it, so those rules never apply.', 'dx-ui' ),
 						$at
 					),
 				);
@@ -497,7 +497,7 @@ final class Import_Audit {
 	 * @return array<int, array{check:string, detail:string}>
 	 */
 	private function check_fonts( int $page_id ): array {
-		$urls = get_post_meta( $page_id, '_dxai_ui_font_urls', true );
+		$urls = get_post_meta( $page_id, '_dx_ui_font_urls', true );
 		if ( ! is_array( $urls ) ) {
 			return array();
 		}
@@ -528,7 +528,7 @@ final class Import_Audit {
 				'check'  => 'fonts-once',
 				'detail' => sprintf(
 					/* translators: %s: comma-separated font families. */
-					__( 'Font famil(ies) requested more than once: %s. The browser may synthesise weights instead of using the real face.', 'dxai-ui' ),
+					__( 'Font famil(ies) requested more than once: %s. The browser may synthesise weights instead of using the real face.', 'dx-ui' ),
 					implode( ', ', $twice )
 				),
 			),

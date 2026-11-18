@@ -2,12 +2,12 @@
 /**
  * What one kind of theme offers a design: the shape every adapter fills in.
  *
- * @package DXAI_UI\Theme\Adapters
+ * @package DX_UI\Theme\Adapters
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme\Adapters;
+namespace DX_UI\Theme\Adapters;
 
 /**
  * The plugin never asks for a theme's name outside this folder (docs/PLAN-ARCHITECTURE.md, section 5): it asks Theme\Capabilities, and
@@ -17,7 +17,7 @@ namespace DXAI_UI\Theme\Adapters;
  * the theme brings on its own pages so the plugin prints nothing of its own there (a video facade's script, a block library's styles).
  *
  * Four adapters, tried in order: DX Base (the plugin's own theme), a DX theme (American Restoration and its children, and any theme the
- * `dxai_ui_dx_themes` filter adds), a block theme, and the rest (a classic theme). A theme is read through exactly one of them.
+ * `dx_ui_dx_themes` filter adds), a block theme, and the rest (a classic theme). A theme is read through exactly one of them.
  */
 abstract class Theme_Adapter {
 

@@ -10,16 +10,16 @@
  *
  * Makes nothing in the database. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Home_Kit;
-use DXAI_UI\Pages\Section_Blueprints;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Refill;
-use DXAI_UI\Pages\Section_Roles;
-use DXAI_UI\Pages\Team_Pages;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Home_Kit;
+use DX_UI\Pages\Section_Blueprints;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Refill;
+use DX_UI\Pages\Section_Roles;
+use DX_UI\Pages\Team_Pages;
 
 $fail   = 0;
 $pass   = 0;
@@ -36,8 +36,8 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 $heading = static fn( string $t, int $l = 2, string $class = '' ): string => '<!-- wp:heading {"level":' . $l . ( $class !== '' ? ',"className":"' . $class . '"' : '' ) . '} --><h' . $l . ' class="wp-block-heading' . ( $class !== '' ? ' ' . $class : '' ) . '">' . $t . '</h' . $l . '><!-- /wp:heading -->';
 $para    = static fn( string $t, string $class = '' ): string => '<!-- wp:paragraph' . ( $class !== '' ? ' {"className":"' . $class . '"}' : '' ) . ' --><p' . ( $class !== '' ? ' class="' . $class . '"' : '' ) . '>' . $t . '</p><!-- /wp:paragraph -->';
 $group   = static fn( string $class, string $inner, string $tag = 'div', string $extra = '' ): string => '<!-- wp:group {"className":"' . $class . '"' . ( $tag !== 'div' ? ',"tagName":"' . $tag . '"' : '' ) . $extra . '} --><' . $tag . ' class="wp-block-group ' . $class . '">' . $inner . '</' . $tag . '><!-- /wp:group -->';
-$link    = static fn( string $t, string $url, string $class = '' ): string => '<!-- wp:dxai-ui/link {"url":"' . $url . '","text":"' . $t . '"' . ( $class !== '' ? ',"className":"' . $class . '"' : '' ) . '} --><a class="wp-block-dxai-ui-link' . ( $class !== '' ? ' ' . $class : '' ) . '" href="' . $url . '">' . $t . '</a><!-- /wp:dxai-ui/link -->';
-$boxlink = static fn( string $class, string $url, string $inner ): string => '<!-- wp:dxai-ui/link {"url":"' . $url . '","className":"' . $class . '"} --><a class="wp-block-dxai-ui-link ' . $class . '" href="' . $url . '">' . $inner . '</a><!-- /wp:dxai-ui/link -->';
+$link    = static fn( string $t, string $url, string $class = '' ): string => '<!-- wp:dx-ui/link {"url":"' . $url . '","text":"' . $t . '"' . ( $class !== '' ? ',"className":"' . $class . '"' : '' ) . '} --><a class="wp-block-dx-ui-link' . ( $class !== '' ? ' ' . $class : '' ) . '" href="' . $url . '">' . $t . '</a><!-- /wp:dx-ui/link -->';
+$boxlink = static fn( string $class, string $url, string $inner ): string => '<!-- wp:dx-ui/link {"url":"' . $url . '","className":"' . $class . '"} --><a class="wp-block-dx-ui-link ' . $class . '" href="' . $url . '">' . $inner . '</a><!-- /wp:dx-ui/link -->';
 $image   = static fn( string $alt ): string => '<!-- wp:image {"id":9999999} --><figure class="wp-block-image"><img src="http://example.test/a.jpg" alt="' . $alt . '" class="wp-image-9999999"/></figure><!-- /wp:image -->';
 
 /** A section of cards: an eyebrow, a heading, a lead, the cards, a button under them. */
@@ -81,7 +81,7 @@ $rows   = static fn( array $names ): array => array_map( static fn( $n ) => arra
 echo "Which sets of cards can be poured into\n";
 $home    = array(
 	$cards_section( array( 'Leaks', 'Heaters', 'Drains' ) ),
-	parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Questions' ) . $group( 'qa-list', '<!-- wp:dxai-ui/box {"tagName":"details","className":"qa"} --><details class="qa"><!-- wp:dxai-ui/text {"tagName":"summary"} --><summary>One?</summary><!-- /wp:dxai-ui/text -->' . $para( 'Yes.' ) . '</details><!-- /wp:dxai-ui/box --><!-- wp:dxai-ui/box {"tagName":"details","className":"qa"} --><details class="qa"><!-- wp:dxai-ui/text {"tagName":"summary"} --><summary>Two?</summary><!-- /wp:dxai-ui/text -->' . $para( 'No.' ) . '</details><!-- /wp:dxai-ui/box -->' ) ), 'section' ) )[0],
+	parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Questions' ) . $group( 'qa-list', '<!-- wp:dx-ui/box {"tagName":"details","className":"qa"} --><details class="qa"><!-- wp:dx-ui/text {"tagName":"summary"} --><summary>One?</summary><!-- /wp:dx-ui/text -->' . $para( 'Yes.' ) . '</details><!-- /wp:dx-ui/box --><!-- wp:dx-ui/box {"tagName":"details","className":"qa"} --><details class="qa"><!-- wp:dx-ui/text {"tagName":"summary"} --><summary>Two?</summary><!-- /wp:dx-ui/text -->' . $para( 'No.' ) . '</details><!-- /wp:dx-ui/box -->' ) ), 'section' ) )[0],
 );
 $kit = Home_Kit::of( $lib( $home ) );
 $expect( 'a section with a heading and three cards (a title, words, a link) is one to pour into', count( $kit['exemplars'] ) === 1 && $kit['exemplars'][0]['index'] === 0 && $kit['exemplars'][0]['count'] === 3, json_encode( $kit['exemplars'] ) );
@@ -94,7 +94,7 @@ $two_sets = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Both' ) 
 $expect( 'a section with two sets of cards is not one section to pour into', Home_Kit::of( $lib( array( $two_sets ) ) )['exemplars'] === array() );
 $two_heads = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'One' ) . $heading( 'Two' ) . $group( 'cards', $group( 'card', $heading( 'A', 3 ) . $para( 'a' ) ) . $group( 'card', $heading( 'B', 3 ) . $para( 'b' ) ) ) ), 'section' ) )[0];
 $expect( 'a section with two headings outside the cards is not either', Home_Kit::of( $lib( array( $two_heads ) ) )['exemplars'] === array() );
-$mobile = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Few' ) . $group( 'cards', '<!-- wp:group {"className":"card","dxaiData":{"data-mob":""}} --><div class="wp-block-group card">' . $heading( 'A', 3 ) . $para( 'a' ) . '</div><!-- /wp:group --><!-- wp:group {"className":"card","dxaiData":{"data-mob":""}} --><div class="wp-block-group card">' . $heading( 'B', 3 ) . $para( 'b' ) . '</div><!-- /wp:group -->' ) ), 'section' ) )[0];
+$mobile = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Few' ) . $group( 'cards', '<!-- wp:group {"className":"card","dxuiData":{"data-mob":""}} --><div class="wp-block-group card">' . $heading( 'A', 3 ) . $para( 'a' ) . '</div><!-- /wp:group --><!-- wp:group {"className":"card","dxuiData":{"data-mob":""}} --><div class="wp-block-group card">' . $heading( 'B', 3 ) . $para( 'b' ) . '</div><!-- /wp:group -->' ) ), 'section' ) )[0];
 $expect( 'cards the design shows on one size of screen only are not', Home_Kit::of( $lib( array( $mobile ) ) )['exemplars'] === array() );
 
 echo "\nWhat a section may wear\n";
@@ -104,7 +104,7 @@ $bad       = $home[0];
 $bad['innerBlocks'][0]['attrs']['className'] .= ' bg-red-500';
 $expect( 'a class the Home does not use is found', Home_Kit::foreign( $bad, $vocab ) !== array() && str_contains( implode( ' ', Home_Kit::foreign( $bad, $vocab ) ), 'bg-red-500' ), implode( ' ', Home_Kit::foreign( $bad, $vocab ) ) );
 $css = $home[0];
-$css['innerBlocks'][0]['attrs']['dxaiCss'] = 'background:#ff0000';
+$css['innerBlocks'][0]['attrs']['dxuiCss'] = 'background:#ff0000';
 $expect( 'a CSS rule the Home does not have is found', Home_Kit::foreign( $css, $vocab ) !== array() );
 $col = $home[0];
 $col['innerBlocks'][0]['attrs']['backgroundColor'] = 'vivid-red';
@@ -252,19 +252,19 @@ $oh = $markup( (array) $mh );
 $expect( 'a row whose title is a card of the Home\'s takes that card (the others take the cards that are left, in turn)', $mh !== null && $titles( $mh ) === array( 'Pages', 'Drains', 'Other', 'Leaks' ) && str_contains( $oh, 'The drains words.' ) && ! str_contains( $oh, 'means to the Home' ), json_encode( $mh ? $titles( $mh ) : null ) );
 
 echo "\nA section with a \"show more\" button\n";
-$hid   = '<!-- wp:group {"className":"dxai-on-more hidden"} --><div class="wp-block-group dxai-on-more hidden">' . $group( 'card', $heading( 'Extra One', 3 ) . $para( 'extra words one' ) ) . $group( 'card', $heading( 'Extra Two', 3 ) . $para( 'extra words two' ) ) . '</div><!-- /wp:group -->';
-$tog   = '<!-- wp:group {"className":"mt-4"} --><div class="wp-block-group mt-4"><!-- wp:dxai-ui/box {"tagName":"button","className":"dxai-toggle-more"} --><button class="dxai-toggle-more"><!-- wp:dxai-ui/html --><span>Show more</span><!-- /wp:dxai-ui/html --></button><!-- /wp:dxai-ui/box --></div><!-- /wp:group -->';
+$hid   = '<!-- wp:group {"className":"dxui-on-more hidden"} --><div class="wp-block-group dxui-on-more hidden">' . $group( 'card', $heading( 'Extra One', 3 ) . $para( 'extra words one' ) ) . $group( 'card', $heading( 'Extra Two', 3 ) . $para( 'extra words two' ) ) . '</div><!-- /wp:group -->';
+$tog   = '<!-- wp:group {"className":"mt-4"} --><div class="wp-block-group mt-4"><!-- wp:dx-ui/box {"tagName":"button","className":"dxui-toggle-more"} --><button class="dxui-toggle-more"><!-- wp:dx-ui/html --><span>Show more</span><!-- /wp:dx-ui/html --></button><!-- /wp:dx-ui/box --></div><!-- /wp:group -->';
 $sm_s  = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'What we do' ) . $group( 'cards', $group( 'card', $heading( 'S1', 3 ) . $para( 'words s1' ) ) . $group( 'card', $heading( 'S2', 3 ) . $para( 'words s2' ) ) . $group( 'card', $heading( 'S3', 3 ) . $para( 'words s3' ) ) ) . $hid . $tog ), 'section' ) )[0];
 $smc   = $lib( array( $sm_s ) )[0];
 $expect( 'a section whose "show more" button reveals more cards is one to pour into (the button and what it reveals are the section\'s machinery, not words)', $smc['controls'] !== array() && Home_Kit::of( array( $smc ) )['exemplars'] !== array(), json_encode( Home_Kit::of( array( $smc ) )['exemplars'] ) );
 $msm   = Section_Refill::cards( $smc, $smc['repeats'][0], 'Pages', $rows( array( 'Alpha', 'Beta', 'Gamma' ) ) );
 $osm   = $markup( (array) $msm );
-$expect( 'the poured section has no button and nothing hidden, and shows its three cards', $msm !== null && ! str_contains( $osm, 'dxai-on-' ) && ! str_contains( $osm, 'dxai-toggle-' ) && ! str_contains( $osm, 'Extra One' ) && ! str_contains( $osm, 'Show more' ) && str_contains( $osm, 'Words about Gamma' ), $osm );
+$expect( 'the poured section has no button and nothing hidden, and shows its three cards', $msm !== null && ! str_contains( $osm, 'dxui-on-' ) && ! str_contains( $osm, 'dxui-toggle-' ) && ! str_contains( $osm, 'Extra One' ) && ! str_contains( $osm, 'Show more' ) && str_contains( $osm, 'Words about Gamma' ), $osm );
 $ml_sm = Section_Refill::cards( $smc, $smc['repeats'][0], 'All', $rows( array( 'P1', 'P2', 'P3', 'P4', 'P5' ) ), '', 12 );
 $expect( 'and as a list it shows all five', $ml_sm !== null && count( array_filter( $titles( $ml_sm ), static fn( $t ) => preg_match( '/^P\d$/', $t ) === 1 ) ) === 5 );
-$play = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Video' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'V', 3 ) . $para( 'words' ) ), 3 ) ) . '<!-- wp:dxai-ui/html --><button class="play">Play</button><!-- /wp:dxai-ui/html -->' ), 'section' ) )[0];
+$play = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Video' ) . $group( 'cards', str_repeat( $group( 'card', $heading( 'V', 3 ) . $para( 'words' ) ), 3 ) ) . '<!-- wp:dx-ui/html --><button class="play">Play</button><!-- /wp:dx-ui/html -->' ), 'section' ) )[0];
 $expect( 'any other control (a play button) stays the Home\'s: that section is not poured into', Home_Kit::of( $lib( array( $play ) ) )['exemplars'] === array() );
-$icon_card = static fn( string $t ): string => $group( 'card', '<!-- wp:image {"id":9999998,"className":"dxai-part-img dxai-icon"} --><figure class="wp-block-image dxai-part-img dxai-icon"><img src="http://example.test/i.svg" alt="" class="wp-image-9999998"/></figure><!-- /wp:image -->' . $heading( $t, 3 ) . $para( 'Words of ' . $t ) );
+$icon_card = static fn( string $t ): string => $group( 'card', '<!-- wp:image {"id":9999998,"className":"dxui-part-img dxui-icon"} --><figure class="wp-block-image dxui-part-img dxui-icon"><img src="http://example.test/i.svg" alt="" class="wp-image-9999998"/></figure><!-- /wp:image -->' . $heading( $t, 3 ) . $para( 'Words of ' . $t ) );
 $ic_s = parse_blocks( $group( 'section', $group( 'wrap', $heading( 'Services' ) . $group( 'cards', $icon_card( 'Leaks' ) . $icon_card( 'Heaters' ) . $icon_card( 'Drains' ) ) ), 'section' ) )[0];
 $expect( 'cards with an icon of the design\'s (a small file of its own) are cards to pour into: the icon is not a picture about the card', Home_Kit::of( $lib( array( $ic_s ) ) )['exemplars'] !== array() );
 
@@ -352,10 +352,10 @@ $expect( 'the rows: call, e-mail, visit — in that order, each with what the Ho
 $expect( 'nothing stated, no rows', Section_Blueprints::contact_rows( array( 'phone' => null, 'email' => '', 'address' => '' ) ) === array() );
 
 echo "\nA bar of badges\n";
-$bar   = parse_blocks( $group( 'trust', '<!-- wp:dxai-ui/text {"tagName":"div","className":"wrap trust-row"} --><div class="wrap trust-row"><span>4.9 ★ from 1,240 reviews</span><span>Licensed CCB #218840</span><span>Upfront pricing</span><span>Same-day service</span></div><!-- /wp:dxai-ui/text -->', 'section' ) )[0];
+$bar   = parse_blocks( $group( 'trust', '<!-- wp:dx-ui/text {"tagName":"div","className":"wrap trust-row"} --><div class="wrap trust-row"><span>4.9 ★ from 1,240 reviews</span><span>Licensed CCB #218840</span><span>Upfront pricing</span><span>Same-day service</span></div><!-- /wp:dx-ui/text -->', 'section' ) )[0];
 $bar_c = Section_Library::analyze( $bar, 0 );
 $expect( 'a row of short claims with no heading and no link is a section (badges), not nothing', $bar_c['kind'] === 'badges', $bar_c['kind'] );
-$plain_tw = parse_blocks( $group( 'section', '<!-- wp:dxai-ui/text {"tagName":"div","className":"flex"} --><div class="flex"><span>One</span><span>Two</span><span>Three</span></div><!-- /wp:dxai-ui/text -->', 'section' ) )[0];
+$plain_tw = parse_blocks( $group( 'section', '<!-- wp:dx-ui/text {"tagName":"div","className":"flex"} --><div class="flex"><span>One</span><span>Two</span><span>Three</span></div><!-- /wp:dx-ui/text -->', 'section' ) )[0];
 $expect( 'and a design that does not name it still has it as the part of trust (the role is read from what it holds)', Section_Roles::of( $plain_tw, false ) === 'trust', Section_Roles::of( $plain_tw, false ) );
 $long = parse_blocks( $group( 'section', $heading( 'Why' ) . $para( str_repeat( 'Long words. ', 30 ) ), 'section' ) )[0];
 $expect( 'text with a heading is not badges', Section_Library::analyze( $long, 0 )['kind'] !== 'badges' );
@@ -367,7 +367,7 @@ $lib2   = array( Section_Library::analyze( parse_blocks( $group( 'section', $gro
 $lib2[1]['index'] = 1;
 $r2 = $roles_m->invoke( null, $lib2 );
 $expect( 'a Home with no reviews that says it is rated (4.9 from 1,240 reviews) has that to show for them', array_keys( $pool_m->invoke( null, $lib2, $r2, 'reviews' ) ) === array( 1 ), json_encode( $pool_m->invoke( null, $lib2, $r2, 'reviews' ) ) );
-$bar2 = parse_blocks( $group( 'trust', '<!-- wp:dxai-ui/text {"tagName":"div"} --><div><span>Licensed</span><span>Insured</span><span>Same-day service</span></div><!-- /wp:dxai-ui/text -->', 'section' ) )[0];
+$bar2 = parse_blocks( $group( 'trust', '<!-- wp:dx-ui/text {"tagName":"div"} --><div><span>Licensed</span><span>Insured</span><span>Same-day service</span></div><!-- /wp:dx-ui/text -->', 'section' ) )[0];
 $lib3 = array( $lib2[0], Section_Library::analyze( $bar2, 1 ) );
 $r3   = $roles_m->invoke( null, $lib3 );
 $expect( 'a bar that says nothing of reviews is not reviews', $pool_m->invoke( null, $lib3, $r3, 'reviews' ) === array() );

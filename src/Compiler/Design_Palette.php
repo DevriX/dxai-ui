@@ -2,12 +2,12 @@
 /**
  * Every colour and shadow a design uses, as named tokens.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * The design's whole palette, not just its named roles.
@@ -30,7 +30,7 @@ namespace DXAI_UI\Compiler;
  * filter strips a `box-shadow` whose value contains `rgba()` (measured:
  * `box-shadow:0 12px 32px rgba(17,17,17,.08)` comes back empty), so every
  * literal shadow in converted content is destroyed the first time an editor
- * without `unfiltered_html` saves the page. `box-shadow:var(--dxai-shadow-1)`
+ * without `unfiltered_html` saves the page. `box-shadow:var(--dxui-shadow-1)`
  * survives it.
  *
  * Only exact values become tokens. A token's definition is the literal it
@@ -123,7 +123,7 @@ final class Design_Palette {
 
 	/**
 	 * Every `style="…"` value in a piece of block markup, plus the CSS carried
-	 * in `dxaiStyle` and in dxai-ui/link's string `style` attribute.
+	 * in `dxuiStyle` and in dx-ui/link's string `style` attribute.
 	 *
 	 * @return array<int, string>
 	 */
@@ -261,13 +261,13 @@ final class Design_Palette {
 					preg_match_all( '/var\(\s*(--[\w-]+)/', $value, $used );
 					if ( str_starts_with( $property, '--' ) ) {
 						/*
-						 * The design's own tokens only. `--dxai-*` is this plugin's —
+						 * The design's own tokens only. `--dxui-*` is this plugin's —
 						 * Token_Styles appends those definitions to the very sheet read
 						 * here, under a `:root` selector — and `--wp--*` is core's.
 						 * Taking either for the design's would register the plugin's
 						 * token as a brand preset and re-point it at itself.
 						 */
-						if ( $is_root && ! str_starts_with( $property, '--dxai-' ) && ! str_starts_with( $property, '--wp--' ) ) {
+						if ( $is_root && ! str_starts_with( $property, '--dxui-' ) && ! str_starts_with( $property, '--wp--' ) ) {
 							$defs[ $property ] = $value;
 							$refs[ $property ] = $used[1];
 						}
@@ -311,7 +311,7 @@ final class Design_Palette {
 
 	/**
 	 * `:root`, `:host`, `html`, or the page wrapper Css_Scoper writes in place
-	 * of `:root` (`.dxai-ui.dxai-ui--88876`) — alone or in a selector list, and
+	 * of `:root` (`.dx-ui.dx-ui--88876`) — alone or in a selector list, and
 	 * never a dark-mode or theme variant of it.
 	 */
 	private static function is_root_selector( string $selector ): bool {
@@ -320,7 +320,7 @@ final class Design_Palette {
 		}
 		foreach ( explode( ',', $selector ) as $part ) {
 			$part = trim( $part );
-			if ( in_array( $part, array( ':root', ':host', 'html' ), true ) || preg_match( '/^\.dxai-ui\.dxai-ui--\d+$/', $part ) === 1 ) {
+			if ( in_array( $part, array( ':root', ':host', 'html' ), true ) || preg_match( '/^\.dx-ui\.dx-ui--\d+$/', $part ) === 1 ) {
 				return true;
 			}
 		}
@@ -424,7 +424,7 @@ final class Design_Palette {
 	 * a longer token is not taken for a colour — and never after `&`, so a
 	 * numeric character reference is not one either: esc_attr() writes a
 	 * quote as `&#039;`, whose `#039` read as the colour #003399, and a
-	 * `font-family:'Inter'` in style="" came out as `&var(--dxai-…);Inter…`
+	 * `font-family:'Inter'` in style="" came out as `&var(--dxui-…);Inter…`
 	 * while the block attribute (holding a plain quote) stayed as it was.
 	 */
 	public const COLOR_PATTERN = '/(?<![\w&#-])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![\w-])|\brgba?\(\s*\d{1,3}\s*[,\s]\s*\d{1,3}\s*[,\s]\s*\d{1,3}\s*(?:[,\/]\s*(?:\d*\.?\d+%?)\s*)?\)/i';

@@ -12,45 +12,45 @@ import './team-pages.css';
  * shown is what is made — and a page can be shuffled (another page of the same site) with the sections you like locked.
  * The words are the Home's until they are written for the page (Words for the pages).
  */
-const base = '/dxai-ui/v1/team-pages';
+const base = '/dx-ui/v1/team-pages';
 
 const ROLE = {
-	hero: __( 'Hero', 'dxai-ui' ),
-	trust: __( 'Trust', 'dxai-ui' ),
-	process: __( 'Process', 'dxai-ui' ),
-	'two-col': __( 'Text + picture', 'dxai-ui' ),
-	cards: __( 'Cards', 'dxai-ui' ),
-	reviews: __( 'Reviews', 'dxai-ui' ),
-	related: __( 'Related', 'dxai-ui' ),
-	contact: __( 'Contact details', 'dxai-ui' ),
-	areas: __( 'Areas', 'dxai-ui' ),
-	form: __( 'Form', 'dxai-ui' ),
-	faq: __( 'FAQ', 'dxai-ui' ),
-	cta: __( 'Call to action', 'dxai-ui' ),
-	content: __( 'Text', 'dxai-ui' ),
-	text: __( 'Text', 'dxai-ui' ),
+	hero: __( 'Hero', 'dx-ui' ),
+	trust: __( 'Trust', 'dx-ui' ),
+	process: __( 'Process', 'dx-ui' ),
+	'two-col': __( 'Text + picture', 'dx-ui' ),
+	cards: __( 'Cards', 'dx-ui' ),
+	reviews: __( 'Reviews', 'dx-ui' ),
+	related: __( 'Related', 'dx-ui' ),
+	contact: __( 'Contact details', 'dx-ui' ),
+	areas: __( 'Areas', 'dx-ui' ),
+	form: __( 'Form', 'dx-ui' ),
+	faq: __( 'FAQ', 'dx-ui' ),
+	cta: __( 'Call to action', 'dx-ui' ),
+	content: __( 'Text', 'dx-ui' ),
+	text: __( 'Text', 'dx-ui' ),
 };
 
 // How the sections are chosen: the three stops of the slider.
 const MODES = [ 'home', 'new', 'ai' ];
 const MODE_LABEL = {
-	home: __( 'Only the Home', 'dxai-ui' ),
-	new: __( 'Home + new', 'dxai-ui' ),
-	ai: __( 'With AI', 'dxai-ui' ),
+	home: __( 'Only the Home', 'dx-ui' ),
+	new: __( 'Home + new', 'dx-ui' ),
+	ai: __( 'With AI', 'dx-ui' ),
 };
 const MODE_HELP = {
-	home: __( 'Every section is one of the Home\'s, as it is. Nothing is made: a page that lists other pages shows the Home\'s own cards.', 'dxai-ui' ),
-	new: __( 'The Home\'s sections, and the sections the site makes in the Home\'s own cards: the list of the site\'s pages, the ways to reach the company.', 'dxai-ui' ),
-	ai: __( 'An AI chooses the sections of each page, among the Home\'s own and the ones the site makes. One request for each page, when you press "Make"; the plan shown is the usual one it starts from. It writes no words.', 'dxai-ui' ),
+	home: __( 'Every section is one of the Home\'s, as it is. Nothing is made: a page that lists other pages shows the Home\'s own cards.', 'dx-ui' ),
+	new: __( 'The Home\'s sections, and the sections the site makes in the Home\'s own cards: the list of the site\'s pages, the ways to reach the company.', 'dx-ui' ),
+	ai: __( 'An AI chooses the sections of each page, among the Home\'s own and the ones the site makes. One request for each page, when you press "Make"; the plan shown is the usual one it starts from. It writes no words.', 'dx-ui' ),
 };
 
 // The team's own sections (the library): to fill what the Home has none of, to take the Home's place too, or not used.
 const LIBRARIES = [ 'team', 'fill', 'prefer', 'off' ];
 const LIBRARY_LABEL = {
-	team: __( 'The team’s layouts: the Home’s hero, then sections arranged as the team arranges theirs', 'dxai-ui' ),
-	fill: __( 'Where the Home has none', 'dxai-ui' ),
-	prefer: __( 'Instead of the Home\'s, where it has one', 'dxai-ui' ),
-	off: __( 'Not used', 'dxai-ui' ),
+	team: __( 'The team’s layouts: the Home’s hero, then sections arranged as the team arranges theirs', 'dx-ui' ),
+	fill: __( 'Where the Home has none', 'dx-ui' ),
+	prefer: __( 'Instead of the Home\'s, where it has one', 'dx-ui' ),
+	off: __( 'Not used', 'dx-ui' ),
 };
 
 // Why the library is not used for a design (what the server found it needs and the site does not have).
@@ -59,26 +59,26 @@ const libraryWhy = ( lib ) => {
 		case 'theme':
 			return sprintf(
 				/* translators: %s: the name of the active theme. */
-				__( 'This site runs %s. The team\'s own sections are made of the American Restoration theme\'s blocks and styles, so they are used only on that theme: install and activate it to use them. Nothing is lost meanwhile; the pages are made from the Home\'s sections as before.', 'dxai-ui' ),
+				__( 'This site runs %s. The team\'s own sections are made of the American Restoration theme\'s blocks and styles, so they are used only on that theme: install and activate it to use them. Nothing is lost meanwhile; the pages are made from the Home\'s sections as before.', 'dx-ui' ),
 				lib.theme
 			);
 		case 'industry':
-			return __( 'This Home does not talk like a restoration company, and the words of the team\'s own sections are a restoration company\'s, so they are not used for it.', 'dxai-ui' );
+			return __( 'This Home does not talk like a restoration company, and the words of the team\'s own sections are a restoration company\'s, so they are not used for it.', 'dx-ui' );
 		case 'blocks':
-			return __( 'The blocks the team\'s own sections are made of are not registered on this site, so they are not used.', 'dxai-ui' );
+			return __( 'The blocks the team\'s own sections are made of are not registered on this site, so they are not used.', 'dx-ui' );
 		default:
-			return __( 'The library has no sections to offer.', 'dxai-ui' );
+			return __( 'The library has no sections to offer.', 'dx-ui' );
 	}
 };
 
 // What was done to a section, in words (the plan says it in short names).
 const VARIANT = [
-	[ /^image:/, __( 'another picture', 'dxai-ui' ) ],
-	[ /^order:/, __( 'cards in another order', 'dxai-ui' ) ],
-	[ /^flip$/, __( 'sides swapped', 'dxai-ui' ) ],
-	[ /^drop:/, __( 'one thing less', 'dxai-ui' ) ],
-	[ /^faq:/, __( 'fewer questions', 'dxai-ui' ) ],
-	[ /^lead:/, __( 'opens with the Home\'s words for it', 'dxai-ui' ) ],
+	[ /^image:/, __( 'another picture', 'dx-ui' ) ],
+	[ /^order:/, __( 'cards in another order', 'dx-ui' ) ],
+	[ /^flip$/, __( 'sides swapped', 'dx-ui' ) ],
+	[ /^drop:/, __( 'one thing less', 'dx-ui' ) ],
+	[ /^faq:/, __( 'fewer questions', 'dx-ui' ) ],
+	[ /^lead:/, __( 'opens with the Home\'s words for it', 'dx-ui' ) ],
 ];
 const variants = ( ops ) => {
 	const out = [];
@@ -96,11 +96,11 @@ const variants = ( ops ) => {
 
 // What the report says about each gate.
 const GATE = {
-	G1: __( 'Header and footer are the Home\'s', 'dxai-ui' ),
-	G7: __( 'Blocks are valid', 'dxai-ui' ),
-	G8: __( 'Not a copy of another page (sections)', 'dxai-ui' ),
-	G8W: __( 'Not a copy of the Home (words)', 'dxai-ui' ),
-	G9: __( 'Nothing foreign (phones, e-mails, other sites)', 'dxai-ui' ),
+	G1: __( 'Header and footer are the Home\'s', 'dx-ui' ),
+	G7: __( 'Blocks are valid', 'dx-ui' ),
+	G8: __( 'Not a copy of another page (sections)', 'dx-ui' ),
+	G8W: __( 'Not a copy of the Home (words)', 'dx-ui' ),
+	G9: __( 'Nothing foreign (phones, e-mails, other sites)', 'dx-ui' ),
 };
 
 const lines = ( text ) => text.split( '\n' ).map( ( l ) => l.trim() ).filter( Boolean );
@@ -112,11 +112,11 @@ const ONCE = [ 'about', 'contact', 'faq', 'testimonials', 'services', 'areas' ];
 
 // Why an item of the menu is not a page, in words (Menu_Pages: left_out[].why).
 const LEFT_OUT = {
-	anchor: __( 'a place on a page, not a page', 'dxai-ui' ),
-	kind: __( 'a page the team has no kind for', 'dxai-ui' ),
-	external: __( 'another site', 'dxai-ui' ),
-	file: __( 'a file', 'dxai-ui' ),
-	parent: __( 'the page above it is not in the menu', 'dxai-ui' ),
+	anchor: __( 'a place on a page, not a page', 'dx-ui' ),
+	kind: __( 'a page the team has no kind for', 'dx-ui' ),
+	external: __( 'another site', 'dx-ui' ),
+	file: __( 'a file', 'dx-ui' ),
+	parent: __( 'the page above it is not in the menu', 'dx-ui' ),
 };
 
 // The rows the menu offers, as the panel keeps them: the lists the addresses imply first, then the pages; a page is on unless its address
@@ -186,7 +186,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 					setGeneral( on );
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'The design could not be read.', 'dxai-ui' ) ) );
+			.catch( ( e ) => setError( e.message || __( 'The design could not be read.', 'dx-ui' ) ) );
 	}
 
 	useEffect( () => {
@@ -390,16 +390,16 @@ export default function TeamPages( { design: fixed = 0 } ) {
 		const c = data.choices || { home: [], library: [] };
 		const home = ( c.home || [] ).map( ( h ) => ( {
 			value: 'home:' + h.home,
-			label: sprintf( /* translators: 1: role, 2: the number of the Home's section, 3: its title. */ __( 'Home · %1$s · section %2$d — %3$s', 'dxai-ui' ), ROLE[ h.role ] || h.role, h.home, h.label ),
+			label: sprintf( /* translators: 1: role, 2: the number of the Home's section, 3: its title. */ __( 'Home · %1$s · section %2$d — %3$s', 'dx-ui' ), ROLE[ h.role ] || h.role, h.home, h.label ),
 		} ) );
 		const lib = library !== 'off' && data.library && data.library.code === 'ok'
 			? ( c.library || [] )
 				.slice()
 				.sort( ( m, n ) => ( ROLE[ m.role ] || m.role ).localeCompare( ROLE[ n.role ] || n.role ) )
-				.map( ( l ) => ( { value: 'lib:' + l.id, label: sprintf( /* translators: 1: role, 2: what the section is. */ __( 'Library · %1$s — %2$s', 'dxai-ui' ), ROLE[ l.role ] || l.role, l.label ) } ) )
+				.map( ( l ) => ( { value: 'lib:' + l.id, label: sprintf( /* translators: 1: role, 2: what the section is. */ __( 'Library · %1$s — %2$s', 'dx-ui' ), ROLE[ l.role ] || l.role, l.label ) } ) )
 			: [];
 
-		return [ { value: '', label: __( 'Pick a section…', 'dxai-ui' ) }, ...home, ...lib ];
+		return [ { value: '', label: __( 'Pick a section…', 'dx-ui' ) }, ...home, ...lib ];
 	}
 
 	function toggleLock( p, x ) {
@@ -424,20 +424,20 @@ export default function TeamPages( { design: fixed = 0 } ) {
 	const arranged = ( p ) => p.arrangement && ( p.arrangement.shuffle > 0 || p.arrangement.locks.length > 0 || ( p.arrangement.roles && p.arrangement.roles.length > 0 ) );
 
 	return (
-		<section className="dxai-section dxai-team" aria-labelledby="dxai-team-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-team" aria-labelledby="dxui-team-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your pages', 'dxai-ui' ) }</p>
-					<h3 id="dxai-team-title">{ __( 'Pages in the team\'s style', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
-						{ __( 'New pages made the way the team makes theirs, in the look of the Home: the sections and their order come from what the team\'s eleven sites do, and every section is one of the Home\'s. The words are the Home\'s until they are written for the page.', 'dxai-ui' ) }
+					<p className="dxui-section-kicker">{ __( 'Your pages', 'dx-ui' ) }</p>
+					<h3 id="dxui-team-title">{ __( 'Pages in the team\'s style', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
+						{ __( 'New pages made the way the team makes theirs, in the look of the Home: the sections and their order come from what the team\'s eleven sites do, and every section is one of the Home\'s. The words are the Home\'s until they are written for the page.', 'dx-ui' ) }
 					</p>
 				</div>
 			</div>
 
 			{ ! fixed && data.designs.length > 1 && (
 				<SelectControl
-					label={ __( 'Design', 'dxai-ui' ) }
+					label={ __( 'Design', 'dx-ui' ) }
 					value={ String( data.design ) }
 					options={ data.designs.map( ( d ) => ( { value: String( d.id ), label: d.title } ) ) }
 					onChange={ ( v ) => load( Number( v ) ) }
@@ -446,28 +446,28 @@ export default function TeamPages( { design: fixed = 0 } ) {
 			) }
 
 			{ menuRows.length > 0 && (
-				<fieldset className="dxai-team__menu">
-					<legend>{ data.menu.source === 'document' ? __( 'From the design’s header', 'dxai-ui' ) : __( 'From the site’s menu', 'dxai-ui' ) }</legend>
-					<p className="dxai-muted">
+				<fieldset className="dxui-team__menu">
+					<legend>{ data.menu.source === 'document' ? __( 'From the design’s header', 'dx-ui' ) : __( 'From the site’s menu', 'dx-ui' ) }</legend>
+					<p className="dxui-muted">
 						{ data.menu.source === 'document'
-							? __( 'The header was kept as a template part, so no menu was written; the design’s own header names these pages and where they sit (read from the design’s document). They are made at the design’s own addresses. Untick what you do not want.', 'dxai-ui' )
+							? __( 'The header was kept as a template part, so no menu was written; the design’s own header names these pages and where they sit (read from the design’s document). They are made at the design’s own addresses. Untick what you do not want.', 'dx-ui' )
 							: sprintf(
 								/* translators: %s: the names of the menus the header was built into. */
-								__( 'The header menu (%s, in Appearance › Menus) names these pages and where they sit. They are made at the menu’s own addresses, so the menu opens them. Untick what you do not want.', 'dxai-ui' ),
+								__( 'The header menu (%s, in Appearance › Menus) names these pages and where they sit. They are made at the menu’s own addresses, so the menu opens them. Untick what you do not want.', 'dx-ui' ),
 								( data.menu.menus || [] ).join( ', ' )
 							) }
 					</p>
 					{ ! data.menu.pretty && (
 						<Notice status="warning" isDismissible={ false }>
-							{ __( 'Settings › Permalinks is set to “Plain”, so these addresses will not open until it is set to “Post name”.', 'dxai-ui' ) }
+							{ __( 'Settings › Permalinks is set to “Plain”, so these addresses will not open until it is set to “Post name”.', 'dx-ui' ) }
 						</Notice>
 					) }
-					<ul className="dxai-team__menu-rows">
+					<ul className="dxui-team__menu-rows">
 						{ menuRows.map( ( r ) => (
 							<li key={ r.key } className={ r.on ? 'is-on' : '' }>
 								<CheckboxControl label={ r.title } checked={ r.on } onChange={ ( on ) => setMenuRow( r.key, { on } ) } __nextHasNoMarginBottom />
 								<SelectControl
-									label={ __( 'Kind of page', 'dxai-ui' ) }
+									label={ __( 'Kind of page', 'dx-ui' ) }
 									hideLabelFromVision
 									value={ r.type }
 									options={ Object.keys( data.kinds ).map( ( t ) => ( { value: t, label: data.kinds[ t ] } ) ) }
@@ -475,24 +475,24 @@ export default function TeamPages( { design: fixed = 0 } ) {
 									__nextHasNoMarginBottom
 								/>
 								<code>{ r.path }</code>
-								{ r.implied && <span className="dxai-muted">{ __( 'the page above the addresses under it', 'dxai-ui' ) }</span> }
-								{ r.exists > 0 && <span className="dxai-muted">{ r.mine ? __( 'made before: updated in place', 'dxai-ui' ) : __( 'the address is another page: kept as it is', 'dxai-ui' ) }</span> }
+								{ r.implied && <span className="dxui-muted">{ __( 'the page above the addresses under it', 'dx-ui' ) }</span> }
+								{ r.exists > 0 && <span className="dxui-muted">{ r.mine ? __( 'made before: updated in place', 'dx-ui' ) : __( 'the address is another page: kept as it is', 'dx-ui' ) }</span> }
 							</li>
 						) ) }
 					</ul>
 					{ data.menu.left_out.length > 0 && (
-						<details className="dxai-team__left-out">
+						<details className="dxui-team__left-out">
 							<summary>
 								{ sprintf(
 									/* translators: %d: number of items. */
-									_n( '%d item of the menu is not a page', '%d items of the menu are not pages', data.menu.left_out.length, 'dxai-ui' ),
+									_n( '%d item of the menu is not a page', '%d items of the menu are not pages', data.menu.left_out.length, 'dx-ui' ),
 									data.menu.left_out.length
 								) }
 							</summary>
 							<ul>
 								{ data.menu.left_out.map( ( l, i ) => (
 									<li key={ i }>
-										<strong>{ l.title }</strong> <code>{ l.url }</code> <span className="dxai-muted">{ LEFT_OUT[ l.why ] || l.why }</span>
+										<strong>{ l.title }</strong> <code>{ l.url }</code> <span className="dxui-muted">{ LEFT_OUT[ l.why ] || l.why }</span>
 									</li>
 								) ) }
 							</ul>
@@ -501,12 +501,12 @@ export default function TeamPages( { design: fixed = 0 } ) {
 				</fieldset>
 			) }
 
-			<div className="dxai-team__fields">
+			<div className="dxui-team__fields">
 				<TextareaControl
-					label={ __( 'Services (one to a line)', 'dxai-ui' ) }
+					label={ __( 'Services (one to a line)', 'dx-ui' ) }
 					help={ data.suggestions.services.length
-						? ( data.suggestions.from?.services === 'document' ? __( 'Read from the design’s document (the section that names its services); change them as you like.', 'dxai-ui' ) : __( 'Read from the Home; change them as you like.', 'dxai-ui' ) )
-						: __( 'The Home does not list services; type them here.', 'dxai-ui' ) }
+						? ( data.suggestions.from?.services === 'document' ? __( 'Read from the design’s document (the section that names its services); change them as you like.', 'dx-ui' ) : __( 'Read from the Home; change them as you like.', 'dx-ui' ) )
+						: __( 'The Home does not list services; type them here.', 'dx-ui' ) }
 					value={ services }
 					onChange={ setServices }
 					rows={ 6 }
@@ -514,15 +514,15 @@ export default function TeamPages( { design: fixed = 0 } ) {
 				/>
 				<div>
 					<TextareaControl
-						label={ __( 'Places (one to a line)', 'dxai-ui' ) }
-						help={ data.suggestions.locations.length ? __( 'Read from the Home; add the others, as "City, ST".', 'dxai-ui' ) : __( 'As "City, ST".', 'dxai-ui' ) }
+						label={ __( 'Places (one to a line)', 'dx-ui' ) }
+						help={ data.suggestions.locations.length ? __( 'Read from the Home; add the others, as "City, ST".', 'dx-ui' ) : __( 'As "City, ST".', 'dx-ui' ) }
 						value={ places }
 						onChange={ setPlaces }
 						rows={ 4 }
 						__nextHasNoMarginBottom
 					/>
 					<TextControl
-						label={ __( 'A page for a place is titled "… in City, ST" after', 'dxai-ui' ) }
+						label={ __( 'A page for a place is titled "… in City, ST" after', 'dx-ui' ) }
 						value={ phrase }
 						onChange={ setPhrase }
 						__nextHasNoMarginBottom
@@ -530,8 +530,8 @@ export default function TeamPages( { design: fixed = 0 } ) {
 				</div>
 			</div>
 
-			<fieldset className="dxai-team__general">
-				<legend>{ __( 'General pages', 'dxai-ui' ) }</legend>
+			<fieldset className="dxui-team__general">
+				<legend>{ __( 'General pages', 'dx-ui' ) }</legend>
 				{ data.suggestions.general.map( ( g ) => {
 					const named = ONCE.includes( g.type ) && menuRows.some( ( r ) => r.type === g.type );
 					return (
@@ -540,7 +540,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 							label={ g.title }
 							checked={ named || !! general[ g.type ] }
 							disabled={ named }
-							help={ named ? __( 'The menu names it: see above.', 'dxai-ui' ) : undefined }
+							help={ named ? __( 'The menu names it: see above.', 'dx-ui' ) : undefined }
 							onChange={ ( on ) => setGeneral( { ...general, [ g.type ]: on } ) }
 							__nextHasNoMarginBottom
 						/>
@@ -549,20 +549,20 @@ export default function TeamPages( { design: fixed = 0 } ) {
 			</fieldset>
 
 			{ data.existing.length > 0 && (
-				<p className="dxai-muted">
+				<p className="dxui-muted">
 					{ sprintf(
 						/* translators: %d: number of pages. */
-						_n( '%d page was made here before. Making it again updates it in place, unless someone edited it.', '%d pages were made here before. Making them again updates them in place, unless someone edited them.', data.existing.length, 'dxai-ui' ),
+						_n( '%d page was made here before. Making it again updates it in place, unless someone edited it.', '%d pages were made here before. Making them again updates them in place, unless someone edited them.', data.existing.length, 'dx-ui' ),
 						data.existing.length
 					) }
 				</p>
 			) }
 
-			<fieldset className="dxai-team__ai">
-				<legend>{ __( 'Where the sections come from', 'dxai-ui' ) }</legend>
+			<fieldset className="dxui-team__ai">
+				<legend>{ __( 'Where the sections come from', 'dx-ui' ) }</legend>
 				<RangeControl
-					className="dxai-team__mode"
-					label={ __( 'How much is the Home\'s alone', 'dxai-ui' ) }
+					className="dxui-team__mode"
+					label={ __( 'How much is the Home\'s alone', 'dx-ui' ) }
 					hideLabelFromVision
 					value={ MODES.indexOf( mode ) }
 					onChange={ ( v ) => pickMode( Number( v ) ) }
@@ -574,12 +574,12 @@ export default function TeamPages( { design: fixed = 0 } ) {
 					showTooltip={ false }
 					__nextHasNoMarginBottom
 				/>
-				<p className="dxai-muted">{ MODE_HELP[ mode ] }</p>
+				<p className="dxui-muted">{ MODE_HELP[ mode ] }</p>
 				{ mode !== 'home' && (
 					<>
 						<SelectControl
-							label={ __( 'The team\'s own sections (the library)', 'dxai-ui' ) }
-							help={ __( 'Sections the team wrote for its own sites: the questions, the steps of the work, the call to action, the places. They are made with what the Home says (its name, its phone) and are only put on the pages made here, never on the Home.', 'dxai-ui' ) }
+							label={ __( 'The team\'s own sections (the library)', 'dx-ui' ) }
+							help={ __( 'Sections the team wrote for its own sites: the questions, the steps of the work, the call to action, the places. They are made with what the Home says (its name, its phone) and are only put on the pages made here, never on the Home.', 'dx-ui' ) }
 							value={ library }
 							options={ LIBRARIES.map( ( l ) => ( { value: l, label: LIBRARY_LABEL[ l ] } ) ) }
 							onChange={ pickLibrary }
@@ -592,10 +592,10 @@ export default function TeamPages( { design: fixed = 0 } ) {
 							</Notice>
 						) }
 						{ data.library && data.library.code === 'ok' && (
-							<p className="dxai-muted">
+							<p className="dxui-muted">
 								{ sprintf(
 									/* translators: 1: how many sections can be made for this Home, 2: how many the library has. */
-									__( '%1$d of the library\'s %2$d sections can be made for this Home. A section that needs a fact the Home does not say (a phone, places) waits for it.', 'dxai-ui' ),
+									__( '%1$d of the library\'s %2$d sections can be made for this Home. A section that needs a fact the Home does not say (a phone, places) waits for it.', 'dx-ui' ),
 									data.library.usable,
 									data.library.sections
 								) }
@@ -603,12 +603,12 @@ export default function TeamPages( { design: fixed = 0 } ) {
 								{ data.library.generic
 									? sprintf(
 										/* translators: %s: the name of the active theme. */
-										__( 'This theme (%s) has no template of its own, so the sections are made in the generic library: core blocks, in the colours this theme\'s palette has for the same roles.', 'dxai-ui' ),
+										__( 'This theme (%s) has no template of its own, so the sections are made in the generic library: core blocks, in the colours this theme\'s palette has for the same roles.', 'dx-ui' ),
 										data.library.theme
 									)
 									: sprintf(
 										/* translators: %s: the name of the template. */
-										__( 'Template: %s.', 'dxai-ui' ),
+										__( 'Template: %s.', 'dx-ui' ),
 										data.library.template_label
 									) }
 							</p>
@@ -616,10 +616,10 @@ export default function TeamPages( { design: fixed = 0 } ) {
 					</>
 				) }
 				{ mode === 'ai' && (
-					<div className="dxai-team__cost">
-						<div className="dxai-team__prices">
+					<div className="dxui-team__cost">
+						<div className="dxui-team__prices">
 							<TextControl
-								label={ __( 'Price of a million tokens in (US$)', 'dxai-ui' ) }
+								label={ __( 'Price of a million tokens in (US$)', 'dx-ui' ) }
 								type="number"
 								min="0"
 								step="0.01"
@@ -628,7 +628,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 								__nextHasNoMarginBottom
 							/>
 							<TextControl
-								label={ __( 'Price of a million tokens out (US$)', 'dxai-ui' ) }
+								label={ __( 'Price of a million tokens out (US$)', 'dx-ui' ) }
 								type="number"
 								min="0"
 								step="0.01"
@@ -637,72 +637,72 @@ export default function TeamPages( { design: fixed = 0 } ) {
 								__nextHasNoMarginBottom
 							/>
 						</div>
-						<p className="dxai-muted">{ __( 'Type the prices as your provider lists them to see the cost in dollars; without them it is told in tokens. Nothing is sent to find this out. The engine is the one chosen in Settings; a plan that breaks a rule is dropped and the usual plan is used.', 'dxai-ui' ) }</p>
+						<p className="dxui-muted">{ __( 'Type the prices as your provider lists them to see the cost in dollars; without them it is told in tokens. Nothing is sent to find this out. The engine is the one chosen in Settings; a plan that breaks a rule is dropped and the usual plan is used.', 'dx-ui' ) }</p>
 						<Button variant="secondary" onClick={ () => send( 'estimate' ) } isBusy={ busy === 'estimate' } disabled={ !! busy || total === 0 }>
-							{ __( 'Show what it would cost', 'dxai-ui' ) }
+							{ __( 'Show what it would cost', 'dx-ui' ) }
 						</Button>
 						{ estimate && (
 							<Notice status={ estimate.within ? 'info' : 'warning' } isDismissible={ false }>
 								{ sprintf(
 									/* translators: 1: requests, 2: tokens in, 3: tokens out. */
-									_n( '%1$d request, about %2$s tokens in and %3$s out.', '%1$d requests, about %2$s tokens in and %3$s out.', estimate.requests, 'dxai-ui' ),
+									_n( '%1$d request, about %2$s tokens in and %3$s out.', '%1$d requests, about %2$s tokens in and %3$s out.', estimate.requests, 'dx-ui' ),
 									estimate.requests,
 									estimate.input.toLocaleString(),
 									estimate.output.toLocaleString()
 								) }
-								{ estimate.cost !== null && ' ' + sprintf( /* translators: %s: dollars. */ __( 'About US$%s.', 'dxai-ui' ), estimate.cost.toFixed( 2 ) ) }
-								{ ' ' + sprintf( /* translators: %s: tokens. */ __( 'The ceiling for one run is %s tokens.', 'dxai-ui' ), estimate.cap.toLocaleString() ) }
-								{ ! estimate.within && ' ' + __( 'This is over the ceiling: the pages after it is reached are made the usual way.', 'dxai-ui' ) }
+								{ estimate.cost !== null && ' ' + sprintf( /* translators: %s: dollars. */ __( 'About US$%s.', 'dx-ui' ), estimate.cost.toFixed( 2 ) ) }
+								{ ' ' + sprintf( /* translators: %s: tokens. */ __( 'The ceiling for one run is %s tokens.', 'dx-ui' ), estimate.cap.toLocaleString() ) }
+								{ ! estimate.within && ' ' + __( 'This is over the ceiling: the pages after it is reached are made the usual way.', 'dx-ui' ) }
 							</Notice>
 						) }
 					</div>
 				) }
 			</fieldset>
 
-			<div className="dxai-actions">
+			<div className="dxui-actions">
 				<Button variant="secondary" onClick={ () => send( 'plan' ) } isBusy={ busy === 'plan' } disabled={ !! busy || total === 0 }>
-					{ __( 'Show the plan', 'dxai-ui' ) }
+					{ __( 'Show the plan', 'dx-ui' ) }
 				</Button>
 				<Button variant="primary" onClick={ build } isBusy={ busy === 'build' } disabled={ !! busy || total === 0 }>
-					{ busy === 'build' ? __( 'Making the pages…', 'dxai-ui' ) : sprintf( /* translators: %d: number of pages. */ _n( 'Make %d page', 'Make %d pages', total, 'dxai-ui' ), total ) }
+					{ busy === 'build' ? __( 'Making the pages…', 'dx-ui' ) : sprintf( /* translators: %d: number of pages. */ _n( 'Make %d page', 'Make %d pages', total, 'dx-ui' ), total ) }
 				</Button>
 			</div>
 
 			{ plan && (
 				<>
-					<p className="dxai-muted dxai-team__legend">
+					<p className="dxui-muted dxui-team__legend">
 						{ mode === 'ai'
-							? __( 'This is the usual plan the AI starts from; it chooses the sections when you press "Make".', 'dxai-ui' )
-							: __( 'What is shown is what is made. Shuffle a page to see another page of the same site; lock a section you like and it stays through the next shuffles. Drag a section to move it, × takes it out, and "Add a section" puts in one of the Home\'s or of the library: a page arranged by hand holds what it shows (unlock a section to let a shuffle change it).', 'dxai-ui' ) }
+							? __( 'This is the usual plan the AI starts from; it chooses the sections when you press "Make".', 'dx-ui' )
+							: __( 'What is shown is what is made. Shuffle a page to see another page of the same site; lock a section you like and it stays through the next shuffles. Drag a section to move it, × takes it out, and "Add a section" puts in one of the Home\'s or of the library: a page arranged by hand holds what it shows (unlock a section to let a shuffle change it).', 'dx-ui' ) }
 					</p>
-					<ul className="dxai-team__plan">
+					<ul className="dxui-team__plan">
 						{ plan.map( ( p ) => (
 							<li key={ p.type + p.slug }>
-								<div className="dxai-team__head">
+								<div className="dxui-team__head">
 									<strong>{ p.title }</strong>
-									<span className="dxai-copy__kind">{ data.kinds[ p.type ] }</span>
+									<span className="dxui-copy__kind">{ data.kinds[ p.type ] }</span>
 									{ p.path && <code>{ p.path }</code> }
-									{ p.conflict > 0 && <span className="dxai-muted">{ __( 'the address is another page: kept as it is, this page is not made', 'dxai-ui' ) }</span> }
-									{ p.exists > 0 && <span className="dxai-muted">{ p.edited ? __( 'made before, edited since: kept', 'dxai-ui' ) : __( 'made before: updated in place', 'dxai-ui' ) }</span> }
+									{ p.conflict > 0 && <span className="dxui-muted">{ __( 'the address is another page: kept as it is, this page is not made', 'dx-ui' ) }</span> }
+									{ p.exists > 0 && <span className="dxui-muted">{ p.edited ? __( 'made before, edited since: kept', 'dx-ui' ) : __( 'made before: updated in place', 'dx-ui' ) }</span> }
 									{ mode !== 'ai' && (
-										<span className="dxai-team__tools">
+										<span className="dxui-team__tools">
 											<Button variant="secondary" size="small" onClick={ () => shuffle( p ) } disabled={ !! busy }>
-												{ __( 'Shuffle', 'dxai-ui' ) }
+												{ __( 'Shuffle', 'dx-ui' ) }
 											</Button>
 											{ arranged( p ) && (
 												<Button variant="tertiary" size="small" onClick={ () => shuffle( p, true ) } disabled={ !! busy }>
-													{ __( 'Back to the usual', 'dxai-ui' ) }
+													{ __( 'Back to the usual', 'dx-ui' ) }
 												</Button>
 											) }
 										</span>
 									) }
 								</div>
-								<ol className="dxai-team__strip">
+								<ol className="dxui-team__strip">
 									{ p.strip.map( ( x, i ) => (
 										<li
 											key={ x.place }
-											className={ 'dxai-team__sec dxai-team__role--' + x.role + ( x.source === '' ? ' is-missing' : '' ) + ( x.locked ? ' is-locked' : '' ) + ( dragging && dragging.k === p.type + p.slug && dragging.from === i ? ' is-dragging' : '' ) + ( mode !== 'ai' && i > 0 ? ' is-movable' : '' ) }
-											title={ x.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dxai-ui' ) : '' }
+											className={ 'dxui-team__sec dxui-team__role--' + x.role + ( x.source === '' ? ' is-missing' : '' ) + ( x.locked ? ' is-locked' : '' ) + ( dragging && dragging.k === p.type + p.slug && dragging.from === i ? ' is-dragging' : '' ) + ( mode !== 'ai' && i > 0 ? ' is-movable' : '' ) }
+											title={ x.source === '' ? __( 'The Home has no section like this, so it is left out.', 'dx-ui' ) : '' }
 											draggable={ mode !== 'ai' && i > 0 && ! busy }
 											onDragStart={ ( e ) => {
 												setDragging( { k: p.type + p.slug, from: i } );
@@ -723,40 +723,40 @@ export default function TeamPages( { design: fixed = 0 } ) {
 											} }
 											onDragEnd={ () => setDragging( null ) }
 										>
-											<span className="dxai-team__sec-role">{ ROLE[ x.role ] || x.role }</span>
-											<span className="dxai-team__sec-from">
-												{ x.source === 'home' && sprintf( /* translators: %d: the number of the Home's section. */ __( 'Home, section %d', 'dxai-ui' ), x.home ) }
-												{ x.source === 'new' && sprintf( /* translators: %d: the number of the Home's section whose cards are used. */ __( 'New, in the cards of section %d', 'dxai-ui' ), x.home ) }
-												{ x.source === 'library' && sprintf( /* translators: %s: what the library's section is. */ __( 'Library: %s', 'dxai-ui' ), x.label ) }
-												{ x.source === '' && __( 'left out', 'dxai-ui' ) }
+											<span className="dxui-team__sec-role">{ ROLE[ x.role ] || x.role }</span>
+											<span className="dxui-team__sec-from">
+												{ x.source === 'home' && sprintf( /* translators: %d: the number of the Home's section. */ __( 'Home, section %d', 'dx-ui' ), x.home ) }
+												{ x.source === 'new' && sprintf( /* translators: %d: the number of the Home's section whose cards are used. */ __( 'New, in the cards of section %d', 'dx-ui' ), x.home ) }
+												{ x.source === 'library' && sprintf( /* translators: %s: what the library's section is. */ __( 'Library: %s', 'dx-ui' ), x.label ) }
+												{ x.source === '' && __( 'left out', 'dx-ui' ) }
 											</span>
-											{ x.ops.length > 0 && <span className="dxai-team__sec-var">{ variants( x.ops ) }</span> }
+											{ x.ops.length > 0 && <span className="dxui-team__sec-var">{ variants( x.ops ) }</span> }
 											{ x.source !== '' && mode !== 'ai' && (
 												<button
 													type="button"
-													className="dxai-team__lock"
+													className="dxui-team__lock"
 													aria-pressed={ !! x.locked }
 													onClick={ () => toggleLock( p, x ) }
 												>
-													{ x.locked ? __( 'Locked', 'dxai-ui' ) : __( 'Lock', 'dxai-ui' ) }
+													{ x.locked ? __( 'Locked', 'dx-ui' ) : __( 'Lock', 'dx-ui' ) }
 												</button>
 											) }
 											{ mode !== 'ai' && i > 0 && (
-												<span className="dxai-team__sec-tools">
-													<button type="button" onClick={ () => move( p, i, i - 1 ) } disabled={ !! busy || i < 2 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s up', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>↑</button>
-													<button type="button" onClick={ () => move( p, i, i + 1 ) } disabled={ !! busy || i >= p.strip.length - 1 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s down', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>↓</button>
-													<button type="button" className="dxai-team__sec-out" onClick={ () => takeOut( p, i ) } disabled={ !! busy } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Take %s out of the page', 'dxai-ui' ), ROLE[ x.role ] || x.role ) }>×</button>
+												<span className="dxui-team__sec-tools">
+													<button type="button" onClick={ () => move( p, i, i - 1 ) } disabled={ !! busy || i < 2 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s up', 'dx-ui' ), ROLE[ x.role ] || x.role ) }>↑</button>
+													<button type="button" onClick={ () => move( p, i, i + 1 ) } disabled={ !! busy || i >= p.strip.length - 1 } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Move %s down', 'dx-ui' ), ROLE[ x.role ] || x.role ) }>↓</button>
+													<button type="button" className="dxui-team__sec-out" onClick={ () => takeOut( p, i ) } disabled={ !! busy } aria-label={ sprintf( /* translators: %s: the section's role. */ __( 'Take %s out of the page', 'dx-ui' ), ROLE[ x.role ] || x.role ) }>×</button>
 												</span>
 											) }
 										</li>
 									) ) }
 								</ol>
 								{ mode !== 'ai' && data.choices && (
-									<div className="dxai-team__add">
+									<div className="dxui-team__add">
 										{ adding === p.type + p.slug ? (
 											<>
 												<SelectControl
-													label={ __( 'Add a section', 'dxai-ui' ) }
+													label={ __( 'Add a section', 'dx-ui' ) }
 													hideLabelFromVision
 													value={ pick }
 													options={ choiceOptions() }
@@ -764,24 +764,24 @@ export default function TeamPages( { design: fixed = 0 } ) {
 													__nextHasNoMarginBottom
 												/>
 												<Button variant="primary" size="small" onClick={ () => addTo( p, pick ) } disabled={ !! busy || pick === '' }>
-													{ __( 'Add', 'dxai-ui' ) }
+													{ __( 'Add', 'dx-ui' ) }
 												</Button>
 												<Button variant="tertiary" size="small" onClick={ () => { setAdding( '' ); setPick( '' ); } }>
-													{ __( 'Cancel', 'dxai-ui' ) }
+													{ __( 'Cancel', 'dx-ui' ) }
 												</Button>
 											</>
 										) : (
 											<Button variant="secondary" size="small" onClick={ () => { setAdding( p.type + p.slug ); setPick( '' ); } } disabled={ !! busy }>
-												{ __( '+ Add a section', 'dxai-ui' ) }
+												{ __( '+ Add a section', 'dx-ui' ) }
 											</Button>
 										) }
 									</div>
 								) }
 								{ p.nearest > 0 && (
-									<p className="dxai-muted">
+									<p className="dxui-muted">
 										{ sprintf(
 											/* translators: %d: number of sections. */
-											_n( 'Differs from the nearest of the team\'s real pages by %d section.', 'Differs from the nearest of the team\'s real pages by %d sections.', p.nearest, 'dxai-ui' ),
+											_n( 'Differs from the nearest of the team\'s real pages by %d section.', 'Differs from the nearest of the team\'s real pages by %d sections.', p.nearest, 'dx-ui' ),
 											p.nearest
 										) }
 									</p>
@@ -793,11 +793,11 @@ export default function TeamPages( { design: fixed = 0 } ) {
 			) }
 
 			{ built && (
-				<div className="dxai-team__built">
+				<div className="dxui-team__built">
 					<Notice status="success" isDismissible={ false }>
 						{ sprintf(
 							/* translators: %d: number of pages. */
-							_n( '%d page is made. Now write its words (Words for the pages, below).', '%d pages are made. Now write their words (Words for the pages, below).', built.pages.length, 'dxai-ui' ),
+							_n( '%d page is made. Now write its words (Words for the pages, below).', '%d pages are made. Now write their words (Words for the pages, below).', built.pages.length, 'dx-ui' ),
 							built.pages.length
 						) }
 					</Notice>
@@ -805,18 +805,18 @@ export default function TeamPages( { design: fixed = 0 } ) {
 						<Notice status={ built.ai.rejected + built.ai.skipped > 0 ? 'warning' : 'info' } isDismissible={ false }>
 							{ sprintf(
 								/* translators: 1: pages planned by the AI, 2: pages made the usual way. */
-								__( 'The AI planned %1$d pages; %2$d were made the usual way (its plan broke a rule, it did not answer, or the ceiling was reached).', 'dxai-ui' ),
+								__( 'The AI planned %1$d pages; %2$d were made the usual way (its plan broke a rule, it did not answer, or the ceiling was reached).', 'dx-ui' ),
 								built.ai.accepted,
 								built.ai.rejected + built.ai.skipped
 							) }
-							{ built.ai.spent && built.ai.spent.requests > 0 && ' ' + sprintf( /* translators: 1: requests, 2: tokens. */ __( 'It spent %1$d requests and about %2$s tokens.', 'dxai-ui' ), built.ai.spent.requests, built.ai.spent.tokens.toLocaleString() ) }
+							{ built.ai.spent && built.ai.spent.requests > 0 && ' ' + sprintf( /* translators: 1: requests, 2: tokens. */ __( 'It spent %1$d requests and about %2$s tokens.', 'dx-ui' ), built.ai.spent.requests, built.ai.spent.tokens.toLocaleString() ) }
 						</Notice>
 					) }
 					{ built.kept.filter( ( k ) => ! k.why || k.why === 'edited' ).length > 0 && (
 						<Notice status="warning" isDismissible={ false }>
 							{ sprintf(
 								/* translators: %s: page titles. */
-								__( 'Kept as they are, because someone edited them: %s', 'dxai-ui' ),
+								__( 'Kept as they are, because someone edited them: %s', 'dx-ui' ),
 								built.kept.filter( ( k ) => ! k.why || k.why === 'edited' ).map( ( k ) => k.title ).join( ', ' )
 							) }
 						</Notice>
@@ -825,7 +825,7 @@ export default function TeamPages( { design: fixed = 0 } ) {
 						<Notice status="warning" isDismissible={ false }>
 							{ sprintf(
 								/* translators: %s: page titles. */
-								__( 'Not made, because their address is already another page, which is left as it is: %s', 'dxai-ui' ),
+								__( 'Not made, because their address is already another page, which is left as it is: %s', 'dx-ui' ),
 								built.kept.filter( ( k ) => k.why === 'address' ).map( ( k ) => k.title ).join( ', ' )
 							) }
 						</Notice>
@@ -834,39 +834,39 @@ export default function TeamPages( { design: fixed = 0 } ) {
 						<Notice status="warning" isDismissible={ false }>
 							{ sprintf(
 								/* translators: %s: page titles. */
-								__( 'Not made yet, because the page above them in the address is not there (tick the list page they sit under): %s', 'dxai-ui' ),
+								__( 'Not made yet, because the page above them in the address is not there (tick the list page they sit under): %s', 'dx-ui' ),
 								built.kept.filter( ( k ) => k.why === 'parent' ).map( ( k ) => k.title ).join( ', ' )
 							) }
 						</Notice>
 					) }
-					<ul className="dxai-team__links">
+					<ul className="dxui-team__links">
 						{ built.pages.map( ( p ) => (
 							<li key={ p.id }>
 								<strong>{ p.title }</strong>
-								<span className="dxai-muted">{ sprintf( /* translators: %d: number of sections. */ _n( '%d section', '%d sections', p.sections, 'dxai-ui' ), p.sections ) }</span>
-								{ p.planned === 'ai' && <span className="dxai-copy__kind">{ __( 'planned by the AI', 'dxai-ui' ) }</span> }
-								<Button variant="link" href={ p.edit }>{ __( 'Edit', 'dxai-ui' ) }</Button>
-								<Button variant="link" href={ p.view }>{ __( 'View', 'dxai-ui' ) }</Button>
+								<span className="dxui-muted">{ sprintf( /* translators: %d: number of sections. */ _n( '%d section', '%d sections', p.sections, 'dx-ui' ), p.sections ) }</span>
+								{ p.planned === 'ai' && <span className="dxui-copy__kind">{ __( 'planned by the AI', 'dx-ui' ) }</span> }
+								<Button variant="link" href={ p.edit }>{ __( 'Edit', 'dx-ui' ) }</Button>
+								<Button variant="link" href={ p.view }>{ __( 'View', 'dx-ui' ) }</Button>
 							</li>
 						) ) }
 					</ul>
 
 					{ built.report && built.report.length > 0 && (
-						<div className="dxai-team__report">
-							<h4>{ __( 'How the pages measure up', 'dxai-ui' ) }</h4>
-							<ul className="dxai-team__reports">
+						<div className="dxui-team__report">
+							<h4>{ __( 'How the pages measure up', 'dx-ui' ) }</h4>
+							<ul className="dxui-team__reports">
 								{ built.report.map( ( r ) => (
 									<li key={ r.id } className={ r.ok ? 'is-ok' : 'is-bad' }>
 										<strong>{ r.title }</strong>
-										<ul className="dxai-team__gates">
+										<ul className="dxui-team__gates">
 											{ r.gates.map( ( g ) => (
 												<li key={ g.gate } className={ g.ok ? 'is-ok' : 'is-bad' } title={ g.problems.join( '\n' ) }>
-													<span className="dxai-team__gate-mark" aria-hidden="true">{ g.ok ? '✓' : '✕' }</span>
-													<span className="screen-reader-text">{ g.ok ? __( 'Passes:', 'dxai-ui' ) : __( 'Fails:', 'dxai-ui' ) }</span>
+													<span className="dxui-team__gate-mark" aria-hidden="true">{ g.ok ? '✓' : '✕' }</span>
+													<span className="screen-reader-text">{ g.ok ? __( 'Passes:', 'dx-ui' ) : __( 'Fails:', 'dx-ui' ) }</span>
 													{ GATE[ g.gate ] || g.label }
 													{ ! g.ok && (
-														<span className="dxai-team__gate-why">
-															{ g.gate === 'G8W' ? __( 'The words are still the Home\'s: write them in "Words for the pages".', 'dxai-ui' ) : g.problems[ 0 ] }
+														<span className="dxui-team__gate-why">
+															{ g.gate === 'G8W' ? __( 'The words are still the Home\'s: write them in "Words for the pages".', 'dx-ui' ) : g.problems[ 0 ] }
 														</span>
 													) }
 												</li>
@@ -875,8 +875,8 @@ export default function TeamPages( { design: fixed = 0 } ) {
 									</li>
 								) ) }
 							</ul>
-							<p className="dxai-muted">
-								{ __( 'Colours, fonts, spacing, how the sections look next to the Home\'s, mobile and speed need a browser to be measured, so they are not shown here: the sections are the Home\'s own, and the plugin\'s quality tool (bin/team-quality.cjs) measures them on a copy of the site.', 'dxai-ui' ) }
+							<p className="dxui-muted">
+								{ __( 'Colours, fonts, spacing, how the sections look next to the Home\'s, mobile and speed need a browser to be measured, so they are not shown here: the sections are the Home\'s own, and the plugin\'s quality tool (bin/team-quality.cjs) measures them on a copy of the site.', 'dx-ui' ) }
 							</p>
 						</div>
 					) }
@@ -888,58 +888,58 @@ export default function TeamPages( { design: fixed = 0 } ) {
 					{ gave.all
 						? sprintf(
 							/* translators: 1: pages put back, 2: pages moved to the trash. */
-							__( 'The run is given back: %1$d pages put back as they were, %2$d moved to the trash (nothing is deleted).', 'dxai-ui' ),
+							__( 'The run is given back: %1$d pages put back as they were, %2$d moved to the trash (nothing is deleted).', 'dx-ui' ),
 							gave.restored.length,
 							gave.removed.length
 						)
-						: __( 'The page is put back as it was.', 'dxai-ui' ) }
+						: __( 'The page is put back as it was.', 'dx-ui' ) }
 					{ gave.skipped.length > 0 && ' ' + sprintf(
 						/* translators: %s: page titles. */
-						__( 'Left as they are, because they were changed since: %s.', 'dxai-ui' ),
+						__( 'Left as they are, because they were changed since: %s.', 'dx-ui' ),
 						gave.skipped.map( ( s ) => s.title ).join( ', ' )
 					) }
 				</Notice>
 			) }
 
 			{ run && (
-				<div className="dxai-team__run">
-					<h4>{ __( 'The last run', 'dxai-ui' ) }</h4>
-					<p className="dxai-muted">
+				<div className="dxui-team__run">
+					<h4>{ __( 'The last run', 'dx-ui' ) }</h4>
+					<p className="dxui-muted">
 						{ sprintf(
 							/* translators: 1: date and time, 2: pages made, 3: pages changed. */
-							__( '%1$s — %2$d pages made, %3$d changed. Giving it back puts the pages that were there back as they were, moves the pages it made to the trash, and returns the Home\'s menu links.', 'dxai-ui' ),
+							__( '%1$s — %2$d pages made, %3$d changed. Giving it back puts the pages that were there back as they were, moves the pages it made to the trash, and returns the Home\'s menu links.', 'dx-ui' ),
 							new Date( run.at * 1000 ).toLocaleString(),
 							run.pages.filter( ( p ) => p.created ).length,
 							run.pages.filter( ( p ) => ! p.created ).length
 						) }
 					</p>
-					<ul className="dxai-team__links">
+					<ul className="dxui-team__links">
 						{ run.pages.map( ( p ) => (
 							<li key={ p.id }>
 								<strong>{ p.title }</strong>
-								<span className="dxai-copy__kind">{ p.created ? __( 'made new', 'dxai-ui' ) : __( 'changed', 'dxai-ui' ) }</span>
-								{ p.changed && <span className="dxai-muted">{ __( 'changed since: it stays as it is', 'dxai-ui' ) }</span> }
+								<span className="dxui-copy__kind">{ p.created ? __( 'made new', 'dx-ui' ) : __( 'changed', 'dx-ui' ) }</span>
+								{ p.changed && <span className="dxui-muted">{ __( 'changed since: it stays as it is', 'dx-ui' ) }</span> }
 								{ ! p.created && ! p.changed && (
 									<Button variant="link" onClick={ () => send( 'put_back', { page: p.id } ) } disabled={ !! busy }>
-										{ __( 'Put this page back', 'dxai-ui' ) }
+										{ __( 'Put this page back', 'dx-ui' ) }
 									</Button>
 								) }
 							</li>
 						) ) }
 					</ul>
-					<div className="dxai-actions">
+					<div className="dxui-actions">
 						{ confirm ? (
 							<>
 								<Button variant="primary" isDestructive onClick={ () => send( 'undo' ) } isBusy={ busy === 'undo' } disabled={ !! busy }>
-									{ __( 'Yes, give the run back', 'dxai-ui' ) }
+									{ __( 'Yes, give the run back', 'dx-ui' ) }
 								</Button>
 								<Button variant="tertiary" onClick={ () => setConfirm( false ) }>
-									{ __( 'No', 'dxai-ui' ) }
+									{ __( 'No', 'dx-ui' ) }
 								</Button>
 							</>
 						) : (
 							<Button variant="secondary" isDestructive onClick={ () => setConfirm( true ) } disabled={ !! busy }>
-								{ __( 'Give the whole run back', 'dxai-ui' ) }
+								{ __( 'Give the whole run back', 'dx-ui' ) }
 							</Button>
 						) }
 					</div>

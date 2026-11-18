@@ -2,12 +2,12 @@
 /**
  * A page's stylesheet without the rules that cannot match anything on it.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * Every page of a design is compiled against the design's whole stylesheet (Dc_Connector merges every page's and part's
@@ -17,12 +17,12 @@ namespace DXAI_UI\Compiler;
  *
  * The test is by token, and it keeps rather than drops whenever it cannot tell: a rule stays when, for one of its
  * selectors, every class, id and attribute name it requires is in the page's markup (its content, its header and footer,
- * the state classes the runtime projects, named in data attributes) or is one the page's scripts add (`is-in`, `dxai-…`).
+ * the state classes the runtime projects, named in data attributes) or is one the page's scripts add (`is-in`, `dxui-…`).
  * What is inside :is()/:where()/:not()/:has() is never required; @keyframes, @font-face and the like stay whole; a rule
  * with no class, id or attribute (html, body, *, a tag) stays.
  *
  * Only on a stylesheet over MIN_BYTES: the designs the converter was built on have far smaller sheets and their classes
- * are compiled per page already (Tailwind_Purger). `dxai_ui_page_css_trim` decides per page.
+ * are compiled per page already (Tailwind_Purger). `dx_ui_page_css_trim` decides per page.
  */
 final class Page_Css_Trim {
 
@@ -30,7 +30,7 @@ final class Page_Css_Trim {
 	public const MIN_BYTES = 1000000;
 
 	/** Classes a script adds at run time, never written in the markup. */
-	private const RUNTIME = '/^(?:is-|has-|dxai-|wp-|js|no-js|admin-bar|logged-in|customize-|screen-reader|sticky|active|open|opened|show|shown|visible|hidden|current|focus|hover|lazy|loaded|swiper-|e--|e-lazyloaded|animated|dxg-anim)/';
+	private const RUNTIME = '/^(?:is-|has-|dxui-|wp-|js|no-js|admin-bar|logged-in|customize-|screen-reader|sticky|active|open|opened|show|shown|visible|hidden|current|focus|hover|lazy|loaded|swiper-|e--|e-lazyloaded|animated|dxg-anim)/';
 
 	/** At-rules whose block holds rules to test; every other block at-rule (keyframes, font-face…) stays whole. */
 	private const GROUPING = array( 'media', 'supports', 'container', 'layer', 'document', 'scope' );
@@ -44,7 +44,7 @@ final class Page_Css_Trim {
 		 * @param bool $on      Default: when the sheet is over Page_Css_Trim::MIN_BYTES.
 		 * @param int  $page_id The page.
 		 */
-		if ( ! (bool) apply_filters( 'dxai_ui_page_css_trim', $on, $page_id ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_page_css_trim', $on, $page_id ) ) {
 			return $css;
 		}
 
@@ -117,8 +117,8 @@ final class Page_Css_Trim {
 
 	/**
 	 * The names a selector can need from this markup: classes, ids, attribute names, and the class-like words in data
-	 * attributes (the runtime's projections: data-dxai-on-sub1="dxai-dc-5--sub1-on"). Block markup counts too: a dynamic
-	 * block (dxai-ui/box, dxai-ui/link…) writes its classes and attributes from its comment's JSON when it renders, so every
+	 * attributes (the runtime's projections: data-dxui-on-sub1="dxui-dc-5--sub1-on"). Block markup counts too: a dynamic
+	 * block (dx-ui/box, dx-ui/link…) writes its classes and attributes from its comment's JSON when it renders, so every
 	 * word of every string there is taken as a class or an id, and every key as an attribute name.
 	 *
 	 * @return array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>}
@@ -197,7 +197,7 @@ final class Page_Css_Trim {
 
 	/**
 	 * The words of a block's attributes, added to the tokens: keys as attribute names, string values word by word as
-	 * classes and ids (an attribute's HTML, as in dxai-ui/html, is read for its own class and id attributes too).
+	 * classes and ids (an attribute's HTML, as in dx-ui/html, is read for its own class and id attributes too).
 	 *
 	 * @param array<mixed>                                                                         $attrs
 	 * @param array{class: array<array-key, true>, id: array<array-key, true>, attr: array<array-key, true>, chars?: array<array-key, true>} $out

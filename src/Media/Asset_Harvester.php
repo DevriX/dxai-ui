@@ -3,14 +3,14 @@
  * Extract images, videos, fonts, links, tokens, and other design files
  * required for a pixel-perfect Gutenberg conversion.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
-use DXAI_UI\Connectors\Zip_Extractor;
+use DX_UI\Connectors\Zip_Extractor;
 
 final class Asset_Harvester {
 
@@ -133,11 +133,11 @@ final class Asset_Harvester {
 		 * 88 of the import's 92 seconds — past a real host's request limit
 		 * before any block was written. A file counts as named when its file
 		 * name (as written or URL-encoded) appears in any of the design's text
-		 * files; the `dxai_ui_harvest_unreferenced` filter brings back the old
+		 * files; the `dx_ui_harvest_unreferenced` filter brings back the old
 		 * upload-everything behaviour for a design that builds paths at run time.
 		 */
 		$named = strtolower( implode( "\n", $texts ) );
-		if ( ! (bool) apply_filters( 'dxai_ui_harvest_unreferenced', false ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_harvest_unreferenced', false ) ) {
 			$binaries = array_filter(
 				$binaries,
 				static function ( $abs, $rel ) use ( $named ): bool {
@@ -895,7 +895,7 @@ final class Asset_Harvester {
 				if ( empty( $file['url'] ) ) {
 					continue;
 				}
-				$family = (string) ( $font['family'] ?? 'DXAI Font' );
+				$family = (string) ( $font['family'] ?? 'DXUI Font' );
 				$format = (string) ( $file['format'] ?? 'woff2' );
 				$out   .= "@font-face { font-family: '{$family}'; src: url('{$file['url']}') format('{$format}'); font-display: swap; }\n";
 			}

@@ -2,14 +2,14 @@
 /**
  * The Design IR: one document that says what a design is, whatever it came from.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Design;
+namespace DX_UI\Design;
 
-use DXAI_UI\Pages\Section_Roles;
+use DX_UI\Pages\Section_Roles;
 
 /**
  * Everything the plugin knows about a design, as one record (docs/PLAN-ARCHITECTURE.md, section 4): where it came from, its pages

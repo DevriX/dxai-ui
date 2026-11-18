@@ -11,7 +11,7 @@
  *   - its rail is the nearest row around it that scrolls sideways — one marked `data-track` first;
  *   - a press moves the rail to the card before or after the one at its edge, smoothly, as far as it can go;
  *   - a button that has the design's `disabled:` look is disabled at the ends of the rail, as the design's code did.
- * A button the design's own script drives (any `data-dxai-*` attribute) is left alone.
+ * A button the design's own script drives (any `data-dxui-*` attribute) is left alone.
  */
 ( function () {
 	'use strict';
@@ -36,7 +36,7 @@
 			return 0;
 		}
 		for ( var i = 0; i < el.attributes.length; i++ ) {
-			if ( el.attributes[ i ].name.indexOf( 'data-dxai-' ) === 0 ) {
+			if ( el.attributes[ i ].name.indexOf( 'data-dxui-' ) === 0 ) {
 				return 0;
 			}
 		}

@@ -8,12 +8,12 @@
  *
  * usage: node bin/wizard-preview.cjs <out.html>
  *
- * The file has to be served from somewhere the stylesheet's own `#dxai-ui-app`
+ * The file has to be served from somewhere the stylesheet's own `#dx-ui-app`
  * scope behaves — copying it into the Local site's webroot and opening it there
  * is what this was checked with; a file:// page renders but the app cannot be
  * driven.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 const fs = require('fs');
 const path = require('path');
@@ -93,8 +93,8 @@ fs.writeFileSync(
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Convert wizard</title><style>${css}</style>
 <style>body{margin:0;background:#090d12;} .harness{max-width:1080px;margin:0 auto;padding:28px 20px 64px;}</style>
-</head><body class="dxai-ui-wrap">
-<div id="dxai-ui-app" class="dxai-ui-admin"><div class="harness">${markup}</div></div>
+</head><body class="dx-ui-wrap">
+<div id="dx-ui-app" class="dx-ui-admin"><div class="harness">${markup}</div></div>
 </body></html>
 `
 );

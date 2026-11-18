@@ -12,7 +12,7 @@
  * (the code before a change, to see the check fail). And it reads every box before it changes a class: on a page of 24 sections it
  * lays the page out once as it starts, not once per section (Lighthouse's "Forced reflow").
  *
- * Needs PHP ($DXAI_PHP, else `php`) and Chrome ($DXAI_CHROME, else the usual places). Exit code 1 when a check fails.
+ * Needs PHP ($DXUI_PHP, else `php`) and Chrome ($DXUI_CHROME, else the usual places). Exit code 1 when a check fails.
  */
 'use strict';
 
@@ -24,13 +24,13 @@ const puppeteer = require( 'puppeteer-core' );
 
 const args = process.argv.slice( 2 );
 const from = args.includes( '--from' ) ? path.resolve( args[ args.indexOf( '--from' ) + 1 ] ) : path.join( __dirname, '..', 'src', 'Compiler', 'Motion_Runtime.php' );
-const PHP = process.env.DXAI_PHP || 'php';
-const CHROME = process.env.DXAI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
+const PHP = process.env.DXUI_PHP || 'php';
+const CHROME = process.env.DXUI_CHROME || [ 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ].find( ( p ) => fs.existsSync( p ) );
 
 // The runtime's script and its rules, as the plugin prints them.
-const probe = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'dxai-reveal-' ) ), 'runtime.php' );
-fs.writeFileSync( probe, '<?php require ' + JSON.stringify( from ) + '; echo \\DXAI_UI\\Compiler\\Motion_Runtime::javascript(), "\\n/*--css--*/\\n", \\DXAI_UI\\Compiler\\Motion_Runtime::css( ".dxai-ui" );' );
-const php = spawnSync( PHP, process.env.DXAI_PHP_INI ? [ '-c', process.env.DXAI_PHP_INI, probe ] : [ probe ], { encoding: 'utf8' } );
+const probe = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'dxui-reveal-' ) ), 'runtime.php' );
+fs.writeFileSync( probe, '<?php require ' + JSON.stringify( from ) + '; echo \\DX_UI\\Compiler\\Motion_Runtime::javascript(), "\\n/*--css--*/\\n", \\DX_UI\\Compiler\\Motion_Runtime::css( ".dx-ui" );' );
+const php = spawnSync( PHP, process.env.DXUI_PHP_INI ? [ '-c', process.env.DXUI_PHP_INI, probe ] : [ probe ], { encoding: 'utf8' } );
 fs.rmSync( path.dirname( probe ), { recursive: true, force: true } );
 if ( php.status !== 0 || ! php.stdout.includes( '/*--css--*/' ) ) {
 	console.log( 'SKIP: PHP could not print the runtime (' + ( php.stderr || php.error || '' ).toString().trim().slice( 0, 200 ) + ')' );
@@ -38,14 +38,14 @@ if ( php.status !== 0 || ! php.stdout.includes( '/*--css--*/' ) ) {
 }
 const [ js, css ] = php.stdout.split( '\n/*--css--*/\n' );
 if ( ! CHROME ) {
-	console.log( 'SKIP: no Chrome found (set DXAI_CHROME)' );
+	console.log( 'SKIP: no Chrome found (set DXUI_CHROME)' );
 	process.exit( 77 );
 }
 
 const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-	+ '<style>body{margin:0;font:16px sans-serif}' + css + ' .dxai-reveal{transition:opacity .6s,transform .6s}</style></head><body>'
-	+ '<div class="dxai-ui"><section class="dxai-reveal" id="top"><h1>On screen as the page opens</h1><p>The first thing a visitor sees.</p></section>'
-	+ '<div style="height:4000px"></div><section class="dxai-reveal" id="below"><h2>Far below</h2><p>Comes in when scrolled to.</p></section></div>'
+	+ '<style>body{margin:0;font:16px sans-serif}' + css + ' .dxui-reveal{transition:opacity .6s,transform .6s}</style></head><body>'
+	+ '<div class="dx-ui"><section class="dxui-reveal" id="top"><h1>On screen as the page opens</h1><p>The first thing a visitor sees.</p></section>'
+	+ '<div style="height:4000px"></div><section class="dxui-reveal" id="below"><h2>Far below</h2><p>Comes in when scrolled to.</p></section></div>'
 	// Every class #top ever has, from before the runtime runs.
 	+ '<script>window.__classes=[];new MutationObserver(function(){window.__classes.push(document.getElementById("top").className);}).observe(document.getElementById("top"),{attributes:true,attributeFilter:["class"]});</script>'
 	+ '<script>' + js + '</script></body></html>';
@@ -74,11 +74,11 @@ const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewp
 			// lays the page out again (Lighthouse's "Forced reflow"; the first version of the on-screen rule did it 25 times).
 			let sections = '';
 			for ( let i = 0; i < 24; i++ ) {
-				sections += '<section class="dxai-reveal" style="height:120px"><h2>Section ' + i + '</h2></section>';
+				sections += '<section class="dxui-reveal" style="height:120px"><h2>Section ' + i + '</h2></section>';
 			}
 			const many = await browser.newPage();
 			await many.setViewport( { width: 1280, height: 800 } );
-			await many.setContent( '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}' + css + '</style></head><body><div class="dxai-ui">' + sections + '</div>'
+			await many.setContent( '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}' + css + '</style></head><body><div class="dx-ui">' + sections + '</div>'
 				+ '<script>window.__run=function(){' + js + '}</script></body></html>', { waitUntil: 'load' } );
 			await new Promise( ( r ) => setTimeout( r, 200 ) );
 			const cdp = await many.target().createCDPSession();

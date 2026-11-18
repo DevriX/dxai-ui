@@ -2,14 +2,14 @@
 /**
  * The order of a page's sections, as the team's pages have it.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Compiler\Color_Usage;
+use DX_UI\Compiler\Color_Usage;
 
 /**
  * What the eleven sites the team has built agree on (283 pages, measured): a page opens with its hero and closes with
@@ -32,10 +32,10 @@ use DXAI_UI\Compiler\Color_Usage;
 final class Page_Order {
 
 	/** On each reordered page: its content before. */
-	public const BEFORE = '_dxai_ui_before_order';
+	public const BEFORE = '_dx_ui_before_order';
 
 	/** On each reordered page: the hash of the content the reorder wrote (a later edit is not undone). */
-	public const HASH = '_dxai_ui_order_hash';
+	public const HASH = '_dx_ui_order_hash';
 
 	/**
 	 * What would change on a page.
@@ -60,7 +60,7 @@ final class Page_Order {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function arrange( array $sections ): array {
-		if ( ! apply_filters( 'dxai_ui_arrange_sections', true ) ) {
+		if ( ! apply_filters( 'dx_ui_arrange_sections', true ) ) {
 			return $sections;
 		}
 		$sections = array_values( $sections );
@@ -98,7 +98,7 @@ final class Page_Order {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $new ), array( 'ID' => $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $post_id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $post_id );
+		\DX_UI\Blocks\Style_Rules::forget( $post_id );
 		update_post_meta( $post_id, self::HASH, md5( $new ) );
 
 		return true;
@@ -120,7 +120,7 @@ final class Page_Order {
 		$wpdb->update( $wpdb->posts, array( 'post_content' => $before ), array( 'ID' => $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		clean_post_cache( $post_id );
 		// Written straight to the row: the rules cached for the page are for the content it had.
-		\DXAI_UI\Blocks\Style_Rules::forget( $post_id );
+		\DX_UI\Blocks\Style_Rules::forget( $post_id );
 		delete_post_meta( $post_id, self::BEFORE );
 		delete_post_meta( $post_id, self::HASH );
 

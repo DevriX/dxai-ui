@@ -1,11 +1,11 @@
-.dxai-report__facts {
+.dxui-report__facts {
 	list-style: none;
 	margin: 8px 0 12px;
 	padding: 0;
 	max-width: 860px;
 }
 
-.dxai-report__facts li {
+.dxui-report__facts li {
 	display: grid;
 	grid-template-columns: 110px 1fr;
 	gap: 4px 16px;
@@ -13,34 +13,34 @@
 	border-bottom: 1px solid #dcdcde;
 }
 
-.dxai-report__facts li > strong {
+.dxui-report__facts li > strong {
 	font-weight: 600;
 }
 
 @media (max-width: 600px) {
-	.dxai-report__facts li {
+	.dxui-report__facts li {
 		grid-template-columns: 1fr;
 	}
 }
 
-.dxai-report h4 {
+.dxui-report h4 {
 	margin: 18px 0 6px;
 }
 
-.dxai-report__pages {
+.dxui-report__pages {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 	max-width: 860px;
 }
 
-.dxai-report__pages > li {
+.dxui-report__pages > li {
 	padding: 8px 0;
 	border-bottom: 1px solid #dcdcde;
 }
 
-.dxai-report__pages code,
-.dxai-report__nav code {
+.dxui-report__pages code,
+.dxui-report__nav code {
 	margin-left: 6px;
 	font-size: 12px;
 	background: #f6f7f7;
@@ -48,20 +48,20 @@
 	border-radius: 3px;
 }
 
-.dxai-report__pages a {
+.dxui-report__pages a {
 	margin-left: 8px;
 }
 
-.dxai-report__sections {
+.dxui-report__sections {
 	margin: 6px 0 0 18px;
 	padding: 0;
 }
 
-.dxai-report__sections li {
+.dxui-report__sections li {
 	margin: 2px 0;
 }
 
-.dxai-report__role {
+.dxui-report__role {
 	display: inline-block;
 	min-width: 72px;
 	margin-right: 8px;
@@ -74,29 +74,29 @@
 	border-radius: 3px;
 }
 
-.dxai-report__nav {
+.dxui-report__nav {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 	max-width: 860px;
 }
 
-.dxai-report__nav.is-child {
+.dxui-report__nav.is-child {
 	margin-left: 18px;
 }
 
-.dxai-report__nav li {
+.dxui-report__nav li {
 	padding: 2px 0;
 }
 
-.dxai-report__behaviours {
+.dxui-report__behaviours {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 	max-width: 560px;
 }
 
-.dxai-report__behaviours li {
+.dxui-report__behaviours li {
 	display: grid;
 	grid-template-columns: 1fr 60px 120px 150px;
 	gap: 8px;
@@ -105,7 +105,7 @@
 }
 
 /* What the Interactivity API could do about a behaviour (Behaviour_Reader): the whole of it, part of it, or nothing without the runtime. */
-.dxai-report__level {
+.dxui-report__level {
 	font-size: 11px;
 	line-height: 18px;
 	padding: 0 6px;
@@ -116,25 +116,25 @@
 	color: #50575e;
 }
 
-.dxai-report__level--full {
+.dxui-report__level--full {
 	background: #edfaef;
 	color: #007017;
 }
 
-.dxai-report__level--partial {
+.dxui-report__level--partial {
 	background: #fcf9e8;
 	color: #996800;
 }
 
-.dxai-report__yes {
+.dxui-report__yes {
 	color: #008a20;
 }
 
-.dxai-report__no {
+.dxui-report__no {
 	color: #b32d2e;
 }
 
-.dxai-report__compiler {
+.dxui-report__compiler {
 	margin-top: 8px;
 	padding: 10px 12px;
 	background: #f6f7f7;
@@ -143,11 +143,11 @@
 	max-width: 860px;
 }
 
-.dxai-report__none {
+.dxui-report__none {
 	margin: 10px 0;
 }
 
-.dxai-report__variation {
+.dxui-report__variation {
 	margin-top: 18px;
 	padding: 12px 14px;
 	border: 1px solid #dcdcde;
@@ -155,11 +155,11 @@
 	max-width: 860px;
 }
 
-.dxai-report__variation h4 {
+.dxui-report__variation h4 {
 	margin-top: 0;
 }
 
-.dxai-report__variation .dxai-actions {
+.dxui-report__variation .dxui-actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;

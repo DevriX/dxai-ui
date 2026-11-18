@@ -2,26 +2,26 @@
 /**
  * A text colour set in the block's Colour panel instead of by a class.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Binding;
-use DXAI_UI\Theme\Theme_Class_Swap;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Binding;
+use DX_UI\Theme\Theme_Class_Swap;
 
 /**
- * A design's text colour is a class the plugin writes a rule for (`text-dxai-sky-38`, `text-dxai-muted`): a person in the block
+ * A design's text colour is a class the plugin writes a rule for (`text-dxui-sky-38`, `text-dxui-muted`): a person in the block
  * editor does not see it in the Colour panel and cannot change it there. On the blocks that have a text colour setting it is
  * the setting instead:
  *
  *  - when the site's palette has the colour as a preset of its own (the brand design's tokens, registered by
  *    Design_Theme_Json, where the theme lets a design bring its palette): `textColor`, the preset the Colour panel shows selected;
- *  - otherwise the colour as the class had it, `var(--dxai-sky-38--fg,var(--dxai-sky-38))`: the same declaration the class's rule
+ *  - otherwise the colour as the class had it, `var(--dxui-sky-38--fg,var(--dxui-sky-38))`: the same declaration the class's rule
  *    wrote (Utility_Classes), so the page is drawn as before, the colour still follows the theme where the design's colours do
  *    (Theme_Binding) and keeps its contrast check, and the Colour panel shows it as the block's custom colour.
  *
@@ -66,7 +66,7 @@ class Text_Color extends Converter {
 	}
 
 	/** The attributes it knows how to carry: nothing here changes the tag but the classes. */
-	protected const KNOWN = array( 'className', 'dxaiCss', 'anchor', 'metadata', 'level', 'tagName', 'ordered', 'style', 'backgroundColor' );
+	protected const KNOWN = array( 'className', 'dxuiCss', 'anchor', 'metadata', 'level', 'tagName', 'ordered', 'style', 'backgroundColor' );
 
 	protected const GROUP_TAGS = array( 'div', 'section', 'header', 'footer', 'main', 'article', 'aside', 'nav', 'figure' );
 
@@ -84,7 +84,7 @@ class Text_Color extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Text colours set in the block\'s Colour panel', 'dxai-ui' );
+		return __( 'Text colours set in the block\'s Colour panel', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -121,14 +121,14 @@ class Text_Color extends Converter {
 			if ( preg_match( '/^[^:\s]+:.*\btext-/', $token ) === 1 || preg_match( '/^(?:text-inherit|text-current|text-transparent|has-[a-z0-9-]+-color|has-text-color)$/', $token ) === 1 ) {
 				return null;
 			}
-			if ( preg_match( '/^text-dxai-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $token, $m ) === 1 ) {
+			if ( preg_match( '/^text-dxui-([a-z0-9]+(?:-[a-z0-9]+)*)$/', $token, $m ) === 1 ) {
 				if ( $slug !== '' ) {
 					return null;
 				}
 				$slug = $m[1];
 			}
 		}
-		if ( $slug === '' || preg_match( '/(?:^|;)\s*color\s*:/i', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1 ) {
+		if ( $slug === '' || preg_match( '/(?:^|;)\s*color\s*:/i', (string) ( $attrs['dxuiCss'] ?? '' ) ) === 1 ) {
 			return null;
 		}
 		$home = (int) ( self::$context['home'] ?? 0 );
@@ -142,10 +142,10 @@ class Text_Color extends Converter {
 		}
 		$preset = $home > 0 ? self::preset( $home, $slug ) : '';
 		$extra  = $preset !== '' ? array( 'has-' . $preset . '-color', 'has-text-color' ) : array( 'has-text-color' );
-		$style  = $preset !== '' ? '' : 'color:var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . '))';
+		$style  = $preset !== '' ? '' : 'color:var(--dxui-' . $slug . '--fg,var(--dxui-' . $slug . '))';
 
 		$new = $attrs;
-		$kept = array_values( array_filter( $tokens, static fn( $t ) => $t !== 'text-dxai-' . $slug ) );
+		$kept = array_values( array_filter( $tokens, static fn( $t ) => $t !== 'text-dxui-' . $slug ) );
 		if ( $kept === array() ) {
 			unset( $new['className'] );
 		} else {
@@ -154,7 +154,7 @@ class Text_Color extends Converter {
 		if ( $preset !== '' ) {
 			$new['textColor'] = $preset;
 		} else {
-			$new['style']['color']['text'] = 'var(--dxai-' . $slug . '--fg,var(--dxai-' . $slug . '))';
+			$new['style']['color']['text'] = 'var(--dxui-' . $slug . '--fg,var(--dxui-' . $slug . '))';
 		}
 
 		return self::rewrite( $block, $tag, $table[ $name ][1], $attrs, $new, $extra, $style );

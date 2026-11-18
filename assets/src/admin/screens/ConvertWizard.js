@@ -47,40 +47,40 @@ import {
 const PATHS = [
 	{
 		id: 'design',
-		title: __( 'Design archive → Gutenberg', 'dxai-ui' ),
-		blurb: __( 'Drop any export: Lovable, Claude Design, Vite/React, Vue, Next.js, or plain HTML. We read the archive and pick the compiler — colors, images, motion, pages, no LLM.', 'dxai-ui' ),
-		hint: __( 'One .zip', 'dxai-ui' ),
+		title: __( 'Design archive → Gutenberg', 'dx-ui' ),
+		blurb: __( 'Drop any export: Lovable, Claude Design, Vite/React, Vue, Next.js, or plain HTML. We read the archive and pick the compiler — colors, images, motion, pages, no LLM.', 'dx-ui' ),
+		hint: __( 'One .zip', 'dx-ui' ),
 	},
 	{
 		id: 'code',
-		title: __( 'Paste a component', 'dxai-ui' ),
-		blurb: __( 'A single JSX/TSX component and, if you have it, its CSS. Useful for one section at a time.', 'dxai-ui' ),
-		hint: __( 'Paste', 'dxai-ui' ),
+		title: __( 'Paste a component', 'dx-ui' ),
+		blurb: __( 'A single JSX/TSX component and, if you have it, its CSS. Useful for one section at a time.', 'dx-ui' ),
+		hint: __( 'Paste', 'dx-ui' ),
 	},
 	{
 		id: 'figma',
-		title: __( 'Figma → Gutenberg', 'dxai-ui' ),
-		blurb: __( 'Paste a Figma file URL. We turn frames into WordPress blocks.', 'dxai-ui' ),
-		hint: __( 'One URL', 'dxai-ui' ),
+		title: __( 'Figma → Gutenberg', 'dx-ui' ),
+		blurb: __( 'Paste a Figma file URL. We turn frames into WordPress blocks.', 'dx-ui' ),
+		hint: __( 'One URL', 'dx-ui' ),
 	},
 ];
 
 /** What the server reports having read, for the screen to name it back. */
 const KINDS = {
-	'lovable-zip': __( 'React source (Lovable, Vite)', 'dxai-ui' ),
-	'dc-zip': __( 'Claude Design export', 'dxai-ui' ),
-	'generated-zip': __( 'Generated design (HTML, Vue, Next.js)', 'dxai-ui' ),
-	'lovable-code': __( 'Pasted component', 'dxai-ui' ),
-	'figma-api': __( 'Figma file', 'dxai-ui' ),
+	'lovable-zip': __( 'React source (Lovable, Vite)', 'dx-ui' ),
+	'dc-zip': __( 'Claude Design export', 'dx-ui' ),
+	'generated-zip': __( 'Generated design (HTML, Vue, Next.js)', 'dx-ui' ),
+	'lovable-code': __( 'Pasted component', 'dx-ui' ),
+	'figma-api': __( 'Figma file', 'dx-ui' ),
 };
 
 const LEVELS = [
-	{ id: 'path', label: __( 'Pick', 'dxai-ui' ) },
-	{ id: 'scope', label: __( 'Page or site', 'dxai-ui' ) },
-	{ id: 'file', label: __( 'Add file', 'dxai-ui' ) },
-	{ id: 'run', label: __( 'Convert', 'dxai-ui' ) },
-	{ id: 'preview', label: __( 'Preview', 'dxai-ui' ) },
-	{ id: 'import', label: __( 'Import', 'dxai-ui' ) },
+	{ id: 'path', label: __( 'Pick', 'dx-ui' ) },
+	{ id: 'scope', label: __( 'Page or site', 'dx-ui' ) },
+	{ id: 'file', label: __( 'Add file', 'dx-ui' ) },
+	{ id: 'run', label: __( 'Convert', 'dx-ui' ) },
+	{ id: 'preview', label: __( 'Preview', 'dx-ui' ) },
+	{ id: 'import', label: __( 'Import', 'dx-ui' ) },
 ];
 
 const STRUCTURE_TYPES = [
@@ -175,34 +175,34 @@ function hasLlm( settings ) {
 
 function failureTitle( phase, saveState ) {
 	if ( phase === 'save' && saveState === 'unchecked' ) {
-		return __( 'The save’s answer was lost on the way.', 'dxai-ui' );
+		return __( 'The save’s answer was lost on the way.', 'dx-ui' );
 	}
 	if ( phase === 'save' && saveState === 'stuck' ) {
-		return __( 'The save has not finished.', 'dxai-ui' );
+		return __( 'The save has not finished.', 'dx-ui' );
 	}
 	return {
-		read: __( 'The archive could not be read.', 'dxai-ui' ),
-		compile: __( 'The design could not be compiled.', 'dxai-ui' ),
-		save: __( 'The page could not be saved.', 'dxai-ui' ),
-		crawl: __( 'Building the menu pages stopped.', 'dxai-ui' ),
-	}[ phase ] || __( 'Something went wrong.', 'dxai-ui' );
+		read: __( 'The archive could not be read.', 'dx-ui' ),
+		compile: __( 'The design could not be compiled.', 'dx-ui' ),
+		save: __( 'The page could not be saved.', 'dx-ui' ),
+		crawl: __( 'Building the menu pages stopped.', 'dx-ui' ),
+	}[ phase ] || __( 'Something went wrong.', 'dx-ui' );
 }
 
 function auditLine( audit ) {
 	if ( ! audit ) {
-		return __( 'Import finished.', 'dxai-ui' );
+		return __( 'Import finished.', 'dx-ui' );
 	}
 	const findings = ( audit.findings || [] ).length;
 	if ( findings ) {
 		return sprintf(
 			/* translators: %d: number of problems */
-			_n( 'Import checks: %d problem found — see below.', 'Import checks: %d problems found — see below.', findings, 'dxai-ui' ),
+			_n( 'Import checks: %d problem found — see below.', 'Import checks: %d problems found — see below.', findings, 'dx-ui' ),
 			findings
 		);
 	}
 	return sprintf(
 		/* translators: %d: number of checks */
-		__( 'Import checks: all %d passed.', 'dxai-ui' ),
+		__( 'Import checks: all %d passed.', 'dx-ui' ),
 		audit.checked || 0
 	);
 }
@@ -266,7 +266,7 @@ export default function ConvertWizard() {
 	const [ chromeScoped, setChromeScoped ] = useState( null );
 	// Engine, upload limit and admin links: printed into the page, then refreshed.
 	const [ info, setInfo ] = useState( () => {
-		const printed = window.dxaiUI && window.dxaiUI.import;
+		const printed = window.dxUI && window.dxUI.import;
 		return printed && ! Array.isArray( printed ) ? printed : {};
 	} );
 
@@ -327,7 +327,7 @@ export default function ConvertWizard() {
 		}
 		let current = true;
 		const query = '?scope=' + encodeURIComponent( scope ) + ( archiveName ? '&archive=' + encodeURIComponent( archiveName ) : '' );
-		apiFetch( { path: '/dxai-ui/v1/import-info' + query } )
+		apiFetch( { path: '/dx-ui/v1/import-info' + query } )
 			.then( ( res ) => {
 				if ( ! current || ! res || typeof res !== 'object' || Array.isArray( res ) ) {
 					return;
@@ -350,7 +350,7 @@ export default function ConvertWizard() {
 	const canImport = info.can_import !== false;
 
 	function refreshInfo() {
-		apiFetch( { path: '/dxai-ui/v1/import-info' } )
+		apiFetch( { path: '/dx-ui/v1/import-info' } )
 			.then( ( res ) => {
 				if ( res && typeof res === 'object' && ! Array.isArray( res ) ) {
 					setInfo( res );
@@ -360,7 +360,7 @@ export default function ConvertWizard() {
 	}
 
 	useEffect( () => {
-		apiFetch( { path: '/dxai-ui/v1/settings' } )
+		apiFetch( { path: '/dx-ui/v1/settings' } )
 			.then( ( res ) => {
 				setSettings( res.settings || {} );
 				setCatalog( res.catalog || [] );
@@ -422,7 +422,7 @@ export default function ConvertWizard() {
 		if ( ! quick || step !== 'preview' || front ) {
 			return;
 		}
-		apiFetch( { path: '/dxai-ui/v1/front-page?home=0&archive=' + encodeURIComponent( ( file && file.name ) || '' ) } )
+		apiFetch( { path: '/dx-ui/v1/front-page?home=0&archive=' + encodeURIComponent( ( file && file.name ) || '' ) } )
 			.then( ( res ) => setFront( res ) )
 			.catch( () => {} );
 	}, [ quick, step ] ); // eslint-disable-line react-hooks/exhaustive-deps
@@ -511,7 +511,7 @@ export default function ConvertWizard() {
 		if ( path === 'figma' && figmaToken && ! settings?.has_figma ) {
 			setBusy( true );
 			apiFetch( {
-				path: '/dxai-ui/v1/settings',
+				path: '/dx-ui/v1/settings',
 				method: 'POST',
 				data: { figma_api_token: figmaToken },
 			} )
@@ -521,7 +521,7 @@ export default function ConvertWizard() {
 				} )
 				.catch( ( err ) => {
 					setBusy( false );
-					setError( err.message || __( 'Could not save the Figma token.', 'dxai-ui' ) );
+					setError( err.message || __( 'Could not save the Figma token.', 'dx-ui' ) );
 				} );
 			return;
 		}
@@ -540,7 +540,7 @@ export default function ConvertWizard() {
 		setBusy( true );
 		setError( '' );
 		apiFetch( {
-			path: '/dxai-ui/v1/settings',
+			path: '/dx-ui/v1/settings',
 			method: 'POST',
 			data: keys,
 		} )
@@ -549,14 +549,14 @@ export default function ConvertWizard() {
 				refreshInfo();
 				if ( ! hasLlm( res.settings ) ) {
 					setBusy( false );
-					setError( __( 'Add at least one engine key to convert.', 'dxai-ui' ) );
+					setError( __( 'Add at least one engine key to convert.', 'dx-ui' ) );
 					return;
 				}
 				startConvert();
 			} )
 			.catch( ( err ) => {
 				setBusy( false );
-				setError( err.message || __( 'Could not save keys.', 'dxai-ui' ) );
+				setError( err.message || __( 'Could not save keys.', 'dx-ui' ) );
 			} );
 	}
 
@@ -577,8 +577,8 @@ export default function ConvertWizard() {
 					id,
 					meter: null,
 					detail: id === 'read'
-						? __( 'Uploaded. The server is unpacking the archive and reading what is in it…', 'dxai-ui' )
-						: __( 'Uploaded. The server is compiling the design into blocks…', 'dxai-ui' ),
+						? __( 'Uploaded. The server is unpacking the archive and reading what is in it…', 'dx-ui' )
+						: __( 'Uploaded. The server is compiling the design into blocks…', 'dx-ui' ),
 				} );
 				return;
 			}
@@ -589,14 +589,14 @@ export default function ConvertWizard() {
 			last = stamp;
 			const text = sprintf(
 				/* translators: 1: bytes sent, 2: file size */
-				__( '%1$s of %2$s uploaded', 'dxai-ui' ),
+				__( '%1$s of %2$s uploaded', 'dx-ui' ),
 				formatBytes( evt.loaded ),
 				formatBytes( evt.total )
 			);
 			dispatch( {
 				type: 'detail',
 				id,
-				detail: ( id === 'read' ? __( 'Uploading the archive — ', 'dxai-ui' ) : __( 'Sending the archive to the compiler — ', 'dxai-ui' ) ) + text,
+				detail: ( id === 'read' ? __( 'Uploading the archive — ', 'dx-ui' ) : __( 'Sending the archive to the compiler — ', 'dx-ui' ) ) + text,
 				meter: { value: evt.loaded, max: evt.total, text },
 			} );
 		};
@@ -635,11 +635,11 @@ export default function ConvertWizard() {
 						const sent = Math.min( file.size, index * size + evt.loaded );
 						const text = sprintf(
 							/* translators: 1: bytes sent, 2: file size */
-							__( '%1$s of %2$s uploaded', 'dxai-ui' ),
+							__( '%1$s of %2$s uploaded', 'dx-ui' ),
 							formatBytes( sent ),
 							formatBytes( file.size )
 						);
-						dispatch( { type: 'detail', id: 'read', detail: __( 'Uploading the archive — ', 'dxai-ui' ) + text, meter: { value: sent, max: file.size, text } } );
+						dispatch( { type: 'detail', id: 'read', detail: __( 'Uploading the archive — ', 'dx-ui' ) + text, meter: { value: sent, max: file.size, text } } );
 					} );
 					if ( res && res.busy ) {
 						await pause( 5000 );
@@ -655,7 +655,7 @@ export default function ConvertWizard() {
 				}
 			}
 		}
-		dispatch( { type: 'detail', id: 'read', meter: null, detail: __( 'Uploaded. The server is unpacking the archive and reading what is in it…', 'dxai-ui' ) } );
+		dispatch( { type: 'detail', id: 'read', meter: null, detail: __( 'Uploaded. The server is unpacking the archive and reading what is in it…', 'dx-ui' ) } );
 		return stage;
 	}
 
@@ -677,16 +677,16 @@ export default function ConvertWizard() {
 		dispatch( { type: 'reset' } );
 
 		let phase = 'read';
-		let readDetail = __( 'Reading the pasted code…', 'dxai-ui' );
+		let readDetail = __( 'Reading the pasted code…', 'dx-ui' );
 		if ( file ) {
 			readDetail = sprintf(
 				/* translators: 1: file name, 2: file size */
-				__( 'Sending %1$s (%2$s) to the server…', 'dxai-ui' ),
+				__( 'Sending %1$s (%2$s) to the server…', 'dx-ui' ),
 				file.name,
 				formatBytes( file.size )
 			);
 		} else if ( path === 'figma' ) {
-			readDetail = __( 'Asking Figma for the file…', 'dxai-ui' );
+			readDetail = __( 'Asking Figma for the file…', 'dx-ui' );
 		}
 		dispatch( { type: 'start', id: 'read', detail: readDetail } );
 
@@ -709,14 +709,14 @@ export default function ConvertWizard() {
 					const files = res.harvest || {};
 					const text = sprintf(
 						/* translators: 1: files added so far, 2: files the design names */
-						__( '%1$d of %2$d files', 'dxai-ui' ),
+						__( '%1$d of %2$d files', 'dx-ui' ),
 						files.done || 0,
 						files.total || 0
 					);
 					dispatch( {
 						type: 'detail',
 						id: 'read',
-						detail: __( 'Adding the design’s pictures and fonts to the media library — ', 'dxai-ui' ) + text,
+						detail: __( 'Adding the design’s pictures and fonts to the media library — ', 'dx-ui' ) + text,
 						meter: { value: files.done || 0, max: files.total || 1, text },
 					} );
 					try {
@@ -752,7 +752,7 @@ export default function ConvertWizard() {
 				if ( readHarvest?.summary ) {
 					found.push( sprintf(
 						/* translators: 1: images, 2: fonts */
-						__( '%1$d images, %2$d fonts', 'dxai-ui' ),
+						__( '%1$d images, %2$d fonts', 'dx-ui' ),
 						readHarvest.summary.images || 0,
 						readHarvest.summary.fonts || 0
 					) );
@@ -763,7 +763,7 @@ export default function ConvertWizard() {
 				dispatch( {
 					type: 'start',
 					id: 'compile',
-					detail: file ? __( 'Sending the archive to the compiler…', 'dxai-ui' ) : __( 'Compiling the design into blocks…', 'dxai-ui' ),
+					detail: file ? __( 'Sending the archive to the compiler…', 'dx-ui' ) : __( 'Compiling the design into blocks…', 'dx-ui' ),
 				} );
 				let generated = null;
 				let last = await postForm( 'generate-block', formBody( undefined, stageRef.current ), uploadWatcher( 'compile', token ) );
@@ -783,14 +783,14 @@ export default function ConvertWizard() {
 						id: 'compile',
 						detail: sprintf(
 							/* translators: 1: part number, 2: part count, 3: part name */
-							__( 'Part %1$d of %2$d: %3$s', 'dxai-ui' ),
+							__( 'Part %1$d of %2$d: %3$s', 'dx-ui' ),
 							generated.chunk.index + 2,
 							generated.chunk.total,
 							generated.chunk.title || ''
 						),
 						meter: { value: generated.chunk.index + 1, max: generated.chunk.total, text: sprintf(
 							/* translators: 1: parts done, 2: part count */
-							__( '%1$d of %2$d parts compiled', 'dxai-ui' ),
+							__( '%1$d of %2$d parts compiled', 'dx-ui' ),
 							generated.chunk.index + 1,
 							generated.chunk.total
 						) },
@@ -814,7 +814,7 @@ export default function ConvertWizard() {
 				} ) );
 				setResult( generated );
 				setStructures( next );
-				dispatch( { type: 'detail', id: 'compile', meter: null, detail: __( 'Rendering the preview…', 'dxai-ui' ) } );
+				dispatch( { type: 'detail', id: 'compile', meter: null, detail: __( 'Rendering the preview…', 'dx-ui' ) } );
 				await loadPreview( generated, next );
 				const score = generated?.fidelity_score?.score;
 				dispatch( {
@@ -822,15 +822,15 @@ export default function ConvertWizard() {
 					id: 'compile',
 					detail: sprintf(
 						/* translators: %d: number of sections */
-						_n( '%d section compiled', '%d sections compiled', next.length, 'dxai-ui' ),
+						_n( '%d section compiled', '%d sections compiled', next.length, 'dx-ui' ),
 						next.length
 					) + ( typeof score === 'number' ? ' · ' + sprintf(
 						/* translators: %d: fidelity score out of 100 */
-						__( 'fidelity %d/100', 'dxai-ui' ),
+						__( 'fidelity %d/100', 'dx-ui' ),
 						score
 					) : '' ),
 				} );
-				dispatch( { type: 'wait', id: 'review', detail: __( 'Nothing is saved yet. Check the preview, then choose Add to WordPress.', 'dxai-ui' ) } );
+				dispatch( { type: 'wait', id: 'review', detail: __( 'Nothing is saved yet. Check the preview, then choose Add to WordPress.', 'dx-ui' ) } );
 				return 'ok';
 			} )
 			.then( ( outcome ) => {
@@ -855,7 +855,7 @@ export default function ConvertWizard() {
 	function loadPreview( generated, nextStructures ) {
 		const markup = markupFromStructures( nextStructures ) || generated?.gutenberg_markup || '';
 		return apiFetch( {
-			path: '/dxai-ui/v1/preview',
+			path: '/dx-ui/v1/preview',
 			method: 'POST',
 			data: {
 				gutenberg_markup: markup,
@@ -869,7 +869,7 @@ export default function ConvertWizard() {
 			.then( ( res ) => setPreview( res ) )
 			.catch( ( err ) => {
 				setPreview( { html: '', css: '' } );
-				setError( err.message || __( 'Preview failed, but Gutenberg was still generated. You can add it to WordPress.', 'dxai-ui' ) );
+				setError( err.message || __( 'Preview failed, but Gutenberg was still generated. You can add it to WordPress.', 'dx-ui' ) );
 			} );
 	}
 
@@ -901,7 +901,7 @@ export default function ConvertWizard() {
 				id: 'review',
 				detail: sprintf(
 					/* translators: 1: pieces included, 2: pieces in the design */
-					__( '%1$d of %2$d pieces included', 'dxai-ui' ),
+					__( '%1$d of %2$d pieces included', 'dx-ui' ),
 					included,
 					structures.length
 				),
@@ -932,7 +932,7 @@ export default function ConvertWizard() {
 		 * the work is what makes the two paths the same conversion.
 		 */
 		apiFetch( {
-			path: '/dxai-ui/v1/save-pattern',
+			path: '/dx-ui/v1/save-pattern',
 			method: 'POST',
 			data: {
 				...result,
@@ -1007,10 +1007,10 @@ export default function ConvertWizard() {
 		dispatch( {
 			type: 'detail',
 			id: 'save',
-			...( res.pages || res.tail ? roundProgress( res ) : { detail: __( 'Going on with the save from where it stopped…', 'dxai-ui' ) } ),
+			...( res.pages || res.tail ? roundProgress( res ) : { detail: __( 'Going on with the save from where it stopped…', 'dx-ui' ) } ),
 		} );
 		const send = () => apiFetch( {
-			path: '/dxai-ui/v1/save-pattern',
+			path: '/dx-ui/v1/save-pattern',
 			method: 'POST',
 			data: { rounds: true, stage: stageRef.current, save_round: 'continue', import_token: attempt },
 		} )
@@ -1043,14 +1043,14 @@ export default function ConvertWizard() {
 		if ( tail && tail.of ) {
 			const text = sprintf(
 				/* translators: 1: step, 2: steps */
-				__( 'step %1$d of %2$d', 'dxai-ui' ),
+				__( 'step %1$d of %2$d', 'dx-ui' ),
 				tail.at || 0,
 				tail.of
 			);
 			return {
 				detail: sprintf(
 					/* translators: %s: how far, e.g. "step 4 of 13" */
-					__( 'All pages written. Linking them, turning colours into the design’s tokens, moving styles into classes — %s', 'dxai-ui' ),
+					__( 'All pages written. Linking them, turning colours into the design’s tokens, moving styles into classes — %s', 'dx-ui' ),
 					text
 				),
 				meter: { value: tail.at || 0, max: tail.of, text },
@@ -1058,12 +1058,12 @@ export default function ConvertWizard() {
 		}
 		const text = sprintf(
 			/* translators: 1: pages written, 2: pages */
-			__( '%1$d of %2$d pages', 'dxai-ui' ),
+			__( '%1$d of %2$d pages', 'dx-ui' ),
 			pages.written || 0,
 			pages.of || 0
 		);
 		return {
-			detail: __( 'Writing the pages — ', 'dxai-ui' ) + text,
+			detail: __( 'Writing the pages — ', 'dx-ui' ) + text,
 			meter: { value: pages.written || 0, max: pages.of || 1, text },
 		};
 	}
@@ -1074,7 +1074,7 @@ export default function ConvertWizard() {
 	 */
 	function makeSizes( token ) {
 		let lost = 0;
-		const round = () => apiFetch( { path: '/dxai-ui/v1/media-sizes', method: 'POST' } )
+		const round = () => apiFetch( { path: '/dx-ui/v1/media-sizes', method: 'POST' } )
 			.then( ( res ) => {
 				lost = 0;
 				const left = Number( res?.left || 0 );
@@ -1097,7 +1097,7 @@ export default function ConvertWizard() {
 		setFailure( null );
 		// A whole site's Home becomes the site's front page when the site has none of its own (Network\Front_Page).
 		if ( res?.page?.id && ( crawlOn || scope === 'site' ) ) {
-			apiFetch( { path: '/dxai-ui/v1/front-page', method: 'POST', data: { home: res.page.id, action: 'adopt' } } )
+			apiFetch( { path: '/dx-ui/v1/front-page', method: 'POST', data: { home: res.page.id, action: 'adopt' } } )
 				.then( ( made ) => setFront( made ) )
 				.catch( () => {} );
 		}
@@ -1108,11 +1108,11 @@ export default function ConvertWizard() {
 			detail: ( res?.page?.id
 				? sprintf(
 					/* translators: 1: page title, 2: page ID */
-					__( 'Page “%1$s” saved (ID %2$d).', 'dxai-ui' ),
+					__( 'Page “%1$s” saved (ID %2$d).', 'dx-ui' ),
 					title,
 					res.page.id
 				)
-				: __( 'Saved.', 'dxai-ui' ) ) + ( note ? ' ' + note : '' ),
+				: __( 'Saved.', 'dx-ui' ) ) + ( note ? ' ' + note : '' ),
 		} );
 		/*
 		 * The header and footer rows: from the save's report and the mode that
@@ -1134,7 +1134,7 @@ export default function ConvertWizard() {
 			return;
 		}
 		if ( crawlOn ) {
-			dispatch( { type: 'skip', id: 'crawl', detail: __( 'The server did not start building the menu pages for this import.', 'dxai-ui' ) } );
+			dispatch( { type: 'skip', id: 'crawl', detail: __( 'The server did not start building the menu pages for this import.', 'dx-ui' ) } );
 		}
 		completeImport( res );
 	}
@@ -1176,10 +1176,10 @@ export default function ConvertWizard() {
 			reopenNext = false;
 		};
 		say( fatal
-			? __( 'WordPress stopped with a critical error. Asking it what PHP said…', 'dxai-ui' )
+			? __( 'WordPress stopped with a critical error. Asking it what PHP said…', 'dx-ui' )
 			: sprintf(
 				/* translators: %s: what went wrong, e.g. "HTTP 504" */
-				__( 'The answer did not come back (%s). That does not mean the save failed — asking WordPress how it is going…', 'dxai-ui' ),
+				__( 'The answer did not come back (%s). That does not mean the save failed — asking WordPress how it is going…', 'dx-ui' ),
 				why
 			) );
 		const later = ( ms ) => {
@@ -1190,7 +1190,7 @@ export default function ConvertWizard() {
 			if ( ! live() ) {
 				return;
 			}
-			apiFetch( { path: '/dxai-ui/v1/save-status?token=' + encodeURIComponent( attempt ) } )
+			apiFetch( { path: '/dx-ui/v1/save-status?token=' + encodeURIComponent( attempt ) } )
 				.then( ( rec ) => {
 					if ( ! live() ) {
 						return;
@@ -1212,7 +1212,7 @@ export default function ConvertWizard() {
 							resume( rec.payload );
 							return;
 						}
-						onSaved( rec.payload, crawlOn, __( 'The connection was cut before WordPress answered, but the save finished — this screen asked WordPress for the result.', 'dxai-ui' ) );
+						onSaved( rec.payload, crawlOn, __( 'The connection was cut before WordPress answered, but the save finished — this screen asked WordPress for the result.', 'dx-ui' ) );
 						return;
 					}
 					if ( rounds && state === 'continue' && rec.payload && typeof rec.payload === 'object' ) {
@@ -1221,7 +1221,7 @@ export default function ConvertWizard() {
 					}
 					if ( state === 'failed' ) {
 						failSave(
-							{ code: rec.code || 'dxai_ui_save', message: rec.message || '', data: { status: rec.status || 0 } },
+							{ code: rec.code || 'dx_ui_save', message: rec.message || '', data: { status: rec.status || 0 } },
 							{ attempt, cause, crawlOn, saveState: 'failed' }
 						);
 						return;
@@ -1241,10 +1241,10 @@ export default function ConvertWizard() {
 						if ( age > patience ) {
 							failSave(
 								{
-									code: 'dxai_ui_save_stuck',
+									code: 'dx_ui_save_stuck',
 									message: sprintf(
 										/* translators: %s: duration, e.g. 10:02 */
-										__( 'WordPress started this save %s ago and has not recorded its end.', 'dxai-ui' ),
+										__( 'WordPress started this save %s ago and has not recorded its end.', 'dx-ui' ),
 										formatDuration( age )
 									),
 									data: {},
@@ -1255,7 +1255,7 @@ export default function ConvertWizard() {
 						}
 						say( sprintf(
 							/* translators: 1: what went wrong, e.g. "HTTP 504", 2: duration */
-							__( 'The connection was cut (%1$s), but WordPress is still saving — it started %2$s ago. Waiting for it to finish; nothing has failed.', 'dxai-ui' ),
+							__( 'The connection was cut (%1$s), but WordPress is still saving — it started %2$s ago. Waiting for it to finish; nothing has failed.', 'dx-ui' ),
 							why,
 							formatDuration( age )
 						) );
@@ -1285,7 +1285,7 @@ export default function ConvertWizard() {
 					}
 					say( sprintf(
 						/* translators: 1: what went wrong with the save, 2: what went wrong with the status read, 3: attempt number, 4: attempts allowed */
-						__( 'The answer did not come back (%1$s), and asking WordPress how the save is going failed too (%2$s). Trying again — %3$d of %4$d…', 'dxai-ui' ),
+						__( 'The answer did not come back (%1$s), and asking WordPress how the save is going failed too (%2$s). Trying again — %3$d of %4$d…', 'dx-ui' ),
 						why,
 						lostWhy( err ),
 						misses,
@@ -1310,7 +1310,7 @@ export default function ConvertWizard() {
 
 	/** The finishing pass is the save's own for a page import — it only reads the audit. */
 	function completeImport( finalSaved, stoppedNote ) {
-		dispatch( { type: 'start', id: 'finish', detail: __( 'Reading the import checks…', 'dxai-ui' ) } );
+		dispatch( { type: 'start', id: 'finish', detail: __( 'Reading the import checks…', 'dx-ui' ) } );
 		dispatch( {
 			type: finalSaved?.audit?.findings?.length ? 'warn' : 'done',
 			id: 'finish',
@@ -1348,7 +1348,7 @@ export default function ConvertWizard() {
 		setFailure( null );
 		setCrawl( ( current ) => current || { total: 0, index: 0, label: '', phase: '', created: 0, errors: 0 } );
 		crawlSeen.current = -1;
-		dispatch( { type: 'start', id: 'crawl', force: true, detail: __( 'Planning the pages from the menu…', 'dxai-ui' ) } );
+		dispatch( { type: 'start', id: 'crawl', force: true, detail: __( 'Planning the pages from the menu…', 'dx-ui' ) } );
 
 		let failures = 0;
 		let inFlight = false;
@@ -1378,14 +1378,14 @@ export default function ConvertWizard() {
 					id: 'crawl',
 					detail: crawlTally( p ),
 				} );
-				dispatch( { type: 'start', id: 'finish', detail: __( 'Linking the menus to the new pages, rewriting links and applying the colour tokens…', 'dxai-ui' ) } );
+				dispatch( { type: 'start', id: 'finish', detail: __( 'Linking the menus to the new pages, rewriting links and applying the colour tokens…', 'dx-ui' ) } );
 			} else if ( p.total > 0 && ! p.done ) {
 				dispatch( {
 					type: 'detail',
 					id: 'crawl',
 					detail: sprintf(
 						/* translators: 1: page number, 2: page count, 3: page name */
-						__( 'Page %1$d of %2$d: %3$s', 'dxai-ui' ),
+						__( 'Page %1$d of %2$d: %3$s', 'dx-ui' ),
 						Math.min( ( p.index || 0 ) + 1, p.total ),
 						p.total,
 						p.label || p.path || ''
@@ -1399,7 +1399,7 @@ export default function ConvertWizard() {
 				return;
 			}
 			inFlight = true;
-			apiFetch( { path: '/dxai-ui/v1/crawl-step', method: 'POST', data: { job } } )
+			apiFetch( { path: '/dx-ui/v1/crawl-step', method: 'POST', data: { job } } )
 				.then( ( p ) => {
 					inFlight = false;
 					if ( ! live() ) {
@@ -1419,7 +1419,7 @@ export default function ConvertWizard() {
 					if ( ! live() ) {
 						return;
 					}
-					if ( err && err.code === 'dxai_ui_crawl_job' ) {
+					if ( err && err.code === 'dx_ui_crawl_job' ) {
 						stop();
 						failCrawl( err, job, base, 'missing' );
 						return;
@@ -1430,7 +1430,7 @@ export default function ConvertWizard() {
 					if ( failures > 30 ) {
 						stop();
 						failCrawl(
-							{ code: err?.code || 'crawl_stalled', message: __( 'The crawl stopped answering after 30 tries in a row.', 'dxai-ui' ), data: err?.data },
+							{ code: err?.code || 'crawl_stalled', message: __( 'The crawl stopped answering after 30 tries in a row.', 'dx-ui' ), data: err?.data },
 							job,
 							base,
 							'stalled'
@@ -1445,7 +1445,7 @@ export default function ConvertWizard() {
 			if ( ! inFlight || ! live() ) {
 				return;
 			}
-			apiFetch( { path: '/dxai-ui/v1/crawl-status?job=' + encodeURIComponent( job ) } )
+			apiFetch( { path: '/dx-ui/v1/crawl-status?job=' + encodeURIComponent( job ) } )
 				.then( ( p ) => {
 					// A status read is never "done" business: finishCrawl belongs to the step.
 					if ( p && ! p.done ) {
@@ -1460,13 +1460,13 @@ export default function ConvertWizard() {
 
 	function crawlTally( p ) {
 		return [
-			sprintf( /* translators: %d: pages created */ _n( '%d page created', '%d pages created', p.created || 0, 'dxai-ui' ), p.created || 0 ),
+			sprintf( /* translators: %d: pages created */ _n( '%d page created', '%d pages created', p.created || 0, 'dx-ui' ), p.created || 0 ),
 			p.ai === false
 				? ''
 				: ! p.engine || p.engine === 'design'
-					? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 )
-					: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dxai-ui' ), p.restyled || 0 ),
-			sprintf( /* translators: %d: errors */ _n( '%d error', '%d errors', p.errors || 0, 'dxai-ui' ), p.errors || 0 ),
+					? sprintf( /* translators: %d: pages built from the design's own sections */ _n( '%d built from the design’s sections', '%d built from the design’s sections', p.restyled || 0, 'dx-ui' ), p.restyled || 0 )
+					: sprintf( /* translators: %d: pages rebuilt with AI */ _n( '%d rebuilt with AI', '%d rebuilt with AI', p.restyled || 0, 'dx-ui' ), p.restyled || 0 ),
+			sprintf( /* translators: %d: errors */ _n( '%d error', '%d errors', p.errors || 0, 'dx-ui' ), p.errors || 0 ),
 		].filter( Boolean ).join( ' · ' );
 	}
 
@@ -1502,7 +1502,7 @@ export default function ConvertWizard() {
 		dispatch( {
 			type: 'done',
 			id: 'finish',
-			detail: __( 'Menus linked to the new pages, links rewritten, colour tokens applied.', 'dxai-ui' ) + ' ' + auditLine( merged.audit ),
+			detail: __( 'Menus linked to the new pages, links rewritten, colour tokens applied.', 'dx-ui' ) + ' ' + auditLine( merged.audit ),
 		} );
 		dispatch( { type: 'end' } );
 		setSaved( merged );
@@ -1518,7 +1518,7 @@ export default function ConvertWizard() {
 			detail: last && last.total > 0 && ! last.finishing
 				? sprintf(
 					/* translators: 1: page number, 2: page count, 3: page name */
-					__( 'Stopped at page %1$d of %2$d: %3$s', 'dxai-ui' ),
+					__( 'Stopped at page %1$d of %2$d: %3$s', 'dx-ui' ),
 					Math.min( ( last.index || 0 ) + 1, last.total ),
 					last.total,
 					last.label || last.path || ''
@@ -1528,11 +1528,11 @@ export default function ConvertWizard() {
 		setFailure( {
 			...describeFailure( err, 'crawl' ),
 			title: kind === 'missing'
-				? __( 'The crawl is no longer on the server.', 'dxai-ui' )
-				: __( 'The crawl stopped answering.', 'dxai-ui' ),
+				? __( 'The crawl is no longer on the server.', 'dx-ui' )
+				: __( 'The crawl stopped answering.', 'dx-ui' ),
 			hint: kind === 'missing'
-				? __( 'The page itself is saved. Start the import again to build the menu pages.', 'dxai-ui' )
-				: __( 'If WordPress cron runs on this site, the crawl carries on in the background and the pages appear in Designs. You can also keep trying from here.', 'dxai-ui' ),
+				? __( 'The page itself is saved. Start the import again to build the menu pages.', 'dx-ui' )
+				: __( 'If WordPress cron runs on this site, the crawl carries on in the background and the pages appear in Designs. You can also keep trying from here.', 'dx-ui' ),
 			kind,
 			job,
 			base,
@@ -1559,9 +1559,9 @@ export default function ConvertWizard() {
 		}
 		if ( failure.phase === 'read' || failure.phase === 'compile' ) {
 			return [
-				{ label: __( 'Try again', 'dxai-ui' ), primary: true, onClick: startConvert },
+				{ label: __( 'Try again', 'dx-ui' ), primary: true, onClick: startConvert },
 				{
-					label: path === 'design' ? __( 'Choose another file', 'dxai-ui' ) : __( 'Back', 'dxai-ui' ),
+					label: path === 'design' ? __( 'Choose another file', 'dx-ui' ) : __( 'Back', 'dx-ui' ),
 					onClick: () => {
 						setFailure( null );
 						setStep( 'file' );
@@ -1571,20 +1571,20 @@ export default function ConvertWizard() {
 		}
 		if ( failure.phase === 'save' ) {
 			const back = {
-				label: __( 'Back to the preview', 'dxai-ui' ),
+				label: __( 'Back to the preview', 'dx-ui' ),
 				onClick: () => {
 					setFailure( null );
 					dispatch( { type: 'clear', id: 'save' } );
-					dispatch( { type: 'wait', id: 'review', detail: __( 'Check the preview, then choose Add to WordPress.', 'dxai-ui' ) } );
+					dispatch( { type: 'wait', id: 'review', detail: __( 'Check the preview, then choose Add to WordPress.', 'dx-ui' ) } );
 					setStep( 'preview' );
 				},
 			};
-			const library = links.designs ? { label: __( 'Open Designs', 'dxai-ui' ), href: links.designs } : null;
+			const library = links.designs ? { label: __( 'Open Designs', 'dx-ui' ), href: links.designs } : null;
 			// Only when WordPress could not say how the save ended is it worth asking again.
 			const unsure = failure.saveState === 'unchecked' || failure.saveState === 'stuck';
 			const check = unsure && failure.attempt
 				? {
-					label: failure.saveState === 'stuck' ? __( 'Keep waiting', 'dxai-ui' ) : __( 'Check again', 'dxai-ui' ),
+					label: failure.saveState === 'stuck' ? __( 'Keep waiting', 'dx-ui' ) : __( 'Check again', 'dx-ui' ),
 					onClick: () => watchSave( {
 						attempt: failure.attempt,
 						cause: failure.cause,
@@ -1604,12 +1604,12 @@ export default function ConvertWizard() {
 				return [
 					{ ...check, primary: true },
 					library,
-					{ label: __( 'Save again anyway', 'dxai-ui' ), onClick: addToWordPress },
+					{ label: __( 'Save again anyway', 'dx-ui' ), onClick: addToWordPress },
 					back,
 				].filter( Boolean );
 			}
 			return [
-				{ label: __( 'Try again', 'dxai-ui' ), primary: true, onClick: addToWordPress },
+				{ label: __( 'Try again', 'dx-ui' ), primary: true, onClick: addToWordPress },
 				check,
 				back,
 				library,
@@ -1618,21 +1618,21 @@ export default function ConvertWizard() {
 		if ( failure.phase === 'crawl' ) {
 			const base = failure.base || saved || {};
 			const summary = {
-				label: __( 'See what was saved', 'dxai-ui' ),
+				label: __( 'See what was saved', 'dx-ui' ),
 				onClick: () => completeImport(
 					crawlPartial( base ),
 					failure.kind === 'missing'
-						? __( 'Building the menu pages stopped: the crawl is no longer on the server. The pages listed here were finished before it stopped.', 'dxai-ui' )
-						: __( 'Building the menu pages stopped answering here. If WordPress cron runs on this site it carries on in the background; the remaining pages will appear in Designs.', 'dxai-ui' )
+						? __( 'Building the menu pages stopped: the crawl is no longer on the server. The pages listed here were finished before it stopped.', 'dx-ui' )
+						: __( 'Building the menu pages stopped answering here. If WordPress cron runs on this site it carries on in the background; the remaining pages will appear in Designs.', 'dx-ui' )
 				),
 			};
 			if ( failure.kind === 'stalled' && failure.job ) {
 				return [
-					{ label: __( 'Keep trying', 'dxai-ui' ), primary: true, onClick: () => runCrawl( failure.job, base ) },
+					{ label: __( 'Keep trying', 'dx-ui' ), primary: true, onClick: () => runCrawl( failure.job, base ) },
 					summary,
 				];
 			}
-			return [ { ...summary, primary: true }, { label: __( 'Start a new import', 'dxai-ui' ), onClick: resetGame } ];
+			return [ { ...summary, primary: true }, { label: __( 'Start a new import', 'dx-ui' ), onClick: resetGame } ];
 		}
 		return [];
 	}
@@ -1704,11 +1704,11 @@ export default function ConvertWizard() {
 	const hasLucide = /data-lucide/.test( String( preview?.html || '' ) );
 	// The plugin's own copy (Dashboard::assets() passes its URL), not a CDN
 	// that a host's CSP or firewall may block.
-	const lucideSrc = String( ( window.dxaiUI && window.dxaiUI.lucide ) || '' ).replace( /"/g, '' );
+	const lucideSrc = String( ( window.dxUI && window.dxUI.lucide ) || '' ).replace( /"/g, '' );
 	const lucideTag = hasLucide && lucideSrc
 		? '<script src="' + lucideSrc + '"><\/script>'
 		: '';
-	const wrapClass = [ 'dxai-ui', 'dxai-ui--0', preview?.wrapper_class || result?.wrapper_class || '' ]
+	const wrapClass = [ 'dx-ui', 'dx-ui--0', preview?.wrapper_class || result?.wrapper_class || '' ]
 		.filter( Boolean )
 		.join( ' ' )
 		.replace( /"/g, '' );
@@ -1717,14 +1717,14 @@ export default function ConvertWizard() {
 		: '';
 	const previewStats = [
 		{
-			label: __( 'Source', 'dxai-ui' ),
+			label: __( 'Source', 'dx-ui' ),
 			value: detected
 				? ( KINDS[ detected ] || detected )
-				: ( path ? PATHS.find( ( item ) => item.id === path )?.title || path : __( 'Not selected', 'dxai-ui' ) ),
+				: ( path ? PATHS.find( ( item ) => item.id === path )?.title || path : __( 'Not selected', 'dx-ui' ) ),
 		},
-		{ label: __( 'Scope', 'dxai-ui' ), value: scope === 'site' ? __( 'Whole site', 'dxai-ui' ) : __( 'One page', 'dxai-ui' ) },
-		{ label: __( 'Pieces', 'dxai-ui' ), value: structures.length || 0 },
-		{ label: __( 'Assets', 'dxai-ui' ), value: harvest ? ( harvest.summary?.images || 0 ) + ( harvest.summary?.videos || 0 ) + ( harvest.summary?.fonts || 0 ) : 0 },
+		{ label: __( 'Scope', 'dx-ui' ), value: scope === 'site' ? __( 'Whole site', 'dx-ui' ) : __( 'One page', 'dx-ui' ) },
+		{ label: __( 'Pieces', 'dx-ui' ), value: structures.length || 0 },
+		{ label: __( 'Assets', 'dx-ui' ), value: harvest ? ( harvest.summary?.images || 0 ) + ( harvest.summary?.videos || 0 ) + ( harvest.summary?.fonts || 0 ) : 0 },
 	];
 	function improveStructure( index ) {
 		const item = structures[ index ];
@@ -1734,7 +1734,7 @@ export default function ConvertWizard() {
 		setBusy( true );
 		setError( '' );
 		apiFetch( {
-			path: '/dxai-ui/v1/refine-structure',
+			path: '/dx-ui/v1/refine-structure',
 			method: 'POST',
 			data: {
 				structure: item,
@@ -1744,7 +1744,7 @@ export default function ConvertWizard() {
 		} )
 			.then( ( res ) => {
 				if ( ! res?.structure ) {
-					throw new Error( __( 'Refine returned nothing.', 'dxai-ui' ) );
+					throw new Error( __( 'Refine returned nothing.', 'dx-ui' ) );
 				}
 				const next = structures.map( ( row, i ) => ( i === index ? { ...row, ...res.structure, key: row.key } : row ) );
 				setStructures( next );
@@ -1752,20 +1752,20 @@ export default function ConvertWizard() {
 				setResult( nextResult );
 				return loadPreview( nextResult, next );
 			} )
-			.catch( ( err ) => setError( err.message || __( 'Improve with AI failed.', 'dxai-ui' ) ) )
+			.catch( ( err ) => setError( err.message || __( 'Improve with AI failed.', 'dx-ui' ) ) )
 			.finally( () => setBusy( false ) );
 	}
 
-	const activeLine = engine && engine.active && engine.active.id ? engineLine( engine.active ) : __( 'the active engine', 'dxai-ui' );
+	const activeLine = engine && engine.active && engine.active.id ? engineLine( engine.active ) : __( 'the active engine', 'dx-ui' );
 	// Sent in pieces, an archive is never one upload: the host's limit matters only to a server that does not take pieces.
 	const tooBig = file && ! ( Number( info.chunk_bytes || 0 ) > 0 ) && info.max_upload > 0 && file.size > info.max_upload;
 	const crawlCount = chosenPaths.length;
 
 	return (
-		<div className="dxai-screen">
+		<div className="dxui-screen">
 			{ /* The two-click way says what it does in words: no counters, no steps to count. */ }
 			{ ! quick && (
-				<ul className="dxai-stats">
+				<ul className="dxui-stats">
 					{ previewStats.map( ( item ) => (
 						<li key={ item.label }>
 							<strong>{ item.value }</strong>
@@ -1775,19 +1775,19 @@ export default function ConvertWizard() {
 				</ul>
 			) }
 			{ ! quick && (
-			<ol className="dxai-levels">
+			<ol className="dxui-levels">
 				{ LEVELS.map( ( item, index ) => (
 					<li key={ item.id } className={ index === stepIndex ? 'is-current' : ( index < stepIndex ? 'is-done' : '' ) }>
 						<span>{ index + 1 }</span>
 						{ /* The third step is a drop zone, a URL or a paste box depending on the path. */ }
 						{ item.id === 'file' && path === 'code'
-							? __( 'Paste code', 'dxai-ui' )
-							: ( item.id === 'file' && path === 'figma' ? __( 'Add URL', 'dxai-ui' ) : item.label ) }
+							? __( 'Paste code', 'dx-ui' )
+							: ( item.id === 'file' && path === 'figma' ? __( 'Add URL', 'dx-ui' ) : item.label ) }
 					</li>
 				) ) }
 			</ol>
 			) }
-			<div className="dxai-panel dxai-panel--stack">
+			<div className="dxui-panel dxui-panel--stack">
 				{ error && <Notice status="error" isDismissible={ false }>{ error }</Notice> }
 
 				{ step === 'quick' && (
@@ -1808,58 +1808,58 @@ export default function ConvertWizard() {
 				) }
 
 				{ step === 'path' && (
-					<section className="dxai-stage-card">
-						<h3 className="dxai-step-title">{ __( 'Pick your design', 'dxai-ui' ) }</h3>
-						<p className="dxai-muted">{ __( 'Start with what you have. Every path runs the same compiler, and an archive is read for what it actually contains.', 'dxai-ui' ) }</p>
+					<section className="dxui-stage-card">
+						<h3 className="dxui-step-title">{ __( 'Pick your design', 'dx-ui' ) }</h3>
+						<p className="dxui-muted">{ __( 'Start with what you have. Every path runs the same compiler, and an archive is read for what it actually contains.', 'dx-ui' ) }</p>
 						{ /* Said here, before the archive is uploaded twice only to be refused. */ }
 						{ ! canImport && (
-							<Notice status="error" isDismissible={ false } className="dxai-cannot-import">
-								{ info.import_refusal || __( 'Your account may not import designs on this site.', 'dxai-ui' ) }
+							<Notice status="error" isDismissible={ false } className="dxui-cannot-import">
+								{ info.import_refusal || __( 'Your account may not import designs on this site.', 'dx-ui' ) }
 							</Notice>
 						) }
-						<div className="dxai-paths">
+						<div className="dxui-paths">
 							{ PATHS.map( ( item ) => (
 								<button
 									key={ item.id }
 									type="button"
-									className={ 'dxai-path' + ( path === item.id ? ' is-selected' : '' ) }
+									className={ 'dxui-path' + ( path === item.id ? ' is-selected' : '' ) }
 									onClick={ () => setPath( item.id ) }
 								>
-									<span className={ 'dxai-path-glyph dxai-path-glyph--' + item.id } aria-hidden="true" />
+									<span className={ 'dxui-path-glyph dxui-path-glyph--' + item.id } aria-hidden="true" />
 									<strong>{ item.title }</strong>
 									<p>{ item.blurb }</p>
 									<em>{ item.hint }</em>
 								</button>
 							) ) }
 						</div>
-						<div className="dxai-actions">
+						<div className="dxui-actions">
 							<Button variant="primary" disabled={ ! path || ! canImport } onClick={ () => setStep( 'scope' ) }>
-								{ __( 'Next', 'dxai-ui' ) }
+								{ __( 'Next', 'dx-ui' ) }
 							</Button>
 						</div>
 					</section>
 				) }
 
 				{ step === 'scope' && (
-					<section className="dxai-stage-card">
-						<h3 className="dxai-step-title">{ __( 'One page or a whole site?', 'dxai-ui' ) }</h3>
-						<p className="dxai-muted">{ copy.intro }</p>
-						<div className="dxai-paths dxai-paths--two">
+					<section className="dxui-stage-card">
+						<h3 className="dxui-step-title">{ __( 'One page or a whole site?', 'dx-ui' ) }</h3>
+						<p className="dxui-muted">{ copy.intro }</p>
+						<div className="dxui-paths dxui-paths--two">
 							<button
 								type="button"
-								className={ 'dxai-path' + ( scope === 'page' ? ' is-selected' : '' ) }
+								className={ 'dxui-path' + ( scope === 'page' ? ' is-selected' : '' ) }
 								onClick={ () => {
 									setScope( 'page' );
 									setCreateMissingPages( false );
 								} }
 							>
-								<span className="dxai-path-glyph dxai-path-glyph--page" aria-hidden="true" />
-								<strong>{ __( 'One page', 'dxai-ui' ) }</strong>
+								<span className="dxui-path-glyph dxui-path-glyph--page" aria-hidden="true" />
+								<strong>{ __( 'One page', 'dx-ui' ) }</strong>
 								<p>{ copy.page }</p>
 							</button>
 							<button
 								type="button"
-								className={ 'dxai-path' + ( scope === 'site' ? ' is-selected' : '' ) }
+								className={ 'dxui-path' + ( scope === 'site' ? ' is-selected' : '' ) }
 								onClick={ () => {
 									// A whole site means its pages too: on, and asked again
 									// at the review with the list to choose from.
@@ -1869,8 +1869,8 @@ export default function ConvertWizard() {
 									setScope( 'site' );
 								} }
 							>
-								<span className="dxai-path-glyph dxai-path-glyph--site" aria-hidden="true" />
-								<strong>{ __( 'Whole site', 'dxai-ui' ) }</strong>
+								<span className="dxui-path-glyph dxui-path-glyph--site" aria-hidden="true" />
+								<strong>{ __( 'Whole site', 'dx-ui' ) }</strong>
 								<p>{ copy.site }</p>
 							</button>
 						</div>
@@ -1886,70 +1886,70 @@ export default function ConvertWizard() {
 						{ facts.offered && (
 							<ChromeChoice stage="scope" facts={ facts } value={ chromeChosen } onChange={ setChromeChoice } />
 						) }
-						<div className="dxai-stack" style={ { marginTop: 20 } }>
-							<p className="dxai-section-kicker">{ __( 'Fidelity', 'dxai-ui' ) }</p>
+						<div className="dxui-stack" style={ { marginTop: 20 } }>
+							<p className="dxui-section-kicker">{ __( 'Fidelity', 'dx-ui' ) }</p>
 							<SelectControl
-								label={ __( 'When to use AI refine', 'dxai-ui' ) }
+								label={ __( 'When to use AI refine', 'dx-ui' ) }
 								value={ fidelity }
 								options={ [
-									{ label: __( 'Auto — Pass 1, AI only on low confidence', 'dxai-ui' ), value: 'auto' },
-									{ label: __( 'Strict — pixel-perfect refine (needs LLM key)', 'dxai-ui' ), value: 'strict' },
-									{ label: __( 'Off — deterministic only', 'dxai-ui' ), value: 'off' },
+									{ label: __( 'Auto — Pass 1, AI only on low confidence', 'dx-ui' ), value: 'auto' },
+									{ label: __( 'Strict — pixel-perfect refine (needs LLM key)', 'dx-ui' ), value: 'strict' },
+									{ label: __( 'Off — deterministic only', 'dx-ui' ), value: 'off' },
 								] }
 								onChange={ ( value ) => setFidelity( value ) }
 								help={ sprintf(
 									/* translators: %s: active engine and model, e.g. Claude · claude-sonnet-5 */
-									__( 'Strict mode runs a second pass with %s on flagged sections, so matches stay editable and separated.', 'dxai-ui' ),
+									__( 'Strict mode runs a second pass with %s on flagged sections, so matches stay editable and separated.', 'dx-ui' ),
 									activeLine
 								) }
 							/>
 						</div>
-						<div className="dxai-actions">
-							<Button variant="secondary" onClick={ () => setStep( 'path' ) }>{ __( 'Back', 'dxai-ui' ) }</Button>
-							<Button variant="primary" onClick={ () => setStep( 'file' ) }>{ __( 'Next', 'dxai-ui' ) }</Button>
+						<div className="dxui-actions">
+							<Button variant="secondary" onClick={ () => setStep( 'path' ) }>{ __( 'Back', 'dx-ui' ) }</Button>
+							<Button variant="primary" onClick={ () => setStep( 'file' ) }>{ __( 'Next', 'dx-ui' ) }</Button>
 						</div>
 					</section>
 				) }
 
 				{ step === 'file' && (
-					<section className="dxai-stage-card">
-						<h3 className="dxai-step-title">
-							{ path === 'figma' && __( 'Add your Figma file', 'dxai-ui' ) }
-							{ path === 'design' && __( 'Drop your design archive', 'dxai-ui' ) }
-							{ path === 'code' && __( 'Paste your component', 'dxai-ui' ) }
+					<section className="dxui-stage-card">
+						<h3 className="dxui-step-title">
+							{ path === 'figma' && __( 'Add your Figma file', 'dx-ui' ) }
+							{ path === 'design' && __( 'Drop your design archive', 'dx-ui' ) }
+							{ path === 'code' && __( 'Paste your component', 'dx-ui' ) }
 						</h3>
 						{ path === 'design' && (
-							<p className="dxai-muted">
-								{ __( 'Any export works. We read the file list and compile it with the right connector — you do not have to say which generator made it.', 'dxai-ui' ) }
+							<p className="dxui-muted">
+								{ __( 'Any export works. We read the file list and compile it with the right connector — you do not have to say which generator made it.', 'dx-ui' ) }
 							</p>
 						) }
 						{ path === 'figma' && (
-							<div className="dxai-stack">
+							<div className="dxui-stack">
 								<TextControl
-									label={ __( 'Figma file URL', 'dxai-ui' ) }
+									label={ __( 'Figma file URL', 'dx-ui' ) }
 									value={ figmaUrl }
 									onChange={ setFigmaUrl }
 									placeholder="https://www.figma.com/design/…"
 								/>
 								<TextControl
-									label={ __( 'Node ID (optional)', 'dxai-ui' ) }
+									label={ __( 'Node ID (optional)', 'dx-ui' ) }
 									value={ nodeId }
 									onChange={ setNodeId }
 								/>
 								{ ! settings?.has_figma && (
 									<TextControl
-										label={ __( 'Figma personal access token', 'dxai-ui' ) }
+										label={ __( 'Figma personal access token', 'dx-ui' ) }
 										type="password"
 										value={ figmaToken }
 										onChange={ setFigmaToken }
-										help={ __( 'Saved encrypted. Used only to read this file.', 'dxai-ui' ) }
+										help={ __( 'Saved encrypted. Used only to read this file.', 'dx-ui' ) }
 									/>
 								) }
 							</div>
 						) }
 						{ path === 'design' && (
 							<div
-								className={ 'dxai-drop' + ( drag ? ' is-drag' : '' ) }
+								className={ 'dxui-drop' + ( drag ? ' is-drag' : '' ) }
 								onDragOver={ ( event ) => {
 									event.preventDefault();
 									setDrag( true );
@@ -1957,18 +1957,18 @@ export default function ConvertWizard() {
 								onDragLeave={ () => setDrag( false ) }
 								onDrop={ onDrop }
 							>
-								<span className="dxai-drop-mark" aria-hidden="true" />
-								<p>{ __( 'Drop a .zip here', 'dxai-ui' ) }</p>
-								<em className="dxai-drop-hint">
-									{ __( 'Lovable · Claude Design · Vite/React · Vue · Next.js · plain HTML', 'dxai-ui' ) }
+								<span className="dxui-drop-mark" aria-hidden="true" />
+								<p>{ __( 'Drop a .zip here', 'dx-ui' ) }</p>
+								<em className="dxui-drop-hint">
+									{ __( 'Lovable · Claude Design · Vite/React · Vue · Next.js · plain HTML', 'dx-ui' ) }
 								</em>
-								<label className="dxai-file">
+								<label className="dxui-file">
 									<input
 										type="file"
 										accept=".zip"
 										onChange={ ( event ) => setFile( event.target.files[ 0 ] || null ) }
 									/>
-									{ file ? file.name + ' · ' + formatBytes( file.size ) : __( 'or browse your files', 'dxai-ui' ) }
+									{ file ? file.name + ' · ' + formatBytes( file.size ) : __( 'or browse your files', 'dx-ui' ) }
 								</label>
 							</div>
 						) }
@@ -1976,43 +1976,43 @@ export default function ConvertWizard() {
 							<Notice status="warning" isDismissible={ false }>
 								{ sprintf(
 									/* translators: 1: file size, 2: the server's upload limit */
-									__( 'This archive is %1$s, and this server accepts uploads up to %2$s (upload_max_filesize / post_max_size). The upload will probably be refused — ask your host to raise the limit.', 'dxai-ui' ),
+									__( 'This archive is %1$s, and this server accepts uploads up to %2$s (upload_max_filesize / post_max_size). The upload will probably be refused — ask your host to raise the limit.', 'dx-ui' ),
 									formatBytes( file.size ),
 									formatBytes( info.max_upload )
 								) }
 							</Notice>
 						) }
 						{ path === 'code' && (
-							<div className="dxai-stack">
-								<p className="dxai-muted">{ __( 'One component, compiled into editable blocks on its own.', 'dxai-ui' ) }</p>
+							<div className="dxui-stack">
+								<p className="dxui-muted">{ __( 'One component, compiled into editable blocks on its own.', 'dx-ui' ) }</p>
 								<TextareaControl
-									label={ __( 'JSX / TSX', 'dxai-ui' ) }
+									label={ __( 'JSX / TSX', 'dx-ui' ) }
 									value={ code }
 									onChange={ setCode }
 									rows={ 8 }
 								/>
 								<TextareaControl
-									label={ __( 'Optional CSS', 'dxai-ui' ) }
+									label={ __( 'Optional CSS', 'dx-ui' ) }
 									value={ css }
 									onChange={ setCss }
 									rows={ 4 }
 								/>
 							</div>
 						) }
-						<div className="dxai-actions">
-							<Button variant="secondary" onClick={ () => setStep( 'scope' ) }>{ __( 'Back', 'dxai-ui' ) }</Button>
+						<div className="dxui-actions">
+							<Button variant="secondary" onClick={ () => setStep( 'scope' ) }>{ __( 'Back', 'dx-ui' ) }</Button>
 							<Button variant="primary" disabled={ ! fileReady() || busy } onClick={ goFileNext }>
-								{ busy ? __( 'Saving…', 'dxai-ui' ) : __( 'Next', 'dxai-ui' ) }
+								{ busy ? __( 'Saving…', 'dx-ui' ) : __( 'Next', 'dx-ui' ) }
 							</Button>
 						</div>
 					</section>
 				) }
 
 				{ step === 'engine' && (
-					<section className="dxai-stage-card">
-						<h3 className="dxai-step-title">{ __( 'Connect an engine', 'dxai-ui' ) }</h3>
-						<p className="dxai-muted">{ __( 'One key is enough. Claude, OpenAI, Grok, or DeepSeek.', 'dxai-ui' ) }</p>
-						<div className="dxai-stack">
+					<section className="dxui-stage-card">
+						<h3 className="dxui-step-title">{ __( 'Connect an engine', 'dx-ui' ) }</h3>
+						<p className="dxui-muted">{ __( 'One key is enough. Claude, OpenAI, Grok, or DeepSeek.', 'dx-ui' ) }</p>
+						<div className="dxui-stack">
 							{ catalog.map( ( item ) => (
 								<TextControl
 									key={ item.id }
@@ -2036,16 +2036,16 @@ export default function ConvertWizard() {
 								/>
 							) ) }
 							<SelectControl
-								label={ __( 'Active engine', 'dxai-ui' ) }
+								label={ __( 'Active engine', 'dx-ui' ) }
 								value={ keys.active_engine || settings?.active_engine || 'claude' }
 								options={ catalog.map( ( item ) => ( { label: item.label, value: item.id } ) ) }
 								onChange={ ( value ) => setKeys( { ...keys, active_engine: value } ) }
 							/>
 						</div>
-						<div className="dxai-actions">
-							<Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dxai-ui' ) }</Button>
+						<div className="dxui-actions">
+							<Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dx-ui' ) }</Button>
 							<Button variant="primary" disabled={ busy } onClick={ saveEngineAndRun }>
-								{ __( 'Save and convert', 'dxai-ui' ) }
+								{ __( 'Save and convert', 'dx-ui' ) }
 							</Button>
 						</div>
 					</section>
@@ -2063,15 +2063,15 @@ export default function ConvertWizard() {
 						errorRef={ errorHeading }
 					>
 						{ step === 'run' && (
-							<div className="dxai-progress__logs">
-								<button type="button" className="dxai-link" aria-expanded={ showLogs } onClick={ () => setShowLogs( ! showLogs ) }>
-									{ showLogs ? __( 'Hide details', 'dxai-ui' ) : __( 'Show details', 'dxai-ui' ) }
+							<div className="dxui-progress__logs">
+								<button type="button" className="dxui-link" aria-expanded={ showLogs } onClick={ () => setShowLogs( ! showLogs ) }>
+									{ showLogs ? __( 'Hide details', 'dx-ui' ) : __( 'Show details', 'dx-ui' ) }
 								</button>
 								{ showLogs && (
-									<div className="dxai-log">
+									<div className="dxui-log">
 										{ logs.length ? logs.map( ( entry, index ) => (
 											<div key={ index }>{ ( entry.time || '' ) + '  ' + ( entry.message || '' ) }</div>
-										) ) : __( 'The server’s log appears here after each request answers.', 'dxai-ui' ) }
+										) ) : __( 'The server’s log appears here after each request answers.', 'dx-ui' ) }
 									</div>
 								) }
 							</div>
@@ -2089,9 +2089,9 @@ export default function ConvertWizard() {
 						aiName={ engine && engine.ready ? engine.name : '' }
 						chrome={ chromeChosen }
 						chromeNote={ facts.own
-							? __( 'The site keeps its own header and footer: its menus and widgets stay as they are.', 'dxai-ui' )
+							? __( 'The site keeps its own header and footer: its menus and widgets stay as they are.', 'dx-ui' )
 							: ( facts.defaultReason === 'theme' || facts.themeDraws
-								? sprintf( /* translators: %s: theme name */ __( '%s draws the site’s own header and footer, so they stay; the design’s can be put in Menus and Widgets under “Change something”.', 'dxai-ui' ), facts.themeName || __( 'Your theme', 'dxai-ui' ) )
+								? sprintf( /* translators: %s: theme name */ __( '%s draws the site’s own header and footer, so they stay; the design’s can be put in Menus and Widgets under “Change something”.', 'dx-ui' ), facts.themeName || __( 'Your theme', 'dx-ui' ) )
 								: '' ) }
 						front={ front }
 						sections={ structures.length }
@@ -2102,18 +2102,18 @@ export default function ConvertWizard() {
 				) }
 
 				{ step === 'preview' && result && ( ! quick || fullView ) && (
-					<section className="dxai-stage-card">
+					<section className="dxui-stage-card">
 						<ImportProgress compact plan={ phasePlan } progress={ progress } crawl={ crawl } engine={ engine } />
-						<h3 className="dxai-step-title" style={ { marginTop: 18 } }>{ __( 'Your WordPress preview', 'dxai-ui' ) }</h3>
+						<h3 className="dxui-step-title" style={ { marginTop: 18 } }>{ __( 'Your WordPress preview', 'dx-ui' ) }</h3>
 						<FidelityReport result={ result } harvest={ harvest } structures={ structures } />
 						{ harvest && <HarvestGallery harvest={ harvest } /> }
-						<div className="dxai-preview-stage dxai-preview-stage--premium">
-							<div className="dxai-preview-toolbar dxai-seg">
+						<div className="dxui-preview-stage dxui-preview-stage--premium">
+							<div className="dxui-preview-toolbar dxui-seg">
 								<Button variant={ viewport === 'desktop' ? 'primary' : 'secondary' } onClick={ () => setViewport( 'desktop' ) }>
-									{ __( 'Desktop', 'dxai-ui' ) }
+									{ __( 'Desktop', 'dx-ui' ) }
 								</Button>
 								<Button variant={ viewport === 'mobile' ? 'primary' : 'secondary' } onClick={ () => setViewport( 'mobile' ) }>
-									{ __( 'Mobile', 'dxai-ui' ) }
+									{ __( 'Mobile', 'dx-ui' ) }
 								</Button>
 							</div>
 							{ /*
@@ -2126,16 +2126,16 @@ export default function ConvertWizard() {
 							  * it, and a font on this site's own host needs a CORS header.
 							  */ }
 							<iframe
-								title={ __( 'Conversion preview', 'dxai-ui' ) }
-								className={ 'dxai-preview is-' + viewport }
+								title={ __( 'Conversion preview', 'dx-ui' ) }
+								className={ 'dxui-preview is-' + viewport }
 								sandbox="allow-scripts"
 								srcDoc={ srcDoc }
 							/>
 						</div>
-						<ul className="dxai-pieces">
+						<ul className="dxui-pieces">
 							{ structures.map( ( item, index ) => (
 								<li key={ item.key || index }>
-									<label className={ 'dxai-chip' + ( item.included !== false ? ' is-on' : '' ) }>
+									<label className={ 'dxui-chip' + ( item.included !== false ? ' is-on' : '' ) }>
 										<input
 											type="checkbox"
 											checked={ item.included !== false }
@@ -2146,13 +2146,13 @@ export default function ConvertWizard() {
 								</li>
 							) ) }
 						</ul>
-						<button type="button" className="dxai-link" onClick={ () => setShowAdjust( ! showAdjust ) }>
-							{ showAdjust ? __( 'Hide adjust pieces', 'dxai-ui' ) : __( 'Adjust pieces', 'dxai-ui' ) }
+						<button type="button" className="dxui-link" onClick={ () => setShowAdjust( ! showAdjust ) }>
+							{ showAdjust ? __( 'Hide adjust pieces', 'dx-ui' ) : __( 'Adjust pieces', 'dx-ui' ) }
 						</button>
 						{ showAdjust && (
-							<div className="dxai-adjust">
+							<div className="dxui-adjust">
 								{ structures.map( ( item, index ) => (
-									<div className="dxai-card" key={ item.key || index }>
+									<div className="dxui-card" key={ item.key || index }>
 										<SelectControl
 											label={ item.title || item.type }
 											value={ item.type }
@@ -2164,19 +2164,19 @@ export default function ConvertWizard() {
 											disabled={ busy }
 											onClick={ () => improveStructure( index ) }
 										>
-											{ __( 'Improve with AI', 'dxai-ui' ) }
+											{ __( 'Improve with AI', 'dx-ui' ) }
 										</Button>
 									</div>
 								) ) }
 							</div>
 						) }
-						<button type="button" className="dxai-link" onClick={ () => setShowMarkup( ! showMarkup ) }>
-							{ showMarkup ? __( 'Hide markup', 'dxai-ui' ) : __( 'View markup', 'dxai-ui' ) }
+						<button type="button" className="dxui-link" onClick={ () => setShowMarkup( ! showMarkup ) }>
+							{ showMarkup ? __( 'Hide markup', 'dx-ui' ) : __( 'View markup', 'dx-ui' ) }
 						</button>
 						{ showMarkup && <textarea readOnly value={ markupFromStructures( structures ) || result.gutenberg_markup } /> }
 						{ ( plan.hasMenu || facts.offered ) && (
-							<div className="dxai-review-options">
-								<p className="dxai-section-kicker">{ __( 'Before you import', 'dxai-ui' ) }</p>
+							<div className="dxui-review-options">
+								<p className="dxui-section-kicker">{ __( 'Before you import', 'dx-ui' ) }</p>
 								{ /* The same question as on the options step, now with what the design has. */ }
 								{ facts.offered && (
 									<ChromeChoice stage="review" facts={ facts } value={ chromeChosen } onChange={ setChromeChoice } />
@@ -2196,18 +2196,18 @@ export default function ConvertWizard() {
 								) }
 							</div>
 						) }
-						<div className="dxai-actions">
+						<div className="dxui-actions">
 							{ quick
-								? <Button variant="secondary" onClick={ () => setFullView( false ) }>{ __( 'Back to the plan', 'dxai-ui' ) }</Button>
-								: <Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dxai-ui' ) }</Button> }
+								? <Button variant="secondary" onClick={ () => setFullView( false ) }>{ __( 'Back to the plan', 'dx-ui' ) }</Button>
+								: <Button variant="secondary" onClick={ () => setStep( 'file' ) }>{ __( 'Back', 'dx-ui' ) }</Button> }
 							<Button variant="primary" disabled={ busy } onClick={ quick ? quickBuild : addToWordPress }>
 								{ crawlWanted && crawlCount > 0
 									? sprintf(
 										/* translators: %d: number of menu pages */
-										_n( 'Add to WordPress and build %d menu page', 'Add to WordPress and build %d menu pages', crawlCount, 'dxai-ui' ),
+										_n( 'Add to WordPress and build %d menu page', 'Add to WordPress and build %d menu pages', crawlCount, 'dx-ui' ),
 										crawlCount
 									)
-									: __( 'Add to WordPress', 'dxai-ui' ) }
+									: __( 'Add to WordPress', 'dx-ui' ) }
 							</Button>
 						</div>
 					</section>
@@ -2225,7 +2225,7 @@ export default function ConvertWizard() {
 							headingRef={ doneHeading }
 							onReset={ resetGame }
 							front={ front }
-							onFront={ () => apiFetch( { path: '/dxai-ui/v1/front-page', method: 'POST', data: { home: saved?.page?.id || 0, action: 'force' } } ).then( ( made ) => setFront( made ) ).catch( ( err ) => setError( err.message ) ) }
+							onFront={ () => apiFetch( { path: '/dx-ui/v1/front-page', method: 'POST', data: { home: saved?.page?.id || 0, action: 'force' } } ).then( ( made ) => setFront( made ) ).catch( ( err ) => setError( err.message ) ) }
 						>
 							{ /* Coverage is counted against the saved page, so it can only appear here. */ }
 							<FidelityReport result={ result } harvest={ harvest } structures={ structures } coverage={ saved?.coverage } compact />
@@ -2268,7 +2268,7 @@ function ImportAudit( { audit } ) {
 	 * leaves the wrong impression.
 	 */
 	const measured = notices.length ? (
-		<ul className="dxai-audit-notices">
+		<ul className="dxui-audit-notices">
 			{ notices.map( ( notice ) => (
 				<li key={ notice.check }>
 					<code>{ notice.check }</code> { notice.detail }
@@ -2279,11 +2279,11 @@ function ImportAudit( { audit } ) {
 
 	if ( ! findings.length ) {
 		return (
-			<div className="dxai-audit dxai-audit--ok">
+			<div className="dxui-audit dxui-audit--ok">
 				<p>
 					{ sprintf(
 						/* translators: %d: number of checks that ran. */
-						__( 'All %d import checks passed.', 'dxai-ui' ),
+						__( 'All %d import checks passed.', 'dx-ui' ),
 						audit.checked || 0
 					) }
 					{ audit.note ? ' ' + audit.note : '' }
@@ -2294,11 +2294,11 @@ function ImportAudit( { audit } ) {
 	}
 
 	return (
-		<div className="dxai-audit dxai-audit--warn">
+		<div className="dxui-audit dxui-audit--warn">
 			<p>
 				{ sprintf(
 					/* translators: %d: number of problems found. */
-					__( 'The import finished, but %d check(s) found a problem:', 'dxai-ui' ),
+					__( 'The import finished, but %d check(s) found a problem:', 'dx-ui' ),
 					findings.length
 				) }
 			</p>
@@ -2310,7 +2310,7 @@ function ImportAudit( { audit } ) {
 				) ) }
 			</ul>
 			{ measured }
-			{ audit.note && <p className="dxai-audit-note">{ audit.note }</p> }
+			{ audit.note && <p className="dxui-audit-note">{ audit.note }</p> }
 		</div>
 	);
 }
@@ -2324,9 +2324,9 @@ function HarvestGallery( { harvest } ) {
 		return null;
 	}
 	return (
-		<div className="dxai-harvest">
+		<div className="dxui-harvest">
 			{ images.length > 0 && (
-				<div className="dxai-thumbs">
+				<div className="dxui-thumbs">
 					{ images.slice( 0, 12 ).map( ( item, index ) => (
 						<button
 							type="button"
@@ -2343,11 +2343,11 @@ function HarvestGallery( { harvest } ) {
 					) ) }
 				</div>
 			) }
-			<p className="dxai-muted">
+			<p className="dxui-muted">
 				{ ( harvest.summary?.images || images.length ) + ' images · ' + ( harvest.summary?.videos || videos.length ) + ' videos · ' + ( harvest.summary?.fonts || fonts.length ) + ' fonts · ' + ( harvest.summary?.links || links.length ) + ' links' }
 			</p>
 			{ fonts.length > 0 && (
-				<p className="dxai-muted">{ fonts.map( ( font ) => font.family || font.name ).filter( Boolean ).join( ', ' ) }</p>
+				<p className="dxui-muted">{ fonts.map( ( font ) => font.family || font.name ).filter( Boolean ).join( ', ' ) }</p>
 			) }
 		</div>
 	);

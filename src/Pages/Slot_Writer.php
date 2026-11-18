@@ -2,15 +2,15 @@
 /**
  * The words of a page composed from its Home's sections, written by an AI place by place, in each place's measure.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Theme\Capabilities;
 
 /**
  * A page made from an old page and its Home's sections (Page_Composer) is the Home's build with the old page's words poured
@@ -30,10 +30,10 @@ use DXAI_UI\Theme\Capabilities;
 final class Slot_Writer {
 
 	/** On a text place while a page is composed: the Home's words in it. */
-	public const WAS = '__dxai_was';
+	public const WAS = '__dxui_was';
 
 	/** On a text place the old page had nothing for: the AI is to write it. */
-	public const WRITE = '__dxai_write';
+	public const WRITE = '__dxui_write';
 
 	/** How much longer than the Home's words a place may be before it is sent back to be shortened. */
 	private const SLACK = 0.15;
@@ -43,7 +43,7 @@ final class Slot_Writer {
 		'core/heading'   => 'heading',
 		'core/paragraph' => 'paragraph',
 		'core/list-item' => 'list item',
-		'dxai-ui/text'   => 'text',
+		'dx-ui/text'   => 'text',
 	);
 
 	/**

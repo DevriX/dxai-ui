@@ -2,16 +2,16 @@
 /**
  * Notes on a made page: what a person would see at a glance, said before they open it.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Compiler\Json_Repair;
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Compiler\Json_Repair;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Theme\Capabilities;
 
 /**
  * Two kinds of notes, neither of which changes the page:
@@ -52,14 +52,14 @@ final class Page_Critic {
 			$images  = 0;
 			$walk    = static function ( array $b ) use ( &$walk, &$words, &$longest, &$buttons, &$images ): void {
 				$name = (string) ( $b['blockName'] ?? '' );
-				if ( in_array( $name, array( 'core/paragraph', 'core/list-item', 'core/heading', 'dxai-ui/text' ), true ) ) {
+				if ( in_array( $name, array( 'core/paragraph', 'core/list-item', 'core/heading', 'dx-ui/text' ), true ) ) {
 					$n      = str_word_count( wp_strip_all_tags( (string) $b['innerHTML'] ) );
 					$words += $n;
 					if ( $name === 'core/paragraph' ) {
 						$longest = max( $longest, $n );
 					}
 				}
-				if ( $name === 'core/button' || ( $name === 'dxai-ui/link' && empty( $b['innerBlocks'] ) ) ) {
+				if ( $name === 'core/button' || ( $name === 'dx-ui/link' && empty( $b['innerBlocks'] ) ) ) {
 					++$buttons;
 				}
 				if ( in_array( $name, Capabilities::image_blocks(), true ) ) {
@@ -185,7 +185,7 @@ final class Page_Critic {
 		$req = self::request( $page_id, $checks );
 		$in  = Ai_Budget::tokens( $req['system'] . $req['user'] );
 		if ( ! $budget->allows( $in, Ai_Budget::NOTES_OUT ) ) {
-			return new \WP_Error( 'dxai_ui_critic_cap', __( 'This would pass the ceiling set for one run, so nothing was asked.', 'dxai-ui' ), array( 'status' => 402 ) );
+			return new \WP_Error( 'dx_ui_critic_cap', __( 'This would pass the ceiling set for one run, so nothing was asked.', 'dx-ui' ), array( 'status' => 402 ) );
 		}
 		$text = $engine->complete( $req['system'], $req['user'], array( 'max_tokens' => 1200 ) ); // phpcs:ignore -- engines have complete(); Copy_Writer::engine() checks.
 		$budget->spend( $in, Ai_Budget::NOTES_OUT );
@@ -194,7 +194,7 @@ final class Page_Critic {
 		}
 		$data = Json_Repair::decode( (string) $text );
 		if ( ! is_array( $data ) || ! is_array( $data['notes'] ?? null ) ) {
-			return new \WP_Error( 'dxai_ui_critic_parse', __( 'The AI did not answer in the shape that was asked for.', 'dxai-ui' ), array( 'status' => 502 ) );
+			return new \WP_Error( 'dx_ui_critic_parse', __( 'The AI did not answer in the shape that was asked for.', 'dx-ui' ), array( 'status' => 502 ) );
 		}
 		$notes = array();
 		foreach ( $data['notes'] as $note ) {

@@ -12,12 +12,12 @@
  *
  * Paths are arrays of inner-block indexes from the section block.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 final class Section_Library {
 
@@ -37,7 +37,7 @@ final class Section_Library {
 			if ( empty( $block['blockName'] ) || self::is_chrome( $block ) || in_array( $i, $skip, true ) ) {
 				continue;
 			}
-			if ( ( $block['blockName'] ?? '' ) === 'dxai-ui/link' && empty( $block['innerBlocks'] ) ) {
+			if ( ( $block['blockName'] ?? '' ) === 'dx-ui/link' && empty( $block['innerBlocks'] ) ) {
 				continue; // the skip link
 			}
 			// A box fixed over the page (a phone's call bar) is no band of it: it does not take a section's place (it took a call to action's,
@@ -69,11 +69,11 @@ final class Section_Library {
 			return false;
 		}
 		// This plugin's own form block, a form plugin's blocks (by namespace), and the few form blocks of bigger suites.
-		if ( in_array( $name, array( 'dxai-ui/form', 'jetpack/contact-form', 'kadence/form', 'kadence/advanced-form', 'core/form' ), true )
+		if ( in_array( $name, array( 'dx-ui/form', 'jetpack/contact-form', 'kadence/form', 'kadence/advanced-form', 'core/form' ), true )
 			|| preg_match( '#^(gravityforms|wpforms|contact-form-7|ninja-forms|formidable|fluentfom|fluentform|forminator|mailchimp-for-wp|mc4wp|leadin|hubspot|srfm|sureforms|everest-forms|happyforms|weforms|metform)(/|$)#', $name ) ) {
 			return true;
 		}
-		if ( ! in_array( $name, array( 'core/shortcode', 'core/html', 'core/freeform', 'dxai-ui/html' ), true ) ) {
+		if ( ! in_array( $name, array( 'core/shortcode', 'core/html', 'core/freeform', 'dx-ui/html' ), true ) ) {
 			return false;
 		}
 		$html = (string) $block['innerHTML'] . ' ' . wp_json_encode( $block['attrs'] ?? array() );
@@ -122,12 +122,12 @@ final class Section_Library {
 
 	/** @param array<string, mixed> $b A container with at least three containers in it: a wrapper around sections. */
 	public static function wraps_sections( array $b ): bool {
-		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) ) {
+		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dx-ui/box' ), true ) ) {
 			return false;
 		}
 		$n = 0;
 		foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {
-			if ( in_array( (string) ( $child['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) && ! empty( $child['innerBlocks'] ) ) {
+			if ( in_array( (string) ( $child['blockName'] ?? '' ), array( 'core/group', 'dx-ui/box' ), true ) && ! empty( $child['innerBlocks'] ) ) {
 				++$n;
 			}
 		}
@@ -154,7 +154,7 @@ final class Section_Library {
 		$run   = array();
 		foreach ( $real as $i ) {
 			$b      = $blocks[ $i ];
-			$header = ( self::is_chrome( $b ) && $b['blockName'] !== 'dxai-ui/site-footer' && ! self::is_footer_part( $b ) )
+			$header = ( self::is_chrome( $b ) && $b['blockName'] !== 'dx-ui/site-footer' && ! self::is_footer_part( $b ) )
 				|| self::is_skip_link( $b )
 				|| self::is_header_bar( $b );
 			if ( ! $header && ! self::is_island( $b ) && ! self::is_header_spacer( $b ) ) {
@@ -174,7 +174,7 @@ final class Section_Library {
 			}
 			$b      = $blocks[ $i ];
 			$tag    = strtolower( (string) ( $b['attrs']['tagName'] ?? '' ) );
-			$footer = $b['blockName'] === 'dxai-ui/site-footer' || self::is_footer_part( $b ) || $tag === 'footer' || $b['blockName'] === 'core/template-part';
+			$footer = $b['blockName'] === 'dx-ui/site-footer' || self::is_footer_part( $b ) || $tag === 'footer' || $b['blockName'] === 'core/template-part';
 			if ( ! $footer && ! self::is_island( $b ) && ! self::is_floating( $b ) ) {
 				break;
 			}
@@ -320,7 +320,7 @@ final class Section_Library {
 
 	/** @param array<string, mixed> $b The skip link: a lone link to the main content. */
 	private static function is_skip_link( array $b ): bool {
-		return ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && empty( $b['innerBlocks'] ) && preg_match( '#href="\#[^"]*"#', (string) $b['innerHTML'] ) === 1;
+		return ( $b['blockName'] ?? '' ) === 'dx-ui/link' && empty( $b['innerBlocks'] ) && preg_match( '#href="\#[^"]*"#', (string) $b['innerHTML'] ) === 1;
 	}
 
 	/** @param array<string, mixed> $b The design's own header bar in the content: a header or nav element, or a bar stuck to the top. */
@@ -334,7 +334,7 @@ final class Section_Library {
 		if ( in_array( $tag, array( 'header', 'nav' ), true ) ) {
 			return true;
 		}
-		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box' ), true ) || $tag === 'section' ) {
+		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dx-ui/box' ), true ) || $tag === 'section' ) {
 			return false;
 		}
 		$css = Block_Tree::css_of( $b );
@@ -343,12 +343,12 @@ final class Section_Library {
 		}
 
 		// A bar holding the site's navigation (a nav element or a menu block).
-		return (bool) preg_match( '#<nav\b|<!-- wp:navigation\b|<!-- wp:dxai-ui/site-header#i', $markup );
+		return (bool) preg_match( '#<nav\b|<!-- wp:navigation\b|<!-- wp:dx-ui/site-header#i', $markup );
 	}
 
 	/** @param array<string, mixed> $b Markup that shows nothing of its own: a style or script block, an SVG sprite. */
 	private static function is_island( array $b ): bool {
-		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'dxai-ui/html', 'core/html' ), true ) ) {
+		if ( ! in_array( (string) ( $b['blockName'] ?? '' ), array( 'dx-ui/html', 'core/html' ), true ) ) {
 			return false;
 		}
 		$html = trim( (string) preg_replace( '#<(style|script)\b[\s\S]*?</\1>|<svg\b[^>]*>\s*(<defs\b[\s\S]*?</defs>|<symbol\b[\s\S]*?</symbol>\s*)+\s*</svg>#i', '', (string) $b['innerHTML'] ) );
@@ -358,7 +358,7 @@ final class Section_Library {
 
 	/** @param array<string, mixed> $b An empty box that holds the place of a fixed header (a <div aria-hidden="true" style="height:140px">): hidden from readers, nothing in it. */
 	private static function is_header_spacer( array $b ): bool {
-		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'dxai-ui/box', 'core/group', 'core/spacer' ), true )
+		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'dx-ui/box', 'core/group', 'core/spacer' ), true )
 			&& empty( $b['innerBlocks'] )
 			&& preg_match( '#aria-hidden="true"#i', (string) ( $b['innerHTML'] ?? '' ) ) === 1
 			&& trim( wp_strip_all_tags( (string) ( $b['innerHTML'] ?? '' ) ) ) === '';
@@ -366,15 +366,15 @@ final class Section_Library {
 
 	/**
 	 * A box fixed over the page (a call bar, a back-to-top button) with no page heading: saved, its CSS is the block's own
-	 * (dxaiCss); compiled, before the import hoists it, the design's inline style (dxaiStyle), so the design's document reads the
+	 * (dxuiCss); compiled, before the import hoists it, the design's inline style (dxuiStyle), so the design's document reads the
 	 * same sections before the save as after it.
 	 *
 	 * @param array<string, mixed> $b
 	 */
 	public static function is_floating( array $b ): bool {
-		$inline = is_string( $b['attrs']['dxaiStyle'] ?? null ) ? strtolower( (string) preg_replace( '/\s*:\s*/', ':', $b['attrs']['dxaiStyle'] ) ) : '';
+		$inline = is_string( $b['attrs']['dxuiStyle'] ?? null ) ? strtolower( (string) preg_replace( '/\s*:\s*/', ':', $b['attrs']['dxuiStyle'] ) ) : '';
 
-		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dxai-ui/box', 'dxai-ui/link' ), true )
+		return in_array( (string) ( $b['blockName'] ?? '' ), array( 'core/group', 'dx-ui/box', 'dx-ui/link' ), true )
 			&& ( str_contains( Block_Tree::css_of( $b ), 'position:fixed' ) || str_contains( $inline, 'position:fixed' ) )
 			&& ! preg_match( '#<h[12]\b#i', serialize_block( $b ) );
 	}
@@ -382,7 +382,7 @@ final class Section_Library {
 	private static function is_chrome( array $block ): bool {
 		$name = (string) $block['blockName'];
 
-		return in_array( $name, array( 'core/template-part', 'dxai-ui/site-header', 'dxai-ui/site-footer', 'core/navigation' ), true );
+		return in_array( $name, array( 'core/template-part', 'dx-ui/site-header', 'dx-ui/site-footer', 'core/navigation' ), true );
 	}
 
 	/**
@@ -492,7 +492,7 @@ final class Section_Library {
 		$tag   = strtolower( (string) ( $attrs['tagName'] ?? '' ) );
 		$class = (string) ( $attrs['className'] ?? '' );
 		// The theme's own picture block, where a design's images became it.
-		if ( \DXAI_UI\Theme\Capabilities::is_block( $name, 'picture' ) ) {
+		if ( \DX_UI\Theme\Capabilities::is_block( $name, 'picture' ) ) {
 			return 'image';
 		}
 		switch ( $name ) {
@@ -506,19 +506,19 @@ final class Section_Library {
 			case 'core/button':
 				return 'link';
 			case 'core/image':
-			case 'dxai-ui/image':
+			case 'dx-ui/image':
 				return 'image';
-			case 'dxai-ui/svg':
+			case 'dx-ui/svg':
 				return 'icon';
-			case 'dxai-ui/link':
+			case 'dx-ui/link':
 				return empty( $block['innerBlocks'] ) ? 'link' : 'card';
-			case 'dxai-ui/text':
+			case 'dx-ui/text':
 				// Text written as a link (a call button: <a href="tel:…">) is a link: it takes a button's words, not a sentence.
 				if ( $tag === 'a' ) {
 					return 'link';
 				}
 				return preg_match( '/^h[1-6]$/', $tag ) ? 'heading' : 'text';
-			case 'dxai-ui/html':
+			case 'dx-ui/html':
 				$html = (string) $block['innerHTML'];
 				// A form was caught above; fields or buttons alone (a play button, a price switch) are controls, and
 				// never make their section a form section.
@@ -526,11 +526,11 @@ final class Section_Library {
 					return 'control';
 				}
 				return preg_match( '#^\s*<(blockquote|p|span|q|cite)\b#i', $html ) ? 'text' : 'widget';
-			case 'dxai-ui/box':
+			case 'dx-ui/box':
 				if ( $tag === 'img' ) {
 					return 'image';
 				}
-				if ( $tag === 'button' || str_contains( $class, 'dxai-toggle-' ) ) {
+				if ( $tag === 'button' || str_contains( $class, 'dxui-toggle-' ) ) {
 					return 'control';
 				}
 				return null;
@@ -582,7 +582,7 @@ final class Section_Library {
 	 * @return array<int, string>
 	 */
 	private static function flags( array $block ): array {
-		$data = (array) ( $block['attrs']['dxaiData'] ?? array() );
+		$data = (array) ( $block['attrs']['dxuiData'] ?? array() );
 
 		return array_values( array_intersect( array( 'data-mob', 'data-desk' ), array_keys( $data ) ) );
 	}
@@ -594,7 +594,7 @@ final class Section_Library {
 	 * @param array<string, mixed> $block
 	 */
 	private static function is_disclosure( array $block ): bool {
-		return str_contains( (string) ( $block['attrs']['className'] ?? '' ), 'dxai-on-' );
+		return str_contains( (string) ( $block['attrs']['className'] ?? '' ), 'dxui-on-' );
 	}
 
 	/**
@@ -604,7 +604,7 @@ final class Section_Library {
 	 * @return array<int, array<int, int>>
 	 */
 	private static function runs( array $inner, bool $list = false ): array {
-		$leaf = array( 'core/paragraph', 'core/heading', 'dxai-ui/text', 'dxai-ui/html' );
+		$leaf = array( 'core/paragraph', 'core/heading', 'dx-ui/text', 'dx-ui/html' );
 		$sigs = array_map(
 			static fn( $b ) => ! $list && in_array( (string) ( $b['blockName'] ?? '' ), $leaf, true ) ? '' : self::signature( $b ),
 			$inner

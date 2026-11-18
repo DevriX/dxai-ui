@@ -16,18 +16,18 @@
  *
  * Makes pages (and imports the small Claude Design fixture under a name of its own) and removes them. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Dc_Connector;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Blank_Template;
-use DXAI_UI\Theme\Theme_Fence;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Dc_Connector;
+use DX_UI\Content\Content_Types;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Blank_Template;
+use DX_UI\Theme\Theme_Fence;
 
 $fail   = 0;
 $pass   = 0;
@@ -53,7 +53,7 @@ $fin     = static function () use ( &$made, &$saved, $max_att ): void {
 	$made = array();
 	$home = (int) ( $saved['page_id'] ?? 0 );
 	if ( $home > 0 ) {
-		foreach ( array( '_dxai_ui_css_url', '_dxai_ui_js_url' ) as $key ) {
+		foreach ( array( '_dx_ui_css_url', '_dx_ui_js_url' ) as $key ) {
 			$file = Upload_Paths::for_meta( $home, $key )['path'] ?? '';
 			if ( is_string( $file ) && $file !== '' && is_file( $file ) ) {
 				wp_delete_file( $file );
@@ -62,7 +62,7 @@ $fin     = static function () use ( &$made, &$saved, $max_att ): void {
 		foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => Page_Scope::META, 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
-		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
+		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
 		$ids = array_merge(
@@ -74,7 +74,7 @@ $fin     = static function () use ( &$made, &$saved, $max_att ): void {
 		foreach ( array_unique( array_filter( $ids ) ) as $id ) {
 			wp_delete_post( (int) $id, true );
 		}
-		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dxai_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dx_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		foreach ( $new as $id ) {
 			wp_delete_attachment( (int) $id, true );
 		}
@@ -89,9 +89,9 @@ $page = static function ( string $title, string $template, array $meta = array()
 	$id     = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => '<!-- wp:paragraph --><p>Words</p><!-- /wp:paragraph -->' ) );
 	$made[] = $id;
 	update_post_meta( $id, '_wp_page_template', $template );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 	update_post_meta( $id, Page_Scope::META, $id );
-	update_post_meta( $id, '_dxai_ui_css_url', 'dxai-ui/theme-drawn-fixture.css' );
+	update_post_meta( $id, '_dx_ui_css_url', 'dx-ui/theme-drawn-fixture.css' );
 	foreach ( $meta as $key => $value ) {
 		update_post_meta( $id, $key, $value );
 	}
@@ -107,29 +107,29 @@ $visit = static function ( int $id ): void {
 
 echo "The Default template is the theme's\n";
 $expect( 'a design\'s pages are given the DX template at import', Blank_Template::default_slug() === Blank_Template::TEMPLATE );
-add_filter( 'dxai_ui_default_template', static fn() => Blank_Template::DEFAULT );
+add_filter( 'dx_ui_default_template', static fn() => Blank_Template::DEFAULT );
 $expect( '…or the Default template, where a site asks for it', Blank_Template::default_slug() === Blank_Template::DEFAULT );
-remove_all_filters( 'dxai_ui_default_template' );
-$static = $page( 'Theme drawn fixture static page', Blank_Template::DEFAULT, array( '_dxai_ui_static_html' => '1' ) );
+remove_all_filters( 'dx_ui_default_template' );
+$static = $page( 'Theme drawn fixture static page', Blank_Template::DEFAULT, array( '_dx_ui_static_html' => '1' ) );
 $visit( $static );
 $expect( 'a design\'s page on the Default template is not a canvas page: the theme draws it', ! Blank_Template::is_canvas( $static ) && ( new Blank_Template() )->include_template( '/theme/page.php' ) === '/theme/page.php' );
-add_filter( 'dxai_ui_default_template_draws_design', '__return_true' );
+add_filter( 'dx_ui_default_template_draws_design', '__return_true' );
 $expect( '…unless the site asks for the design\'s own header and footer there (beta.45\'s drawing)', Blank_Template::is_canvas( $static ) );
-remove_all_filters( 'dxai_ui_default_template_draws_design' );
+remove_all_filters( 'dx_ui_default_template_draws_design' );
 
 echo "\nIts sections are kept off the theme's CSS when it was made for the canvas\n";
-$theme_tpl = $page( 'Theme drawn fixture page on the theme\'s named template', 'page.php', array( '_dxai_ui_static_html' => '1' ) );
-$imported  = $page( 'Theme drawn fixture imported page', Blank_Template::DEFAULT, array( '_dxai_ui_fence_theme' => '1' ) );
+$theme_tpl = $page( 'Theme drawn fixture page on the theme\'s named template', 'page.php', array( '_dx_ui_static_html' => '1' ) );
+$imported  = $page( 'Theme drawn fixture imported page', Blank_Template::DEFAULT, array( '_dx_ui_fence_theme' => '1' ) );
 $team      = $page( 'Theme drawn fixture page the team built under the theme', Blank_Template::DEFAULT );
-$canvas    = $page( 'Theme drawn fixture canvas page', Blank_Template::TEMPLATE, array( '_dxai_ui_static_html' => '1' ) );
+$canvas    = $page( 'Theme drawn fixture canvas page', Blank_Template::TEMPLATE, array( '_dx_ui_static_html' => '1' ) );
 $expect( 'a design\'s own page on the Default template, or on a template of the theme\'s by name, is drawn by the theme', Theme_Fence::draws_own_design( $static ) && Theme_Fence::draws_own_design( $theme_tpl ) );
 $expect( '…a page on the canvas is not', ! Theme_Fence::draws_own_design( $canvas ) );
 $expect( 'a static design is fenced there (it never ran under a theme\'s stylesheet)', Theme_Fence::fences( $static ) && Theme_Fence::fences( $theme_tpl ) );
 $expect( 'a page the import saved says so itself', Theme_Fence::fences( $imported ) );
 $expect( 'a page the team built under the theme\'s CSS keeps it (not fenced)', ! Theme_Fence::fences( $team ) );
-update_post_meta( $static, '_dxai_ui_fence_theme', '0' );
+update_post_meta( $static, '_dx_ui_fence_theme', '0' );
 $expect( 'the page\'s own custom field decides', ! Theme_Fence::fences( $static ) );
-update_post_meta( $static, '_dxai_ui_fence_theme', '' );
+update_post_meta( $static, '_dx_ui_fence_theme', '' );
 $visit( $static );
 $expect( 'the request fences the theme\'s styles there', Theme_Fence::applies() );
 $expect( '…and a DX theme\'s modules stand down as on the canvas: the design\'s scripts are not held back, its pictures keep their own loading', false === apply_filters( 'dx_delay_scripts_should_delay', true ) && true === apply_filters( 'dx_lazy_load_skip_image', false, '<img src="x.jpg">' ) );
@@ -138,17 +138,17 @@ $delay  = static fn( string $src, string $tag, string $inner = '' ): bool => tru
 $own_js = Upload_Paths::url( Upload_Paths::DIR . '/pattern-theme-drawn-fixture.js' );
 $gtm    = "(function(w,d,s,l,i){w[l]=w[l]||[];var j=d.createElement(s);j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i;d.head.appendChild(j);})(window,document,'script','dataLayer','GTM-FIXTURE');";
 $expect( '…the design\'s page script, its file in the plugin\'s uploads folder, runs at once', ! $delay( $own_js, '<script defer src="' . esc_url( $own_js ) . '"></script>' ) );
-$expect( '…so does a file in the plugin\'s folder', ! $delay( DXAI_UI_URL . 'assets/js/rail.js', '<script src="' . esc_url( DXAI_UI_URL . 'assets/js/rail.js' ) . '"></script>' ) );
-$sibling = (string) preg_replace( '#/[^/]+/?$#', '/' . basename( untrailingslashit( DXAI_UI_URL ) ) . '-addon/', untrailingslashit( DXAI_UI_URL ) ) . 'view.js';
+$expect( '…so does a file in the plugin\'s folder', ! $delay( DX_UI_URL . 'assets/js/rail.js', '<script src="' . esc_url( DX_UI_URL . 'assets/js/rail.js' ) . '"></script>' ) );
+$sibling = (string) preg_replace( '#/[^/]+/?$#', '/' . basename( untrailingslashit( DX_UI_URL ) ) . '-addon/', untrailingslashit( DX_UI_URL ) ) . 'view.js';
 $expect( '…but not a file of another plugin whose folder only starts with the same name', $delay( $sibling, '<script src="' . esc_url( $sibling ) . '"></script>' ), $sibling );
-$expect( '…nor a file elsewhere that only has the plugin\'s name in its address', $delay( 'https://cdn.example.test/assets/dxai-ui/widget.js', '<script src="https://cdn.example.test/assets/dxai-ui/widget.js"></script>' ) );
-$expect( '…and the plugin\'s inline scripts run at once (its handles\' data, its own printed scripts)', ! $delay( '', '<script id="dxai-ui-backgrounds">', '(function(){})();' ) && ! $delay( '', '<script id="dxai-ui-page-1-js-before">', 'window.dxaiLucideUrl="x";' ) );
+$expect( '…nor a file elsewhere that only has the plugin\'s name in its address', $delay( 'https://cdn.example.test/assets/dx-ui/widget.js', '<script src="https://cdn.example.test/assets/dx-ui/widget.js"></script>' ) );
+$expect( '…and the plugin\'s inline scripts run at once (its handles\' data, its own printed scripts)', ! $delay( '', '<script id="dx-ui-backgrounds">', '(function(){})();' ) && ! $delay( '', '<script id="dx-ui-page-1-js-before">', 'window.dxuiLucideUrl="x";' ) );
 wp_register_script( 'theme-drawn-fixture-need', 'https://example.test/need.js', array(), '1', true );
-wp_register_script( 'dxai-ui-theme-drawn-fixture', DXAI_UI_URL . 'assets/js/rail.js', array( 'theme-drawn-fixture-need' ), '1', true );
-wp_enqueue_script( 'dxai-ui-theme-drawn-fixture' );
+wp_register_script( 'dx-ui-theme-drawn-fixture', DX_UI_URL . 'assets/js/rail.js', array( 'theme-drawn-fixture-need' ), '1', true );
+wp_enqueue_script( 'dx-ui-theme-drawn-fixture' );
 $expect( '…and so does a script one of the plugin\'s scripts depends on, with its data', ! $delay( 'https://example.test/need.js', '<script id="theme-drawn-fixture-need-js" src="https://example.test/need.js"></script>' ) && ! $delay( '', '<script id="theme-drawn-fixture-need-js-extra">', 'var need = {};' ) );
-wp_dequeue_script( 'dxai-ui-theme-drawn-fixture' );
-wp_deregister_script( 'dxai-ui-theme-drawn-fixture' );
+wp_dequeue_script( 'dx-ui-theme-drawn-fixture' );
+wp_deregister_script( 'dx-ui-theme-drawn-fixture' );
 wp_deregister_script( 'theme-drawn-fixture-need' );
 $expect( '…once nothing of the plugin\'s needs it, that script waits like the others', $delay( 'https://example.test/need.js', '<script id="theme-drawn-fixture-need-js" src="https://example.test/need.js"></script>' ) );
 $expect( 'the tag manager waits for the first interaction, as on every page of the site', $delay( '', '<script>', $gtm ) && $delay( 'https://www.googletagmanager.com/gtm.js?id=GTM-FIXTURE', '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-FIXTURE"></script>' ) );
@@ -162,7 +162,7 @@ $expect( '…and not on a canvas page, which goes without them', ! Theme_Fence::
 echo "\nThe theme's stylesheet stays for its header and footer\n";
 $theme_src = trailingslashit( (string) get_template_directory_uri() ) . 'theme-drawn-fixture.css';
 wp_register_style( 'theme-drawn-fixture', $theme_src, array(), '1' );
-$assets = new \DXAI_UI\Blocks\Assets();
+$assets = new \DX_UI\Blocks\Assets();
 $check  = static function ( int $id ) use ( $assets, $visit ): bool {
 	$visit( $id );
 	wp_enqueue_style( 'theme-drawn-fixture' );
@@ -178,7 +178,7 @@ $expect( 'on a page the team built under the theme, unfenced, they go as before'
 wp_deregister_style( 'theme-drawn-fixture' );
 
 echo "\nA copy follows its source page\n";
-$copy = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Theme drawn fixture copy', 'post_content' => '<!-- wp:dxai-ui/box {"className":"copied"} --><div class="copied">Copy</div><!-- /wp:dxai-ui/box -->' ) );
+$copy = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Theme drawn fixture copy', 'post_content' => '<!-- wp:dx-ui/box {"className":"copied"} --><div class="copied">Copy</div><!-- /wp:dx-ui/box -->' ) );
 $made[] = $copy;
 update_post_meta( $copy, Design_Attach::META, $static );
 Design_Attach::forget( $copy );
@@ -204,7 +204,7 @@ if ( ! is_file( $zip ) ) {
 	};
 	$saved = $import();
 	$home  = (int) ( $saved['page_id'] ?? 0 );
-	$expect( 'a page the import saves is on the DX template and says it was made for the canvas', $home > 0 && get_page_template_slug( $home ) === Blank_Template::TEMPLATE && get_post_meta( $home, '_dxai_ui_fence_theme', true ) === '1', (string) get_page_template_slug( $home ) );
+	$expect( 'a page the import saves is on the DX template and says it was made for the canvas', $home > 0 && get_page_template_slug( $home ) === Blank_Template::TEMPLATE && get_post_meta( $home, '_dx_ui_fence_theme', true ) === '1', (string) get_page_template_slug( $home ) );
 	update_post_meta( $home, '_wp_page_template', Blank_Template::DEFAULT );
 	$again = $import();
 	$expect( 're-imported, a page someone moved to the theme\'s Default template stays on it', (int) ( $again['page_id'] ?? 0 ) === $home && get_post_meta( $home, '_wp_page_template', true ) === Blank_Template::DEFAULT, (string) get_post_meta( $home, '_wp_page_template', true ) );

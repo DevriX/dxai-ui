@@ -2,14 +2,14 @@
 /**
  * The prompt that asks an AI for the words of a page, filled in from the page.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Compiler\Color_Usage;
+use DX_UI\Compiler\Color_Usage;
 
 /**
  * The team writes the copy of a new page with one prompt: look at the staging page, know what the page is about, take
@@ -24,7 +24,7 @@ use DXAI_UI\Compiler\Color_Usage;
 final class Copy_Prompt {
 
 	/** On a page: the topic and the reference address a person set. */
-	public const META = '_dxai_ui_copy_prompt';
+	public const META = '_dx_ui_copy_prompt';
 
 	/**
 	 * The prompt, with the three blanks as {STAGING}, {TOPIC} and {REFERENCE}.
@@ -135,7 +135,7 @@ PROMPT;
 		$home  = self::home_of( $page_id );
 		$orig  = $home > 0 ? rtrim( (string) get_post_meta( $home, Site_Pages::ORIGIN_META, true ), '/' ) : '';
 
-		$route     = trim( (string) get_post_meta( $page_id, '_dxai_ui_source_route', true ), '/' );
+		$route     = trim( (string) get_post_meta( $page_id, '_dx_ui_source_route', true ), '/' );
 		$reference = '';
 		$guessed   = false;
 		if ( $orig !== '' ) {
@@ -254,7 +254,7 @@ PROMPT;
 
 	/** The Home a page belongs to: its own id when it is one. */
 	public static function home_of( int $page_id ): int {
-		$scope = (int) get_post_meta( $page_id, \DXAI_UI\Structures\Page_Scope::META, true );
+		$scope = (int) get_post_meta( $page_id, \DX_UI\Structures\Page_Scope::META, true );
 
 		return $scope > 0 ? $scope : $page_id;
 	}

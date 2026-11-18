@@ -2,12 +2,12 @@
 /**
  * Editable design primitives used when core blocks cannot keep the ZIP markup.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
 final class Design_Blocks {
 
@@ -28,7 +28,7 @@ final class Design_Blocks {
 		 * registered with them: a runtime fix then reaches pages imported
 		 * before it, instead of waiting for each to be re-imported.
 		 */
-		\DXAI_UI\Compiler\Motion_Runtime::register_refresh();
+		\DX_UI\Compiler\Motion_Runtime::register_refresh();
 	}
 
 	/**
@@ -49,7 +49,7 @@ final class Design_Blocks {
 		}
 		$entry = array(
 			'slug'  => self::CATEGORY,
-			'title' => __( 'DX Blocks', 'dxai-ui' ),
+			'title' => __( 'DX Blocks', 'dx-ui' ),
 			'icon'  => null,
 		);
 		// Next to core's Design group.
@@ -74,12 +74,12 @@ final class Design_Blocks {
 		// BlockHTMLConvertButton is guarded by `block.name !== 'core/html'`, so
 		// a block of our own simply never offers it.
 		register_block_type(
-			'dxai-ui/html',
+			'dx-ui/html',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX HTML', 'dxai-ui' ),
+				'title'         => __( 'DX HTML', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class, and no "Edit as HTML" that could
 					// rewrite the payload behind the compiler's back.
@@ -96,7 +96,7 @@ final class Design_Blocks {
 					),
 					// CSS of the styled elements inside, class => declarations
 					// (Style_Hoister::INNER_ATTR).
-					'dxaiInner' => array(
+					'dxuiInner' => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
@@ -120,16 +120,16 @@ final class Design_Blocks {
 		 * `aria-hidden`, some after.
 		 */
 		register_block_type(
-			'dxai-ui/text',
+			'dx-ui/text',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Text', 'dxai-ui' ),
+				'title'         => __( 'DX Text', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class and no custom-CSS class, so the saved
 					// element carries exactly what the design put on it —
-					// the same reason the 642 dxai-ui/html instances render
+					// the same reason the 642 dx-ui/html instances render
 					// 1:1. customClassName would let the inspector add one.
 					'className'       => false,
 					'customClassName' => false,
@@ -156,22 +156,22 @@ final class Design_Blocks {
 						'type'    => 'string',
 						'default' => '',
 					),
-					'dxaiStyle'  => array(
+					'dxuiStyle'  => array(
 						'type'    => 'string',
 						'default' => '',
 					),
 					// The block's own CSS once it is out of the markup: save() writes
 					// a dxs- class for it and Style_Rules writes the rule (Style_Hoister).
-					'dxaiCss'    => array(
+					'dxuiCss'    => array(
 						'type'    => 'string',
 						'default' => '',
 					),
 					// CSS of the styled runs inside (Style_Hoister::INNER_ATTR).
-					'dxaiInner'  => array(
+					'dxuiInner'  => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
-					'dxaiData'   => array(
+					'dxuiData'   => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
@@ -183,7 +183,7 @@ final class Design_Blocks {
 					 * A link's own attributes, so a designed call-to-action —
 					 * one anchor holding a glyph and a line of copy — rides
 					 * this block instead of staying raw HTML. Mirrors
-					 * Html_To_Blocks::TEXT_ATTR_MAP and DXAI_TEXT_ATTRS in
+					 * Html_To_Blocks::TEXT_ATTR_MAP and DXUI_TEXT_ATTRS in
 					 * assets/js/blocks-editor.js; bin/block-parity.cjs compares
 					 * this registration against that bundle, so all three move
 					 * together or none of them does.
@@ -243,31 +243,31 @@ final class Design_Blocks {
 		);
 
 		/*
-		 * dxai-ui/box: the design's own container element, with its children as
+		 * dx-ui/box: the design's own container element, with its children as
 		 * editable blocks.
 		 *
-		 * The same element and attribute contract as dxai-ui/text, and the same
+		 * The same element and attribute contract as dx-ui/text, and the same
 		 * `supports` refusals for the same reasons, with inner blocks in place
 		 * of `content`. It exists because core/group cannot reproduce a
 		 * container the design styles itself: core/group writes
 		 * `wp-block-group` into the class list, which hands the element to
 		 * WordPress layout CSS, and it has no attribute that can hold a
-		 * `data-dxai-*` behaviour hook. Both were measured: every flex, grid,
+		 * `data-dxui-*` behaviour hook. Both were measured: every flex, grid,
 		 * absolute or behaviour-marked container stayed raw HTML instead, 665
 		 * of the 3001 raw-HTML islands, with another 1327 classed spans beside
 		 * them. Raw HTML is markup nobody can edit in the editor.
 		 *
 		 * No `content` attribute at all, so the hpq round-trip hazard that
-		 * governs dxai-ui/text does not apply here: the children are their own
+		 * governs dx-ui/text does not apply here: the children are their own
 		 * blocks and carry their own markup.
 		 */
 		register_block_type(
-			'dxai-ui/box',
+			'dx-ui/box',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Box', 'dxai-ui' ),
+				'title'         => __( 'DX Box', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					// No generated class and no inspector-added one: the saved
 					// element carries exactly what the design put on it.
@@ -291,17 +291,17 @@ final class Design_Blocks {
 						'type'    => 'string',
 						'default' => '',
 					),
-					'dxaiStyle'       => array(
+					'dxuiStyle'       => array(
 						'type'    => 'string',
 						'default' => '',
 					),
 					// The block's own CSS once it is out of the markup: save() writes
 					// a dxs- class for it and Style_Rules writes the rule (Style_Hoister).
-					'dxaiCss'    => array(
+					'dxuiCss'    => array(
 						'type'    => 'string',
 						'default' => '',
 					),
-					'dxaiData'        => array(
+					'dxuiData'        => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
@@ -455,14 +455,14 @@ final class Design_Blocks {
 			)
 		);
 		/*
-		 * dxai-ui/svg: the design's own inline SVG, with its size and colours
+		 * dx-ui/svg: the design's own inline SVG, with its size and colours
 		 * editable.
 		 *
 		 * `svgAttrs` is an ordered list of `[ name, value ]` pairs rather than
 		 * one declared attribute per name, because an SVG's attribute surface
 		 * is open: the corpus's 163 inline SVGs carry viewBox, fill, stroke,
 		 * stroke-width, width, height, preserveAspectRatio, role, aria-hidden,
-		 * focusable and data-dxai hooks between them. A list keeps the source
+		 * focusable and data-dxui hooks between them. A list keeps the source
 		 * order, which is part of reproducing the markup, and needs no schema
 		 * change to grow.
 		 *
@@ -474,12 +474,12 @@ final class Design_Blocks {
 		 * escaping contract over it at all.
 		 */
 		register_block_type(
-			'dxai-ui/svg',
+			'dx-ui/svg',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Icon', 'dxai-ui' ),
+				'title'         => __( 'DX Icon', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					'className'       => false,
 					'customClassName' => false,
@@ -498,7 +498,7 @@ final class Design_Blocks {
 					),
 					// CSS of the root's and the shapes' classes
 					// (Style_Hoister::INNER_ATTR).
-					'dxaiInner' => array(
+					'dxuiInner' => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
@@ -524,12 +524,12 @@ final class Design_Blocks {
 		 * rel="noreferrer"` link lost both on the page.
 		 */
 		register_block_type(
-			'dxai-ui/link',
+			'dx-ui/link',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Link', 'dxai-ui' ),
+				'title'         => __( 'DX Link', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,
 					'html'      => false,
@@ -590,7 +590,7 @@ final class Design_Blocks {
 					),
 					// The block's own CSS once it is out of the markup: save() writes
 					// a dxs- class for it and Style_Rules writes the rule (Style_Hoister).
-					'dxaiCss'    => array(
+					'dxuiCss'    => array(
 						'type'    => 'string',
 						'default' => '',
 					),
@@ -598,7 +598,7 @@ final class Design_Blocks {
 						'type'    => 'string',
 						'default' => '',
 					),
-					'dxaiData'     => array(
+					'dxuiData'     => array(
 						'type'    => 'object',
 						'default' => array(),
 					),
@@ -668,12 +668,12 @@ final class Design_Blocks {
 		 * no generated class, no figure, no caption.
 		 */
 		register_block_type(
-			'dxai-ui/image',
+			'dx-ui/image',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Image', 'dxai-ui' ),
+				'title'         => __( 'DX Image', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					// The point of the block is that the saved element carries
 					// exactly what the design put on it, so nothing may append
@@ -701,13 +701,13 @@ final class Design_Blocks {
 					// ship `aspect-ratio:5 / 4` and `transform:scale(1.06)`,
 					// which theme.json cannot hold, and WP's custom-CSS support
 					// rejects any value matching `</?\w+`.
-					'dxaiStyle' => array(
+					'dxuiStyle' => array(
 						'type'    => 'string',
 						'default' => '',
 					),
 					// The block's own CSS once it is out of the markup: save() writes
 					// a dxs- class for it and Style_Rules writes the rule (Style_Hoister).
-					'dxaiCss'    => array(
+					'dxuiCss'    => array(
 						'type'    => 'string',
 						'default' => '',
 					),
@@ -742,12 +742,12 @@ final class Design_Blocks {
 		);
 
 		register_block_type(
-			'dxai-ui/details',
+			'dx-ui/details',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Details', 'dxai-ui' ),
+				'title'         => __( 'DX Details', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,
 					'html'      => false,
@@ -770,12 +770,12 @@ final class Design_Blocks {
 		);
 
 		register_block_type(
-			'dxai-ui/countup',
+			'dx-ui/countup',
 			array(
 				'api_version'   => 3,
-				'title'         => __( 'DX Count Up', 'dxai-ui' ),
+				'title'         => __( 'DX Count Up', 'dx-ui' ),
 				'category'      => 'dx-blocks',
-				'editor_script' => 'dxai-ui-blocks-editor',
+				'editor_script' => 'dx-ui-blocks-editor',
 				'supports'      => array(
 					'className' => true,
 					'html'      => false,
@@ -813,14 +813,14 @@ final class Design_Blocks {
 	}
 
 	public function enqueue_editor_script(): void {
-		wp_enqueue_script( 'dxai-ui-blocks-editor' );
+		wp_enqueue_script( 'dx-ui-blocks-editor' );
 
 		$post_id   = $this->editing_post_id();
-		$converted = $post_id > 0 && \DXAI_UI\Support\Upload_Paths::for_meta( $post_id, '_dxai_ui_css_url' )['url'] !== '';
+		$converted = $post_id > 0 && \DX_UI\Support\Upload_Paths::for_meta( $post_id, '_dx_ui_css_url' )['url'] !== '';
 
 		wp_localize_script(
-			'dxai-ui-blocks-editor',
-			'dxaiUIEditor',
+			'dx-ui-blocks-editor',
+			'dxUIEditor',
 			array(
 				'postId'       => $post_id,
 				/*
@@ -830,8 +830,8 @@ final class Design_Blocks {
 				 * them on the canvas body so the scoped stylesheet matches
 				 * there too. Empty for a page stored with its scope group.
 				 */
-				'scopeClass'   => $post_id > 0 && \DXAI_UI\Structures\Design_Attach::scope_for( $post_id ) > 0
-					? \DXAI_UI\Structures\Page_Scope::design_classes( $post_id )
+				'scopeClass'   => $post_id > 0 && \DX_UI\Structures\Design_Attach::scope_for( $post_id ) > 0
+					? \DX_UI\Structures\Page_Scope::design_classes( $post_id )
 					: '',
 				'canvas'       => $this->canvas_config( $post_id, $converted ),
 				/*
@@ -841,8 +841,8 @@ final class Design_Blocks {
 				 * with a block previews at once instead of after a save and
 				 * reload. Empty in a build without the route.
 				 */
-				'utilityRules' => method_exists( Style_Rules::class, 'rest_rules' ) && defined( 'DXAI_UI_REST_NAMESPACE' )
-					? '/' . (string) constant( 'DXAI_UI_REST_NAMESPACE' ) . '/utility-rules'
+				'utilityRules' => method_exists( Style_Rules::class, 'rest_rules' ) && defined( 'DX_UI_REST_NAMESPACE' )
+					? '/' . (string) constant( 'DX_UI_REST_NAMESPACE' ) . '/utility-rules'
 					: '',
 			)
 		);
@@ -857,7 +857,7 @@ final class Design_Blocks {
 	 * `tokens` is exactly what Blank_Template gives the front end back after
 	 * dropping the theme's global styles — every `--wp--preset--*` property
 	 * and the `.has-*` preset classes, no `--wp--style--*` — so the design's
-	 * brand override (`--dxai-ink: var(--wp--preset--color--ink)`) resolves
+	 * brand override (`--dxui-ink: var(--wp--preset--color--ink)`) resolves
 	 * in the canvas once the theme's global styles are gone from it.
 	 *
 	 * @return array<string, mixed>
@@ -867,11 +867,11 @@ final class Design_Blocks {
 			// An ordinary page that holds sections copied from a design (Design_Attach): its canvas gets the design's scope, as the front
 			// end wraps those sections in it (Page_Scope::wrap_runs()) — without it the design's stylesheet, scoped to that element,
 			// matches nothing in the canvas — and, where the front end fences the theme's CSS off them (Theme_Fence), the same.
-			if ( $post_id > 0 && \DXAI_UI\Structures\Design_Attach::attached( $post_id ) ) {
+			if ( $post_id > 0 && \DX_UI\Structures\Design_Attach::attached( $post_id ) ) {
 				return array(
 					'converted'   => false,
 					'attached'    => true,
-					'fence'       => \DXAI_UI\Theme\Theme_Fence::fences( $post_id ),
+					'fence'       => \DX_UI\Theme\Theme_Fence::fences( $post_id ),
 					'themeRoots'  => array_values( array_unique( array_filter( array( (string) get_stylesheet_directory_uri(), (string) get_template_directory_uri() ) ) ) ),
 					'themeBlocks' => self::theme_block_style_handles(),
 				);
@@ -883,11 +883,11 @@ final class Design_Blocks {
 		return array(
 			'converted'     => true,
 			// A design's page the theme draws with its sections fenced off its CSS shows them in the canvas as the canvas pages do.
-			'blank'         => \DXAI_UI\Theme\Blank_Template::is_canvas( $post_id ) || ( \DXAI_UI\Theme\Theme_Fence::draws_own_design( $post_id ) && \DXAI_UI\Theme\Theme_Fence::fences( $post_id ) ),
-			'blankTemplate' => \DXAI_UI\Theme\Blank_Template::SLUG,
+			'blank'         => \DX_UI\Theme\Blank_Template::is_canvas( $post_id ) || ( \DX_UI\Theme\Theme_Fence::draws_own_design( $post_id ) && \DX_UI\Theme\Theme_Fence::fences( $post_id ) ),
+			'blankTemplate' => \DX_UI\Theme\Blank_Template::SLUG,
 			// Both canvas templates render the page the same way (DX Blank and the DX template): the canvas follows the edited one.
 			'blankTemplates' => self::blank_templates( $post_id ),
-			'static'        => (bool) get_post_meta( $post_id, '_dxai_ui_static_html', true ),
+			'static'        => (bool) get_post_meta( $post_id, '_dx_ui_static_html', true ),
 			'tokens'        => wp_get_global_stylesheet( array( 'variables', 'presets' ) ),
 			// Assets::drop_theme_styles() dequeues every stylesheet served
 			// from these on a converted page's front end; the canvas turns
@@ -907,12 +907,12 @@ final class Design_Blocks {
 	 * @return array<int, string>
 	 */
 	private static function blank_templates( int $post_id ): array {
-		$slugs = \DXAI_UI\Theme\Blank_Template::drawn_slugs( $post_id );
-		if ( ! \DXAI_UI\Theme\Theme_Fence::fences_own( $post_id ) ) {
+		$slugs = \DX_UI\Theme\Blank_Template::drawn_slugs( $post_id );
+		if ( ! \DX_UI\Theme\Theme_Fence::fences_own( $post_id ) ) {
 			return $slugs;
 		}
 
-		return array_values( array_unique( array_merge( $slugs, array( '', \DXAI_UI\Theme\Blank_Template::DEFAULT ), array_map( 'strval', array_keys( wp_get_theme()->get_page_templates( null, 'page' ) ) ) ) ) );
+		return array_values( array_unique( array_merge( $slugs, array( '', \DX_UI\Theme\Blank_Template::DEFAULT ), array_map( 'strval', array_keys( wp_get_theme()->get_page_templates( null, 'page' ) ) ) ) ) );
 	}
 
 	/**
@@ -956,10 +956,10 @@ final class Design_Blocks {
 	 * editor-design.css — the canvas's copy of blank-canvas.css — comes after
 	 * the page sheet, where blank-canvas.css is on the front end: its rules
 	 * have that sheet's specificity, so at a tie with one of the design's
-	 * (`.dxai-ui.dxai-ui--{id} p` against the paragraph reset, both (0,2,1))
+	 * (`.dx-ui.dx-ui--{id} p` against the paragraph reset, both (0,2,1))
 	 * the order decides, and it has to decide the same way in both places.
 	 * It loads for every post, not only a converted one: all of it is keyed
-	 * on the canvas classes blocks-editor.js sets or on dxai-ui blocks, and
+	 * on the canvas classes blocks-editor.js sets or on dx-ui blocks, and
 	 * the site header and footer previews it unwraps can sit in any post.
 	 */
 	public function enqueue_editor_canvas(): void {
@@ -977,47 +977,47 @@ final class Design_Blocks {
 		// any post, since a generated pattern can be inserted into an
 		// ordinary one. The blocks' own CSS is also previewed from their
 		// attribute.
-		Style_Rules::attach( 'dxai-ui-rules-editor', Style_Rules::css_for_post( $post_id ) );
+		Style_Rules::attach( 'dx-ui-rules-editor', Style_Rules::css_for_post( $post_id ) );
 		// The theme's button styles, for the buttons that wear them.
-		\DXAI_UI\Theme\Theme_Buttons::enqueue();
+		\DX_UI\Theme\Theme_Buttons::enqueue();
 
 		// The design this page shows: its own, or the one its copied blocks come from (Design_Attach).
-		$source = \DXAI_UI\Structures\Design_Attach::source_for( $post_id );
+		$source = \DX_UI\Structures\Design_Attach::source_for( $post_id );
 		$source = $source > 0 ? $source : $post_id;
-		$sheet  = \DXAI_UI\Support\Upload_Paths::for_meta( $source, '_dxai_ui_css_url' );
+		$sheet  = \DX_UI\Support\Upload_Paths::for_meta( $source, '_dx_ui_css_url' );
 		$css    = $sheet['url'];
 		$design = array();
 		if ( $css !== '' ) {
 			// A Claude Design export never ran under Tailwind's reset — see Assets.
-			$static = (bool) get_post_meta( $source, '_dxai_ui_static_html', true );
+			$static = (bool) get_post_meta( $source, '_dx_ui_static_html', true );
 			if ( ! $static ) {
-				wp_enqueue_style( 'dxai-ui-isolate' );
+				wp_enqueue_style( 'dx-ui-isolate' );
 			}
-			$ver = \DXAI_UI\Support\Upload_Paths::version( $sheet['path'] );
-			wp_enqueue_style( 'dxai-ui-page-editor-' . $post_id, $css, $static ? array() : array( 'dxai-ui-isolate' ), $ver );
+			$ver = \DX_UI\Support\Upload_Paths::version( $sheet['path'] );
+			wp_enqueue_style( 'dx-ui-page-editor-' . $post_id, $css, $static ? array() : array( 'dx-ui-isolate' ), $ver );
 			// The same brand override the front end gets (Assets), so the canvas
 			// shows the colours Styles is set to rather than the imported ones.
-			$brand = \DXAI_UI\Compiler\Token_Styles::brand_css( $source );
+			$brand = \DX_UI\Compiler\Token_Styles::brand_css( $source );
 			if ( $brand !== '' ) {
-				wp_add_inline_style( 'dxai-ui-page-editor-' . $post_id, $brand );
+				wp_add_inline_style( 'dx-ui-page-editor-' . $post_id, $brand );
 			}
-			$design = array( 'dxai-ui-page-editor-' . $post_id );
+			$design = array( 'dx-ui-page-editor-' . $post_id );
 		}
 		// Versioned by its mtime, as the editor script is (Assets): a browser
 		// holding the previous copy would keep the old canvas rules.
 		wp_enqueue_style(
-			'dxai-ui-editor-design',
-			DXAI_UI_URL . 'assets/css/editor-design.css',
+			'dx-ui-editor-design',
+			DX_UI_URL . 'assets/css/editor-design.css',
 			$design,
-			(string) filemtime( DXAI_UI_DIR . 'assets/css/editor-design.css' )
+			(string) filemtime( DX_UI_DIR . 'assets/css/editor-design.css' )
 		);
 		if ( $css === '' ) {
 			return;
 		}
 
-		$fonts = get_post_meta( $source, '_dxai_ui_font_urls', true );
+		$fonts = get_post_meta( $source, '_dx_ui_font_urls', true );
 		// The theme's fonts (Theme_Fonts) are in the canvas with the brand rule above; the design's own are not loaded.
-		if ( ! is_array( $fonts ) || \DXAI_UI\Theme\Theme_Fonts::adopts( $source ) ) {
+		if ( ! is_array( $fonts ) || \DX_UI\Theme\Theme_Fonts::adopts( $source ) ) {
 			return;
 		}
 		foreach ( array_values( $fonts ) as $i => $font_url ) {
@@ -1025,7 +1025,7 @@ final class Design_Blocks {
 			if ( $font_url === '' ) {
 				continue;
 			}
-			wp_enqueue_style( 'dxai-ui-font-editor-' . $post_id . '-' . $i, $font_url, array(), false );
+			wp_enqueue_style( 'dx-ui-font-editor-' . $post_id . '-' . $i, $font_url, array(), false );
 		}
 	}
 
@@ -1089,7 +1089,7 @@ final class Design_Blocks {
 		/*
 		 * kses's own `img` list has src, alt, class, style, width, height and
 		 * loading but NOT decoding, srcset or sizes — measured on this install,
-		 * wp_kses_post() strips those three. dxai-ui/image declares all of
+		 * wp_kses_post() strips those three. dx-ui/image declares all of
 		 * them, so without this a responsive image saved by anyone without
 		 * unfiltered_html would come back missing attributes its save() still
 		 * writes, which is an invalid block.
@@ -1114,7 +1114,7 @@ final class Design_Blocks {
 		/*
 		 * Inline SVG icons, as a fixed subset of shapes and presentation
 		 * attributes. Without them KSES removed every <svg> from a page saved
-		 * by a user without unfiltered_html — and from the dxai-ui/svg block's
+		 * by a user without unfiltered_html — and from the dx-ui/svg block's
 		 * `svgInner` attribute too, which it filters the same way — so icons
 		 * vanished and the blocks went invalid (measured: 1,108 SVG elements
 		 * over the corpus). Nothing here can run script or fetch anything:

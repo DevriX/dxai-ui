@@ -5,16 +5,16 @@
  *   bash bin/wp-php.sh bin/verify-composer-icons.php        (or: wp eval-file bin/verify-composer-icons.php --user=1)
  *
  * The live-site crawl composes a page from a Home's sections and the old page's words and pictures (Page_Composer). A section's icon is
- * an image block of the Home's (an SVG file, class `dxai-icon`); it was taken for a picture slot, so a photograph of the old page was
+ * an image block of the Home's (an SVG file, class `dxui-icon`); it was taken for a picture slot, so a photograph of the old page was
  * put where the icon was, with the icon's own CSS (`max-width:none`, no size): the photograph at its natural size, thousands of pixels
  * wide. The icon stays; a picture slot beside it is filled as before. Reads nothing from the site and writes nothing. Exit code 1 when
  * a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Page_Composer;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Page_Composer;
 
 $fail   = 0;
 $pass   = 0;
@@ -40,10 +40,10 @@ $fill->setAccessible( true );
 
 $icon  = array(
 	'blockName'    => 'core/image',
-	'attrs'        => array( 'className' => 'dxai-part-img dxai-icon', 'dxaiCss' => 'display:inline;margin-bottom:14px;max-width:none', 'url' => 'http://example.test/icons/a.svg' ),
+	'attrs'        => array( 'className' => 'dxui-part-img dxui-icon', 'dxuiCss' => 'display:inline;margin-bottom:14px;max-width:none', 'url' => 'http://example.test/icons/a.svg' ),
 	'innerBlocks'  => array(),
-	'innerHTML'    => '<figure class="wp-block-image dxai-part-img dxai-icon"><img src="http://example.test/icons/a.svg" alt=""/></figure>',
-	'innerContent' => array( '<figure class="wp-block-image dxai-part-img dxai-icon"><img src="http://example.test/icons/a.svg" alt=""/></figure>' ),
+	'innerHTML'    => '<figure class="wp-block-image dxui-part-img dxui-icon"><img src="http://example.test/icons/a.svg" alt=""/></figure>',
+	'innerContent' => array( '<figure class="wp-block-image dxui-part-img dxui-icon"><img src="http://example.test/icons/a.svg" alt=""/></figure>' ),
 );
 $photo = array(
 	'blockName'    => 'core/image',
@@ -56,16 +56,16 @@ $photo = array(
 echo "A section's icon\n";
 $section = array( 'blockName' => 'core/group', 'attrs' => array(), 'innerBlocks' => array( $icon, $photo ), 'innerHTML' => '', 'innerContent' => array( null, null ) );
 $fill->invokeArgs( $composer, array( &$section, array( 0 ), 'p1' ) );
-$expect( 'an old photograph is not put in its place', ( $section['innerBlocks'][0]['attrs']['url'] ?? '' ) === 'http://example.test/icons/a.svg' && empty( $section['innerBlocks'][0]['attrs']['__dxai_image'] ) );
-$expect( '…and the icon is not dropped for having no picture to show', empty( $section['innerBlocks'][0]['attrs']['__dxai_drop'] ) );
+$expect( 'an old photograph is not put in its place', ( $section['innerBlocks'][0]['attrs']['url'] ?? '' ) === 'http://example.test/icons/a.svg' && empty( $section['innerBlocks'][0]['attrs']['__dxui_image'] ) );
+$expect( '…and the icon is not dropped for having no picture to show', empty( $section['innerBlocks'][0]['attrs']['__dxui_drop'] ) );
 $fill->invokeArgs( $composer, array( &$section, array( 0 ), '' ) );
-$expect( '…not even when the old page has none', empty( $section['innerBlocks'][0]['attrs']['__dxai_drop'] ) );
+$expect( '…not even when the old page has none', empty( $section['innerBlocks'][0]['attrs']['__dxui_drop'] ) );
 
 echo "\nA picture slot beside it\n";
 $fill->invokeArgs( $composer, array( &$section, array( 1 ), 'p1' ) );
-$expect( 'is filled as before', ( $section['innerBlocks'][1]['attrs']['url'] ?? '' ) === 'http://example.test/uploads/mold.webp' && ! empty( $section['innerBlocks'][1]['attrs']['__dxai_image'] ), wp_json_encode( $section['innerBlocks'][1]['attrs'] ?? null ) );
+$expect( 'is filled as before', ( $section['innerBlocks'][1]['attrs']['url'] ?? '' ) === 'http://example.test/uploads/mold.webp' && ! empty( $section['innerBlocks'][1]['attrs']['__dxui_image'] ), wp_json_encode( $section['innerBlocks'][1]['attrs'] ?? null ) );
 $fill->invokeArgs( $composer, array( &$section, array( 1 ), '' ) );
-$expect( 'and goes when the old page has no picture for it', ! empty( $section['innerBlocks'][1]['attrs']['__dxai_drop'] ) );
+$expect( 'and goes when the old page has no picture for it', ! empty( $section['innerBlocks'][1]['attrs']['__dxui_drop'] ) );
 
 echo "A rating's stars drawn before a line (H2O Away's call band, 2026-10-23)\n";
 // The Home's line: its stars as drawing (aria-hidden), then the words. The old page's words go in its place, line by line.
@@ -97,7 +97,7 @@ $hero = parse_blocks(
 	'<!-- wp:group {"tagName":"section","className":"hero"} --><section class="wp-block-group hero"><!-- wp:group {"className":"copy"} --><div class="wp-block-group copy">'
 	. '<!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Water, Fire &amp; Mold Damage Restoration in Olympia, WA</h1><!-- /wp:heading -->'
 	. '<!-- wp:paragraph --><p>Third-generation insurance contractors serving Thurston County. On site in about 60 minutes.</p><!-- /wp:paragraph -->'
-	. '<!-- wp:dxai-ui/text {"tagName":"div","className":"checks"} --><div class="checks"><span class="row"><span aria-hidden="true" class="tick">✓</span>4.9-star Google rating from 800+ local reviews</span><span class="row"><span aria-hidden="true" class="tick">✓</span>We work with all insurance companies</span></div><!-- /wp:dxai-ui/text -->'
+	. '<!-- wp:dx-ui/text {"tagName":"div","className":"checks"} --><div class="checks"><span class="row"><span aria-hidden="true" class="tick">✓</span>4.9-star Google rating from 800+ local reviews</span><span class="row"><span aria-hidden="true" class="tick">✓</span>We work with all insurance companies</span></div><!-- /wp:dx-ui/text -->'
 	. '</div><!-- /wp:group --><!-- wp:group {"className":"figures"} --><div class="wp-block-group figures">' . $fig( '4.9 ★', 'Google reviews' ) . $fig( '~60 min', 'On site, day or night' ) . $fig( '800+', 'Homes restored' ) . '</div><!-- /wp:group --></section><!-- /wp:group -->'
 )[0];
 $blank = new ReflectionMethod( Page_Composer::class, 'blank' );
@@ -112,21 +112,21 @@ $unit = array_merge(
 		'paras'   => array( 'Fire damage can affect far more than the areas touched directly by flames.', 'Answered live, day or night', 'Free inspections', 'We bill your insurer directly' ),
 	)
 );
-$hero_out = $fill_section->invoke( new Page_Composer( array(), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ), DXAI_UI\Pages\Section_Library::analyze( $hero, 0 ), 0, $unit );
+$hero_out = $fill_section->invoke( new Page_Composer( array(), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ), DX_UI\Pages\Section_Library::analyze( $hero, 0 ), 0, $unit );
 $hero_html = is_array( $hero_out ) ? serialize_block( $hero_out ) : '';
 $expect( 'the old page\'s title and its first paragraph take the title and the line under it', str_contains( $hero_html, '>Emergency Fire &amp; Smoke Damage Restoration</h1>' ) && str_contains( $hero_html, '<p>Fire damage can affect far more' ), $hero_html );
 $expect( 'its short lines are the list\'s claims, one each with its tick — not a copy of the list for every line', substr_count( $hero_html, '<span class="row"><span aria-hidden="true" class="tick">✓</span>' ) === 3 && str_contains( $hero_html, '✓</span>Free inspections</span>' ) && substr_count( $hero_html, 'class="checks"' ) === 1, $hero_html );
 $expect( 'the Home\'s row of figures, the company\'s on every page, stays with its words', str_contains( $hero_html, '>~60 min<' ) && str_contains( $hero_html, '>On site, day or night<' ) && str_contains( $hero_html, '>Homes restored<' ) );
 $long = $unit;
 $long['paras'] = array( 'Fire damage can affect far more than the areas touched directly by flames.', str_repeat( 'Smoke and soot travel through a home and settle on every surface they reach, ', 3 ) );
-$long_html = serialize_block( (array) $fill_section->invoke( new Page_Composer( array(), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ), DXAI_UI\Pages\Section_Library::analyze( $hero, 0 ), 0, $long ) );
+$long_html = serialize_block( (array) $fill_section->invoke( new Page_Composer( array(), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ), DX_UI\Pages\Section_Library::analyze( $hero, 0 ), 0, $long ) );
 $expect( 'a long paragraph is not made a claim with a tick', ! str_contains( $long_html, '✓</span>Smoke and soot' ), $long_html );
-$two = static fn( string $second ): array => array( 'blockName' => 'dxai-ui/text', 'attrs' => array(), 'innerBlocks' => array(), 'innerHTML' => '<div class="checks"><span class="row"><i aria-hidden="true">✓</i>One</span>' . $second . '</div>' );
+$two = static fn( string $second ): array => array( 'blockName' => 'dx-ui/text', 'attrs' => array(), 'innerBlocks' => array(), 'innerHTML' => '<div class="checks"><span class="row"><i aria-hidden="true">✓</i>One</span>' . $second . '</div>' );
 $expect( 'a list of claims is rows of one kind, each with its drawing', Block_Tree::rows( $two( '<span class="row"><i aria-hidden="true">✓</i>Two</span>' ) ) !== null && Block_Tree::rows( $two( '<em class="note"><i aria-hidden="true">✓</i>Two</em>' ) ) === null && Block_Tree::rows( $two( '<span class="row">Two</span>' ) ) === null );
 
 echo "A call button's drawing (its pulse, its pictograph)\n";
 $call = static fn(): array => array(
-	'blockName'    => 'dxai-ui/text',
+	'blockName'    => 'dx-ui/text',
 	'attrs'        => array( 'tagName' => 'a', 'url' => 'tel:+18555607463' ),
 	'innerBlocks'  => array(),
 	'innerHTML'    => '<a href="tel:+18555607463"><span aria-hidden="" class="pulse"></span>📞 Call Now: <span class="sc-interp">(855) 560-7463</span></a>',
@@ -166,12 +166,12 @@ $expect( 'without the Home\'s grounds nothing changes', $alternate->invoke( new 
 
 // …and on a page composed from an old one: two texts in a row, the Home's text sections both white.
 $text_section = static fn( string $h ): array => parse_blocks( '<!-- wp:group {"tagName":"section","className":"txt"} --><section class="wp-block-group txt"><!-- wp:heading --><h2 class="wp-block-heading">' . $h . '</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Every job is handled by our own trained crews, from the first call to the last repair, with photos for your insurer.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
-$library      = array( DXAI_UI\Pages\Section_Library::analyze( $text_section( 'Our crews' ), 0 ), DXAI_UI\Pages\Section_Library::analyze( $text_section( 'Why us' ), 1 ) );
+$library      = array( DX_UI\Pages\Section_Library::analyze( $text_section( 'Our crews' ), 0 ), DX_UI\Pages\Section_Library::analyze( $text_section( 'Why us' ), 1 ) );
 $old_page     = '<html><body><main><section><h2>Fire damage cleanup</h2><p>A fire can cause devastating damage to a home or commercial property, and even rooms the flames never reached carry smoke and soot.</p></section>'
 	. '<section><h2>Smoke and soot</h2><p>Smoke and soot travel through a property and settle on surfaces that were never touched by the fire itself, so every room is cleaned.</p></section></main></body></html>';
 $composed     = ( new Page_Composer( $library, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
 	->grounds( array( 'light' => array( 'class' => array( 'bg-light-tint' ) ) ) )
-	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $old_page, 'https://old.example.test/fire/' ) );
+	->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $old_page, 'https://old.example.test/fire/' ) );
 $tints        = array_map( static fn( array $s ): bool => str_contains( (string) ( $s['attrs']['className'] ?? '' ), 'bg-light-tint' ), $composed['sections'] );
 $expect( 'a page composed of two text sections has the second on the Home\'s light ground', $tints === array( false, true ), wp_json_encode( $tints ) . ' ' . implode( ' | ', $composed['log'] ) );
 
@@ -188,7 +188,7 @@ $trade_cls = array_map( static fn( array $s ): string => (string) ( $s['attrs'][
 $expect( '…and a Home that writes its white with a class: the class goes when the light ground comes, and comes back when it goes', $trade_cls === array( 'bg-paper', 'bg-light-tint', 'bg-paper', 'bg-light-tint' ), implode( ' | ', $trade_cls ) );
 // Two dark text sections of the Home and a white one; three texts in a row on the old page: no two dark ones in a row.
 $text_on    = static fn( string $class, string $h ): array => parse_blocks( '<!-- wp:group {"tagName":"section","className":"txt ' . $class . '"} --><section class="wp-block-group txt ' . $class . '"><!-- wp:heading --><h2 class="wp-block-heading">' . $h . '</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Every job is handled by our own trained crews, from the first call to the last repair, with photos for your insurer.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
-$dark_lib   = array( DXAI_UI\Pages\Section_Library::analyze( $text_on( 'bg-ink', 'Night crews' ), 0 ), DXAI_UI\Pages\Section_Library::analyze( $text_on( 'bg-ink', 'Our trucks' ), 1 ), DXAI_UI\Pages\Section_Library::analyze( $text_on( 'bg-paper', 'Why us' ), 2 ) );
+$dark_lib   = array( DX_UI\Pages\Section_Library::analyze( $text_on( 'bg-ink', 'Night crews' ), 0 ), DX_UI\Pages\Section_Library::analyze( $text_on( 'bg-ink', 'Our trucks' ), 1 ), DX_UI\Pages\Section_Library::analyze( $text_on( 'bg-paper', 'Why us' ), 2 ) );
 $three_text = '<html><body><main>' . implode( '', array_map( static fn( string $h ): string => '<section><h2>' . $h . '</h2><p>A fire can cause devastating damage to a home or commercial property, and even rooms the flames never reached carry smoke and soot.</p></section>', array( 'Fire damage cleanup', 'Smoke and soot', 'Odor removal' ) ) ) . '</main></body></html>';
 $dark_page  = ( new Page_Composer( $dark_lib, static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
 	->grounds(
@@ -198,7 +198,7 @@ $dark_page  = ( new Page_Composer( $dark_lib, static fn( string $src ): array =>
 			'white' => array( 'class' => array( 'bg-paper' ) ),
 		)
 	)
-	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $three_text, 'https://old.example.test/fire/' ) );
+	->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $three_text, 'https://old.example.test/fire/' ) );
 $darks      = array_map( static fn( array $s ): bool => str_contains( (string) ( $s['attrs']['className'] ?? '' ), 'bg-ink' ), $dark_page['sections'] );
 $two_dark   = false;
 foreach ( $darks as $k => $is_dark ) {
@@ -217,25 +217,25 @@ $built = parse_blocks(
 	. '</div><!-- /wp:group --></section><!-- /wp:group -->'
 )[0];
 $built_old  = '<html><body><main><section><h1>Restoration services</h1><p>Water, fire and mold restoration for homes and businesses across Thurston County, day or night.</p></section><section><h2>Built in the South Puget Sound, for the South Puget Sound</h2><p>H2O Away was founded in Tumwater by a family of contractors, and every crew still lives within an hour of the homes it restores.</p></section></main></body></html>';
-$built_page = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $why, 1 ), DXAI_UI\Pages\Section_Library::analyze( $built, 2 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
-	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $built_old, 'https://old.example.test/services/' ) );
+$built_page = ( new Page_Composer( array( DX_UI\Pages\Section_Library::analyze( $why, 0 ), DX_UI\Pages\Section_Library::analyze( $why, 1 ), DX_UI\Pages\Section_Library::analyze( $built, 2 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+	->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $built_old, 'https://old.example.test/services/' ) );
 $built_html = implode( '', array_map( 'serialize_block', $built_page['sections'] ) );
 $expect( 'it goes into the Home\'s section under the same heading, not the first one of its kind', str_contains( $built_html, 'class="wp-block-group built"' ) && str_contains( $built_html, 'every crew still lives within an hour' ), implode( ' | ', $built_page['log'] ) );
 $expect( '…and the photograph the Home shows there stays (the old page has none for it): its two columns stay two', str_contains( $built_html, 'crew-truck.jpg' ), $built_html );
 $other_old  = '<html><body><main><section><h1>About us</h1><p>Water, fire and mold restoration for homes and businesses across Thurston County, day or night.</p></section><section><h2>Our history in Thurston County</h2><p>H2O Away was founded in Tumwater by a family of contractors, and every crew still lives within an hour of the homes it restores.</p></section></main></body></html>';
-$other_page = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $built, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
-	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $other_old, 'https://old.example.test/about/' ) );
+$other_page = ( new Page_Composer( array( DX_UI\Pages\Section_Library::analyze( $why, 0 ), DX_UI\Pages\Section_Library::analyze( $built, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+	->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $other_old, 'https://old.example.test/about/' ) );
 $expect( 'a part under another heading does not take the Home\'s photograph', ! str_contains( wp_json_encode( $other_page['sections'] ), 'crew-truck.jpg' ) );
 
 echo "A photograph the Home draws as its hero's ground, in its CSS (H2O Away's hero, docs/PLAN-NETWORK-PAGES.md, 11.4)\n";
-$css_hero  = parse_blocks( '<!-- wp:group {"tagName":"section","className":"hero","dxaiCss":"background-image:url(\'https://example.test/home-hero.jpg\');background-size:cover"} --><section class="wp-block-group hero"><!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Water, Fire &amp; Mold Damage Restoration</h1><!-- /wp:heading --><!-- wp:paragraph --><p>On site in about 60 minutes, day or night, anywhere in Thurston County.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
+$css_hero  = parse_blocks( '<!-- wp:group {"tagName":"section","className":"hero","dxuiCss":"background-image:url(\'https://example.test/home-hero.jpg\');background-size:cover"} --><section class="wp-block-group hero"><!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Water, Fire &amp; Mold Damage Restoration</h1><!-- /wp:heading --><!-- wp:paragraph --><p>On site in about 60 minutes, day or night, anywhere in Thurston County.</p><!-- /wp:paragraph --></section><!-- /wp:group -->' )[0];
 $hero_page = static function ( int $width ) use ( $css_hero, $why ): string {
 	$old = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p><img src="https://old.example.test/burned-kitchen.jpg" width="' . $width . '" height="1000" alt="A burned kitchen"/></section>'
 		. '<section><h2>Why Olympia calls us</h2><p>Our crews answer at night and reach you within the hour, every day of the year, with photos for your insurer.</p></section></main></body></html>';
-	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $css_hero, 0 ), DXAI_UI\Pages\Section_Library::analyze( $why, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
-		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
+	$out = ( new Page_Composer( array( DX_UI\Pages\Section_Library::analyze( $css_hero, 0 ), DX_UI\Pages\Section_Library::analyze( $why, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+		->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
 
-	return (string) ( $out['sections'][0]['attrs']['dxaiCss'] ?? '' );
+	return (string) ( $out['sections'][0]['attrs']['dxuiCss'] ?? '' );
 };
 $big = $hero_page( 2000 );
 $expect( 'the old page\'s own photograph, large enough to stand behind the whole hero, takes its place', str_contains( $big, "url('https://old.example.test/burned-kitchen.jpg')" ) && str_contains( $big, 'background-size:cover' ), $big );
@@ -244,18 +244,18 @@ $expect( 'one too small for it (940 px) leaves the Home\'s', str_contains( $smal
 
 echo "The Home's marks for its services (H2O Away's 56 px icons, hidden from screen readers; 11.4)\n";
 $box  = static fn( string $src, string $class, bool $hidden = true ): array => array(
-	'blockName'    => 'dxai-ui/box',
+	'blockName'    => 'dx-ui/box',
 	'attrs'        => array_merge( array( 'tagName' => 'img', 'src' => $src, 'className' => $class ), $hidden ? array( 'ariaHidden' => 'true' ) : array() ),
 	'innerBlocks'  => array(),
 	'innerHTML'    => '',
 	'innerContent' => array(),
 );
-$is_icon = array( DXAI_UI\Pages\Home_Kit::class, 'is_icon' );
+$is_icon = array( DX_UI\Pages\Home_Kit::class, 'is_icon' );
 $expect( 'a small picture the design hides from screen readers is an icon', $is_icon( $box( 'https://example.test/icons/fire.webp', 'w-56px h-56px' ) ) );
 $expect( '…a large one (a photograph laid behind, hidden too) is not, nor a small one screen readers read', ! $is_icon( $box( 'https://example.test/hero.jpg', 'w-600px h-400px' ) ) && ! $is_icon( $box( 'https://example.test/icons/fire.webp', 'w-56px h-56px', false ) ) );
 
 $service = static fn( string $icon, string $title, string $words ): string => '<!-- wp:group {"className":"card"} --><div class="wp-block-group card">'
-	. '<!-- wp:dxai-ui/box ' . wp_json_encode( array( 'tagName' => 'img', 'src' => 'https://example.test/icons/' . $icon . '.webp', 'ariaHidden' => 'true', 'className' => 'w-56px h-56px' ) ) . ' /-->'
+	. '<!-- wp:dx-ui/box ' . wp_json_encode( array( 'tagName' => 'img', 'src' => 'https://example.test/icons/' . $icon . '.webp', 'ariaHidden' => 'true', 'className' => 'w-56px h-56px' ) ) . ' /-->'
 	. '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . $title . '</h3><!-- /wp:heading --><!-- wp:paragraph --><p>' . $words . '</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
 $services = parse_blocks(
 	'<!-- wp:group {"tagName":"section","className":"svc"} --><section class="wp-block-group svc"><!-- wp:heading --><h2 class="wp-block-heading">Restoration services in Olympia</h2><!-- /wp:heading --><!-- wp:group {"className":"grid"} --><div class="wp-block-group grid">'
@@ -283,8 +283,8 @@ $cards_page = static function ( string $h2, array $cards ) use ( $why, $services
 	$old = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p></section><section><h2>' . $h2 . '</h2><div>'
 		. implode( '', array_map( static fn( string $c ): string => '<div><h3>' . $c . '</h3><p>Our crews handle it from the first call to the last repair, with photos for your insurer.</p></div>', $cards ) )
 		. '</div></section></main></body></html>';
-	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ), DXAI_UI\Pages\Section_Library::analyze( $services, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
-		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
+	$out = ( new Page_Composer( array( DX_UI\Pages\Section_Library::analyze( $why, 0 ), DX_UI\Pages\Section_Library::analyze( $services, 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ) ) )
+		->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $old, 'https://old.example.test/fire/' ) );
 
 	return array( implode( '', array_map( 'serialize_block', $out['sections'] ) ), $out['log'] );
 };
@@ -297,14 +297,14 @@ $expect( 'elsewhere a card takes the mark of the service it names, and one that 
 $expect( '…and the card without a mark is filled like the others', substr_count( $mixed_html, 'with photos for your insurer' ) === 3, $mixed_html );
 
 echo "…and the same when a list of pages is poured into those cards (Section_Refill)\n";
-$svc_shape = DXAI_UI\Pages\Section_Library::analyze( $services, 0 );
+$svc_shape = DX_UI\Pages\Section_Library::analyze( $services, 0 );
 $svc_rep   = null;
 foreach ( $svc_shape['repeats'] as $r ) {
 	if ( $r['kind'] === 'card' ) {
 		$svc_rep = $r;
 	}
 }
-$poured = is_array( $svc_rep ) ? DXAI_UI\Pages\Section_Refill::cards(
+$poured = is_array( $svc_rep ) ? DX_UI\Pages\Section_Refill::cards(
 	$svc_shape,
 	$svc_rep,
 	'Related services',
@@ -334,11 +334,11 @@ $rows_old = '<html><body><main>' . implode(
 	)
 ) . '</main></body></html>';
 $sides_of = static function ( string $css ) use ( $row_of, $rows_old ): array {
-	$out = ( new Page_Composer( array( DXAI_UI\Pages\Section_Library::analyze( $row_of( 'built', 'Built in the South Puget Sound' ), 0 ), DXAI_UI\Pages\Section_Library::analyze( $row_of( 'crew', 'Our own crews' ), 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), $css ) )
-		->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $rows_old, 'https://old.example.test/fire/' ) );
+	$out = ( new Page_Composer( array( DX_UI\Pages\Section_Library::analyze( $row_of( 'built', 'Built in the South Puget Sound' ), 0 ), DX_UI\Pages\Section_Library::analyze( $row_of( 'crew', 'Our own crews' ), 1 ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), $css ) )
+		->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $rows_old, 'https://old.example.test/fire/' ) );
 	$sides = array();
 	foreach ( $out['sections'] as $s ) {
-		$row     = DXAI_UI\Pages\Section_Variants::picture_side( $s, array() );
+		$row     = DX_UI\Pages\Section_Variants::picture_side( $s, array() );
 		$sides[] = $row === null ? '-' : $row['side'];
 	}
 
@@ -347,12 +347,12 @@ $sides_of = static function ( string $css ) use ( $row_of, $rows_old ): array {
 list( $sides, $sides_out ) = $sides_of( '.cols{gap:44px}' );
 $expect( 'three rows in a row: the picture left, right, left', $sides === array( 'left', 'right', 'left' ), implode( ' ', $sides ) . ' ' . implode( ' | ', $sides_out['log'] ) );
 $second = serialize_block( $sides_out['sections'][1] );
-$expect( '…the second row only has its two sides changed: the words first, then the picture, each with its own classes', strpos( $second, 'class="wp-block-group copy"' ) < strpos( $second, 'class="wp-block-image photo"' ) && str_contains( $second, '<div class="wp-block-group cols d-grid">' ) && ! is_wp_error( DXAI_UI\Pages\Block_Tree::serialize_checked( array( $sides_out['sections'][1] ) ) ), $second );
+$expect( '…the second row only has its two sides changed: the words first, then the picture, each with its own classes', strpos( $second, 'class="wp-block-group copy"' ) < strpos( $second, 'class="wp-block-image photo"' ) && str_contains( $second, '<div class="wp-block-group cols d-grid">' ) && ! is_wp_error( DX_UI\Pages\Block_Tree::serialize_checked( array( $sides_out['sections'][1] ) ) ), $second );
 list( $placed ) = $sides_of( '.cols > .photo:first-child{border-radius:0 14px 14px 0}' );
 $expect( 'a design that styles the sides by their place keeps them where they are', $placed === array( 'left', 'left', 'left' ), implode( ' ', $placed ) );
 $ordered = $row_of( 'built', 'Built here' );
 $ordered['innerBlocks'][0]['innerBlocks'][0]['attrs']['className'] = 'photo md:order-last';
-$expect( 'a row whose sides the design moves itself (order) is not taken for one with the picture on the left', DXAI_UI\Pages\Section_Variants::picture_side( $ordered, array() ) === null && DXAI_UI\Pages\Section_Variants::picture_side( $row_of( 'built', 'Built here' ), array() ) !== null );
+$expect( 'a row whose sides the design moves itself (order) is not taken for one with the picture on the left', DX_UI\Pages\Section_Variants::picture_side( $ordered, array() ) === null && DX_UI\Pages\Section_Variants::picture_side( $row_of( 'built', 'Built here' ), array() ) !== null );
 // A section of badges, each a logo beside its caption in a row (H2O Away's certifications, on the Resources page): not a row of two.
 $badges = parse_blocks(
 	'<!-- wp:group {"tagName":"section","className":"badges"} --><section class="wp-block-group badges"><!-- wp:heading --><h2 class="wp-block-heading">Industry certifications</h2><!-- /wp:heading -->'
@@ -360,7 +360,7 @@ $badges = parse_blocks(
 	. '<!-- wp:paragraph --><p>BusinessRate Best of 2026 award for water damage restoration in Thurston County, Washington</p><!-- /wp:paragraph --></div><!-- /wp:group -->'
 	. '</section><!-- /wp:group -->'
 )[0];
-$expect( 'a logo beside its caption is not a row of two (its words are not under the section\'s heading): it is never turned round', DXAI_UI\Pages\Section_Variants::picture_side( $badges, array() ) === null );
+$expect( 'a logo beside its caption is not a row of two (its words are not under the section\'s heading): it is never turned round', DX_UI\Pages\Section_Variants::picture_side( $badges, array() ) === null );
 list( $bare ) = $sides_of( '' );
 $expect( '…and so does a page without the design\'s stylesheet to tell', $bare === array( 'left', 'left', 'left' ), implode( ' ', $bare ) );
 
@@ -374,14 +374,14 @@ $grid_of = static function ( string $name, string $min, int $n, string $box = 'm
 		$cards .= '<!-- wp:group {"className":"card"} --><div class="wp-block-group card"><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . ucfirst( $name ) . ' ' . $k . '</h3><!-- /wp:heading --><!-- wp:paragraph --><p>Handled by our own crews from the first call to the last repair.</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
 	}
 	return parse_blocks(
-		'<!-- wp:group {"tagName":"section","className":"' . $name . '"} --><section class="wp-block-group ' . $name . '"><!-- wp:group ' . wp_json_encode( array( 'className' => 'box', 'dxaiCss' => $box ) ) . ' --><div class="wp-block-group box">'
+		'<!-- wp:group {"tagName":"section","className":"' . $name . '"} --><section class="wp-block-group ' . $name . '"><!-- wp:group ' . wp_json_encode( array( 'className' => 'box', 'dxuiCss' => $box ) ) . ' --><div class="wp-block-group box">'
 		. '<!-- wp:heading --><h2 class="wp-block-heading">Our ' . $name . '</h2><!-- /wp:heading -->'
-		. '<!-- wp:group {"className":"grid","dxaiCss":"grid-template-columns:repeat(auto-fit,minmax(' . $min . ',1fr));gap:20px"} --><div class="wp-block-group grid">' . $cards . '</div><!-- /wp:group -->'
+		. '<!-- wp:group {"className":"grid","dxuiCss":"grid-template-columns:repeat(auto-fit,minmax(' . $min . ',1fr));gap:20px"} --><div class="wp-block-group grid">' . $cards . '</div><!-- /wp:group -->'
 		. '</div><!-- /wp:group --></section><!-- /wp:group -->'
 	)[0];
 };
 $services_grid = $grid_of( 'services', '250px', 4 );
-$library_of    = static fn( array ...$sections ): array => array_map( static fn( array $s, int $i ): array => DXAI_UI\Pages\Section_Library::analyze( $s, $i ), $sections, array_keys( $sections ) );
+$library_of    = static fn( array ...$sections ): array => array_map( static fn( array $s, int $i ): array => DX_UI\Pages\Section_Library::analyze( $s, $i ), $sections, array_keys( $sections ) );
 $full_rows     = new ReflectionMethod( Page_Composer::class, 'full_rows' );
 $full_rows->setAccessible( true );
 $columns_for = static function ( array $library, int $count, ?array $section = null ) use ( $full_rows, $services_grid ): string {
@@ -389,7 +389,7 @@ $columns_for = static function ( array $library, int $count, ?array $section = n
 	$block    = $section ?? $services_grid;
 	$path     = array( 0, 1 );
 	$full_rows->invokeArgs( $composer, array( &$block, $path, $count ) );
-	preg_match( '/minmax\(([^,]+),/', (string) ( DXAI_UI\Pages\Block_Tree::at( $block, $path )['attrs']['dxaiCss'] ?? '' ), $m );
+	preg_match( '/minmax\(([^,]+),/', (string) ( DX_UI\Pages\Block_Tree::at( $block, $path )['attrs']['dxuiCss'] ?? '' ), $m );
 
 	return (string) ( $m[1] ?? '?' );
 };
@@ -407,8 +407,8 @@ $expect( '…nor any in a box whose width cannot be read', $columns_for( $home_a
 $six_old  = '<html><body><main><section><h1>Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by the flames themselves.</p></section><section><h2>Types of Fire Damage We Restore</h2><div>'
 	. implode( '', array_map( static fn( string $c ): string => '<div><h3>' . $c . '</h3><p>Our crews handle it from the first call to the last repair, with photos for your insurer.</p></div>', array( 'Smoke', 'Soot', 'Odor', 'Board-up', 'Contents', 'Water' ) ) )
 	. '</div></section></main></body></html>';
-$six_page = ( new Page_Composer( array_merge( array( DXAI_UI\Pages\Section_Library::analyze( $why, 0 ) ), $library_of( $services_grid, $grid_of( 'rows', '320px', 2 ) ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), '.card{padding:24px}' ) )
-	->compose( ( new DXAI_UI\Pages\Content_Extractor() )->extract( $six_old, 'https://old.example.test/fire/' ) );
+$six_page = ( new Page_Composer( array_merge( array( DX_UI\Pages\Section_Library::analyze( $why, 0 ) ), $library_of( $services_grid, $grid_of( 'rows', '320px', 2 ) ) ), static fn( string $src ): array => array( 'url' => $src, 'id' => 0 ), '.card{padding:24px}' ) )
+	->compose( ( new DX_UI\Pages\Content_Extractor() )->extract( $six_old, 'https://old.example.test/fire/' ) );
 $six_html = implode( '', array_map( 'serialize_block', $six_page['sections'] ) );
 $expect( '…and on a composed page the six cards, in the Home\'s services, are laid in three columns', substr_count( $six_html, '<h3' ) === 6 && str_contains( $six_html, 'minmax(320px,1fr));gap:20px' ) && str_contains( implode( ' | ', $six_page['log'] ), '6 cards in 4 columns leave a row of 2' ), implode( ' | ', $six_page['log'] ) );
 

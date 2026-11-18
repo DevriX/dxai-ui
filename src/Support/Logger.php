@@ -2,16 +2,16 @@
 /**
  * Conversion log helper (admin-only, not secrets).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 final class Logger {
 
-	public const TRANSIENT = 'dxai_ui_last_log';
+	public const TRANSIENT = 'dx_ui_last_log';
 
 	/**
 	 * @param array<int, array{level:string, message:string, time:string}> $entries

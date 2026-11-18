@@ -2,18 +2,18 @@
 /**
  * The active theme's font settings, and a design following them.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Design_Tokens;
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Design_Tokens;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Media\Font_Host;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * A theme that lets the site choose its fonts (the DevriX themes: Theme Global Settings > Fonts, a headline font and a
@@ -23,9 +23,9 @@ use DXAI_UI\Support\Upload_Paths;
  * into uploads so the page could draw them. On such a theme it does not: the page uses the theme's fonts.
  *
  *  - The theme's @font-face rules for the two fonts it is set to are printed with the design, and its two stacks are
- *    given names the design cannot shadow (`--dxai-theme-heading`, `--dxai-theme-body`) — a design that calls its own
+ *    given names the design cannot shadow (`--dxui-theme-heading`, `--dxui-theme-body`) — a design that calls its own
  *    variable `--font-heading` must not read itself.
- *  - The design's font variables (`--font-sans`, `--font-display`, `--dxai-font`, …) are re-pointed at those two, by the
+ *  - The design's font variables (`--font-sans`, `--font-display`, `--dxui-font`, …) are re-pointed at those two, by the
  *    role their name says; its root and its headings take them; a rule of its sheet that names a font in a class
  *    (`.rv-display { font-family: "Inter" }`) is written again with the role of that font; and so is a `font-family`
  *    in the CSS of a block (Style_Rules, via bind_css()). A font is the BODY font when it is the one the design's page
@@ -37,25 +37,25 @@ use DXAI_UI\Support\Upload_Paths;
  *    fonts come back when the theme stops managing them. What the plugin copied for the design is no longer needed
  *    and goes (Font_Host::adopt(), clean_files()).
  *
- * A design can keep its own fonts: the post meta MODE_META = 'keep', the filter `dxai_ui_theme_fonts_follow`, or fonts
+ * A design can keep its own fonts: the post meta MODE_META = 'keep', the filter `dx_ui_theme_fonts_follow`, or fonts
  * the plugin cannot replace (an icon font in its stylesheets).
  *
  * Which themes manage fonts is `current()`: the DevriX contract (the `amr_*` typography functions) out of the box,
- * anything else through the filter `dxai_ui_theme_fonts`.
+ * anything else through the filter `dx_ui_theme_fonts`.
  */
 final class Theme_Fonts {
 
 	/** Post meta on a design's Home: 'keep' stops the design following the theme's fonts. */
-	public const MODE_META = '_dxai_ui_theme_fonts';
+	public const MODE_META = '_dx_ui_theme_fonts';
 
 	/** Post meta on a design's Home: what its stylesheet says about fonts (analysis()). */
-	public const MAP_META = '_dxai_ui_font_map';
+	public const MAP_META = '_dx_ui_font_map';
 
 	/** Bumped when the analysis or the printed rule changes. */
 	public const SCHEMA = 3;
 
 	/** Option: the stylesheet and schema the last migration ran for. */
-	public const DONE = 'dxai_ui_theme_fonts_done';
+	public const DONE = 'dx_ui_theme_fonts_done';
 
 	/** The system's monospace, for code. */
 	public const SYSTEM_MONO = 'ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace';
@@ -112,7 +112,7 @@ final class Theme_Fonts {
 		 * @param array<string, string>|null|false $fonts {id, heading, body, heading_slug, body_slug, faces}: the two CSS
 		 *                                                font stacks, the slugs of the choices, and the @font-face rules to print.
 		 */
-		$found = apply_filters( 'dxai_ui_theme_fonts', self::read_theme() );
+		$found = apply_filters( 'dx_ui_theme_fonts', self::read_theme() );
 		$clean = self::clean( $found );
 		self::$memo = $clean ?? false;
 
@@ -180,7 +180,7 @@ final class Theme_Fonts {
 			 * @param bool $follow Default: yes, unless the design was set to keep its own.
 			 * @param int  $design The design's Home page id.
 			 */
-			self::$follow[ $key ] = (bool) apply_filters( 'dxai_ui_theme_fonts_follow', ! $keep, $design );
+			self::$follow[ $key ] = (bool) apply_filters( 'dx_ui_theme_fonts_follow', ! $keep, $design );
 		}
 
 		return self::$follow[ $key ];
@@ -356,10 +356,10 @@ final class Theme_Fonts {
 			}
 		}
 		if ( in_array( 'monospace', $families, true ) || in_array( 'ui-monospace', $families, true ) || preg_match( '/(?:^|[ -])(?:mono|code|courier|consolas|menlo|monaco)(?:[ -]|$)/', $first ) === 1 ) {
-			return $code ? self::SYSTEM_MONO : 'var(--dxai-theme-body)';
+			return $code ? self::SYSTEM_MONO : 'var(--dxui-theme-body)';
 		}
 
-		return $first === '' || $body === '' || $first === $body || in_array( $first, self::SYSTEM, true ) ? 'var(--dxai-theme-body)' : 'var(--dxai-theme-heading)';
+		return $first === '' || $body === '' || $first === $body || in_array( $first, self::SYSTEM, true ) ? 'var(--dxui-theme-body)' : 'var(--dxui-theme-heading)';
 	}
 
 	/**
@@ -422,7 +422,7 @@ final class Theme_Fonts {
 				if ( $new !== null ) {
 					$out[]   = 'font-family:' . $new . ( $d['important'] ? ' !important' : '' );
 					// A heading font with no bold is not drawn bold: what the browser would make of it is not what the theme's headings are.
-					if ( $new === 'var(--dxai-theme-heading)' && self::heading_lacks_bold() && stripos( $css, 'font-synthesis' ) === false ) {
+					if ( $new === 'var(--dxui-theme-heading)' && self::heading_lacks_bold() && stripos( $css, 'font-synthesis' ) === false ) {
 						$out[] = 'font-synthesis-weight:none';
 					}
 					$changed = true;
@@ -468,13 +468,13 @@ final class Theme_Fonts {
 			'icons' => false,
 			'cut'   => false,
 		);
-		$sheet = $design > 0 ? Upload_Paths::for_meta( $design, '_dxai_ui_css_url' ) : array( 'path' => '' );
+		$sheet = $design > 0 ? Upload_Paths::for_meta( $design, '_dx_ui_css_url' ) : array( 'path' => '' );
 		if ( (string) $sheet['path'] === '' || ! is_readable( (string) $sheet['path'] ) ) {
 			return self::$analyses[ $design ] = $empty;
 		}
 		$tokens = Design_Tokens::for_page( $design );
 		$token  = self::first_named( (string) ( $tokens['font'] ?? '' ) );
-		$key    = self::SCHEMA . '|' . Upload_Paths::version( (string) $sheet['path'] ) . '|' . $token . '|' . md5( (string) wp_json_encode( get_post_meta( $design, '_dxai_ui_font_urls', true ) ) );
+		$key    = self::SCHEMA . '|' . Upload_Paths::version( (string) $sheet['path'] ) . '|' . $token . '|' . md5( (string) wp_json_encode( get_post_meta( $design, '_dx_ui_font_urls', true ) ) );
 		$held   = get_post_meta( $design, self::MAP_META, true );
 		if ( is_array( $held ) && ( $held['k'] ?? '' ) === $key && isset( $held['vars'], $held['rules'] ) ) {
 			return self::$analyses[ $design ] = array_merge( $empty, $held );
@@ -499,7 +499,7 @@ final class Theme_Fonts {
 		// The family the page root is set in: the rule for the design's scope element alone.
 		$root = '';
 		foreach ( $rules as $r ) {
-			if ( $r['at'] === array() && preg_match( '/^\.dxai-ui\.dxai-ui--\d+\s*$/', $r['sel'] ) === 1 ) {
+			if ( $r['at'] === array() && preg_match( '/^\.dx-ui\.dx-ui--\d+\s*$/', $r['sel'] ) === 1 ) {
 				foreach ( Utility_Classes::declarations( $r['body'] ) as $d ) {
 					if ( $d['prop'] === 'font-family' && self::first_named( $d['value'] ) !== '' && stripos( $d['value'], 'var(' ) === false ) {
 						$root = self::first_named( $d['value'] );
@@ -511,7 +511,7 @@ final class Theme_Fonts {
 		$vars = array();
 		foreach ( $rules as $r ) {
 			foreach ( Utility_Classes::declarations( $r['body'] ) as $d ) {
-				if ( strncmp( $d['prop'], '--', 2 ) !== 0 || $d['prop'] === '--dxai-font' || $d['prop'] === '--font-heading-theme' ) {
+				if ( strncmp( $d['prop'], '--', 2 ) !== 0 || $d['prop'] === '--dxui-font' || $d['prop'] === '--font-heading-theme' ) {
 					continue;
 				}
 				if ( preg_match( '/^--(?:[a-z0-9]+-)*(?:font|family)(?:-[a-z0-9]+)*$/', $d['prop'] ) !== 1 || preg_match( '/weight|size|style|stretch|feature|variation|smoothing|tracking|leading|line|^--tw-|^--wp--/', $d['prop'] ) === 1 ) {
@@ -563,7 +563,7 @@ final class Theme_Fonts {
 				$names[] = self::first_named( $v );
 			}
 		}
-		$urls = get_post_meta( $design, '_dxai_ui_font_urls', true );
+		$urls = get_post_meta( $design, '_dx_ui_font_urls', true );
 		$urls = is_array( $urls ) ? array_map( 'strval', $urls ) : array();
 		if ( preg_match_all( '#fonts\.googleapis\.com/css2?\?[^"\'\s)]+#i', $css, $m ) ) {
 			$urls = array_merge( $urls, $m[0] );
@@ -575,7 +575,7 @@ final class Theme_Fonts {
 				}
 			}
 		}
-		$path = Upload_Paths::for_meta( $design, '_dxai_ui_css_url' )['path'];
+		$path = Upload_Paths::for_meta( $design, '_dx_ui_css_url' )['path'];
 		foreach ( Font_Host::covered( (string) $path ) as $url ) {
 			if ( preg_match_all( '/family=([^:&;]+)/', Font_Host::normal( (string) $url ), $m ) ) {
 				foreach ( $m[1] as $family ) {
@@ -711,21 +711,21 @@ final class Theme_Fonts {
 		$out = $theme['faces'] !== '' ? $theme['faces'] . "\n" : '';
 		// A design page drops the theme's own typography (Theme_Compat): its two variables are written here, as it would.
 		$define = Theme_Compat::is_converted_page() ? '--font-heading:' . $theme['heading'] . ';--font-primary:' . $theme['body'] . ';' : '';
-		$out   .= ':root{' . $define . '--dxai-theme-heading:var(--font-heading,' . $theme['heading'] . ');--dxai-theme-body:var(--font-primary,' . $theme['body'] . ');}';
-		// `.dxai-ui.dxai-ui` is (0,2,0), as the scoper's replacement of the design's `:root`, and this comes after it.
-		$vars = array( '--dxai-font:var(--dxai-theme-body)' );
+		$out   .= ':root{' . $define . '--dxui-theme-heading:var(--font-heading,' . $theme['heading'] . ');--dxui-theme-body:var(--font-primary,' . $theme['body'] . ');}';
+		// `.dx-ui.dx-ui` is (0,2,0), as the scoper's replacement of the design's `:root`, and this comes after it.
+		$vars = array( '--dxui-font:var(--dxui-theme-body)' );
 		foreach ( $a['vars'] as $name => $role ) {
-			$vars[] = $name . ':var(--dxai-theme-' . ( $role === 'heading' ? 'heading' : 'body' ) . ')';
+			$vars[] = $name . ':var(--dxui-theme-' . ( $role === 'heading' ? 'heading' : 'body' ) . ')';
 		}
-		$out .= '.dxai-ui.dxai-ui{' . implode( ';', $vars ) . '}';
-		$out .= '.dxai-ui.dxai-ui.dxai-ui{font-family:var(--dxai-theme-body)}';
+		$out .= '.dx-ui.dx-ui{' . implode( ';', $vars ) . '}';
+		$out .= '.dx-ui.dx-ui.dx-ui{font-family:var(--dxui-theme-body)}';
 		// A heading font with no bold (Impact, Archivo Black) is not drawn bold for a design that sets its headings at 800.
 		$plain = self::heading_lacks_bold() ? ';font-synthesis-weight:none' : '';
-		$out  .= '.dxai-ui.dxai-ui :is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxai-theme-heading)' . $plain . '}';
+		$out  .= '.dx-ui.dx-ui :is(h1,h2,h3,h4,h5,h6,.wp-block-heading){font-family:var(--dxui-theme-heading)' . $plain . '}';
 		// Code is the one thing that stays monospace: the design's monospace variable is the body font now.
-		$out .= '.dxai-ui.dxai-ui.dxai-ui :is(pre,code,kbd,samp){font-family:' . self::SYSTEM_MONO . '}';
+		$out .= '.dx-ui.dx-ui.dx-ui :is(pre,code,kbd,samp){font-family:' . self::SYSTEM_MONO . '}';
 		foreach ( $a['rules'] as $r ) {
-			$rule = $r['s'] . '{font-family:' . $r['v'] . ( $plain !== '' && str_contains( $r['v'], '--dxai-theme-heading' ) ? $plain : '' ) . '}';
+			$rule = $r['s'] . '{font-family:' . $r['v'] . ( $plain !== '' && str_contains( $r['v'], '--dxui-theme-heading' ) ? $plain : '' ) . '}';
 			foreach ( array_reverse( $r['at'] ) as $prelude ) {
 				$rule = $prelude . '{' . $rule . '}';
 			}
@@ -783,7 +783,7 @@ final class Theme_Fonts {
 			}
 		} elseif ( Font_Host::design_state( $home ) === 'theme' ) {
 			// The theme stopped managing fonts (or the design was set to keep its own): its fonts come back.
-			set_transient( 'dxai_ui_fonts_wait_' . $home, 1, 10 * MINUTE_IN_SECONDS );
+			set_transient( 'dx_ui_fonts_wait_' . $home, 1, 10 * MINUTE_IN_SECONDS );
 			Font_Host::localize_design( $home, 8 );
 		}
 	}

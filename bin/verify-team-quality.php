@@ -15,11 +15,11 @@
  * `allow` names gates that may fail without failing the run (a phase that has not reached them yet). Reads only; it
  * writes the JSON file (one Home) and nothing else. Exit code 1 when a gate that is not allowed fails, 2 for a wrong id.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Team_Quality;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Pages\Team_Quality;
+use DX_UI\Structures\Design_Attach;
 
 $home  = 0;
 $out   = '';

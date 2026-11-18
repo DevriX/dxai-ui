@@ -14,24 +14,24 @@
  * patterns, the conversion snapshot, the files it sideloaded and the stylesheet) when it ends, however it ends. Exit code 1 when
  * a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Dc_Connector;
-use DXAI_UI\Connectors\Lovable_Connector;
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Design\Behaviour_Reader;
-use DXAI_UI\Design\Document;
-use DXAI_UI\Design\Document_Builder;
-use DXAI_UI\Design\Document_Store;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Roles;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Support\Design_Cli;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Dc_Connector;
+use DX_UI\Connectors\Lovable_Connector;
+use DX_UI\Content\Content_Types;
+use DX_UI\Design\Behaviour_Reader;
+use DX_UI\Design\Document;
+use DX_UI\Design\Document_Builder;
+use DX_UI\Design\Document_Store;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Roles;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Support\Design_Cli;
+use DX_UI\Support\Upload_Paths;
 
 $fail   = 0;
 $pass   = 0;
@@ -53,14 +53,14 @@ $fin     = static function () use ( &$made, &$saved, $max_att ): void {
 	global $wpdb;
 	$home = (int) ( $saved['page_id'] ?? 0 );
 	if ( $home > 0 ) {
-		$file = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' )['path'] ?? '';
+		$file = Upload_Paths::for_meta( $home, '_dx_ui_css_url' )['path'] ?? '';
 		if ( is_string( $file ) && $file !== '' && is_file( $file ) ) {
 			wp_delete_file( $file );
 		}
 		foreach ( get_posts( array( 'post_type' => 'page', 'post_status' => array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => Page_Scope::META, 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
-		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dxai_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
+		foreach ( get_posts( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'any', 'fields' => 'ids', 'posts_per_page' => -1, 'meta_key' => '_dx_ui_page_id', 'meta_value' => $home ) ) as $id ) { // phpcs:ignore WordPress.DB.SlowDBQuery
 			wp_delete_post( (int) $id, true );
 		}
 		$ids = array_merge(
@@ -73,7 +73,7 @@ $fin     = static function () use ( &$made, &$saved, $max_att ): void {
 			wp_delete_post( (int) $id, true );
 		}
 		// The pictures the save sideloaded for the fixture: attachments made after this suite began, marked as the plugin's own.
-		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dxai_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$new = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_dx_ui_asset_kind' WHERE p.post_type = 'attachment' AND p.ID > %d", $max_att ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		foreach ( $new as $id ) {
 			wp_delete_attachment( (int) $id, true );
 		}
@@ -151,7 +151,7 @@ $expect( 'the report carries the compiler\'s own list of what it could not evalu
 // Before a save the colours are still literals (Token_Styles writes the tokens and their classes as it saves): the measure is there, at zero.
 $expect( 'the report measures the residual CSS and how the blocks carry their colours (as presets, as custom colours, as classes)', isset( $data['report']['css']['bytes'], $data['report']['css']['rules'], $data['report']['bound']['text']['class'], $data['report']['bound']['background']['class'] ) && $data['report']['css']['bytes'] > 0 && $data['report']['css']['literals'] > 0, wp_json_encode( array( $data['report']['css'] ?? null, $data['report']['bound'] ?? null ) ) );
 $expect( 'the layout tree is not claimed in version 1', null === $data['layout'] );
-$expect( 'built by this plugin, by the source compiler, at a time', DXAI_UI_VERSION === $data['built']['plugin'] && 'source' === $data['built']['compiler'] && '' !== $data['built']['at'] );
+$expect( 'built by this plugin, by the source compiler, at a time', DX_UI_VERSION === $data['built']['plugin'] && 'source' === $data['built']['compiler'] && '' !== $data['built']['at'] );
 $expect( 'nothing is wrong with it', array() === Document::problems( $data ), implode( '; ', Document::problems( $data ) ) );
 $expect( 'the array form comes back the same through from_array()', Document::from_array( $data )->to_array() === $data );
 $twice = Document_Builder::from_result( $native );
@@ -175,19 +175,19 @@ echo "\nWhat the compiled page does when touched (Behaviour_Reader)\n";
 // A header whose menu opens on click and closes on a click elsewhere, turns solid past 24px (a derived flag), a FAQ with three
 // questions (an index with a text map), a carousel moved by steps, a Radix accordion and tabs, a dialog and a popover, a revealing
 // section, a counting number, a facade.
-$markup = '<!-- wp:dxai-ui/box --><header class="sticky dxai-cls-dark" data-dxai-on="bg-paper/95 backdrop-blur-md" data-dxai-off="bg-transparent" data-dxai-any="dark:solid,open" data-dxai-scroll="solid:24" data-dxai-outside="open">'
-	. '<button class="dxai-toggle-open" aria-expanded="false">Menu</button><nav class="hidden dxai-on-open"><a href="#a">A</a></nav>'
-	. '<div class="relative"><button class="dxai-toggle-open--services" data-dxai-hover="enter" data-dxai-mode="toggle" aria-expanded="false">Services</button><div class="hidden dxai-on-open--services">panel</div></div>'
-	. '</header><section class="faq"><button class="dxai-toggle-openFaq--0" data-dxai-mode="toggle" aria-expanded="true"><span data-dxai-text-openFaq="{&quot;0&quot;:&quot;−&quot;,&quot;null&quot;:&quot;+&quot;}">−</span>Q1</button><div class="dxai-on-openFaq--0">A1</div>'
-	. '<button class="dxai-toggle-openFaq--1" data-dxai-mode="toggle" aria-expanded="false">Q2</button><div class="hidden dxai-on-openFaq--1">A2</div>'
-	. '<button class="dxai-toggle-openFaq--2" data-dxai-mode="toggle" aria-expanded="false">Q3</button><div class="hidden dxai-on-openFaq--2">A3</div></section>'
-	. '<section class="rail"><div class="flex overflow-x-auto snap-x"><div class="dxai-cls-slide--0 is-on" data-dxai-on="is-on">1</div><div class="dxai-cls-slide--1" data-dxai-on="is-on">2</div></div>'
-	. '<button class="dxai-toggle-slide" data-dxai-step="-1" data-dxai-init="0" data-dxai-disabled="slide:0" aria-label="Previous" disabled>‹</button><button class="dxai-toggle-slide" data-dxai-step="1" aria-label="Next">›</button></section>'
-	. '<section><button id="dxai-rx-1-trigger-a" aria-expanded="false">Acc</button><div role="region" aria-labelledby="dxai-rx-1-trigger-a" hidden>…</div>'
-	. '<button role="tab" id="dxai-rx-2-trigger-a" aria-selected="true">Tab</button><div role="tabpanel" aria-labelledby="dxai-rx-2-trigger-a">…</div>'
-	. '<button aria-haspopup="dialog" aria-controls="dxai-rx-3-content-1" aria-expanded="false">Open</button><div id="dxai-rx-3-content-1" role="dialog" style="display:none" data-dxai-portal="1">…</div>'
-	. '<button aria-haspopup="dialog" aria-controls="dxai-rx-4-content-1" aria-expanded="false">Pop</button><div id="dxai-rx-4-content-1" role="dialog" data-side="bottom" style="display:none">…</div>'
-	. '<span class="rv-num" data-to="62" data-suffix="%">0%</span><i data-lucide="star"></i><div class="youtube-facade" data-video-id="x"></div></section><!-- /wp:dxai-ui/box -->';
+$markup = '<!-- wp:dx-ui/box --><header class="sticky dxui-cls-dark" data-dxui-on="bg-paper/95 backdrop-blur-md" data-dxui-off="bg-transparent" data-dxui-any="dark:solid,open" data-dxui-scroll="solid:24" data-dxui-outside="open">'
+	. '<button class="dxui-toggle-open" aria-expanded="false">Menu</button><nav class="hidden dxui-on-open"><a href="#a">A</a></nav>'
+	. '<div class="relative"><button class="dxui-toggle-open--services" data-dxui-hover="enter" data-dxui-mode="toggle" aria-expanded="false">Services</button><div class="hidden dxui-on-open--services">panel</div></div>'
+	. '</header><section class="faq"><button class="dxui-toggle-openFaq--0" data-dxui-mode="toggle" aria-expanded="true"><span data-dxui-text-openFaq="{&quot;0&quot;:&quot;−&quot;,&quot;null&quot;:&quot;+&quot;}">−</span>Q1</button><div class="dxui-on-openFaq--0">A1</div>'
+	. '<button class="dxui-toggle-openFaq--1" data-dxui-mode="toggle" aria-expanded="false">Q2</button><div class="hidden dxui-on-openFaq--1">A2</div>'
+	. '<button class="dxui-toggle-openFaq--2" data-dxui-mode="toggle" aria-expanded="false">Q3</button><div class="hidden dxui-on-openFaq--2">A3</div></section>'
+	. '<section class="rail"><div class="flex overflow-x-auto snap-x"><div class="dxui-cls-slide--0 is-on" data-dxui-on="is-on">1</div><div class="dxui-cls-slide--1" data-dxui-on="is-on">2</div></div>'
+	. '<button class="dxui-toggle-slide" data-dxui-step="-1" data-dxui-init="0" data-dxui-disabled="slide:0" aria-label="Previous" disabled>‹</button><button class="dxui-toggle-slide" data-dxui-step="1" aria-label="Next">›</button></section>'
+	. '<section><button id="dxui-rx-1-trigger-a" aria-expanded="false">Acc</button><div role="region" aria-labelledby="dxui-rx-1-trigger-a" hidden>…</div>'
+	. '<button role="tab" id="dxui-rx-2-trigger-a" aria-selected="true">Tab</button><div role="tabpanel" aria-labelledby="dxui-rx-2-trigger-a">…</div>'
+	. '<button aria-haspopup="dialog" aria-controls="dxui-rx-3-content-1" aria-expanded="false">Open</button><div id="dxui-rx-3-content-1" role="dialog" style="display:none" data-dxui-portal="1">…</div>'
+	. '<button aria-haspopup="dialog" aria-controls="dxui-rx-4-content-1" aria-expanded="false">Pop</button><div id="dxui-rx-4-content-1" role="dialog" data-side="bottom" style="display:none">…</div>'
+	. '<span class="rv-num" data-to="62" data-suffix="%">0%</span><i data-lucide="star"></i><div class="youtube-facade" data-video-id="x"></div></section><!-- /wp:dx-ui/box -->';
 $read   = Behaviour_Reader::from_markup( $markup );
 $by     = array();
 foreach ( $read['states'] as $row ) {
@@ -305,9 +305,9 @@ $page = static function ( string $title, int $scope = 0 ) use ( &$made ): int {
 	$id     = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => '<!-- wp:paragraph --><p>Fixture.</p><!-- /wp:paragraph -->' ) );
 	$made[] = $id;
 	update_post_meta( $id, Page_Scope::META, $scope > 0 ? $scope : $id );
-	update_post_meta( $id, '_dxai_ui_generated_page', '1' );
+	update_post_meta( $id, '_dx_ui_generated_page', '1' );
 	if ( $scope < 1 ) {
-		update_post_meta( $id, '_dxai_ui_css_url', 'https://example.test/design-document-fixture.css' );
+		update_post_meta( $id, '_dx_ui_css_url', 'https://example.test/design-document-fixture.css' );
 	}
 	Design_Attach::forget( $id );
 
@@ -333,7 +333,7 @@ $expect( 'a document with a problem is not kept; the problem is', ( static funct
 Document_Store::save( $home, $doc );
 $expect( '…and the note goes when a document is kept', '' === Document_Store::error( $home ) );
 
-$ns   = DXAI_UI_REST_NAMESPACE;
+$ns   = DX_UI_REST_NAMESPACE;
 $rest = static function ( int $id, array $params = array() ) use ( $ns ): array {
 	$request = new WP_REST_Request( 'GET', '/' . $ns . '/design/' . $id );
 	foreach ( $params as $key => $value ) {
@@ -350,10 +350,10 @@ $expect( 'GET /design/{id} answers an administrator with the design, its summary
 $r = $rest( $child, array( 'summary' => true ) );
 $expect( '…by any page of the design, and the summary alone when asked', 200 === $r['status'] && ( $r['data']['design'] ?? 0 ) === $home && ! isset( $r['data']['document'] ) && isset( $r['data']['summary']['pages'] ) );
 $r = $rest( $plain );
-$expect( 'a page that is no design\'s is 404', 404 === $r['status'] && 'dxai_ui_no_design' === ( $r['data']['code'] ?? '' ), wp_json_encode( $r ) );
+$expect( 'a page that is no design\'s is 404', 404 === $r['status'] && 'dx_ui_no_design' === ( $r['data']['code'] ?? '' ), wp_json_encode( $r ) );
 Document_Store::forget( $home );
 $r = $rest( $home );
-$expect( 'a design with no document yet is 404, and says why', 404 === $r['status'] && 'dxai_ui_no_document' === ( $r['data']['code'] ?? '' ) );
+$expect( 'a design with no document yet is 404, and says why', 404 === $r['status'] && 'dx_ui_no_document' === ( $r['data']['code'] ?? '' ) );
 Document_Store::save( $home, $doc );
 wp_set_current_user( 0 );
 $r = $rest( $home );
@@ -392,7 +392,7 @@ $fixture                = $native;
 $fixture['block_title'] = 'Design document saved fixture ' . $run;
 $fixture['slug']        = '/ddoc-fixture-' . $run . '/';
 $fixture['source_name'] = 'ddoc-fixture-' . $run . '.zip';
-$fixture['chrome']      = \DXAI_UI\Chrome\Chrome_Choice::KEEP;
+$fixture['chrome']      = \DX_UI\Chrome\Chrome_Choice::KEEP;
 $created = ( new Structure_Repository() )->save( $fixture );
 if ( is_wp_error( $created ) ) {
 	$expect( 'the fixture saves', false, $created->get_error_message() );
@@ -410,7 +410,7 @@ if ( is_wp_error( $created ) ) {
 		$expect( 'the coverage of the saved page is in the report', count( $k['report']['coverage'] ) >= 5 && isset( $k['report']['coverage'][0]['dimension'], $k['report']['coverage'][0]['short'] ), (string) count( $k['report']['coverage'] ) );
 		$bound = $k['report']['bound'];
 		$expect( 'saved, the colours are tokens: the report counts the blocks that carry them as classes, and no literal is left', $bound['text']['class'] + $bound['background']['class'] > 0 && 0 === (int) $k['report']['css']['literals'], wp_json_encode( array( $bound, $k['report']['css'] ) ) );
-		$expect( 'the tokens are the ones the Home keeps', $k['tokens']['roles'] === array_diff_key( \DXAI_UI\Compiler\Design_Tokens::for_page( $hid ), array( 'source' => 1 ) ) );
+		$expect( 'the tokens are the ones the Home keeps', $k['tokens']['roles'] === array_diff_key( \DX_UI\Compiler\Design_Tokens::for_page( $hid ), array( 'source' => 1 ) ) );
 		$r = $rest( $hid );
 		$expect( 'the route serves it', 200 === $r['status'] && ( $r['data']['summary']['fingerprint'] ?? '' ) === $kept->fingerprint() );
 		$expect( 'the save\'s answer carries the document\'s summary for the import summary', ( $created['document']['fingerprint'] ?? '' ) === $kept->fingerprint() && ( $created['document']['sections'] ?? -1 ) === count( $k['pages'][0]['sections'] ) );
@@ -434,17 +434,17 @@ if ( is_wp_error( $created ) ) {
 		$svc_doc['pages'][0]['sections'][] = array( 'index' => 99, 'role' => 'cards', 'kind' => 'cards', 'name' => '', 'heading' => 'Our services', 'words' => 20, 'repeats' => 3, 'items' => array( 'Water Damage', 'Fire Damage', 'Mold Removal' ), 'has' => array( 'image' => false, 'form' => false, 'button' => false, 'video' => false ), 'sig' => md5( 'x' ) );
 		$svc_doc['pages'][0]['sections'][] = array( 'index' => 100, 'role' => 'areas', 'kind' => 'cards', 'name' => '', 'heading' => 'Where we work', 'words' => 20, 'repeats' => 2, 'items' => array( 'Tyler, TX', 'Longview, TX' ), 'has' => array( 'image' => false, 'form' => false, 'button' => false, 'video' => false ), 'sig' => md5( 'y' ) );
 		Document_Store::save( $hid, Document::from_array( $svc_doc ) );
-		$sugg = \DXAI_UI\Pages\Team_Pages::suggestions( $hid );
+		$sugg = \DX_UI\Pages\Team_Pages::suggestions( $hid );
 		$expect( 'the panel\'s suggestions fall back to the document when the Home\'s cards name no services and no places', array( 'Water Damage', 'Fire Damage', 'Mold Removal' ) === $sugg['services'] && array( 'Tyler, TX', 'Longview, TX' ) === $sugg['locations'] && 'document' === ( $sugg['from']['services'] ?? '' ) && 'document' === ( $sugg['from']['places'] ?? '' ), wp_json_encode( $sugg ) );
 		Document_Store::save( $hid, $kept );
-		$sugg = \DXAI_UI\Pages\Team_Pages::suggestions( $hid );
+		$sugg = \DX_UI\Pages\Team_Pages::suggestions( $hid );
 		$expect( '…and offer nothing when the document names none either', array() === $sugg['services'] && '' === ( $sugg['from']['services'] ?? 'x' ), wp_json_encode( $sugg['services'] ) );
 	}
 }
 $no_snap = Document_Store::rebuild( $home );
-$expect( 'a design that has no snapshot cannot be rebuilt, and says so', is_wp_error( $no_snap ) && 'dxai_ui_no_snapshot' === $no_snap->get_error_code() );
+$expect( 'a design that has no snapshot cannot be rebuilt, and says so', is_wp_error( $no_snap ) && 'dx_ui_no_snapshot' === $no_snap->get_error_code() );
 $no_design = Document_Store::rebuild( $plain );
-$expect( 'nor can a page that is no design\'s', is_wp_error( $no_design ) && 'dxai_ui_no_design' === $no_design->get_error_code() );
+$expect( 'nor can a page that is no design\'s', is_wp_error( $no_design ) && 'dx_ui_no_design' === $no_design->get_error_code() );
 
 $fin();
 echo "\n$pass passed, $fail failed\n";

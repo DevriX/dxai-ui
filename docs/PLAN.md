@@ -1,4 +1,4 @@
-# DXAI-UI implementation plan
+# DX-UI implementation plan
 
 ## Goal
 
@@ -10,12 +10,12 @@ Ship an enterprise WordPress plugin that turns Figma JSON, Lovable React+Tailwin
 
 - [x] Research Local WP, APIs, Gutenberg, Tailwind, Lovable
 - [x] Project skill + Cursor rule + docs
-- [x] Create Local site `DXAI-UI` (PHP 8.2, WP latest)
-- [x] Junction this repo into `wp-content/plugins/dxai-ui`
+- [x] Create Local site `DX-UI` (PHP 8.2, WP latest)
+- [x] Junction this repo into `wp-content/plugins/dx-ui`
 
 ### Phase 1 — Core scaffolding
 
-- [x] Entry `dxai-ui.php`, autoloader, `Plugin` bootstrap
+- [x] Entry `dx-ui.php`, autoloader, `Plugin` bootstrap
 - [x] Admin menu, asset enqueue (React SPA)
 - [x] Options schema + encrypted secret store
 - [x] `uninstall.php`
@@ -57,9 +57,9 @@ Ship an enterprise WordPress plugin that turns Figma JSON, Lovable React+Tailwin
 | Lovable API tab | Label as “not available”; ZIP + code editor are primary |
 | Model dropdown | Brief labels + current request IDs |
 | Patterns | `wp_block` synced posts, not `register_block_pattern()` |
-| Header/footer slugs | `dxai-header` / `dxai-footer` (never overwrite theme `header`/`footer`) |
+| Header/footer slugs | `dxui-header` / `dxui-footer` (never overwrite theme `header`/`footer`) |
 | Blog | Always `core/query` + post-template |
-| Forms / sliders | `dxai-ui/form` (entries CPT) and `dxai-ui/slider` (InnerBlocks) |
+| Forms / sliders | `dx-ui/form` (entries CPT) and `dx-ui/slider` (InnerBlocks) |
 | Homepage | Never auto-set `show_on_front`; create/update a generated page |
 | Admin Tailwind | Separate scoped stylesheet; do not leak to frontend |
 

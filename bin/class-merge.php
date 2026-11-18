@@ -18,7 +18,7 @@
  * usage: php bin/class-merge.php
  * exit:  0 every case matches, 1 any case differs
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ $root = dirname( __DIR__ );
 require_once $root . '/src/Compiler/Tailwind/Candidate.php';
 require_once $root . '/src/Compiler/Tailwind/Class_Merge.php';
 
-use DXAI_UI\Compiler\Tailwind\Class_Merge;
+use DX_UI\Compiler\Tailwind\Class_Merge;
 
 /** [ input, expected, why ] */
 $cases = array(

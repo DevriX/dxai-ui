@@ -2,16 +2,16 @@
 /**
  * Layout utilities: display, position, offsets, overflow, object fit and more.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind\Utilities;
+namespace DX_UI\Compiler\Tailwind\Utilities;
 
-use DXAI_UI\Compiler\Tailwind\Candidate;
-use DXAI_UI\Compiler\Tailwind\Theme;
-use DXAI_UI\Compiler\Tailwind\Utility_Module;
+use DX_UI\Compiler\Tailwind\Candidate;
+use DX_UI\Compiler\Tailwind\Theme;
+use DX_UI\Compiler\Tailwind\Utility_Module;
 
 /**
  * Everything Tailwind groups under "Layout": how a box participates in flow

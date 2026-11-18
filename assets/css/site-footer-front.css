@@ -1,8 +1,8 @@
 /*
  * The site footer rendered outside its own design's page (Site_Footer_Block::frame()):
  *
- *   <div class="dxai-ui-site-footer alignfull dxai-ui-site-footer--static dxai-ui-static">   (or --dynamic)
- *     <div class="wp-block-group alignfull dxai-ui dxai-ui--{footer scope} … is-layout-flow …">
+ *   <div class="dx-ui-site-footer alignfull dx-ui-site-footer--static dx-ui-static">   (or --dynamic)
+ *     <div class="wp-block-group alignfull dx-ui dx-ui--{footer scope} … is-layout-flow …">
  *       <footer>…</footer>
  *
  * The inner element is the scope element the footer's own page gives it, so
@@ -10,10 +10,10 @@
  * another page is the page-wide CSS this plugin prints for a converted page,
  * which is keyed on the PAGE's kind of design: frontend-isolate.css for a
  * design that ran under Tailwind, blank-canvas.css's margin resets unless
- * `body.dxai-ui-static`. The rules below undo the ones the footer's own page
+ * `body.dx-ui-static`. The rules below undo the ones the footer's own page
  * did not have and supply the ones it had, each at the specificity of the
  * rule it stands for or one step past it, and always below the design's own
- * rules — `.dxai-ui.dxai-ui--{id} …`, (0,2,0) and up — so the design still
+ * rules — `.dx-ui.dx-ui--{id} …`, (0,2,0) and up — so the design still
  * decides everything it declares.
  */
 
@@ -21,24 +21,24 @@
    it (`:root :where(.is-layout-constrained) > *`, (0,1,0), printed after this
    sheet by a block theme). A theme's `.has-global-padding > .alignfull`
    still pulls it out to the page's edges. */
-div.dxai-ui-site-footer {
+div.dx-ui-site-footer {
 	margin-block: 0;
 }
 
 /*
  * A Claude Design footer on the page of a design that ran under Tailwind.
- * That page loads frontend-isolate.css, whose `.dxai-ui, .dxai-ui *
- * { box-sizing: border-box }` (0,1,0) and `.dxai-ui img, .dxai-ui video
- * { max-width: 100% }` (0,1,1) reach every `.dxai-ui` element on the page —
+ * That page loads frontend-isolate.css, whose `.dx-ui, .dx-ui *
+ * { box-sizing: border-box }` (0,1,0) and `.dx-ui img, .dx-ui video
+ * { max-width: 100% }` (0,1,1) reach every `.dx-ui` element on the page —
  * this one too. Its own page never loads that sheet (every padded width in
  * such a design is content-box). The initial values back, at (0,1,1) and
  * (0,1,2).
  */
-div.dxai-ui-site-footer--static :where(.dxai-ui, .dxai-ui *) {
+div.dx-ui-site-footer--static :where(.dx-ui, .dx-ui *) {
 	box-sizing: content-box;
 }
 
-div.dxai-ui-site-footer--static :where(.dxai-ui) :is(img, video) {
+div.dx-ui-site-footer--static :where(.dx-ui) :is(img, video) {
 	max-width: none;
 }
 
@@ -47,23 +47,23 @@ div.dxai-ui-site-footer--static :where(.dxai-ui) :is(img, video) {
  * Claude Design page, an ordinary page): that sheet's two rules, for the
  * footer only, at their own specificity.
  */
-:where(.dxai-ui-site-footer--dynamic) .dxai-ui,
-:where(.dxai-ui-site-footer--dynamic) .dxai-ui * {
+:where(.dx-ui-site-footer--dynamic) .dx-ui,
+:where(.dx-ui-site-footer--dynamic) .dx-ui * {
 	box-sizing: border-box;
 }
 
-:where(.dxai-ui-site-footer--dynamic) .dxai-ui :is(img, video) {
+:where(.dx-ui-site-footer--dynamic) .dx-ui :is(img, video) {
 	max-width: 100%;
 }
 
 /*
- * A Tailwind footer on a Claude Design page (`body.dxai-ui-static`): the
+ * A Tailwind footer on a Claude Design page (`body.dx-ui-static`): the
  * block-margin resets blank-canvas.css gives a Tailwind design's page and
  * withholds from a static one — so this footer had them on its own page —
  * at the same specificity, (0,2,1) and (0,2,2). A static footer on a
- * Tailwind page is kept out of the originals by its own `dxai-ui-static`.
+ * Tailwind page is kept out of the originals by its own `dx-ui-static`.
  */
-body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui :where(
+body.dx-ui-blank:where(.dx-ui-static) :where(.dx-ui-site-footer--dynamic) .dx-ui :where(
 	.wp-block-group,
 	.wp-block-image,
 	.wp-block-list,
@@ -77,12 +77,12 @@ body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) 
 	max-width: none;
 }
 
-body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui :where(.is-layout-flow) > * {
+body.dx-ui-blank:where(.dx-ui-static) :where(.dx-ui-site-footer--dynamic) .dx-ui :where(.is-layout-flow) > * {
 	margin-block-start: 0;
 	margin-block-end: 0;
 }
 
-body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) .dxai-ui p {
+body.dx-ui-blank:where(.dx-ui-static) :where(.dx-ui-site-footer--dynamic) .dx-ui p {
 	margin: 0;
 }
 
@@ -109,8 +109,8 @@ body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) 
  * the page, where lift() leaves it (measured in the canvas: the other
  * design's `line-height: 1.5` made the footer 51px taller).
  */
-:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer,
-.dxai-ui div.dxai-ui-site-footer {
+:where(body:not(.dx-ui-blank)) div.dx-ui-site-footer,
+.dx-ui div.dx-ui-site-footer {
 	color: initial;
 	font-family: initial;
 	font-size: medium;
@@ -125,7 +125,7 @@ body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) 
 	text-shadow: none;
 }
 
-:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, b, i, small, figure, figcaption, blockquote, cite, address) {
+:where(body:not(.dx-ui-blank)) div.dx-ui-site-footer :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, b, i, small, figure, figcaption, blockquote, cite, address) {
 	font-family: revert;
 	font-size: revert;
 	font-weight: revert;
@@ -139,7 +139,7 @@ body.dxai-ui-blank:where(.dxai-ui-static) :where(.dxai-ui-site-footer--dynamic) 
 	margin-block-end: revert;
 }
 
-:where(body:not(.dxai-ui-blank)) div.dxai-ui-site-footer :where(.is-layout-flow, .is-layout-constrained) > * {
+:where(body:not(.dx-ui-blank)) div.dx-ui-site-footer :where(.is-layout-flow, .is-layout-constrained) > * {
 	margin-block-start: revert;
 	margin-block-end: revert;
 }

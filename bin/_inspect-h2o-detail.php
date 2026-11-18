@@ -2,7 +2,7 @@
 /**
  * Inspect H2O site-from-menu results.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -10,14 +10,14 @@ declare(strict_types=1);
 $home    = 87312;
 $contact = 87553;
 
-echo 'HOME css=' . (string) get_post_meta( $home, '_dxai_ui_css_url', true ) . PHP_EOL;
-echo 'CONTACT css=' . (string) get_post_meta( $contact, '_dxai_ui_css_url', true ) . PHP_EOL;
-echo 'same_css=' . ( get_post_meta( $home, '_dxai_ui_css_url', true ) === get_post_meta( $contact, '_dxai_ui_css_url', true ) ? '1' : '0' ) . PHP_EOL;
+echo 'HOME css=' . (string) get_post_meta( $home, '_dx_ui_css_url', true ) . PHP_EOL;
+echo 'CONTACT css=' . (string) get_post_meta( $contact, '_dx_ui_css_url', true ) . PHP_EOL;
+echo 'same_css=' . ( get_post_meta( $home, '_dx_ui_css_url', true ) === get_post_meta( $contact, '_dx_ui_css_url', true ) ? '1' : '0' ) . PHP_EOL;
 
 $hc = (string) get_post_field( 'post_content', $home );
 $cc = (string) get_post_field( 'post_content', $contact );
-preg_match( '/"slug":"(dxai-header[^"]*)"/', $hc, $hm );
-preg_match( '/"slug":"(dxai-header[^"]*)"/', $cc, $cm );
+preg_match( '/"slug":"(dxui-header[^"]*)"/', $hc, $hm );
+preg_match( '/"slug":"(dxui-header[^"]*)"/', $cc, $cm );
 echo 'home_header_slug=' . ( $hm[1] ?? 'none' ) . PHP_EOL;
 echo 'contact_header_slug=' . ( $cm[1] ?? 'none' ) . PHP_EOL;
 

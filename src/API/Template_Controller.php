@@ -2,18 +2,18 @@
 /**
  * REST: the site's template — its header, footer and fonts — and the DX Base theme.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Chrome\Chrome_Choice;
-use DXAI_UI\Theme\Base_Theme;
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Template_Fonts;
-use DXAI_UI\Theme\Theme_Options;
+use DX_UI\Chrome\Chrome_Choice;
+use DX_UI\Theme\Base_Theme;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Template_Fonts;
+use DX_UI\Theme\Theme_Options;
 
 /**
  * GET  /template  the active theme and whether it is a DX theme, the design whose header and footer are the site's now, the template's
@@ -29,7 +29,7 @@ final class Template_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/template',
 			array(
 				array(
@@ -66,25 +66,25 @@ final class Template_Controller {
 		$done   = array();
 		if ( 'base-install' === $action ) {
 			if ( ! $this->may_install() ) {
-				return new \WP_Error( 'dxai_ui_cannot_install_themes', $this->install_note(), array( 'status' => rest_authorization_required_code() ) );
+				return new \WP_Error( 'dx_ui_cannot_install_themes', $this->install_note(), array( 'status' => rest_authorization_required_code() ) );
 			}
 			$did = Base_Theme::install();
 			if ( is_wp_error( $did ) ) {
-				return new \WP_Error( $did->get_error_code(), $did->get_error_message(), array( 'status' => 'dxai_ui_base_theme_taken' === $did->get_error_code() ? 409 : 500 ) );
+				return new \WP_Error( $did->get_error_code(), $did->get_error_message(), array( 'status' => 'dx_ui_base_theme_taken' === $did->get_error_code() ? 409 : 500 ) );
 			}
 			$done = $did;
 		} else {
 			if ( ! current_user_can( 'switch_themes' ) ) {
-				return new \WP_Error( 'dxai_ui_cannot_switch_themes', $this->activate_note(), array( 'status' => rest_authorization_required_code() ) );
+				return new \WP_Error( 'dx_ui_cannot_switch_themes', $this->activate_note(), array( 'status' => rest_authorization_required_code() ) );
 			}
 			if ( ! wp_get_theme( Base_Theme::SLUG )->exists() ) {
-				return new \WP_Error( 'dxai_ui_base_theme_missing', __( 'Install the DX Base theme first.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_base_theme_missing', __( 'Install the DX Base theme first.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 			if ( Base_Theme::status()['foreign'] ) {
-				return new \WP_Error( 'dxai_ui_base_theme_taken', __( 'The theme in the dx-base folder is not DX Base, so the site was not switched to it.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_base_theme_taken', __( 'The theme in the dx-base folder is not DX Base, so the site was not switched to it.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 			if ( is_multisite() && ! wp_get_theme( Base_Theme::SLUG )->is_allowed() ) {
-				return new \WP_Error( 'dxai_ui_base_theme_not_allowed', $this->activate_note(), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_base_theme_not_allowed', $this->activate_note(), array( 'status' => 409 ) );
 			}
 			$did = Base_Theme::activate();
 			if ( is_wp_error( $did ) ) {
@@ -173,7 +173,7 @@ final class Template_Controller {
 			return true;
 		}
 
-		return ! is_multisite() && ! wp_is_file_mod_allowed( 'dxai_ui_base_theme' ) && current_user_can( 'switch_themes' );
+		return ! is_multisite() && ! wp_is_file_mod_allowed( 'dx_ui_base_theme' ) && current_user_can( 'switch_themes' );
 	}
 
 	/**
@@ -197,13 +197,13 @@ final class Template_Controller {
 
 	private function install_note(): string {
 		return is_multisite()
-			? __( 'On a network a Super Admin installs themes. Ask them to install DX Base from this plugin’s folder or to run: wp dxai-ui base-theme install', 'dxai-ui' )
-			: __( 'Your account cannot install themes. An administrator can install DX Base here, or run: wp dxai-ui base-theme install', 'dxai-ui' );
+			? __( 'On a network a Super Admin installs themes. Ask them to install DX Base from this plugin’s folder or to run: wp dx-ui base-theme install', 'dx-ui' )
+			: __( 'Your account cannot install themes. An administrator can install DX Base here, or run: wp dx-ui base-theme install', 'dx-ui' );
 	}
 
 	private function activate_note(): string {
 		return is_multisite()
-			? __( 'DX Base is not enabled for this site. A Super Admin enables it in Network Admin › Themes; then it can be switched to here.', 'dxai-ui' )
-			: __( 'Your account cannot switch the site’s theme.', 'dxai-ui' );
+			? __( 'DX Base is not enabled for this site. A Super Admin enables it in Network Admin › Themes; then it can be switched to here.', 'dx-ui' )
+			: __( 'Your account cannot switch the site’s theme.', 'dx-ui' );
 	}
 }

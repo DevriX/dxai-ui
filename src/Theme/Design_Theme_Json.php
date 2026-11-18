@@ -2,14 +2,14 @@
 /**
  * The imported design's tokens as theme.json presets, editable in Styles.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Compiler\Design_Tokens;
+use DX_UI\Compiler\Design_Tokens;
 
 /**
  * Puts one design's tokens into the theme layer of theme.json.
@@ -17,8 +17,8 @@ use DXAI_UI\Compiler\Design_Tokens;
  * Until this existed a brand value lived in two places and was editable in
  * neither: every converted page carried its colours as literal hex in inline
  * styles (H2O Away: 832 literals, `#F2A34A` alone 44 times), and
- * Design_Tokens wrote a copy of them as `--dxai-*` variables scoped to one page
- * (`.dxai-ui.dxai-ui--{id}`), which only the form, the slider and the live-page
+ * Design_Tokens wrote a copy of them as `--dxui-*` variables scoped to one page
+ * (`.dx-ui.dx-ui--{id}`), which only the form, the slider and the live-page
  * prose ever read. Changing a button colour meant editing every page.
  *
  * WordPress already has the place a brand value belongs: global styles. A
@@ -50,7 +50,7 @@ use DXAI_UI\Compiler\Design_Tokens;
 final class Design_Theme_Json {
 
 	/** The design chosen as the site's brand: its tokens, and where they came from. */
-	public const OPTION = 'dxai_ui_site_design';
+	public const OPTION = 'dx_ui_site_design';
 
 	/**
 	 * Token key => [ palette slug, label ].
@@ -109,7 +109,7 @@ final class Design_Theme_Json {
 		}
 		$conversions = get_posts(
 			array(
-				'post_type'      => \DXAI_UI\Content\Content_Types::CONVERSION,
+				'post_type'      => \DX_UI\Content\Content_Types::CONVERSION,
 				'post_status'    => 'publish',
 				'orderby'        => 'modified',
 				'order'          => 'DESC',
@@ -119,11 +119,11 @@ final class Design_Theme_Json {
 			)
 		);
 		foreach ( $conversions as $conversion ) {
-			$page = (int) get_post_meta( (int) $conversion, '_dxai_ui_page_id', true );
+			$page = (int) get_post_meta( (int) $conversion, '_dx_ui_page_id', true );
 			if ( $page < 1 || $page === $post_id || get_post_status( $page ) !== 'publish' ) {
 				continue;
 			}
-			self::adopt( $page, (string) get_post_meta( $page, '_dxai_ui_source_zip', true ) );
+			self::adopt( $page, (string) get_post_meta( $page, '_dx_ui_source_zip', true ) );
 			$now = get_option( self::OPTION );
 			if ( is_array( $now ) && (int) ( $now['page_id'] ?? 0 ) === $page ) {
 				return;
@@ -155,13 +155,13 @@ final class Design_Theme_Json {
 		 * DevriX themes): its palette is the live site's, and it can rewrite
 		 * theme.json after this filter — american-restoration re-syncs its
 		 * ACF palette at priority 100 — so the design's presets vanished and
-		 * every `--dxai-*` token pointing at them turned black, while the
+		 * every `--dxui-*` token pointing at them turned black, while the
 		 * design's `accent` and `border` resolved to the theme's own. The page
 		 * then keeps its own literal colours from its stylesheet, and the
-		 * site's global styles are left as they are. `dxai_ui_adopt_brand`
+		 * site's global styles are left as they are. `dx_ui_adopt_brand`
 		 * overrides this.
 		 */
-		if ( ! (bool) apply_filters( 'dxai_ui_adopt_brand', \DXAI_UI\Theme\Theme_Compat::may_install_chrome(), $page_id ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_adopt_brand', \DX_UI\Theme\Theme_Compat::may_install_chrome(), $page_id ) ) {
 			return;
 		}
 		$tokens = self::clean( Design_Tokens::for_page( $page_id ) );
@@ -196,7 +196,7 @@ final class Design_Theme_Json {
 		// is always the palette the content was tokenised against — see
 		// Token_Styles. Absent on a page imported before tokenising existed,
 		// in which case the nine roles are registered on their own.
-		$palette  = get_post_meta( (int) ( $design['page_id'] ?? 0 ), \DXAI_UI\Compiler\Token_Styles::META, true );
+		$palette  = get_post_meta( (int) ( $design['page_id'] ?? 0 ), \DX_UI\Compiler\Token_Styles::META, true );
 		$fragment = self::fragment( $tokens, $current, is_array( $palette ) ? $palette : array() );
 
 		return $fragment === array() ? $theme_json : $theme_json->update_with( $fragment );
@@ -220,7 +220,7 @@ final class Design_Theme_Json {
 		/*
 		 * Every solid colour the design uses, under the slug its content was
 		 * tokenised against — Token_Styles::brand_css() points
-		 * `--dxai-{slug}` at `--wp--preset--color--{slug}`, so a slug missing
+		 * `--dxui-{slug}` at `--wp--preset--color--{slug}`, so a slug missing
 		 * here would leave that token pointing at nothing. Translucent colours
 		 * are not offered as swatches (Design_Palette marks them preset=false).
 		 */
@@ -263,7 +263,7 @@ final class Design_Theme_Json {
 			$value = trim( (string) ( $var['value'] ?? '' ) );
 			if ( $slug === '' || in_array( $slug, $taken, true )
 				|| preg_match( '/^[a-z0-9#(),.%\/\s-]+$/i', $value ) !== 1
-				|| ! \DXAI_UI\Compiler\Design_Palette::is_solid_color_value( $value )
+				|| ! \DX_UI\Compiler\Design_Palette::is_solid_color_value( $value )
 			) {
 				continue;
 			}
@@ -298,7 +298,7 @@ final class Design_Theme_Json {
 		/*
 		 * Shadows, carried forward the same way palettes are (merge() replaces a
 		 * preset list per origin). Registered because brand_css() points
-		 * `--dxai-shadow-N` at `--wp--preset--shadow--shadow-N`.
+		 * `--dxui-shadow-N` at `--wp--preset--shadow--shadow-N`.
 		 */
 		$shadows = is_array( $design_palette['shadows'] ?? null ) ? $design_palette['shadows'] : array();
 		if ( $shadows !== array() ) {

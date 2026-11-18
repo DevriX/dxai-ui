@@ -2,16 +2,16 @@
 /**
  * Lovable ZIP / pasted code connector.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Compiler\Design_Css;
-use DXAI_UI\Compiler\Tsx_Section_Splitter;
-use DXAI_UI\Media\Asset_Harvester;
+use DX_UI\Compiler\Design_Css;
+use DX_UI\Compiler\Tsx_Section_Splitter;
+use DX_UI\Media\Asset_Harvester;
 
 final class Lovable_Connector {
 
@@ -71,7 +71,7 @@ final class Lovable_Connector {
 		Zip_Extractor::cleanup( $unpacked['dir'] );
 
 		if ( $components === array() && $styles === array() ) {
-			return new \WP_Error( 'dxai_ui_lovable', __( 'No React/Tailwind source files were found in the ZIP.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_lovable', __( 'No React/Tailwind source files were found in the ZIP.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$raw_css    = implode( "\n", $styles );
@@ -127,7 +127,7 @@ final class Lovable_Connector {
 				 * can record it.
 				 *
 				 * bin/verify-import.cjs pairs a page with its design through
-				 * `_dxai_ui_source_zip`, and only bin/purge-and-import-real-zips.php
+				 * `_dx_ui_source_zip`, and only bin/purge-and-import-real-zips.php
 				 * ever wrote that meta — so a page imported through wp-admin
 				 * could never be measured against its own design, and the
 				 * corpus run reported eight of them as "no recorded source
@@ -152,7 +152,7 @@ final class Lovable_Connector {
 	public function from_code( string $code, string $css = '', string $title = '' ): Source_Document|\WP_Error {
 		$code = trim( $code );
 		if ( $code === '' ) {
-			return new \WP_Error( 'dxai_ui_lovable', __( 'Paste JSX/TSX source code first.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_lovable', __( 'Paste JSX/TSX source code first.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$harvest = ( new Asset_Harvester() )->from_text( $code, $css );
@@ -202,8 +202,8 @@ final class Lovable_Connector {
 
 	public function from_api(): \WP_Error {
 		return new \WP_Error(
-			'dxai_ui_lovable_api',
-			__( 'Lovable does not offer a public source API. Upload a ZIP or paste TSX instead.', 'dxai-ui' ),
+			'dx_ui_lovable_api',
+			__( 'Lovable does not offer a public source API. Upload a ZIP or paste TSX instead.', 'dx-ui' ),
 			array( 'status' => 501 )
 		);
 	}

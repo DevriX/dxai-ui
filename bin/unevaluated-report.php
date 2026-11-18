@@ -67,7 +67,7 @@ if ( $zips !== array() ) {
 			printf( "%-30s NOT READABLE\n", basename( $zip ) );
 			continue;
 		}
-		$source = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip(
+		$source = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip(
 			array( 'name' => basename( $zip ), 'tmp_name' => $zip, 'error' => 0, 'size' => filesize( $zip ) )
 		);
 		if ( is_wp_error( $source ) ) {
@@ -75,7 +75,7 @@ if ( $zips !== array() ) {
 			++$total;
 			continue;
 		}
-		$result = ( new DXAI_UI\Compiler\Source_Compiler() )->compile( $source );
+		$result = ( new DX_UI\Compiler\Source_Compiler() )->compile( $source );
 		$rows   = is_array( $result['unevaluated'] ?? null ) ? $result['unevaluated'] : array();
 		$n      = 0;
 		foreach ( $rows as $row ) {
@@ -146,7 +146,7 @@ foreach ( $dirs as $root ) {
 
 	$slug = basename( dirname( $root ) );
 	foreach ( $routes as $path => $code ) {
-		$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+		$compiler = new DX_UI\Compiler\Jsx_Compiler();
 		try {
 			$compiler->compile_file( $code, array(), $files );
 		} catch ( Throwable $e ) {

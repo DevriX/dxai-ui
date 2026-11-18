@@ -18,9 +18,9 @@ export default function Speed( { design: fixed = 0 } ) {
 	const [ note, setNote ] = useState( '' );
 
 	useEffect( () => {
-		apiFetch( { path: '/dxai-ui/v1/speed' } )
+		apiFetch( { path: '/dx-ui/v1/speed' } )
 			.then( setData )
-			.catch( ( e ) => setError( e.message || __( 'The page speed could not be read.', 'dxai-ui' ) ) );
+			.catch( ( e ) => setError( e.message || __( 'The page speed could not be read.', 'dx-ui' ) ) );
 	}, [] );
 
 	if ( error ) {
@@ -36,86 +36,86 @@ export default function Speed( { design: fixed = 0 } ) {
 	function run( action, design = 0 ) {
 		setBusy( action + design );
 		setNote( '' );
-		apiFetch( { path: '/dxai-ui/v1/speed', method: 'POST', data: { action, design } } )
+		apiFetch( { path: '/dx-ui/v1/speed', method: 'POST', data: { action, design } } )
 			.then( ( report ) => {
 				setData( report );
 				if ( action === 'fonts-apply' ) {
 					setNote(
 						report.done && report.done.complete
-							? __( 'The fonts are on this site now.', 'dxai-ui' )
-							: __( 'Some font files could not be fetched from Google just now. The page still shows them; the rest is copied the next time it is viewed.', 'dxai-ui' )
+							? __( 'The fonts are on this site now.', 'dx-ui' )
+							: __( 'Some font files could not be fetched from Google just now. The page still shows them; the rest is copied the next time it is viewed.', 'dx-ui' )
 					);
 				}
 			} )
-			.catch( ( e ) => setError( e.message || __( 'Could not change the page speed.', 'dxai-ui' ) ) )
+			.catch( ( e ) => setError( e.message || __( 'Could not change the page speed.', 'dx-ui' ) ) )
 			.finally( () => setBusy( '' ) );
 	}
 
 	const label = {
-		local: __( 'From this site', 'dxai-ui' ),
-		partial: __( 'Partly from this site', 'dxai-ui' ),
-		remote: __( 'From Google', 'dxai-ui' ),
-		theme: __( 'From the theme', 'dxai-ui' ),
-		none: __( 'No web fonts', 'dxai-ui' ),
+		local: __( 'From this site', 'dx-ui' ),
+		partial: __( 'Partly from this site', 'dx-ui' ),
+		remote: __( 'From Google', 'dx-ui' ),
+		theme: __( 'From the theme', 'dx-ui' ),
+		none: __( 'No web fonts', 'dx-ui' ),
 	};
 
 	return (
-		<section className="dxai-section dxai-speed" aria-labelledby="dxai-speed-title">
-			<div className="dxai-section-head">
+		<section className="dxui-section dxui-speed" aria-labelledby="dxui-speed-title">
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Your pages', 'dxai-ui' ) }</p>
-					<h3 id="dxai-speed-title">{ __( 'Page speed', 'dxai-ui' ) }</h3>
-					<p className="dxai-muted">
+					<p className="dxui-section-kicker">{ __( 'Your pages', 'dx-ui' ) }</p>
+					<h3 id="dxui-speed-title">{ __( 'Page speed', 'dx-ui' ) }</h3>
+					<p className="dxui-muted">
 						{ sprintf(
 							/* translators: %s: theme name. */
-							__( 'A phone waits for the fonts and for the whole of the %s stylesheet before it paints. Both are cut down without changing how the pages look.', 'dxai-ui' ),
+							__( 'A phone waits for the fonts and for the whole of the %s stylesheet before it paints. Both are cut down without changing how the pages look.', 'dx-ui' ),
 							data.theme
 						) }
 					</p>
 				</div>
 			</div>
 
-			<h4>{ __( 'Fonts', 'dxai-ui' ) }</h4>
-			<ul className="dxai-speed__list">
+			<h4>{ __( 'Fonts', 'dx-ui' ) }</h4>
+			<ul className="dxui-speed__list">
 				{ data.designs.filter( ( d ) => ! fixed || d.id === fixed ).map( ( d ) => (
 					<li key={ d.id }>
 						<div>
 							<strong>{ d.title }</strong>
-							<span className="dxai-muted">
+							<span className="dxui-muted">
 								{ d.fonts.follows && d.fonts.theme.body && sprintf(
 									/* translators: 1: the theme's headline font, 2: its body font. */
-									__( 'Drawn in the theme’s fonts: %1$s for headings, %2$s for the rest', 'dxai-ui' ),
+									__( 'Drawn in the theme’s fonts: %1$s for headings, %2$s for the rest', 'dx-ui' ),
 									d.fonts.theme.heading,
 									d.fonts.theme.body
 								) }
 								{ ! d.fonts.follows && ( d.fonts.families.length ? d.fonts.families.join( ', ' ) : '' ) }
 								{ d.fonts.files > 0 && ' · ' + sprintf(
 									/* translators: 1: number of files, 2: size in KB. */
-									_n( '%1$d file, %2$d KB', '%1$d files, %2$d KB', d.fonts.files, 'dxai-ui' ),
+									_n( '%1$d file, %2$d KB', '%1$d files, %2$d KB', d.fonts.files, 'dx-ui' ),
 									d.fonts.files,
 									kb( d.fonts.bytes )
 								) }
 							</span>
 						</div>
-						<span className={ 'dxai-speed__state dxai-speed__state--' + d.fonts.state }>{ label[ d.fonts.state ] }</span>
+						<span className={ 'dxui-speed__state dxui-speed__state--' + d.fonts.state }>{ label[ d.fonts.state ] }</span>
 						{ ( d.fonts.state === 'remote' || d.fonts.state === 'partial' ) && ! d.fonts.follows && (
 							<Button variant="primary" onClick={ () => run( 'fonts-apply', d.id ) } isBusy={ busy === 'fonts-apply' + d.id } disabled={ !! busy }>
-								{ __( 'Copy the fonts here', 'dxai-ui' ) }
+								{ __( 'Copy the fonts here', 'dx-ui' ) }
 							</Button>
 						) }
 						{ d.fonts.follows && (
 							<Button variant="tertiary" onClick={ () => run( 'fonts-own', d.id ) } disabled={ !! busy }>
-								{ __( 'Use the design’s own fonts', 'dxai-ui' ) }
+								{ __( 'Use the design’s own fonts', 'dx-ui' ) }
 							</Button>
 						) }
 						{ d.fonts.managed && ! d.fonts.follows && (
 							<Button variant="secondary" onClick={ () => run( 'fonts-theme', d.id ) } disabled={ !! busy }>
-								{ __( 'Use the theme’s fonts', 'dxai-ui' ) }
+								{ __( 'Use the theme’s fonts', 'dx-ui' ) }
 							</Button>
 						) }
 						{ ( d.fonts.state === 'local' || d.fonts.state === 'partial' ) && ! d.fonts.follows && (
 							<Button variant="tertiary" onClick={ () => run( 'fonts-revert', d.id ) } disabled={ !! busy }>
-								{ __( 'Use Google again', 'dxai-ui' ) }
+								{ __( 'Use Google again', 'dx-ui' ) }
 							</Button>
 						) }
 					</li>
@@ -123,22 +123,22 @@ export default function Speed( { design: fixed = 0 } ) {
 			</ul>
 			{ note && <Notice status="success" isDismissible={ false }>{ note }</Notice> }
 
-			<h4>{ __( 'Theme stylesheet', 'dxai-ui' ) }</h4>
+			<h4>{ __( 'Theme stylesheet', 'dx-ui' ) }</h4>
 			<ToggleControl
-				label={ __( 'Print only the part of the theme’s stylesheet each page uses', 'dxai-ui' ) }
-				help={ __( 'Applies to visitors who are not logged in, on pages that show a design. Anything the page needs — hover, open menus, classes a script adds — stays.', 'dxai-ui' ) }
+				label={ __( 'Print only the part of the theme’s stylesheet each page uses', 'dx-ui' ) }
+				help={ __( 'Applies to visitors who are not logged in, on pages that show a design. Anything the page needs — hover, open menus, classes a script adds — stays.', 'dx-ui' ) }
 				checked={ data.trim.enabled }
 				onChange={ ( on ) => run( on ? 'trim-on' : 'trim-off' ) }
 				disabled={ !! busy }
 			/>
 			{ data.trim.enabled && data.trim.pages.length > 0 && (
-				<ul className="dxai-speed__list dxai-speed__list--sizes">
+				<ul className="dxui-speed__list dxui-speed__list--sizes">
 					{ data.trim.pages.map( ( p ) => (
 						<li key={ p.id }>
 							<span>{ p.title }</span>
 							<strong>{ sprintf(
 								/* translators: 1: size before in KB, 2: size after in KB. */
-								__( '%1$d KB → %2$d KB', 'dxai-ui' ),
+								__( '%1$d KB → %2$d KB', 'dx-ui' ),
 								kb( p.before ),
 								kb( p.after )
 							) }</strong>
@@ -147,7 +147,7 @@ export default function Speed( { design: fixed = 0 } ) {
 				</ul>
 			) }
 			{ data.trim.enabled && ! data.trim.pages.length && (
-				<p className="dxai-muted">{ __( 'Nothing to show yet: the sizes appear after the first visit to a page.', 'dxai-ui' ) }</p>
+				<p className="dxui-muted">{ __( 'Nothing to show yet: the sizes appear after the first visit to a page.', 'dx-ui' ) }</p>
 			) }
 		</section>
 	);

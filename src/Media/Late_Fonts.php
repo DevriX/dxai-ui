@@ -2,12 +2,12 @@
 /**
  * A design's web fonts asked for once the page has loaded; their fallback faces draw it until then.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * Lighthouse counts every request that starts before a page's first paint and its largest one, and a web font starts as soon as the
@@ -23,12 +23,12 @@ namespace DXAI_UI\Media;
  * 0.3 s) left fonts asked for at `load` among what was counted, LCP 2.7 s; after both, 2.0–2.2 s. A page whose first paint is not
  * reported (opened in a hidden tab) gets them BACKSTOP ms after it loaded. A browser without scripts gets them at once (<noscript>). The faces that name a local font (the fallback faces) and everything else are printed where they were.
  * Not in the block editor, the admin or a REST request: those show the fonts at once. The theme's preload of the files is dropped
- * while they wait (Template_Fonts::preload()). `dxai_ui_late_fonts` turns it off.
+ * while they wait (Template_Fonts::preload()). `dx_ui_late_fonts` turns it off.
  */
 final class Late_Fonts {
 
 	/** The style element that holds the faces until the page has loaded. */
-	public const ID = 'dxai-ui-late-fonts';
+	public const ID = 'dx-ui-late-fonts';
 
 	/** Milliseconds after the load event the faces come anyway, when no first paint is reported (a page opened in a hidden tab). */
 	public const BACKSTOP = 2000;
@@ -52,7 +52,7 @@ final class Late_Fonts {
 		 *
 		 * @param bool $on Default true.
 		 */
-		return (bool) apply_filters( 'dxai_ui_late_fonts', true );
+		return (bool) apply_filters( 'dx_ui_late_fonts', true );
 	}
 
 	/**

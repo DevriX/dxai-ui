@@ -2,11 +2,11 @@
  * The store that drives a converted page's states through the Interactivity API (Blocks\Interactivity), in place of the page
  * runtime's state machine (Compiler\Motion_Runtime), which it mirrors mark for mark:
  *
- *   trigger   class dxai-toggle-<state>[--<value>], data-dxai-step (a relative move), data-dxai-clamp, data-dxai-set (a literal),
- *             data-dxai-mode="toggle" (off again when already on), data-dxai-init (the authored start), data-dxai-hover
- *   target    class dxai-cls-<state>[--<value>] with data-dxai-on / data-dxai-off class lists (per state and value, per state, shared),
- *             class dxai-on-<state>[--<value>] / dxai-off-… panels (hidden, grid rows, max-height), data-dxai-text-<state> word maps,
- *             data-dxai-disabled="state:v1,v2", data-dxai-any="derived:a,b", data-dxai-scroll="state:px", data-dxai-outside="state"
+ *   trigger   class dxui-toggle-<state>[--<value>], data-dxui-step (a relative move), data-dxui-clamp, data-dxui-set (a literal),
+ *             data-dxui-mode="toggle" (off again when already on), data-dxui-init (the authored start), data-dxui-hover
+ *   target    class dxui-cls-<state>[--<value>] with data-dxui-on / data-dxui-off class lists (per state and value, per state, shared),
+ *             class dxui-on-<state>[--<value>] / dxui-off-… panels (hidden, grid rows, max-height), data-dxui-text-<state> word maps,
+ *             data-dxui-disabled="state:v1,v2", data-dxui-any="derived:a,b", data-dxui-scroll="state:px", data-dxui-outside="state"
  *
  * The region's context holds the machine (m), the order of each state's values (o), the derived states (d), the scroll specs (sc) and
  * the states a click elsewhere resets (out); callbacks.init seeds it from the markup, so nothing moves on load. The getters read the
@@ -14,13 +14,13 @@
  */
 import { store, getContext, getElement, withScope } from '@wordpress/interactivity';
 
-const NS = 'dxai-ui';
+const NS = 'dx-ui';
 
 const tokens = ( value ) => String( value || '' ).split( /\s+/ ).filter( ( c ) => c !== '' );
 
 // State names are JavaScript identifiers and never hold "-"; a value can, so the split is at the FIRST "--".
 const marks = ( classText, kind ) => {
-	const prefix = 'dxai-' + kind + '-';
+	const prefix = 'dxui-' + kind + '-';
 	const out = [];
 	tokens( classText ).forEach( ( c ) => {
 		if ( c.indexOf( prefix ) !== 0 ) {
@@ -34,14 +34,14 @@ const marks = ( classText, kind ) => {
 };
 
 // The class list a projection adds: per state and value, then per state, then the shared one. Attribute names are looked up in
-// lower case: the compiler writes a state's case into them (`data-dxai-on-help-Waterdamage`), the HTML parser lowers it.
+// lower case: the compiler writes a state's case into them (`data-dxui-on-help-Waterdamage`), the HTML parser lowers it.
 const attrFor = ( attrs, kind, mark ) => {
-	let v = mark.value === null ? undefined : attrs[ ( 'data-dxai-' + kind + '-' + mark.state + '-' + mark.value ).toLowerCase() ];
+	let v = mark.value === null ? undefined : attrs[ ( 'data-dxui-' + kind + '-' + mark.state + '-' + mark.value ).toLowerCase() ];
 	if ( v === undefined ) {
-		v = attrs[ ( 'data-dxai-' + kind + '-' + mark.state ).toLowerCase() ];
+		v = attrs[ ( 'data-dxui-' + kind + '-' + mark.state ).toLowerCase() ];
 	}
 	if ( v === undefined ) {
-		v = attrs[ 'data-dxai-' + kind ];
+		v = attrs[ 'data-dxui-' + kind ];
 	}
 	return tokens( v );
 };
@@ -193,7 +193,7 @@ const { state, actions, callbacks } = store( NS, {
 		get off() {
 			const ctx = getContext();
 			const { attrs } = live();
-			const spec = String( attrs[ 'data-dxai-disabled' ] || '' );
+			const spec = String( attrs[ 'data-dxui-disabled' ] || '' );
 			const cut = spec.indexOf( ':' );
 			const m = ctx.m || {};
 			if ( cut < 1 || ! ( spec.slice( 0, cut ) in m ) || ! moved( ctx, spec.slice( 0, cut ) ) ) {
@@ -211,8 +211,8 @@ const { state, actions, callbacks } = store( NS, {
 				return;
 			}
 			// The nearest trigger to the click is the one that fires, as the runtime's one listener at the root picks it: a click inside a
-			// menu's wrapper (itself a trigger that closes the menu, data-dxai-set="null") must not reach the wrapper after the item.
-			const target = event && event.target && event.target.closest ? event.target.closest( "[class*='dxai-toggle-']" ) : null;
+			// menu's wrapper (itself a trigger that closes the menu, data-dxui-set="null") must not reach the wrapper after the item.
+			const target = event && event.target && event.target.closest ? event.target.closest( "[class*='dxui-toggle-']" ) : null;
 			if ( target && target !== el ) {
 				return;
 			}
@@ -270,7 +270,7 @@ const { state, actions, callbacks } = store( NS, {
 				if ( current === null || current === undefined || current === false ) {
 					return;
 				}
-				if ( target && target.closest && target.closest( "[class*='dxai-toggle-" + s + "'], [class*='dxai-on-" + s + "'], [class*='dxai-off-" + s + "']" ) ) {
+				if ( target && target.closest && target.closest( "[class*='dxui-toggle-" + s + "'], [class*='dxui-on-" + s + "'], [class*='dxui-off-" + s + "']" ) ) {
 					return;
 				}
 				setState( ctx, s, ( ctx.o[ s ] || [] ).length ? null : false, true );
@@ -290,7 +290,7 @@ const { state, actions, callbacks } = store( NS, {
 			}
 			// The innermost open hover menu that holds the focus or the pointer closes; focus goes back to its trigger.
 			const active = document.activeElement;
-			const open = [].slice.call( root.querySelectorAll( "[data-dxai-hover='enter']" ) ).filter( ( el ) => {
+			const open = [].slice.call( root.querySelectorAll( "[data-dxui-hover='enter']" ) ).filter( ( el ) => {
 				const box = wrapOf( el );
 				return hoverHeld( ctx, el ) && ( ( active && box.contains( active ) ) || pointerOver( box ) );
 			} );
@@ -331,7 +331,7 @@ function seed( ctx, root ) {
 		}
 	};
 	// A projection whose on-classes are all present is the current one; a panel with none reports through its own visibility.
-	root.querySelectorAll( "[class*='dxai-cls-']" ).forEach( ( el ) => {
+	root.querySelectorAll( "[class*='dxui-cls-']" ).forEach( ( el ) => {
 		const attrs = attributesOf( el );
 		marks( attrs.class, 'cls' ).forEach( ( mark ) => {
 			note( mark.state, mark.value );
@@ -344,9 +344,9 @@ function seed( ctx, root ) {
 			}
 		} );
 	} );
-	const panels = root.querySelectorAll( "[class*='dxai-on-'], [class*='dxai-off-']" );
+	const panels = root.querySelectorAll( "[class*='dxui-on-'], [class*='dxui-off-']" );
 	// A region that projects nothing has no machine at all (the runtime's older handler answers every trigger there).
-	if ( ! root.querySelector( "[class*='dxai-cls-']" ) && ! panels.length ) {
+	if ( ! root.querySelector( "[class*='dxui-cls-']" ) && ! panels.length ) {
 		ctx.o = {};
 		ctx.d = [];
 		ctx.sc = [];
@@ -369,7 +369,7 @@ function seed( ctx, root ) {
 			}
 		} );
 	} );
-	root.querySelectorAll( "[class*='dxai-cls-'], [class*='dxai-on-'], [class*='dxai-off-']" ).forEach( ( el ) => {
+	root.querySelectorAll( "[class*='dxui-cls-'], [class*='dxui-on-'], [class*='dxui-off-']" ).forEach( ( el ) => {
 		[ 'cls', 'on', 'off' ].forEach( ( kind ) => {
 			marks( el.className, kind ).forEach( ( mark ) => {
 				if ( ! ( mark.state in m ) ) {
@@ -385,7 +385,7 @@ function seed( ctx, root ) {
 			values.sort( ( a, b ) => parseFloat( a ) - parseFloat( b ) );
 		} else if ( values.length > 1 ) {
 			const byTrigger = [];
-			root.querySelectorAll( "[class*='dxai-toggle-" + s + "--']" ).forEach( ( el ) => {
+			root.querySelectorAll( "[class*='dxui-toggle-" + s + "--']" ).forEach( ( el ) => {
 				marks( el.className, 'toggle' ).forEach( ( mark ) => {
 					if ( mark.state === s && mark.value !== null && byTrigger.indexOf( mark.value ) < 0 ) {
 						byTrigger.push( mark.value );
@@ -402,8 +402,8 @@ function seed( ctx, root ) {
 	} );
 	// States built from other states, their members seeded false (the state the page was compiled in).
 	const derived = [];
-	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxai-any]' ) ) ).forEach( ( el ) => {
-		tokens( el.getAttribute( 'data-dxai-any' ) ).forEach( ( spec ) => {
+	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxui-any]' ) ) ).forEach( ( el ) => {
+		tokens( el.getAttribute( 'data-dxui-any' ) ).forEach( ( spec ) => {
 			const cut = spec.indexOf( ':' );
 			if ( cut < 1 ) {
 				return;
@@ -422,14 +422,14 @@ function seed( ctx, root ) {
 		} );
 	} );
 	// An explicit initial wins: a relative move needs the index it starts from.
-	root.querySelectorAll( '[data-dxai-init]' ).forEach( ( el ) => {
+	root.querySelectorAll( '[data-dxui-init]' ).forEach( ( el ) => {
 		marks( el.className, 'toggle' ).forEach( ( mark ) => {
-			m[ mark.state ] = el.getAttribute( 'data-dxai-init' );
+			m[ mark.state ] = el.getAttribute( 'data-dxui-init' );
 		} );
 	} );
 	const sc = [];
-	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxai-scroll]' ) ) ).forEach( ( el ) => {
-		tokens( el.getAttribute( 'data-dxai-scroll' ) ).forEach( ( spec ) => {
+	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxui-scroll]' ) ) ).forEach( ( el ) => {
+		tokens( el.getAttribute( 'data-dxui-scroll' ) ).forEach( ( spec ) => {
 			const cut = spec.indexOf( ':' );
 			const s = cut > 0 ? spec.slice( 0, cut ) : spec;
 			if ( s in m ) {
@@ -438,8 +438,8 @@ function seed( ctx, root ) {
 		} );
 	} );
 	const out = [];
-	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxai-outside]' ) ) ).forEach( ( el ) => {
-		tokens( el.getAttribute( 'data-dxai-outside' ) ).forEach( ( s ) => {
+	[ root ].concat( [].slice.call( root.querySelectorAll( '[data-dxui-outside]' ) ) ).forEach( ( el ) => {
+		tokens( el.getAttribute( 'data-dxui-outside' ) ).forEach( ( s ) => {
 			if ( s in m && out.indexOf( s ) < 0 ) {
 				out.push( s );
 			}
@@ -484,10 +484,10 @@ function words( ctx, s ) {
 	if ( ! scope ) {
 		return;
 	}
-	scope.querySelectorAll( '[data-dxai-text-' + s + ']' ).forEach( ( el ) => {
+	scope.querySelectorAll( '[data-dxui-text-' + s + ']' ).forEach( ( el ) => {
 		let map;
 		try {
-			map = JSON.parse( el.getAttribute( 'data-dxai-text-' + s ) || '{}' );
+			map = JSON.parse( el.getAttribute( 'data-dxui-text-' + s ) || '{}' );
 		} catch ( e ) {
 			return;
 		}
@@ -509,9 +509,9 @@ function fire( ctx, el ) {
 			acted = true;
 			return;
 		}
-		const step = parseInt( el.getAttribute( 'data-dxai-step' ) || '0', 10 );
-		const set = el.getAttribute( 'data-dxai-set' );
-		const mode = el.getAttribute( 'data-dxai-mode' );
+		const step = parseInt( el.getAttribute( 'data-dxui-step' ) || '0', 10 );
+		const set = el.getAttribute( 'data-dxui-set' );
+		const mode = el.getAttribute( 'data-dxui-mode' );
 		const current = ctx.m[ mark.state ];
 		let next;
 		if ( step ) {
@@ -526,7 +526,7 @@ function fire( ctx, el ) {
 				at = 0;
 			}
 			let to = at + step;
-			to = el.hasAttribute( 'data-dxai-clamp' ) ? Math.max( 0, Math.min( values.length - 1, to ) ) : ( ( to % values.length ) + values.length ) % values.length;
+			to = el.hasAttribute( 'data-dxui-clamp' ) ? Math.max( 0, Math.min( values.length - 1, to ) ) : ( ( to % values.length ) + values.length ) % values.length;
 			next = values[ to ];
 		} else if ( set === 'null' ) {
 			next = null;
@@ -552,7 +552,7 @@ function legacy( ctx, el, mark ) {
 	const scope = root && root.closest ? root.closest( '[data-wp-interactive]' ) || root : document;
 	const willOpen = el.getAttribute( 'aria-expanded' ) !== 'true';
 	if ( mark.value !== null ) {
-		scope.querySelectorAll( "[class*='dxai-toggle-" + mark.state + "--']" ).forEach( ( other ) => {
+		scope.querySelectorAll( "[class*='dxui-toggle-" + mark.state + "--']" ).forEach( ( other ) => {
 			other.setAttribute( 'aria-expanded', 'false' );
 			other.querySelectorAll( '.rotate-45' ).forEach( ( icon ) => {
 				icon.classList.remove( 'rotate-45' );
@@ -570,7 +570,7 @@ function legacy( ctx, el, mark ) {
 
 // What a valueless trigger means on a state whose projections are all keyed by value: "none of them".
 const wanted = ( ctx, el, mark ) => {
-	const set = el.getAttribute( 'data-dxai-set' );
+	const set = el.getAttribute( 'data-dxui-set' );
 	if ( set === 'null' ) {
 		return null;
 	}
@@ -619,7 +619,7 @@ const hoverHeld = ( ctx, el ) =>
 	} );
 
 // The wrap, not the trigger, owns the leaving: a mega-menu panel is a sibling of the button that opens it.
-const wrapOf = ( el ) => ( el.hasAttribute( 'data-dxai-hover-self' ) ? el : el.closest( "li, .relative, [class*='relative']" ) || el.parentElement || el );
+const wrapOf = ( el ) => ( el.hasAttribute( 'data-dxui-hover-self' ) ? el : el.closest( "li, .relative, [class*='relative']" ) || el.parentElement || el );
 
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
 const focusable = ( el ) => ( el.matches && el.matches( FOCUSABLE ) ? el : el.querySelector( FOCUSABLE ) );
@@ -641,7 +641,7 @@ const keyboardFocus = ( el ) => {
 // Leaving the wrap (the pointer, or the focus for anywhere outside it) closes what entering opened — bound once per entry.
 function leaveOnce( ctx, el, kind ) {
 	const box = wrapOf( el );
-	const key = '__dxaiLeave_' + kind;
+	const key = '__dxuiLeave_' + kind;
 	if ( box[ key ] ) {
 		return;
 	}

@@ -2,12 +2,12 @@
 /**
  * Where the pages of a team site are read from.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * A site of the network as one record, whichever way it was read:
@@ -227,7 +227,7 @@ final class Site_Source {
 				'timeout'     => 30,
 				'redirection' => 3,
 				'headers'     => array( 'Accept' => $json ? 'application/json' : 'text/html' ),
-				'user-agent'  => 'Mozilla/5.0 (compatible; DXAI-UI network model; +' . home_url( '/' ) . ')',
+				'user-agent'  => 'Mozilla/5.0 (compatible; DX-UI network model; +' . home_url( '/' ) . ')',
 			)
 		);
 		if ( is_wp_error( $r ) ) {
@@ -235,7 +235,7 @@ final class Site_Source {
 		}
 		$code = (int) wp_remote_retrieve_response_code( $r );
 		if ( $code < 200 || $code >= 300 ) {
-			return new \WP_Error( 'dxai_network_http', sprintf( '%s answered %d.', $url, $code ) );
+			return new \WP_Error( 'dxui_network_http', sprintf( '%s answered %d.', $url, $code ) );
 		}
 
 		return array(

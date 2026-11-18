@@ -2,12 +2,12 @@
 /**
  * The plugin's small stylesheets written into the page, the way WordPress writes its own.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 /**
  * A design's page linked four small stylesheets of the plugin in its head — the blank canvas's resets, the rules every converted page
@@ -15,7 +15,7 @@ namespace DXAI_UI\Media;
  * apiece in Lighthouse on H2O Away (docs/PLAN-PERFECT-PAGES.md, T5.3). WordPress writes small stylesheets into the page itself when
  * they say where their file is (`wp_maybe_inline_styles()`, smallest first, up to `styles_inline_size_limit`: 40 KB since 6.9); the
  * plugin's stylesheets now say so. Only the plugin's own (its folder, and its folder in uploads), never the theme's or another
- * plugin's; a large one stays a file the browser caches. `dxai_ui_inline_styles` turns it off.
+ * plugin's; a large one stays a file the browser caches. `dx_ui_inline_styles` turns it off.
  */
 final class Inline_Styles {
 
@@ -36,7 +36,7 @@ final class Inline_Styles {
 		 *
 		 * @param bool $on Default true.
 		 */
-		if ( ! (bool) apply_filters( 'dxai_ui_inline_styles', true ) ) {
+		if ( ! (bool) apply_filters( 'dx_ui_inline_styles', true ) ) {
 			return;
 		}
 		$styles = wp_styles();
@@ -72,8 +72,8 @@ final class Inline_Styles {
 		$src     = (string) strtok( $dep->src, '?#' );
 		$uploads = wp_upload_dir( null, false );
 		$roots   = array(
-			untrailingslashit( DXAI_UI_URL ) => untrailingslashit( DXAI_UI_DIR ),
-			untrailingslashit( (string) $uploads['baseurl'] ) . '/dxai-ui' => untrailingslashit( (string) $uploads['basedir'] ) . '/dxai-ui',
+			untrailingslashit( DX_UI_URL ) => untrailingslashit( DX_UI_DIR ),
+			untrailingslashit( (string) $uploads['baseurl'] ) . '/dx-ui' => untrailingslashit( (string) $uploads['basedir'] ) . '/dx-ui',
 		);
 		foreach ( $roots as $url => $dir ) {
 			$rest = self::under( $src, $url );

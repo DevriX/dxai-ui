@@ -2,12 +2,12 @@
 /**
  * The name of a page's sections in the List View.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
 /**
  * The theme's pages name each section in the List View — "Hero Section", "FAQ Section", "CTA Banner" — through the
@@ -25,7 +25,7 @@ final class Section_Names extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Sections named in the List View', 'dxai-ui' );
+		return __( 'Sections named in the List View', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -79,27 +79,27 @@ final class Section_Names extends Converter {
 		$attrs = $block['attrs'];
 		$tag   = (string) ( $attrs['tagName'] ?? 'div' );
 		if ( $tag === 'header' || $tag === 'footer' ) {
-			return $tag === 'header' ? __( 'Header', 'dxai-ui' ) : __( 'Footer', 'dxai-ui' );
+			return $tag === 'header' ? __( 'Header', 'dx-ui' ) : __( 'Footer', 'dx-ui' );
 		}
 		$anchor = (string) ( $attrs['anchor'] ?? '' );
 		$found  = self::scan( $block );
 		if ( $found['header'] && ! $found['h1'] && $found['heading'] === '' ) {
-			return __( 'Header', 'dxai-ui' );
+			return __( 'Header', 'dx-ui' );
 		}
 		if ( $found['h1'] ) {
-			return __( 'Hero Section', 'dxai-ui' );
+			return __( 'Hero Section', 'dx-ui' );
 		}
 		if ( $anchor !== '' && ! in_array( $anchor, array( 'main', 'content', 'top' ), true ) ) {
-			return self::title( $anchor ) . ' ' . __( 'Section', 'dxai-ui' );
+			return self::title( $anchor ) . ' ' . __( 'Section', 'dx-ui' );
 		}
 		if ( $found['form'] ) {
-			return __( 'Contact Section', 'dxai-ui' );
+			return __( 'Contact Section', 'dx-ui' );
 		}
 		if ( $found['heading'] !== '' ) {
 			return self::short( $found['heading'] );
 		}
 		if ( $found['buttons'] ) {
-			return __( 'Call to Action', 'dxai-ui' );
+			return __( 'Call to Action', 'dx-ui' );
 		}
 
 		return '';
@@ -133,7 +133,7 @@ final class Section_Names extends Converter {
 				}
 			} elseif ( $name === 'core/buttons' ) {
 				$out['buttons'] = true;
-			} elseif ( $name === 'dxai-ui/form' || $name === 'gravityforms/form' || $name === 'core/shortcode' && str_contains( (string) ( $b['innerHTML'] ?? '' ), '[gravityform' ) ) {
+			} elseif ( $name === 'dx-ui/form' || $name === 'gravityforms/form' || $name === 'core/shortcode' && str_contains( (string) ( $b['innerHTML'] ?? '' ), '[gravityform' ) ) {
 				$out['form'] = true;
 			}
 			foreach ( (array) ( $b['innerBlocks'] ?? array() ) as $child ) {
@@ -166,7 +166,7 @@ final class Section_Names extends Converter {
 			$name = is_array( $child ) ? (string) ( $child['blockName'] ?? '' ) : '';
 			if ( $name === 'core/group' ) {
 				++$groups;
-			} elseif ( ! in_array( $name, array( '', 'dxai-ui/link', 'dxai-ui/svg', 'dxai-ui/html', 'dxai-ui/box' ), true ) ) {
+			} elseif ( ! in_array( $name, array( '', 'dx-ui/link', 'dx-ui/svg', 'dx-ui/html', 'dx-ui/box' ), true ) ) {
 				return false;
 			}
 		}

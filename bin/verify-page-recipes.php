@@ -7,10 +7,10 @@
  *
  * Reads data/team-pages.json and nothing of the site. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Page_Recipes;
+use DX_UI\Pages\Page_Recipes;
 
 $fail   = 0;
 $pass   = 0;
@@ -34,7 +34,7 @@ echo "\nOne design\n";
 $a = Page_Recipes::pick( 'service', 'Clean Joe' );
 $b = Page_Recipes::pick( 'service', 'Clean Joe' );
 $expect( 'the same design gets the same recipe every time', $a['roles'] === $b['roles'] );
-$expect( 'the recipe is a list of the roles Section_Roles knows', array_diff( $a['roles'], \DXAI_UI\Pages\Section_Roles::ROLES ) === array(), implode( ',', $a['roles'] ) );
+$expect( 'the recipe is a list of the roles Section_Roles knows', array_diff( $a['roles'], \DX_UI\Pages\Section_Roles::ROLES ) === array(), implode( ',', $a['roles'] ) );
 
 echo "\nMany designs\n";
 $seeds  = array( 'Clean Joe', 'Semper Dry', 'H2O Away', 'Arcus Restoration', 'Angel Reyes', 'Global Market Launch', 'DevriX Elevate', 'Integration Hub', 'Messaging Architects', 'Zendesk HubSpot', 'Growth Story Hub', 'ICP Activated' );

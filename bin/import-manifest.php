@@ -8,7 +8,7 @@
  *
  * Run: wp eval-file bin/import-manifest.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,7 +26,7 @@ foreach (
 			'order'          => 'ASC',
 			'meta_query'     => array(
 				array(
-					'key'     => '_dxai_ui_generated_page',
+					'key'     => '_dx_ui_generated_page',
 					'compare' => 'EXISTS',
 				),
 			),
@@ -38,13 +38,13 @@ foreach (
 		'title'  => (string) $page->post_title,
 		'url'    => (string) get_permalink( $page->ID ),
 		// A full URL whichever form the location is stored in — new imports
-		// store it relative to uploads (see DXAI_UI\Support\Upload_Paths).
-		'css'    => DXAI_UI\Support\Upload_Paths::for_meta( (int) $page->ID, '_dxai_ui_css_url' )['url'],
+		// store it relative to uploads (see DX_UI\Support\Upload_Paths).
+		'css'    => DX_UI\Support\Upload_Paths::for_meta( (int) $page->ID, '_dx_ui_css_url' )['url'],
 		// The upload this page came from, recorded at import. Without it the
 		// verifier cannot tell which design to measure against.
-		'source' => (string) get_post_meta( $page->ID, '_dxai_ui_source_zip', true ),
+		'source' => (string) get_post_meta( $page->ID, '_dx_ui_source_zip', true ),
 		// Which route of that upload, for a design that has more than one.
-		'route'  => (string) get_post_meta( $page->ID, '_dxai_ui_source_route', true ),
+		'route'  => (string) get_post_meta( $page->ID, '_dx_ui_source_route', true ),
 	);
 }
 

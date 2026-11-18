@@ -2,12 +2,12 @@
 /**
  * What the team's sites say about making the pages after the Home.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * The network as a teacher (docs/PLAN-NETWORK-PAGES.md, N0). Every site of the network is read (Site_Source), every page
@@ -31,7 +31,7 @@ final class Network_Model {
 	public const VERSION = 1;
 
 	/** Where the model is kept: a network option on a multisite, so every site of it reads the same. */
-	public const OPTION = 'dxai_ui_network_model';
+	public const OPTION = 'dx_ui_network_model';
 
 	/** The roles in one letter each, for the orders. */
 	public const LETTER = array(
@@ -815,7 +815,7 @@ final class Network_Model {
 	private static $shipped = null;
 
 	/**
-	 * The model learned on this site's network (`wp dxai-ui network learn`), or null when it has not been read.
+	 * The model learned on this site's network (`wp dx-ui network learn`), or null when it has not been read.
 	 *
 	 * @return array<string, mixed>|null
 	 */
@@ -836,7 +836,7 @@ final class Network_Model {
 			return $m;
 		}
 		if ( self::$shipped === null ) {
-			$file          = DXAI_UI_DIR . self::SHIPPED;
+			$file          = DX_UI_DIR . self::SHIPPED;
 			$data          = is_readable( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			self::$shipped = is_array( $data ) && (int) ( $data['version'] ?? 0 ) === self::VERSION ? $data : false;
 		}

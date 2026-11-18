@@ -2,15 +2,15 @@
 /**
  * Appearance > Widgets, styled as the footer it edits.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * The footer's content is edited in Appearance > Widgets, so that screen
@@ -28,7 +28,7 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Widgets_Screen {
 
-	private const HANDLE = 'dxai-ui-widgets-screen';
+	private const HANDLE = 'dx-ui-widgets-screen';
 
 	public function register(): void {
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
@@ -50,14 +50,14 @@ final class Widgets_Screen {
 		$deps  = array();
 
 		if ( $page > 0 ) {
-			$fonts = \DXAI_UI\Theme\Theme_Fonts::adopts( $page ) ? array() : get_post_meta( $page, '_dxai_ui_font_urls', true );
+			$fonts = \DX_UI\Theme\Theme_Fonts::adopts( $page ) ? array() : get_post_meta( $page, '_dx_ui_font_urls', true );
 			foreach ( is_array( $fonts ) ? array_values( $fonts ) : array() as $i => $url ) {
 				$url = esc_url_raw( (string) $url );
 				if ( $url !== '' && preg_match( '#^https?://#i', $url ) === 1 ) {
 					wp_enqueue_style( self::HANDLE . '-font-' . $i, $url, array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- a font CSS URL is versioned by its query.
 				}
 			}
-			$sheet = Upload_Paths::for_meta( $page, '_dxai_ui_css_url' );
+			$sheet = Upload_Paths::for_meta( $page, '_dx_ui_css_url' );
 			if ( $sheet['url'] !== '' ) {
 				wp_enqueue_style( self::HANDLE . '-design', $sheet['url'], array(), Upload_Paths::version( $sheet['path'] ) );
 				// The brand's tokens pointed at the Styles presets, as on the
@@ -70,8 +70,8 @@ final class Widgets_Screen {
 			}
 		}
 
-		$file = DXAI_UI_DIR . 'assets/css/widgets-screen.css';
-		wp_enqueue_style( self::HANDLE, DXAI_UI_URL . 'assets/css/widgets-screen.css', $deps, is_readable( $file ) ? (string) filemtime( $file ) : DXAI_UI_VERSION );
+		$file = DX_UI_DIR . 'assets/css/widgets-screen.css';
+		wp_enqueue_style( self::HANDLE, DX_UI_URL . 'assets/css/widgets-screen.css', $deps, is_readable( $file ) ? (string) filemtime( $file ) : DX_UI_VERSION );
 
 		/*
 		 * The preset custom properties (--wp--preset--color--…), which the
@@ -92,10 +92,10 @@ final class Widgets_Screen {
 			if ( ! $is_brand ) {
 				// The design's token of that name; a preset the design never
 				// had (a theme utility's `text-white`) keeps the site's.
-				$paint = (string) preg_replace( '/var\(--wp--preset--color--([a-z0-9_-]+)\)/', 'var(--dxai-$1,var(--wp--preset--color--$1))', $paint );
+				$paint = (string) preg_replace( '/var\(--wp--preset--color--([a-z0-9_-]+)\)/', 'var(--dxui-$1,var(--wp--preset--color--$1))', $paint );
 			}
 			if ( $id !== '' && $paint !== '' ) {
-				$css .= 'body .dxai-ui.dxai-ui-widget-area[data-widget-area-id="' . $id . '"]{' . $paint . '}';
+				$css .= 'body .dx-ui.dx-ui-widget-area[data-widget-area-id="' . $id . '"]{' . $paint . '}';
 			}
 		}
 		// The widgets' own rules, and the frame's (a block moved out of the
@@ -105,14 +105,14 @@ final class Widgets_Screen {
 		$css   .= Site_Footer_Block::preset_fallbacks( $markup, $page, $scope, 'body ' );
 		wp_add_inline_style( self::HANDLE, $css );
 
-		$js = DXAI_UI_DIR . 'assets/js/widgets-screen.js';
-		wp_enqueue_script( self::HANDLE, DXAI_UI_URL . 'assets/js/widgets-screen.js', array(), is_readable( $js ) ? (string) filemtime( $js ) : DXAI_UI_VERSION, true );
+		$js = DX_UI_DIR . 'assets/js/widgets-screen.js';
+		wp_enqueue_script( self::HANDLE, DX_UI_URL . 'assets/js/widgets-screen.js', array(), is_readable( $js ) ? (string) filemtime( $js ) : DX_UI_VERSION, true );
 		wp_localize_script(
 			self::HANDLE,
-			'dxaiUIWidgetsScreen',
+			'dxUIWidgetsScreen',
 			array(
 				'areas'      => Footer_Template::areas(),
-				'scopeClass' => $page > 0 ? \DXAI_UI\Structures\Page_Scope::design_classes( $page, $scope ) : '',
+				'scopeClass' => $page > 0 ? \DX_UI\Structures\Page_Scope::design_classes( $page, $scope ) : '',
 			)
 		);
 	}

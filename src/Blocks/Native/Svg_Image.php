@@ -2,21 +2,21 @@
 /**
  * An icon that is a plain drawing: core's Image, with the drawing as a file in the media library.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Utility_Classes;
-use DXAI_UI\Media\Svg_Files;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Compiler\Utility_Classes;
+use DX_UI\Media\Svg_Files;
+use DX_UI\Support\Upload_Paths;
 
 /**
- * `dxai-ui/svg` → `core/image` pointing at an SVG file, the way the team's sites hold their icons: swapped from the
+ * `dx-ui/svg` → `core/image` pointing at an SVG file, the way the team's sites hold their icons: swapped from the
  * library, sized in the block's panel. The design's classes and CSS were written for the `<svg>` and go on the figure
- * as for any picture (Image, `dxai-part-img`), their rules written for the image inside it.
+ * as for any picture (Image, `dxui-part-img`), their rules written for the image inside it.
  *
  * Only a drawing is a picture. An icon that takes its colour from the text around it (`currentColor`), from a variable
  * of the design, or from a class of its own on a shape; one with more than shapes in it (a gradient, a clip, a symbol
@@ -25,7 +25,7 @@ use DXAI_UI\Support\Upload_Paths;
  */
 final class Svg_Image extends Converter {
 
-	private const KNOWN = array( 'svgAttrs', 'svgInner', 'dxaiInner' );
+	private const KNOWN = array( 'svgAttrs', 'svgInner', 'dxuiInner' );
 
 	/** @var array<string, array{safe:bool, display:string}> The design's stylesheet path + mtime => what it says about svgs. */
 	private static array $sheets = array();
@@ -35,11 +35,11 @@ final class Svg_Image extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Icons → Image', 'dxai-ui' );
+		return __( 'Icons → Image', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/svg';
+		return 'dx-ui/svg';
 	}
 
 	public function target(): string {
@@ -97,7 +97,7 @@ final class Svg_Image extends Converter {
 		// The root's class: utilities and the one hoisted rule of its own; a class of the design's is a rule we cannot see.
 		$utilities = array();
 		$css       = '';
-		$hoisted   = is_array( $attrs['dxaiInner'] ?? null ) ? $attrs['dxaiInner'] : array();
+		$hoisted   = is_array( $attrs['dxuiInner'] ?? null ) ? $attrs['dxuiInner'] : array();
 		foreach ( preg_split( '/\s+/', trim( $class ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
 			if ( preg_match( '/^dxs-[a-z0-9]+$/', $token ) === 1 ) {
 				if ( ! isset( $hoisted[ $token ] ) || ! is_string( $hoisted[ $token ] ) ) {
@@ -124,7 +124,7 @@ final class Svg_Image extends Converter {
 
 		// The design's `img` rules (a picture is a block) are not the svg's: the picture keeps the display the svg had, and
 		// a width limit the svg never had is taken off — unless the icon says so itself.
-		$own = array( 'className' => implode( ' ', $utilities ), 'dxaiCss' => $css );
+		$own = array( 'className' => implode( ' ', $utilities ), 'dxuiCss' => $css );
 		if ( ! self::states_display( $own ) ) {
 			$css = 'display:' . self::sheet( (int) ( self::$context['home'] ?? 0 ) )['display'] . ( $css !== '' ? ';' . $css : '' );
 		}
@@ -141,10 +141,10 @@ final class Svg_Image extends Converter {
 			'id'              => $file['id'],
 			'sizeSlug'        => 'full',
 			'linkDestination' => 'none',
-			'className'       => trim( 'dxai-part-img dxai-icon ' . implode( ' ', $utilities ) ),
+			'className'       => trim( 'dxui-part-img dxui-icon ' . implode( ' ', $utilities ) ),
 		);
 		if ( $css !== '' ) {
-			$new['dxaiCss'] = $css;
+			$new['dxuiCss'] = $css;
 		}
 		$html = '<figure class="' . esc_attr( trim( 'wp-block-image size-full ' . self::class_tail( $new ) ) ) . '">'
 			. '<img src="' . esc_url( $file['url'] ) . '" alt="' . esc_attr( $alt ) . '" class="wp-image-' . $file['id'] . '"/></figure>';
@@ -164,7 +164,7 @@ final class Svg_Image extends Converter {
 	 * @return array{safe:bool, display:string, mirror:string}
 	 */
 	private static function sheet( int $home ): array {
-		$sheet = $home > 0 ? Upload_Paths::for_meta( $home, '_dxai_ui_css_url' ) : array();
+		$sheet = $home > 0 ? Upload_Paths::for_meta( $home, '_dx_ui_css_url' ) : array();
 		$path  = (string) ( $sheet['path'] ?? '' );
 		if ( $path === '' || ! is_readable( $path ) ) {
 			return array( 'safe' => true, 'display' => 'inline', 'mirror' => '' );
@@ -180,7 +180,7 @@ final class Svg_Image extends Converter {
 	/**
 	 * The rules a design wrote for its svgs, as far as a picture can have them. A rule whose last compound is an svg
 	 * (`[data-stats] svg { width: 32px }`, `.card > svg`, `svg:hover`) is written again for the picture — `svg` becomes
-	 * `.dxai-icon img`, the rest of the selector and the media query around it stay — and that is `mirror`. A rule
+	 * `.dxui-icon img`, the rest of the selector and the media query around it stay — and that is `mirror`. A rule
 	 * that cannot be carried over makes the sheet unsafe, and the design's icons stay inline: one that styles what is
 	 * inside an svg (`svg path`), one that gives an svg a colour (`fill`, `stroke`, `color`), one with a class or a
 	 * position on the svg itself. A rule that names an image as well reaches the picture already.
@@ -291,8 +291,8 @@ final class Svg_Image extends Converter {
 
 				return '';
 			}
-			$out[]     = $m[1] . '.dxai-icon img' . $m[3];
-			$boosted[] = $m[1] . str_repeat( ':is(.dxai-icon,#dxai-h)', 4 ) . ' img' . $m[3];
+			$out[]     = $m[1] . '.dxui-icon img' . $m[3];
+			$boosted[] = $m[1] . str_repeat( ':is(.dxui-icon,#dxui-h)', 4 ) . ' img' . $m[3];
 			if ( trim( $m[1] ) === '' && preg_match( '/(?:^|;)\s*display\s*:\s*([a-z-]+)/i', $body, $d ) === 1 ) {
 				$info['display'] = strtolower( $d[1] );
 			}

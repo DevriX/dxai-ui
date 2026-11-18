@@ -1,6 +1,6 @@
 /**
  * Would the editor's save() write the same bytes as Html_To_Blocks for a
- * dxai-ui/countup?
+ * dx-ui/countup?
  *
  * The block has two emitters that must agree exactly — Html_To_Blocks::
  * countup_html() on this side and save() in assets/js/blocks-editor.js on the
@@ -105,7 +105,7 @@ const wp = {
  * priority: custom-class-name (block-editor.js:94159) appends
  * attributes.className, then generated-class-name (block-editor.js:94206)
  * puts the block's default class FIRST and dedupes. `rv-num` therefore comes
- * out as `wp-block-dxai-ui-countup rv-num`, which is what
+ * out as `wp-block-dx-ui-countup rv-num`, which is what
  * Html_To_Blocks::countup_html() writes.
  */
 const defaultClassName = ( name ) => 'wp-block-' + name.replace( '/', '-' ).replace( /^core-/, '' );
@@ -144,7 +144,7 @@ new Function(
 	fs.readFileSync( path.join( ROOT, 'assets/js/blocks-editor.js' ), 'utf8' )
 )( global.window );
 
-const NAME = 'dxai-ui/countup';
+const NAME = 'dx-ui/countup';
 const settings = registered[ NAME ];
 if ( ! settings ) {
 	console.error( NAME + ' was not registered by the editor bundle' );

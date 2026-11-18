@@ -2,15 +2,15 @@
 /**
  * A design's links where the site is: under the site's own address, and to the Home's sections from the other pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Seo\Page_Meta;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Seo\Page_Meta;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * A design names its pages from the root of its host (`/careers/`, `/water-damage-restoration/`) and the Home's sections by their place
@@ -26,12 +26,12 @@ use DXAI_UI\Structures\Design_Attach;
  *    link stays the page's own.
  * Where: the content of a design's pages (the DX template draws its header and footer through it too), the site's header and footer
  * blocks, the footer widgets the plugin installed (a theme draws them in its own footer: Footer_Widgets), and the menu items the plugin
- * wrote (Navigation_Factory). Links a person wrote anywhere else are not read. `dxai_ui_site_links` turns it off.
+ * wrote (Navigation_Factory). Links a person wrote anywhere else are not read. `dx_ui_site_links` turns it off.
  */
 final class Site_Links {
 
 	/** Where a skip link goes: the page's own, never sent to the Home. */
-	private const OWN = array( 'main', 'content', 'primary', 'top', 'maincontent', 'main-content', 'site-content', 'dxai-root' );
+	private const OWN = array( 'main', 'content', 'primary', 'top', 'maincontent', 'main-content', 'site-content', 'dxui-root' );
 
 	/** @var array<int, string> The content of a page as stored, by its id, for the places it has (one read a request). */
 	private static array $stored = array();
@@ -106,7 +106,7 @@ final class Site_Links {
 	 * @return array<string, mixed>|mixed
 	 */
 	public static function menu_item( $atts, $item = null ) {
-		if ( ! is_array( $atts ) || ! is_string( $atts['href'] ?? null ) || ! $item instanceof \WP_Post || ! \DXAI_UI\Structures\Navigation_Factory::wrote( (int) $item->ID ) || ! self::on() ) {
+		if ( ! is_array( $atts ) || ! is_string( $atts['href'] ?? null ) || ! $item instanceof \WP_Post || ! \DX_UI\Structures\Navigation_Factory::wrote( (int) $item->ID ) || ! self::on() ) {
 			return $atts;
 		}
 		$spec          = Header_Template::stored();
@@ -222,6 +222,6 @@ final class Site_Links {
 		 *
 		 * @param bool $on Default true.
 		 */
-		return (bool) apply_filters( 'dxai_ui_site_links', true );
+		return (bool) apply_filters( 'dx_ui_site_links', true );
 	}
 }

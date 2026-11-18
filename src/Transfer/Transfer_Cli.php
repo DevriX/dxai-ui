@@ -1,13 +1,13 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui export / wp dxai-ui import.
+ * WP-CLI: wp dx-ui export / wp dx-ui import.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Transfer;
+namespace DX_UI\Transfer;
 
 /**
  * The same export and import the admin screens run, from the command line —
@@ -19,10 +19,10 @@ final class Transfer_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui export',
+			'dx-ui export',
 			array( self::class, 'export' ),
 			array(
-				'shortdesc' => 'Export a converted page with its styles, media, parts, header and footer as a .dxai.zip package.',
+				'shortdesc' => 'Export a converted page with its styles, media, parts, header and footer as a .dxui.zip package.',
 				'synopsis'  => array(
 					array(
 						'type'        => 'positional',
@@ -33,7 +33,7 @@ final class Transfer_Cli {
 						'type'        => 'assoc',
 						'name'        => 'file',
 						'optional'    => true,
-						'description' => 'Where to write the package (default: <slug>.dxai.zip in the current folder).',
+						'description' => 'Where to write the package (default: <slug>.dxui.zip in the current folder).',
 					),
 					array(
 						'type'        => 'assoc',
@@ -47,10 +47,10 @@ final class Transfer_Cli {
 			)
 		);
 		\WP_CLI::add_command(
-			'dxai-ui import',
+			'dx-ui import',
 			array( self::class, 'import' ),
 			array(
-				'shortdesc' => 'Import a .dxai.zip page package. Run as an administrator allowed unfiltered HTML (--user=<admin>; a Super Admin on multisite).',
+				'shortdesc' => 'Import a .dxui.zip page package. Run as an administrator allowed unfiltered HTML (--user=<admin>; a Super Admin on multisite).',
 				'synopsis'  => array(
 					array(
 						'type'        => 'positional',
@@ -104,7 +104,7 @@ final class Transfer_Cli {
 		$ok   = copy( $built['path'], $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
 		Package::remove_dir( (string) $built['dir'] );
 		if ( $ok ) {
-			\DXAI_UI\Design\Design_Status::exported( $page_id );
+			\DX_UI\Design\Design_Status::exported( $page_id );
 		}
 		if ( ! $ok ) {
 			\WP_CLI::error( sprintf( 'The package could not be written to %s.', $file ) );

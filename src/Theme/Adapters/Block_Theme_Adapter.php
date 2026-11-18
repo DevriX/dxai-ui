@@ -2,12 +2,12 @@
 /**
  * A block theme: Twenty Twenty-Five and the like.
  *
- * @package DXAI_UI\Theme\Adapters
+ * @package DX_UI\Theme\Adapters
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme\Adapters;
+namespace DX_UI\Theme\Adapters;
 
 /**
  * A theme made of block templates, with a theme.json. It draws nothing of the site's chrome itself, so an import may install a design's

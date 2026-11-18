@@ -2,15 +2,15 @@
 /**
  * The pages a design's header menu names, as pages the team's panel can make at the menu's own addresses.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Chrome\Header_Template;
-use DXAI_UI\Connectors\Site_Origin;
+use DX_UI\Chrome\Header_Template;
+use DX_UI\Connectors\Site_Origin;
 
 /**
  * A design's header is Appearance > Menus (Header_Menus): the menu of the site, with its dropdowns and the address of each page. It says
@@ -74,7 +74,7 @@ final class Menu_Pages {
 		}
 		// The design's own site is this site's, for its menu: a header read from a live site links to the old addresses (Site_Origin), and
 		// the document knows that host (`source.origin`); without it every page of the old site would be "another site's".
-		$doc    = \DXAI_UI\Design\Document_Store::load( $home );
+		$doc    = \DX_UI\Design\Document_Store::load( $home );
 		$origin = $doc === null ? '' : (string) ( $doc->get( 'source' )['origin'] ?? '' );
 		$ctx    = array(
 			'hosts'    => array_values( array_unique( array_merge( self::hosts(), $origin !== '' ? array( $origin ) : array() ) ) ),
@@ -91,7 +91,7 @@ final class Menu_Pages {
 		 * @param bool $on   Read the live site's menu.
 		 * @param int  $home The design's Home.
 		 */
-		if ( $live !== '' && apply_filters( 'dxai_ui_menu_pages_live', true, $home ) ) {
+		if ( $live !== '' && apply_filters( 'dx_ui_menu_pages_live', true, $home ) ) {
 			$ctx['live']        = Site_Origin::from_site( $live );
 			$ctx['live_origin'] = $live;
 		}
@@ -147,7 +147,7 @@ final class Menu_Pages {
 			return $out;
 		}
 		if ( $document && $home > 0 ) {
-			$doc = \DXAI_UI\Design\Document_Store::load( $home );
+			$doc = \DX_UI\Design\Document_Store::load( $home );
 			$nav = $doc === null ? array() : (array) ( $doc->get( 'regions' )['header']['nav'] ?? array() );
 			if ( $nav !== array() ) {
 				$out['tree']   = self::document_tree( $nav );
@@ -237,7 +237,7 @@ final class Menu_Pages {
 		 *
 		 * @param array<int, string> $hosts
 		 */
-		$hosts = apply_filters( 'dxai_ui_menu_pages_hosts', $hosts );
+		$hosts = apply_filters( 'dx_ui_menu_pages_hosts', $hosts );
 
 		return array_values( array_unique( array_map( static fn( $h ) => (string) preg_replace( '/^www\./', '', strtolower( (string) $h ) ), (array) $hosts ) ) );
 	}

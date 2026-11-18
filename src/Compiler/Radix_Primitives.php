@@ -2,12 +2,12 @@
 /**
  * What each Radix primitive renders as.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 /**
  * Radix ships no markup of its own that we can read: the components are

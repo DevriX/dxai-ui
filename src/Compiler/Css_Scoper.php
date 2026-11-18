@@ -1,13 +1,13 @@
 <?php
 /**
- * Prefix design CSS under .dxai-ui without breaking :root, @keyframes, or @media.
+ * Prefix design CSS under .dx-ui without breaking :root, @keyframes, or @media.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Css_Scoper {
 
@@ -97,7 +97,7 @@ final class Css_Scoper {
 	 * inherited and act only on the element that scrolls: on a <div> that
 	 * does not scroll they do nothing, and Arcus's `html { scroll-behavior:
 	 * smooth }` — every anchor link and its FAQ jumps glide in the design —
-	 * arrived as `.dxai-ui--N { scroll-behavior: smooth }` and jumped on the
+	 * arrived as `.dx-ui--N { scroll-behavior: smooth }` and jumped on the
 	 * page. They are repeated on `html`, narrowed with :has() to the pages
 	 * that carry this design so another page on the site never scrolls
 	 * differently for it. Media queries around the rule are kept: this runs
@@ -172,8 +172,8 @@ final class Css_Scoper {
 	 * element they never matched: Integration Hub's `.rv-root p { max-width:
 	 * 68ch; color: var(--rf-mute) }` narrowed its `div.rv-eng-out-label` from
 	 * 720px to 428px at 768 and recoloured ten eyebrows. The converter marks
-	 * every such element `dxai-not-p`; here every bare `p` type selector in
-	 * the design's CSS is narrowed to `p:where(:not(.dxai-not-p))` — :where()
+	 * every such element `dxui-not-p`; here every bare `p` type selector in
+	 * the design's CSS is narrowed to `p:where(:not(.dxui-not-p))` — :where()
 	 * keeps the rule's specificity exactly as written, so nothing else in the
 	 * cascade moves — which is the set of elements the selector matched in
 	 * the design.
@@ -183,7 +183,7 @@ final class Css_Scoper {
 	 * `progress`, `.rv-p`.
 	 */
 	private static function spare_converted_paragraphs( string $part ): string {
-		return (string) preg_replace( '/(?<![\w\-#.:\[\\\\"\'=])p(?![\w\-])/', 'p:where(:not(.dxai-not-p))', $part );
+		return (string) preg_replace( '/(?<![\w\-#.:\[\\\\"\'=])p(?![\w\-])/', 'p:where(:not(.dxui-not-p))', $part );
 	}
 
 	/**
@@ -195,7 +195,7 @@ final class Css_Scoper {
 	 * it. Each selector is returned as written, untrimmed.
 	 *
 	 * Splitting on every comma cut `.rv-root .rv-footer :is(h2,h3,h4,strong)`
-	 * into four pieces and scoped each: `:is(h2, .dxai-ui… h3, …)`, whose
+	 * into four pieces and scoped each: `:is(h2, .dx-ui… h3, …)`, whose
 	 * scoped arguments lifted the rule to (0,2,0) above the rules that were
 	 * meant to beat it (Integration Hub's primary objective cards), and a
 	 * piece given the same-node copy as well left a `(` unclosed, which

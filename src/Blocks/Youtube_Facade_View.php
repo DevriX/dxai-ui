@@ -2,15 +2,15 @@
 /**
  * The script and styles of a YouTube facade, on the pages whose theme does not bring them.
  *
- * @package DXAI_UI\Blocks
+ * @package DX_UI\Blocks
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Theme\Capabilities;
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Theme\Capabilities;
+use DX_UI\Theme\Theme_Compat;
 
 /**
  * A YouTube video is added as a facade (Compiler\Video_Facade): a box with the video's thumbnail and a play button that becomes the player
@@ -27,7 +27,7 @@ use DXAI_UI\Theme\Theme_Compat;
  */
 final class Youtube_Facade_View {
 
-	public const HANDLE = 'dxai-ui-youtube-facade';
+	public const HANDLE = 'dx-ui-youtube-facade';
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'register_assets' ) );
@@ -35,12 +35,12 @@ final class Youtube_Facade_View {
 	}
 
 	public function register_assets(): void {
-		wp_register_style( self::HANDLE, DXAI_UI_URL . 'assets/css/youtube-facade.css', array(), DXAI_UI_VERSION );
-		wp_register_script( self::HANDLE, DXAI_UI_URL . 'assets/js/youtube-facade.js', array(), DXAI_UI_VERSION, true );
+		wp_register_style( self::HANDLE, DX_UI_URL . 'assets/css/youtube-facade.css', array(), DX_UI_VERSION );
+		wp_register_script( self::HANDLE, DX_UI_URL . 'assets/js/youtube-facade.js', array(), DX_UI_VERSION, true );
 	}
 
 	/**
-	 * Whether the theme draws the facade on this page (Capabilities::brings(): the theme says so with the `dxai-youtube-facade` support, or
+	 * Whether the theme draws the facade on this page (Capabilities::brings(): the theme says so with the `dxui-youtube-facade` support, or
 	 * its adapter knows it does). Not on a converted page, whatever the theme (it is detached from it).
 	 */
 	public static function theme_handles(): bool {
@@ -51,7 +51,7 @@ final class Youtube_Facade_View {
 		 *
 		 * @param bool $can The theme is known to, and the page is not a converted one.
 		 */
-		return (bool) apply_filters( 'dxai_ui_theme_has_youtube_facade', $can );
+		return (bool) apply_filters( 'dx_ui_theme_has_youtube_facade', $can );
 	}
 
 	/**

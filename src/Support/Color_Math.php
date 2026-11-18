@@ -2,12 +2,12 @@
 /**
  * Colour parsing, perceptual distance and contrast.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 /**
  * The arithmetic the theme-palette mapping needs, in one place and without

@@ -2,37 +2,37 @@
 /**
  * The plugin's canvas templates, so generated designs are not wrapped in theme chrome.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Structures\Page_Scope;
 
 /**
- * How a design's page is drawn. On the plugin's two canvas templates the theme draws nothing around the page (`body.dxai-ui-blank`) and the
+ * How a design's page is drawn. On the plugin's two canvas templates the theme draws nothing around the page (`body.dx-ui-blank`) and the
  * design's own header and footer are drawn around it:
  *
- *  - `dxai-template.php`, the DX template: what a design's pages are given at import. The template draws the design's header, filled from
+ *  - `dxui-template.php`, the DX template: what a design's pages are given at import. The template draws the design's header, filled from
  *    Appearance > Menus, and its footer, around Appearance > Widgets (Template_Chrome).
- *  - `dxai-blank.php`, DX Blank: the header and the footer are put into the page's content as it renders (Page_Chrome). Every site
+ *  - `dxui-blank.php`, DX Blank: the header and the footer are put into the page's content as it renders (Page_Chrome). Every site
  *    imported before the DX template has pages on it, and they render exactly as they did.
  *
  * On a template of the theme's own — its Default template — the theme draws the page: its header and footer, the team's on its other
  * sites, from the same Menus and Widgets, and the design's sections between them, kept off the theme's CSS (Theme_Fence) so they look as
  * on the canvas. 0.4.0-beta.45 drew a design's page on the Default template as the DX template does; that took the theme's header and
  * footer off pages the team had moved to the Default template for them, and it is off again unless a site asks for it
- * (`dxai_ui_default_template_draws_design`).
+ * (`dx_ui_default_template_draws_design`).
  */
 final class Blank_Template {
 
 	/** DX Blank: the chrome is added to the content as it renders (Page_Chrome). Kept for the pages of every earlier import. */
-	public const SLUG = 'dxai-blank.php';
+	public const SLUG = 'dxui-blank.php';
 
 	/** The DX template: the chrome is drawn by the template (Template_Chrome). */
-	public const TEMPLATE = 'dxai-template.php';
+	public const TEMPLATE = 'dxui-template.php';
 
 	/** The theme's Default template, as `_wp_page_template` stores it. A design's page on it is drawn as on the DX template. */
 	public const DEFAULT = 'default';
@@ -62,7 +62,7 @@ final class Blank_Template {
 	 */
 	public static function is_design_page( int $post_id ): bool {
 		return $post_id > 0
-			&& ( (int) get_post_meta( $post_id, Page_Scope::META, true ) > 0 || (string) get_post_meta( $post_id, '_dxai_ui_generated_page', true ) === '1' );
+			&& ( (int) get_post_meta( $post_id, Page_Scope::META, true ) > 0 || (string) get_post_meta( $post_id, '_dx_ui_generated_page', true ) === '1' );
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class Blank_Template {
 		 * @param bool $draws   Draw it as the design (default false).
 		 * @param int  $post_id The page, 0 when the import asks which template to give a new page.
 		 */
-		return (bool) apply_filters( 'dxai_ui_default_template_draws_design', false, $post_id );
+		return (bool) apply_filters( 'dx_ui_default_template_draws_design', false, $post_id );
 	}
 
 	/**
@@ -108,17 +108,17 @@ final class Blank_Template {
 	}
 
 	/**
-	 * The template a design's pages are given when they are made: the DX template. `dxai_ui_default_template` can name DX Blank, or the
+	 * The template a design's pages are given when they are made: the DX template. `dx_ui_default_template` can name DX Blank, or the
 	 * theme's Default template ('default') for a site whose pages show the theme's header and footer.
 	 */
 	public static function default_slug(): string {
 		/**
 		 * The template a design's pages are given when they are made.
 		 *
-		 * @param string $slug 'dxai-template.php' (the default), 'dxai-blank.php', or 'default' (the theme's Default template: the theme's
+		 * @param string $slug 'dxui-template.php' (the default), 'dxui-blank.php', or 'default' (the theme's Default template: the theme's
 		 *                     header and footer, the design's sections kept off its CSS).
 		 */
-		$slug = apply_filters( 'dxai_ui_default_template', self::TEMPLATE );
+		$slug = apply_filters( 'dx_ui_default_template', self::TEMPLATE );
 
 		// Whatever a filter returns: only one of the three is taken.
 		return in_array( $slug, array( self::DEFAULT, self::SLUG, self::TEMPLATE ), true ) ? $slug : self::TEMPLATE;
@@ -135,8 +135,8 @@ final class Blank_Template {
 	 * @return array<string, string>
 	 */
 	public function register_template( array $templates ): array {
-		$templates[ self::TEMPLATE ] = __( 'DX Template (header from Menus, footer from Widgets)', 'dxai-ui' );
-		$templates[ self::SLUG ]     = __( 'DX Blank (earlier imports)', 'dxai-ui' );
+		$templates[ self::TEMPLATE ] = __( 'DX Template (header from Menus, footer from Widgets)', 'dx-ui' );
+		$templates[ self::SLUG ]     = __( 'DX Blank (earlier imports)', 'dx-ui' );
 
 		return $templates;
 	}
@@ -156,7 +156,7 @@ final class Blank_Template {
 			$slug = self::TEMPLATE;
 		}
 
-		$path = DXAI_UI_DIR . 'templates/' . $slug;
+		$path = DX_UI_DIR . 'templates/' . $slug;
 
 		return is_readable( $path ) ? $path : $template;
 	}
@@ -167,10 +167,10 @@ final class Blank_Template {
 		}
 
 		wp_enqueue_style(
-			'dxai-ui-blank-canvas',
-			DXAI_UI_URL . 'assets/css/blank-canvas.css',
+			'dx-ui-blank-canvas',
+			DX_UI_URL . 'assets/css/blank-canvas.css',
 			array(),
-			DXAI_UI_VERSION
+			DX_UI_VERSION
 		);
 
 		foreach ( array( 'global-styles', 'classic-theme-styles' ) as $handle ) {
@@ -202,9 +202,9 @@ final class Blank_Template {
 		 */
 		$tokens = wp_get_global_stylesheet( array( 'variables', 'presets' ) );
 		if ( $tokens !== '' ) {
-			wp_register_style( 'dxai-ui-tokens', false, array(), DXAI_UI_VERSION );
-			wp_enqueue_style( 'dxai-ui-tokens' );
-			wp_add_inline_style( 'dxai-ui-tokens', $tokens );
+			wp_register_style( 'dx-ui-tokens', false, array(), DX_UI_VERSION );
+			wp_enqueue_style( 'dx-ui-tokens' );
+			wp_add_inline_style( 'dx-ui-tokens', $tokens );
 		}
 	}
 }

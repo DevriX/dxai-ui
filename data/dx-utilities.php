@@ -4,9 +4,9 @@
  *
  * The DevriX theme utility classes (american-restoration
  * assets/src/sass/base/_utilities.scss), in the theme's own cascade order.
- * Read by DXAI_UI\Compiler\Utility_Classes. Source: the compressed Dart Sass compile of american-restoration assets/src/sass/base/_breakpoints.scss + _utilities.scss (sha1 6ccc4fc150f2).
+ * Read by DX_UI\Compiler\Utility_Classes. Source: the compressed Dart Sass compile of american-restoration assets/src/sass/base/_breakpoints.scss + _utilities.scss (sha1 6ccc4fc150f2).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 // phpcs:ignoreFile -- generated data.

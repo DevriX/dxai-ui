@@ -2,15 +2,15 @@
 /**
  * The design's scope element around a converted page's content.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Structures;
+namespace DX_UI\Structures;
 
 /**
- * A converted page's stylesheet is scoped to `.dxai-ui.dxai-ui--{id}`, so the
+ * A converted page's stylesheet is scoped to `.dx-ui.dx-ui--{id}`, so the
  * page's markup has to sit inside an element carrying those classes. That
  * element used to be stored IN the page: one core/group wrapping the header
  * part, every section and the footer part. In the editor the whole page was
@@ -19,8 +19,8 @@ namespace DXAI_UI\Structures;
  *
  * The page now stores its sections as top-level blocks, and this filter adds
  * the scope element around the rendered content: the same element with the
- * same classes the group rendered (`wp-block-group alignfull dxai-ui
- * dxai-ui--{id} {design root classes} is-layout-flow
+ * same classes the group rendered (`wp-block-group alignfull dx-ui
+ * dx-ui--{id} {design root classes} is-layout-flow
  * wp-block-group-is-layout-flow`), so the front end is byte-for-byte what it
  * was and every scoped rule still matches. On `the_content`, not in the page
  * template, so it holds whichever template the page is given — the plugin's
@@ -32,7 +32,7 @@ namespace DXAI_UI\Structures;
 final class Page_Scope {
 
 	/** The page whose scope a page renders in: its own id, or Home's for a crawled page. */
-	public const META = '_dxai_ui_scope_id';
+	public const META = '_dx_ui_scope_id';
 
 	public function register(): void {
 		// After do_blocks (9), wpautop and shortcodes: wraps the final HTML.
@@ -142,7 +142,7 @@ final class Page_Scope {
 			return $content;
 		}
 		// The DX template opened the scope element itself, around the header and the footer too (Template_Chrome).
-		if ( \DXAI_UI\Chrome\Template_Chrome::wraps( (int) $post->ID ) ) {
+		if ( \DX_UI\Chrome\Template_Chrome::wraps( (int) $post->ID ) ) {
 			return $content;
 		}
 		// Its own scope. An ordinary page showing a design has its copied sections wrapped already (wrap_runs()).
@@ -151,7 +151,7 @@ final class Page_Scope {
 			return $content;
 		}
 		// Already inside one (a legacy wrapped page re-saved with the meta).
-		if ( preg_match( '/^\s*<div\b[^>]*\bclass="[^"]*\bdxai-ui--' . $scope . '\b/', $content ) ) {
+		if ( preg_match( '/^\s*<div\b[^>]*\bclass="[^"]*\bdx-ui--' . $scope . '\b/', $content ) ) {
 			return $content;
 		}
 
@@ -163,7 +163,7 @@ final class Page_Scope {
 	 * attributes that make it the interactive region (Blocks\Interactivity::root_attrs()).
 	 */
 	public static function open( int $post_id, int $scope ): string {
-		return '<div class="' . esc_attr( self::classes( $post_id, $scope ) ) . '"' . \DXAI_UI\Blocks\Interactivity::root_attrs() . '>';
+		return '<div class="' . esc_attr( self::classes( $post_id, $scope ) ) . '"' . \DX_UI\Blocks\Interactivity::root_attrs() . '>';
 	}
 
 	/**
@@ -180,12 +180,12 @@ final class Page_Scope {
 	 */
 	public static function design_classes( int $post_id, int $scope = 0 ): string {
 		$scope = $scope > 0 ? $scope : Design_Attach::scope_for( $post_id );
-		$extra = trim( (string) get_post_meta( $post_id, '_dxai_ui_wrapper_class', true ) );
+		$extra = trim( (string) get_post_meta( $post_id, '_dx_ui_wrapper_class', true ) );
 		// An ordinary page showing a design: that design's own wrapper classes.
 		if ( $extra === '' && Design_Attach::attached( $post_id ) ) {
-			$extra = trim( (string) get_post_meta( Design_Attach::source_for( $post_id ), '_dxai_ui_wrapper_class', true ) );
+			$extra = trim( (string) get_post_meta( Design_Attach::source_for( $post_id ), '_dx_ui_wrapper_class', true ) );
 		}
 
-		return trim( 'dxai-ui dxai-ui--' . $scope . ' ' . $extra );
+		return trim( 'dx-ui dx-ui--' . $scope . ' ' . $extra );
 	}
 }

@@ -8,23 +8,23 @@ import './page.css';
  */
 export default function Page( { title, crumbs = [], meta = null, actions = null, className = '', children } ) {
 	return (
-		<div className={ 'dxai-page' + ( className ? ' ' + className : '' ) }>
+		<div className={ 'dxui-page' + ( className ? ' ' + className : '' ) }>
 			{ crumbs.length > 0 && (
-				<nav className="dxai-page__crumbs" aria-label="Breadcrumb">
+				<nav className="dxui-page__crumbs" aria-label="Breadcrumb">
 					{ crumbs.map( ( c, i ) => (
 						<Fragment key={ i }>
-							{ i > 0 && <span className="dxai-page__crumb-sep" aria-hidden="true">›</span> }
+							{ i > 0 && <span className="dxui-page__crumb-sep" aria-hidden="true">›</span> }
 							{ c.href ? <a href={ c.href }>{ c.label }</a> : <span>{ c.label }</span> }
 						</Fragment>
 					) ) }
 				</nav>
 			) }
-			<div className="dxai-page__head">
-				<div className="dxai-page__title">
+			<div className="dxui-page__head">
+				<div className="dxui-page__title">
 					<h1 className="wp-heading-inline">{ title }</h1>
-					{ meta && <p className="dxai-page__meta">{ meta }</p> }
+					{ meta && <p className="dxui-page__meta">{ meta }</p> }
 				</div>
-				{ actions && <div className="dxai-page__actions">{ actions }</div> }
+				{ actions && <div className="dxui-page__actions">{ actions }</div> }
 			</div>
 			{ children }
 		</div>

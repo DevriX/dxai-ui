@@ -8,8 +8,8 @@ $page_id = (int) ( $argv[3] ?? 0 );
 require rtrim( $wp_root, "/\\" ) . DIRECTORY_SEPARATOR . 'wp-load.php';
 
 $file = array( 'tmp_name' => $zip, 'name' => basename( $zip ) );
-$doc  = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip( $file );
-$compiler = new DXAI_UI\Compiler\Source_Compiler();
+$doc  = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip( $file );
+$compiler = new DX_UI\Compiler\Source_Compiler();
 $result   = $compiler->compile( $doc );
 
 $payload = $doc->payload;
@@ -22,7 +22,7 @@ foreach ( $sources as $path => $code ) {
 	}
 }
 
-$jsx = new DXAI_UI\Compiler\Jsx_Compiler();
+$jsx = new DX_UI\Compiler\Jsx_Compiler();
 $sections = $jsx->compile_file( $page_src, is_array( $payload['harvest'] ?? null ) ? $payload['harvest'] : array(), $sources );
 
 $html_blob = '';
@@ -42,7 +42,7 @@ $checks = array(
 	'DesktopNav'       => 'DesktopNav',
 	'SiteFooter'       => 'SiteFooter',
 	'TopicLinkList'    => 'topic-row',
-	'FadeUpSection'    => 'dxai-reveal',
+	'FadeUpSection'    => 'dxui-reveal',
 	'data-lucide'      => 'data-lucide',
 	'inline style tag' => '<style>',
 	'ara-navy class'   => 'text-ara-navy',

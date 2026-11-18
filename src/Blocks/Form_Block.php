@@ -1,13 +1,13 @@
 <?php
 /**
- * Dynamic contact/newsletter form — submissions go to dxai_form_entry.
+ * Dynamic contact/newsletter form — submissions go to dxui_form_entry.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
 final class Form_Block {
 
@@ -17,7 +17,7 @@ final class Form_Block {
 	 * came after it with the same name: the visitor's answer filled the trap,
 	 * and every such lead was thanked and thrown away.
 	 */
-	public const HONEYPOT = '_dxai_hp';
+	public const HONEYPOT = '_dxui_hp';
 
 	/** Names the form sends for itself; a design field with one of them is renamed. */
 	private const RESERVED = array( 'nonce', 'page_id', self::HONEYPOT );
@@ -28,12 +28,12 @@ final class Form_Block {
 
 	public function register_block(): void {
 		register_block_type(
-			'dxai-ui/form',
+			'dx-ui/form',
 			array(
 				'api_version'     => 3,
-				'editor_script'   => 'dxai-ui-blocks-editor',
-				'view_script'     => 'dxai-ui-form-view',
-				'style'           => 'dxai-ui-dynamic',
+				'editor_script'   => 'dx-ui-blocks-editor',
+				'view_script'     => 'dx-ui-form-view',
+				'style'           => 'dx-ui-dynamic',
 				'render_callback' => array( $this, 'render' ),
 				'attributes'      => array(
 					'fields' => array(
@@ -63,52 +63,52 @@ final class Form_Block {
 	public function render( array $attributes, string $content, \WP_Block $block ): string {
 		unset( $content );
 		$fields  = is_array( $attributes['fields'] ?? null ) ? $attributes['fields'] : array();
-		$label   = sanitize_text_field( (string) ( $attributes['submitLabel'] ?? __( 'Send', 'dxai-ui' ) ) );
+		$label   = sanitize_text_field( (string) ( $attributes['submitLabel'] ?? __( 'Send', 'dx-ui' ) ) );
 		$class   = preg_replace( '/[^a-zA-Z0-9_\-:\/\[\]\s]/', '', (string) ( $attributes['className'] ?? '' ) ) ?? '';
-		$success = sanitize_text_field( (string) ( $attributes['successMessage'] ?? __( 'Thank you.', 'dxai-ui' ) ) );
+		$success = sanitize_text_field( (string) ( $attributes['successMessage'] ?? __( 'Thank you.', 'dx-ui' ) ) );
 		$id      = isset( $block->context['postId'] ) ? (int) $block->context['postId'] : get_the_ID();
-		$nonce   = wp_create_nonce( 'dxai_ui_form' );
-		$action  = esc_url_raw( rest_url( DXAI_UI_REST_NAMESPACE . '/forms/submit' ) );
+		$nonce   = wp_create_nonce( 'dx_ui_form' );
+		$action  = esc_url_raw( rest_url( DX_UI_REST_NAMESPACE . '/forms/submit' ) );
 
 		if ( $fields === array() ) {
 			$fields = array(
 				array(
 					'name'     => 'name',
 					'type'     => 'text',
-					'label'    => __( 'Name', 'dxai-ui' ),
+					'label'    => __( 'Name', 'dx-ui' ),
 					'required' => true,
 				),
 				array(
 					'name'     => 'email',
 					'type'     => 'email',
-					'label'    => __( 'Email', 'dxai-ui' ),
+					'label'    => __( 'Email', 'dx-ui' ),
 					'required' => true,
 				),
 				array(
 					'name'     => 'phone',
 					'type'     => 'tel',
-					'label'    => __( 'Phone', 'dxai-ui' ),
+					'label'    => __( 'Phone', 'dx-ui' ),
 					'required' => false,
 				),
 				array(
 					'name'     => 'message',
 					'type'     => 'textarea',
-					'label'    => __( 'Message', 'dxai-ui' ),
+					'label'    => __( 'Message', 'dx-ui' ),
 					'required' => true,
 				),
 			);
 		}
 
 		if ( $label === '' || strcasecmp( $label, 'Send' ) === 0 ) {
-			$label = __( 'Send message', 'dxai-ui' );
+			$label = __( 'Send message', 'dx-ui' );
 		}
 
-		wp_enqueue_style( 'dxai-ui-dynamic' );
+		wp_enqueue_style( 'dx-ui-dynamic' );
 
-		$html  = '<form class="dxai-form ' . esc_attr( $class ) . '" method="post" action="' . esc_url( $action ) . '" data-dxai-form="1" data-success="' . esc_attr( $success ) . '">';
+		$html  = '<form class="dxui-form ' . esc_attr( $class ) . '" method="post" action="' . esc_url( $action ) . '" data-dxui-form="1" data-success="' . esc_attr( $success ) . '">';
 		$html .= '<input type="hidden" name="nonce" value="' . esc_attr( $nonce ) . '" />';
 		$html .= '<input type="hidden" name="page_id" value="' . esc_attr( (string) $id ) . '" />';
-		$html .= '<input type="text" name="' . esc_attr( self::HONEYPOT ) . '" value="" class="dxai-form-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />';
+		$html .= '<input type="text" name="' . esc_attr( self::HONEYPOT ) . '" value="" class="dxui-form-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />';
 
 		foreach ( $fields as $field ) {
 			if ( ! is_array( $field ) ) {
@@ -125,7 +125,7 @@ final class Form_Block {
 			if ( in_array( $name, self::RESERVED, true ) ) {
 				$name .= '_field';
 			}
-			$html .= '<label class="dxai-form-field">';
+			$html .= '<label class="dxui-form-field">';
 			$html .= '<span>' . esc_html( $field_label ) . '</span>';
 			if ( 'textarea' === $type ) {
 				$html .= '<textarea name="' . esc_attr( $name ) . '"' . $required . '></textarea>';
@@ -136,11 +136,11 @@ final class Form_Block {
 			$html .= '</label>';
 		}
 
-		$html .= '<button type="submit" class="dxai-form-submit">' . esc_html( $label ) . '</button>';
-		$html .= '<p class="dxai-form-status" hidden></p>';
+		$html .= '<button type="submit" class="dxui-form-submit">' . esc_html( $label ) . '</button>';
+		$html .= '<p class="dxui-form-status" hidden></p>';
 		$html .= '</form>';
 
-		wp_enqueue_script( 'dxai-ui-form-view' );
+		wp_enqueue_script( 'dx-ui-form-view' );
 
 		return $html;
 	}

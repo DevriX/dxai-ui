@@ -1,12 +1,12 @@
-/* "Words for the pages" — in the admin app's own colours (#dxai-ui-app sets the --dxai-* variables). */
+/* "Words for the pages" — in the admin app's own colours (#dx-ui-app sets the --dxui-* variables). */
 
-#dxai-ui-app .dxai-copy > .components-base-control,
-#dxai-ui-app .dxai-copy > .components-toggle-control {
+#dx-ui-app .dxui-copy > .components-base-control,
+#dx-ui-app .dxui-copy > .components-toggle-control {
 	margin: 12px 0;
 	max-width: 520px;
 }
 
-#dxai-ui-app .dxai-copy__list {
+#dx-ui-app .dxui-copy__list {
 	list-style: none;
 	margin: 16px 0 0;
 	padding: 0;
@@ -15,91 +15,91 @@
 	gap: 12px;
 }
 
-#dxai-ui-app .dxai-copy__page {
-	border: 1px solid var(--dxai-line);
-	border-radius: var(--dxai-radius, 10px);
+#dx-ui-app .dxui-copy__page {
+	border: 1px solid var(--dxui-line);
+	border-radius: var(--dxui-radius, 10px);
 	padding: 14px 16px;
-	background: var(--dxai-panel);
-	color: var(--dxai-text);
+	background: var(--dxui-panel);
+	color: var(--dxui-text);
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
 }
 
-#dxai-ui-app .dxai-copy__head {
+#dx-ui-app .dxui-copy__head {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 6px 12px;
 }
 
-#dxai-ui-app .dxai-copy__head strong {
-	color: var(--dxai-text);
+#dx-ui-app .dxui-copy__head strong {
+	color: var(--dxui-text);
 	font-size: 14px;
 }
 
-#dxai-ui-app .dxai-copy__kind {
+#dx-ui-app .dxui-copy__kind {
 	padding: 2px 10px;
 	border-radius: 999px;
 	font-size: 12px;
 	font-weight: 600;
 	background: rgba(138, 176, 208, 0.14);
-	color: var(--dxai-muted);
+	color: var(--dxui-muted);
 }
 
-#dxai-ui-app .dxai-copy__kind--location {
+#dx-ui-app .dxui-copy__kind--location {
 	background: rgba(34, 113, 177, 0.16);
-	color: var(--dxai-accent-2);
+	color: var(--dxui-accent-2);
 }
 
-#dxai-ui-app .dxai-copy__kind--service {
+#dx-ui-app .dxui-copy__kind--service {
 	background: #edfaef;
 	color: #007017;
 }
 
-#dxai-ui-app .dxai-copy__fields {
+#dx-ui-app .dxui-copy__fields {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 	gap: 12px 16px;
 }
 
-#dxai-ui-app .dxai-copy__proposal {
-	border-top: 1px solid var(--dxai-line);
+#dx-ui-app .dxui-copy__proposal {
+	border-top: 1px solid var(--dxui-line);
 	padding-top: 12px;
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
 
-#dxai-ui-app .dxai-copy__blocks {
+#dx-ui-app .dxui-copy__blocks {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 	max-height: 420px;
 	overflow: auto;
-	border: 1px solid var(--dxai-line);
+	border: 1px solid var(--dxui-line);
 	border-radius: 6px;
 }
 
-#dxai-ui-app .dxai-copy__blocks li {
+#dx-ui-app .dxui-copy__blocks li {
 	padding: 8px 12px;
-	border-bottom: 1px solid var(--dxai-line);
+	border-bottom: 1px solid var(--dxui-line);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-#dxai-ui-app .dxai-copy__blocks li:last-child {
+#dx-ui-app .dxui-copy__blocks li:last-child {
 	border-bottom: 0;
 }
 
-#dxai-ui-app .dxai-copy__blocks label {
+#dx-ui-app .dxui-copy__blocks label {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-#dxai-ui-app .dxai-copy__blocks input[type="checkbox"] {
+#dx-ui-app .dxui-copy__blocks input[type="checkbox"] {
 	flex: none;
 	width: 16px;
 	min-width: 16px;
@@ -109,26 +109,26 @@
 	border-radius: 3px;
 }
 
-#dxai-ui-app .dxai-copy__where {
+#dx-ui-app .dxui-copy__where {
 	font-size: 12px;
-	color: var(--dxai-muted);
+	color: var(--dxui-muted);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
 
-#dxai-ui-app .dxai-copy__blocks del {
-	color: var(--dxai-muted);
+#dx-ui-app .dxui-copy__blocks del {
+	color: var(--dxui-muted);
 }
 
-#dxai-ui-app .dxai-copy__blocks ins {
+#dx-ui-app .dxui-copy__blocks ins {
 	text-decoration: none;
 	background: rgba(95, 211, 155, 0.14);
-	color: var(--dxai-text);
+	color: var(--dxui-text);
 	padding: 1px 4px;
 	border-radius: 3px;
 }
 
-#dxai-ui-app .dxai-copy__review {
+#dx-ui-app .dxui-copy__review {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;

@@ -2,14 +2,14 @@
 //
 //   node bin/release.cjs 0.4.0-beta.9            (or: npm run release -- 0.4.0-beta.9)
 //
-// Writes dist/dxai-ui-<version>.zip. Everything is checked before the ZIP is kept: a release that fails a check is
-// not written. The ZIP is made by PHP's ZipArchive with forward-slash entry names under one `dxai-ui/` root — the
+// Writes dist/dx-ui-<version>.zip. Everything is checked before the ZIP is kept: a release that fails a check is
+// not written. The ZIP is made by PHP's ZipArchive with forward-slash entry names under one `dx-ui/` root — the
 // only shape WordPress's plugin upload installs on a Linux host. (A ZIP made by Windows' Compress-Archive names its
-// entries `dxai-ui\src\Plugin.php`; unzipped on WP Engine those are flat files with backslashes in their names, and
+// entries `dx-ui\src\Plugin.php`; unzipped on WP Engine those are flat files with backslashes in their names, and
 // the plugin does not load.)
 //
-// PHP: $DXAI_PHP, else Local's PHP 8.2. The CLI ini that loads the zip extension: $DXAI_PHP_INI, else
-// .verify/tools/dxai-cli.ini.
+// PHP: $DXUI_PHP, else Local's PHP 8.2. The CLI ini that loads the zip extension: $DXUI_PHP_INI, else
+// .verify/tools/dxui-cli.ini.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -21,14 +21,14 @@ if (!/^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/.test(VERSION || '')) {
 	process.exit(2);
 }
 const ROOT = path.resolve(__dirname, '..');
-const PHP = process.env.DXAI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
-const INI = process.env.DXAI_PHP_INI || path.join(ROOT, '.verify/tools/dxai-cli.ini');
-const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'dxai-release-'));
-const DST = path.join(WORK, 'dxai-ui');
-const OUT = path.join(ROOT, 'dist', 'dxai-ui-' + VERSION + '.zip');
+const PHP = process.env.DXUI_PHP || 'C:/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe';
+const INI = process.env.DXUI_PHP_INI || path.join(ROOT, '.verify/tools/dxui-cli.ini');
+const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'dxui-release-'));
+const DST = path.join(WORK, 'dx-ui');
+const OUT = path.join(ROOT, 'dist', 'dx-ui-' + VERSION + '.zip');
 
 // What ships. Nothing else: no assets/src, bin, fixtures, node_modules, logs.
-const KEEP = ['dxai-ui.php', 'uninstall.php', 'readme.txt', 'LICENSE', 'src', 'data', 'templates', 'themes', 'languages', 'runtime', 'assets/build', 'assets/css', 'assets/js', 'assets/vendor', 'assets/index.php'];
+const KEEP = ['dx-ui.php', 'uninstall.php', 'readme.txt', 'LICENSE', 'src', 'data', 'templates', 'themes', 'languages', 'runtime', 'assets/build', 'assets/css', 'assets/js', 'assets/vendor', 'assets/index.php'];
 const DEV = /[\\/](node_modules|\.git|\.verify|\.cursor|\.DS_Store)([\\/]|$)/;
 const JUNK = /\.(bak|orig|log|map|tmp)$/i;
 
@@ -60,21 +60,21 @@ const stamp = (rel, re, to) => {
 	need(n === 1, rel + ': version anchor found ' + n + ' times: ' + re);
 	fs.writeFileSync(f, s.replace(re, to));
 };
-stamp('dxai-ui.php', /( \* Version:\s+)[^\r\n]+/, '$1' + VERSION);
-stamp('dxai-ui.php', /define\( 'DXAI_UI_VERSION', '[^']+' \);/, "define( 'DXAI_UI_VERSION', '" + VERSION + "' );");
+stamp('dx-ui.php', /( \* Version:\s+)[^\r\n]+/, '$1' + VERSION);
+stamp('dx-ui.php', /define\( 'DX_UI_VERSION', '[^']+' \);/, "define( 'DX_UI_VERSION', '" + VERSION + "' );");
 stamp('readme.txt', /(Stable tag:\s*)[^\r\n]+/, '$1' + VERSION);
 
 // Promises the plugin makes that a release must keep.
 const read = (rel) => fs.readFileSync(path.join(DST, rel), 'utf8');
-need(fs.existsSync(path.join(DST, 'runtime/dxai-ui-runtime.php')), 'the runtime loader ships');
-need(fs.existsSync(path.join(DST, 'templates/dxai-template.php')) && fs.existsSync(path.join(DST, 'templates/dxai-blank.php')), 'both page templates ship (the DX template, and DX Blank for the pages of earlier imports)');
+need(fs.existsSync(path.join(DST, 'runtime/dx-ui-runtime.php')), 'the runtime loader ships');
+need(fs.existsSync(path.join(DST, 'templates/dxui-template.php')) && fs.existsSync(path.join(DST, 'templates/dxui-blank.php')), 'both page templates ship (the DX template, and DX Blank for the pages of earlier imports)');
 need(fs.existsSync(path.join(DST, 'themes/dx-base/style.css')) && fs.existsSync(path.join(DST, 'themes/dx-base/header.php')), 'the DX Base theme ships (the Template card installs it from the plugin)');
 need(fs.existsSync(path.join(DST, 'assets/vendor/lucide.min.js')), 'the icon runtime ships (assets/vendor/lucide.min.js: Assets::lucide_src() loads it on a page with icons, the admin too)');
 const un = read('uninstall.php');
 need(!/wp_delete_post\s*\(/.test(un), 'uninstall.php never deletes posts');
-need(/dxai_ui_keep_runtime/.test(un), 'uninstall.php keeps the runtime');
+need(/dx_ui_keep_runtime/.test(un), 'uninstall.php keeps the runtime');
 need(/render_only/.test(read('src/Plugin.php')), 'render-only boot (the runtime) exists');
-need((read('dxai-ui.php').match(/Requires at least:\s*([\d.]+)/) || [])[1] === (read('readme.txt').match(/Requires at least:\s*([\d.]+)/) || [])[1], 'dxai-ui.php and readme.txt require the same WordPress version');
+need((read('dx-ui.php').match(/Requires at least:\s*([\d.]+)/) || [])[1] === (read('readme.txt').match(/Requires at least:\s*([\d.]+)/) || [])[1], 'dx-ui.php and readme.txt require the same WordPress version');
 
 // Lint everything that ships.
 let php = 0, js = 0;

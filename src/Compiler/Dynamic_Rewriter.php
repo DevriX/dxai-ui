@@ -2,12 +2,12 @@
 /**
  * Force WordPress-native dynamic blocks for blog, forms, sliders, and menus.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Dynamic_Rewriter {
 
@@ -56,7 +56,7 @@ final class Dynamic_Rewriter {
 		// `is_designed()` used to veto this branch as a stand-in for "do not
 		// destroy the design". The policy states that outright now, so asking
 		// for a native form gets one even when the markup is fully designed.
-		if ( 'form' === $type && ! str_contains( $markup, 'wp:dxai-ui/form' ) && $this->policy->is_dynamic( $structure, 'form' ) ) {
+		if ( 'form' === $type && ! str_contains( $markup, 'wp:dx-ui/form' ) && $this->policy->is_dynamic( $structure, 'form' ) ) {
 			$block = $this->form_block( $structure['form_fields'] ?? array(), $class );
 			if ( str_contains( $markup, '<form' ) && ! $this->wraps_raw_html( $markup ) ) {
 				// Swap the element in place so surrounding blocks survive.
@@ -68,11 +68,11 @@ final class Dynamic_Rewriter {
 			}
 		}
 
-		if ( 'slider' === $type && ! str_contains( $markup, 'wp:dxai-ui/slider' ) && $this->policy->is_dynamic( $structure, 'slider' ) ) {
+		if ( 'slider' === $type && ! str_contains( $markup, 'wp:dx-ui/slider' ) && $this->policy->is_dynamic( $structure, 'slider' ) ) {
 			$structure['gutenberg_markup'] = sprintf(
-				'<!-- wp:dxai-ui/slider {"className":"%1$s"} -->' . "\n" .
-				'<div class="wp-block-dxai-ui-slider dxai-slider %1$s">%2$s</div>' . "\n" .
-				'<!-- /wp:dxai-ui/slider -->',
+				'<!-- wp:dx-ui/slider {"className":"%1$s"} -->' . "\n" .
+				'<div class="wp-block-dx-ui-slider dxui-slider %1$s">%2$s</div>' . "\n" .
+				'<!-- /wp:dx-ui/slider -->',
 				esc_attr( $class ),
 				$markup
 			);
@@ -83,7 +83,7 @@ final class Dynamic_Rewriter {
 				'<!-- wp:cover {"className":"%1$s","dimRatio":0,"isUserOverlayColor":false} -->' .
 				'<div class="wp-block-cover %1$s"><span aria-hidden="true" class="wp-block-cover__background has-background-dim-0 has-background-dim"></span><div class="wp-block-cover__inner-container">%2$s</div></div>' .
 				'<!-- /wp:cover -->',
-				esc_attr( $class !== '' ? $class : 'dxai-hero' ),
+				esc_attr( $class !== '' ? $class : 'dxui-hero' ),
 				$markup
 			);
 		}
@@ -100,13 +100,13 @@ final class Dynamic_Rewriter {
 				array(
 					'name'     => 'email',
 					'type'     => 'email',
-					'label'    => __( 'Email', 'dxai-ui' ),
+					'label'    => __( 'Email', 'dx-ui' ),
 					'required' => true,
 				),
 				array(
 					'name'     => 'message',
 					'type'     => 'textarea',
-					'label'    => __( 'Message', 'dxai-ui' ),
+					'label'    => __( 'Message', 'dx-ui' ),
 					'required' => true,
 				),
 			);
@@ -115,12 +115,12 @@ final class Dynamic_Rewriter {
 		$encoded = wp_json_encode(
 			array(
 				'fields'       => $fields,
-				'submitLabel'  => __( 'Send', 'dxai-ui' ),
+				'submitLabel'  => __( 'Send', 'dx-ui' ),
 				'className'    => $class,
 			)
 		);
 
-		return sprintf( '<!-- wp:dxai-ui/form %s /-->', is_string( $encoded ) ? $encoded : '{}' );
+		return sprintf( '<!-- wp:dx-ui/form %s /-->', is_string( $encoded ) ? $encoded : '{}' );
 	}
 
 	private function query_loop( string $class ): string {
@@ -179,7 +179,7 @@ HTML;
 			|| str_contains( $markup, '<!-- wp:heading' )
 			|| ( str_contains( $markup, '<!-- wp:html' ) || str_contains( $markup, '<!-- wp:' . Design_Html::RAW_BLOCK ) )
 			|| str_contains( $markup, '<!-- wp:image' )
-			|| str_contains( $markup, 'wp:dxai-ui/link' );
+			|| str_contains( $markup, 'wp:dx-ui/link' );
 	}
 
 	private function extract_class( string $markup ): string {

@@ -2,12 +2,12 @@
 /**
  * Convert Design.com `style-hover` attributes into real CSS :hover rules.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Style_Hover {
 
@@ -34,7 +34,7 @@ final class Style_Hover {
 				}
 
 				++self::$seq;
-				$class = 'dxai-sh-' . self::$seq;
+				$class = 'dxui-sh-' . self::$seq;
 				$css  .= '.' . $class . ':hover{' . $decls . "}\n";
 
 				$attrs = $m[2] . $m[5];

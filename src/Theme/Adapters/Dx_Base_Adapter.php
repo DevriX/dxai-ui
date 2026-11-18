@@ -2,14 +2,14 @@
 /**
  * DX Base: the theme the plugin carries for a site that has no DX theme of its own.
  *
- * @package DXAI_UI\Theme\Adapters
+ * @package DX_UI\Theme\Adapters
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme\Adapters;
+namespace DX_UI\Theme\Adapters;
 
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Theme\Theme_Compat;
 
 /**
  * DX Base (Theme\Base_Theme) has the same menu locations and widget areas as a DX theme and draws the design's header and footer on every

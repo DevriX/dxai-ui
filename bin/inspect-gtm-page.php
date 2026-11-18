@@ -2,7 +2,7 @@
 /**
  * Inspect saved GTM pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param array<int, array<string, mixed>> $blocks
  * @param array<string, int>               $counts
  */
-function dxai_count_blocks( array $blocks, array &$counts ): void {
+function dxui_count_blocks( array $blocks, array &$counts ): void {
 	foreach ( $blocks as $block ) {
 		$name = (string) ( $block['blockName'] ?? '' );
 		if ( $name !== '' ) {
 			$counts[ $name ] = ( $counts[ $name ] ?? 0 ) + 1;
 		}
 		if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
-			dxai_count_blocks( $block['innerBlocks'], $counts );
+			dxui_count_blocks( $block['innerBlocks'], $counts );
 		}
 	}
 }
@@ -31,7 +31,7 @@ $pages = get_posts(
 		'post_type'      => 'page',
 		'post_status'    => array( 'publish', 'draft', 'trash' ),
 		'posts_per_page' => 20,
-		'meta_key'       => '_dxai_ui_generated_page',
+		'meta_key'       => '_dx_ui_generated_page',
 		'meta_value'     => '1',
 	)
 );
@@ -48,7 +48,7 @@ foreach ( $ids as $id ) {
 		continue;
 	}
 	$counts = array();
-	dxai_count_blocks( parse_blocks( $p->post_content ), $counts );
+	dxui_count_blocks( parse_blocks( $p->post_content ), $counts );
 	arsort( $counts );
 	echo sprintf(
 		"id=%d type=%s status=%s slug=%s title=%s content=%d template=%s canvas=%d\n",
@@ -59,13 +59,13 @@ foreach ( $ids as $id ) {
 		$p->post_title,
 		strlen( $p->post_content ),
 		(string) get_post_meta( $id, '_wp_page_template', true ),
-		strlen( (string) get_post_meta( $id, '_dxai_ui_canvas_html', true ) )
+		strlen( (string) get_post_meta( $id, '_dx_ui_canvas_html', true ) )
 	);
 	echo 'has_ref=' . ( str_contains( $p->post_content, 'wp:block {"ref"' ) ? '1' : '0' ) . "\n";
 	echo 'has_heading=' . ( ( $counts['core/heading'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
 	echo 'has_paragraph=' . ( ( $counts['core/paragraph'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
-	echo 'has_link=' . ( ( $counts['dxai-ui/link'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
-	echo 'has_details=' . ( ( $counts['dxai-ui/details'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
+	echo 'has_link=' . ( ( $counts['dx-ui/link'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
+	echo 'has_details=' . ( ( $counts['dx-ui/details'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
 	echo 'has_group=' . ( ( $counts['core/group'] ?? 0 ) > 0 ? '1' : '0' ) . "\n";
 	echo 'html_blocks=' . (int) ( $counts['core/html'] ?? 0 ) . "\n";
 	echo 'block_counts=' . wp_json_encode( $counts ) . "\n";

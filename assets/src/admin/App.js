@@ -10,7 +10,7 @@ import { useRoute } from './router';
 import './screens/screens.css';
 
 /*
- * The app is one of five screens, told by WordPress which (dxaiUI.screen); the menu, the admin bar and the page's
+ * The app is one of five screens, told by WordPress which (dxUI.screen); the menu, the admin bar and the page's
  * frame are WordPress's own. Inside Designs the hash says whether the list or one design's page is open.
  */
 
@@ -26,7 +26,7 @@ export default function App( { screen } ) {
 	switch ( screen ) {
 		case 'convert':
 			return (
-				<Page title={ __( 'Convert', 'dxai-ui' ) } meta={ __( 'A design archive, a pasted component or a Figma file, compiled into editable blocks.', 'dxai-ui' ) } className="dxai-page--convert">
+				<Page title={ __( 'Convert', 'dx-ui' ) } meta={ __( 'A design archive, a pasted component or a Figma file, compiled into editable blocks.', 'dx-ui' ) } className="dxui-page--convert">
 					<ConvertWizard />
 				</Page>
 			);
@@ -34,13 +34,13 @@ export default function App( { screen } ) {
 			return <SiteScreen />;
 		case 'forms':
 			return (
-				<Page title={ __( 'Form entries', 'dxai-ui' ) } meta={ __( 'What the forms of the converted pages received.', 'dxai-ui' ) } className="dxai-page--forms">
+				<Page title={ __( 'Form entries', 'dx-ui' ) } meta={ __( 'What the forms of the converted pages received.', 'dx-ui' ) } className="dxui-page--forms">
 					<FormsScreen />
 				</Page>
 			);
 		case 'settings':
 			return (
-				<Page title={ __( 'Settings', 'dxai-ui' ) } meta={ __( 'The AI engines and their keys, and how the pages behave.', 'dxai-ui' ) } className="dxai-page--settings">
+				<Page title={ __( 'Settings', 'dx-ui' ) } meta={ __( 'The AI engines and their keys, and how the pages behave.', 'dx-ui' ) } className="dxui-page--settings">
 					<SettingsScreen />
 				</Page>
 			);

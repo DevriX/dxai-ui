@@ -13,7 +13,7 @@ parameters:
 			path: src/API/Converter_Controller.php
 
 		-
-			message: '#^Method DXAI_UI\\API\\Converter_Controller\:\:publish_permissions\(\) should return WP_Error\|true but returns false\.$#'
+			message: '#^Method DX_UI\\API\\Converter_Controller\:\:publish_permissions\(\) should return WP_Error\|true but returns false\.$#'
 			identifier: return.type
 			count: 1
 			path: src/API/Converter_Controller.php
@@ -91,7 +91,7 @@ parameters:
 			path: src/API/Template_Controller.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''chrome_owner'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\API\\\\Converter_Controller'' and ''chrome_owner'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/API/Transfer_Controller.php
@@ -133,55 +133,55 @@ parameters:
 			path: src/Blocks/Assets.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Blocks\\\\Style_Rules'' and ''rest_rules'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\Blocks\\\\Style_Rules'' and ''rest_rules'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false, splitting\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''span''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}, dxaiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false, splitting\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''span''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{svgAttrs\: array\{type\: ''array'', default\: array\{\}\}, svgInner\: array\{type\: ''string'', default\: ''''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{svgAttrs\: array\{type\: ''array'', default\: array\{\}\}, svgInner\: array\{type\: ''string'', default\: ''''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''div''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, dxaiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, elType\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{tagName\: array\{type\: ''string'', default\: ''div''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, dxuiData\: array\{type\: ''object'', default\: array\{\}\}, anchor\: array\{type\: ''string'', default\: ''''\}, elType\: array\{type\: ''string'', default\: ''''\}, url\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, alt\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, dxaiStyle\: array\{type\: ''string'', default\: ''''\}, dxaiCss\: array\{type\: ''string'', default\: ''''\}, width\: array\{type\: ''string'', default\: ''''\}, height\: array\{type\: ''string'', default\: ''''\}, loading\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, customCSS\: false, html\: false, anchor\: false\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, alt\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, dxuiStyle\: array\{type\: ''string'', default\: ''''\}, dxuiCss\: array\{type\: ''string'', default\: ''''\}, width\: array\{type\: ''string'', default\: ''''\}, height\: array\{type\: ''string'', default\: ''''\}, loading\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, html\: false, customCSS\: false, anchor\: false\}, attributes\: array\{content\: array\{type\: ''string'', source\: ''html''\}, dxaiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: false, customClassName\: false, html\: false, customCSS\: false, anchor\: false\}, attributes\: array\{content\: array\{type\: ''string'', source\: ''html''\}, dxuiInner\: array\{type\: ''object'', default\: array\{\}\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false, anchor\: true\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, text\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, tagName\: array\{type\: ''string'', default\: ''a''\}, suffix\: array\{type\: ''string'', default\: ''''\}, suffixClass\: array\{type\: ''string'', default\: ''''\}, ariaLabel\: array\{type\: ''string'', default\: ''''\}, role\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false, anchor\: true\}, attributes\: array\{url\: array\{type\: ''string'', default\: ''''\}, text\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}, tagName\: array\{type\: ''string'', default\: ''a''\}, suffix\: array\{type\: ''string'', default\: ''''\}, suffixClass\: array\{type\: ''string'', default\: ''''\}, ariaLabel\: array\{type\: ''string'', default\: ''''\}, role\: array\{type\: ''string'', default\: ''''\}, \.\.\.\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{num\: array\{type\: ''string'', default\: ''''\}, question\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{num\: array\{type\: ''string'', default\: ''''\}, question\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxai\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{value\: array\{type\: ''string'', default\: ''''\}, suffix\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''rv\-num''\}, srClass\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, category\: ''dx\-blocks'', editor_script\: ''dxui\-ui\-blocks…'', supports\: array\{className\: true, html\: false\}, attributes\: array\{value\: array\{type\: ''string'', default\: ''''\}, suffix\: array\{type\: ''string'', default\: ''''\}, className\: array\{type\: ''string'', default\: ''rv\-num''\}, srClass\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Design_Blocks.php
@@ -205,7 +205,7 @@ parameters:
 			path: src/Blocks/Design_Blocks.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxai\-ui\-blocks…'', view_script\: ''dxai\-ui\-form\-view'', style\: ''dxai\-ui\-dynamic'', render_callback\: array\{\$this\(DXAI_UI\\Blocks\\Form_Block\), ''render''\}, attributes\: array\{fields\: array\{type\: ''array'', default\: array\{\}\}, submitLabel\: array\{type\: ''string'', default\: ''Send''\}, successMessage\: array\{type\: ''string'', default\: ''Thank you\.''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxui\-ui\-blocks…'', view_script\: ''dxui\-ui\-form\-view'', style\: ''dxui\-ui\-dynamic'', render_callback\: array\{\$this\(DX_UI\\Blocks\\Form_Block\), ''render''\}, attributes\: array\{fields\: array\{type\: ''array'', default\: array\{\}\}, submitLabel\: array\{type\: ''string'', default\: ''Send''\}, successMessage\: array\{type\: ''string'', default\: ''Thank you\.''\}, className\: array\{type\: ''string'', default\: ''''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Form_Block.php
@@ -289,7 +289,7 @@ parameters:
 			path: src/Blocks/Native/Library_Style.php
 
 		-
-			message: '#^Instanceof between DXAI_UI\\Blocks\\Native\\Converter and DXAI_UI\\Blocks\\Native\\Converter will always evaluate to true\.$#'
+			message: '#^Instanceof between DX_UI\\Blocks\\Native\\Converter and DX_UI\\Blocks\\Native\\Converter will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 1
 			path: src/Blocks/Native/Native_Blocks.php
@@ -331,13 +331,13 @@ parameters:
 			path: src/Blocks/Native/Tidy.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, render_callback\: array\{\$this\(DXAI_UI\\Blocks\\Pattern_Block\), ''render''\}, attributes\: array\{patternId\: array\{type\: ''number'', default\: 0\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, render_callback\: array\{\$this\(DX_UI\\Blocks\\Pattern_Block\), ''render''\}, attributes\: array\{patternId\: array\{type\: ''number'', default\: 0\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Pattern_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxai\-ui\-blocks…'', view_script\: ''dxai\-ui\-slider\-view'', style\: ''dxai\-ui\-dynamic'', supports\: array\{className\: true, html\: false, align\: array\{''wide'', ''full''\}\}\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, editor_script\: ''dxui\-ui\-blocks…'', view_script\: ''dxui\-ui\-slider\-view'', style\: ''dxui\-ui\-dynamic'', supports\: array\{className\: true, html\: false, align\: array\{''wide'', ''full''\}\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Blocks/Slider_Block.php
@@ -385,7 +385,7 @@ parameters:
 			path: src/Blocks/Style_Rules.php
 
 		-
-			message: '#^Offset \*NEVER\* on array\{dxai\-part\-img\: '' img''\} in isset\(\) always exists and is not nullable\.$#'
+			message: '#^Offset \*NEVER\* on array\{dxui\-part\-img\: '' img''\} in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.offset
 			count: 1
 			path: src/Blocks/Style_Rules.php
@@ -415,7 +415,7 @@ parameters:
 			path: src/Blocks/Style_Rules.php
 
 		-
-			message: '#^Default value of the parameter \#5 \$site \(array\{\}\) of method DXAI_UI\\Chrome\\Chrome_Choice\:\:message\(\) is incompatible with type array\{menus\: array\<string, string\>, widgets\: array\<string, int\>\}\.$#'
+			message: '#^Default value of the parameter \#5 \$site \(array\{\}\) of method DX_UI\\Chrome\\Chrome_Choice\:\:message\(\) is incompatible with type array\{menus\: array\<string, string\>, widgets\: array\<string, int\>\}\.$#'
 			identifier: parameter.defaultValue
 			count: 1
 			path: src/Chrome/Chrome_Choice.php
@@ -499,13 +499,13 @@ parameters:
 			path: src/Chrome/Site_Footer_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', keywords\: array\{''footer'', ''widgets''\}, editor_script_handles\: array\{''dxai\-ui\-site\-footer…''\}, render_callback\: array\{''DXAI_UI\\\\Chrome\\\\Site_Footer_Block'', ''render''\}, supports\: array\{html\: false, className\: false, customClassName\: false, reusable\: false, multiple\: false\}, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', keywords\: array\{''footer'', ''widgets''\}, editor_script_handles\: array\{''dxui\-ui\-site\-footer…''\}, render_callback\: array\{''DX_UI\\\\Chrome\\\\Site_Footer_Block'', ''render''\}, supports\: array\{html\: false, className\: false, customClassName\: false, reusable\: false, multiple\: false\}, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Chrome/Site_Footer_Block.php
 
 		-
-			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', icon\: ''menu'', keywords\: array\{''header'', ''menu'', ''navigation'', ''logo''\}, editor_script\: ''dxai\-ui\-site\-header…'', render_callback\: array\{\$this\(DXAI_UI\\Chrome\\Site_Header_Block\), ''render''\}, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$args of function register_block_type expects array\{api_version\?\: string, title\?\: string, category\?\: string\|null, parent\?\: array\<string\>\|null, ancestor\?\: array\<string\>\|null, allowed_blocks\?\: array\<string\>\|null, icon\?\: string\|null, description\?\: string, \.\.\.\}, array\{api_version\: 3, title\: string, description\: string, category\: ''dx\-blocks'', icon\: ''menu'', keywords\: array\{''header'', ''menu'', ''navigation'', ''logo''\}, editor_script\: ''dxui\-ui\-site\-header…'', render_callback\: array\{\$this\(DX_UI\\Chrome\\Site_Header_Block\), ''render''\}, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Chrome/Site_Header_Block.php
@@ -559,13 +559,13 @@ parameters:
 			path: src/Compiler/Dc_Js.php
 
 		-
-			message: '#^Parameter &\$out by\-ref type of method DXAI_UI\\Compiler\\Dc_Js\:\:collect_setstate\(\) expects array\<int, array\<mixed\>\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter &\$out by\-ref type of method DX_UI\\Compiler\\Dc_Js\:\:collect_setstate\(\) expects array\<int, array\<mixed\>\>, array\<int, mixed\> given\.$#'
 			identifier: parameterByRef.type
 			count: 1
 			path: src/Compiler/Dc_Js.php
 
 		-
-			message: '#^Parameter &\$scope by\-ref type of method DXAI_UI\\Compiler\\Dc_Js\:\:ev\(\) expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter &\$scope by\-ref type of method DX_UI\\Compiler\\Dc_Js\:\:ev\(\) expects array\<string, mixed\>, array given\.$#'
 			identifier: parameterByRef.type
 			count: 2
 			path: src/Compiler/Dc_Js.php
@@ -637,7 +637,7 @@ parameters:
 			path: src/Compiler/Dc_Script.php
 
 		-
-			message: '#^Static method DXAI_UI\\Compiler\\Design_Css\:\:unwrap_at_layer\(\) is unused\.$#'
+			message: '#^Static method DX_UI\\Compiler\\Design_Css\:\:unwrap_at_layer\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Compiler/Design_Css.php
@@ -835,13 +835,13 @@ parameters:
 			path: src/Compiler/Jsx_Compiler.php
 
 		-
-			message: '#^Method DXAI_UI\\Compiler\\Jsx_Compiler\:\:is_landmark\(\) is unused\.$#'
+			message: '#^Method DX_UI\\Compiler\\Jsx_Compiler\:\:is_landmark\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Compiler/Jsx_Compiler.php
 
 		-
-			message: '#^Method DXAI_UI\\Compiler\\Jsx_Compiler\:\:skip_value\(\) is unused\.$#'
+			message: '#^Method DX_UI\\Compiler\\Jsx_Compiler\:\:skip_value\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Compiler/Jsx_Compiler.php
@@ -1015,13 +1015,13 @@ parameters:
 			path: src/Compiler/Source_Compiler.php
 
 		-
-			message: '#^Method DXAI_UI\\Compiler\\Source_Compiler\:\:compile_html_zip\(\) should return array\{block_title\: string, gutenberg_markup\: string, structures\: array\<int, array\<string, mixed\>\>, slug\?\: string, from_html\?\: bool\} but returns array\{\}\.$#'
+			message: '#^Method DX_UI\\Compiler\\Source_Compiler\:\:compile_html_zip\(\) should return array\{block_title\: string, gutenberg_markup\: string, structures\: array\<int, array\<string, mixed\>\>, slug\?\: string, from_html\?\: bool\} but returns array\{\}\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Compiler/Source_Compiler.php
 
 		-
-			message: '#^Method DXAI_UI\\Compiler\\Source_Compiler\:\:root_class\(\) is unused\.$#'
+			message: '#^Method DX_UI\\Compiler\\Source_Compiler\:\:root_class\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Compiler/Source_Compiler.php
@@ -1075,7 +1075,7 @@ parameters:
 			path: src/Compiler/Tailwind/Engine.php
 
 		-
-			message: '#^Constant DXAI_UI\\Compiler\\Tailwind\\Utilities\\Mask\:\:CSS_NUMBER is unused\.$#'
+			message: '#^Constant DX_UI\\Compiler\\Tailwind\\Utilities\\Mask\:\:CSS_NUMBER is unused\.$#'
 			identifier: classConstant.unused
 			count: 1
 			path: src/Compiler/Tailwind/Utilities/Mask.php
@@ -1393,13 +1393,13 @@ parameters:
 			path: src/Pages/Block_Library.php
 
 		-
-			message: '#^Method DXAI_UI\\Pages\\Block_Library\:\:fill\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
+			message: '#^Method DX_UI\\Pages\\Block_Library\:\:fill\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
 			identifier: parameterByRef.unusedType
 			count: 1
 			path: src/Pages/Block_Library.php
 
 		-
-			message: '#^Method DXAI_UI\\Pages\\Block_Library\:\:section\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
+			message: '#^Method DX_UI\\Pages\\Block_Library\:\:section\(\) never assigns null to &\$why so it can be removed from the by\-ref type\.$#'
 			identifier: parameterByRef.unusedType
 			count: 1
 			path: src/Pages/Block_Library.php
@@ -1465,13 +1465,13 @@ parameters:
 			path: src/Pages/Content_Extractor.php
 
 		-
-			message: '#^Parameter \#1 \$img of method DXAI_UI\\Pages\\Content_Extractor\:\:image_from\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			message: '#^Parameter \#1 \$img of method DX_UI\\Pages\\Content_Extractor\:\:image_from\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Pages/Content_Extractor.php
 
 		-
-			message: '#^Call to function method_exists\(\) with DXAI_UI\\Engines\\LLM_Provider_Interface and ''complete'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with DX_UI\\Engines\\LLM_Provider_Interface and ''complete'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Pages/Copy_Writer.php
@@ -1897,7 +1897,7 @@ parameters:
 			path: src/Pages/Team_Quality.php
 
 		-
-			message: '#^Method DXAI_UI\\Pages\\Team_Run\:\:finish\(\) should return array\{at\: int, posts\: array\<int, array\<string, mixed\>\>\} but returns array\{at\: int, pages\: array\<int, array\<string, mixed\>\>, menu\: bool\}\.$#'
+			message: '#^Method DX_UI\\Pages\\Team_Run\:\:finish\(\) should return array\{at\: int, posts\: array\<int, array\<string, mixed\>\>\} but returns array\{at\: int, pages\: array\<int, array\<string, mixed\>\>, menu\: bool\}\.$#'
 			identifier: return.type
 			count: 2
 			path: src/Pages/Team_Run.php
@@ -2083,7 +2083,7 @@ parameters:
 			path: src/Structures/Navigation_Factory.php
 
 		-
-			message: '#^Method DXAI_UI\\Structures\\Navigation_Factory\:\:classic_plan\(\) should return array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\<string, array\>\} but returns array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\{existing\: array\<int, array\{key\?\: string, label\?\: string, children\: list\<int\>, owned\?\: bool, matchable\?\: bool, record\?\: string\|null, ref\?\: WP_Post\}\>, desired\: array\<int, array\<string, mixed\>\>, d_to_e\: array\<int, int\>, e_to_d\: array\<int, int\>, skip\: array\<int, true\>, header\: bool\}\}\.$#'
+			message: '#^Method DX_UI\\Structures\\Navigation_Factory\:\:classic_plan\(\) should return array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\<string, array\>\} but returns array\{tree\: array\<int, array\{d\: int\|null, e\: int\|null, children\: array\}\>, m\: array\{existing\: array\<int, array\{key\?\: string, label\?\: string, children\: list\<int\>, owned\?\: bool, matchable\?\: bool, record\?\: string\|null, ref\?\: WP_Post\}\>, desired\: array\<int, array\<string, mixed\>\>, d_to_e\: array\<int, int\>, e_to_d\: array\<int, int\>, skip\: array\<int, true\>, header\: bool\}\}\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Structures/Navigation_Factory.php
@@ -2107,7 +2107,7 @@ parameters:
 			path: src/Structures/Navigation_Factory.php
 
 		-
-			message: '#^Parameter \#3 \$m of method DXAI_UI\\Structures\\Navigation_Factory\:\:merge_level\(\) expects array\<string, array\>, array\<string, array\<int, array\<string, mixed\>\|int\|true\>\|bool\> given\.$#'
+			message: '#^Parameter \#3 \$m of method DX_UI\\Structures\\Navigation_Factory\:\:merge_level\(\) expects array\<string, array\>, array\<string, array\<int, array\<string, mixed\>\|int\|true\>\|bool\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Structures/Navigation_Factory.php
@@ -2185,13 +2185,13 @@ parameters:
 			path: src/Structures/Site_From_Menu.php
 
 		-
-			message: '#^Parameter &\$run by\-ref type of method DXAI_UI\\Structures\\Site_From_Menu\:\:step\(\) expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter &\$run by\-ref type of method DX_UI\\Structures\\Site_From_Menu\:\:step\(\) expects array\<string, mixed\>, array given\.$#'
 			identifier: parameterByRef.type
 			count: 11
 			path: src/Structures/Site_From_Menu.php
 
 		-
-			message: '#^Static method DXAI_UI\\Structures\\Site_From_Menu\:\:chrome_markup\(\) is unused\.$#'
+			message: '#^Static method DX_UI\\Structures\\Site_From_Menu\:\:chrome_markup\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Structures/Site_From_Menu.php
@@ -2239,7 +2239,7 @@ parameters:
 			path: src/Structures/Structure_Repository.php
 
 		-
-			message: '#^Parameter &\$link_pages by\-ref type of method DXAI_UI\\Structures\\Structure_Repository\:\:apply_crawl\(\) expects array\<int, array\<string, mixed\>\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter &\$link_pages by\-ref type of method DX_UI\\Structures\\Structure_Repository\:\:apply_crawl\(\) expects array\<int, array\<string, mixed\>\>, array\<int, mixed\> given\.$#'
 			identifier: parameterByRef.type
 			count: 2
 			path: src/Structures/Structure_Repository.php
@@ -2263,7 +2263,7 @@ parameters:
 			path: src/Support/Color_Math.php
 
 		-
-			message: '#^Method DXAI_UI\\Support\\Css_Trim\:\:trim\(\) never assigns null to &\$stats so it can be removed from the by\-ref type\.$#'
+			message: '#^Method DX_UI\\Support\\Css_Trim\:\:trim\(\) never assigns null to &\$stats so it can be removed from the by\-ref type\.$#'
 			identifier: parameterByRef.unusedType
 			count: 1
 			path: src/Support/Css_Trim.php
@@ -2293,7 +2293,7 @@ parameters:
 			path: src/Support/Upload_Paths.php
 
 		-
-			message: '#^Method DXAI_UI\\Theme\\Adapters\\Amr_Adapter\:\:picture_shape\(\) never returns array\{\} so it can be removed from the return type\.$#'
+			message: '#^Method DX_UI\\Theme\\Adapters\\Amr_Adapter\:\:picture_shape\(\) never returns array\{\} so it can be removed from the return type\.$#'
 			identifier: return.unusedType
 			count: 1
 			path: src/Theme/Adapters/Amr_Adapter.php
@@ -2485,31 +2485,31 @@ parameters:
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''chrome_report'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\API\\\\Converter_Controller'' and ''chrome_report'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\API\\\\Converter_Controller'' and ''unfiltered_html…'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\API\\\\Converter_Controller'' and ''unfiltered_html…'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Structures\\\\Navigation_Factory'' and ''header_menu'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\Structures\\\\Navigation_Factory'' and ''header_menu'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Structures\\\\Structure_Repository'' and ''install_site_footer'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\Structures\\\\Structure_Repository'' and ''install_site_footer'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Call to function method_exists\(\) with ''DXAI_UI\\\\Theme\\\\Theme_Compat'' and ''may_install_chrome'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with ''DX_UI\\\\Theme\\\\Theme_Compat'' and ''may_install_chrome'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Transfer/Page_Import.php
@@ -2551,7 +2551,7 @@ parameters:
 			path: src/Transfer/Page_Import.php
 
 		-
-			message: '#^Property DXAI_UI\\Transfer\\Page_Import\:\:\$made_media \(array\<string, int\>\) does not accept array\<int, int\>\.$#'
+			message: '#^Property DX_UI\\Transfer\\Page_Import\:\:\$made_media \(array\<string, int\>\) does not accept array\<int, int\>\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: src/Transfer/Page_Import.php
@@ -2617,7 +2617,7 @@ parameters:
 			path: src/Verification/Import_Audit.php
 
 		-
-			message: '#^Method DXAI_UI\\Verification\\Import_Audit\:\:note_editability\(\) is unused\.$#'
+			message: '#^Method DX_UI\\Verification\\Import_Audit\:\:note_editability\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: src/Verification/Import_Audit.php

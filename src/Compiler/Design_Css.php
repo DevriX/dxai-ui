@@ -2,12 +2,12 @@
 /**
  * Keep pixel-perfect design CSS (tokens + custom classes) for Gutenberg.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Design_Css {
 

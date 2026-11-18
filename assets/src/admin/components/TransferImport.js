@@ -10,8 +10,8 @@ import { readPackage } from './TransferPackage';
 import './import.css';
 
 /*
- * "Import package": a .dxai.zip exported from another site's Library (or its
- * Pages list, or `wp dxai-ui export`) becomes a page here, with its design
+ * "Import package": a .dxui.zip exported from another site's Library (or its
+ * Pages list, or `wp dx-ui export`) becomes a page here, with its design
  * stylesheet, fonts, images, parts and patterns.
  *
  * The decision asked is the header and footer — the question the ZIP import
@@ -68,7 +68,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 
 	useEffect( () => {
 		if ( result && done.current ) {
-			const heading = done.current.querySelector( '.dxai-done__title' );
+			const heading = done.current.querySelector( '.dxui-done__title' );
 			if ( heading ) {
 				heading.focus();
 			}
@@ -85,7 +85,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 		keep( '' );
 		setPkg( null );
 		if ( picked && ! /\.zip$/i.test( picked.name ) ) {
-			setError( __( 'Choose a .dxai.zip package exported by DX UI.', 'dxai-ui' ) );
+			setError( __( 'Choose a .dxui.zip package exported by DX UI.', 'dx-ui' ) );
 			return;
 		}
 		setFile( picked || null );
@@ -116,11 +116,11 @@ export default function TransferImport( { info, infoError, onImported } ) {
 	// A lost answer: what the person can do about it, in words.
 	function failure( err, resumable ) {
 		const status = Number( ( err && err.data && err.data.status ) || 0 );
-		const message = ( err && err.message ) || __( 'The import failed.', 'dxai-ui' );
+		const message = ( err && err.message ) || __( 'The import failed.', 'dx-ui' );
 		if ( status === 0 || status >= 500 || ( err && ( err.code === 'invalid_json' || err.code === 'fetch_error' ) ) ) {
 			return message + ' ' + ( resumable
-				? __( 'The import waits on the server: continue it, and it goes on where it stopped.', 'dxai-ui' )
-				: __( 'Nothing is lost: import the same package again and it continues where it stopped — the files already added to the media library are reused, and the page is updated in place.', 'dxai-ui' ) );
+				? __( 'The import waits on the server: continue it, and it goes on where it stopped.', 'dx-ui' )
+				: __( 'Nothing is lost: import the same package again and it continues where it stopped — the files already added to the media library are reused, and the page is updated in place.', 'dx-ui' ) );
 		}
 		return message;
 	}
@@ -133,7 +133,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 		}
 		keep( res.token );
 		setProgress( { phase: 'media', done: Number( res.media && res.media.done ) || 0, total: Number( res.media && res.media.total ) || 0 } );
-		return apiFetch( { path: '/dxai-ui/v1/transfer/import/continue', method: 'POST', data: { token: res.token } } ).then( steps );
+		return apiFetch( { path: '/dx-ui/v1/transfer/import/continue', method: 'POST', data: { token: res.token } } ).then( steps );
 	}
 
 	function run( start ) {
@@ -172,7 +172,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 			return;
 		}
 		setProgress( { phase: 'media', done: 0, total: 0 } );
-		run( () => apiFetch( { path: '/dxai-ui/v1/transfer/import/continue', method: 'POST', data: { token } } ) );
+		run( () => apiFetch( { path: '/dx-ui/v1/transfer/import/continue', method: 'POST', data: { token } } ) );
 	}
 
 	function reset() {
@@ -185,32 +185,32 @@ export default function TransferImport( { info, infoError, onImported } ) {
 		if ( progress.phase === 'upload' ) {
 			status = sprintf(
 				/* translators: 1: bytes sent, 2: total bytes */
-				__( 'Uploading %1$s of %2$s…', 'dxai-ui' ),
+				__( 'Uploading %1$s of %2$s…', 'dx-ui' ),
 				formatBytes( progress.loaded || 0 ),
 				formatBytes( progress.total || ( file ? file.size : 0 ) )
 			);
 		} else if ( progress.phase === 'media' && progress.total > 0 ) {
 			status = sprintf(
 				/* translators: 1: files done, 2: files in the package */
-				__( 'Adding the images and fonts to the media library: %1$d of %2$d…', 'dxai-ui' ),
+				__( 'Adding the images and fonts to the media library: %1$d of %2$d…', 'dx-ui' ),
 				progress.done,
 				progress.total
 			);
 		} else {
-			status = __( 'Uploaded. Importing the page, its media, header and footer…', 'dxai-ui' );
+			status = __( 'Uploaded. Importing the page, its media, header and footer…', 'dx-ui' );
 		}
 	}
 
 	return (
-		<section className="dxai-library-group dxai-section" aria-labelledby="dxai-transfer-title" ref={ done }>
-			<div className="dxai-section-head">
+		<section className="dxui-library-group dxui-section" aria-labelledby="dxui-transfer-title" ref={ done }>
+			<div className="dxui-section-head">
 				<div>
-					<p className="dxai-section-kicker">{ __( 'Move a page between sites', 'dxai-ui' ) }</p>
-					<h3 id="dxai-transfer-title">{ __( 'Import package', 'dxai-ui' ) }</h3>
+					<p className="dxui-section-kicker">{ __( 'Move a page between sites', 'dx-ui' ) }</p>
+					<h3 id="dxui-transfer-title">{ __( 'Import package', 'dx-ui' ) }</h3>
 				</div>
 			</div>
-			<p className="dxai-muted">
-				{ __( 'A package is a converted page exported with its styles: its blocks, design stylesheet and script, fonts, images, template parts and patterns, and its header and footer. Copying blocks from one editor into another site carries none of that — export the page on the site it was built on (Designs › the design › Transfer, or Pages › Export with styles) and import the file here.', 'dxai-ui' ) }
+			<p className="dxui-muted">
+				{ __( 'A package is a converted page exported with its styles: its blocks, design stylesheet and script, fonts, images, template parts and patterns, and its header and footer. Copying blocks from one editor into another site carries none of that — export the page on the site it was built on (Designs › the design › Transfer, or Pages › Export with styles) and import the file here.', 'dx-ui' ) }
 			</p>
 
 			{ infoError && <Notice status="error" isDismissible={ false }>{ infoError }</Notice> }
@@ -220,7 +220,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 			{ ! result && ! infoError && (
 				<>
 					<div
-						className={ 'dxai-drop' + ( drag ? ' is-drag' : '' ) }
+						className={ 'dxui-drop' + ( drag ? ' is-drag' : '' ) }
 						onDragOver={ ( event ) => {
 							event.preventDefault();
 							setDrag( true );
@@ -228,25 +228,25 @@ export default function TransferImport( { info, infoError, onImported } ) {
 						onDragLeave={ () => setDrag( false ) }
 						onDrop={ onDrop }
 					>
-						<span className="dxai-drop-mark" aria-hidden="true" />
-						<p>{ __( 'Drop a .dxai.zip package here', 'dxai-ui' ) }</p>
-						<em className="dxai-drop-hint">{ __( 'Exported by DX UI on another site', 'dxai-ui' ) }</em>
-						<label className="dxai-file">
+						<span className="dxui-drop-mark" aria-hidden="true" />
+						<p>{ __( 'Drop a .dxui.zip package here', 'dx-ui' ) }</p>
+						<em className="dxui-drop-hint">{ __( 'Exported by DX UI on another site', 'dx-ui' ) }</em>
+						<label className="dxui-file">
 							<input
 								ref={ input }
 								type="file"
 								accept=".zip,application/zip"
 								onChange={ ( event ) => pick( event.target.files[ 0 ] ) }
 							/>
-							{ file ? file.name + ' · ' + formatBytes( file.size ) : __( 'or browse your files', 'dxai-ui' ) }
+							{ file ? file.name + ' · ' + formatBytes( file.size ) : __( 'or browse your files', 'dx-ui' ) }
 						</label>
 					</div>
 
 					{ pkg && ! pkg.invalid && (
-						<p className="dxai-muted">
+						<p className="dxui-muted">
 							{ sprintf(
 								/* translators: 1: page title, 2: source site, 3: page id there, 4: number of media files */
-								_n( '“%1$s” from %2$s (page %3$d there), with %4$d image or font file.', '“%1$s” from %2$s (page %3$d there), with %4$d image and font files.', pkg.media, 'dxai-ui' ),
+								_n( '“%1$s” from %2$s (page %3$d there), with %4$d image or font file.', '“%1$s” from %2$s (page %3$d there), with %4$d image and font files.', pkg.media, 'dx-ui' ),
 								pkg.title,
 								pkg.siteUrl,
 								pkg.pageId,
@@ -256,7 +256,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 					) }
 					{ pkg && pkg.invalid && (
 						<Notice status="warning" isDismissible={ false }>
-							{ __( 'This ZIP is not a page package exported by DX UI (its manifest.json is of another kind), so the import will refuse it. To import a Lovable or Claude Design export, use Convert instead.', 'dxai-ui' ) }
+							{ __( 'This ZIP is not a page package exported by DX UI (its manifest.json is of another kind), so the import will refuse it. To import a Lovable or Claude Design export, use Convert instead.', 'dx-ui' ) }
 						</Notice>
 					) }
 
@@ -264,7 +264,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 						<Notice status="warning" isDismissible={ false }>
 							{ sprintf(
 								/* translators: 1: file size, 2: the server's upload limit */
-								__( 'This package is %1$s, and this server accepts uploads up to %2$s, so the upload will be refused. Import it from the command line instead, where there is no upload limit: copy the file to the server and run `wp dxai-ui import <file> --user=<admin>`.', 'dxai-ui' ),
+								__( 'This package is %1$s, and this server accepts uploads up to %2$s, so the upload will be refused. Import it from the command line instead, where there is no upload limit: copy the file to the server and run `wp dx-ui import <file> --user=<admin>`.', 'dx-ui' ),
 								formatBytes( file.size ),
 								formatBytes( maxUpload )
 							) }
@@ -279,7 +279,7 @@ export default function TransferImport( { info, infoError, onImported } ) {
 									<li key={ row.location }>
 										{ sprintf(
 											/* translators: 1: menu location, 2: the person's menu there */
-											__( '%1$s holds your menu “%2$s”. Installing leaves it there, so the header — the site’s, and this page’s — shows “%2$s” in the design’s look, not the design’s own links. To show the design’s, assign its menu to %1$s afterwards in Appearance › Menus › Manage Locations.', 'dxai-ui' ),
+											__( '%1$s holds your menu “%2$s”. Installing leaves it there, so the header — the site’s, and this page’s — shows “%2$s” in the design’s look, not the design’s own links. To show the design’s, assign its menu to %1$s afterwards in Appearance › Menus › Manage Locations.', 'dx-ui' ),
 											row.label || row.location,
 											row.menu
 										) }
@@ -291,26 +291,26 @@ export default function TransferImport( { info, infoError, onImported } ) {
 
 					<CheckboxControl
 						__nextHasNoMarginBottom
-						label={ __( 'Publish the page right away', 'dxai-ui' ) }
-						help={ __( 'Off: a page this import creates is a draft, to preview before it is public. A page this package created here before keeps the status it has.', 'dxai-ui' ) }
+						label={ __( 'Publish the page right away', 'dx-ui' ) }
+						help={ __( 'Off: a page this import creates is a draft, to preview before it is public. A page this package created here before keeps the status it has.', 'dx-ui' ) }
 						checked={ publish }
 						onChange={ setPublish }
 					/>
 
 					{ error && <Notice status="error" isDismissible={ false }>{ error }</Notice> }
 
-					<div className="dxai-actions">
+					<div className="dxui-actions">
 						<Button variant="primary" onClick={ submit } disabled={ ! file || busy } isBusy={ busy && ! token }>
-							{ __( 'Import package', 'dxai-ui' ) }
+							{ __( 'Import package', 'dx-ui' ) }
 						</Button>
 						{ token && ! busy && error && (
 							<Button variant="secondary" onClick={ resume }>
-								{ __( 'Continue the import', 'dxai-ui' ) }
+								{ __( 'Continue the import', 'dx-ui' ) }
 							</Button>
 						) }
 						{ busy && <Spinner /> }
 					</div>
-					<p className="dxai-muted" role="status" aria-live="polite">{ status }</p>
+					<p className="dxui-muted" role="status" aria-live="polite">{ status }</p>
 				</>
 			) }
 		</section>

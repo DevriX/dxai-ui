@@ -10,11 +10,11 @@
  * This is a developer tool: the plugin ships what it writes (data/block-library/blocks/*.html and the entries in library.json), not the
  * pages it reads.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 // (No strict_types declaration: WP-CLI's eval-file evals the file, where it may not come first.)
-use DXAI_UI\Pages\Layout_Builder;
+use DX_UI\Pages\Layout_Builder;
 
 $dry     = in_array( 'dry', $args, true );
 $only    = '';

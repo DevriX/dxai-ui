@@ -11,14 +11,14 @@
  *
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Template_Fonts;
-use DXAI_UI\Theme\Theme_Compat;
-use DXAI_UI\Theme\Theme_Fonts;
+use DX_UI\Media\Font_Host;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Template_Fonts;
+use DX_UI\Theme\Theme_Compat;
+use DX_UI\Theme\Theme_Fonts;
 
 if ( Template_Fonts::get() !== array() ) {
 	echo "SKIP: this site has template fonts installed and the suite would replace them; run it on a test install\n";
@@ -91,15 +91,15 @@ $sheet_rel = Upload_Paths::DIR . '/tf-test-' . $run . '.css';
 $sheet     = Upload_Paths::path( $sheet_rel );
 wp_mkdir_p( dirname( $sheet ) );
 $home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Template fonts fixture ' . $run ), true );
-file_put_contents( $sheet, ".dxai-ui.dxai-ui--{$home}{font-family:'Tf Body',system-ui,sans-serif}\n.dxai-ui .tf-display{font-family:'Tf Display',Impact,sans-serif}\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-update_post_meta( $home, '_dxai_ui_css_url', $sheet_rel );
-update_post_meta( $home, '_dxai_ui_scope_id', $home );
-update_post_meta( $home, '_dxai_ui_font_urls', array( $google ) );
+file_put_contents( $sheet, ".dx-ui.dx-ui--{$home}{font-family:'Tf Body',system-ui,sans-serif}\n.dx-ui .tf-display{font-family:'Tf Display',Impact,sans-serif}\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+update_post_meta( $home, '_dx_ui_css_url', $sheet_rel );
+update_post_meta( $home, '_dx_ui_scope_id', $home );
+update_post_meta( $home, '_dx_ui_font_urls', array( $google ) );
 $plain = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Template fonts fixture without fonts ' . $run ), true );
-file_put_contents( Upload_Paths::path( Upload_Paths::DIR . '/tf-test-plain-' . $run . '.css' ), '.dxai-ui{color:#000}' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-update_post_meta( $plain, '_dxai_ui_css_url', Upload_Paths::DIR . '/tf-test-plain-' . $run . '.css' );
-update_post_meta( $plain, '_dxai_ui_scope_id', $plain );
-update_post_meta( $plain, '_dxai_ui_font_urls', array( 'https://example.com/fonts.css' ) );
+file_put_contents( Upload_Paths::path( Upload_Paths::DIR . '/tf-test-plain-' . $run . '.css' ), '.dx-ui{color:#000}' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+update_post_meta( $plain, '_dx_ui_css_url', Upload_Paths::DIR . '/tf-test-plain-' . $run . '.css' );
+update_post_meta( $plain, '_dx_ui_scope_id', $plain );
+update_post_meta( $plain, '_dx_ui_font_urls', array( 'https://example.com/fonts.css' ) );
 
 $clean = static function () use ( &$home, &$plain, $sheet, $gstatic, $name_of, $google, $bad_url, $run ): void {
 	remove_all_filters( 'pre_http_request', 99 );
@@ -135,7 +135,7 @@ $clean = static function () use ( &$home, &$plain, $sheet, $gstatic, $name_of, $
 register_shutdown_function( $clean );
 
 echo "A design that loads its fonts from Google\n";
-$expect( 'the fixture is a design', \DXAI_UI\Structures\Design_Attach::is_design( $home ) && \DXAI_UI\Structures\Design_Attach::is_design( $plain ) );
+$expect( 'the fixture is a design', \DX_UI\Structures\Design_Attach::is_design( $home ) && \DX_UI\Structures\Design_Attach::is_design( $plain ) );
 $done = Template_Fonts::install( $home );
 $expect( 'its fonts are installed as the template\'s', is_array( $done ) && ! empty( $done['installed'] ), is_wp_error( $done ) ? $done->get_error_message() : wp_json_encode( $done ) );
 $rec = Template_Fonts::get();
@@ -163,15 +163,15 @@ $expect( 'a display face with one weight is not drawn bold (the heading font has
 ob_start();
 Template_Fonts::print_site();
 $printed = ob_get_clean();
-$expect( 'every page the theme draws gets the faces and the two variables the theme\'s stylesheet reads', str_contains( $printed, 'id="dxai-template-fonts"' ) && str_contains( $printed, '--font-heading:\'Tf Display\',Impact,sans-serif' ) && str_contains( $printed, '--font-primary:\'Tf Body\',system-ui,sans-serif' ) && ! str_contains( $printed, '</style></style>' ), $printed );
+$expect( 'every page the theme draws gets the faces and the two variables the theme\'s stylesheet reads', str_contains( $printed, 'id="dxui-template-fonts"' ) && str_contains( $printed, '--font-heading:\'Tf Display\',Impact,sans-serif' ) && str_contains( $printed, '--font-primary:\'Tf Body\',system-ui,sans-serif' ) && ! str_contains( $printed, '</style></style>' ), $printed );
 $ed = Template_Fonts::editor_settings( array( 'styles' => array( array( 'css' => 'a{}' ) ) ) );
 $expect( 'the block editor gets them as a style of its canvas, after what it had', 2 === count( $ed['styles'] ) && 'a{}' === $ed['styles'][0]['css'] && str_contains( $ed['styles'][1]['css'], '--font-heading' ) );
 $theme_dir = trailingslashit( get_stylesheet_directory_uri() ) . 'assets/src/fonts/';
 $late      = Template_Fonts::preload( array( $theme_dir . 'Inter-VariableFont_wght.woff2', 'https://example.com/other.woff2' ) );
 $expect( 'while the fonts wait for the page to load (Late_Fonts), the theme\'s fonts module preloads none of them, and no longer the theme\'s own', array( 'https://example.com/other.woff2' ) === $late, wp_json_encode( $late ) );
-add_filter( 'dxai_ui_late_fonts', '__return_false' );
+add_filter( 'dx_ui_late_fonts', '__return_false' );
 $urls = Template_Fonts::preload( array( $theme_dir . 'Inter-VariableFont_wght.woff2', 'https://example.com/other.woff2' ) );
-remove_filter( 'dxai_ui_late_fonts', '__return_false' );
+remove_filter( 'dx_ui_late_fonts', '__return_false' );
 $expect( '…and when they do not wait, it preloads the template\'s two first-paint files and no longer the theme\'s own fonts', 3 === count( $urls ) && ! in_array( $theme_dir . 'Inter-VariableFont_wght.woff2', $urls, true ) && in_array( 'https://example.com/other.woff2', $urls, true ) && 2 === count( array_filter( $urls, static fn( $u ) => str_contains( $u, '/' . Template_Fonts::DIR . '/' ) ) ), wp_json_encode( $urls ) );
 $st = Template_Fonts::status();
 $expect( 'status says what is installed and that it is in use', ! empty( $st['installed'] ) && ! empty( $st['live'] ) && 'Tf Body' === $st['body'] && 5 === $st['files'] && $st['bytes'] > 0 );
@@ -190,44 +190,44 @@ $expect( 'the clean-up of fonts no stylesheet names does not touch them', array(
 
 echo "\nA person's choice wins\n";
 if ( $dx ) {
-	add_filter( 'dxai_ui_template_fonts_choice', $chose = static fn() => array( 'headlines' => 'bitter' ), 99 );
+	add_filter( 'dx_ui_template_fonts_choice', $chose = static fn() => array( 'headlines' => 'bitter' ), 99 );
 	Theme_Fonts::reset();
 	$cur = Theme_Fonts::current();
 	$expect( 'a font chosen in Theme Global Settings is the theme\'s again: the template\'s are not used', null === Template_Fonts::live() && ( null === $cur || ! str_contains( $cur['heading'], 'Tf Display' ) ), wp_json_encode( $cur ) );
 	ob_start();
 	Template_Fonts::print_site();
 	$expect( '…and nothing is printed for them', '' === ob_get_clean() );
-	remove_filter( 'dxai_ui_template_fonts_choice', $chose, 99 );
+	remove_filter( 'dx_ui_template_fonts_choice', $chose, 99 );
 	Theme_Fonts::reset();
 	$expect( 'cleared, they are back', null !== Template_Fonts::live() );
 	$import = Template_Fonts::for_import( $home, array( 'mode' => 'install' ) );
 	$expect( 'an import that installs the design as the template installs the fonts (the theme manages them, nobody chose)', ! empty( $import['installed'] ), wp_json_encode( $import ) );
-	add_filter( 'dxai_ui_template_fonts_choice', $chose, 99 );
+	add_filter( 'dx_ui_template_fonts_choice', $chose, 99 );
 	$import = Template_Fonts::for_import( $home, array( 'mode' => 'install' ) );
 	$expect( 'but not over a font a person chose (reason chosen)', empty( $import['installed'] ) && 'chosen' === ( $import['reason'] ?? '' ), wp_json_encode( $import ) );
-	remove_filter( 'dxai_ui_template_fonts_choice', $chose, 99 );
+	remove_filter( 'dx_ui_template_fonts_choice', $chose, 99 );
 } else {
 	echo "  (the theme has no font settings here: the cases about them are skipped)\n";
 }
 $kept = Template_Fonts::for_import( $home, array( 'mode' => 'keep' ) );
 $expect( 'an import that keeps the site\'s header and footer leaves the fonts alone (reason kept)', empty( $kept['installed'] ) && 'kept' === ( $kept['reason'] ?? '' ) );
-add_filter( 'dxai_ui_theme_fonts', $unmanaged = static fn() => false, 99 );
+add_filter( 'dx_ui_theme_fonts', $unmanaged = static fn() => false, 99 );
 Theme_Fonts::reset();
 $un = Template_Fonts::for_import( $home, array( 'mode' => 'install' ) );
 $expect( 'on a theme that does not manage the site\'s fonts the design keeps its own (reason unmanaged)', empty( $un['installed'] ) && 'unmanaged' === ( $un['reason'] ?? '' ), wp_json_encode( $un ) );
-remove_filter( 'dxai_ui_theme_fonts', $unmanaged, 99 );
+remove_filter( 'dx_ui_theme_fonts', $unmanaged, 99 );
 Theme_Fonts::reset();
-add_filter( 'dxai_ui_template_fonts_live', $off = '__return_false', 99 );
+add_filter( 'dx_ui_template_fonts_live', $off = '__return_false', 99 );
 $expect( 'a filter can keep them out of use', null === Template_Fonts::live() );
-remove_filter( 'dxai_ui_template_fonts_live', $off, 99 );
+remove_filter( 'dx_ui_template_fonts_live', $off, 99 );
 
 echo "\nWhat cannot be installed changes nothing\n";
 $before = Template_Fonts::get();
 $none   = Template_Fonts::install( $plain );
-$expect( 'a design that loads no Google font has nothing to host', is_wp_error( $none ) && 'dxai_ui_fonts_none' === $none->get_error_code() );
-update_post_meta( $plain, '_dxai_ui_font_urls', array( $bad_url ) );
+$expect( 'a design that loads no Google font has nothing to host', is_wp_error( $none ) && 'dx_ui_fonts_none' === $none->get_error_code() );
+update_post_meta( $plain, '_dx_ui_font_urls', array( $bad_url ) );
 $off_line = Template_Fonts::install( $plain );
-$expect( 'Google out of reach: an error, and the record is as it was', is_wp_error( $off_line ) && 'dxai_ui_fonts_fetch' === $off_line->get_error_code() && Template_Fonts::get() === $before, is_wp_error( $off_line ) ? $off_line->get_error_code() : 'no error' );
+$expect( 'Google out of reach: an error, and the record is as it was', is_wp_error( $off_line ) && 'dx_ui_fonts_fetch' === $off_line->get_error_code() && Template_Fonts::get() === $before, is_wp_error( $off_line ) ? $off_line->get_error_code() : 'no error' );
 $expect( 'something that is not a design is refused', is_wp_error( Template_Fonts::install( 999999 ) ) );
 $answer = Template_Fonts::for_import( $plain, array( 'mode' => 'install' ) );
 $expect( 'an import never fails over it: the answer says why not (reason ' . ( $answer['reason'] ?? '' ) . ')', empty( $answer['installed'] ) && '' !== ( $answer['reason'] ?? '' ) && '' !== ( $answer['message'] ?? '' ) );

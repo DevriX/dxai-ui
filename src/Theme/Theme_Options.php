@@ -2,12 +2,12 @@
 /**
  * What the site's owner chose in the theme's "Theme Global Settings" (ACF options page), when they chose it.
  *
- * @package DXAI_UI\Theme
+ * @package DX_UI\Theme
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme;
+namespace DX_UI\Theme;
 
 /**
  * The DevriX themes keep the site-wide choices — colours, fonts, logos, the radius of buttons and cards, the header and footer — in an ACF
@@ -52,7 +52,7 @@ final class Theme_Options {
 		 * @param mixed                $value The value ACF has, or null.
 		 * @param array<int, string>   $path  The names down to the field.
 		 */
-		$value = apply_filters( 'dxai_ui_theme_option', $value, $path );
+		$value = apply_filters( 'dx_ui_theme_option', $value, $path );
 
 		return $value === '' || $value === array() || $value === false ? null : $value;
 	}

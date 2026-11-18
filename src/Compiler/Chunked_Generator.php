@@ -2,16 +2,16 @@
 /**
  * Generate Gutenberg in source-sized chunks so JSON stays valid.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Connectors\Source_Document;
-use DXAI_UI\Engines\LLM_Provider_Interface;
-use DXAI_UI\Support\Logger;
+use DX_UI\Connectors\Source_Document;
+use DX_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Support\Logger;
 
 final class Chunked_Generator {
 
@@ -43,7 +43,7 @@ final class Chunked_Generator {
 		$total = count( $chunks );
 		if ( $chunk_index !== null ) {
 			if ( ! isset( $chunks[ $chunk_index ] ) ) {
-				return new \WP_Error( 'dxai_ui_chunk', __( 'Unknown generation chunk.', 'dxai-ui' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'dx_ui_chunk', __( 'Unknown generation chunk.', 'dx-ui' ), array( 'status' => 400 ) );
 			}
 
 			$part = $this->generate_chunk( $source, $chunks[ $chunk_index ], $notes, $chunk_index, $total );
@@ -85,7 +85,7 @@ final class Chunked_Generator {
 		$user   = Prompt_Builder::user_chunk( $source->to_array(), $chunk, $notes, $index, $total );
 		$result = $this->engine->generate( $system, $user, array( 'max_tokens' => 8192 ) );
 
-		if ( is_wp_error( $result ) && in_array( $result->get_error_code(), array( 'dxai_ui_engine_parse', 'dxai_ui_engine_markup' ), true ) ) {
+		if ( is_wp_error( $result ) && in_array( $result->get_error_code(), array( 'dx_ui_engine_parse', 'dx_ui_engine_markup' ), true ) ) {
 			Logger::store( array( Logger::entry( 'warning', sprintf( 'Chunk %d parse failed, retrying compact prompt.', $index + 1 ) ) ) );
 			$result = $this->engine->generate(
 				$system,

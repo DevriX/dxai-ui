@@ -18,52 +18,52 @@
  *   12 links that say where they go.
  * Reads only. Prints one line a page and the findings; exit code 0 (a measurement).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Tree;
+use DX_UI\Pages\Block_Tree;
 
-$dxai_audit_ids = array();
-$dxai_audit_out = '';
-foreach ( (array) ( $args ?? array() ) as $dxai_arg ) {
-	if ( str_starts_with( (string) $dxai_arg, 'out=' ) ) {
-		$dxai_audit_out = substr( (string) $dxai_arg, 4 );
-	} elseif ( ctype_digit( (string) $dxai_arg ) ) {
-		$dxai_audit_ids[] = (int) $dxai_arg;
+$dxui_audit_ids = array();
+$dxui_audit_out = '';
+foreach ( (array) ( $args ?? array() ) as $dxui_arg ) {
+	if ( str_starts_with( (string) $dxui_arg, 'out=' ) ) {
+		$dxui_audit_out = substr( (string) $dxui_arg, 4 );
+	} elseif ( ctype_digit( (string) $dxui_arg ) ) {
+		$dxui_audit_ids[] = (int) $dxui_arg;
 	}
 }
-if ( $dxai_audit_ids === array() ) {
+if ( $dxui_audit_ids === array() ) {
 	WP_CLI::error( 'usage: wp eval-file bin/gutenberg-audit.php <page id>... [out=<report.json>]' );
 }
 
 /** Every block of a tree, depth first, with its depth. */
-function dxai_audit_walk( array $blocks, int $depth = 0 ): array {
+function dxui_audit_walk( array $blocks, int $depth = 0 ): array {
 	$out = array();
 	foreach ( $blocks as $b ) {
 		if ( ! is_array( $b ) ) {
 			continue;
 		}
 		$out[] = array( $b, $depth );
-		$out   = array_merge( $out, dxai_audit_walk( (array) ( $b['innerBlocks'] ?? array() ), $depth + 1 ) );
+		$out   = array_merge( $out, dxui_audit_walk( (array) ( $b['innerBlocks'] ?? array() ), $depth + 1 ) );
 	}
 	return $out;
 }
 
 /** The rendered content as a DOM. */
-function dxai_audit_dom( string $html ): DOMXPath {
+function dxui_audit_dom( string $html ): DOMXPath {
 	$doc = new DOMDocument();
 	libxml_use_internal_errors( true );
-	$doc->loadHTML( '<?xml encoding="utf-8"?><div id="dxai-audit">' . $html . '</div>', LIBXML_NOERROR | LIBXML_NOWARNING );
+	$doc->loadHTML( '<?xml encoding="utf-8"?><div id="dxui-audit">' . $html . '</div>', LIBXML_NOERROR | LIBXML_NOWARNING );
 	libxml_clear_errors();
 	return new DOMXPath( $doc );
 }
 
-$dxai_audit_pages    = array();
-$dxai_audit_sections = array();
-foreach ( $dxai_audit_ids as $dxai_id ) {
-	$markup = (string) get_post_field( 'post_content', $dxai_id );
+$dxui_audit_pages    = array();
+$dxui_audit_sections = array();
+foreach ( $dxui_audit_ids as $dxui_id ) {
+	$markup = (string) get_post_field( 'post_content', $dxui_id );
 	$blocks = parse_blocks( $markup );
-	$all    = dxai_audit_walk( $blocks );
+	$all    = dxui_audit_walk( $blocks );
 	$find   = array();
 	$count  = array( 'blocks' => 0, 'core' => 0, 'theme' => 0, 'plugin' => 0, 'other' => 0 );
 
@@ -79,7 +79,7 @@ foreach ( $dxai_audit_ids as $dxai_id ) {
 		}
 		$count['blocks']++;
 		$ns = strtok( $name, '/' );
-		$count[ $ns === 'core' ? 'core' : ( in_array( $ns, array( 'dx', 'amr' ), true ) ? 'theme' : ( $ns === 'dxai-ui' ? 'plugin' : 'other' ) ) ]++;
+		$count[ $ns === 'core' ? 'core' : ( in_array( $ns, array( 'dx', 'amr' ), true ) ? 'theme' : ( $ns === 'dx-ui' ? 'plugin' : 'other' ) ) ]++;
 		$attrs = (array) ( $b['attrs'] ?? array() );
 		// 1 · an HTML block that carries words.
 		if ( in_array( $name, array( 'core/html', 'core/freeform', 'core/shortcode' ), true ) && trim( wp_strip_all_tags( $html ) ) !== '' ) {
@@ -121,7 +121,7 @@ foreach ( $dxai_audit_ids as $dxai_id ) {
 	}
 
 	// The rendered content.
-	$xp = dxai_audit_dom( do_blocks( $markup ) );
+	$xp = dxui_audit_dom( do_blocks( $markup ) );
 	// 2 · inline styles in what is shown.
 	$styled = $xp->query( '//*[@style]' )->length;
 	if ( $styled > 0 ) {
@@ -204,12 +204,12 @@ foreach ( $dxai_audit_ids as $dxai_id ) {
 			continue;
 		}
 		$sig = md5( serialize_block( $top ) );
-		$dxai_audit_sections[ $sig ][ $dxai_id ] = (string) ( $top['attrs']['metadata']['name'] ?? $top['attrs']['className'] ?? $top['blockName'] );
+		$dxui_audit_sections[ $sig ][ $dxui_id ] = (string) ( $top['attrs']['metadata']['name'] ?? $top['attrs']['className'] ?? $top['blockName'] );
 	}
 	$synced = substr_count( $markup, '<!-- wp:block ' );
-	$dxai_audit_pages[ $dxai_id ] = array(
-		'id'     => $dxai_id,
-		'title'  => html_entity_decode( get_the_title( $dxai_id ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+	$dxui_audit_pages[ $dxui_id ] = array(
+		'id'     => $dxui_id,
+		'title'  => html_entity_decode( get_the_title( $dxui_id ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 		'count'  => $count,
 		'synced' => $synced,
 		'find'   => $find,
@@ -217,18 +217,18 @@ foreach ( $dxai_audit_ids as $dxai_id ) {
 }
 
 // 7 · a section that is on two or more of these pages, word for word, and is not a synced pattern.
-foreach ( $dxai_audit_sections as $sig => $pages ) {
+foreach ( $dxui_audit_sections as $sig => $pages ) {
 	if ( count( $pages ) >= 2 ) {
 		foreach ( $pages as $id => $label ) {
-			$dxai_audit_pages[ $id ]['find']['7'][] = 'the same section on ' . count( $pages ) . ' pages, not a synced pattern: ' . mb_substr( $label, 0, 40 );
+			$dxui_audit_pages[ $id ]['find']['7'][] = 'the same section on ' . count( $pages ) . ' pages, not a synced pattern: ' . mb_substr( $label, 0, 40 );
 		}
 	}
 }
 
-$dxai_total = 0;
-foreach ( $dxai_audit_pages as $p ) {
+$dxui_total = 0;
+foreach ( $dxui_audit_pages as $p ) {
 	$n           = array_sum( array_map( 'count', $p['find'] ) );
-	$dxai_total += $n;
+	$dxui_total += $n;
 	$share       = $p['count']['blocks'] ? round( 100 * ( $p['count']['core'] + $p['count']['theme'] ) / $p['count']['blocks'] ) : 0;
 	WP_CLI::log( sprintf( '%6d %-34s %4d blocks, %3d%% core/theme, %d plugin, %d synced · %d findings', $p['id'], mb_substr( $p['title'], 0, 34 ), $p['count']['blocks'], $share, $p['count']['plugin'], $p['synced'], $n ) );
 	foreach ( $p['find'] as $rule => $list ) {
@@ -241,7 +241,7 @@ foreach ( $dxai_audit_pages as $p ) {
 		}
 	}
 }
-WP_CLI::log( sprintf( "\n%d pages, %d findings", count( $dxai_audit_pages ), $dxai_total ) );
-if ( $dxai_audit_out !== '' ) {
-	file_put_contents( $dxai_audit_out, wp_json_encode( array_values( $dxai_audit_pages ), JSON_PRETTY_PRINT ) );
+WP_CLI::log( sprintf( "\n%d pages, %d findings", count( $dxui_audit_pages ), $dxui_total ) );
+if ( $dxui_audit_out !== '' ) {
+	file_put_contents( $dxui_audit_out, wp_json_encode( array_values( $dxui_audit_pages ), JSON_PRETTY_PRINT ) );
 }

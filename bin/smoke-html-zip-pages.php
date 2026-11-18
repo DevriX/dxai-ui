@@ -4,7 +4,7 @@
  *
  * Usage: php bin/smoke-html-zip-pages.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -15,8 +15,8 @@ if ( PHP_SAPI !== 'cli' ) {
 }
 
 $root = dirname( __DIR__ );
-if ( ! defined( 'DXAI_UI_DIR' ) ) {
-	define( 'DXAI_UI_DIR', $root . '/' );
+if ( ! defined( 'DX_UI_DIR' ) ) {
+	define( 'DX_UI_DIR', $root . '/' );
 }
 if ( ! function_exists( 'sanitize_title' ) ) {
 	function sanitize_title( string $title ): string {
@@ -44,10 +44,10 @@ if ( ! function_exists( 'wp_parse_url' ) ) {
 }
 
 require_once $root . '/src/Autoloader.php';
-DXAI_UI\Autoloader::register();
+DX_UI\Autoloader::register();
 
-use DXAI_UI\Connectors\Html_Zip_Pages;
-use DXAI_UI\Connectors\Site_Origin;
+use DX_UI\Connectors\Html_Zip_Pages;
+use DX_UI\Connectors\Site_Origin;
 
 $fail = 0;
 $ok   = 0;

@@ -2,14 +2,14 @@
 /**
  * A Home's section of cards, with other cards in it.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
  * The cards of one of the Home's sections are taken as the pattern (Home_Kit): the section keeps its wrapper, its heading and its
@@ -291,7 +291,7 @@ final class Section_Refill {
 
 	/** What a link says: what it was given or "Learn more", with the arrow the Home's link has. */
 	private static function label( string $was, string $given = '' ): string {
-		$label = $given !== '' ? $given : __( 'Learn more', 'dxai-ui' );
+		$label = $given !== '' ? $given : __( 'Learn more', 'dx-ui' );
 		if ( preg_match( '/\s*([→›»]+)\s*$/u', $was, $m ) === 1 ) {
 			$label .= ' ' . $m[1];
 		}

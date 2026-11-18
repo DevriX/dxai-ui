@@ -14,12 +14,12 @@
  * old page's words in place. No mark of the work is ever left on the page. The crawl of an old site (Site_From_Menu) asks the AI
  * chosen in Settings, unless a site says no. Makes one page (a Home) and deletes it. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Page_Composer;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Slot_Writer;
+use DX_UI\Pages\Page_Composer;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Slot_Writer;
 
 $fail   = 0;
 $pass   = 0;
@@ -39,8 +39,8 @@ $hero = parse_blocks(
 	. '<!-- wp:paragraph {"className":"eyebrow"} --><p class="eyebrow">24/7 Emergency Response · Olympia, WA</p><!-- /wp:paragraph -->'
 	. '<!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Water, Fire &amp; Mold Damage Restoration in Olympia, WA</h1><!-- /wp:heading -->'
 	. '<!-- wp:paragraph --><p>Third-generation insurance contractors serving Thurston County. On site in about 60 minutes, day or night.</p><!-- /wp:paragraph -->'
-	. '<!-- wp:dxai-ui/text {"tagName":"div","className":"checks"} --><div class="checks"><span class="row"><span aria-hidden="true" class="tick">✓</span>4.9-star Google rating from 800+ local reviews</span><span class="row"><span aria-hidden="true" class="tick">✓</span>We work with all insurance companies</span></div><!-- /wp:dxai-ui/text -->'
-	. '<!-- wp:dxai-ui/text {"tagName":"a","url":"tel:+18555607463","className":"call"} --><a href="tel:+18555607463" class="call">Call Now: (855) 560-7463</a><!-- /wp:dxai-ui/text -->'
+	. '<!-- wp:dx-ui/text {"tagName":"div","className":"checks"} --><div class="checks"><span class="row"><span aria-hidden="true" class="tick">✓</span>4.9-star Google rating from 800+ local reviews</span><span class="row"><span aria-hidden="true" class="tick">✓</span>We work with all insurance companies</span></div><!-- /wp:dx-ui/text -->'
+	. '<!-- wp:dx-ui/text {"tagName":"a","url":"tel:+18555607463","className":"call"} --><a href="tel:+18555607463" class="call">Call Now: (855) 560-7463</a><!-- /wp:dx-ui/text -->'
 	. '</div><!-- /wp:group --><!-- wp:group {"className":"figures"} --><div class="wp-block-group figures">' . $fig( '4.9 ★', 'Google reviews' ) . $fig( '~60 min', 'On site, day or night' ) . $fig( '800+', 'Homes restored' ) . '</div><!-- /wp:group --></section><!-- /wp:group -->'
 )[0];
 // The old page's first part as the extractor reads it: its title, a long paragraph, two short lines; nothing over the title.
@@ -73,10 +73,10 @@ $json   = (string) wp_json_encode( $marked['sections'] );
 $expect( 'the places keep the Home\'s words as their measure', str_contains( $json, '"' . Slot_Writer::WAS . '":"Third-generation insurance contractors' ) );
 $expect( 'the line over the title, which the old page has nothing for, is kept to be written', str_contains( $json, 'Emergency Response' ) && str_contains( $json, '"' . Slot_Writer::WRITE . '":true' ) );
 $plain = $compose( false );
-$expect( 'composed without an AI, the line over the title goes and nothing is marked, as before', ! str_contains( (string) wp_json_encode( $plain['sections'] ), '24/7 Emergency Response' ) && ! str_contains( (string) wp_json_encode( $plain['sections'] ), '__dxai_' ) );
+$expect( 'composed without an AI, the line over the title goes and nothing is marked, as before', ! str_contains( (string) wp_json_encode( $plain['sections'] ), '24/7 Emergency Response' ) && ! str_contains( (string) wp_json_encode( $plain['sections'] ), '__dxui_' ) );
 
 echo "Written by an AI\n";
-$stub = new class() extends DXAI_UI\Engines\Abstract_Engine {
+$stub = new class() extends DX_UI\Engines\Abstract_Engine {
 	/** @var array<int, string> */
 	public array $asked = array();
 	/** @var array<string, string> */
@@ -125,7 +125,7 @@ $html = implode( '', array_map( 'serialize_block', $done['sections'] ) );
 $expect( 'its words are in their places: the line over the title written', str_contains( $html, '<p class="eyebrow">24/7 fire response in Olympia</p>' ), $html );
 $expect( 'what ran over its place\'s measure was sent back once and came back within it', count( $stub->asked ) === 2 && $done['shortened'] === 1 && Slot_Writer::words( (string) preg_replace( '#.*<!-- wp:paragraph --><p>(.*?)</p>.*#s', '$1', $html ) ) <= 18, count( $stub->asked ) . ' ' . $done['shortened'] );
 $expect( 'the claims keep their ticks, the figures and the call stay as composed', substr_count( $html, '<span aria-hidden="true" class="tick">✓</span>' ) === 2 && str_contains( $html, 'On site, day or night' ) && str_contains( $html, 'tel:+18557758614' ) );
-$expect( 'no mark of the work is left on the page', ! str_contains( (string) wp_json_encode( $done['sections'] ), '__dxai_' ) );
+$expect( 'no mark of the work is left on the page', ! str_contains( (string) wp_json_encode( $done['sections'] ), '__dxui_' ) );
 
 echo "When there is nothing to write, or no AI\n";
 $stub->asked  = array();
@@ -151,23 +151,23 @@ $home_id = (int) wp_insert_post(
 	)
 );
 register_shutdown_function( static fn() => wp_delete_post( $home_id, true ) );
-$body = new ReflectionMethod( DXAI_UI\Structures\Site_From_Menu::class, 'compose_body' );
+$body = new ReflectionMethod( DX_UI\Structures\Site_From_Menu::class, 'compose_body' );
 $body->setAccessible( true );
-$crawl_model = ( new DXAI_UI\Pages\Content_Extractor() )->extract( '<html><body><main><section><h1>Emergency Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by flames, as smoke and soot spread into rooms the fire never reached.</p></section><section><h2>Smoke and soot</h2><p>Smoke and soot travel through a property and settle on surfaces the fire never touched.</p></section></main></body></html>', 'https://old.example.test/fire/' );
+$crawl_model = ( new DX_UI\Pages\Content_Extractor() )->extract( '<html><body><main><section><h1>Emergency Fire Damage Restoration</h1><p>Fire damage can affect far more than the areas touched directly by flames, as smoke and soot spread into rooms the fire never reached.</p></section><section><h2>Smoke and soot</h2><p>Smoke and soot travel through a property and settle on surfaces the fire never touched.</p></section></main></body></html>', 'https://old.example.test/fire/' );
 $stub->broken = false;
 $stub->asked  = array();
 $stub->answer = array( 'paragraph+write' => '24/7 fire response in Olympia' );
-add_filter( 'dxai_ui_copy_engine', static fn() => $stub );
+add_filter( 'dx_ui_copy_engine', static fn() => $stub );
 $summary = array();
 $markup  = (string) $body->invokeArgs( null, array( $home_id, $crawl_model, &$summary, '/fire/' ) );
-$expect( 'the page\'s words are written by it, in their places', count( $stub->asked ) >= 1 && ( $summary['words_engine'] ?? '' ) === 'stub' && str_contains( $markup, '24/7 fire response in Olympia' ) && ! str_contains( $markup, '__dxai_' ), wp_json_encode( $summary['compose_log'] ?? null ) );
-add_filter( 'dxai_ui_crawl_words', '__return_false' );
+$expect( 'the page\'s words are written by it, in their places', count( $stub->asked ) >= 1 && ( $summary['words_engine'] ?? '' ) === 'stub' && str_contains( $markup, '24/7 fire response in Olympia' ) && ! str_contains( $markup, '__dxui_' ), wp_json_encode( $summary['compose_log'] ?? null ) );
+add_filter( 'dx_ui_crawl_words', '__return_false' );
 $stub->asked = array();
 $summary     = array();
 $markup      = (string) $body->invokeArgs( null, array( $home_id, $crawl_model, &$summary, '/fire/' ) );
-$expect( '…and when a site says no (dxai_ui_crawl_words), the composer\'s words stay and nothing is asked', $stub->asked === array() && ! isset( $summary['words_engine'] ) && ! str_contains( $markup, '24/7 fire response' ) && ! str_contains( $markup, '__dxai_' ) );
-remove_all_filters( 'dxai_ui_crawl_words' );
-remove_all_filters( 'dxai_ui_copy_engine' );
+$expect( '…and when a site says no (dx_ui_crawl_words), the composer\'s words stay and nothing is asked', $stub->asked === array() && ! isset( $summary['words_engine'] ) && ! str_contains( $markup, '24/7 fire response' ) && ! str_contains( $markup, '__dxui_' ) );
+remove_all_filters( 'dx_ui_crawl_words' );
+remove_all_filters( 'dx_ui_copy_engine' );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

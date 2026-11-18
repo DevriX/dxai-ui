@@ -2,14 +2,14 @@
 /**
  * The same space above and below the sections of a design's pages.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Utility_Classes;
+use DX_UI\Compiler\Utility_Classes;
 
 /**
  * The sections of a page have the same padding above and below, as the Home's do: the padding most of the Home's sections have
@@ -35,7 +35,7 @@ final class Section_Spacing extends Style_Harmony {
 	}
 
 	public function label(): string {
-		return __( 'The same spacing for the sections', 'dxai-ui' );
+		return __( 'The same spacing for the sections', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -77,7 +77,7 @@ final class Section_Spacing extends Style_Harmony {
 				$class = implode( ' ', array_merge( $sig['rest_class'], $dom['mine_class'] ) );
 				$css   = Utility_Classes::fit_system( implode( ';', array_merge( $rest, $own ) ) );
 				$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
-				if ( $class === trim( (string) ( $attrs['className'] ?? '' ) ) && $css === trim( (string) ( $attrs['dxaiCss'] ?? '' ) ) ) {
+				if ( $class === trim( (string) ( $attrs['className'] ?? '' ) ) && $css === trim( (string) ( $attrs['dxuiCss'] ?? '' ) ) ) {
 					return null;
 				}
 				$new = self::restyle( $block, $class, $css );
@@ -196,7 +196,7 @@ final class Section_Spacing extends Style_Harmony {
 		$top    = null;
 		$bottom = null;
 		$css    = array();
-		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $d ) {
+		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) as $d ) {
 			$prop = $d['prop'];
 			if ( $prop === '' || ! str_starts_with( $prop, 'padding' ) ) {
 				$css[] = $d['raw'];

@@ -2,18 +2,18 @@
 /**
  * Compile a harvested source document to Gutenberg without an LLM.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
-use DXAI_UI\Connectors\Html_Zip_Pages;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Connectors\Source_Document;
-use DXAI_UI\Verification\Design_Coverage;
-use DXAI_UI\Media\Asset_Harvester;
+use DX_UI\Connectors\Html_Zip_Pages;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Connectors\Source_Document;
+use DX_UI\Verification\Design_Coverage;
+use DX_UI\Media\Asset_Harvester;
 
 final class Source_Compiler {
 
@@ -75,7 +75,7 @@ final class Source_Compiler {
 		 * own answer; and the compiled oracle mirrors whatever the page loads,
 		 * which is why it could not see this either.
 		 */
-		$title   = $source->title !== '' ? $source->title : __( 'DX UI Pattern', 'dxai-ui' );
+		$title   = $source->title !== '' ? $source->title : __( 'DX UI Pattern', 'dx-ui' );
 
 		$pages = is_array( $payload['pages'] ?? null ) ? $payload['pages'] : array();
 		if ( $pages === array() ) {
@@ -476,7 +476,7 @@ final class Source_Compiler {
 		$this->count_islands( $converter );
 
 		return array(
-			'block_title'      => \DXAI_UI\Support\Page_Title::for_home( (string) ( $dc['title'] ?? $title ) ),
+			'block_title'      => \DX_UI\Support\Page_Title::for_home( (string) ( $dc['title'] ?? $title ) ),
 			'seo_title'        => trim( (string) ( $dc['title'] ?? '' ) ),
 			'gutenberg_markup' => '',
 			'structures'       => $structures,
@@ -851,8 +851,8 @@ final class Source_Compiler {
 		}
 
 		$page_title = $slug === '/'
-			? \DXAI_UI\Support\Page_Title::for_home( $title )
-			: \DXAI_UI\Support\Page_Title::for_page( $title, $title );
+			? \DX_UI\Support\Page_Title::for_home( $title )
+			: \DX_UI\Support\Page_Title::for_page( $title, $title );
 
 		return array(
 			'block_title'      => $page_title,

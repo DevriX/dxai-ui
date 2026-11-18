@@ -2,14 +2,14 @@
 /**
  * Updates from the plugin's GitHub releases.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Update;
+namespace DX_UI\Update;
 
-use DXAI_UI\Http\Remote_Client;
+use DX_UI\Http\Remote_Client;
 
 /**
  * Dashboard › Updates offers a new DX the way it offers a plugin from wordpress.org, from the releases of the plugin's GitHub
@@ -18,8 +18,8 @@ use DXAI_UI\Http\Remote_Client;
  * The plugin's header says `Update URI: https://github.com/DevriX/dxai-ui`, so WordPress does not look for it on wordpress.org
  * (where another plugin could have the same folder name) and asks `update_plugins_github.com` instead; WordPress compares the
  * versions itself. A release counts when it is published (not a draft), its tag is a version (v0.4.0-beta.33) and it carries the
- * ZIP `dxai-ui-<version>.zip`. A beta — a version with a "-", or a GitHub pre-release — is offered on the beta channel only: the
- * channel of the version running, unless `dxai_ui_update_channel` says otherwise. The releases are read at most once in six hours
+ * ZIP `dx-ui-<version>.zip`. A beta — a version with a "-", or a GitHub pre-release — is offered on the beta channel only: the
+ * channel of the version running, unless `dx_ui_update_channel` says otherwise. The releases are read at most once in six hours
  * (once an hour after a failure), in a site transient; "View details" shows the release's notes (plugins_api).
  */
 final class Github_Updater {
@@ -28,10 +28,10 @@ final class Github_Updater {
 	public const REPOSITORY = 'DevriX/dxai-ui';
 
 	/** The plugin's folder, its slug in the updates screens. */
-	public const SLUG = 'dxai-ui';
+	public const SLUG = 'dx-ui';
 
 	/** The site transient that holds the releases read last. */
-	public const CACHE = 'dxai_ui_github_releases';
+	public const CACHE = 'dx_ui_github_releases';
 
 	private const TTL = 6 * HOUR_IN_SECONDS;
 
@@ -44,8 +44,8 @@ final class Github_Updater {
 
 	/** The repository the updates come from ("owner/name"), or '' when they are switched off. */
 	public static function repository(): string {
-		// `dxai_ui_update_repository`: the GitHub repository ("owner/name") DX updates from; '' switches the updates off.
-		$repo = (string) apply_filters( 'dxai_ui_update_repository', self::REPOSITORY );
+		// `dx_ui_update_repository`: the GitHub repository ("owner/name") DX updates from; '' switches the updates off.
+		$repo = (string) apply_filters( 'dx_ui_update_repository', self::REPOSITORY );
 
 		return preg_match( '#^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$#', $repo ) === 1 ? $repo : '';
 	}
@@ -54,22 +54,22 @@ final class Github_Updater {
 	 * Whether this copy of the plugin is a development checkout: a link to the source tree, or the tree itself (git, node_modules,
 	 * .verify, the import suite — the release ZIP has none of them). WordPress replaces a plugin by deleting its folder first, and
 	 * through a link that is the repository, uncommitted work and all; so no update is offered to one, as uninstall.php will not
-	 * delete one. `dxai_ui_update_checkout` says otherwise.
+	 * delete one. `dx_ui_update_checkout` says otherwise.
 	 */
 	public static function is_checkout(): bool {
-		$dir      = untrailingslashit( (string) DXAI_UI_DIR );
-		$folder   = WP_PLUGIN_DIR . '/' . dirname( plugin_basename( DXAI_UI_FILE ) );
+		$dir      = untrailingslashit( (string) DX_UI_DIR );
+		$folder   = WP_PLUGIN_DIR . '/' . dirname( plugin_basename( DX_UI_FILE ) );
 		$checkout = is_link( $folder ) || file_exists( $dir . '/.git' ) || is_dir( $dir . '/node_modules' ) || is_dir( $dir . '/.verify' ) || file_exists( $dir . '/bin/verify-import.cjs' );
 
-		// `dxai_ui_update_checkout`: whether this copy is a development checkout, which is offered no update.
-		return (bool) apply_filters( 'dxai_ui_update_checkout', $checkout );
+		// `dx_ui_update_checkout`: whether this copy is a development checkout, which is offered no update.
+		return (bool) apply_filters( 'dx_ui_update_checkout', $checkout );
 	}
 
 	/** 'beta' (pre-releases offered too) or 'stable'. */
 	public static function channel(): string {
-		$default = str_contains( (string) DXAI_UI_VERSION, '-' ) ? 'beta' : 'stable';
-		// `dxai_ui_update_channel`: 'stable' (releases only) or 'beta' (pre-releases too); by default the channel of the version running.
-		$channel = (string) apply_filters( 'dxai_ui_update_channel', $default );
+		$default = str_contains( (string) DX_UI_VERSION, '-' ) ? 'beta' : 'stable';
+		// `dx_ui_update_channel`: 'stable' (releases only) or 'beta' (pre-releases too); by default the channel of the version running.
+		$channel = (string) apply_filters( 'dx_ui_update_channel', $default );
 
 		return $channel === 'beta' ? 'beta' : 'stable';
 	}
@@ -99,7 +99,7 @@ final class Github_Updater {
 			}
 			$package = '';
 			foreach ( (array) ( $release['assets'] ?? array() ) as $asset ) {
-				if ( is_array( $asset ) && ( $asset['name'] ?? '' ) === 'dxai-ui-' . $version . '.zip' ) {
+				if ( is_array( $asset ) && ( $asset['name'] ?? '' ) === 'dx-ui-' . $version . '.zip' ) {
 					$package = (string) ( $asset['browser_download_url'] ?? '' );
 				}
 			}
@@ -129,7 +129,7 @@ final class Github_Updater {
 	 * @return array<string, mixed>|false
 	 */
 	public static function update( $update, $plugin_data = array(), $plugin_file = '' ) {
-		if ( $plugin_file !== plugin_basename( DXAI_UI_FILE ) || is_array( $update ) || self::is_checkout() ) {
+		if ( $plugin_file !== plugin_basename( DX_UI_FILE ) || is_array( $update ) || self::is_checkout() ) {
 			return $update;
 		}
 		$latest = self::latest();
@@ -176,7 +176,7 @@ final class Github_Updater {
 			'last_updated'  => $latest['published'],
 			'download_link' => $latest['package'],
 			'sections'      => array(
-				'changelog' => wpautop( esc_html( $latest['notes'] !== '' ? $latest['notes'] : __( 'This release has no notes.', 'dxai-ui' ) ) ),
+				'changelog' => wpautop( esc_html( $latest['notes'] !== '' ? $latest['notes'] : __( 'This release has no notes.', 'dx-ui' ) ) ),
 			),
 		);
 	}
@@ -196,7 +196,7 @@ final class Github_Updater {
 			'https://api.github.com/repos/' . $repo . '/releases?per_page=20',
 			array(
 				'Accept'     => 'application/vnd.github+json',
-				'User-Agent' => 'DX-UI/' . DXAI_UI_VERSION,
+				'User-Agent' => 'DX-UI/' . DX_UI_VERSION,
 			),
 			'',
 			array( 'timeout' => 10 )

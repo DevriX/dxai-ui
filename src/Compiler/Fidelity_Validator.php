@@ -2,12 +2,12 @@
 /**
  * Validate Pass-2 LLM refine output before merging.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Fidelity_Validator {
 
@@ -18,8 +18,8 @@ final class Fidelity_Validator {
 		$markup = trim( (string) ( $structure['gutenberg_markup'] ?? '' ) );
 		if ( $markup === '' || ! str_contains( $markup, '<!-- wp:' ) ) {
 			return new \WP_Error(
-				'dxai_ui_refine_markup',
-				__( 'Refine response had no Gutenberg blocks.', 'dxai-ui' ),
+				'dx_ui_refine_markup',
+				__( 'Refine response had no Gutenberg blocks.', 'dx-ui' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -40,8 +40,8 @@ final class Fidelity_Validator {
 			}
 			if ( $named < 1 ) {
 				return new \WP_Error(
-					'dxai_ui_refine_parse',
-					__( 'Refine response could not be parsed as blocks.', 'dxai-ui' ),
+					'dx_ui_refine_parse',
+					__( 'Refine response could not be parsed as blocks.', 'dx-ui' ),
 					array( 'status' => 502 )
 				);
 			}
@@ -55,16 +55,16 @@ final class Fidelity_Validator {
 			&& ( $m[1][0] ?? '' ) === 'html'
 		) {
 			return new \WP_Error(
-				'dxai_ui_refine_blob',
-				__( 'Refine collapsed the structure into a single HTML block.', 'dxai-ui' ),
+				'dx_ui_refine_blob',
+				__( 'Refine collapsed the structure into a single HTML block.', 'dx-ui' ),
 				array( 'status' => 502 )
 			);
 		}
 
 		if ( preg_match( '/,\s*\)\s*\}|className\s*=/', $markup ) ) {
 			return new \WP_Error(
-				'dxai_ui_refine_jsx',
-				__( 'Refine response still contains JSX leftovers.', 'dxai-ui' ),
+				'dx_ui_refine_jsx',
+				__( 'Refine response still contains JSX leftovers.', 'dx-ui' ),
 				array( 'status' => 502 )
 			);
 		}

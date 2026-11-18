@@ -8,11 +8,11 @@
  * and the button styles); a converter whose native block is missing here is reported as skipped, not failed. Exit
  * code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Native\Native_Blocks;
-use DXAI_UI\Blocks\Native\Converter;
+use DX_UI\Blocks\Native\Native_Blocks;
+use DX_UI\Blocks\Native\Converter;
 
 $fail   = 0;
 $pass   = 0;
@@ -34,30 +34,30 @@ foreach ( Native_Blocks::converters() as $c ) {
 echo "converters on this site: " . implode( ', ', array_keys( $have ) ) . "\n";
 
 // --- Fixtures: the stored forms the importer writes. ---------------------------------------------------------------
-$card = '<!-- wp:dxai-ui/link {"url":"https://example.org/a/","className":"rounded-md d-block text-dxai-ink bg-dxai-neutral-100","hasInner":true} -->'
-	. '<a class="wp-block-dxai-ui-link rounded-md d-block text-dxai-ink bg-dxai-neutral-100" href="https://example.org/a/">'
-	. '<!-- wp:paragraph --><p>Inside</p><!-- /wp:paragraph --></a><!-- /wp:dxai-ui/link -->';
-$card_bare = str_replace( array( ' d-block', ' text-dxai-ink' ), '', $card );
-$card_data = str_replace( '"hasInner":true', '"hasInner":true,"dxaiData":{"data-x":"1"}', $card );
-$span      = '<!-- wp:dxai-ui/text {"className":"text-14 fw-900"} --><span class="text-14 fw-900">Learn more →</span><!-- /wp:dxai-ui/text -->';
-$span_data = '<!-- wp:dxai-ui/text {"className":"x","ariaHidden":"true","dxaiData":{"data-plus":""},"attrOrder":["class"]} --><span aria-hidden="true" data-plus="" class="x">+</span><!-- /wp:dxai-ui/text -->';
-$box       = '<!-- wp:dxai-ui/box {"className":"px-4 d-flex"} --><div class="px-4 d-flex"><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --></div><!-- /wp:dxai-ui/box -->';
-$box_empty = '<!-- wp:dxai-ui/box {"className":"absolute inset-0","ariaHidden":"true"} --><div aria-hidden="true" class="absolute inset-0"></div><!-- /wp:dxai-ui/box -->';
-$box_ctrl  = '<!-- wp:dxai-ui/box {"className":"t","ariaExpanded":"false"} --><div class="t" aria-expanded="false"><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --></div><!-- /wp:dxai-ui/box -->';
-$cta       = static fn( string $cls, string $css, string $text ): string => '<!-- wp:dxai-ui/link {"url":"tel:5551234","text":"' . $text . '","className":"' . $cls . '"' . ( $css !== '' ? ',"dxaiCss":"' . $css . '"' : '' ) . '} -->'
-	. '<a class="wp-block-dxai-ui-link ' . $cls . '" href="tel:5551234">' . $text . '</a><!-- /wp:dxai-ui/link -->';
-$filled    = $cta( 'rounded-5px px-7 py-4 bg-dxai-accent text-dxai-ink fw-900', '', 'Call now' );
-$ghost     = $cta( 'rounded-5px px-6 text-white', 'background:transparent;padding-top:17px;padding-bottom:17px;border:2px solid var(--dxai-neutral-100-a55)', 'Request a callback' );
-$navlink   = '<!-- wp:dxai-ui/link {"url":"#about","text":"About","className":"px-3 fw-700","dxaiData":{"data-dxai-set":"null"}} --><a class="wp-block-dxai-ui-link px-3 fw-700" href="#about" data-dxai-set="null">About</a><!-- /wp:dxai-ui/link -->';
-$skip      = $cta( 'px-4 py-3 absolute top-0 bg-dxai-accent', 'left:-9999px;z-index:999', 'Skip to content' );
+$card = '<!-- wp:dx-ui/link {"url":"https://example.org/a/","className":"rounded-md d-block text-dxui-ink bg-dxui-neutral-100","hasInner":true} -->'
+	. '<a class="wp-block-dx-ui-link rounded-md d-block text-dxui-ink bg-dxui-neutral-100" href="https://example.org/a/">'
+	. '<!-- wp:paragraph --><p>Inside</p><!-- /wp:paragraph --></a><!-- /wp:dx-ui/link -->';
+$card_bare = str_replace( array( ' d-block', ' text-dxui-ink' ), '', $card );
+$card_data = str_replace( '"hasInner":true', '"hasInner":true,"dxuiData":{"data-x":"1"}', $card );
+$span      = '<!-- wp:dx-ui/text {"className":"text-14 fw-900"} --><span class="text-14 fw-900">Learn more →</span><!-- /wp:dx-ui/text -->';
+$span_data = '<!-- wp:dx-ui/text {"className":"x","ariaHidden":"true","dxuiData":{"data-plus":""},"attrOrder":["class"]} --><span aria-hidden="true" data-plus="" class="x">+</span><!-- /wp:dx-ui/text -->';
+$box       = '<!-- wp:dx-ui/box {"className":"px-4 d-flex"} --><div class="px-4 d-flex"><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --></div><!-- /wp:dx-ui/box -->';
+$box_empty = '<!-- wp:dx-ui/box {"className":"absolute inset-0","ariaHidden":"true"} --><div aria-hidden="true" class="absolute inset-0"></div><!-- /wp:dx-ui/box -->';
+$box_ctrl  = '<!-- wp:dx-ui/box {"className":"t","ariaExpanded":"false"} --><div class="t" aria-expanded="false"><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --></div><!-- /wp:dx-ui/box -->';
+$cta       = static fn( string $cls, string $css, string $text ): string => '<!-- wp:dx-ui/link {"url":"tel:5551234","text":"' . $text . '","className":"' . $cls . '"' . ( $css !== '' ? ',"dxuiCss":"' . $css . '"' : '' ) . '} -->'
+	. '<a class="wp-block-dx-ui-link ' . $cls . '" href="tel:5551234">' . $text . '</a><!-- /wp:dx-ui/link -->';
+$filled    = $cta( 'rounded-5px px-7 py-4 bg-dxui-accent text-dxui-ink fw-900', '', 'Call now' );
+$ghost     = $cta( 'rounded-5px px-6 text-white', 'background:transparent;padding-top:17px;padding-bottom:17px;border:2px solid var(--dxui-neutral-100-a55)', 'Request a callback' );
+$navlink   = '<!-- wp:dx-ui/link {"url":"#about","text":"About","className":"px-3 fw-700","dxuiData":{"data-dxui-set":"null"}} --><a class="wp-block-dx-ui-link px-3 fw-700" href="#about" data-dxui-set="null">About</a><!-- /wp:dx-ui/link -->';
+$skip      = $cta( 'px-4 py-3 absolute top-0 bg-dxui-accent', 'left:-9999px;z-index:999', 'Skip to content' );
 
 echo "\nLink box\n";
 if ( isset( $have['link-box'] ) ) {
 	$r = $convert( $card );
 	$expect( 'a link around content becomes amr/link-box', $names( $r['content'] ) === array( 'amr/link-box' ), implode( ',', $names( $r['content'] ) ) );
 	$expect( 'its inner block is kept', str_contains( $r['content'], '<p>Inside</p>' ) );
-	$expect( 'without display and colour of its own it stays a DX Link', $names( $convert( $card_bare )['content'] ) === array( 'dxai-ui/link' ) );
-	$expect( 'with data attributes it stays a DX Link', $names( $convert( $card_data )['content'] ) === array( 'dxai-ui/link' ) );
+	$expect( 'without display and colour of its own it stays a DX Link', $names( $convert( $card_bare )['content'] ) === array( 'dx-ui/link' ) );
+	$expect( 'with data attributes it stays a DX Link', $names( $convert( $card_data )['content'] ) === array( 'dx-ui/link' ) );
 } else {
 	echo "  skip  amr/link-box is not registered here\n";
 }
@@ -65,15 +65,15 @@ if ( isset( $have['link-box'] ) ) {
 echo "\nSpan\n";
 if ( isset( $have['span'] ) ) {
 	$expect( 'a span of words becomes amr/span', $names( $convert( $span )['content'] ) === array( 'amr/span' ) );
-	$expect( 'a span with aria-hidden and data attributes stays a DX Text', $names( $convert( $span_data )['content'] ) === array( 'dxai-ui/text' ) );
+	$expect( 'a span with aria-hidden and data attributes stays a DX Text', $names( $convert( $span_data )['content'] ) === array( 'dx-ui/text' ) );
 } else {
 	echo "  skip  amr/span is not registered here\n";
 }
 
 echo "\nGroup\n";
 $expect( 'a container with blocks becomes core/group', $names( $convert( $box )['content'] ) === array( 'core/group' ) );
-$expect( 'an empty box stays a DX Box (an empty group opens as a layout picker)', $names( $convert( $box_empty )['content'] ) === array( 'dxai-ui/box' ) );
-$expect( 'a control with aria-expanded stays a DX Box', $names( $convert( $box_ctrl )['content'] ) === array( 'dxai-ui/box' ) );
+$expect( 'an empty box stays a DX Box (an empty group opens as a layout picker)', $names( $convert( $box_empty )['content'] ) === array( 'dx-ui/box' ) );
+$expect( 'a control with aria-expanded stays a DX Box', $names( $convert( $box_ctrl )['content'] ) === array( 'dx-ui/box' ) );
 
 echo "\nButtons\n";
 if ( isset( $have['button'] ) ) {
@@ -84,12 +84,12 @@ if ( isset( $have['button'] ) ) {
 	$r = $convert( $filled . "\n\n" . $ghost );
 	$blocks = array_values( array_filter( parse_blocks( $r['content'] ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
 	$expect( 'two adjacent CTAs are one Buttons block', count( $blocks ) === 1 && $blocks[0]['blockName'] === 'core/buttons' && count( $blocks[0]['innerBlocks'] ) === 2 );
-	$expect( 'a menu item (data attributes) stays a DX Link', $names( $convert( $navlink )['content'] ) === array( 'dxai-ui/link' ) );
-	$expect( 'the skip link stays a DX Link', $names( $convert( $skip )['content'] ) === array( 'dxai-ui/link' ) );
+	$expect( 'a menu item (data attributes) stays a DX Link', $names( $convert( $navlink )['content'] ) === array( 'dx-ui/link' ) );
+	$expect( 'the skip link stays a DX Link', $names( $convert( $skip )['content'] ) === array( 'dx-ui/link' ) );
 	$r = $convert( $filled . "\n\n" . $navlink . "\n\n" . $ghost );
 	$expect( 'a menu item between two CTAs keeps them apart', count( array_filter( $names( $r['content'] ), static fn( $n ) => $n === 'core/buttons' ) ) === 2 );
 	$expect( 'the row stacks on a small screen, as the theme\'s pages do', str_contains( $convert( $filled )['content'], 'sm-flex-column' ) );
-	$grow = $cta( 'rounded-5px px-6 text-white', 'flex:1 1 200px;background:transparent;border:2px solid var(--dxai-neutral-100-a55)', 'Request a callback' );
+	$grow = $cta( 'rounded-5px px-6 text-white', 'flex:1 1 200px;background:transparent;border:2px solid var(--dxui-neutral-100-a55)', 'Request a callback' );
 	$expect( 'a button the design sizes along the row (flex: 1 1 200px) does not stack: in a column that basis is a height', ! str_contains( $convert( $grow )['content'], 'sm-flex-column' ) );
 	$scroller = static fn( string $inner ): string => '<!-- wp:group {"className":"flex gap-2 overflow-x-auto"} --><div class="wp-block-group flex gap-2 overflow-x-auto">' . $inner . '</div><!-- /wp:group -->';
 	$expect( 'links in a row that scrolls sideways stay as the design wrote them', ! str_contains( $convert( $scroller( $filled . "\n\n" . $ghost ) )['content'], 'wp:buttons' ) );
@@ -105,18 +105,18 @@ if ( isset( $have['button'] ) ) {
  * filled with, and the button vanished into it.
  */
 echo "\nButtons on a band of the theme's button colour\n";
-$accent_hex = \DXAI_UI\Theme\Theme_Palette::hex( 'accent' );
-$dark_hex   = \DXAI_UI\Theme\Theme_Palette::hex( 'primary-dark' );
-$fill_hex   = \DXAI_UI\Theme\Theme_Buttons::fill( 'primary-button' );
-if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fill_hex === '' || ! \DXAI_UI\Theme\Theme_Palette::current()['has_palette'] ) {
+$accent_hex = \DX_UI\Theme\Theme_Palette::hex( 'accent' );
+$dark_hex   = \DX_UI\Theme\Theme_Palette::hex( 'primary-dark' );
+$fill_hex   = \DX_UI\Theme\Theme_Buttons::fill( 'primary-button' );
+if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fill_hex === '' || ! \DX_UI\Theme\Theme_Palette::current()['has_palette'] ) {
 	echo "  skip  the theme has no button styles, accent or primary dark here\n";
 } else {
 	$expect( 'the theme\'s primary button is filled with its accent, read from the theme\'s own rule', $fill_hex === $accent_hex, $fill_hex . ' / ' . $accent_hex );
 	$bhome = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture buttons on a band' ) );
-	$bfile = \DXAI_UI\Support\Upload_Paths::DIR . '/verify-buttons-' . $bhome . '.css';
+	$bfile = \DX_UI\Support\Upload_Paths::DIR . '/verify-buttons-' . $bhome . '.css';
 	register_shutdown_function(
 		static function () use ( &$bhome, $bfile ): void {
-			$path = \DXAI_UI\Support\Upload_Paths::path( $bfile );
+			$path = \DX_UI\Support\Upload_Paths::path( $bfile );
 			if ( $path !== '' && is_file( $path ) ) {
 				wp_delete_file( $path );
 			}
@@ -128,7 +128,7 @@ if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fi
 	);
 	update_post_meta(
 		$bhome,
-		\DXAI_UI\Compiler\Token_Styles::META,
+		\DX_UI\Compiler\Token_Styles::META,
 		array(
 			'colors' => array(
 				'#f28c28'                 => array( 'slug' => 'flame', 'name' => 'Flame', 'value' => '#f28c28', 'uses' => 2, 'preset' => true ),
@@ -141,10 +141,10 @@ if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fi
 	);
 	update_post_meta(
 		$bhome,
-		\DXAI_UI\Theme\Theme_Binding::META,
+		\DX_UI\Theme\Theme_Binding::META,
 		array(
 			get_stylesheet() => array(
-				'schema' => \DXAI_UI\Theme\Theme_Binding::SCHEMA,
+				'schema' => \DX_UI\Theme\Theme_Binding::SCHEMA,
 				'mode'   => 'follow',
 				'design' => array( 'flame' => '#f28c28', 'navy' => '#0d2a55', 'plum' => '#6b21a8' ),
 				'tokens' => array( 'flame' => array( 'to' => 'accent' ), 'navy' => array( 'to' => 'primary-dark' ) ),
@@ -152,12 +152,12 @@ if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fi
 		)
 	);
 	// A Tailwind design keeps its own class names; the rules of its sheet say which token each paints.
-	wp_mkdir_p( dirname( \DXAI_UI\Support\Upload_Paths::path( $bfile ) ) );
-	file_put_contents( \DXAI_UI\Support\Upload_Paths::path( $bfile ), '.bg-flame, .dxai-ui.dxai-ui--' . $bhome . ' .bg-flame { background-color:var(--dxai-flame); }' . "\n" . '.bg-navy, .dxai-ui.dxai-ui--' . $bhome . ' .bg-navy { background-color:var(--dxai-navy); }' . "\n" . '.bg-white\/10, .dxai-ui.dxai-ui--' . $bhome . ' .bg-white\/10 { background-color:var(--dxai-neutral-100-a10); }' . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-	update_post_meta( $bhome, '_dxai_ui_css_url', $bfile );
+	wp_mkdir_p( dirname( \DX_UI\Support\Upload_Paths::path( $bfile ) ) );
+	file_put_contents( \DX_UI\Support\Upload_Paths::path( $bfile ), '.bg-flame, .dx-ui.dx-ui--' . $bhome . ' .bg-flame { background-color:var(--dxui-flame); }' . "\n" . '.bg-navy, .dx-ui.dx-ui--' . $bhome . ' .bg-navy { background-color:var(--dxui-navy); }' . "\n" . '.bg-white\/10, .dx-ui.dx-ui--' . $bhome . ' .bg-white\/10 { background-color:var(--dxui-neutral-100-a10); }' . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+	update_post_meta( $bhome, '_dx_ui_css_url', $bfile );
 
 	$on      = static fn( string $markup ): array => Native_Blocks::convert_content( $markup, array( 'home' => $bhome, 'post' => $bhome ) );
-	$band    = static fn( string $outer, string $inner, string $cta_markup ): string => '<!-- wp:dxai-ui/box {"className":"' . $outer . '"} --><div class="' . $outer . '"><!-- wp:dxai-ui/box {"className":"' . $inner . '"} --><div class="' . $inner . '">' . $cta_markup . '</div><!-- /wp:dxai-ui/box --></div><!-- /wp:dxai-ui/box -->';
+	$band    = static fn( string $outer, string $inner, string $cta_markup ): string => '<!-- wp:dx-ui/box {"className":"' . $outer . '"} --><div class="' . $outer . '"><!-- wp:dx-ui/box {"className":"' . $inner . '"} --><div class="' . $inner . '">' . $cta_markup . '</div><!-- /wp:dx-ui/box --></div><!-- /wp:dx-ui/box -->';
 	$button  = static function ( string $content ): array {
 		$found = array();
 		$walk  = static function ( array $blocks ) use ( &$walk, &$found ): void {
@@ -172,8 +172,8 @@ if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fi
 
 		return $found;
 	};
-	$call    = $cta( 'rounded-lg bg-dxai-navy px-6 py-3 fw-600', '', 'Call (303) 555-0188' );
-	$r       = $on( $band( 'bg-dxai-flame', 'mx-auto flex gap-6 px-6 py-14', $call ) );
+	$call    = $cta( 'rounded-lg bg-dxui-navy px-6 py-3 fw-600', '', 'Call (303) 555-0188' );
+	$r       = $on( $band( 'bg-dxui-flame', 'mx-auto flex gap-6 px-6 py-14', $call ) );
 	$b       = $button( $r['content'] );
 	$expect( 'a filled CTA on a band of the theme\'s button colour keeps the design\'s own fill, as the theme colour it follows, in the Button\'s Colour panel', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark' && str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ), wp_json_encode( $b['attrs'] ?? null ) );
 	$expect( 'with the palette\'s white for its text, which reads on it', ( $b['attrs']['textColor'] ?? '' ) === 'white' && ( $b['attrs']['style']['elements']['link']['color']['text'] ?? '' ) === 'var:preset|color|white', wp_json_encode( $b['attrs'] ?? null ) );
@@ -186,20 +186,20 @@ if ( ! isset( $have['button'] ) || $accent_hex === '' || $dark_hex === '' || $fi
 	$expect( 'the same where the design keeps its own class names (Tailwind), read from the rules of its sheet', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark', wp_json_encode( $b['attrs'] ?? null ) );
 	$b = $button( $on( $band( 'bg-flame', 'rounded-xl bg-white/10 p-6', $cta( 'rounded-lg bg-navy px-6 py-3', '', 'Call' ) ) )['content'] );
 	$expect( 'a translucent row on the band is seen through to the band', ( $b['attrs']['backgroundColor'] ?? '' ) === 'primary-dark', wp_json_encode( $b['attrs'] ?? null ) );
-	$b = $button( $on( $band( 'bg-dxai-flame', 'flex gap-6', $cta( 'rounded-lg bg-dxai-plum px-6 py-3', '', 'Call' ) ) )['content'] );
+	$b = $button( $on( $band( 'bg-dxui-flame', 'flex gap-6', $cta( 'rounded-lg bg-dxui-plum px-6 py-3', '', 'Call' ) ) )['content'] );
 	$expect( 'a CTA whose own fill is no colour of the theme wears the theme\'s other style there, which shows on the band', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-secondary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
-	$b = $button( $on( $band( 'bg-dxai-navy', 'flex gap-6', $cta( 'rounded-lg bg-dxai-flame px-6 py-3', '', 'Book' ) ) )['content'] );
-	$expect( 'on any other band the button is the theme\'s, as before', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ) && ! isset( $b['attrs']['backgroundColor'] ) && ( $b['attrs']['textColor'] ?? '' ) === \DXAI_UI\Theme\Theme_Buttons::text_slug(), wp_json_encode( $b['attrs'] ?? null ) );
+	$b = $button( $on( $band( 'bg-dxui-navy', 'flex gap-6', $cta( 'rounded-lg bg-dxui-flame px-6 py-3', '', 'Book' ) ) )['content'] );
+	$expect( 'on any other band the button is the theme\'s, as before', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ) && ! isset( $b['attrs']['backgroundColor'] ) && ( $b['attrs']['textColor'] ?? '' ) === \DX_UI\Theme\Theme_Buttons::text_slug(), wp_json_encode( $b['attrs'] ?? null ) );
 	$b = $button( $on( $call )['content'] );
 	$expect( 'and so it is on no band at all', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-primary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
-	$b = $button( $on( $band( 'bg-dxai-flame', 'flex gap-6', $ghost ) )['content'] );
+	$b = $button( $on( $band( 'bg-dxui-flame', 'flex gap-6', $ghost ) )['content'] );
 	$expect( 'an outlined CTA on the band keeps the theme\'s secondary style', str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'is-style-secondary-button' ) && ! isset( $b['attrs']['backgroundColor'] ), wp_json_encode( $b['attrs'] ?? null ) );
 }
 
 echo "\nLayout\n";
 $para  = static fn( string $cls = 'm-0' ): string => '<!-- wp:paragraph {"className":"' . $cls . '"} --><p class="' . $cls . '">A</p><!-- /wp:paragraph -->';
-$group = static fn( string $cls, string $inner, string $css = '' ): string => '<!-- wp:group {"className":"' . $cls . '"' . ( $css !== '' ? ',"dxaiCss":"' . $css . '"' : '' ) . '} -->'
-	. '<div class="wp-block-group ' . $cls . ( $css !== '' ? ' ' . \DXAI_UI\Compiler\Style_Hoister::css_class( $css ) : '' ) . '">' . $inner . '</div><!-- /wp:group -->';
+$group = static fn( string $cls, string $inner, string $css = '' ): string => '<!-- wp:group {"className":"' . $cls . '"' . ( $css !== '' ? ',"dxuiCss":"' . $css . '"' : '' ) . '} -->'
+	. '<div class="wp-block-group ' . $cls . ( $css !== '' ? ' ' . \DX_UI\Compiler\Style_Hoister::css_class( $css ) : '' ) . '">' . $inner . '</div><!-- /wp:group -->';
 $attrs_of = static function ( string $markup ): array {
 	$b = array_values( array_filter( parse_blocks( $markup ), static fn( $x ) => ! empty( $x['blockName'] ) ) );
 
@@ -222,13 +222,13 @@ $expect( 'a row with a display set in its own CSS is read from there too', ( $at
 $wrapper = $group( 'mx-auto my-0 px-7 max-w-1280px', $para() . $para() );
 $ba  = $attrs_of( $convert( $wrapper )['content'] );
 // The design's container is 1280px; the site's design system stops at the widest the theme has (1200px on american-restoration).
-$sys  = \DXAI_UI\Compiler\Utility_Classes::system();
+$sys  = \DX_UI\Compiler\Utility_Classes::system();
 $want = ( $sys !== null ? min( 1280, $sys['max_width'] ) : 1280 ) - 56;
 $expect( 'a centred container becomes a Constrained layout of the width its children had, within the site\'s design system', ( $ba['layout']['type'] ?? '' ) === 'constrained' && ( $ba['layout']['contentSize'] ?? '' ) === $want . 'px' && ( $ba['style']['spacing']['blockGap'] ?? '' ) === '0px', json_encode( $ba ) . ' want ' . $want );
 $expect( 'and keeps its padding and its other classes', ( $ba['className'] ?? '' ) === 'my-0 px-7', json_encode( $ba ) );
 $expect( 'a container with a narrower child stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'max-w-720px m-0' ) ) )['content'] )['layout'] ) );
 $expect( 'a container with a child that has a vertical margin stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7', $para( 'mb-3' ) ) )['content'] )['layout'] ) );
-$expect( 'a container with a background stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7 bg-dxai-brand', $para() ) )['content'] )['layout'] ) );
+$expect( 'a container with a background stays as it is', ! isset( $attrs_of( $convert( $group( 'mx-auto max-w-1280px px-7 bg-dxui-brand', $para() ) )['content'] )['layout'] ) );
 $once = $convert( $row . "\n\n" . $box )['content'];
 $expect( 'a second pass changes nothing', $convert( $once )['counts'] === array() && $convert( $once )['content'] === $once );
 $expect( 'parse and serialize give the same bytes', serialize_blocks( parse_blocks( $once ) ) === $once );
@@ -236,20 +236,20 @@ $expect( 'parse and serialize give the same bytes', serialize_blocks( parse_bloc
 echo "\nIcons\n";
 if ( isset( $have['svg'] ) ) {
 	// An icon is converted for a design, and a design whose stylesheet is read; a throwaway page stands for one that has none.
-	$icon_home    = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dxai-ui icon test' ) );
+	$icon_home    = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dx-ui icon test' ) );
 	$convert_icon = static fn( string $markup ): array => Native_Blocks::convert_content( $markup, array( 'home' => $icon_home, 'post' => $icon_home ) );
-	$known_files  = get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) );
+	$known_files  = get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dx_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) );
 	$svg = static function ( array $pairs, string $inner, array $hoisted = array() ): string {
 		$attrs = array( 'svgAttrs' => $pairs, 'svgInner' => $inner );
 		if ( $hoisted !== array() ) {
-			$attrs['dxaiInner'] = $hoisted;
+			$attrs['dxuiInner'] = $hoisted;
 		}
 		$tag = '<svg';
 		foreach ( $pairs as $p ) {
 			$tag .= ' ' . $p[0] . '="' . esc_attr( $p[1] ) . '"';
 		}
 
-		return '<!-- wp:dxai-ui/svg ' . wp_json_encode( $attrs ) . ' -->' . $tag . '>' . $inner . '</svg><!-- /wp:dxai-ui/svg -->';
+		return '<!-- wp:dx-ui/svg ' . wp_json_encode( $attrs ) . ' -->' . $tag . '>' . $inner . '</svg><!-- /wp:dx-ui/svg -->';
 	};
 	$icon_pairs = array( array( 'viewBox', '0 0 24 24' ), array( 'width', '24' ), array( 'height', '24' ), array( 'fill', 'none' ), array( 'stroke', '#0a7c4a' ), array( 'stroke-width', '2' ), array( 'aria-hidden', 'true' ) );
 	$icon_path  = '<path d="M5 12h14M12 5l7 7-7 7"/>';
@@ -257,21 +257,21 @@ if ( isset( $have['svg'] ) ) {
 	$r          = $convert_icon( $plain );
 	$ia         = $attrs_of( $r['content'] );
 	$expect( 'a drawing with its own colours and size becomes core/image', $names( $r['content'] ) === array( 'core/image' ), implode( ',', $names( $r['content'] ) ) );
-	$expect( 'pointing at a file in the media library, with the icon marker', ! empty( $ia['id'] ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxai-icon' ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxai-part-img' ), json_encode( $ia ) );
+	$expect( 'pointing at a file in the media library, with the icon marker', ! empty( $ia['id'] ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxui-icon' ) && str_contains( (string) ( $ia['className'] ?? '' ), 'dxui-part-img' ), json_encode( $ia ) );
 	$file = ! empty( $ia['id'] ) ? (string) get_attached_file( (int) $ia['id'] ) : '';
 	$body = $file !== '' && is_readable( $file ) ? (string) file_get_contents( $file ) : '';
 	$expect( 'the file is a standalone SVG with the drawing and its colours', str_contains( $body, 'xmlns="http://www.w3.org/2000/svg"' ) && str_contains( $body, 'stroke="#0a7c4a"' ) && str_contains( $body, '<path' ) && ! str_contains( $body, 'aria-hidden' ), $body );
 	$expect( 'the picture says nothing to a screen reader, as the icon did', str_contains( $r['content'], 'alt=""' ) );
 	$expect( 'the same drawing twice is one file', ( $attrs_of( $convert_icon( $plain . "\n\n" . $plain )['content'] )['id'] ?? 0 ) === ( $ia['id'] ?? -1 ) );
 	$expect( 'a label on the icon becomes the alt text', str_contains( $convert_icon( $svg( array_merge( $icon_pairs, array( array( 'aria-label', 'Next step' ) ) ), $icon_path ) )['content'], 'alt="Next step"' ) );
-	$expect( 'without a design to read the stylesheet of, an icon stays as it is', $names( $convert( $plain )['content'] ) === array( 'dxai-ui/svg' ) );
+	$expect( 'without a design to read the stylesheet of, an icon stays as it is', $names( $convert( $plain )['content'] ) === array( 'dx-ui/svg' ) );
 	$expect( 'a second pass changes nothing', $convert_icon( $r['content'] )['counts'] === array() );
 	$expect( 'parse and serialize give the same bytes', serialize_blocks( parse_blocks( $r['content'] ) ) === $r['content'] );
 
 	$sized_by_css = $svg( array( array( 'viewBox', '0 0 24 24' ), array( 'fill', '#111' ), array( 'class', 'dxs-ab12cd' ) ), $icon_path, array( 'dxs-ab12cd' => 'width:2rem;height:2rem' ) );
 	$sa           = $attrs_of( $convert_icon( $sized_by_css )['content'] );
-	$expect( 'an icon sized by a rule of its own keeps that rule on the picture', ( $sa['dxaiCss'] ?? '' ) !== '' && str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'width:2rem' ), json_encode( $sa ) );
-	$expect( 'and the picture keeps the display the svg had, and no width limit it never had', str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'display:inline' ) && str_contains( (string) ( $sa['dxaiCss'] ?? '' ), 'max-width:none' ), json_encode( $sa ) );
+	$expect( 'an icon sized by a rule of its own keeps that rule on the picture', ( $sa['dxuiCss'] ?? '' ) !== '' && str_contains( (string) ( $sa['dxuiCss'] ?? '' ), 'width:2rem' ), json_encode( $sa ) );
+	$expect( 'and the picture keeps the display the svg had, and no width limit it never had', str_contains( (string) ( $sa['dxuiCss'] ?? '' ), 'display:inline' ) && str_contains( (string) ( $sa['dxuiCss'] ?? '' ), 'max-width:none' ), json_encode( $sa ) );
 	$utility      = $svg( array( array( 'viewBox', '0 0 24 24' ), array( 'fill', '#111' ), array( 'class', 'w-20px h-20px mr-2' ) ), $icon_path );
 	$expect( 'an icon sized by utilities converts and keeps them', str_contains( (string) ( $attrs_of( $convert_icon( $utility )['content'] )['className'] ?? '' ), 'w-20px h-20px mr-2' ) );
 
@@ -295,25 +295,25 @@ if ( isset( $have['svg'] ) ) {
 		'a label that is a script'                              => $svg( array_merge( $icon_pairs, array( array( 'aria-label', 'x" onerror="y' ) ) ), $icon_path ),
 	);
 	foreach ( $stays as $label => $markup ) {
-		$expect( "$label stays a DX Icon", $names( $convert_icon( $markup )['content'] ) === array( 'dxai-ui/svg' ), implode( ',', $names( $convert_icon( $markup )['content'] ) ) );
+		$expect( "$label stays a DX Icon", $names( $convert_icon( $markup )['content'] ) === array( 'dx-ui/svg' ), implode( ',', $names( $convert_icon( $markup )['content'] ) ) );
 	}
 
 	$fresh  = $svg( $icon_pairs, '<path d="M3 3h18M3 9h18M3 15h12"/>' );
-	$before = count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) );
+	$before = count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dx_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) );
 	$plan   = Native_Blocks::convert_content( $fresh, array( 'home' => $icon_home, 'post' => $icon_home, 'dry' => 1 ) );
 	$expect( 'planning counts the icon', ( $plan['counts']['svg'] ?? 0 ) === 1, json_encode( $plan['counts'] ) );
-	$expect( 'and makes no file and no attachment', count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) ) === $before );
+	$expect( 'and makes no file and no attachment', count( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dx_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ) ) === $before );
 
 	echo "\nIcons: what the design's stylesheet says about svgs\n";
-	$read = static fn( string $css ): array => \DXAI_UI\Blocks\Native\Svg_Image::read( $css );
+	$read = static fn( string $css ): array => \DX_UI\Blocks\Native\Svg_Image::read( $css );
 	$m    = $read( '[data-stats] svg{width:32px;height:32px}' );
-	$expect( 'a rule for svgs in a place is written again for the picture', $m['safe'] && str_contains( $m['mirror'], '[data-stats] .dxai-icon img{width:32px;height:32px}' ), json_encode( $m ) );
+	$expect( 'a rule for svgs in a place is written again for the picture', $m['safe'] && str_contains( $m['mirror'], '[data-stats] .dxui-icon img{width:32px;height:32px}' ), json_encode( $m ) );
 	$m = $read( '.a svg,.b svg{width:1px}' );
-	$expect( 'a list of selectors is written for each', $m['safe'] && str_contains( $m['mirror'], '.a .dxai-icon img,.b .dxai-icon img{width:1px}' ), json_encode( $m ) );
+	$expect( 'a list of selectors is written for each', $m['safe'] && str_contains( $m['mirror'], '.a .dxui-icon img,.b .dxui-icon img{width:1px}' ), json_encode( $m ) );
 	$m = $read( '@media (max-width:600px){.card svg{width:10px}}' );
-	$expect( 'inside a media query it stays inside', $m['safe'] && str_contains( $m['mirror'], '@media (max-width:600px){.card .dxai-icon img{width:10px}}' ), json_encode( $m ) );
+	$expect( 'inside a media query it stays inside', $m['safe'] && str_contains( $m['mirror'], '@media (max-width:600px){.card .dxui-icon img{width:10px}}' ), json_encode( $m ) );
 	$m = $read( '.card svg:hover{opacity:.5}' );
-	$expect( 'a hover state is kept', $m['safe'] && str_contains( $m['mirror'], '.card .dxai-icon img:hover{opacity:.5}' ), json_encode( $m ) );
+	$expect( 'a hover state is kept', $m['safe'] && str_contains( $m['mirror'], '.card .dxui-icon img:hover{opacity:.5}' ), json_encode( $m ) );
 	$m = $read( 'svg{display:block}' );
 	$expect( 'the display a rule gives svgs is the picture\'s', $m['safe'] && $m['display'] === 'block', json_encode( $m ) );
 	$expect( 'without a rule an svg is inline', $read( '.x{color:red}' ) === array( 'safe' => true, 'display' => 'inline', 'mirror' => '' ) );
@@ -324,7 +324,7 @@ if ( isset( $have['svg'] ) ) {
 	$expect( 'comments are not rules', $read( '/* .a svg path{fill:red} */.b{color:red}' )['safe'] );
 
 	// The files this run made are taken away again; the ones that were there are not touched.
-	$made = array_diff( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dxai_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ), $known_files );
+	$made = array_diff( get_posts( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'meta_key' => '_dx_ui_svg_hash', 'fields' => 'ids', 'numberposts' => -1 ) ), $known_files );
 	foreach ( $made as $id ) {
 		wp_delete_attachment( (int) $id, true );
 	}
@@ -371,7 +371,7 @@ if ( $publisher === 0 ) {
 	$was_user = get_current_user_id();
 	wp_set_current_user( $publisher );
 	$raw      = '<!-- wp:html --><form action="https://example.org/send"><input type="text" name="q"><button type="submit">Go</button></form><iframe src="https://example.org/map" title="Map"></iframe><!-- /wp:html -->';
-	$kses_home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dxai-ui kses test', 'post_content' => wp_slash( $box . "\n\n" . $raw ) ) );
+	$kses_home = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'dx-ui kses test', 'post_content' => wp_slash( $box . "\n\n" . $raw ) ) );
 	$stored    = (string) get_post_field( 'post_content', $kses_home );
 	$expect( 'the page holds a form, its controls and an iframe, as its publisher wrote them', str_contains( $stored, '<form' ) && str_contains( $stored, '<input' ) && str_contains( $stored, '<button' ) && str_contains( $stored, '<iframe' ) );
 
@@ -383,7 +383,7 @@ if ( $publisher === 0 ) {
 
 	$done  = Native_Blocks::apply( $kses_home );
 	$after = (string) get_post_field( 'post_content', $kses_home );
-	$expect( 'apply converts the box', $done['posts'] === 1 && ! str_contains( $after, 'dxai-ui/box' ) && str_contains( $after, 'wp:group' ), wp_json_encode( $done ) );
+	$expect( 'apply converts the box', $done['posts'] === 1 && ! str_contains( $after, 'dx-ui/box' ) && str_contains( $after, 'wp:group' ), wp_json_encode( $done ) );
 	$expect( 'and leaves the form, its controls and the iframe where they were', str_contains( $after, '<form' ) && str_contains( $after, '<input' ) && str_contains( $after, '<button' ) && str_contains( $after, '<iframe' ), 'the content now: ' . substr( $after, -260 ) );
 	$expect( 'KSES is on again when it is done (the filters it found are put back)', has_filter( 'content_save_pre', 'wp_filter_post_kses' ) !== false );
 

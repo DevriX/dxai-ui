@@ -20,14 +20,14 @@
  *
  * It makes one page and a few records of its own and deletes them when it ends, however it ends. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Design\Document_Store;
-use DXAI_UI\Structures\Conversion_Snapshot;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
+use DX_UI\Content\Content_Types;
+use DX_UI\Design\Document_Store;
+use DX_UI\Structures\Conversion_Snapshot;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
 
 $fail   = 0;
 $pass   = 0;
@@ -110,7 +110,7 @@ echo "\nThe record a save writes\n";
 $home   = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Snapshot fixture ' . $run, 'post_content' => '' ) );
 $made[] = $home;
 update_post_meta( $home, Page_Scope::META, $home );
-update_post_meta( $home, '_dxai_ui_css_url', 'dxai-ui/snapshot-fixture-' . $run . '.css' );
+update_post_meta( $home, '_dx_ui_css_url', 'dx-ui/snapshot-fixture-' . $run . '.css' );
 $expect( 'the fixture is a design Home (Document_Store reads its snapshots)', Document_Store::home_of( $home ) === $home );
 $repo   = new Structure_Repository();
 $write  = new ReflectionMethod( Structure_Repository::class, 'save_conversion' );
@@ -132,14 +132,14 @@ $expect( 'and it comes back from the database whole, KSES on', is_array( $back )
 wp_set_current_user( 0 );
 $restored = $repo->restore( $id );
 wp_set_current_user( $user );
-$expect( 'restore() reads the compressed record', is_wp_error( $restored ) && $restored->get_error_code() === 'dxai_ui_unfiltered_html', is_wp_error( $restored ) ? $restored->get_error_code() . ': ' . $restored->get_error_message() : 'saved' );
+$expect( 'restore() reads the compressed record', is_wp_error( $restored ) && $restored->get_error_code() === 'dx_ui_unfiltered_html', is_wp_error( $restored ) ? $restored->get_error_code() . ': ' . $restored->get_error_message() : 'saved' );
 $rebuilt = Document_Store::rebuild( $home );
-$expect( 'Document_Store::rebuild() finds the compressed snapshot', ! is_wp_error( $rebuilt ) || ! in_array( $rebuilt->get_error_code(), array( 'dxai_ui_no_design', 'dxai_ui_no_snapshot' ), true ), is_wp_error( $rebuilt ) ? $rebuilt->get_error_code() : '' );
-$broken = (int) wp_insert_post( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'publish', 'post_title' => 'Snapshot fixture broken ' . $run, 'post_content' => Conversion_Snapshot::PREFIX . 'AAAA', 'meta_input' => array( '_dxai_ui_page_id' => $home ) ) );
+$expect( 'Document_Store::rebuild() finds the compressed snapshot', ! is_wp_error( $rebuilt ) || ! in_array( $rebuilt->get_error_code(), array( 'dx_ui_no_design', 'dx_ui_no_snapshot' ), true ), is_wp_error( $rebuilt ) ? $rebuilt->get_error_code() : '' );
+$broken = (int) wp_insert_post( array( 'post_type' => Content_Types::CONVERSION, 'post_status' => 'publish', 'post_title' => 'Snapshot fixture broken ' . $run, 'post_content' => Conversion_Snapshot::PREFIX . 'AAAA', 'meta_input' => array( '_dx_ui_page_id' => $home ) ) );
 $made[] = $broken;
 $bad    = $repo->restore( $broken );
-$expect( 'a damaged record is refused by restore(), not saved', is_wp_error( $bad ) && $bad->get_error_code() === 'dxai_ui_restore' );
-$expect( 'and the newest snapshot of a Home, damaged, gives rebuild() no snapshot', is_wp_error( Document_Store::rebuild( $home ) ) && Document_Store::rebuild( $home )->get_error_code() === 'dxai_ui_no_snapshot' );
+$expect( 'a damaged record is refused by restore(), not saved', is_wp_error( $bad ) && $bad->get_error_code() === 'dx_ui_restore' );
+$expect( 'and the newest snapshot of a Home, damaged, gives rebuild() no snapshot', is_wp_error( Document_Store::rebuild( $home ) ) && Document_Store::rebuild( $home )->get_error_code() === 'dx_ui_no_snapshot' );
 
 echo "\nWhat a large record costs to write\n";
 if ( function_exists( 'memory_reset_peak_usage' ) ) {
@@ -183,7 +183,7 @@ foreach ( array( 'process-source', 'generate-block', 'save-pattern' ) as $route 
 	add_filter( 'admin_memory_limit', $stop );
 	$got = null;
 	try {
-		$got = rest_do_request( new WP_REST_Request( 'POST', '/' . DXAI_UI_REST_NAMESPACE . '/' . $route ) );
+		$got = rest_do_request( new WP_REST_Request( 'POST', '/' . DX_UI_REST_NAMESPACE . '/' . $route ) );
 	} catch ( RuntimeException $e ) {
 		unset( $e );
 	}

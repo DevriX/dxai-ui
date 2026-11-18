@@ -2,17 +2,17 @@
 /**
  * What the design page gives its sections that an ordinary page does not.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks;
+namespace DX_UI\Blocks;
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Upload_Paths;
+use DX_UI\Media\Font_Host;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Upload_Paths;
 
 /**
  * Sections copied from a design page into an ordinary page of the theme get
@@ -25,7 +25,7 @@ use DXAI_UI\Support\Upload_Paths;
  *    24px line-height, a colour. The scope element starts from the browser's
  *    defaults again, at no specificity, so the design's own root rule wins.
  *  - the blank canvas's block resets (blank-canvas.css), which are written for
- *    `body.dxai-ui-blank` — the same rules, at the same weight, without it.
+ *    `body.dx-ui-blank` — the same rules, at the same weight, without it.
  *  - the theme.json tokens without its styling: the preset variables and the
  *    `.has-*` classes (Blank_Template does the same), since the fenced
  *    global-styles no longer reaches into the sections.
@@ -39,10 +39,10 @@ use DXAI_UI\Support\Upload_Paths;
 final class Attached_Styles {
 
 	/** The handle the design sheet depends on, printed before it. */
-	public const HANDLE = 'dxai-ui-attached';
+	public const HANDLE = 'dx-ui-attached';
 
 	public function register(): void {
-		add_action( 'dxai_ui_copy_font_css', array( self::class, 'copy_font_css' ) );
+		add_action( 'dx_ui_copy_font_css', array( self::class, 'copy_font_css' ) );
 		add_action( 'save_post', array( self::class, 'warm' ), 20 );
 	}
 
@@ -51,7 +51,7 @@ final class Attached_Styles {
 	 */
 	public static function base( int $source ): string {
 		if ( ! wp_style_is( self::HANDLE, 'registered' ) ) {
-			wp_register_style( self::HANDLE, false, array(), DXAI_UI_VERSION );
+			wp_register_style( self::HANDLE, false, array(), DX_UI_VERSION );
 			wp_add_inline_style( self::HANDLE, self::base_css( $source ) );
 		}
 
@@ -62,8 +62,8 @@ final class Attached_Styles {
 	public static function base_css( int $source ): string {
 		$scope = (int) get_post_meta( $source, Page_Scope::META, true );
 		$scope = $scope > 0 ? $scope : $source;
-		$css   = ':where(.dxai-ui.dxai-ui--' . $scope . '){font:initial;font-size:medium;color:initial;letter-spacing:normal;word-spacing:normal;text-transform:none;text-align:start;text-indent:0;text-shadow:none;white-space:normal;font-feature-settings:normal;font-variation-settings:normal;text-rendering:auto;-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto;hyphens:manual;word-break:normal;overflow-wrap:normal;cursor:auto;visibility:visible}';
-		$css  .= self::canvas_css( (bool) get_post_meta( $source, '_dxai_ui_static_html', true ) );
+		$css   = ':where(.dx-ui.dx-ui--' . $scope . '){font:initial;font-size:medium;color:initial;letter-spacing:normal;word-spacing:normal;text-transform:none;text-align:start;text-indent:0;text-shadow:none;white-space:normal;font-feature-settings:normal;font-variation-settings:normal;text-rendering:auto;-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto;hyphens:manual;word-break:normal;overflow-wrap:normal;cursor:auto;visibility:visible}';
+		$css  .= self::canvas_css( (bool) get_post_meta( $source, '_dx_ui_static_html', true ) );
 		if ( function_exists( 'wp_get_global_stylesheet' ) ) {
 			$css .= wp_get_global_stylesheet( array( 'variables', 'presets' ) );
 		}
@@ -72,13 +72,13 @@ final class Attached_Styles {
 	}
 
 	/**
-	 * blank-canvas.css for sections outside the blank canvas: the rules about `.dxai-ui` only, with
-	 * `body.dxai-ui-blank` read as `html:not(.dxai-ui-x)` — (0,1,1) as before, so each rule keeps its place against
+	 * blank-canvas.css for sections outside the blank canvas: the rules about `.dx-ui` only, with
+	 * `body.dx-ui-blank` read as `html:not(.dx-ui-x)` — (0,1,1) as before, so each rule keeps its place against
 	 * the design's. A static design (a Claude Design export) keeps the browser's margins, as on its own page, where
-	 * `body.dxai-ui-static` leaves those rules out.
+	 * `body.dx-ui-static` leaves those rules out.
 	 */
 	private static function canvas_css( bool $static ): string {
-		$file = DXAI_UI_DIR . 'assets/css/blank-canvas.css';
+		$file = DX_UI_DIR . 'assets/css/blank-canvas.css';
 		$css  = is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$css  = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
 		if ( ! preg_match_all( '/([^{}]+)\{([^{}]*)\}/', $css, $m, PREG_SET_ORDER ) ) {
@@ -87,13 +87,13 @@ final class Attached_Styles {
 		$out = '';
 		foreach ( $m as $rule ) {
 			$selector = trim( $rule[1] );
-			if ( preg_match( '/\.dxai-ui(?![\w-])/', $selector ) !== 1 || str_contains( $selector, 'body.admin-bar' ) || str_contains( $selector, '.dxai-ui-root' ) ) {
+			if ( preg_match( '/\.dx-ui(?![\w-])/', $selector ) !== 1 || str_contains( $selector, 'body.admin-bar' ) || str_contains( $selector, '.dx-ui-root' ) ) {
 				continue;
 			}
-			if ( $static && str_contains( $selector, ':not(.dxai-ui-static *)' ) ) {
+			if ( $static && str_contains( $selector, ':not(.dx-ui-static *)' ) ) {
 				continue;
 			}
-			$out .= str_replace( 'body.dxai-ui-blank', 'html:not(.dxai-ui-x)', $selector ) . '{' . trim( $rule[2] ) . '}';
+			$out .= str_replace( 'body.dx-ui-blank', 'html:not(.dx-ui-x)', $selector ) . '{' . trim( $rule[2] ) . '}';
 		}
 
 		return $out;
@@ -118,8 +118,8 @@ final class Attached_Styles {
 			return;
 		}
 		$source = Design_Attach::source_for( $post_id );
-		$fonts  = get_post_meta( $source, '_dxai_ui_font_urls', true );
-		foreach ( is_array( $fonts ) && ! \DXAI_UI\Theme\Theme_Fonts::adopts( $source ) ? $fonts : array() as $url ) {
+		$fonts  = get_post_meta( $source, '_dx_ui_font_urls', true );
+		foreach ( is_array( $fonts ) && ! \DX_UI\Theme\Theme_Fonts::adopts( $source ) ? $fonts : array() as $url ) {
 			self::copy_font_css( (string) $url );
 		}
 		// The design's own sheet carries them too, so the page asks for its fonts once.

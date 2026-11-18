@@ -128,7 +128,7 @@ foreach ( $shapes as $shape_label => $body ) {
 			);
 			$harvest = array( 'rewrites' => array( $key_a => $url_a, $key_b => $url_b ) );
 
-			$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+			$compiler = new DX_UI\Compiler\Jsx_Compiler();
 			$sections = $compiler->compile_file( $page, $harvest, $files );
 			$html     = implode( "\n", array_column( $sections, 'html' ) );
 
@@ -171,7 +171,7 @@ export default function Page() {
 }
 TSX;
 
-$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+$compiler = new DX_UI\Compiler\Jsx_Compiler();
 $sections = $compiler->compile_file(
 	$fallback_page,
 	array( 'rewrites' => array( '@/assets/site-logo.png' => 'http://x.test/uploads/site-logo.png' ) ),

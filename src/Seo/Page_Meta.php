@@ -2,24 +2,24 @@
 /**
  * A design's page described for search engines.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Seo;
+namespace DX_UI\Seo;
 
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Theme\Theme_Compat;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Theme\Theme_Compat;
 
 /**
  * The pages a design makes — its Home, the pages from its menu and from its old site — say what they are about to search engines
  * and to whoever shares them: `<meta name="description">`, from the page's excerpt when it has one, else its first paragraph that
  * says something (twelve words or more), cut at a word to 155 characters. Lighthouse's SEO audit counts a page without one (every
  * page of H2O Away scored 92 for it, docs/PLAN-PERFECT-PAGES.md, T5.4). Not when an SEO plugin writes one (Yoast, Rank Math, All in
- * One SEO, SEOPress, The SEO Framework, Slim SEO; `dxai_ui_seo_plugin` says otherwise): with one of them on, the head is read when it is
+ * One SEO, SEOPress, The SEO Framework, Slim SEO; `dx_ui_seo_plugin` says otherwise): with one of them on, the head is read when it is
  * written and the page's description is added only where the head has none — Rank Math was on for Taylored Restoration's site on the
- * team's network and wrote nothing in the head of its pages, so they had no description at all (2026-10-16). `dxai_ui_meta_description`
+ * team's network and wrote nothing in the head of its pages, so they had no description at all (2026-10-16). `dx_ui_meta_description`
  * changes it, or removes it with ''.
  */
 final class Page_Meta {
@@ -102,7 +102,7 @@ final class Page_Meta {
 		 * @param string $text The excerpt, else the page's lead paragraph, cut to 155 characters.
 		 * @param int    $id   The page.
 		 */
-		return trim( (string) apply_filters( 'dxai_ui_meta_description', $text, $id ) );
+		return trim( (string) apply_filters( 'dx_ui_meta_description', $text, $id ) );
 	}
 
 	/** The first paragraph of a page's content that says something: twelve words or more. */
@@ -141,6 +141,6 @@ final class Page_Meta {
 		 *
 		 * @param bool $on Whether one of the known SEO plugins is active.
 		 */
-		return (bool) apply_filters( 'dxai_ui_seo_plugin', $on );
+		return (bool) apply_filters( 'dx_ui_seo_plugin', $on );
 	}
 }

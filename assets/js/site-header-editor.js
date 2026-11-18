@@ -1,5 +1,5 @@
 /**
- * Editor side of dxai-ui/site-header (src/Chrome/Site_Header_Block.php).
+ * Editor side of dx-ui/site-header (src/Chrome/Site_Header_Block.php).
  *
  * The block has nothing to edit in place: its links are Appearance > Menus
  * items and its logo is the Site Logo. So the canvas shows the REAL header —
@@ -26,7 +26,7 @@
 	const { useSelect, useDispatch } = wp.data;
 	const { __ } = wp.i18n;
 	const ServerSideRender = wp.serverSideRender;
-	const cfg = window.dxaiSiteHeader || {};
+	const cfg = window.dxuiSiteHeader || {};
 	const designLogo = cfg.designLogo || { id: 0, url: '' };
 
 	/*
@@ -62,7 +62,7 @@
 		const where = window.location || {};
 		const post = /[?&]post=(\d+)(?:&|$)/.exec( where.search || '' );
 		return post && /\/post\.php$/.test( where.pathname || '' )
-			? '/wp/v2/block-renderer/dxai-ui/site-header?context=edit&post_id=' + post[ 1 ]
+			? '/wp/v2/block-renderer/dx-ui/site-header?context=edit&post_id=' + post[ 1 ]
 			: '';
 	}() );
 	let first = '';
@@ -112,7 +112,7 @@
 		if ( first !== '' ) {
 			return el( RawHTML, null, first );
 		}
-		return el( 'div', { className: 'dxai-ui-site-header__loading', style: { padding: '24px', textAlign: 'center' } }, el( Spinner ) );
+		return el( 'div', { className: 'dx-ui-site-header__loading', style: { padding: '24px', textAlign: 'center' } }, el( Spinner ) );
 	}
 
 	/**
@@ -144,7 +144,7 @@
 	function LogoPanel( props ) {
 		const logo = props.logo;
 		if ( ! logo.canEdit ) {
-			return el( 'p', null, __( 'The logo is the WordPress Site Logo. An administrator can change it here.', 'dxai-ui' ) );
+			return el( 'p', null, __( 'The logo is the WordPress Site Logo. An administrator can change it here.', 'dx-ui' ) );
 		}
 		let preview = '';
 		if ( logo.media && logo.media.source_url ) {
@@ -157,7 +157,7 @@
 			Fragment,
 			null,
 			preview
-				? el( 'img', { src: preview, alt: '', className: 'dxai-site-header-editor__logo', style: { display: 'block', maxWidth: '100%', height: 'auto', marginBottom: '8px' } } )
+				? el( 'img', { src: preview, alt: '', className: 'dxui-site-header-editor__logo', style: { display: 'block', maxWidth: '100%', height: 'auto', marginBottom: '8px' } } )
 				: null,
 			el(
 				MediaUploadCheck,
@@ -169,15 +169,15 @@
 						logo.setLogo( media && media.id ? media.id : 0 );
 					},
 					render: function ( args ) {
-						return el( Button, { variant: 'secondary', onClick: args.open }, logo.logoId ? __( 'Replace logo', 'dxai-ui' ) : __( 'Choose logo', 'dxai-ui' ) );
+						return el( Button, { variant: 'secondary', onClick: args.open }, logo.logoId ? __( 'Replace logo', 'dx-ui' ) : __( 'Choose logo', 'dx-ui' ) );
 					},
 				} )
 			),
 			designLogo.id && logo.logoId !== designLogo.id
-				? el( Button, { variant: 'link', onClick: function () { logo.setLogo( designLogo.id ); } }, __( "Use the design's logo", 'dxai-ui' ) )
+				? el( Button, { variant: 'link', onClick: function () { logo.setLogo( designLogo.id ); } }, __( "Use the design's logo", 'dx-ui' ) )
 				: null,
-			el( 'p', { className: 'description' }, __( 'Saved with the page: Save asks to update the site settings too.', 'dxai-ui' ) ),
-			cfg.customizerUrl ? el( 'p', null, el( ExternalLink, { href: cfg.customizerUrl }, __( 'Site Identity in the Customizer', 'dxai-ui' ) ) ) : null
+			el( 'p', { className: 'description' }, __( 'Saved with the page: Save asks to update the site settings too.', 'dx-ui' ) ),
+			cfg.customizerUrl ? el( 'p', null, el( ExternalLink, { href: cfg.customizerUrl }, __( 'Site Identity in the Customizer', 'dx-ui' ) ) ) : null
 		);
 	}
 
@@ -186,7 +186,7 @@
 		const logo = useSiteLogo();
 		// An unsaved logo is previewed by asking the renderer for it; the
 		// server honours this only for someone who may change the logo.
-		const query = logo.dirty ? { dxai_logo: logo.logoId || 0 } : {};
+		const query = logo.dirty ? { dxui_logo: logo.logoId || 0 } : {};
 		const menus = Array.isArray( cfg.menus ) ? cfg.menus : [];
 
 		const toolbar = cfg.canEditMenus
@@ -196,7 +196,7 @@
 				el(
 					ToolbarGroup,
 					null,
-					el( ToolbarButton, { icon: 'menu', label: __( 'Edit the header links in Appearance > Menus', 'dxai-ui' ), href: cfg.menusUrl, target: '_blank', rel: 'noopener noreferrer' }, __( 'Edit in Menus', 'dxai-ui' ) )
+					el( ToolbarButton, { icon: 'menu', label: __( 'Edit the header links in Appearance > Menus', 'dx-ui' ), href: cfg.menusUrl, target: '_blank', rel: 'noopener noreferrer' }, __( 'Edit in Menus', 'dx-ui' ) )
 				)
 			)
 			: null;
@@ -206,16 +206,16 @@
 			null,
 			el(
 				PanelBody,
-				{ title: __( 'Header content', 'dxai-ui' ), initialOpen: true },
-				el( 'p', null, __( 'The links, trust items and buttons come from Appearance > Menus; the look comes from the imported design.', 'dxai-ui' ) ),
+				{ title: __( 'Header content', 'dx-ui' ), initialOpen: true },
+				el( 'p', null, __( 'The links, trust items and buttons come from Appearance > Menus; the look comes from the imported design.', 'dx-ui' ) ),
 				cfg.design && ! cfg.siteHeader
-					? el( 'p', { className: 'description' }, __( 'This page keeps the header of its own design, filled from that design’s menus below. The menu locations belong to the design imported last.', 'dxai-ui' ) )
+					? el( 'p', { className: 'description' }, __( 'This page keeps the header of its own design, filled from that design’s menus below. The menu locations belong to the design imported last.', 'dx-ui' ) )
 					: null,
 				1 === cfg.levels
-					? el( 'p', { className: 'description' }, __( 'This design’s navigation has no dropdowns: sub-items in the primary menu are not shown in the bar.', 'dxai-ui' ) )
+					? el( 'p', { className: 'description' }, __( 'This design’s navigation has no dropdowns: sub-items in the primary menu are not shown in the bar.', 'dx-ui' ) )
 					: null,
 				2 === cfg.levels
-					? el( 'p', { className: 'description' }, __( 'The primary menu shows two levels here: top items and their dropdowns.', 'dxai-ui' ) )
+					? el( 'p', { className: 'description' }, __( 'The primary menu shows two levels here: top items and their dropdowns.', 'dx-ui' ) )
 					: null,
 				menus.map( function ( m ) {
 					return el(
@@ -223,13 +223,13 @@
 						{ key: m.location },
 						el( 'strong', null, m.label ),
 						el( 'br' ),
-						m.menu ? m.menu + ' ' : __( 'No menu assigned', 'dxai-ui' ) + ' ',
-						cfg.canEditMenus ? el( ExternalLink, { href: m.editUrl }, __( 'Edit', 'dxai-ui' ) ) : null
+						m.menu ? m.menu + ' ' : __( 'No menu assigned', 'dx-ui' ) + ' ',
+						cfg.canEditMenus ? el( ExternalLink, { href: m.editUrl }, __( 'Edit', 'dx-ui' ) ) : null
 					);
 				} ),
-				cfg.canEditMenus ? el( 'p', null, el( ExternalLink, { href: cfg.locationsUrl }, __( 'Manage menu locations', 'dxai-ui' ) ) ) : null
+				cfg.canEditMenus ? el( 'p', null, el( ExternalLink, { href: cfg.locationsUrl }, __( 'Manage menu locations', 'dx-ui' ) ) ) : null
 			),
-			el( PanelBody, { title: __( 'Site Logo', 'dxai-ui' ), initialOpen: false }, el( LogoPanel, { logo: logo } ) )
+			el( PanelBody, { title: __( 'Site Logo', 'dx-ui' ), initialOpen: false }, el( LogoPanel, { logo: logo } ) )
 		);
 
 		if ( logo.dirty && staticFirst ) {
@@ -240,27 +240,27 @@
 		}
 		const preview = staticFirst && first !== ''
 			? el( RawHTML, null, first )
-			: el( ServerSideRender, { block: 'dxai-ui/site-header', attributes: props.attributes, urlQueryArgs: query, LoadingResponsePlaceholder: Loading } );
+			: el( ServerSideRender, { block: 'dx-ui/site-header', attributes: props.attributes, urlQueryArgs: query, LoadingResponsePlaceholder: Loading } );
 		const body = cfg.installed
 			? el( Disabled, null, preview )
 			: el( Placeholder, {
 				icon: 'menu',
-				label: __( 'Site Header', 'dxai-ui' ),
-				instructions: __( 'No header is installed yet. Importing a design with DX UI installs its header, with its links in Appearance > Menus.', 'dxai-ui' ),
+				label: __( 'Site Header', 'dx-ui' ),
+				instructions: __( 'No header is installed yet. Importing a design with DX UI installs its header, with its links in Appearance > Menus.', 'dx-ui' ),
 			} );
 		// Outside a converted page no design stylesheet styles the header
 		// (both its desktop and its mobile rows show). Said above the
 		// preview, not inside it, so the preview stays the front end's.
 		const notice = cfg.installed && ! cfg.scoped
-			? el( Notice, { status: 'warning', isDismissible: false }, __( 'This page is not a converted design, so the header shows here without the design’s styles. It belongs at the top of a page DX UI imported.', 'dxai-ui' ) )
+			? el( Notice, { status: 'warning', isDismissible: false }, __( 'This page is not a converted design, so the header shows here without the design’s styles. It belongs at the top of a page DX UI imported.', 'dx-ui' ) )
 			: null;
 
 		return el( Fragment, null, toolbar, inspector, el( 'div', blockProps, notice, body ) );
 	}
 
-	registerBlockType( 'dxai-ui/site-header', {
+	registerBlockType( 'dx-ui/site-header', {
 		apiVersion: 3,
-		title: __( 'DX Site Header', 'dxai-ui' ),
+		title: __( 'DX Site Header', 'dx-ui' ),
 		category: 'dx-blocks',
 		icon: 'menu',
 		attributes: {},

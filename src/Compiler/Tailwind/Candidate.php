@@ -2,12 +2,12 @@
 /**
  * One parsed Tailwind class name.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 /**
  * A class name split into the parts a utility module needs.

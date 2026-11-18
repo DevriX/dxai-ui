@@ -2,12 +2,12 @@
 /**
  * Split React/TSX page files into LLM-sized visual sections.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Tsx_Section_Splitter {
 

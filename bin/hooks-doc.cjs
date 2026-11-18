@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * docs/HOOKS.md from the code: every filter and action the plugin fires (apply_filters / do_action with a `dxai_ui_` name), with
+ * docs/HOOKS.md from the code: every filter and action the plugin fires (apply_filters / do_action with a `dx_ui_` name), with
  * the comment written above the call, the values it passes and where it is called.
  *
  *   node bin/hooks-doc.cjs            write docs/HOOKS.md
@@ -8,7 +8,7 @@
  *
  * A hook is documented by the comment right above the line that fires it; one without a comment is listed as such.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 'use strict';
@@ -18,7 +18,7 @@ const path = require( 'path' );
 
 const ROOT = path.resolve( __dirname, '..' );
 const OUT = path.join( ROOT, 'docs', 'HOOKS.md' );
-const SOURCES = [ 'src', 'templates', 'themes', 'dxai-ui.php', 'uninstall.php' ];
+const SOURCES = [ 'src', 'templates', 'themes', 'dx-ui.php', 'uninstall.php' ];
 
 const files = [];
 const walk = ( p ) => {
@@ -124,7 +124,7 @@ const hooks = new Map();
 for ( const file of files ) {
 	const src = fs.readFileSync( file, 'utf8' ).replace( /\r\n/g, '\n' );
 	const lines = src.split( '\n' );
-	const re = /\b(apply_filters|do_action)(_ref_array)?\s*\(\s*'(dxai_ui_[a-z0-9_]+)'/g;
+	const re = /\b(apply_filters|do_action)(_ref_array)?\s*\(\s*'(dx_ui_[a-z0-9_]+)'/g;
 	let m;
 	while ( ( m = re.exec( src ) ) !== null ) {
 		const kind = m[ 1 ] === 'do_action' ? 'action' : 'filter';

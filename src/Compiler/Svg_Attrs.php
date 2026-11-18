@@ -19,12 +19,12 @@
  * than typed out, because a table that drifts from the editor's is worse than
  * no table: it would be wrong only for the attributes nobody checked.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Svg_Attrs {
 

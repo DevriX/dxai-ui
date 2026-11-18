@@ -14,12 +14,12 @@
  * Against a Home, a page, a menu and a block widget made for the purpose (spx-…); removes them and puts the stored footer back,
  * also when a check dies half-way. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Footer_Template;
-use DXAI_UI\Compiler\Internal_Links;
-use DXAI_UI\Pages\Site_Pages;
+use DX_UI\Chrome\Footer_Template;
+use DX_UI\Compiler\Internal_Links;
+use DX_UI\Pages\Site_Pages;
 
 $fail   = 0;
 $pass   = 0;
@@ -189,9 +189,9 @@ if ( ! is_wp_error( $wp_home ) && ! is_wp_error( $built ) ) {
 	$made[] = (int) $built;
 	update_post_meta( (int) $wp_home, Site_Pages::ORIGIN_META, $old );
 	$expect( 'a design with no pages built from its old site: nothing to lead', 0 === Site_Pages::relink( (int) $wp_home ) && str_contains( (string) get_post_field( 'post_content', (int) $wp_home ), $old . '/' ) );
-	update_post_meta( (int) $built, '_dxai_ui_from_live_menu', '1' );
-	update_post_meta( (int) $built, \DXAI_UI\Structures\Page_Scope::META, (string) $wp_home );
-	update_post_meta( (int) $built, '_dxai_ui_source_route', $run . '-svc' );
+	update_post_meta( (int) $built, '_dx_ui_from_live_menu', '1' );
+	update_post_meta( (int) $built, \DX_UI\Structures\Page_Scope::META, (string) $wp_home );
+	update_post_meta( (int) $built, '_dx_ui_source_route', $run . '-svc' );
 	$led = Site_Pages::relink( (int) $wp_home );
 	$now = (string) get_post_field( 'post_content', (int) $wp_home );
 	$expect( 'the old site\'s own home leads to the design\'s Home', str_contains( $now, 'href="' . get_permalink( (int) $wp_home ) . '"' ), $now );
@@ -202,14 +202,14 @@ if ( ! is_wp_error( $wp_home ) && ! is_wp_error( $built ) ) {
 			'post_type'    => 'wp_template_part',
 			'post_status'  => 'publish',
 			'post_title'   => 'Header ' . $run,
-			'post_name'    => 'dxai-header-' . $run . '-key',
+			'post_name'    => 'dxui-header-' . $run . '-key',
 			'post_content' => '<!-- wp:paragraph --><p><a href="' . $old . '/' . $run . '-svc/">Service</a></p><!-- /wp:paragraph -->',
 		),
 		true
 	);
 	if ( ! is_wp_error( $part ) ) {
 		$made[] = (int) $part;
-		update_post_meta( (int) $wp_home, '_dxai_ui_part_key', $run . '-key' );
+		update_post_meta( (int) $wp_home, '_dx_ui_part_key', $run . '-key' );
 		Site_Pages::relink( (int) $wp_home );
 		$in_part = (string) get_post_field( 'post_content', (int) $part );
 		$expect( 'the header part the DX template draws (named by the design\'s part key) leads to the built page too', str_contains( $in_part, 'href="' . get_permalink( (int) $built ) . '"' ), $in_part );

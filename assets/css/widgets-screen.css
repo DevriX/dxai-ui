@@ -1,7 +1,7 @@
 /*
  * Appearance > Widgets: the footer's areas shown in the footer's design.
  *
- * widgets-screen.js puts the design's scope classes and `dxai-ui-widget-area`
+ * widgets-screen.js puts the design's scope classes and `dx-ui-widget-area`
  * on each footer area's block container; Widgets_Screen adds, per area, the
  * frame's paint (background, text colour and type of the <footer> and the
  * column around it). This file holds what is the same for every design.
@@ -17,7 +17,7 @@
  * sets. (0,3,1): above the editor styles, which core scopes with a
  * zero-specificity `:where(.editor-styles-wrapper)`.
  */
-body .dxai-ui.dxai-ui-widget-area {
+body .dx-ui.dx-ui-widget-area {
 	font-size: medium;
 	font-weight: normal;
 	font-style: normal;
@@ -36,7 +36,7 @@ body .dxai-ui.dxai-ui-widget-area {
  * (0,2,1) and up, its dxs- rules (3,0,0), its preset colour classes
  * !important), so the design still decides everything it declares.
  */
-.dxai-ui.dxai-ui-widget-area :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, small, figure, figcaption, blockquote, cite, address) {
+.dx-ui.dx-ui-widget-area :where(h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, span, strong, em, small, figure, figcaption, blockquote, cite, address) {
 	font-family: revert;
 	font-size: revert;
 	font-weight: revert;

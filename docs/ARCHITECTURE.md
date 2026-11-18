@@ -1,11 +1,11 @@
 # Architecture
 
-See also `.cursor/skills/dxai-ui/architecture.md` (agent-oriented). This file is the human overview.
+See also `.cursor/skills/dx-ui/architecture.md` (agent-oriented). This file is the human overview.
 
-DXAI-UI is a WordPress plugin (this repository). Develop here; Local WP loads it through a directory junction.
+DX-UI is a WordPress plugin (this repository). Develop here; Local WP loads it through a directory junction.
 
 ```
-Documents/DXAI-UI  →  Local Sites/DXAI-UI/app/public/wp-content/plugins/dxai-ui
+Documents/DX-UI  →  Local Sites/DX-UI/app/public/wp-content/plugins/dx-ui
 ```
 
 Layers:
@@ -20,8 +20,8 @@ Layers:
 
 Constants (main file):
 
-- `DXAI_UI_VERSION`
-- `DXAI_UI_FILE`
-- `DXAI_UI_DIR`
-- `DXAI_UI_URL`
-- `DXAI_UI_REST_NAMESPACE` = `dxai-ui/v1`
+- `DX_UI_VERSION`
+- `DX_UI_FILE`
+- `DX_UI_DIR`
+- `DX_UI_URL`
+- `DX_UI_REST_NAMESPACE` = `dx-ui/v1`

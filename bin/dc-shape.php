@@ -19,7 +19,7 @@
  *
  * Exits 1 on any failed assertion.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -30,11 +30,11 @@ if ( PHP_SAPI !== 'cli' ) {
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Dc_Js_Element;
-use DXAI_UI\Compiler\Dc_Renderer;
-use DXAI_UI\Compiler\Dc_Script;
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Dc_Connector;
+use DX_UI\Compiler\Dc_Js_Element;
+use DX_UI\Compiler\Dc_Renderer;
+use DX_UI\Compiler\Dc_Script;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Dc_Connector;
 
 $root     = dirname( __DIR__ );
 $project  = $root . '/fixtures/dc-minimal';
@@ -43,10 +43,10 @@ $zip_path = $root . '/.verify/dc-minimal.zip';
 $zip_only = in_array( '--zip-only', $argv, true );
 
 // The packing is shared with bin/pack-fixtures.php (the suite runner packs the fixture with it on a fresh checkout).
-define( 'DXAI_PACK_FIXTURES_LIBRARY', true );
+define( 'DXUI_PACK_FIXTURES_LIBRARY', true );
 require __DIR__ . '/pack-fixtures.php';
 
-$packed = dxai_pack_dc_fixture( $project, $zip_path );
+$packed = dxui_pack_dc_fixture( $project, $zip_path );
 if ( $packed < 1 ) {
 	fwrite( STDERR, "dc-shape: could not create {$zip_path}\n" );
 	exit( 2 );
@@ -115,27 +115,27 @@ $count    = static fn( string $needle, string $in ) => substr_count( $in, $needl
 
 $check( ! str_contains( $body, '{{' ) && ! str_contains( $body, '<sc-' ) && ! str_contains( $body, 'onClick' ) && ! str_contains( $body, 'hint-placeholder' ), 'render: no template syntax left' );
 $check( $renderer->breakpoint() === 900, 'render: breakpoint 900' );
-$check( $count( 'dxai-dc-desktop', $body ) >= 1 && $count( 'dxai-dc-mobile', $body ) >= 3, 'render: media-gated branches' );
+$check( $count( 'dxui-dc-desktop', $body ) >= 1 && $count( 'dxui-dc-mobile', $body ) >= 3, 'render: media-gated branches' );
 $check( str_contains( $css, '@media (max-width: 900px)' ) && str_contains( $css, '@media (min-width: 901px)' ), 'render: media queries at the breakpoint' );
-$check( $count( 'dxai-toggle-', $body ) >= 14, 'render: toggles (' . $count( 'dxai-toggle-', $body ) . ')' );
-$check( str_contains( $body, 'dxai-on-dropdown--product' ) && str_contains( $body, 'dxai-on-dropdown--pricing' ), 'render: dropdown panels' );
-$check( str_contains( $body, 'dxai-toggle-dropdown--product' ) && str_contains( $body, 'data-dxai-mode="toggle"' ), 'render: dropdown trigger toggles its own value' );
-$check( str_contains( $body, 'dxai-on-day--2' ) && str_contains( $body, 'dxai-on-day--3' ) && preg_match( '/class="[^"]*dxai-on-day--2[^"]*hidden/', $body ) === 1, 'render: day panels, 2 and 3 hidden at rest' );
-$check( str_contains( $body, 'data-dxai-step="1"' ) && str_contains( $body, 'data-dxai-step="-1"' ) && str_contains( $body, 'data-dxai-clamp="1"' ), 'render: step triggers with clamp' );
-$check( str_contains( $body, 'data-dxai-init="1"' ) && str_contains( $body, 'data-dxai-init="0"' ), 'render: initial values for day and openFaq' );
-$check( str_contains( $body, 'dxai-toggle-openFaq--1' ) && str_contains( $body, 'dxai-cls-openFaq--1' ), 'render: FAQ toggle and per-item class projections' );
-$check( preg_match( '/data-dxai-text-day="[^"]*Day 2 of 3/', $body ) === 1, 'render: text map for dayLabel' );
-$check( preg_match( '/data-dxai-text-entitiesExpanded="[^"]*Show fewer/', $body ) === 1, 'render: text map for the show-more label' );
-$check( str_contains( $body, 'dxai-on-entitiesExpanded' ) && str_contains( $body, 'Fabrikam' ), 'render: hidden extra entities rendered' );
-$check( str_contains( $body, 'dxai-on-submitted' ) && str_contains( $body, 'dxai-off-submitted' ), 'render: submitted / not submitted branches' );
-$check( str_contains( $body, 'dxai-cls-scrolled' ) && str_contains( $css, 'box-shadow:0 4px 20px' ), 'render: scrolled header projection' );
-$check( preg_match( '/class="dxai-sh-\d+"/', $body ) === 1 && str_contains( $css, ':hover {' ) && str_contains( $css, '!important' ), 'render: style-hover to a class' );
+$check( $count( 'dxui-toggle-', $body ) >= 14, 'render: toggles (' . $count( 'dxui-toggle-', $body ) . ')' );
+$check( str_contains( $body, 'dxui-on-dropdown--product' ) && str_contains( $body, 'dxui-on-dropdown--pricing' ), 'render: dropdown panels' );
+$check( str_contains( $body, 'dxui-toggle-dropdown--product' ) && str_contains( $body, 'data-dxui-mode="toggle"' ), 'render: dropdown trigger toggles its own value' );
+$check( str_contains( $body, 'dxui-on-day--2' ) && str_contains( $body, 'dxui-on-day--3' ) && preg_match( '/class="[^"]*dxui-on-day--2[^"]*hidden/', $body ) === 1, 'render: day panels, 2 and 3 hidden at rest' );
+$check( str_contains( $body, 'data-dxui-step="1"' ) && str_contains( $body, 'data-dxui-step="-1"' ) && str_contains( $body, 'data-dxui-clamp="1"' ), 'render: step triggers with clamp' );
+$check( str_contains( $body, 'data-dxui-init="1"' ) && str_contains( $body, 'data-dxui-init="0"' ), 'render: initial values for day and openFaq' );
+$check( str_contains( $body, 'dxui-toggle-openFaq--1' ) && str_contains( $body, 'dxui-cls-openFaq--1' ), 'render: FAQ toggle and per-item class projections' );
+$check( preg_match( '/data-dxui-text-day="[^"]*Day 2 of 3/', $body ) === 1, 'render: text map for dayLabel' );
+$check( preg_match( '/data-dxui-text-entitiesExpanded="[^"]*Show fewer/', $body ) === 1, 'render: text map for the show-more label' );
+$check( str_contains( $body, 'dxui-on-entitiesExpanded' ) && str_contains( $body, 'Fabrikam' ), 'render: hidden extra entities rendered' );
+$check( str_contains( $body, 'dxui-on-submitted' ) && str_contains( $body, 'dxui-off-submitted' ), 'render: submitted / not submitted branches' );
+$check( str_contains( $body, 'dxui-cls-scrolled' ) && str_contains( $css, 'box-shadow:0 4px 20px' ), 'render: scrolled header projection' );
+$check( preg_match( '/class="dxui-sh-\d+"/', $body ) === 1 && str_contains( $css, ':hover {' ) && str_contains( $css, '!important' ), 'render: style-hover to a class' );
 $check( $count( '<svg', $body ) >= 3 && $count( '<path', $body ) >= 4, 'render: inline SVG icons' );
 $check( $count( 'class="sc-interp"', $body ) + $count( 'class="sc-interp" data-', $body ) >= 12, 'render: sc-interp spans' );
 $check( preg_match( '/<textarea[^>]*>\s*<\/textarea>/', $body ) === 1 && ! preg_match( '/<textarea[^>]*>\s*<span/', $body ), 'render: textarea keeps plain text' );
 $check( str_contains( $body, 'value=""' ), 'render: controlled input value' );
 $check( preg_match( '/<details[^>]*open=""/', $body ) === 1, 'render: mount-time open attribute' );
-$check( ( $out['root_attrs']['data-dxai-outside'] ?? '' ) === 'dropdown' && ( $out['root_attrs']['data-dxai-scroll'] ?? '' ) === 'scrolled:24', 'render: root markers' );
+$check( ( $out['root_attrs']['data-dxui-outside'] ?? '' ) === 'dropdown' && ( $out['root_attrs']['data-dxui-scroll'] ?? '' ) === 'scrolled:24', 'render: root markers' );
 $check( ! str_contains( $body, 'required=""' ) && str_contains( $body, 'aria-label="Open menu"' ), 'render: attributes' );
 
 /* --------------------------------------------- 4. connector → compiler */
@@ -151,12 +151,12 @@ if ( is_wp_error( $doc ) ) {
 	$check( ! empty( $result['static_html'] ), 'compiler: static_html flag' );
 	$check( str_contains( (string) ( $result['custom_css'] ?? '' ), '@media (max-width: 900px)' ), 'compiler: renderer CSS carried' );
 	$check( ! str_contains( (string) ( $result['gutenberg_markup'] ?? '' ), '{{' ), 'compiler: no template syntax in blocks' );
-	$check( str_contains( (string) ( $result['gutenberg_markup'] ?? '' ), 'dxai-toggle-' ), 'compiler: runtime markers survive block conversion' );
-	$check( str_contains( (string) ( $result['custom_js'] ?? '' ), 'dxai-toggle-' ) || str_contains( (string) ( $result['custom_js'] ?? '' ), 'projections' ), 'compiler: front-end runtime attached' );
+	$check( str_contains( (string) ( $result['gutenberg_markup'] ?? '' ), 'dxui-toggle-' ), 'compiler: runtime markers survive block conversion' );
+	$check( str_contains( (string) ( $result['custom_js'] ?? '' ), 'dxui-toggle-' ) || str_contains( (string) ( $result['custom_js'] ?? '' ), 'projections' ), 'compiler: front-end runtime attached' );
 	$check( count( $result['unevaluated'] ?? array() ) <= 1, 'compiler: unevaluated ' . wp_json_encode( $result['unevaluated'] ?? array() ) );
 }
 
-echo 'dc-shape: vals=', count( $vals ), ' toggles=', $count( 'dxai-toggle-', $body ), ' media_branches=', $count( 'dxai-dc-mobile', $body ) + $count( 'dxai-dc-desktop', $body ), ' text_maps=', $count( 'data-dxai-text-', $body ), ' css_bytes=', strlen( $css ), "\n";
+echo 'dc-shape: vals=', count( $vals ), ' toggles=', $count( 'dxui-toggle-', $body ), ' media_branches=', $count( 'dxui-dc-mobile', $body ) + $count( 'dxui-dc-desktop', $body ), ' text_maps=', $count( 'data-dxui-text-', $body ), ' css_bytes=', strlen( $css ), "\n";
 if ( $failures !== array() ) {
 	echo 'dc-shape: FAIL (', count( $failures ), ")\n";
 	exit( 1 );

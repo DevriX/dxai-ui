@@ -2,12 +2,12 @@
 /**
  * Gutenberg HTML wrappers and design-safe KSES for converted pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler;
+namespace DX_UI\Compiler;
 
 final class Design_Html {
 
@@ -22,7 +22,7 @@ final class Design_Html {
 	 * island away from losing the entire Tailwind layer. The button is guarded
 	 * by `block.name !== 'core/html'`, so a block of our own never offers it.
 	 */
-	public const RAW_BLOCK = 'dxai-ui/html';
+	public const RAW_BLOCK = 'dx-ui/html';
 
 	/**
 	 * Matches either delimiter, so markup written before the switch still parses.
@@ -92,7 +92,7 @@ final class Design_Html {
 	/**
 	 * The design's own HTML back out of block markup.
 	 *
-	 * Two paths. A structure that still has a dxai-ui/html raw block hands back
+	 * Two paths. A structure that still has a dx-ui/html raw block hands back
 	 * its contents verbatim. A structure converted entirely to real blocks has
 	 * no raw block, so the block comments come off and what is left is the
 	 * design's markup with WordPress's own group wrapper still in it.
@@ -192,7 +192,7 @@ final class Design_Html {
 	/**
 	 * The element children a plain <main> is unwrapped into, its id moved
 	 * onto the first of them so links to it keep working (a skip link, a
-	 * logo linking to `#main`). The moved id is marked `data-dxai-anchor`, so
+	 * logo linking to `#main`). The moved id is marked `data-dxui-anchor`, so
 	 * the geometry oracle knows the band is the design's band and not a node
 	 * with a new identity. A first child with an id of its own keeps it.
 	 *
@@ -208,7 +208,7 @@ final class Design_Html {
 		$id = trim( $main->getAttribute( 'id' ) );
 		if ( $id !== '' && isset( $children[0] ) && trim( $children[0]->getAttribute( 'id' ) ) === '' ) {
 			$children[0]->setAttribute( 'id', $id );
-			$children[0]->setAttribute( 'data-dxai-anchor', $id );
+			$children[0]->setAttribute( 'data-dxui-anchor', $id );
 		}
 
 		return $children;

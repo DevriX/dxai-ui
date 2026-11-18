@@ -16,7 +16,7 @@
  * project has.
  * Then: node bin/design-oracle.cjs --dir <out-dir> --url <live-page-url>
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -77,7 +77,7 @@ $before = get_posts(
 	)
 );
 
-$source = ( new DXAI_UI\Connectors\Lovable_Connector() )->import_zip(
+$source = ( new DX_UI\Connectors\Lovable_Connector() )->import_zip(
 	array(
 		'name'     => basename( $zip ),
 		'tmp_name' => $zip,
@@ -157,7 +157,7 @@ if ( $code === '' ) {
 }
 echo 'route=' . $route . PHP_EOL;
 
-$compiler = new DXAI_UI\Compiler\Jsx_Compiler();
+$compiler = new DX_UI\Compiler\Jsx_Compiler();
 $sections = $compiler->compile_file( $code, is_array( $payload['harvest'] ?? null ) ? $payload['harvest'] : array(), $files );
 $html     = implode( "\n", array_column( $sections, 'html' ) );
 
@@ -207,7 +207,7 @@ $html = strtr( $html, $local );
 
 file_put_contents(
 	$out . '/oracle-dom.html',
-	'<div class="dxai-ui dxai-ui--oracle ' . esc_attr( $compiler->wrapper_class() ) . '"'
+	'<div class="dx-ui dx-ui--oracle ' . esc_attr( $compiler->wrapper_class() ) . '"'
 	. ( $compiler->wrapper_style() !== '' ? ' style="' . esc_attr( $compiler->wrapper_style() ) . '"' : '' )
 	. ">\n" . $html . "\n</div>\n"
 );
@@ -336,7 +336,7 @@ echo 'font_faces=' . substr_count( $face_css, '@font-face' ) . PHP_EOL;
  * the compiled DOM (`<i data-lucide>`) that a script swaps for real SVGs; if
  * only one side runs it, every icon in the comparison is a size mismatch.
  */
-$lucide_src = DXAI_UI\Blocks\Assets::lucide_src();
+$lucide_src = DX_UI\Blocks\Assets::lucide_src();
 /*
  * Cached one directory up, which is shared by every oracle of a run.
  *
@@ -354,7 +354,7 @@ if ( ! is_readable( $out . '/lucide.js' ) && is_readable( $cache ) && filesize( 
 if ( ! is_readable( $out . '/lucide.js' ) ) {
 	$body = str_starts_with( $lucide_src, 'http' )
 		? ( ( $r = wp_remote_get( $lucide_src, array( 'timeout' => 30 ) ) ) && ! is_wp_error( $r ) ? wp_remote_retrieve_body( $r ) : '' )
-		: (string) file_get_contents( str_replace( DXAI_UI_URL, DXAI_UI_DIR, $lucide_src ) );
+		: (string) file_get_contents( str_replace( DX_UI_URL, DX_UI_DIR, $lucide_src ) );
 	if ( $body !== '' ) {
 		file_put_contents( $cache, $body );
 	}

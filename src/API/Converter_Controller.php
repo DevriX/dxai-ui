@@ -2,42 +2,42 @@
 /**
  * Conversion REST controller.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Compiler\Chunked_Generator;
-use DXAI_UI\Compiler\Css_Scoper;
-use DXAI_UI\Compiler\Design_Html;
-use DXAI_UI\Compiler\Fidelity_Confidence;
-use DXAI_UI\Compiler\Fidelity_Gate;
-use DXAI_UI\Compiler\Fidelity_Refiner;
-use DXAI_UI\Compiler\Gutenberg_Mapper;
-use DXAI_UI\Compiler\Rewrite_Policy;
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Compiler\Style_Hoister;
-use DXAI_UI\Compiler\Tailwind_Purger;
-use DXAI_UI\Connectors\Figma_Connector;
-use DXAI_UI\Connectors\Lovable_Connector;
-use DXAI_UI\Connectors\Site_Origin;
-use DXAI_UI\Connectors\Source_Document;
-use DXAI_UI\Connectors\Zip_Extractor;
-use DXAI_UI\Connectors\Zip_Router;
-use DXAI_UI\Engines\Engine_Factory;
-use DXAI_UI\Media\Asset_Harvester;
-use DXAI_UI\Media\Harvest_Paused;
-use DXAI_UI\Media\Pending_Sizes;
-use DXAI_UI\Patterns\Pattern_Repository;
-use DXAI_UI\Settings\Options;
-use DXAI_UI\Structures\Crawl_Job;
-use DXAI_UI\Structures\Live_Page_Restyler;
-use DXAI_UI\Structures\Structure_Repository;
-use DXAI_UI\Support\Logger;
-use DXAI_UI\Transfer\Import_Job;
-use DXAI_UI\Verification\Import_Audit;
+use DX_UI\Compiler\Chunked_Generator;
+use DX_UI\Compiler\Css_Scoper;
+use DX_UI\Compiler\Design_Html;
+use DX_UI\Compiler\Fidelity_Confidence;
+use DX_UI\Compiler\Fidelity_Gate;
+use DX_UI\Compiler\Fidelity_Refiner;
+use DX_UI\Compiler\Gutenberg_Mapper;
+use DX_UI\Compiler\Rewrite_Policy;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Compiler\Style_Hoister;
+use DX_UI\Compiler\Tailwind_Purger;
+use DX_UI\Connectors\Figma_Connector;
+use DX_UI\Connectors\Lovable_Connector;
+use DX_UI\Connectors\Site_Origin;
+use DX_UI\Connectors\Source_Document;
+use DX_UI\Connectors\Zip_Extractor;
+use DX_UI\Connectors\Zip_Router;
+use DX_UI\Engines\Engine_Factory;
+use DX_UI\Media\Asset_Harvester;
+use DX_UI\Media\Harvest_Paused;
+use DX_UI\Media\Pending_Sizes;
+use DX_UI\Patterns\Pattern_Repository;
+use DX_UI\Settings\Options;
+use DX_UI\Structures\Crawl_Job;
+use DX_UI\Structures\Live_Page_Restyler;
+use DX_UI\Structures\Structure_Repository;
+use DX_UI\Support\Logger;
+use DX_UI\Transfer\Import_Job;
+use DX_UI\Verification\Import_Audit;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -54,7 +54,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	private ?array $staged = null;
 
 	public function __construct() {
-		$this->namespace = DXAI_UI_REST_NAMESPACE;
+		$this->namespace = DX_UI_REST_NAMESPACE;
 		$this->rest_base = 'process-source';
 	}
 
@@ -281,7 +281,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 */
 	public static function import_info_payload( string $archive = '', string $scope = 'site' ): array {
 		$can_import = current_user_can( 'unfiltered_html' );
-		$choice     = \DXAI_UI\Chrome\Chrome_Choice::info( $archive, $scope );
+		$choice     = \DX_UI\Chrome\Chrome_Choice::info( $archive, $scope );
 
 		return array(
 			'engine'         => self::crawl_engine(),
@@ -310,8 +310,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 			'theme_name'             => $choice['theme_name'],
 			'chrome_owner'           => self::chrome_owner( $choice['chrome_owner'] ),
 			// A theme that is not a DX theme is offered DX Base (Base_Theme::offer(): '', available, installed).
-			'dx_theme'               => \DXAI_UI\Theme\Capabilities::is_dx(),
-			'base_theme'             => \DXAI_UI\Theme\Base_Theme::offer(),
+			'dx_theme'               => \DX_UI\Theme\Capabilities::is_dx(),
+			'base_theme'             => \DX_UI\Theme\Base_Theme::offer(),
 			// The server's clock, so the screen can say how long ago a save started.
 			'now'            => time(),
 			'links'          => array(
@@ -319,8 +319,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 				// save response names them itself once it creates menus/widgets.
 				'menus'    => current_theme_supports( 'menus' ) ? admin_url( 'nav-menus.php' ) : '',
 				'widgets'  => current_theme_supports( 'widgets' ) ? admin_url( 'widgets.php' ) : '',
-				'designs'  => \DXAI_UI\Admin\Dashboard::url( 'designs' ),
-				'settings' => admin_url( 'admin.php?page=dxai-ui-settings' ),
+				'designs'  => \DX_UI\Admin\Dashboard::url( 'designs' ),
+				'settings' => admin_url( 'admin.php?page=dx-ui-settings' ),
 			),
 		);
 	}
@@ -360,7 +360,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 *
 	 * Asked of Live_Page_Restyler::engine() rather than read from the
 	 * active-engine setting, because the two can still differ. The restyler
-	 * uses the engine chosen in Settings (or the one `dxai_ui_restyle_engine`
+	 * uses the engine chosen in Settings (or the one `dx_ui_restyle_engine`
 	 * names) whenever it has an API key. Only when it has none does the
 	 * restyler fall back to DeepSeek, and only if a DeepSeek key is saved;
 	 * otherwise no engine runs. The screen has to name the engine that will
@@ -385,11 +385,11 @@ final class Converter_Controller extends \WP_REST_Controller {
 		}
 		// The same switch Site_From_Menu::prepare() asks; with no key the
 		// restyle fails and every page falls back to the deterministic pass.
-		$crawl['ai']        = $crawl['ready'] && (bool) apply_filters( 'dxai_ui_crawl_use_ai', true, 0 );
+		$crawl['ai']        = $crawl['ready'] && (bool) apply_filters( 'dx_ui_crawl_use_ai', true, 0 );
 		$crawl['preferred'] = $id !== '' && $active !== '' && $id !== $active;
 		$crawl['active']    = self::describe_engine( $active, $settings );
 		// How the menu pages are built on this site ('design' unless a filter asks for 'ai').
-		$crawl['pages']     = \DXAI_UI\Structures\Site_From_Menu::engine( array(), 0 );
+		$crawl['pages']     = \DX_UI\Structures\Site_From_Menu::engine( array(), 0 );
 
 		return $crawl;
 	}
@@ -443,7 +443,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	public function crawl_step( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		$progress = Crawl_Job::advance( (string) $request->get_param( 'job' ), Crawl_Job::REQUEST_BUDGET );
 		if ( ( $progress['error'] ?? '' ) === 'missing' ) {
-			return new \WP_Error( 'dxai_ui_crawl_job', __( 'This crawl is no longer available. Start the import again.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_crawl_job', __( 'This crawl is no longer available. Start the import again.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return rest_ensure_response( self::client_progress( $progress ) );
@@ -452,7 +452,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	public function crawl_status( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		$state = Crawl_Job::load( (string) $request->get_param( 'job' ) );
 		if ( $state === null ) {
-			return new \WP_Error( 'dxai_ui_crawl_job', __( 'This crawl is no longer available. Start the import again.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_crawl_job', __( 'This crawl is no longer available. Start the import again.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return rest_ensure_response( self::client_progress( Crawl_Job::progress( $state ) ) );
@@ -600,7 +600,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 						$row['renders']        = $their_name;
 						$row['location_label'] = sprintf(
 							/* translators: 1: menu location name, 2: the menu assigned to it. */
-							__( 'not in %1$s, which keeps “%2$s”', 'dxai-ui' ),
+							__( 'not in %1$s, which keeps “%2$s”', 'dx-ui' ),
 							$label,
 							$their_name
 						);
@@ -612,13 +612,13 @@ final class Converter_Controller extends \WP_REST_Controller {
 						);
 						$notices[] = sprintf(
 							/* translators: 1: menu location name, 2: the person's menu, 3: the design's menu. */
-							__( '%1$s keeps your menu “%2$s”, so the header shows it instead of the design\'s “%3$s”. Assign “%3$s” to %1$s in Appearance › Menus › Manage Locations to show the design\'s items.', 'dxai-ui' ),
+							__( '%1$s keeps your menu “%2$s”, so the header shows it instead of the design\'s “%3$s”. Assign “%3$s” to %1$s in Appearance › Menus › Manage Locations to show the design\'s items.', 'dx-ui' ),
 							$label,
 							$their_name,
 							$row['name']
 						);
 					} elseif ( $site_kept !== array() ) {
-						$row['location_label'] = __( 'this page\'s header', 'dxai-ui' );
+						$row['location_label'] = __( 'this page\'s header', 'dx-ui' );
 					}
 					$out['menus'][] = $row;
 				}
@@ -636,7 +636,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 					);
 					$notices[] = sprintf(
 						/* translators: 1: menu location name, 2: the menu that was assigned to it. */
-						__( '%1$s no longer shows “%2$s”, the menu of the header installed before: this design has nothing there. The menu itself is kept in Appearance › Menus.', 'dxai-ui' ),
+						__( '%1$s no longer shows “%2$s”, the menu of the header installed before: this design has nothing there. The menu itself is kept in Appearance › Menus.', 'dx-ui' ),
 						(string) ( $labels[ $location ] ?? $location ),
 						$name
 					);
@@ -648,7 +648,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 					);
 					$notices[] = sprintf(
 						/* translators: %s: title of the design whose header was the site's. */
-						__( 'The theme\'s menu locations showed the header menus of “%1$s” until now; they show this design\'s now. The pages of “%1$s” keep their own header.', 'dxai-ui' ),
+						__( 'The theme\'s menu locations showed the header menus of “%1$s” until now; they show this design\'s now. The pages of “%1$s” keep their own header.', 'dx-ui' ),
 						$out['header_replaced']['title']
 					);
 				}
@@ -659,7 +659,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 					);
 					$notices[] = sprintf(
 						/* translators: %s: title of the design whose header is the site's. */
-						__( 'This page\'s header menus were created for this page only; the site\'s header stays that of “%s”.', 'dxai-ui' ),
+						__( 'This page\'s header menus were created for this page only; the site\'s header stays that of “%s”.', 'dx-ui' ),
 						$out['site_kept']['title']
 					);
 				}
@@ -706,14 +706,14 @@ final class Converter_Controller extends \WP_REST_Controller {
 								'The widget areas held the footer of “%1$s” until now; its %2$d page keeps that footer as a template part (Appearance › Editor › Patterns).',
 								'The widget areas held the footer of “%1$s” until now; its %2$d pages keep that footer as a template part (Appearance › Editor › Patterns).',
 								count( $out['footer_replaced']['pages'] ),
-								'dxai-ui'
+								'dx-ui'
 							),
 							$out['footer_replaced']['title'],
 							count( $out['footer_replaced']['pages'] )
 						)
 						: sprintf(
 							/* translators: %s: title of the design whose footer stood in the widget areas. */
-							__( 'The widget areas held the footer of “%s” until now; no page shows it any more.', 'dxai-ui' ),
+							__( 'The widget areas held the footer of “%s” until now; no page shows it any more.', 'dx-ui' ),
 							$out['footer_replaced']['title']
 						);
 				}
@@ -742,13 +742,13 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 * @return array{header:array<string, mixed>, footer:array<string, mixed>}
 	 */
 	public static function chrome_owner( ?array $owners = null ): array {
-		$owners = $owners ?? \DXAI_UI\Chrome\Chrome_Choice::owners();
+		$owners = $owners ?? \DX_UI\Chrome\Chrome_Choice::owners();
 		$out    = array(
 			'header' => (array) ( $owners['header'] ?? array() ),
 			'footer' => (array) ( $owners['footer'] ?? array() ),
 		);
 		if ( $out['footer'] !== array() ) {
-			$out['footer']['held'] = \DXAI_UI\Chrome\Footer_Widgets::holders() !== array();
+			$out['footer']['held'] = \DX_UI\Chrome\Footer_Widgets::holders() !== array();
 		}
 
 		return $out;
@@ -780,7 +780,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		}
 		if ( ! current_user_can( 'unfiltered_html' ) ) {
 			return new \WP_Error(
-				'dxai_ui_unfiltered_html',
+				'dx_ui_unfiltered_html',
 				self::unfiltered_html_message(),
 				array( 'status' => rest_authorization_required_code() )
 			);
@@ -796,8 +796,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 */
 	public static function unfiltered_html_message(): string {
 		return is_multisite()
-			? __( 'Importing a design publishes its HTML, CSS and JavaScript, which on a multisite network only a Super Admin may do. Ask a Super Admin to run the import.', 'dxai-ui' )
-			: __( 'Importing a design publishes its HTML, CSS and JavaScript, and this site does not allow your account to publish unfiltered HTML (DISALLOW_UNFILTERED_HTML may be set in wp-config.php).', 'dxai-ui' );
+			? __( 'Importing a design publishes its HTML, CSS and JavaScript, which on a multisite network only a Super Admin may do. Ask a Super Admin to run the import.', 'dx-ui' )
+			: __( 'Importing a design publishes its HTML, CSS and JavaScript, and this site does not allow your account to publish unfiltered HTML (DISALLOW_UNFILTERED_HTML may be set in wp-config.php).', 'dx-ui' );
 	}
 
 	public function process_source( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
@@ -961,7 +961,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		$files = $request->get_file_params();
 		$part  = $files['chunk'] ?? null;
 		if ( ! is_array( $part ) ) {
-			return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dxai_ui_chunk', __( 'No piece of the archive came with the request.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dx_ui_chunk', __( 'No piece of the archive came with the request.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$refused = Zip_Extractor::upload_error( $part );
 		if ( null !== $refused ) {
@@ -972,12 +972,12 @@ final class Converter_Controller extends \WP_REST_Controller {
 		$size  = absint( $request->get_param( 'size' ) );
 		$name  = wp_strip_all_tags( wp_basename( (string) $request->get_param( 'name' ) ) );
 		if ( $total < 1 || $index >= $total || $size < 1 || $size > self::ARCHIVE_MAX || ! str_ends_with( strtolower( $name ), '.zip' ) ) {
-			return new \WP_Error( 'dxai_ui_chunk', __( 'This piece does not belong to a .zip archive that can be sent in pieces.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_chunk', __( 'This piece does not belong to a .zip archive that can be sent in pieces.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$token = strtolower( trim( (string) $request->get_param( 'stage' ) ) );
 		if ( $token === '' ) {
 			if ( 0 !== $index ) {
-				return new \WP_Error( 'dxai_ui_chunk', __( 'The archive\'s first piece is missing.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_chunk', __( 'The archive\'s first piece is missing.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 			$job = Import_Job::create(
 				(string) $part['tmp_name'],
@@ -1006,11 +1006,11 @@ final class Converter_Controller extends \WP_REST_Controller {
 				$chunks   = is_array( $job['state']['chunks'] ?? null ) ? $job['state']['chunks'] : array();
 				$received = (int) ( $chunks['received'] ?? 0 );
 				if ( $chunks === array() || (int) ( $chunks['total'] ?? 0 ) !== $total || (int) ( $chunks['size'] ?? 0 ) !== $size || $index > $received ) {
-					return new \WP_Error( 'dxai_ui_chunk', __( 'A piece of the archive is missing. Send the archive again.', 'dxai-ui' ), array( 'status' => 409 ) );
+					return new \WP_Error( 'dx_ui_chunk', __( 'A piece of the archive is missing. Send the archive again.', 'dx-ui' ), array( 'status' => 409 ) );
 				}
 				if ( $index === $received ) {
 					if ( ! Import_Job::append( $job, (string) $part['tmp_name'] ) ) {
-						return new \WP_Error( 'dxai_ui_chunk', __( 'The piece could not be added to the archive on the server.', 'dxai-ui' ), array( 'status' => 500 ) );
+						return new \WP_Error( 'dx_ui_chunk', __( 'The piece could not be added to the archive on the server.', 'dx-ui' ), array( 'status' => 500 ) );
 					}
 					$job['state']['chunks']['received'] = $received + 1;
 					Import_Job::save( $job );
@@ -1025,7 +1025,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		if ( $complete && (int) filesize( (string) $job['zip'] ) !== $size ) {
 			Import_Job::close( $job );
 
-			return new \WP_Error( 'dxai_ui_chunk', __( 'The archive arrived with a different size than it has. Send it again.', 'dxai-ui' ), array( 'status' => 422 ) );
+			return new \WP_Error( 'dx_ui_chunk', __( 'The archive arrived with a different size than it has. Send it again.', 'dx-ui' ), array( 'status' => 422 ) );
 		}
 
 		return rest_ensure_response(
@@ -1047,7 +1047,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	 * False while another request holds it; a lock older than ROUND_LOCK_TTL is taken over.
 	 */
 	private static function round_lock( string $token ): bool {
-		$key = 'dxai_ui_round_lock_' . $token;
+		$key = 'dx_ui_round_lock_' . $token;
 		if ( add_option( $key, time(), '', false ) ) {
 			return true;
 		}
@@ -1060,7 +1060,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	}
 
 	private static function round_unlock( string $token ): void {
-		delete_option( 'dxai_ui_round_lock_' . $token );
+		delete_option( 'dx_ui_round_lock_' . $token );
 	}
 
 	/** The answer while another request is on a round of this import: go on after it. */
@@ -1094,15 +1094,15 @@ final class Converter_Controller extends \WP_REST_Controller {
 
 	/**
 	 * Seconds one round of an import in rounds adds files for: 20, a third of WP Engine's 60-second limit, like the steps of a
-	 * page package's import (Transfer\Page_Import::step_budget()). Filterable: `dxai_ui_import_round_seconds`.
+	 * page package's import (Transfer\Page_Import::step_budget()). Filterable: `dx_ui_import_round_seconds`.
 	 */
 	public static function round_budget(): float {
-		return max( 0.01, (float) apply_filters( 'dxai_ui_import_round_seconds', 20.0 ) );
+		return max( 0.01, (float) apply_filters( 'dx_ui_import_round_seconds', 20.0 ) );
 	}
 
 	/**
 	 * The archive of an import in rounds, kept on the server between its requests (Transfer\Import_Job: a folder of its own under
-	 * uploads/dxai-ui, behind deny rules, named by a random token, this user's only, removed after a day): the one this request
+	 * uploads/dx-ui, behind deny rules, named by a random token, this user's only, removed after a day): the one this request
 	 * uploads, or the one its `stage` token names. Read from there by resolve_source().
 	 *
 	 * @return array<string, mixed>|\WP_Error The job.
@@ -1114,13 +1114,13 @@ final class Converter_Controller extends \WP_REST_Controller {
 			// Sent in pieces (upload_chunk()): read only once the last one is there.
 			$chunks = is_array( $job ) && is_array( $job['state']['chunks'] ?? null ) ? $job['state']['chunks'] : array();
 			if ( $chunks !== array() && (int) ( $chunks['received'] ?? 0 ) < (int) ( $chunks['total'] ?? 0 ) ) {
-				return new \WP_Error( 'dxai_ui_chunk', __( 'Not all of the archive has arrived yet.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_chunk', __( 'Not all of the archive has arrived yet.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 		} else {
 			$files = $request->get_file_params();
 			$zip   = $files['file'] ?? $files['zip'] ?? null;
 			if ( ! is_array( $zip ) ) {
-				return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dxai_ui_zip', __( 'Upload a design archive (.zip).', 'dxai-ui' ), array( 'status' => 400 ) );
+				return Zip_Extractor::upload_error( null ) ?? new \WP_Error( 'dx_ui_zip', __( 'Upload a design archive (.zip).', 'dx-ui' ), array( 'status' => 400 ) );
 			}
 			$refused = Zip_Extractor::upload_error( $zip );
 			if ( null !== $refused ) {
@@ -1196,8 +1196,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 				$native = $this->maybe_refine_pass( $native, $fidelity, $logs );
 			} else {
 				return new \WP_Error(
-					'dxai_ui_source_compile',
-					__( 'This ZIP compiled to no Gutenberg blocks. Use a Lovable/Vite source archive with src/pages or src/routes — a dist-only export cannot be split into editable blocks.', 'dxai-ui' ),
+					'dx_ui_source_compile',
+					__( 'This ZIP compiled to no Gutenberg blocks. Use a Lovable/Vite source archive with src/pages or src/routes — a dist-only export cannot be split into editable blocks.', 'dx-ui' ),
 					array( 'status' => 422 )
 				);
 			}
@@ -1237,7 +1237,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			return $markup;
 		}
 		// A YouTube player an engine wrote is made the team's way (a facade, not a live player): Video_Facade.
-		$markup = \DXAI_UI\Compiler\Video_Facade::rewrite( $markup );
+		$markup = \DX_UI\Compiler\Video_Facade::rewrite( $markup );
 
 		if ( str_contains( (string) ( $result['gutenberg_markup'] ?? '' ), '<!-- wp:' ) ) {
 			$result['gutenberg_markup'] = $markup;
@@ -1465,7 +1465,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		if ( 'continue' === (string) $request->get_param( 'save_round' ) ) {
 			$input = is_readable( $kept ) ? json_decode( (string) file_get_contents( $kept ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			if ( ! is_array( $input ) || ! is_array( $state['save'] ?? null ) ) {
-				return new \WP_Error( 'dxai_ui_save_rounds', __( 'The save was not found on the server to go on with. Save again: the pages written so far are updated in place.', 'dxai-ui' ), array( 'status' => 409 ) );
+				return new \WP_Error( 'dx_ui_save_rounds', __( 'The save was not found on the server to go on with. Save again: the pages written so far are updated in place.', 'dx-ui' ), array( 'status' => 409 ) );
 			}
 		} else {
 			$input = $this->save_input( $request );
@@ -1481,7 +1481,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			$encoded = wp_json_encode( $input );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			if ( ! is_string( $encoded ) || false === file_put_contents( $kept, $encoded ) ) {
-				return new \WP_Error( 'dxai_ui_save_rounds', __( 'The save could not be kept on the server between its steps (wp-content/uploads is not writable).', 'dxai-ui' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'dx_ui_save_rounds', __( 'The save could not be kept on the server between its steps (wp-content/uploads is not writable).', 'dx-ui' ), array( 'status' => 500 ) );
 			}
 			$state = array_merge(
 				$state,
@@ -1556,11 +1556,11 @@ final class Converter_Controller extends \WP_REST_Controller {
 			array(
 				'state'    => 'failed',
 				'finished' => time(),
-				'code'     => $fatal ? 'dxai_ui_save_fatal' : 'dxai_ui_save_stopped',
+				'code'     => $fatal ? 'dx_ui_save_fatal' : 'dx_ui_save_stopped',
 				'message'  => $fatal
 					/* translators: %s: PHP's error message */
-					? sprintf( __( 'PHP stopped the save: %s', 'dxai-ui' ), $message )
-					: __( 'The save stopped before it finished, without an error message.', 'dxai-ui' ),
+					? sprintf( __( 'PHP stopped the save: %s', 'dx-ui' ), $message )
+					: __( 'The save stopped before it finished, without an error message.', 'dx-ui' ),
 				'status'   => 500,
 			)
 		);
@@ -1589,7 +1589,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 
 	/** Per user: nobody can read, or wait on, someone else's save. */
 	private static function save_status_key( string $token, int $user ): string {
-		return 'dxai_ui_save_' . md5( $user . ':' . $token );
+		return 'dx_ui_save_' . md5( $user . ':' . $token );
 	}
 
 	/**
@@ -1632,7 +1632,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		$compiled = (string) $request->get_param( 'compiled_css' );
 
 		if ( $title === '' ) {
-			$title = __( 'DX UI Pattern', 'dxai-ui' );
+			$title = __( 'DX UI Pattern', 'dx-ui' );
 		}
 
 		return array(
@@ -1723,9 +1723,9 @@ final class Converter_Controller extends \WP_REST_Controller {
 			// with each old page's text and pictures, no AI) unless 'ai' is
 			// asked for; and which of them, when the person chose (paths).
 			'pages_engine'     => 'ai' === $request->get_param( 'pages_engine' ) ? 'ai' : 'design',
-			'pages_only'       => array_values( array_filter( array_map( static fn( $p ) => \DXAI_UI\Connectors\Site_Origin::path_of( rawurldecode( (string) $p ) ), array_filter( (array) ( $request->get_param( 'pages_only' ) ?? array() ), 'is_scalar' ) ), static fn( $p ) => $p !== '' && $p !== '/' ) ),
+			'pages_only'       => array_values( array_filter( array_map( static fn( $p ) => \DX_UI\Connectors\Site_Origin::path_of( rawurldecode( (string) $p ) ), array_filter( (array) ( $request->get_param( 'pages_only' ) ?? array() ), 'is_scalar' ) ), static fn( $p ) => $p !== '' && $p !== '/' ) ),
 			// The old site's address, when the person typed it (the design's links did not show it).
-			'pages_origin'     => \DXAI_UI\Connectors\Site_Origin::normalize( (string) $request->get_param( 'pages_origin' ) ),
+			'pages_origin'     => \DX_UI\Connectors\Site_Origin::normalize( (string) $request->get_param( 'pages_origin' ) ),
 			/*
 			 * Two more fields save() reads that this endpoint dropped.
 			 *
@@ -1752,7 +1752,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			 * design's are template parts), or '' — automatic
 			 * (Chrome_Choice::resolve()). Anything else is automatic.
 			 */
-					'chrome'           => \DXAI_UI\Chrome\Chrome_Choice::normalize( $request->get_param( 'chrome' ) ),
+					'chrome'           => \DX_UI\Chrome\Chrome_Choice::normalize( $request->get_param( 'chrome' ) ),
 		);
 	}
 
@@ -1805,8 +1805,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 					// Menus and Widgets for the site header and footer blocks the
 					// import put in the page, the template part for an area that
 					// kept one (Part_Shortcuts::edit_links()).
-					'edit_header' => \DXAI_UI\Admin\Part_Shortcuts::edit_url_for_page( $page_id, 'header', (int) ( $created['header_id'] ?? 0 ) ),
-					'edit_footer' => \DXAI_UI\Admin\Part_Shortcuts::edit_url_for_page( $page_id, 'footer', (int) ( $created['footer_id'] ?? 0 ) ),
+					'edit_header' => \DX_UI\Admin\Part_Shortcuts::edit_url_for_page( $page_id, 'header', (int) ( $created['header_id'] ?? 0 ) ),
+					'edit_footer' => \DX_UI\Admin\Part_Shortcuts::edit_url_for_page( $page_id, 'footer', (int) ( $created['footer_id'] ?? 0 ) ),
 				);
 
 				/*
@@ -1846,7 +1846,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			 * again updates this pattern instead of adding another copy of
 			 * the whole page to the library each time.
 			 */
-			$page_key = isset( $payload['page']['id'] ) ? (string) get_post_meta( (int) $payload['page']['id'], '_dxai_ui_page_key', true ) : '';
+			$page_key = isset( $payload['page']['id'] ) ? (string) get_post_meta( (int) $payload['page']['id'], '_dx_ui_page_key', true ) : '';
 			$saved    = ( new Pattern_Repository() )->save( $title, $markup, $css, $synced !== false, '', '', Pattern_Repository::key( $page_key, 'page', 1 ), ! empty( $input['static_html'] ) );
 			if ( is_wp_error( $saved ) ) {
 				if ( $payload === array() ) {
@@ -1863,7 +1863,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 		}
 
 		if ( $payload === array() ) {
-			return new \WP_Error( 'dxai_ui_save', __( 'Nothing to save: provide Gutenberg markup or structures.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_save', __( 'Nothing to save: provide Gutenberg markup or structures.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return rest_ensure_response( $payload );
@@ -1897,20 +1897,20 @@ final class Converter_Controller extends \WP_REST_Controller {
 		}
 
 		if ( $markup === '' || ! str_contains( $markup, '<!-- wp:' ) ) {
-			return new \WP_Error( 'dxai_ui_preview', __( 'No Gutenberg markup to preview.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_preview', __( 'No Gutenberg markup to preview.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$html = do_blocks( $markup );
 		$html = Design_Html::kses( $html );
 
 		$isolate = '';
-		$isolate_file = DXAI_UI_DIR . 'assets/css/frontend-isolate.css';
+		$isolate_file = DX_UI_DIR . 'assets/css/frontend-isolate.css';
 		if ( is_readable( $isolate_file ) ) {
 			$isolate = (string) file_get_contents( $isolate_file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
 
 		Css_Scoper::set_root_classes( $wrapper );
-		$compile_src = '<div class="dxai-ui dxai-ui--0 ' . esc_attr( $wrapper ) . '">' . $html . '</div>';
+		$compile_src = '<div class="dx-ui dx-ui--0 ' . esc_attr( $wrapper ) . '">' . $html . '</div>';
 		$sheet       = ( new Tailwind_Purger() )->compile( $compile_src, $css, 0, $compiled, $raw_css );
 		$js          = (string) $request->get_param( 'custom_js' );
 		if ( $js === '' && is_array( $request->get_param( 'result' ) ) ) {
@@ -1963,7 +1963,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 	public function refine_structure( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		$structure = $request->get_param( 'structure' );
 		if ( ! is_array( $structure ) ) {
-			return new \WP_Error( 'dxai_ui_refine', __( 'Provide a structure object to refine.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_refine', __( 'Provide a structure object to refine.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$issues = $request->get_param( 'issues' );
 		$issues = is_array( $issues ) ? array_map( 'sanitize_key', $issues ) : array();
@@ -2021,8 +2021,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 			$logs[] = Logger::entry(
 				'warning',
 				$fidelity === 'strict'
-					? __( 'Strict fidelity requested but no LLM key is configured — keeping Pass 1.', 'dxai-ui' )
-					: __( 'Fidelity refine skipped (no LLM key).', 'dxai-ui' )
+					? __( 'Strict fidelity requested but no LLM key is configured — keeping Pass 1.', 'dx-ui' )
+					: __( 'Fidelity refine skipped (no LLM key).', 'dx-ui' )
 			);
 
 			return $native;
@@ -2116,7 +2116,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			),
 			'figma-zip'     => is_array( $zip )
 				? ( new Figma_Connector() )->import_zip( $zip )
-				: new \WP_Error( 'dxai_ui_zip', __( 'Upload a Figma ZIP archive.', 'dxai-ui' ), array( 'status' => 400 ) ),
+				: new \WP_Error( 'dx_ui_zip', __( 'Upload a Figma ZIP archive.', 'dx-ui' ), array( 'status' => 400 ) ),
 			'lovable-api'   => ( new Lovable_Connector() )->from_api(),
 			/*
 			 * Every archive route reads the archive.
@@ -2131,7 +2131,7 @@ final class Converter_Controller extends \WP_REST_Controller {
 			 */
 			'auto-zip', 'lovable-zip' => is_array( $zip )
 				? Zip_Router::import( $zip )
-				: new \WP_Error( 'dxai_ui_zip', __( 'Upload a design archive (.zip).', 'dxai-ui' ), array( 'status' => 400 ) ),
+				: new \WP_Error( 'dx_ui_zip', __( 'Upload a design archive (.zip).', 'dx-ui' ), array( 'status' => 400 ) ),
 			'lovable-code'  => ( new Lovable_Connector() )->from_code(
 				(string) $request->get_param( 'code' ),
 				(string) $request->get_param( 'css' ),
@@ -2139,8 +2139,8 @@ final class Converter_Controller extends \WP_REST_Controller {
 			),
 			'generated-zip', 'claude-zip', 'dc-zip' => is_array( $zip )
 				? Zip_Router::import( $zip )
-				: new \WP_Error( 'dxai_ui_zip', __( 'Upload a generated design ZIP (HTML/CSS/JS, Vue, React, Next.js, or a Claude Design .dc.html export).', 'dxai-ui' ), array( 'status' => 400 ) ),
-			default         => new \WP_Error( 'dxai_ui_source', __( 'Unknown source type.', 'dxai-ui' ), array( 'status' => 400 ) ),
+				: new \WP_Error( 'dx_ui_zip', __( 'Upload a generated design ZIP (HTML/CSS/JS, Vue, React, Next.js, or a Claude Design .dc.html export).', 'dx-ui' ), array( 'status' => 400 ) ),
+			default         => new \WP_Error( 'dx_ui_source', __( 'Unknown source type.', 'dx-ui' ), array( 'status' => 400 ) ),
 		};
 	}
 

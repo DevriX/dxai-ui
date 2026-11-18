@@ -1,22 +1,22 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui page-order.
+ * WP-CLI: wp dx-ui page-order.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * The order of the sections of a design's pages, as the team's pages have it (Page_Order).
  *
- *   wp dxai-ui page-order status  [--design=<home-id>]
- *   wp dxai-ui page-order apply   [--design=<home-id>]
- *   wp dxai-ui page-order revert  [--design=<home-id>]
+ *   wp dx-ui page-order status  [--design=<home-id>]
+ *   wp dx-ui page-order apply   [--design=<home-id>]
+ *   wp dx-ui page-order revert  [--design=<home-id>]
  *
  * Without --design it works on every imported design of the site. `status` only says what would move.
  */
@@ -40,7 +40,7 @@ final class Order_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui page-order',
+			'dx-ui page-order',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'Put the tail of a design\'s pages in the team\'s order: related services, questions, call to action (status, apply, revert).',

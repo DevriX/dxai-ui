@@ -2,12 +2,12 @@
 /**
  * Infer the live site origin and crawl candidates from design menu URLs.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
 final class Site_Origin {
 
@@ -334,7 +334,7 @@ final class Site_Origin {
 		if ( $origin === '' ) {
 			return array();
 		}
-		$key    = 'dxai_ui_site_nav_' . md5( $origin );
+		$key    = 'dx_ui_site_nav_' . md5( $origin );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) ) {
 			return $cached;

@@ -2,16 +2,16 @@
 /**
  * REST: a design's document (the Design IR), where it is, and what to do next.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Design\Design_Status;
-use DXAI_UI\Design\Document_Store;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Design\Design_Status;
+use DX_UI\Design\Document_Store;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * GET  /design                 every design on the site: its Home, its title, its document's summary (or that it has none, and why)
@@ -31,7 +31,7 @@ final class Design_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/design',
 			array(
 				array(
@@ -42,7 +42,7 @@ final class Design_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/design/(?P<id>\d+)',
 			array(
 				array(
@@ -82,7 +82,7 @@ final class Design_Controller {
 		);
 		// What to do next with the design (Design_Status::next()), for the design's page.
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/design/(?P<id>\d+)/next',
 			array(
 				array(
@@ -101,7 +101,7 @@ final class Design_Controller {
 		);
 		// The design's style variation (Style_Variation): read it, apply it as the site's, take it off, write it into the theme.
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/design/(?P<id>\d+)/variation',
 			array(
 				array(
@@ -140,39 +140,39 @@ final class Design_Controller {
 	public function variation( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
-		$json = \DXAI_UI\Design\Style_Variation::json( $home );
+		$json = \DX_UI\Design\Style_Variation::json( $home );
 		if ( is_wp_error( $json ) ) {
 			$json->add_data( array( 'status' => 404 ) );
 
 			return $json;
 		}
 
-		return new \WP_REST_Response( \DXAI_UI\Design\Style_Variation::status( $home ) + array( 'json' => $json, 'capabilities' => \DXAI_UI\Theme\Capabilities::report() ) );
+		return new \WP_REST_Response( \DX_UI\Design\Style_Variation::status( $home ) + array( 'json' => $json, 'capabilities' => \DX_UI\Theme\Capabilities::report() ) );
 	}
 
 	public function variation_run( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$action = (string) $request->get_param( 'action' );
 		$done   = array();
 		if ( 'apply' === $action ) {
-			$done = \DXAI_UI\Design\Style_Variation::apply( $home );
+			$done = \DX_UI\Design\Style_Variation::apply( $home );
 		} elseif ( 'clear' === $action ) {
-			\DXAI_UI\Design\Style_Variation::clear();
+			\DX_UI\Design\Style_Variation::clear();
 		} elseif ( 'write' === $action ) {
-			$done = \DXAI_UI\Design\Style_Variation::write( $home );
+			$done = \DX_UI\Design\Style_Variation::write( $home );
 		}
 		if ( is_wp_error( $done ) ) {
-			$done->add_data( array( 'status' => 'dxai_ui_variation_not_ours' === $done->get_error_code() ? 409 : 422 ) );
+			$done->add_data( array( 'status' => 'dx_ui_variation_not_ours' === $done->get_error_code() ? 409 : 422 ) );
 
 			return $done;
 		}
 
-		return new \WP_REST_Response( \DXAI_UI\Design\Style_Variation::status( $home ) + array( 'done' => $action, 'result' => $done ) );
+		return new \WP_REST_Response( \DX_UI\Design\Style_Variation::status( $home ) + array( 'done' => $action, 'result' => $done ) );
 	}
 
 	public function permissions(): bool|\WP_Error {
@@ -180,7 +180,7 @@ final class Design_Controller {
 			return true;
 		}
 
-		return new \WP_Error( 'dxai_ui_forbidden', __( 'You are not allowed to read designs on this site.', 'dxai-ui' ), array( 'status' => rest_authorization_required_code() ) );
+		return new \WP_Error( 'dx_ui_forbidden', __( 'You are not allowed to read designs on this site.', 'dx-ui' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 
 	public function write_permissions(): bool|\WP_Error {
@@ -210,7 +210,7 @@ final class Design_Controller {
 		$id   = (int) $request->get_param( 'id' );
 		$home = Document_Store::home_of( $id );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$doc = Document_Store::load( $home );
 		if ( $doc === null ) {
@@ -223,7 +223,7 @@ final class Design_Controller {
 	public function next( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = Document_Store::home_of( (int) $request->get_param( 'id' ) );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return new \WP_REST_Response(
@@ -240,11 +240,11 @@ final class Design_Controller {
 		$id   = (int) $request->get_param( 'id' );
 		$home = Document_Store::home_of( $id );
 		if ( $home < 1 ) {
-			return new \WP_Error( 'dxai_ui_no_design', __( 'No design has a page with this id.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_no_design', __( 'No design has a page with this id.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$doc = Document_Store::rebuild( $home );
 		if ( is_wp_error( $doc ) ) {
-			$doc->add_data( array( 'status' => 'dxai_ui_no_snapshot' === $doc->get_error_code() ? 409 : 422 ) );
+			$doc->add_data( array( 'status' => 'dx_ui_no_snapshot' === $doc->get_error_code() ? 409 : 422 ) );
 
 			return $doc;
 		}
@@ -253,7 +253,7 @@ final class Design_Controller {
 	}
 
 	/** @return array<string, mixed> */
-	private function answer( int $home, \DXAI_UI\Design\Document $doc, bool $whole ): array {
+	private function answer( int $home, \DX_UI\Design\Document $doc, bool $whole ): array {
 		$out = array(
 			'design'  => $home,
 			'title'   => html_entity_decode( get_the_title( $home ), ENT_QUOTES, 'UTF-8' ),
@@ -272,11 +272,11 @@ final class Design_Controller {
 		$why = Document_Store::error( $home );
 
 		return new \WP_Error(
-			'dxai_ui_no_document',
+			'dx_ui_no_document',
 			$why !== ''
 				/* translators: %s: what went wrong. */
-				? sprintf( __( 'The design has no document: %s', 'dxai-ui' ), $why )
-				: __( 'The design has no document yet: it was imported before documents were kept. Importing it again writes one, or rebuild it from its conversion snapshot.', 'dxai-ui' ),
+				? sprintf( __( 'The design has no document: %s', 'dx-ui' ), $why )
+				: __( 'The design has no document yet: it was imported before documents were kept. Importing it again writes one, or rebuild it from its conversion snapshot.', 'dx-ui' ),
 			array( 'status' => 404 )
 		);
 	}

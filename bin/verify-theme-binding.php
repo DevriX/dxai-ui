@@ -9,13 +9,13 @@
  * colour settings with a primary and its dark shade (american-restoration: Primary #016bc4, Primary Dark #173764); elsewhere
  * reported as skipped. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Token_Styles;
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Theme\Theme_Binding;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Compiler\Token_Styles;
+use DX_UI\Support\Color_Math;
+use DX_UI\Theme\Theme_Binding;
+use DX_UI\Theme\Theme_Palette;
 
 $fail   = 0;
 $pass   = 0;

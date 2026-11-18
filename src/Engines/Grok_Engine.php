@@ -2,15 +2,15 @@
 /**
  * xAI Grok engine.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
-use DXAI_UI\Compiler\Schema;
-use DXAI_UI\Http\Remote_Client;
+use DX_UI\Compiler\Schema;
+use DX_UI\Http\Remote_Client;
 
 final class Grok_Engine extends Abstract_Engine {
 
@@ -29,7 +29,7 @@ final class Grok_Engine extends Abstract_Engine {
 
 	public function test_connection(): bool|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'xAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'xAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$response = Remote_Client::post_json(
@@ -48,7 +48,7 @@ final class Grok_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Grok connection failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Grok connection failed.', 'dx-ui' ) );
 		}
 
 		return true;
@@ -56,7 +56,7 @@ final class Grok_Engine extends Abstract_Engine {
 
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'xAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'xAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$payload = array(
@@ -69,7 +69,7 @@ final class Grok_Engine extends Abstract_Engine {
 			'response_format'       => array(
 				'type'        => 'json_schema',
 				'json_schema' => array(
-					'name'   => 'dxai_ui_block',
+					'name'   => 'dx_ui_block',
 					'strict' => true,
 					'schema' => Schema::generation(),
 				),
@@ -90,7 +90,7 @@ final class Grok_Engine extends Abstract_Engine {
 		}
 
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Grok generation failed.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Grok generation failed.', 'dx-ui' ) );
 		}
 
 		$decoded = Remote_Client::decode_body( $response['body'] );
@@ -103,7 +103,7 @@ final class Grok_Engine extends Abstract_Engine {
 
 	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
 		if ( $this->api_key === '' ) {
-			return new \WP_Error( 'dxai_ui_missing_key', __( 'xAI API key is not configured.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_missing_key', __( 'xAI API key is not configured.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		$response = Remote_Client::post_json(
 			'https://api.x.ai/v1/chat/completions',
@@ -121,7 +121,7 @@ final class Grok_Engine extends Abstract_Engine {
 			return $response;
 		}
 		if ( $response['code'] < 200 || $response['code'] >= 300 ) {
-			return $this->http_error( $response['code'], $response['body'], __( 'Grok did not answer.', 'dxai-ui' ) );
+			return $this->http_error( $response['code'], $response['body'], __( 'Grok did not answer.', 'dx-ui' ) );
 		}
 		$decoded = Remote_Client::decode_body( $response['body'] );
 		if ( is_wp_error( $decoded ) ) {

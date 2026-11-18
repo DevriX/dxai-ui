@@ -2,17 +2,17 @@
 /**
  * A short inline label: the theme's Span.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
- * `dxai-ui/text` written as a `<span>` holding words → the theme's `amr/span`
+ * `dx-ui/text` written as a `<span>` holding words → the theme's `amr/span`
  * (american-restoration): an inline span with colour, typography and spacing
  * controls, the block its own pages use for the small label above a heading.
  * Its save() is one `<span>` with the words in it — the element and its
@@ -24,18 +24,18 @@ use DXAI_UI\Theme\Capabilities;
  */
 final class Span extends Converter {
 
-	private const KNOWN = array( 'className', 'dxaiCss', 'tagName' );
+	private const KNOWN = array( 'className', 'dxuiCss', 'tagName' );
 
 	public function id(): string {
 		return 'span';
 	}
 
 	public function label(): string {
-		return __( 'Text spans → Span', 'dxai-ui' );
+		return __( 'Text spans → Span', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/text';
+		return 'dx-ui/text';
 	}
 
 	public function target(): string {
@@ -76,8 +76,8 @@ final class Span extends Converter {
 		if ( trim( (string) ( $attrs['className'] ?? '' ) ) !== '' ) {
 			$new['className'] = $attrs['className'];
 		}
-		if ( ! empty( $attrs['dxaiCss'] ) ) {
-			$new['dxaiCss'] = $attrs['dxaiCss'];
+		if ( ! empty( $attrs['dxuiCss'] ) ) {
+			$new['dxuiCss'] = $attrs['dxuiCss'];
 		}
 		$tag = '<span class="' . esc_attr( trim( 'wp-block-amr-span amr-span ' . self::class_tail( $attrs ) ) ) . '">';
 

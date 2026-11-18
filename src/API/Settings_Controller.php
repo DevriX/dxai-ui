@@ -2,23 +2,23 @@
 /**
  * Settings REST controller.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Connectors\Figma_Connector;
-use DXAI_UI\Engines\Engine_Factory;
-use DXAI_UI\Settings\Options;
+use DX_UI\Connectors\Figma_Connector;
+use DX_UI\Engines\Engine_Factory;
+use DX_UI\Settings\Options;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class Settings_Controller extends \WP_REST_Controller {
 
 	public function __construct() {
-		$this->namespace = DXAI_UI_REST_NAMESPACE;
+		$this->namespace = DX_UI_REST_NAMESPACE;
 		$this->rest_base = 'settings';
 	}
 
@@ -113,8 +113,8 @@ final class Settings_Controller extends \WP_REST_Controller {
 
 		if ( $provider === 'lovable' ) {
 			return new \WP_Error(
-				'dxai_ui_lovable_api',
-				__( 'Lovable has no public source API. Use ZIP or paste instead.', 'dxai-ui' ),
+				'dx_ui_lovable_api',
+				__( 'Lovable has no public source API. Use ZIP or paste instead.', 'dx-ui' ),
 				array( 'status' => 501 )
 			);
 		}

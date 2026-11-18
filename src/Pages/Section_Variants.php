@@ -2,15 +2,15 @@
 /**
  * Another way of showing one of the Home's sections, made only of what the Home has.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Capabilities;
 
 /**
  * Pages made from the Home's own sections look like each other when each section is the Home's section untouched. A variant
@@ -43,7 +43,7 @@ final class Section_Variants {
 	 * @return array<string, true>|null Null when the stylesheet cannot be read (then nothing is moved).
 	 */
 	public static function positional_classes( int $home ): ?array {
-		$sheet = Upload_Paths::for_meta( $home, '_dxai_ui_css_url' );
+		$sheet = Upload_Paths::for_meta( $home, '_dx_ui_css_url' );
 		if ( (string) $sheet['path'] === '' || ! is_readable( (string) $sheet['path'] ) ) {
 			return null;
 		}
@@ -383,7 +383,7 @@ final class Section_Variants {
 				// Items are one kind when their classes are (cards); logos are each their own size and stay interchangeable.
 				$c     = in_array( $kind, array( 'logo', 'gallery' ), true ) ? '' : self::kind_of_class( $item );
 				$class = $class ?? $c;
-				if ( $c !== $class || isset( $item['attrs']['dxaiData']['data-mob'] ) || isset( $item['attrs']['dxaiData']['data-desk'] ) || self::positional( $item, (array) $ctx['positional'] ) ) {
+				if ( $c !== $class || isset( $item['attrs']['dxuiData']['data-mob'] ) || isset( $item['attrs']['dxuiData']['data-desk'] ) || self::positional( $item, (array) $ctx['positional'] ) ) {
 					$ok = false;
 					break;
 				}
@@ -447,13 +447,13 @@ final class Section_Variants {
 	}
 
 	/**
-	 * What a block is called, without the importer's per-block helper classes (`dxai-sh-26`, `dxai-sh-27`: one each, with the same
+	 * What a block is called, without the importer's per-block helper classes (`dxui-sh-26`, `dxui-sh-27`: one each, with the same
 	 * rules), so that items of one kind are told as one.
 	 *
 	 * @param array<string, mixed> $block
 	 */
 	private static function kind_of_class( array $block ): string {
-		return trim( (string) preg_replace( '/\s+/', ' ', (string) preg_replace( '/\bdxai-sh-\d+\b/', '', (string) ( $block['attrs']['className'] ?? '' ) ) ) );
+		return trim( (string) preg_replace( '/\s+/', ' ', (string) preg_replace( '/\bdxui-sh-\d+\b/', '', (string) ( $block['attrs']['className'] ?? '' ) ) ) );
 	}
 
 	/** Whether any class of a block (or its blocks) is one the design styles by place. @param array<string, mixed> $block @param array<string, true> $positional */
@@ -526,7 +526,7 @@ final class Section_Variants {
 	 */
 	private static function find_pair( array $block, array $path, array $positional, bool $headed = false ): ?array {
 		$kids = array_values( (array) ( $block['innerBlocks'] ?? array() ) );
-		if ( count( $kids ) === 2 && in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/group', 'core/columns', 'dxai-ui/box' ), true ) ) {
+		if ( count( $kids ) === 2 && in_array( (string) ( $block['blockName'] ?? '' ), array( 'core/group', 'core/columns', 'dx-ui/box' ), true ) ) {
 			$class = (string) ( $block['attrs']['className'] ?? '' );
 			$css   = Block_Tree::css_of( $block );
 			$row   = (string) $block['blockName'] === 'core/columns' || preg_match( '/(^|\s)(d-flex|flex|d-grid|grid|grid-cols-\d)(\s|$)/', $class ) === 1 || preg_match( '/display:(flex|grid)/', $css ) === 1;

@@ -13,12 +13,12 @@
  *
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Admin\Dashboard;
-use DXAI_UI\Design\Design_Status;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Admin\Dashboard;
+use DX_UI\Design\Design_Status;
+use DX_UI\Structures\Design_Attach;
 
 $fail   = 0;
 $pass   = 0;
@@ -57,19 +57,19 @@ foreach ( (array) ( $submenu[ Dashboard::SLUG ] ?? array() ) as $sub ) {
 	// As WordPress lists them, every entry: a first screen that is not the menu's own slug makes WordPress put a copy of the menu ("DX") before it.
 	$order[] = wp_strip_all_tags( (string) $sub[0] ) . '|' . (string) $sub[2];
 }
-$want = array( 'dxai-ui' => 'Designs', 'dxai-ui-convert' => 'Convert', 'dxai-ui-site' => 'Site', 'dxai-ui-forms' => 'Form entries', 'dxai-ui-settings' => 'Settings' );
+$want = array( 'dx-ui' => 'Designs', 'dx-ui-convert' => 'Convert', 'dx-ui-site' => 'Site', 'dx-ui-forms' => 'Form entries', 'dx-ui-settings' => 'Settings' );
 $expect( 'five screens under it, in this order: Designs, Convert, Site, Form entries, Settings', $subs === $want && $order === array_map( static fn( $slug, $label ) => "$label|$slug", array_keys( $want ), $want ), implode( ', ', $order ) );
-$expect( 'no Library screen in the menu', ! isset( $subs['dxai-ui-library'] ) && ! in_array( 'Library', $subs, true ) );
+$expect( 'no Library screen in the menu', ! isset( $subs['dx-ui-library'] ) && ! in_array( 'Library', $subs, true ) );
 $expect( 'the screens the Dashboard knows are the menu’s', array_values( Dashboard::SCREENS ) === array_keys( $want ) );
 $options = array();
 foreach ( (array) ( $submenu['options-general.php'] ?? array() ) as $sub ) {
-	if ( str_contains( (string) $sub[2], 'dxai' ) ) {
+	if ( str_contains( (string) $sub[2], 'dxui' ) ) {
 		$options[] = (string) $sub[2];
 	}
 }
 $expect( 'Settings › DX UI opens the same Settings screen', $options === array( Dashboard::SLUG_SETTINGS ), wp_json_encode( $options ) );
-$expect( 'a screen’s URL is its admin.php address', Dashboard::url( 'site' ) === admin_url( 'admin.php?page=dxai-ui-site' ) && Dashboard::url( 'designs' ) === admin_url( 'admin.php?page=dxai-ui' ) );
-$expect( 'a screen nobody has is sent to Designs', Dashboard::url( 'bogus' ) === admin_url( 'admin.php?page=dxai-ui' ) );
+$expect( 'a screen’s URL is its admin.php address', Dashboard::url( 'site' ) === admin_url( 'admin.php?page=dx-ui-site' ) && Dashboard::url( 'designs' ) === admin_url( 'admin.php?page=dx-ui' ) );
+$expect( 'a screen nobody has is sent to Designs', Dashboard::url( 'bogus' ) === admin_url( 'admin.php?page=dx-ui' ) );
 
 // --- 2. The Library address of earlier versions. ----------------------------------------------------------------------
 echo "\n2. The old Library address\n";
@@ -86,7 +86,7 @@ try {
 } catch ( RuntimeException $e ) {
 	$caught = $e->getMessage();
 }
-$expect( 'admin.php?page=dxai-ui-library is sent to Designs', str_ends_with( $caught, 'admin.php?page=dxai-ui' ), $caught === '' ? 'no redirect' : $caught );
+$expect( 'admin.php?page=dx-ui-library is sent to Designs', str_ends_with( $caught, 'admin.php?page=dx-ui' ), $caught === '' ? 'no redirect' : $caught );
 $caught       = '';
 $_GET['page'] = Dashboard::SLUG_SITE;
 try {
@@ -104,35 +104,35 @@ foreach ( Dashboard::SCREENS as $name => $slug ) {
 	ob_start();
 	$dash->render();
 	$html = (string) ob_get_clean();
-	$expect( "$name: the app’s root, told which screen it is", str_contains( $html, 'id="dxai-ui-app"' ) && str_contains( $html, 'data-screen="' . $name . '"' ) );
+	$expect( "$name: the app’s root, told which screen it is", str_contains( $html, 'id="dx-ui-app"' ) && str_contains( $html, 'data-screen="' . $name . '"' ) );
 	$expect( "$name: a title for a reader without the app", str_contains( $html, '<h1 class="screen-reader-text">' . esc_html( Dashboard::labels()[ $name ] ) . '</h1>' ) );
-	$expect( "$name: the fallback links to the five screens and not to the Library", substr_count( $html, 'admin.php?page=dxai-ui' ) === 5 && ! str_contains( $html, 'dxai-ui-library' ) && ! str_contains( $html, 'Library' ) );
+	$expect( "$name: the fallback links to the five screens and not to the Library", substr_count( $html, 'admin.php?page=dx-ui' ) === 5 && ! str_contains( $html, 'dx-ui-library' ) && ! str_contains( $html, 'Library' ) );
 }
 $_GET['page'] = Dashboard::SLUG;
-$dash->assets( 'toplevel_page_dxai-ui' );
+$dash->assets( 'toplevel_page_dx-ui' );
 $scripts = wp_scripts();
-$data    = (string) $scripts->get_data( 'dxai-ui-admin', 'data' );
-$expect( 'the app’s script is enqueued on the screen', wp_script_is( 'dxai-ui-admin', 'enqueued' ) );
+$data    = (string) $scripts->get_data( 'dx-ui-admin', 'data' );
+$expect( 'the app’s script is enqueued on the screen', wp_script_is( 'dx-ui-admin', 'enqueued' ) );
 $expect( 'the app is told the screen', str_contains( $data, '"screen":"designs"' ) );
 foreach ( array_keys( Dashboard::SCREENS ) as $name ) {
 	$expect( "the app is told where $name is", preg_match( '#"' . $name . '":"[^"]*admin\.php\?page=' . preg_quote( Dashboard::SCREENS[ $name ], '#' ) . '"#', $data ) === 1 );
 }
 $expect( 'the app is told the screens’ names', str_contains( $data, '"labels":{' ) && str_contains( $data, '"designs":"Designs"' ) );
 $expect( 'the app is told the theme', preg_match( '#"theme":"[^"]+"#', $data ) === 1 );
-$expect( 'the plugin’s row links go to Designs and Settings', array_slice( apply_filters( 'plugin_action_links_' . plugin_basename( DXAI_UI_FILE ), array() ), 0, 2 ) === array( '<a href="' . esc_url( Dashboard::url( 'designs' ) ) . '">Designs</a>', '<a href="' . esc_url( Dashboard::url( 'settings' ) ) . '">Settings</a>' ) );
+$expect( 'the plugin’s row links go to Designs and Settings', array_slice( apply_filters( 'plugin_action_links_' . plugin_basename( DX_UI_FILE ), array() ), 0, 2 ) === array( '<a href="' . esc_url( Dashboard::url( 'designs' ) ) . '">Designs</a>', '<a href="' . esc_url( Dashboard::url( 'settings' ) ) . '">Settings</a>' ) );
 
-$src = DXAI_UI_DIR . 'assets/src/admin';
+$src = DX_UI_DIR . 'assets/src/admin';
 if ( is_dir( $src ) ) {
 	$spelled = array();
 	foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $src, FilesystemIterator::SKIP_DOTS ) ) as $f ) {
-		if ( preg_match( '/\.js$/', (string) $f ) === 1 && preg_match_all( '#admin\.php\?page=dxai-ui[a-z-]*#', (string) file_get_contents( (string) $f ), $m ) ) {
+		if ( preg_match( '/\.js$/', (string) $f ) === 1 && preg_match_all( '#admin\.php\?page=dx-ui[a-z-]*#', (string) file_get_contents( (string) $f ), $m ) ) {
 			foreach ( array_unique( $m[0] ) as $hit ) {
 				$spelled[] = basename( (string) $f ) . ': ' . $hit;
 			}
 		}
 	}
 	// ChromeChoice.js links to Site by its address from inside the wizard, as a relative admin.php link WordPress resolves; nothing else may.
-	$allowed = array( 'ChromeChoice.js: admin.php?page=dxai-ui-site' );
+	$allowed = array( 'ChromeChoice.js: admin.php?page=dx-ui-site' );
 	$expect( 'the app spells no admin address of its own (it is told them)', array_diff( $spelled, $allowed ) === array(), implode( '; ', array_diff( $spelled, $allowed ) ) );
 	$expect( 'the app has no second menu (Chrome.js) and no Library screen', ! file_exists( $src . '/Chrome.js' ) && ! file_exists( $src . '/screens/LibraryScreen.js' ) );
 } else {
@@ -154,7 +154,7 @@ if ( $home < 1 ) {
 	$expect( 'colours say follow or keep', in_array( $status['colours'], array( 'follow', 'keep' ), true ) );
 	$expect( 'fonts say theme, own or none', in_array( $status['fonts'], array( 'theme', 'own', 'none' ), true ) );
 	$expect( 'fonts are none exactly when the theme does not manage them', ( $status['fonts'] === 'none' ) === ! $status['fonts_managed'] );
-	$expect( 'the status says what the records say', $status['native'] === \DXAI_UI\Blocks\Native\Native_Blocks::applied( $home ) && ( $status['colours'] === 'follow' ) === \DXAI_UI\Theme\Theme_Binding::follows( $home ) && $status['interactivity'] === \DXAI_UI\Blocks\Interactivity::enabled() );
+	$expect( 'the status says what the records say', $status['native'] === \DX_UI\Blocks\Native\Native_Blocks::applied( $home ) && ( $status['colours'] === 'follow' ) === \DX_UI\Theme\Theme_Binding::follows( $home ) && $status['interactivity'] === \DX_UI\Blocks\Interactivity::enabled() );
 	$expect( 'the Home’s addresses are there', $status['home'] === get_permalink( $home ) && $status['edit'] === get_edit_post_link( $home, 'raw' ) );
 	$expect( 'the export link is the admin download', str_contains( (string) $status['export'], 'admin-post.php' ) && str_contains( (string) $status['export'], 'page_id=' . $home ) );
 
@@ -188,7 +188,7 @@ if ( $home < 1 ) {
 	// --- 5. The routes. -------------------------------------------------------------------------------------------------
 	echo "\n5. The routes\n";
 	$get = static function ( string $route ): array {
-		$res = rest_do_request( new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . $route ) );
+		$res = rest_do_request( new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . $route ) );
 
 		return array( 'status' => $res->get_status(), 'data' => is_array( $res->get_data() ) ? $res->get_data() : array() );
 	};
@@ -213,7 +213,7 @@ if ( $home < 1 ) {
 	$show = $get( '/design/' . $home . '?summary=1' );
 	$expect( 'GET /design/{id} carries the status too', $show['status'] === 404 || ( $show['status'] === 200 && isset( $show['data']['status']['pages'] ) ) );
 	// The design's Blocks tab asks for its own report alone: every design's reads every page of every design (seconds on a site with tens).
-	$req    = new WP_REST_Request( 'GET', '/' . DXAI_UI_REST_NAMESPACE . '/native-blocks' );
+	$req    = new WP_REST_Request( 'GET', '/' . DX_UI_REST_NAMESPACE . '/native-blocks' );
 	$req->set_query_params( array( 'design' => $home ) );
 	$native = rest_do_request( $req );
 	$rows   = is_array( $native->get_data() ) ? (array) ( $native->get_data()['designs'] ?? array() ) : array();

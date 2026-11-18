@@ -2,14 +2,14 @@
 /**
  * The part a section plays on a page of a restoration site.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Theme\Capabilities;
 
 /**
  * The team's sites (eleven of them, read from their databases: 283 pages) build every page from the same handful of
@@ -114,7 +114,7 @@ final class Section_Roles {
 		$best = 0;
 		$runs = array();
 		foreach ( $kids as $c ) {
-			if ( ! in_array( (string) $c['blockName'], array_merge( array( 'core/group', 'dxai-ui/box', 'dxai-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) || ! self::has_heading( $c ) ) {
+			if ( ! in_array( (string) $c['blockName'], array_merge( array( 'core/group', 'dx-ui/box', 'dx-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) || ! self::has_heading( $c ) ) {
 				continue;
 			}
 			$sig          = Section_Library::signature( $c );
@@ -179,13 +179,13 @@ final class Section_Roles {
 					$out['h1'] = true;
 				}
 			}
-			if ( in_array( $n, array( 'core/paragraph', 'core/list-item', 'core/heading', 'dxai-ui/text' ), true ) ) {
+			if ( in_array( $n, array( 'core/paragraph', 'core/list-item', 'core/heading', 'dx-ui/text' ), true ) ) {
 				$out['text'] .= ' ' . wp_strip_all_tags( $html );
 			}
 			if ( $n === 'core/button' ) {
 				++$out['buttons'];
 			}
-			if ( $n === 'dxai-ui/link' && ! empty( $b['innerBlocks'] ) === false && preg_match( '/\bbtn|button|bg-dxai-accent/', $cl ) === 1 ) {
+			if ( $n === 'dx-ui/link' && ! empty( $b['innerBlocks'] ) === false && preg_match( '/\bbtn|button|bg-dxui-accent/', $cl ) === 1 ) {
 				++$out['buttons'];
 			}
 			if ( $n === 'core/columns' ) {
@@ -195,7 +195,7 @@ final class Section_Roles {
 			if ( in_array( $n, Capabilities::image_blocks(), true ) ) {
 				++$out['images'];
 			}
-			if ( in_array( $n, array_merge( array( 'dxai-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) && ! empty( $b['innerBlocks'] ) ) {
+			if ( in_array( $n, array_merge( array( 'dx-ui/link' ), Capabilities::blocks( 'link_box' ) ), true ) && ! empty( $b['innerBlocks'] ) ) {
 				++$out['links'];
 			}
 			if ( str_contains( $cl, 'faq-question' ) ) {
@@ -215,7 +215,7 @@ final class Section_Roles {
 			$kids = array_values( array_filter( (array) ( $b['innerBlocks'] ?? array() ), static fn( $c ) => is_array( $c ) && ! empty( $c['blockName'] ) ) );
 			foreach ( $kids as $k => $c ) {
 				$line = (string) $c['blockName'];
-				if ( (string) ( $kids[ $k + 1 ]['blockName'] ?? '' ) === 'core/heading' && ( in_array( $line, array( 'core/paragraph', 'dxai-ui/text' ), true ) || Capabilities::is_block( $line, 'span' ) ) ) {
+				if ( (string) ( $kids[ $k + 1 ]['blockName'] ?? '' ) === 'core/heading' && ( in_array( $line, array( 'core/paragraph', 'dx-ui/text' ), true ) || Capabilities::is_block( $line, 'span' ) ) ) {
 					$words = trim( html_entity_decode( wp_strip_all_tags( (string) ( $c['innerHTML'] ?? '' ) ), ENT_QUOTES, 'UTF-8' ) );
 					$n     = str_word_count( $words );
 					if ( $n >= 1 && $n <= 4 ) {

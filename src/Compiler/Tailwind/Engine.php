@@ -2,12 +2,12 @@
 /**
  * Generates scoped CSS for the Tailwind classes a design actually uses.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Compiler\Tailwind;
+namespace DX_UI\Compiler\Tailwind;
 
 final class Engine {
 
@@ -959,22 +959,22 @@ final class Engine {
 		preg_match_all( '/"className"\s*:\s*"([^"]*)"/', $markup, $json );
 		/*
 		 * The classes a state change adds, which are used by the page as surely
-		 * as the ones it starts with: `data-dxai-on` / `data-dxai-off` hold
-		 * the two arms of a class ternary, and `dxaiData` carries the same
+		 * as the ones it starts with: `data-dxui-on` / `data-dxui-off` hold
+		 * the two arms of a class ternary, and `dxuiData` carries the same
 		 * pair through the block round trip. Read nowhere before this, so a
 		 * utility that appears only in an arm got no rule and the projection
 		 * was pruned for being unselectable — which is how a sticky header kept
 		 * `bg-transparent` and never went solid.
 		 */
-		preg_match_all( '/data-dxai-o(?:n|ff)="([^"]*)"/', $markup, $projected );
-		preg_match_all( '/"dxai-o(?:n|ff)"\s*:\s*"([^"]*)"/', $markup, $projected_json );
+		preg_match_all( '/data-dxui-o(?:n|ff)="([^"]*)"/', $markup, $projected );
+		preg_match_all( '/"dxui-o(?:n|ff)"\s*:\s*"([^"]*)"/', $markup, $projected_json );
 
 		$tokens = array();
 		foreach ( array_merge( $quoted[1] ?? array(), $json[1] ?? array(), $projected[1] ?? array(), $projected_json[1] ?? array() ) as $chunk ) {
 			$chunk = self::decode_class_chunk( (string) $chunk );
 			foreach ( preg_split( '/\s+/', $chunk ) ?: array() as $token ) {
 				$token = trim( $token );
-				if ( $token === '' || str_starts_with( $token, 'wp-block' ) || str_starts_with( $token, 'is-layout' ) || str_starts_with( $token, 'dxai-ui' ) || $token === 'alignfull' ) {
+				if ( $token === '' || str_starts_with( $token, 'wp-block' ) || str_starts_with( $token, 'is-layout' ) || str_starts_with( $token, 'dx-ui' ) || $token === 'alignfull' ) {
 					continue;
 				}
 				$tokens[ $token ] = true;

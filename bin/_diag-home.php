@@ -2,7 +2,7 @@
 /**
  * Diagnose Home CSS + block balance.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -11,12 +11,12 @@ $wp_root = $argv[1] ?? '';
 require rtrim( $wp_root, '/\\' ) . '/wp-load.php';
 
 $home_id = (int) ( $argv[2] ?? 88022 );
-$base    = trailingslashit( wp_upload_dir()['basedir'] ) . 'dxai-ui/';
+$base    = trailingslashit( wp_upload_dir()['basedir'] ) . 'dx-ui/';
 echo 'pattern_exists=' . ( is_readable( $base . 'pattern-' . $home_id . '.css' ) ? '1' : '0' ) . PHP_EOL;
 echo 'pattern_bytes=' . ( is_readable( $base . 'pattern-' . $home_id . '.css' ) ? (string) filesize( $base . 'pattern-' . $home_id . '.css' ) : '0' ) . PHP_EOL;
 echo 'site_exists=' . ( is_readable( $base . 'site-' . $home_id . '.css' ) ? '1' : '0' ) . PHP_EOL;
 echo 'site_bytes=' . ( is_readable( $base . 'site-' . $home_id . '.css' ) ? (string) filesize( $base . 'site-' . $home_id . '.css' ) : '0' ) . PHP_EOL;
-echo 'home_meta_css=' . (string) get_post_meta( $home_id, '_dxai_ui_css_url', true ) . PHP_EOL;
+echo 'home_meta_css=' . (string) get_post_meta( $home_id, '_dx_ui_css_url', true ) . PHP_EOL;
 
 $content = (string) get_post_field( 'post_content', $home_id );
 $opens   = preg_match_all( '/<!-- wp:[a-z0-9-\/]+/i', $content );

@@ -8,18 +8,18 @@
  *
  * Makes a Home and its pages and removes them again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Copy_Writer;
-use DXAI_UI\Pages\Page_Frame;
-use DXAI_UI\Pages\Section_Library;
-use DXAI_UI\Pages\Section_Variants;
-use DXAI_UI\Pages\Team_Chrome;
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Pages\Team_Quality;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Structure_Repository;
+use DX_UI\Pages\Copy_Writer;
+use DX_UI\Pages\Page_Frame;
+use DX_UI\Pages\Section_Library;
+use DX_UI\Pages\Section_Variants;
+use DX_UI\Pages\Team_Chrome;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Pages\Team_Quality;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
 
 $fail   = 0;
 $pass   = 0;
@@ -34,7 +34,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 };
 // The checks are of the pages made in the Home's own look (the library where the Home has nothing); the team's layouts, the usual
 // where the library holds them, are checked at the end.
-add_filter( 'dxai_ui_team_library', static fn() => 'fill' );
+add_filter( 'dx_ui_team_library', static fn() => 'fill' );
 
 $heading = static fn( string $t, int $l = 2 ): string => '<!-- wp:heading {"level":' . $l . '} --><h' . $l . ' class="wp-block-heading">' . $t . '</h' . $l . '><!-- /wp:heading -->';
 $para    = static fn( string $t ): string => '<!-- wp:paragraph --><p>' . $t . '</p><!-- /wp:paragraph -->';
@@ -73,8 +73,8 @@ if ( ! is_int( $home_id ) || $home_id < 1 ) {
 	exit( 1 );
 }
 update_post_meta( $home_id, Page_Scope::META, $home_id );
-update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home_id, '_dxai_ui_css_url', 'dxai-ui/fixture-home.css' );
+update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home_id, '_dx_ui_css_url', 'dx-ui/fixture-home.css' );
 
 echo "What the Home names\n";
 $s = Team_Pages::suggestions( $home_id );
@@ -105,10 +105,10 @@ echo "\nThe network's order (asked for; or on a site whose network was read: Net
 $net  = Team_Pages::plan( $home_id, $wanted, array( 'recipe' => 'network' ) );
 $seq  = static fn( array $p ): string => implode( ' ', array_column( $p['roles'], 'role' ) );
 $svcs = array_values( array_filter( $net, static fn( $p ) => $p['type'] === 'service' ) );
-$want = DXAI_UI\Network\Network_Model::recipe( 'service' );
+$want = DX_UI\Network\Network_Model::recipe( 'service' );
 $expect( 'every service page has the same order, as the team\'s services are made from one page', count( $svcs ) >= 2 && count( array_unique( array_map( $seq, $svcs ) ) ) === 1, implode( ' | ', array_map( $seq, $svcs ) ) );
 $expect( '…the network\'s order of a service page (hero first, its questions, the list of the other services before them)', $want !== null && $svcs !== array() && $svcs[0]['roles'][0]['role'] === 'hero' && in_array( 'faq', array_column( $svcs[0]['roles'], 'role' ), true ) && is_int( array_search( 'related', array_column( $svcs[0]['roles'], 'role' ), true ) ) && array_search( 'related', array_column( $svcs[0]['roles'], 'role' ), true ) < array_search( 'faq', array_column( $svcs[0]['roles'], 'role' ), true ), $svcs !== array() ? $seq( $svcs[0] ) : '' );
-$expect( 'not asked for, and no network read here: the usual plan, as it was', DXAI_UI\Network\Network_Model::stored() !== null || Team_Pages::plan( $home_id, $wanted ) === $plan );
+$expect( 'not asked for, and no network read here: the usual plan, as it was', DX_UI\Network\Network_Model::stored() !== null || Team_Pages::plan( $home_id, $wanted ) === $plan );
 echo "\nThe pages\n";
 $out = Team_Pages::build( $home_id, $wanted );
 $expect( 'they are made', ! is_wp_error( $out ) && count( $out['pages'] ) === 7, is_wp_error( $out ) ? $out->get_error_message() : (string) count( $out['pages'] ) );
@@ -126,8 +126,8 @@ $c   = (string) get_post_field( 'post_content', $svc );
 $expect( 'a service page is in the Home\'s look: its sections and their classes', str_contains( $c, 'hero-x' ) && str_contains( $c, 'svc-x' ) && str_contains( $c, 'cta-x' ) );
 $expect( 'its hero is headed with its title', preg_match( '/<h1[^>]*>Water Damage<\/h1>/', $c ) === 1, substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $c ) ), 0, 80 ) );
 $expect( 'the Home\'s header and footer are on it once', substr_count( $c, '<header' ) === 1 && substr_count( $c, '<footer' ) === 1 );
-$expect( 'the page belongs to the design: its scope, template and marker', (int) get_post_meta( $svc, Page_Scope::META, true ) === $home_id && get_post_meta( $svc, '_wp_page_template', true ) === \DXAI_UI\Theme\Blank_Template::default_slug() && get_post_meta( $svc, Team_Pages::META, true ) === 'service|water-damage' );
-$expect( 'and is not itself a design', ! \DXAI_UI\Structures\Design_Attach::is_design( $svc ) );
+$expect( 'the page belongs to the design: its scope, template and marker', (int) get_post_meta( $svc, Page_Scope::META, true ) === $home_id && get_post_meta( $svc, '_wp_page_template', true ) === \DX_UI\Theme\Blank_Template::default_slug() && get_post_meta( $svc, Team_Pages::META, true ) === 'service|water-damage' );
+$expect( 'and is not itself a design', ! \DX_UI\Structures\Design_Attach::is_design( $svc ) );
 $expect( 'the page is blocks all the way, nothing loose between them', count( array_filter( parse_blocks( $c ), static fn( $b ) => empty( $b['blockName'] ) && trim( (string) $b['innerHTML'] ) !== '' ) ) === 0 );
 $list = $by['services|services'] ?? 0;
 $expect( 'the services sit under the page that lists them', (int) get_post_field( 'post_parent', $svc ) === $list && $list > 0 );
@@ -159,9 +159,9 @@ $expect( 'unless it is asked for again on purpose', ! is_wp_error( $forced ) && 
 
 echo "\nWhat is refused\n";
 $none = Team_Pages::build( $home_id, array( array( 'type' => 'nonsense', 'title' => 'x' ) ) );
-$expect( 'nothing asked for is an error', is_wp_error( $none ) && $none->get_error_code() === 'dxai_ui_team_none' );
+$expect( 'nothing asked for is an error', is_wp_error( $none ) && $none->get_error_code() === 'dx_ui_team_none' );
 $bad = Team_Pages::build( 999999, $wanted );
-$expect( 'so is a design that is not one', is_wp_error( $bad ) && $bad->get_error_code() === 'dxai_ui_team_design' );
+$expect( 'so is a design that is not one', is_wp_error( $bad ) && $bad->get_error_code() === 'dx_ui_team_design' );
 
 echo "\nA Home without a hero (a job page's Home is a route: its header band is in the chrome)\n";
 $home2_html = $header
@@ -171,8 +171,8 @@ $home2_html = $header
 $home2_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Jobs', 'post_content' => $home2_html ) );
 $made[]   = (int) $home2_id;
 update_post_meta( $home2_id, Page_Scope::META, $home2_id );
-update_post_meta( $home2_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home2_id, '_dxai_ui_css_url', 'dxai-ui/fixture-jobs.css' );
+update_post_meta( $home2_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home2_id, '_dx_ui_css_url', 'dx-ui/fixture-jobs.css' );
 $plan2 = Team_Pages::plan( $home2_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
 $expect( 'the hero is not left out: the first section lends its heading', ! in_array( 'hero', $plan2[0]['left_out'] ?? array( 'hero' ), true ), json_encode( $plan2[0]['left_out'] ?? null ) );
 $out2 = Team_Pages::build( $home2_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
@@ -184,8 +184,8 @@ $expect( 'the section keeps its look and its other words', str_contains( $c2, 'r
 $home3_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture No Headings', 'post_content' => $header . $section( 'Plain', 'plain-x', $para( 'Only a line of text.' ) ) . $footer ) );
 $made[]   = (int) $home3_id;
 update_post_meta( $home3_id, Page_Scope::META, $home3_id );
-update_post_meta( $home3_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home3_id, '_dxai_ui_css_url', 'dxai-ui/fixture-plain.css' );
+update_post_meta( $home3_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home3_id, '_dx_ui_css_url', 'dx-ui/fixture-plain.css' );
 $plan3 = Team_Pages::plan( $home3_id, array( array( 'type' => 'service', 'title' => 'Service One' ) ) );
 $expect( 'a first section with no heading to carry the title is not used', in_array( 'hero', $plan3[0]['left_out'] ?? array(), true ), json_encode( $plan3[0]['left_out'] ?? null ) );
 
@@ -198,18 +198,18 @@ for ( $i = 0; $i < 105; $i++ ) {
 			'post_status' => 'draft',
 			'post_title'  => 'Fixture made page ' . $i,
 			'meta_input'  => array(
-				'_dxai_ui_generated_page' => '1',
+				'_dx_ui_generated_page' => '1',
 				Page_Scope::META          => (string) $home_id,
 			),
 		)
 	);
 	$made[] = (int) $extra;
 }
-$homes = \DXAI_UI\Structures\Design_Attach::home_ids( 100 );
+$homes = \DX_UI\Structures\Design_Attach::home_ids( 100 );
 $expect( 'the Home is listed although 105 newer pages were made for it', in_array( $home_id, $homes, true ) );
 $expect( 'and a page made for a design is not', count( array_intersect( $homes, array_slice( $made, -105 ) ) ) === 0 );
-if ( \DXAI_UI\Structures\Design_Attach::is_design( $home_id ) ) {
-	$expect( 'designs() lists it too', in_array( $home_id, array_map( static fn( $p ) => (int) $p->ID, \DXAI_UI\Structures\Design_Attach::designs() ), true ) );
+if ( \DX_UI\Structures\Design_Attach::is_design( $home_id ) ) {
+	$expect( 'designs() lists it too', in_array( $home_id, array_map( static fn( $p ) => (int) $p->ID, \DX_UI\Structures\Design_Attach::designs() ), true ) );
 }
 
 echo "\nA page that is not what its name says without one section\n";
@@ -230,8 +230,8 @@ $home4_html = $header
 $home4_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With A Form', 'post_content' => $home4_html ) );
 $made[]   = (int) $home4_id;
 update_post_meta( $home4_id, Page_Scope::META, $home4_id );
-update_post_meta( $home4_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home4_id, '_dxai_ui_css_url', 'dxai-ui/fixture-form.css' );
+update_post_meta( $home4_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home4_id, '_dx_ui_css_url', 'dx-ui/fixture-form.css' );
 $qd    = Team_Pages::build( $home4_id, array( array( 'type' => 'contact', 'title' => '' ) ) );
 $qdid  = ! is_wp_error( $qd ) ? (int) ( $qd['pages'][0]['id'] ?? 0 ) : 0;
 $made[] = $qdid;
@@ -246,7 +246,7 @@ $arc   = (string) get_post_field( 'post_content', $arid );
 $expect( 'the page that lists the service areas opens with the Home\'s areas, not a list of services', str_contains( $arc, 'loc-x' ) && ! str_contains( $arc, 'svc-x' ), implode( ',', $ar['pages'][0]['roles'] ?? array() ) );
 
 echo "\nThe menu: the header and footer links lead to the pages\n";
-$mlink = static fn( string $t, string $u ): string => '<!-- wp:dxai-ui/link {"url":"' . $u . '","text":"' . $t . '"} --><a class="wp-block-dxai-ui-link" href="' . $u . '">' . $t . '</a><!-- /wp:dxai-ui/link -->';
+$mlink = static fn( string $t, string $u ): string => '<!-- wp:dx-ui/link {"url":"' . $u . '","text":"' . $t . '"} --><a class="wp-block-dx-ui-link" href="' . $u . '">' . $t . '</a><!-- /wp:dx-ui/link -->';
 $header5 = '<!-- wp:group {"tagName":"header","className":"site-bar"} --><header class="wp-block-group site-bar"><!-- wp:group {"tagName":"nav"} --><nav class="wp-block-group">'
 	. $mlink( 'Water Damage', 'https://old.example.com/services/water' )
 	. $mlink( 'About', '#about' )
@@ -255,7 +255,7 @@ $header5 = '<!-- wp:group {"tagName":"header","className":"site-bar"} --><header
 	. $mlink( 'Call (555) 010-0101', 'tel:5550100101' )
 	. '</nav><!-- /wp:group --></header><!-- /wp:group -->';
 $footer5 = '<!-- wp:group {"tagName":"footer","className":"site-foot"} --><footer class="wp-block-group site-foot"><!-- wp:list --><ul class="wp-block-list"><!-- wp:list-item --><li><a href="https://old.example.com/faq">FAQ</a></li><!-- /wp:list-item --><!-- wp:list-item --><li><a href="https://old.example.com/privacy">Privacy Policy</a></li><!-- /wp:list-item --></ul><!-- /wp:list --></footer><!-- /wp:group -->';
-$card5   = static fn( string $t, string $u ): string => '<!-- wp:dxai-ui/link {"url":"' . $u . '","className":"card","hasInner":true} --><a class="wp-block-dxai-ui-link card" href="' . $u . '"><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . $t . '</h3><!-- /wp:heading --></a><!-- /wp:dxai-ui/link -->';
+$card5   = static fn( string $t, string $u ): string => '<!-- wp:dx-ui/link {"url":"' . $u . '","className":"card","hasInner":true} --><a class="wp-block-dx-ui-link card" href="' . $u . '"><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">' . $t . '</h3><!-- /wp:heading --></a><!-- /wp:dx-ui/link -->';
 $list5   = static fn( array $cards ): string => '<!-- wp:group {"className":"cards5-x"} --><div class="wp-block-group cards5-x">' . implode( '', $cards ) . '</div><!-- /wp:group -->';
 $cards5  = $list5( array( $card5( 'Water Damage', 'https://old.example.com/w' ), $card5( 'Fire Damage', 'https://old.example.com/f' ), $card5( 'Roof Repair', 'https://old.example.com/r' ) ) )
 	. $list5( array( $card5( 'Gutter Help', 'https://old.example.com/g' ), $card5( 'Tree Help', 'https://old.example.com/t' ) ) );
@@ -263,8 +263,8 @@ $home5 = serialize_blocks( parse_blocks( str_replace( array( $header, $footer ),
 $home5_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With A Menu', 'post_content' => wp_slash( $home5 ) ) );
 $made[]   = (int) $home5_id;
 update_post_meta( $home5_id, Page_Scope::META, $home5_id );
-update_post_meta( $home5_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home5_id, '_dxai_ui_css_url', 'dxai-ui/fixture-menu.css' );
+update_post_meta( $home5_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home5_id, '_dx_ui_css_url', 'dx-ui/fixture-menu.css' );
 $mb = Team_Pages::build(
 	$home5_id,
 	array(
@@ -312,7 +312,7 @@ $cards_of = static function ( int $id ): array {
 	$out  = array();
 	$walk = static function ( array $bs ) use ( &$walk, &$out ): void {
 		foreach ( $bs as $b ) {
-			if ( ( $b['blockName'] ?? '' ) === 'dxai-ui/link' && ! empty( $b['innerBlocks'] ) ) {
+			if ( ( $b['blockName'] ?? '' ) === 'dx-ui/link' && ! empty( $b['innerBlocks'] ) ) {
 				$h = (array) $b['innerBlocks'][0];
 				$out[ trim( wp_strip_all_tags( (string) ( $h['innerHTML'] ?? '' ) ) ) ] = (string) ( $b['attrs']['url'] ?? '' );
 			}
@@ -328,7 +328,7 @@ $expect( 'a card whose heading is a page\'s opens that page', ( $ch5['Water Dama
 $expect( 'cards of the same list that have no page open the page that lists the services', ( $ch5['Fire Damage'] ?? '' ) === get_permalink( $mp['services'] ?? 0 ) && ( $ch5['Roof Repair'] ?? '' ) === get_permalink( $mp['services'] ?? 0 ), json_encode( $ch5 ) );
 $expect( 'a list of cards none of which has a page is left as it is', ( $ch5['Gutter Help'] ?? '' ) === 'https://old.example.com/g' && ( $ch5['Tree Help'] ?? '' ) === 'https://old.example.com/t', json_encode( $ch5 ) );
 $expect( 'a card block says the same in its markup and its url', (bool) preg_match( '/href="' . preg_quote( get_permalink( $mp['service'] ?? 0 ), '/' ) . '"/', (string) get_post_field( 'post_content', $home5_id ) ) );
-$again = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
+$again = \DX_UI\Pages\Team_Menu::link( $home5_id );
 $expect( 'pointing them again changes nothing', $again === array( 'pages' => 0, 'links' => 0 ), json_encode( $again ) );
 // The words of a page written by the copy writer can still be put back after the menu was pointed again.
 $svc5   = $mp['service'] ?? 0;
@@ -340,7 +340,7 @@ global $wpdb;
 $wpdb->update( $wpdb->posts, array( 'post_content' => $reset5 ), array( 'ID' => $svc5 ) );
 clean_post_cache( $svc5 );
 update_post_meta( $svc5, Copy_Writer::HASH, md5( $reset5 ) );
-$fix5 = \DXAI_UI\Pages\Team_Menu::link( $home5_id );
+$fix5 = \DX_UI\Pages\Team_Menu::link( $home5_id );
 $expect( 'a link put back to the old site is pointed again', $fix5['links'] >= 1, json_encode( $fix5 ) );
 $expect( 'and the page\'s earlier words can still be put back', Copy_Writer::can_revert( $svc5 ) && Copy_Writer::revert( $svc5 ) === true );
 
@@ -372,7 +372,7 @@ Team_Chrome::sync( $home_id );
 
 echo "\nThe Home's frame (the group around its header, main and footer)\n";
 $expect( 'a Home that has no wrapper has pages that have none', Page_Frame::frame_key( parse_blocks( (string) get_post_field( 'post_content', $svc ) ) ) === '' );
-$wrapped_home = '<!-- wp:group {"className":"max-w-full","dxaiCss":"overflow-x:clip"} --><div class="wp-block-group max-w-full dxs-vtxwrap">'
+$wrapped_home = '<!-- wp:group {"className":"max-w-full","dxuiCss":"overflow-x:clip"} --><div class="wp-block-group max-w-full dxs-vtxwrap">'
 	. $header
 	. '<!-- wp:group {"tagName":"main","anchor":"main"} --><main id="main" class="wp-block-group">' . str_replace( array( $header, $footer ), '', $home ) . '</main><!-- /wp:group -->'
 	. $footer
@@ -380,10 +380,10 @@ $wrapped_home = '<!-- wp:group {"className":"max-w-full","dxaiCss":"overflow-x:c
 $wh = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Wrapped', 'post_content' => wp_slash( $wrapped_home ) ) );
 $made[] = (int) $wh;
 update_post_meta( $wh, Page_Scope::META, $wh );
-update_post_meta( $wh, '_dxai_ui_generated_page', '1' );
-update_post_meta( $wh, '_dxai_ui_css_url', 'dxai-ui/fixture-wrapped.css' );
+update_post_meta( $wh, '_dx_ui_generated_page', '1' );
+update_post_meta( $wh, '_dx_ui_css_url', 'dx-ui/fixture-wrapped.css' );
 $shells = Page_Frame::shells( $wh );
-$expect( 'the Home\'s wrapper and main are found, empty', $shells['wrapper'] !== null && $shells['main'] !== null && $shells['wrapper']['innerBlocks'] === array() && ( $shells['wrapper']['attrs']['dxaiCss'] ?? '' ) === 'overflow-x:clip' );
+$expect( 'the Home\'s wrapper and main are found, empty', $shells['wrapper'] !== null && $shells['main'] !== null && $shells['wrapper']['innerBlocks'] === array() && ( $shells['wrapper']['attrs']['dxuiCss'] ?? '' ) === 'overflow-x:clip' );
 $wb = Team_Pages::build( $wh, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'about', 'title' => '' ) ) );
 $wp = array();
 foreach ( ! is_wp_error( $wb ) ? $wb['pages'] : array() as $p ) {
@@ -392,9 +392,9 @@ foreach ( ! is_wp_error( $wb ) ? $wb['pages'] : array() as $p ) {
 }
 $wc = (string) get_post_field( 'post_content', $wp['service'] ?? 0 );
 $wtop = array_values( array_filter( parse_blocks( $wc ), static fn( $b ) => ! empty( $b['blockName'] ) ) );
-$expect( 'the pages are made in the Home\'s frame: one group around everything, as the Home has it', count( $wtop ) === 1 && ( $wtop[0]['attrs']['dxaiCss'] ?? '' ) === 'overflow-x:clip' && str_contains( $wc, 'dxs-vtxwrap' ), (string) count( $wtop ) );
+$expect( 'the pages are made in the Home\'s frame: one group around everything, as the Home has it', count( $wtop ) === 1 && ( $wtop[0]['attrs']['dxuiCss'] ?? '' ) === 'overflow-x:clip' && str_contains( $wc, 'dxs-vtxwrap' ), (string) count( $wtop ) );
 $expect( 'the header, the main with the sections, and the footer are inside it, once each', substr_count( $wc, '<header' ) === 1 && substr_count( $wc, '<footer' ) === 1 && substr_count( $wc, '<main' ) === 1 && str_contains( $wc, 'svc-x' ) && str_contains( $wc, 'cta-x' ) );
-$expect( 'a page in the Home\'s frame is not given a second header and footer when it is shown (Page_Chrome reads it as a design is read)', \DXAI_UI\Chrome\Page_Chrome::with_chrome( $wp['service'] ?? 0, $wc ) === $wc && \DXAI_UI\Chrome\Page_Chrome::already_has_chrome( $wc ) );
+$expect( 'a page in the Home\'s frame is not given a second header and footer when it is shown (Page_Chrome reads it as a design is read)', \DX_UI\Chrome\Page_Chrome::with_chrome( $wp['service'] ?? 0, $wc ) === $wc && \DX_UI\Chrome\Page_Chrome::already_has_chrome( $wc ) );
 $expect( 'the page still reads as sections', count( Section_Library::for_page( $wp['service'] ?? 0 ) ) >= 4, (string) count( Section_Library::for_page( $wp['service'] ?? 0 ) ) );
 $wq = Team_Quality::measure( $wh );
 $expect( 'the quality measure finds the header, the footer and the frame the Home\'s', $wq['gates']['G1'] === array() && count( $wq['pages'] ) === 2, json_encode( $wq['gates']['G1'] ) );
@@ -505,7 +505,7 @@ foreach ( $pg as $p ) {
 		if ( $h === $last ) {
 			$jammed[] = $p['title'];
 		}
-		if ( isset( $seen[ $h ] ) && \DXAI_UI\Pages\Section_Roles::of( $c['block'], $i === 0 ) !== 'cta' ) {
+		if ( isset( $seen[ $h ] ) && \DX_UI\Pages\Section_Roles::of( $c['block'], $i === 0 ) !== 'cta' ) {
 			$repeated[] = $p['title'];
 		}
 		$seen[ $h ] = true;
@@ -525,8 +525,8 @@ $home6_html = str_replace( '© Fixture Co. All rights reserved.', '© Fixture Co
 $home6_id   = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With Contacts', 'post_content' => wp_slash( $home6_html ) ) );
 $made[]     = (int) $home6_id;
 update_post_meta( $home6_id, Page_Scope::META, $home6_id );
-update_post_meta( $home6_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home6_id, '_dxai_ui_css_url', 'dxai-ui/fixture-contacts.css' );
+update_post_meta( $home6_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home6_id, '_dx_ui_css_url', 'dx-ui/fixture-contacts.css' );
 $cb   = Team_Pages::build( $home6_id, array( array( 'type' => 'contact', 'title' => '' ) ) );
 $cbid = ! is_wp_error( $cb ) ? (int) ( $cb['pages'][0]['id'] ?? 0 ) : 0;
 $made[] = $cbid;
@@ -577,8 +577,8 @@ $home7_html = str_replace( array( 'Family run since 1983.', 'Extraction and dryi
 $home7_id   = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture With Leads', 'post_content' => wp_slash( $home7_html ) ) );
 $made[]     = (int) $home7_id;
 update_post_meta( $home7_id, Page_Scope::META, $home7_id );
-update_post_meta( $home7_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home7_id, '_dxai_ui_css_url', 'dxai-ui/fixture-leads.css' );
+update_post_meta( $home7_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home7_id, '_dx_ui_css_url', 'dx-ui/fixture-leads.css' );
 $lb = Team_Pages::build( $home7_id, array( array( 'type' => 'service', 'title' => 'Water Damage' ), array( 'type' => 'service', 'title' => 'Roof Repair' ) ) );
 $lw = $lr = 0;
 foreach ( ! is_wp_error( $lb ) ? $lb['pages'] : array() as $p ) {
@@ -603,8 +603,8 @@ $abc = (string) get_post_field( 'post_content', $abid );
 $expect( 'the About page of a Home that states its phone and address has the ways to reach it, before the questions and the call to action', str_contains( $abc, 'Get in touch' ) && str_contains( $abc, '12 Elm St, Tyler, TX' ) && ( ! str_contains( $abc, 'cta-x' ) || strpos( $abc, 'Get in touch' ) < strpos( $abc, 'cta-x' ) ), substr( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $abc ) ), 0, 200 ) );
 
 echo "\nThe team's arrangement (the usual, where the library holds the team's layouts)\n";
-remove_all_filters( 'dxai_ui_team_library' );
-$expect( 'the library holds the team\'s layouts, so a run with nothing said about the library lays the pages out with them', DXAI_UI\Pages\Block_Library::has_layouts() );
+remove_all_filters( 'dx_ui_team_library' );
+$expect( 'the library holds the team\'s layouts, so a run with nothing said about the library lays the pages out with them', DX_UI\Pages\Block_Library::has_layouts() );
 // A restoration company's Home that states what the layouts list: the steps of its work, what customers said, its questions, its
 // badges, and a few points about it.
 $col3  = static fn( string $a, string $b, string $c ): string => '<!-- wp:columns --><div class="wp-block-columns">' . $a . $b . $c . '</div><!-- /wp:columns -->';
@@ -626,9 +626,9 @@ $home9 = $header
 $home9_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Fixture Restoration', 'post_content' => wp_slash( $home9 ) ) );
 $made[]   = (int) $home9_id;
 update_post_meta( $home9_id, Page_Scope::META, $home9_id );
-update_post_meta( $home9_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $home9_id, '_dxai_ui_css_url', 'dxai-ui/fixture-rich.css' );
-$lists9 = DXAI_UI\Pages\Layouts::lists( $home9_id, Section_Library::for_page( $home9_id ) );
+update_post_meta( $home9_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $home9_id, '_dx_ui_css_url', 'dx-ui/fixture-rich.css' );
+$lists9 = DX_UI\Pages\Layouts::lists( $home9_id, Section_Library::for_page( $home9_id ) );
 $expect( 'the Home gives the layouts its steps, reviews, questions, badges and points (three bare, three with their words), each read once; the number of a step is not a figure', count( $lists9['steps'] ) === 3 && count( $lists9['reviews'] ) === 3 && count( $lists9['faq'] ) === 3 && count( $lists9['logos'] ) === 3 && count( $lists9['items'] ) === 6 && $lists9['stats'] === array(), json_encode( array_map( 'count', $lists9 ) ) );
 $expect( 'a review is who said it and what was said; a question is the question and its answer; a step is numbered', ( $lists9['reviews'][0]['title'] ?? '' ) === 'Maria G., Tyler' && str_starts_with( (string) ( $lists9['reviews'][0]['text'] ?? '' ), 'They were at the house' ) && ( $lists9['faq'][1]['title'] ?? '' ) === 'Do you work with my insurance?' && str_starts_with( (string) ( $lists9['faq'][1]['text'] ?? '' ), 'Yes.' ) && ( $lists9['steps'][1]['title'] ?? '' ) === 'Inspection' && ( $lists9['steps'][1]['eyebrow'] ?? '' ) === '2', json_encode( array( $lists9['reviews'][0] ?? null, $lists9['steps'][1] ?? null ) ) );
 // Three pages: a page's related services are the other two, enough for the Home's own cards to be poured into — which a team run does not do.
@@ -654,7 +654,7 @@ foreach ( $tms as $x ) {
 }
 $expect( 'a role is on the page once, a call to action twice at most, and each section of a role is another one', count( array_filter( $per_role, static fn( $n, $r ) => $n > ( $r === 'cta' ? 2 : 1 ), ARRAY_FILTER_USE_BOTH ) ) === 0 && ( $per_role['cta'] ?? 0 ) === 2 && count( array_unique( array_map( static fn( $x ) => json_encode( $x['ops'] ?? array() ), $ctas ) ) ) === count( $ctas ), json_encode( $per_role ) );
 $tmc = (string) get_post_field( 'post_content', $tmid );
-$expect( 'the sections carry the library\'s class, and nothing the library keeps for itself is on the page', substr_count( $tmc, 'dxai-lib' ) >= 5 && ! str_contains( $tmc, '{{' ) && ! str_contains( $tmc, '[[' ) && ! preg_match( '/dxaiIf|dxaiRepeat|dxaiIcon|dxaiCount|dxaiSlice/', $tmc ), (string) substr_count( $tmc, 'dxai-lib' ) );
+$expect( 'the sections carry the library\'s class, and nothing the library keeps for itself is on the page', substr_count( $tmc, 'dxui-lib' ) >= 5 && ! str_contains( $tmc, '{{' ) && ! str_contains( $tmc, '[[' ) && ! preg_match( '/dxuiIf|dxuiRepeat|dxuiIcon|dxuiCount|dxuiSlice/', $tmc ), (string) substr_count( $tmc, 'dxui-lib' ) );
 $expect( 'the Home\'s services, steps, reviews, questions and trust row are not copied onto it (their classes are not on the page); its hero and its call to action band are, once', str_contains( $tmc, 'hero-x' ) && substr_count( $tmc, '"className":"cta-x"' ) === 1 && ! str_contains( $tmc, 'svc-x' ) && ! str_contains( $tmc, 'why-x' ) && ! str_contains( $tmc, 'proc-x' ) && ! str_contains( $tmc, 'rev-x' ) && ! str_contains( $tmc, 'faq-x' ) && ! str_contains( $tmc, 'trust-x' ) );
 $tmt = html_entity_decode( wp_strip_all_tags( $tmc ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 $expect( 'the layouts show what the Home states: its steps, a review with who said it, a question with its answer', str_contains( $tmt, 'Inspection' ) && str_contains( $tmt, 'Maria G., Tyler' ) && str_contains( $tmt, 'Do you work with my insurance?' ) && str_contains( $tmt, 'talk to the adjuster' ), substr( preg_replace( '/\s+/', ' ', $tmt ), 0, 300 ) );
@@ -679,8 +679,8 @@ $ph_home = $header
 $ph_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Placeholder Restoration', 'post_content' => wp_slash( $ph_home ) ) );
 $made[] = (int) $ph_id;
 update_post_meta( $ph_id, Page_Scope::META, $ph_id );
-update_post_meta( $ph_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $ph_id, '_dxai_ui_css_url', 'dxai-ui/fixture-placeholder.css' );
+update_post_meta( $ph_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $ph_id, '_dx_ui_css_url', 'dx-ui/fixture-placeholder.css' );
 $ph_made = Team_Pages::build( (int) $ph_id, array( array( 'type' => 'testimonials', 'title' => 'Testimonials' ), array( 'type' => 'service', 'title' => 'Water Damage' ) ), true, array( 'library' => 'team' ) );
 $ph_text = '';
 foreach ( ! is_wp_error( $ph_made ) ? $ph_made['pages'] : array() as $p ) {
@@ -695,8 +695,8 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 	$back      = static function () use ( $theme_was ): void {
 		if ( get_stylesheet() !== $theme_was ) {
 			switch_theme( $theme_was );
-			DXAI_UI\Theme\Theme_Palette::reset();
-			DXAI_UI\Theme\Theme_Buttons::reset();
+			DX_UI\Theme\Theme_Palette::reset();
+			DX_UI\Theme\Theme_Buttons::reset();
 			if ( function_exists( 'wp_clean_theme_json_cache' ) ) {
 				wp_clean_theme_json_cache();
 			}
@@ -704,8 +704,8 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 	};
 	register_shutdown_function( $back );
 	switch_theme( 'twentytwentyfive' );
-	DXAI_UI\Theme\Theme_Palette::reset();
-	DXAI_UI\Theme\Theme_Buttons::reset();
+	DX_UI\Theme\Theme_Palette::reset();
+	DX_UI\Theme\Theme_Buttons::reset();
 	// WordPress keeps the theme.json it read for the rest of the request: without this the palette is still the theme switched
 	// from (on a site that runs American Restoration the check read its colours and could not see a colour foreign to this theme).
 	if ( function_exists( 'wp_clean_theme_json_cache' ) ) {
@@ -723,10 +723,10 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 	}
 	$tt_src = array_count_values( array_map( static fn( $x ) => (string) ( $x['source'] ?? '' ), $tts ) );
 	$ttc    = (string) get_post_field( 'post_content', $ttid );
-	$tt_pal = DXAI_UI\Theme\Capabilities::palette();
+	$tt_pal = DX_UI\Theme\Capabilities::palette();
 	preg_match_all( '/\bhas-([a-z0-9-]+?)-(?:background-color|border-color|color)\b/', $ttc, $cm );
 	$foreign = array_values( array_filter( array_unique( $cm[1] ), static fn( $s ) => ! in_array( $s, array( 'text', 'link', 'background' ), true ) && ! isset( $tt_pal[ $s ] ) ) );
-	$expect( 'the page is laid out with the generic library: the Home\'s hero, then the team\'s sections in core blocks, with this theme\'s colours', ( $tts[0]['role'] ?? '' ) === 'hero' && ( $tt_src['library'] ?? 0 ) >= 4 && ! preg_match( '/<!-- wp:(?:amr|dx)\//', $ttc ) && ! str_contains( $ttc, '{{' ) && ! str_contains( $ttc, '[[' ) && $foreign === array() && substr_count( $ttc, 'dxai-lib' ) >= 4, json_encode( array( array_map( static fn( $x ) => ( $x['role'] ?? '' ) . ':' . ( $x['source'] ?? '' ), $tts ), $foreign ) ) );
+	$expect( 'the page is laid out with the generic library: the Home\'s hero, then the team\'s sections in core blocks, with this theme\'s colours', ( $tts[0]['role'] ?? '' ) === 'hero' && ( $tt_src['library'] ?? 0 ) >= 4 && ! preg_match( '/<!-- wp:(?:amr|dx)\//', $ttc ) && ! str_contains( $ttc, '{{' ) && ! str_contains( $ttc, '[[' ) && $foreign === array() && substr_count( $ttc, 'dxui-lib' ) >= 4, json_encode( array( array_map( static fn( $x ) => ( $x['role'] ?? '' ) . ':' . ( $x['source'] ?? '' ), $tts ), $foreign ) ) );
 	$back();
 	$expect( 'and the theme is switched back', get_stylesheet() === $theme_was, get_stylesheet() );
 } else {
@@ -735,16 +735,16 @@ if ( wp_get_theme( 'twentytwentyfive' )->exists() ) {
 
 echo "\nEach page's own words (words => write): no section says the Home's words on a page about something else\n";
 // An AI that does not answer: the page's own lines wait for a person, with the Home's words as their hints.
-$down = new class() extends DXAI_UI\Engines\Abstract_Engine {
+$down = new class() extends DX_UI\Engines\Abstract_Engine {
 	public function get_id(): string { return 'down'; }
 	public function get_label(): string { return 'Down'; }
 	public function test_connection(): bool|\WP_Error { return true; }
 	public function generate( string $system, string $user, array $args = array() ): array|\WP_Error { return new \WP_Error( 'x', 'no' ); }
-	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error { return new \WP_Error( 'dxai_test_down', 'The provider is down.' ); }
+	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error { return new \WP_Error( 'dxui_test_down', 'The provider is down.' ); }
 };
-add_filter( 'dxai_ui_copy_engine', static fn() => $down );
+add_filter( 'dx_ui_copy_engine', static fn() => $down );
 $ww  = Team_Pages::build( $home_id, array( array( 'type' => 'service', 'title' => 'Storm Damage' ) ), true, array( 'recipe' => 'network', 'words' => 'write' ) );
-remove_all_filters( 'dxai_ui_copy_engine' );
+remove_all_filters( 'dx_ui_copy_engine' );
 $wp  = ! is_wp_error( $ww ) && isset( $ww['pages'][0] ) ? $ww['pages'][0] : array();
 $wid = (int) ( $wp['id'] ?? 0 );
 if ( $wid > 0 ) {
@@ -753,7 +753,7 @@ if ( $wid > 0 ) {
 $wc = (string) get_post_field( 'post_content', $wid );
 $expect( 'the page is made, and its own lines wait for a person (the AI did not answer)', $wid > 0 && ( $wp['words'] ?? '' ) === 'outline' && (int) ( $wp['places'] ?? 0 ) > 0, is_wp_error( $ww ) ? $ww->get_error_message() : wp_json_encode( $wp ) );
 $expect( '…each with the Home\'s words as its hint in the editor, never on the page', str_contains( $wc, '"placeholder":"Write for Storm Damage. The original says:' ) );
-$expect( 'the sections the site says the same way everywhere keep the Home\'s words, and the AI would not be shown them', count( (array) get_post_meta( $wid, DXAI_UI\Pages\Copy_Writer::KEEP, true ) ) >= 1 && ! str_contains( (string) wp_json_encode( DXAI_UI\Pages\Copy_Writer::inventory( $wid ) ), '"section":"Reviews"' ), (string) wp_json_encode( get_post_meta( $wid, DXAI_UI\Pages\Copy_Writer::KEEP, true ) ) );
+$expect( 'the sections the site says the same way everywhere keep the Home\'s words, and the AI would not be shown them', count( (array) get_post_meta( $wid, DX_UI\Pages\Copy_Writer::KEEP, true ) ) >= 1 && ! str_contains( (string) wp_json_encode( DX_UI\Pages\Copy_Writer::inventory( $wid ) ), '"section":"Reviews"' ), (string) wp_json_encode( get_post_meta( $wid, DX_UI\Pages\Copy_Writer::KEEP, true ) ) );
 $expect( 'the plugin wrote the words: the page is not one a person edited, so it can be made again', $wid > 0 && Team_Pages::plan( $home_id, array( array( 'type' => 'service', 'title' => 'Storm Damage' ) ) )[0]['edited'] === false );
 
 $fin();

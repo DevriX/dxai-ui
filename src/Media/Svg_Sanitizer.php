@@ -2,12 +2,12 @@
 /**
  * Strip executable bits from SVG before storing (DOM allowlist).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 final class Svg_Sanitizer {
 

@@ -1,5 +1,5 @@
-.dxai-ui,
-.dxai-ui * {
+.dx-ui,
+.dx-ui * {
 	box-sizing: border-box;
 }
 
@@ -24,7 +24,7 @@
  * generated copy changed nothing, because this static one is what the page
  * actually loads.
  */
-.dxai-ui img,
-.dxai-ui video {
+.dx-ui img,
+.dx-ui video {
 	max-width: 100%;
 }

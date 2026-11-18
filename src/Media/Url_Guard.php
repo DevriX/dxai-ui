@@ -2,12 +2,12 @@
 /**
  * Block private/loopback URLs when downloading design assets.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Media;
+namespace DX_UI\Media;
 
 final class Url_Guard {
 

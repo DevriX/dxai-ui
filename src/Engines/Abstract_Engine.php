@@ -2,14 +2,14 @@
 /**
  * Shared JSON extraction for LLM responses.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
-use DXAI_UI\Compiler\Generation_Parser;
+use DX_UI\Compiler\Generation_Parser;
 
 abstract class Abstract_Engine implements LLM_Provider_Interface {
 
@@ -34,7 +34,7 @@ abstract class Abstract_Engine implements LLM_Provider_Interface {
 	 * @param array<string, mixed> $args max_tokens.
 	 */
 	public function complete( string $system, string $user, array $args = array() ): string|\WP_Error {
-		return new \WP_Error( 'dxai_ui_engine_complete', __( 'This AI engine cannot answer in plain text.', 'dxai-ui' ), array( 'status' => 501 ) );
+		return new \WP_Error( 'dx_ui_engine_complete', __( 'This AI engine cannot answer in plain text.', 'dx-ui' ), array( 'status' => 501 ) );
 	}
 
 	protected function http_error( int $code, string $body, string $fallback ): \WP_Error {
@@ -51,10 +51,10 @@ abstract class Abstract_Engine implements LLM_Provider_Interface {
 		}
 
 		return new \WP_Error(
-			'dxai_ui_engine_http',
+			'dx_ui_engine_http',
 			sprintf(
 				/* translators: 1: HTTP status, 2: error message */
-				__( 'Provider error (%1$d): %2$s', 'dxai-ui' ),
+				__( 'Provider error (%1$d): %2$s', 'dx-ui' ),
 				$code,
 				sanitize_text_field( $message )
 			),

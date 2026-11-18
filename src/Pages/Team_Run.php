@@ -2,12 +2,12 @@
 /**
  * What a run of Team_Pages changed, kept so that it can be given back.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 /**
  * Making the pages of a design writes more than the pages: it points the Home's menu at them and gives every page the Home's header
@@ -23,7 +23,7 @@ namespace DXAI_UI\Pages;
 final class Team_Run {
 
 	/** On the Home: {at, posts: {id: {created, after, content, meta}}}. */
-	public const META = '_dxai_ui_team_run';
+	public const META = '_dx_ui_team_run';
 
 	/** The records of a team page that a run writes, besides its content. */
 	private const KEYS = array( Team_Pages::HASH, Copy_Writer::HASH, Team_Pages::OPS_META, Team_Pages::AI_META, Team_Pages::ARR_META, Team_Chrome::HASH );
@@ -136,7 +136,7 @@ final class Team_Run {
 	public static function undo( int $home ) {
 		$run = self::load( $home );
 		if ( $run === null ) {
-			return new \WP_Error( 'dxai_ui_team_run', __( 'There is nothing to give back: no pages were made here, or they were given back already.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_team_run', __( 'There is nothing to give back: no pages were made here, or they were given back already.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		$out = array(
 			'restored' => array(),
@@ -174,10 +174,10 @@ final class Team_Run {
 		$run = self::load( $home );
 		$p   = $run['posts'][ $id ] ?? null;
 		if ( $run === null || $p === null || $id === $home ) {
-			return new \WP_Error( 'dxai_ui_team_run', __( 'That page was not changed by the last run, so there is nothing to put back.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_team_run', __( 'That page was not changed by the last run, so there is nothing to put back.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		if ( ! empty( $p['created'] ) ) {
-			return new \WP_Error( 'dxai_ui_team_run_new', __( 'The run made this page, and the Home\'s menu opens it: give the whole run back to take it away.', 'dxai-ui' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'dx_ui_team_run_new', __( 'The run made this page, and the Home\'s menu opens it: give the whole run back to take it away.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 		$out = array(
 			'restored' => array(),
@@ -185,7 +185,7 @@ final class Team_Run {
 			'skipped'  => array(),
 		);
 		if ( ! self::give_back( $home, $id, $p, $out ) ) {
-			return new \WP_Error( 'dxai_ui_team_run_changed', __( 'The page was changed after it was made (its words were written, or someone edited it), so it is left as it is.', 'dxai-ui' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'dx_ui_team_run_changed', __( 'The page was changed after it was made (its words were written, or someone edited it), so it is left as it is.', 'dx-ui' ), array( 'status' => 409 ) );
 		}
 		unset( $run['posts'][ $id ] );
 		if ( $run['posts'] === array() && $run['items'] === array() ) {

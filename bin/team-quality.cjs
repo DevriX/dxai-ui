@@ -26,7 +26,7 @@
  *   bash bin/wp-php.sh bin/verify-team-quality.php <home-id> out=<json> [allow=G8]
  *   node bin/team-quality.cjs <json> [allow=G8,G5] [pages=<id,id>] [report=<file>]
  *
- * Chrome: $DXAI_CHROME, else the usual places. puppeteer-core comes from node_modules. Reads only. Exit code 1 when a
+ * Chrome: $DXUI_CHROME, else the usual places. puppeteer-core comes from node_modules. Reads only. Exit code 1 when a
  * gate that is not allowed fails.
  */
 const fs = require('fs');
@@ -44,9 +44,9 @@ const allow = new Set([...(data.allow || []), ...String(opt.allow || '').split('
 const only = opt.pages ? new Set(opt.pages.split(',').map(Number)) : null;
 const WIDTHS = [1440, 768, 412];
 const OVERFLOW_WIDTHS = [360, 320];
-const CHROME = process.env.DXAI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
+const CHROME = process.env.DXUI_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => fs.existsSync(p));
 if (!CHROME) {
-	console.error('no Chrome found (set DXAI_CHROME)');
+	console.error('no Chrome found (set DXUI_CHROME)');
 	process.exit(2);
 }
 
@@ -57,7 +57,7 @@ function collect(arg) {
 	const vis =(e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'; };
 	const SKIP = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'TEMPLATE', 'SVG', 'PATH', 'DEFS', 'CLIPPATH', 'G'];
 	const px = (v) => Math.round(parseFloat(v) || 0);
-	const scope = document.querySelector('[class*="dxai-ui--"]');
+	const scope = document.querySelector('[class*="dx-ui--"]');
 	if (!scope) return { error: 'no design scope on the page' };
 	// The page's own elements: the scope's children, one wrapper opened, then the header and footer taken off.
 	let list = [...scope.children];
@@ -361,11 +361,11 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 			if (!shots[i]) continue;
 			const d = await compare(homeShots[width][p.sections[i].home_index], shots[i]);
 			pix[width + ':' + t.id][i] = d;
-			// The two photographs of a section that differs, to look at (DXAI_SHOTS=<directory>).
-			if (process.env.DXAI_SHOTS && !(d.px !== undefined && d.px / d.total <= PIX_LIMIT)) {
-				fs.mkdirSync(process.env.DXAI_SHOTS, { recursive: true });
-				fs.writeFileSync(path.join(process.env.DXAI_SHOTS, `${t.id}-${width}-s${i + 1}-page.png`), shots[i]);
-				fs.writeFileSync(path.join(process.env.DXAI_SHOTS, `${t.id}-${width}-s${i + 1}-home.png`), homeShots[width][p.sections[i].home_index]);
+			// The two photographs of a section that differs, to look at (DXUI_SHOTS=<directory>).
+			if (process.env.DXUI_SHOTS && !(d.px !== undefined && d.px / d.total <= PIX_LIMIT)) {
+				fs.mkdirSync(process.env.DXUI_SHOTS, { recursive: true });
+				fs.writeFileSync(path.join(process.env.DXUI_SHOTS, `${t.id}-${width}-s${i + 1}-page.png`), shots[i]);
+				fs.writeFileSync(path.join(process.env.DXUI_SHOTS, `${t.id}-${width}-s${i + 1}-home.png`), homeShots[width][p.sections[i].home_index]);
 			}
 		}
 	};
@@ -378,7 +378,7 @@ process.on('unhandledRejection', (e) => console.error('browser:', String((e && e
 					if (PIXELS && WIDTHS.includes(width) && !seen[width + ':' + t.id].error) await photograph(page, t, width);
 					break;
 				} catch (e) {
-					seen[width + ':' + t.id] = { error: String((e && e.stack) || e).slice(0, 300) }; if (process.env.DXAI_DEBUG) console.error(e);
+					seen[width + ':' + t.id] = { error: String((e && e.stack) || e).slice(0, 300) }; if (process.env.DXUI_DEBUG) console.error(e);
 					// a page or a browser that is gone: a new one, and the same page again
 					try { await page.close(); } catch (_) { /* gone already */ }
 					page = await open(width);

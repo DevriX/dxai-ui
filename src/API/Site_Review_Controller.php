@@ -2,15 +2,15 @@
 /**
  * REST: the whole site seen before its pages go live.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Network\Site_Review;
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Network\Site_Review;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * GET  /site-review?home=<id>   the Home and the pages of its design, each with its status, its preview and how it measures.
@@ -23,7 +23,7 @@ final class Site_Review_Controller {
 
 	public function register_routes(): void {
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/site-review',
 			array(
 				array(
@@ -78,7 +78,7 @@ final class Site_Review_Controller {
 	public function show( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$home = (int) $request->get_param( 'home' );
 		if ( ! Design_Attach::is_design( $home ) ) {
-			return new \WP_Error( 'dxai_review_home', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_review_home', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return rest_ensure_response( Site_Review::pages( $home ) );
@@ -98,7 +98,7 @@ final class Site_Review_Controller {
 		}
 		$home = (int) $request->get_param( 'home' );
 		if ( ! Design_Attach::is_design( $home ) ) {
-			return new \WP_Error( 'dxai_review_home', __( 'That is not an imported design.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dxui_review_home', __( 'That is not an imported design.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return rest_ensure_response( Site_Review::decide( $home, (array) $request->get_param( 'publish' ), (array) $request->get_param( 'drop' ) ) );

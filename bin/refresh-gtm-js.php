@@ -2,7 +2,7 @@
 /**
  * Refresh GTM page motion JS after runtime changes.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $id = 343;
-$js = DXAI_UI\Compiler\Motion_Runtime::javascript();
-$url = ( new DXAI_UI\Compiler\Tailwind_Purger() )->persist_js( $id, $js );
+$js = DX_UI\Compiler\Motion_Runtime::javascript();
+$url = ( new DX_UI\Compiler\Tailwind_Purger() )->persist_js( $id, $js );
 echo 'js_url=' . ( is_wp_error( $url ) ? $url->get_error_message() : (string) $url ) . PHP_EOL;
 echo 'js_len=' . strlen( $js ) . PHP_EOL;
 echo 'has_not_label=' . ( str_contains( $js, 'p:not(.rv-hero-split-label)' ) ? '1' : '0' ) . PHP_EOL;

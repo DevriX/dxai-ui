@@ -2,15 +2,15 @@
 /**
  * REST: the team libraries (templates) a site keeps — made from the team's exports, built here, trained with more.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Pages\Library_Store;
-use DXAI_UI\Pages\Template;
+use DX_UI\Pages\Library_Store;
+use DX_UI\Pages\Template;
 
 /**
  * GET    /libraries                   every template the site has (the built-in one, the stored ones), which is in use, the themes installed.
@@ -34,7 +34,7 @@ final class Libraries_Controller {
 			),
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/libraries',
 			array(
 				array(
@@ -64,7 +64,7 @@ final class Libraries_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/libraries/(?P<slug>[a-z0-9-]+)',
 			array(
 				array(
@@ -82,7 +82,7 @@ final class Libraries_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/libraries/(?P<slug>[a-z0-9-]+)/sources',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -92,7 +92,7 @@ final class Libraries_Controller {
 			)
 		);
 		register_rest_route(
-			DXAI_UI_REST_NAMESPACE,
+			DX_UI_REST_NAMESPACE,
 			'/libraries/(?P<slug>[a-z0-9-]+)/build',
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -109,7 +109,7 @@ final class Libraries_Controller {
 			return true;
 		}
 
-		return new \WP_Error( 'rest_forbidden', __( 'Only an administrator may keep the team libraries.', 'dxai-ui' ), array( 'status' => rest_authorization_required_code() ) );
+		return new \WP_Error( 'rest_forbidden', __( 'Only an administrator may keep the team libraries.', 'dx-ui' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 
 	public function index(): \WP_REST_Response {
@@ -120,7 +120,7 @@ final class Libraries_Controller {
 	public function show( \WP_REST_Request $request ) {
 		$lib = Library_Store::get( (string) $request['slug'] );
 		if ( $lib === null ) {
-			return new \WP_Error( 'dxai_ui_library_none', __( 'There is no such library.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_library_none', __( 'There is no such library.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		return new \WP_REST_Response( $this->item( $lib, true ) );
@@ -165,7 +165,7 @@ final class Libraries_Controller {
 		}
 		$added = Library_Store::add_source( (string) $request['slug'], (string) $file['tmp_name'], (string) ( $file['name'] ?? '' ) );
 		if ( is_wp_error( $added ) ) {
-			$added->add_data( array( 'status' => $added->get_error_code() === 'dxai_ui_library_none' ? 404 : 400 ) );
+			$added->add_data( array( 'status' => $added->get_error_code() === 'dx_ui_library_none' ? 404 : 400 ) );
 
 			return $added;
 		}
@@ -177,7 +177,7 @@ final class Libraries_Controller {
 	public function build( \WP_REST_Request $request ) {
 		$built = Library_Store::build( (string) $request['slug'] );
 		if ( is_wp_error( $built ) ) {
-			$built->add_data( array( 'status' => $built->get_error_code() === 'dxai_ui_library_none' ? 404 : 400 ) );
+			$built->add_data( array( 'status' => $built->get_error_code() === 'dx_ui_library_none' ? 404 : 400 ) );
 
 			return $built;
 		}
@@ -189,10 +189,10 @@ final class Libraries_Controller {
 	public function remove( \WP_REST_Request $request ) {
 		$slug = (string) $request['slug'];
 		if ( Library_Store::get( $slug ) === null ) {
-			return new \WP_Error( 'dxai_ui_library_none', __( 'There is no such library.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_library_none', __( 'There is no such library.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 		if ( ! Library_Store::delete( $slug ) ) {
-			return new \WP_Error( 'dxai_ui_library_delete', __( 'The library could not be removed.', 'dxai-ui' ), array( 'status' => 500 ) );
+			return new \WP_Error( 'dx_ui_library_delete', __( 'The library could not be removed.', 'dx-ui' ), array( 'status' => 500 ) );
 		}
 
 		return new \WP_REST_Response(
@@ -212,10 +212,10 @@ final class Libraries_Controller {
 		$files = $request->get_file_params();
 		$file  = isset( $files['file'] ) && is_array( $files['file'] ) ? $files['file'] : null;
 		if ( $file === null || empty( $file['tmp_name'] ) || ! is_uploaded_file( (string) $file['tmp_name'] ) ) {
-			return new \WP_Error( 'dxai_ui_library_file', __( 'No file was uploaded. Choose a WordPress export (.xml) or a file of block markup.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_library_file', __( 'No file was uploaded. Choose a WordPress export (.xml) or a file of block markup.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 		if ( (int) ( $file['error'] ?? 0 ) !== UPLOAD_ERR_OK ) {
-			return new \WP_Error( 'dxai_ui_library_file', __( 'The file did not arrive whole. Try again.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_library_file', __( 'The file did not arrive whole. Try again.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return $file;

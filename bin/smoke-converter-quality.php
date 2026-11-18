@@ -5,7 +5,7 @@
  * usage: bin/wp-php.sh bin/smoke-converter-quality.php
  * exit:  0 pass, 1 fail, 2 bad usage
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -16,9 +16,9 @@ if ( PHP_SAPI !== 'cli' ) {
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Html_To_Blocks;
-use DXAI_UI\Structures\Live_Page_Restyler;
-use DXAI_UI\Verification\Import_Audit;
+use DX_UI\Compiler\Html_To_Blocks;
+use DX_UI\Structures\Live_Page_Restyler;
+use DX_UI\Verification\Import_Audit;
 
 $fail = 0;
 $ok   = 0;
@@ -32,19 +32,19 @@ $assert = static function ( bool $cond, string $msg ) use ( &$fail, &$ok ): void
 	}
 };
 
-// Nested chip with phrase child + loose text must not stay dxai-ui/html.
+// Nested chip with phrase child + loose text must not stay dx-ui/html.
 $chip_html = '<span class="rv-chip"><strong>Legal</strong> Liability</span>';
 $chip      = ( new Html_To_Blocks() )->convert( $chip_html );
-$assert( ! str_contains( $chip, 'wp:dxai-ui/html' ), 'nested chip is not a raw-HTML island' );
+$assert( ! str_contains( $chip, 'wp:dx-ui/html' ), 'nested chip is not a raw-HTML island' );
 $assert(
-	str_contains( $chip, 'wp:dxai-ui/text' ) || str_contains( $chip, 'wp:dxai-ui/box' ),
-	'nested chip becomes dxai-ui/text or dxai-ui/box'
+	str_contains( $chip, 'wp:dx-ui/text' ) || str_contains( $chip, 'wp:dx-ui/box' ),
+	'nested chip becomes dx-ui/text or dx-ui/box'
 );
 $assert( str_contains( $chip, 'Legal' ) && str_contains( $chip, 'Liability' ), 'nested chip keeps copy' );
 
 // Pure nested phrasing without loose text (text_run whitespace-normalized path).
 $nested = ( new Html_To_Blocks() )->convert( '<span class="x"><em>Emphasis</em><strong>Bold</strong></span>' );
-$assert( ! str_contains( $nested, 'wp:dxai-ui/html' ), 'nested em/strong span is not an island' );
+$assert( ! str_contains( $nested, 'wp:dx-ui/html' ), 'nested em/strong span is not an island' );
 
 // Invented-color pressure: hexes outside allow-list.
 $pressure = Live_Page_Restyler::invented_color_pressure(
@@ -95,15 +95,15 @@ $method->setAccessible( true );
 $low = $method->invoke(
 	$auditor,
 	'<!-- wp:paragraph --><p>a</p><!-- /wp:paragraph -->'
-	. '<!-- wp:dxai-ui/html --><div>x</div><!-- /wp:dxai-ui/html -->'
+	. '<!-- wp:dx-ui/html --><div>x</div><!-- /wp:dx-ui/html -->'
 	. '<!-- wp:paragraph --><p>b</p><!-- /wp:paragraph -->'
 	. '<!-- wp:paragraph --><p>c</p><!-- /wp:paragraph -->'
 );
 $assert( $low['finding'] === null && is_array( $low['notice'] ), '25% opaque is notice only' );
 $high = $method->invoke(
 	$auditor,
-	'<!-- wp:dxai-ui/html --><div>1</div><!-- /wp:dxai-ui/html -->'
-	. '<!-- wp:dxai-ui/html --><div>2</div><!-- /wp:dxai-ui/html -->'
+	'<!-- wp:dx-ui/html --><div>1</div><!-- /wp:dx-ui/html -->'
+	. '<!-- wp:dx-ui/html --><div>2</div><!-- /wp:dx-ui/html -->'
 	. '<!-- wp:paragraph --><p>ok</p><!-- /wp:paragraph -->'
 );
 $assert( is_array( $high['finding'] ) && $high['notice'] === null, '>30% opaque soft-fails editability' );

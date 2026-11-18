@@ -8,7 +8,7 @@
  *
  * Run: wp eval-file bin/editor-roundtrip-cookie.php [user_login]
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

@@ -2,12 +2,12 @@
 /**
  * The site's header and footer, edited where WordPress edits them.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
 /**
  * Converted design's header and footer are not stored in page content: the

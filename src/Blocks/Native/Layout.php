@@ -2,14 +2,14 @@
 /**
  * A row or a centred container written as the Group block's own layout.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Compiler\Utility_Classes;
+use DX_UI\Compiler\Utility_Classes;
 
 /**
  * The theme's pages set a group's arrangement in the block's Layout panel — Flex (direction, justification, wrapping)
@@ -39,14 +39,14 @@ final class Layout extends Converter {
 	/** What a Constrained container may carry besides its width: nothing that paints or clips. */
 	private const PLAIN = '/^(?:margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|max-width|width|position|z-index|box-sizing|color|font(?:-[a-z]+)?|line-height|letter-spacing|text-[a-z-]+|word-spacing|white-space)$/';
 
-	private const KNOWN = array( 'tagName', 'className', 'dxaiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxaiData', 'metadata' );
+	private const KNOWN = array( 'tagName', 'className', 'dxuiCss', 'anchor', 'ariaHidden', 'labelledBy', 'ariaLabel', 'role', 'dxuiData', 'metadata' );
 
 	public function id(): string {
 		return 'layout';
 	}
 
 	public function label(): string {
-		return __( 'Rows and containers → Group layout', 'dxai-ui' );
+		return __( 'Rows and containers → Group layout', 'dx-ui' );
 	}
 
 	public function source(): string {
@@ -78,12 +78,12 @@ final class Layout extends Converter {
 			return null;
 		}
 		$new = $attrs;
-		unset( $new['className'], $new['dxaiCss'] );
+		unset( $new['className'], $new['dxuiCss'] );
 		if ( $plan['classes'] !== '' ) {
 			$new['className'] = $plan['classes'];
 		}
 		if ( $plan['css'] !== '' ) {
-			$new['dxaiCss'] = $plan['css'];
+			$new['dxuiCss'] = $plan['css'];
 		}
 		$new['layout'] = $plan['layout'];
 		$new['style']  = array( 'spacing' => array( 'blockGap' => $plan['gap'] ) );
@@ -273,7 +273,7 @@ final class Layout extends Converter {
 			$keep[] = $token;
 		}
 		$css = array();
-		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $d ) {
+		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) as $d ) {
 			if ( $d['prop'] === '' || preg_match( self::FOREIGN, $d['prop'] ) === 1 ) {
 				return null;
 			}
@@ -346,7 +346,7 @@ final class Layout extends Converter {
 			}
 		}
 
-		return preg_match( '/(?:^|;)\s*display\s*:\s*(?!block\b)/i', (string) ( $attrs['dxaiCss'] ?? '' ) ) === 1;
+		return preg_match( '/(?:^|;)\s*display\s*:\s*(?!block\b)/i', (string) ( $attrs['dxuiCss'] ?? '' ) ) === 1;
 	}
 
 	/**
@@ -425,7 +425,7 @@ final class Layout extends Converter {
 				}
 			}
 		}
-		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $d ) {
+		foreach ( Utility_Classes::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) as $d ) {
 			if ( ! $take( $d['prop'], strtolower( trim( $d['value'] ) ) ) ) {
 				return null;
 			}
@@ -447,10 +447,10 @@ final class Layout extends Converter {
 			if ( $name === '' ) {
 				continue;
 			}
-			if ( ! str_starts_with( $name, 'core/' ) && ! str_starts_with( $name, 'dxai-ui/' ) && ! str_starts_with( $name, 'amr/' ) ) {
+			if ( ! str_starts_with( $name, 'core/' ) && ! str_starts_with( $name, 'dx-ui/' ) && ! str_starts_with( $name, 'amr/' ) ) {
 				return false;
 			}
-			if ( in_array( $name, array( 'core/html', 'core/shortcode', 'dxai-ui/html', 'dxai-ui/form' ), true ) ) {
+			if ( in_array( $name, array( 'core/html', 'core/shortcode', 'dx-ui/html', 'dx-ui/form' ), true ) ) {
 				return false;
 			}
 			$attrs = is_array( $child['attrs'] ?? null ) ? $child['attrs'] : array();
@@ -461,7 +461,7 @@ final class Layout extends Converter {
 				}
 				$decls = array_merge( $decls, self::decls( Utility_Classes::base_declarations( $token ) ) );
 			}
-			foreach ( Utility_Classes::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $d ) {
+			foreach ( Utility_Classes::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) as $d ) {
 				if ( $d['prop'] === '' ) {
 					return false;
 				}

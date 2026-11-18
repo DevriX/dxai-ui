@@ -14,13 +14,13 @@
  *
  * Makes one page (the Home) and deletes it, also when a check dies half-way. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Pages\Block_Tree;
-use DXAI_UI\Pages\Content_Extractor;
-use DXAI_UI\Pages\Page_Composer;
-use DXAI_UI\Pages\Section_Library;
+use DX_UI\Pages\Block_Tree;
+use DX_UI\Pages\Content_Extractor;
+use DX_UI\Pages\Page_Composer;
+use DX_UI\Pages\Section_Library;
 
 $fail   = 0;
 $pass   = 0;
@@ -55,7 +55,7 @@ $home = wp_insert_post(
 		'post_content' => $sec( 'crx-hero', $h( 'Fixture Restoration', 1 ) . $p( 'We dry what the water took, day and night.' ) )
 			. $sec( 'crx-text', $h( 'Why families call us' ) . $p( 'A family business since 1990, on call at any hour of the day.' ) )
 			. $sec( 'crx-cta', $h( 'Water in your home?' ) . '<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="tel:5550100">Call now</a></div><!-- /wp:button --></div><!-- /wp:buttons -->' )
-			. $sec( 'crx-form', $h( 'Request a callback' ) . '<!-- wp:group {"className":"dxai-on-step1"} --><div class="wp-block-group dxai-on-step1"><!-- wp:html --><div class="crx-field"><input name="crx-name" placeholder="Name"></div><!-- /wp:html --></div><!-- /wp:group --><!-- wp:group {"className":"dxai-on-step2"} --><div class="wp-block-group dxai-on-step2"><!-- wp:html --><div class="crx-field"><input name="crx-phone" placeholder="Phone"></div><!-- /wp:html --></div><!-- /wp:group -->' ),
+			. $sec( 'crx-form', $h( 'Request a callback' ) . '<!-- wp:group {"className":"dxui-on-step1"} --><div class="wp-block-group dxui-on-step1"><!-- wp:html --><div class="crx-field"><input name="crx-name" placeholder="Name"></div><!-- /wp:html --></div><!-- /wp:group --><!-- wp:group {"className":"dxui-on-step2"} --><div class="wp-block-group dxui-on-step2"><!-- wp:html --><div class="crx-field"><input name="crx-phone" placeholder="Phone"></div><!-- /wp:html --></div><!-- /wp:group -->' ),
 	),
 	true
 );
@@ -110,7 +110,7 @@ $out      = $composer->compose( $model );
 $log      = implode( "\n", $out['log'] );
 $markup   = implode( "\n", array_map( 'serialize_block', $out['sections'] ) );
 $expect( 'the old page\'s form goes to the Home\'s form section', false !== $form_at && 1 === preg_match( '/form\s+→ #' . (int) $form_at . ' form/', $log ), $log );
-$expect( 'the form section keeps its fields, steps and all (a step form shows them with dxai-on- groups)', 2 === preg_match_all( '#<input name="crx-(name|phone)"#', $markup ), $markup );
+$expect( 'the form section keeps its fields, steps and all (a step form shows them with dxui-on- groups)', 2 === preg_match_all( '#<input name="crx-(name|phone)"#', $markup ), $markup );
 $expect( 'no text is poured into the form section', 0 === preg_match( '/\b(text|list|cta)\s+→ #' . (int) $form_at . '\b/', $log ), $log );
 $expect( 'the questions the Home has no section for are core/details in one of its text sections', 2 === substr_count( $markup, '<!-- wp:details -->' ) && str_contains( $markup, '<summary>How long does drying take?</summary>' ) && str_contains( $markup, 'Three to five days' ), $log );
 $expect( 'the figures the Home has no section for are shown in its text, not left out', str_contains( $markup, '40,000+ Properties Restored' ) && str_contains( $markup, '24/7 Live dispatch' ) && ! str_contains( $log, 'left out' ), $log );
@@ -141,7 +141,7 @@ $expect( 'the composed page holds no link in a link, and says it unwrapped one',
 
 echo "\nA call button of the design\n";
 // The Home's call to action: a heading, a line, and a call button written as a link that does not wrap.
-$button = '<!-- wp:dxai-ui/text {"tagName":"a","url":"tel:5550100","className":"crx-btn whitespace-nowrap"} --><a class="wp-block-dxai-ui-text crx-btn whitespace-nowrap" href="tel:5550100">Call (555) 010-0100</a><!-- /wp:dxai-ui/text -->';
+$button = '<!-- wp:dx-ui/text {"tagName":"a","url":"tel:5550100","className":"crx-btn whitespace-nowrap"} --><a class="wp-block-dx-ui-text crx-btn whitespace-nowrap" href="tel:5550100">Call (555) 010-0100</a><!-- /wp:dx-ui/text -->';
 wp_update_post(
 	array(
 		'ID'           => (int) $home,
@@ -161,7 +161,7 @@ $expect( 'a text block written as a link (a call button) is a link slot, not a t
 $call_html = '<html><body><main><section><h2>Call H2O Today</h2><p>We work with all insurance companies and bill them directly for the work we do.</p><div class="wp-block-buttons"><div class="wp-block-button"><a href="tel:5550100">Call Now</a></div></div></section></main></body></html>';
 $call_out  = ( new Page_Composer( $call_lib, static fn( string $src ) => null ) )->compose( ( new Content_Extractor() )->extract( $call_html, 'https://old-crx.example/call/' ) );
 $call_mk   = implode( "\n", array_map( 'serialize_block', $call_out['sections'] ) );
-$in_button = preg_match( '#<a class="wp-block-dxai-ui-text crx-btn whitespace-nowrap"[^>]*>([^<]*)</a>#', $call_mk, $bm ) ? $bm[1] : '';
+$in_button = preg_match( '#<a class="wp-block-dx-ui-text crx-btn whitespace-nowrap"[^>]*>([^<]*)</a>#', $call_mk, $bm ) ? $bm[1] : '';
 $expect( 'a sentence of the old page does not go in a call button that does not wrap', $in_button === '' || ! str_contains( $in_button, 'insurance companies' ), $in_button );
 
 $clean();

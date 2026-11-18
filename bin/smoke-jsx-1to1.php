@@ -3,14 +3,14 @@
  * Smoke: authored classes are not missing utilities; space-x compiles;
  * JSX toggles, Lucide icons, and next/image survive compilation.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-define( 'DXAI_UI_DIR', dirname( __DIR__ ) . '/' );
-require DXAI_UI_DIR . 'src/Autoloader.php';
-DXAI_UI\Autoloader::register();
+define( 'DX_UI_DIR', dirname( __DIR__ ) . '/' );
+require DX_UI_DIR . 'src/Autoloader.php';
+DX_UI\Autoloader::register();
 
 if ( ! function_exists( 'esc_attr' ) ) {
 	function esc_attr( $text ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
@@ -48,13 +48,13 @@ $fail = static function ( string $msg ): never {
 	exit( 1 );
 };
 
-if ( DXAI_UI\Compiler\Tailwind\Engine::looks_like_utility( 'mobile-section-nav' ) ) {
+if ( DX_UI\Compiler\Tailwind\Engine::looks_like_utility( 'mobile-section-nav' ) ) {
 	$fail( 'mobile-section-nav must not look like a Tailwind utility' );
 }
-if ( ! DXAI_UI\Compiler\Tailwind\Engine::looks_like_utility( 'space-x-4' ) ) {
+if ( ! DX_UI\Compiler\Tailwind\Engine::looks_like_utility( 'space-x-4' ) ) {
 	$fail( 'space-x-4 must look like a utility' );
 }
-if ( ! DXAI_UI\Compiler\Tailwind\Engine::looks_like_utility( 'md:hidden' ) ) {
+if ( ! DX_UI\Compiler\Tailwind\Engine::looks_like_utility( 'md:hidden' ) ) {
 	$fail( 'md:hidden must look like a utility' );
 }
 
@@ -63,13 +63,13 @@ $css = <<<'CSS'
 @theme { --color-background: #fff; }
 CSS;
 $markup = '<nav class="mobile-section-nav space-x-4 hidden md:flex divide-x divide-gray-200">';
-$unresolved = ( new DXAI_UI\Compiler\Tailwind_Purger() )->unresolved( $markup, $css );
+$unresolved = ( new DX_UI\Compiler\Tailwind_Purger() )->unresolved( $markup, $css );
 if ( in_array( 'mobile-section-nav', $unresolved, true ) ) {
 	$fail( 'authored class leaked into unresolved utilities: ' . implode( ',', $unresolved ) );
 }
 
-$engine = new DXAI_UI\Compiler\Tailwind\Engine( DXAI_UI\Compiler\Tailwind\Theme::from_css( $css ) );
-$sheet  = $engine->compile( '<div class="space-x-4 divide-x">', '.dxai-ui' );
+$engine = new DX_UI\Compiler\Tailwind\Engine( DX_UI\Compiler\Tailwind\Theme::from_css( $css ) );
+$sheet  = $engine->compile( '<div class="space-x-4 divide-x">', '.dx-ui' );
 if ( ! str_contains( $sheet, 'margin-inline' ) && ! str_contains( $sheet, '--tw-space-x-reverse' ) ) {
 	$fail( "space-x-4 did not compile:\n" . $sheet );
 }
@@ -79,7 +79,7 @@ if ( ! str_contains( $sheet, 'margin-inline' ) && ! str_contains( $sheet, '--tw-
 if ( ! str_contains( $sheet, '> :not(:last-child)' ) ) {
 	$fail( "space-x child combinator missing:\n" . $sheet );
 }
-$a11y = $engine->compile( '<span class="sr-only md:not-sr-only">Hidden label</span>', '.dxai-ui' );
+$a11y = $engine->compile( '<span class="sr-only md:not-sr-only">Hidden label</span>', '.dx-ui' );
 // `clip-path: inset(50%)`, not the deprecated `clip: rect(...)` this once
 // expected — upstream Tailwind changed it, and the parity harness caught that
 // we had not.
@@ -113,7 +113,7 @@ export default function Page() {
 }
 TSX;
 
-$sections = ( new DXAI_UI\Compiler\Jsx_Compiler() )->compile_file(
+$sections = ( new DX_UI\Compiler\Jsx_Compiler() )->compile_file(
 	$source,
 	array(
 		'images' => array(
@@ -132,10 +132,10 @@ $html = implode( "\n", array_column( $sections, 'html' ) );
 if ( ! str_contains( $html, 'data-lucide="menu"' ) ) {
 	$fail( "lucide Menu missing:\n" . $html );
 }
-if ( ! str_contains( $html, 'dxai-toggle-open' ) ) {
+if ( ! str_contains( $html, 'dxui-toggle-open' ) ) {
 	$fail( "toggle class missing:\n" . $html );
 }
-if ( ! str_contains( $html, 'dxai-on-open' ) ) {
+if ( ! str_contains( $html, 'dxui-on-open' ) ) {
 	$fail( "gated nav missing:\n" . $html );
 }
 if ( ! str_contains( $html, 'mobile-section-nav' ) ) {
@@ -144,7 +144,7 @@ if ( ! str_contains( $html, 'mobile-section-nav' ) ) {
 if ( ! str_contains( $html, 'https://example.com/hero.jpg' ) ) {
 	$fail( "image src missing:\n" . $html );
 }
-if ( DXAI_UI\Compiler\Tsx_Section_Splitter::icon_id( 'Bars3Icon', 'heroicons' ) !== 'menu' ) {
+if ( DX_UI\Compiler\Tsx_Section_Splitter::icon_id( 'Bars3Icon', 'heroicons' ) !== 'menu' ) {
 	$fail( 'Bars3Icon should map to lucide menu' );
 }
 

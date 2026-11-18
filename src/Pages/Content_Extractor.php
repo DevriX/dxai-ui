@@ -15,12 +15,12 @@
  * and background images are read from inline styles, data attributes and the
  * page's own stylesheets (Elementor writes section backgrounds there).
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
 final class Content_Extractor {
 

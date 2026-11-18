@@ -2,21 +2,21 @@
 /**
  * The whole site seen before its pages go live: the Home and every page the import made, and the choice of which to add.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
-use DXAI_UI\Pages\Team_Pages;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Structures\Site_From_Menu;
+use DX_UI\Pages\Team_Pages;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Site_From_Menu;
 
 /**
  * A Home-only import makes the pages its menu names (from the old site, or from the Home's own sections). They are made
  * as drafts while a person looks at them (docs/PLAN-NETWORK-PAGES.md, section 11, point 6): the import asks for it
- * (hold()), and every page it makes new while that holds is a draft (the `dxai_ui_new_page_status` filter; a page that
+ * (hold()), and every page it makes new while that holds is a draft (the `dx_ui_new_page_status` filter; a page that
  * was there already keeps its status). Then the person sees the Home and each page, with how each measures against the
  * team's pages (Page_Quality), and chooses: every page, only the Home, or the ones ticked. The chosen ones are published
  * (the menu, which leads to them already, shows them once they are), the others go to the trash — only pages the import
@@ -25,13 +25,13 @@ use DXAI_UI\Structures\Site_From_Menu;
 final class Site_Review {
 
 	/** Option: until when the pages an import makes new are drafts (a timestamp). */
-	public const HOLD = 'dxai_ui_hold_new_pages';
+	public const HOLD = 'dx_ui_hold_new_pages';
 
 	/** How long a hold lasts when nothing releases it: a long import, with time to look. */
 	private const HOLD_MINUTES = 180;
 
 	public static function register(): void {
-		add_filter( 'dxai_ui_new_page_status', array( self::class, 'status' ), 10, 2 );
+		add_filter( 'dx_ui_new_page_status', array( self::class, 'status' ), 10, 2 );
 		add_filter( 'page_link', array( self::class, 'draft_link' ), 10, 3 );
 		add_filter( 'wp_insert_post_data', array( self::class, 'draft_slug' ), 10, 2 );
 	}
@@ -118,7 +118,7 @@ final class Site_Review {
 	public static function holds_for( int $home ): bool {
 		$held = self::held();
 
-		return $held['until'] > time() && ( $held['archive'] === '' || ( $home > 0 && (string) get_post_meta( $home, '_dxai_ui_source_zip', true ) === $held['archive'] ) );
+		return $held['until'] > time() && ( $held['archive'] === '' || ( $home > 0 && (string) get_post_meta( $home, '_dx_ui_source_zip', true ) === $held['archive'] ) );
 	}
 
 	/**
@@ -133,7 +133,7 @@ final class Site_Review {
 	 * the menu named): only such a page may go to the trash here.
 	 */
 	public static function made_by_import( int $id ): bool {
-		return get_post_meta( $id, '_dxai_ui_generated_page', true ) === '1'
+		return get_post_meta( $id, '_dx_ui_generated_page', true ) === '1'
 			|| (string) get_post_meta( $id, Team_Pages::META, true ) !== ''
 			|| get_post_meta( $id, Page_Copies::MADE, true ) === '1';
 	}
@@ -277,7 +277,7 @@ final class Site_Review {
 			$out['published'][] = $id;
 		}
 		self::relink( $home, $moved );
-		$origin = untrailingslashit( (string) get_post_meta( $home, '_dxai_ui_site_origin', true ) );
+		$origin = untrailingslashit( (string) get_post_meta( $home, '_dx_ui_site_origin', true ) );
 		$gone   = array();
 		foreach ( array_unique( array_map( 'intval', $drop ) ) as $id ) {
 			if ( in_array( $id, $publish, true ) ) {
@@ -296,7 +296,7 @@ final class Site_Review {
 			) !== array();
 			if ( $mine( $id ) && self::made_by_import( $id ) && ! $parent_of_live && current_user_can( 'delete_post', $id ) ) {
 				// The links to it go back to where they led before the import made it: the old site's page it was made from.
-				$route = trim( (string) get_post_meta( $id, '_dxai_ui_source_route', true ), '/' );
+				$route = trim( (string) get_post_meta( $id, '_dx_ui_source_route', true ), '/' );
 				if ( $route !== '' && preg_match( '~^https?://[^/\s?#]+$~i', $origin ) === 1 ) {
 					$old = $origin . '/' . $route . '/';
 					foreach ( array( get_page_link( $id, false, true ), home_url( '?page_id=' . $id ), (string) get_permalink( $id ) ) as $link ) {

@@ -1,19 +1,19 @@
 <?php
 /**
- * The must-use loader that keeps converted pages rendering while DXAI-UI is deactivated.
+ * The must-use loader that keeps converted pages rendering while DX-UI is deactivated.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Support;
+namespace DX_UI\Support;
 
 /**
- * Installs runtime/dxai-ui-runtime.php as wp-content/mu-plugins/dxai-ui-runtime.php
- * and keeps the per-site record the loader reads (dxai_ui_runtime: the
+ * Installs runtime/dx-ui-runtime.php as wp-content/mu-plugins/dx-ui-runtime.php
+ * and keeps the per-site record the loader reads (dx_ui_runtime: the
  * plugin's file and whether the site has converted pages). The loader boots
- * the plugin with DXAI_UI_RENDER_ONLY, which Plugin::boot() reads.
+ * the plugin with DX_UI_RENDER_ONLY, which Plugin::boot() reads.
  *
  * Only this class writes the loader, and only while the plugin itself is
  * active (never from the loader's own render-only boot). uninstall.php
@@ -21,9 +21,9 @@ namespace DXAI_UI\Support;
  */
 final class Runtime {
 
-	public const OPTION = 'dxai_ui_runtime';
+	public const OPTION = 'dx_ui_runtime';
 
-	public const FILE = 'dxai-ui-runtime.php';
+	public const FILE = 'dx-ui-runtime.php';
 
 	/** A header line only this loader carries; the file is never removed without it. */
 	public const SIGNATURE = 'Plugin Name: DX UI Runtime';
@@ -32,7 +32,7 @@ final class Runtime {
 	public const LEGACY_SIGNATURE = 'Plugin Name: DXAI-UI Runtime';
 
 	public static function render_only(): bool {
-		return defined( 'DXAI_UI_RENDER_ONLY' ) && DXAI_UI_RENDER_ONLY;
+		return defined( 'DX_UI_RENDER_ONLY' ) && DX_UI_RENDER_ONLY;
 	}
 
 	public function register(): void {
@@ -60,21 +60,21 @@ final class Runtime {
 			return;
 		}
 		$state = array(
-			'file'    => plugin_basename( DXAI_UI_FILE ),
+			'file'    => plugin_basename( DX_UI_FILE ),
 			'pages'   => self::has_pages(),
-			'version' => DXAI_UI_VERSION,
+			'version' => DX_UI_VERSION,
 		);
 		if ( get_option( self::OPTION ) !== $state ) {
 			update_option( self::OPTION, $state, true );
 		}
-		if ( self::installed_version() !== DXAI_UI_VERSION ) {
+		if ( self::installed_version() !== DX_UI_VERSION ) {
 			self::install( $activating );
 		}
 		self::drop_bundle();
 	}
 
 	/**
-	 * The copy uninstall.php left in mu-plugins/dxai-ui-runtime/ when the
+	 * The copy uninstall.php left in mu-plugins/dx-ui-runtime/ when the
 	 * plugin was deleted is superseded once the plugin is back: the loader
 	 * boots the installed plugin from then on. Only a folder that holds this
 	 * plugin's main file is removed.
@@ -86,17 +86,17 @@ final class Runtime {
 	 * to the bound activate() uses; a network with more sites keeps the folder.
 	 */
 	private static function drop_bundle(): void {
-		$bundle = wp_normalize_path( WPMU_PLUGIN_DIR ) . '/dxai-ui-runtime';
-		$main   = $bundle . '/dxai-ui.php';
-		if ( ! is_dir( $bundle ) || is_link( $bundle ) || ! is_readable( $main ) || ! preg_match( '/Plugin Name:\s+(?:DX UI|DXAI-UI)\b/', (string) file_get_contents( $main, false, null, 0, 1024 ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$bundle = wp_normalize_path( WPMU_PLUGIN_DIR ) . '/dx-ui-runtime';
+		$main   = $bundle . '/dx-ui.php';
+		if ( ! is_dir( $bundle ) || is_link( $bundle ) || ! is_readable( $main ) || ! preg_match( '/Plugin Name:\s+(?:DX UI|DX-UI)\b/', (string) file_get_contents( $main, false, null, 0, 1024 ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			return;
 		}
 		if ( is_multisite() ) {
-			$bound = max( 1, (int) apply_filters( 'dxai_ui_network_activation_sites', 500 ) );
+			$bound = max( 1, (int) apply_filters( 'dx_ui_network_activation_sites', 500 ) );
 			if ( (int) get_sites( array( 'count' => true ) ) > $bound ) {
 				return;
 			}
-			$file = plugin_basename( DXAI_UI_FILE );
+			$file = plugin_basename( DX_UI_FILE );
 			foreach ( get_sites( array( 'fields' => 'ids', 'number' => $bound ) ) as $site_id ) {
 				$state = get_blog_option( (int) $site_id, self::OPTION );
 				$named = is_array( $state ) ? (string) ( $state['file'] ?? '' ) : '';
@@ -128,7 +128,7 @@ final class Runtime {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one indexed existence check.
-		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key = %s LIMIT 1", '_dxai_ui_generated_page' ) );
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key = %s LIMIT 1", '_dx_ui_generated_page' ) );
 	}
 
 	public static function target(): string {
@@ -154,20 +154,20 @@ final class Runtime {
 		if ( self::render_only() && ! $activating ) {
 			return false;
 		}
-		$source = DXAI_UI_DIR . 'runtime/' . self::FILE;
+		$source = DX_UI_DIR . 'runtime/' . self::FILE;
 		$code   = is_readable( $source ) ? (string) file_get_contents( $source ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		if ( $code === '' ) {
 			return false;
 		}
-		$code = str_replace( '{{DXAI_UI_VERSION}}', DXAI_UI_VERSION, $code );
+		$code = str_replace( '{{DX_UI_VERSION}}', DX_UI_VERSION, $code );
 		$dir  = wp_normalize_path( WPMU_PLUGIN_DIR );
 		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
-			update_option( 'dxai_ui_runtime_error', 'mkdir', false );
+			update_option( 'dx_ui_runtime_error', 'mkdir', false );
 			return false;
 		}
 		// An existing file of another plugin under this name is never replaced.
 		if ( file_exists( self::target() ) && self::installed_version() === '' ) {
-			update_option( 'dxai_ui_runtime_error', 'foreign', false );
+			update_option( 'dx_ui_runtime_error', 'foreign', false );
 			return false;
 		}
 		// Written whole to a temporary name, then moved, so a request never
@@ -175,10 +175,10 @@ final class Runtime {
 		$tmp = $dir . '/.' . self::FILE . '.' . wp_generate_password( 8, false ) . '.tmp';
 		if ( false === @file_put_contents( $tmp, $code ) || ! @rename( $tmp, self::target() ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions
 			@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.unlink_unlink
-			update_option( 'dxai_ui_runtime_error', 'write', false );
+			update_option( 'dx_ui_runtime_error', 'write', false );
 			return false;
 		}
-		delete_option( 'dxai_ui_runtime_error' );
+		delete_option( 'dx_ui_runtime_error' );
 
 		return true;
 	}
@@ -188,7 +188,7 @@ final class Runtime {
 	 * deactivating the plugin would then leave converted pages unstyled.
 	 */
 	public function notice(): void {
-		$error = get_option( 'dxai_ui_runtime_error' );
+		$error = get_option( 'dx_ui_runtime_error' );
 		if ( ! $error || ! current_user_can( 'activate_plugins' ) || ! self::has_pages() ) {
 			return;
 		}
@@ -197,7 +197,7 @@ final class Runtime {
 			esc_html(
 				sprintf(
 					/* translators: %s: the folder path. */
-					__( 'DX UI could not write its runtime into %s, so converted pages would lose their styles while DX UI is deactivated. Make that folder writable, or keep DX UI active.', 'dxai-ui' ),
+					__( 'DX UI could not write its runtime into %s, so converted pages would lose their styles while DX UI is deactivated. Make that folder writable, or keep DX UI active.', 'dx-ui' ),
 					wp_normalize_path( WPMU_PLUGIN_DIR )
 				)
 			)

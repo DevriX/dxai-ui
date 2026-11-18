@@ -1,19 +1,19 @@
 /**
  * Appearance > Widgets: the footer's areas in the footer's design (Widgets_Screen).
  *
- * The design's stylesheet is scoped to `.dxai-ui.dxai-ui--{id}`, and on the
+ * The design's stylesheet is scoped to `.dx-ui.dx-ui--{id}`, and on the
  * front end the footer sits inside the element carrying those classes. In the
  * Widgets screen nothing does, so the scope classes are put on each footer
  * area's block container (`[data-widget-area-id]`, which holds the area's
- * blocks and nothing else), together with `dxai-ui-widget-area`, the hook for
+ * blocks and nothing else), together with `dx-ui-widget-area`, the hook for
  * the frame's paint (background, text colour, type) that Widgets_Screen
  * writes per area. React owns that element's class list and rewrites it when
  * the area is dragged over, so the classes are put back whenever they go.
  */
 ( function () {
-	const cfg = window.dxaiUIWidgetsScreen || {};
+	const cfg = window.dxUIWidgetsScreen || {};
 	const areas = Array.isArray( cfg.areas ) ? cfg.areas : [];
-	const names = String( cfg.scopeClass || '' ).split( /\s+/ ).filter( Boolean ).concat( [ 'dxai-ui-widget-area' ] );
+	const names = String( cfg.scopeClass || '' ).split( /\s+/ ).filter( Boolean ).concat( [ 'dx-ui-widget-area' ] );
 	if ( ! areas.length ) {
 		return;
 	}

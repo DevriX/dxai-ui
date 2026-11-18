@@ -29,7 +29,7 @@ export function blockCounts( markup ) {
 	}
 	// Opening delimiters only: `<!-- /wp:x -->` closes a block it already counted.
 	const blocks = ( text.match( /<!--\s+wp:/g ) || [] ).length;
-	const islands = ( text.match( /<!--\s+wp:(?:dxai-ui\/html|html)[\s-]/g ) || [] ).length;
+	const islands = ( text.match( /<!--\s+wp:(?:dx-ui\/html|html)[\s-]/g ) || [] ).length;
 
 	return { blocks, islands };
 }

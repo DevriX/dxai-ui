@@ -9,11 +9,11 @@
 # usage: bin/wp-php.sh <script.php> [args...]
 set -euo pipefail
 
-PHP_DIR="${DXAI_PHP_DIR:-/c/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64}"
+PHP_DIR="${DXUI_PHP_DIR:-/c/Users/DevriX/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64}"
 PHP="$PHP_DIR/php.exe"
 
 if [ ! -x "$PHP" ]; then
-	echo "bin/wp-php.sh: no php.exe at $PHP (set DXAI_PHP_DIR)" >&2
+	echo "bin/wp-php.sh: no php.exe at $PHP (set DXUI_PHP_DIR)" >&2
 	exit 1
 fi
 
@@ -26,8 +26,8 @@ EXT_DIR="${EXT_DIR//\//\\}"
 # Local runs a per-site MySQL on a port it allocates, and injects that port
 # through php.ini for its own php-fpm. Read it back out of Local's site
 # registry rather than pinning a number that changes when a site is recreated.
-SITES_JSON="${DXAI_LOCAL_SITES:-/c/Users/DevriX/AppData/Roaming/Local/sites.json}"
-DB_PORT="${DXAI_DB_PORT:-}"
+SITES_JSON="${DXUI_LOCAL_SITES:-/c/Users/DevriX/AppData/Roaming/Local/sites.json}"
+DB_PORT="${DXUI_DB_PORT:-}"
 if [ -z "$DB_PORT" ] && [ -f "$SITES_JSON" ]; then
 	DB_PORT="$(node -e '
 		const fs = require( "fs" );
@@ -45,7 +45,7 @@ if [ -z "$DB_PORT" ] && [ -f "$SITES_JSON" ]; then
 			}
 		}
 		process.stdout.write( found );
-	' "$SITES_JSON" "${DXAI_SITE_NAME:-DXAI-UI}" 2>/dev/null || true)"
+	' "$SITES_JSON" "${DXUI_SITE_NAME:-DX-UI}" 2>/dev/null || true)"
 fi
 
 exec "$PHP" -n \

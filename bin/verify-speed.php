@@ -6,15 +6,15 @@
  *
  *   bash bin/wp-php.sh bin/verify-speed.php        (or: wp eval-file bin/verify-speed.php)
  *
- * Writes only under uploads/dxai-ui/ in files named for the test, and removes them again. Exit code 1 when a check fails.
+ * Writes only under uploads/dx-ui/ in files named for the test, and removes them again. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Media\Font_Host;
-use DXAI_UI\Support\Css_Trim;
-use DXAI_UI\Support\Upload_Paths;
-use DXAI_UI\Theme\Theme_Trim;
+use DX_UI\Media\Font_Host;
+use DX_UI\Support\Css_Trim;
+use DX_UI\Support\Upload_Paths;
+use DX_UI\Theme\Theme_Trim;
 
 $fail   = 0;
 $pass   = 0;
@@ -70,20 +70,20 @@ $theme_css = '.faq-answer{overflow:hidden}.faq-answer:not(.is-open){max-height:0
 	. '.faq-question--expanded .faq-arrow,.faq-arrow.is-open{transform:rotate(180deg)}.card .faq-question:hover{color:red}.other{color:blue}'
 	. 'body .faq-question{margin:0}.faq-note:not(.faq-answer){color:1}@media (max-width:600px){.faq-arrow{width:1px}.other{color:2}}'
 	. '@keyframes fade{from{opacity:0}to{opacity:1}}.faq-question{animation:fade .3s}';
-$cut = (string) Css_Trim::components( $theme_css, array( 'faq-answer', 'faq-arrow', 'faq-question' ), ':where(.dxai-ui)' );
-$expect( 'the rules that name a component class come back narrowed to the scope', str_contains( $cut, ':where(.dxai-ui) .faq-answer{overflow:hidden}' ) && str_contains( $cut, ':where(.dxai-ui) .faq-answer:not(.is-open){max-height:0;visibility:hidden}' ) && str_contains( $cut, ':where(.dxai-ui) .faq-answer.is-open{max-height:unset !important}' ), $cut );
-$expect( 'every selector of a list that names one is narrowed', str_contains( $cut, ':where(.dxai-ui) .faq-question--expanded .faq-arrow,:where(.dxai-ui) .faq-arrow.is-open{transform:rotate(180deg)}' ) && str_contains( $cut, ':where(.dxai-ui) .card .faq-question:hover{color:red}' ), $cut );
+$cut = (string) Css_Trim::components( $theme_css, array( 'faq-answer', 'faq-arrow', 'faq-question' ), ':where(.dx-ui)' );
+$expect( 'the rules that name a component class come back narrowed to the scope', str_contains( $cut, ':where(.dx-ui) .faq-answer{overflow:hidden}' ) && str_contains( $cut, ':where(.dx-ui) .faq-answer:not(.is-open){max-height:0;visibility:hidden}' ) && str_contains( $cut, ':where(.dx-ui) .faq-answer.is-open{max-height:unset !important}' ), $cut );
+$expect( 'every selector of a list that names one is narrowed', str_contains( $cut, ':where(.dx-ui) .faq-question--expanded .faq-arrow,:where(.dx-ui) .faq-arrow.is-open{transform:rotate(180deg)}' ) && str_contains( $cut, ':where(.dx-ui) .card .faq-question:hover{color:red}' ), $cut );
 $expect( 'a class only inside :not() is not a mention; the document\'s own selectors are left out', ! str_contains( $cut, '.faq-note' ) && ! str_contains( $cut, 'body .faq-question' ) && ! str_contains( $cut, '.other{' ) );
-$expect( 'media blocks are cut inside, and the keyframes a kept rule animates with come along', str_contains( $cut, '@media (max-width:600px){:where(.dxai-ui) .faq-arrow{width:1px}}' ) && str_contains( $cut, '@keyframes fade{' ) );
-$expect( 'CSS that never closes gives null', Css_Trim::components( '.faq-answer{color:red', array( 'faq-answer' ), ':where(.dxai-ui)' ) === null );
-if ( class_exists( 'DXAI_UI\Theme\Theme_Components' ) && isset( DXAI_UI\Compiler\Utility_Classes::design_classes( implode( '', array_map( static fn( $f ) => (string) file_get_contents( $f ), DXAI_UI\Theme\Theme_Buttons::sheets() ) ) )[0] ) && in_array( 'faq-answer', DXAI_UI\Compiler\Utility_Classes::design_classes( implode( '', array_map( static fn( $f ) => (string) file_get_contents( $f ), DXAI_UI\Theme\Theme_Buttons::sheets() ) ) ), true ) ) {
+$expect( 'media blocks are cut inside, and the keyframes a kept rule animates with come along', str_contains( $cut, '@media (max-width:600px){:where(.dx-ui) .faq-arrow{width:1px}}' ) && str_contains( $cut, '@keyframes fade{' ) );
+$expect( 'CSS that never closes gives null', Css_Trim::components( '.faq-answer{color:red', array( 'faq-answer' ), ':where(.dx-ui)' ) === null );
+if ( class_exists( 'DX_UI\Theme\Theme_Components' ) && isset( DX_UI\Compiler\Utility_Classes::design_classes( implode( '', array_map( static fn( $f ) => (string) file_get_contents( $f ), DX_UI\Theme\Theme_Buttons::sheets() ) ) )[0] ) && in_array( 'faq-answer', DX_UI\Compiler\Utility_Classes::design_classes( implode( '', array_map( static fn( $f ) => (string) file_get_contents( $f ), DX_UI\Theme\Theme_Buttons::sheets() ) ) ), true ) ) {
 	$markup = '<!-- wp:group {"className":"faq-question mt-4 wp-block-x"} --><div class="wp-block-group faq-question is-layout-flex has-border-color"><p class="faq-answer faq-answer--default-open text-white">A</p><figure class="faq-arrow"></figure></div><!-- /wp:group -->';
-	$wanted = DXAI_UI\Theme\Theme_Components::wanted( $markup, '' );
+	$wanted = DX_UI\Theme\Theme_Components::wanted( $markup, '' );
 	$expect( 'the theme\'s FAQ classes in the content are the ones kept (WordPress\'s and utilities are not)', in_array( 'faq-question', $wanted, true ) && in_array( 'faq-answer', $wanted, true ) && in_array( 'faq-arrow', $wanted, true ) && ! in_array( 'wp-block-group', $wanted, true ) && ! in_array( 'is-layout-flex', $wanted, true ) && ! in_array( 'text-white', $wanted, true ) && ! in_array( 'has-border-color', $wanted, true ), implode( ' ', $wanted ) );
 	$expect( 'the states a script adds come with them', in_array( 'faq-question--expanded', $wanted, true ), implode( ' ', $wanted ) );
 	$own = Upload_Paths::path( Upload_Paths::DIR . '/vtx-design-fixture.css' );
-	file_put_contents( $own, '.dxai-ui .faq-question{margin:0}' );
-	$owned = DXAI_UI\Theme\Theme_Components::wanted( $markup, $own );
+	file_put_contents( $own, '.dx-ui .faq-question{margin:0}' );
+	$owned = DX_UI\Theme\Theme_Components::wanted( $markup, $own );
 	$expect( 'a class the design\'s own sheet defines is the design\'s', ! in_array( 'faq-question', $owned, true ) && in_array( 'faq-answer', $owned, true ), implode( ' ', $owned ) );
 	wp_delete_file( $own );
 } else {
@@ -92,7 +92,7 @@ if ( class_exists( 'DXAI_UI\Theme\Theme_Components' ) && isset( DXAI_UI\Compiler
 
 // --- Theme_Trim::filter --------------------------------------------------------------------------------------------
 echo "\nTheme_Trim\n";
-add_filter( 'dxai_ui_trim_min_bytes', static fn() => 16384 );
+add_filter( 'dx_ui_trim_min_bytes', static fn() => 16384 );
 $sheet = '';
 for ( $i = 0; $i < 1500; $i++ ) {
 	$sheet .= ".vtx-c{$i}{color:#" . str_pad( dechex( $i ), 6, '0', STR_PAD_LEFT ) . ";padding:{$i}px}";
@@ -110,7 +110,7 @@ $rm     = static function ( string $d ): void {
 	@rmdir( $d ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 };
 $rm( $dir );
-delete_transient( 'dxai_ui_trim_seen_0' );
+delete_transient( 'dx_ui_trim_seen_0' );
 $in  = $page( 'vtx-c7 vtx-c9' );
 $a   = (string) Theme_Trim::filter( $in, $whole );
 $expect( 'the big sheet is cut to the rules the page can use', strlen( $a ) < strlen( $in ) / 4 && str_contains( $a, '.vtx-c7{' ) && str_contains( $a, '.vtx-c7:hover{' ) && ! str_contains( $a, '.vtx-c8{' ) && str_contains( $a, '.vtx-c9{margin:0}' ) && ! str_contains( $a, '.vtx-c10' ), (string) strlen( $a ) );
@@ -128,33 +128,33 @@ $broken = str_replace( '.vtx-c7:hover{color:red}', '.vtx-c7:hover{color:red', $i
 $expect( 'a sheet that cannot be read to the end is left as it is', Theme_Trim::filter( $broken, $whole ) === $broken );
 $rm( $dir );
 $rm( Upload_Paths::path( Upload_Paths::DIR . '/trim/' . substr( md5( str_replace( '.vtx-c7:hover{color:red}', '.vtx-c7:hover{color:red', $sheet ) ), 0, 12 ) ) );
-delete_transient( 'dxai_ui_trim_seen_0' );
+delete_transient( 'dx_ui_trim_seen_0' );
 
 // --- Theme_Fence::fences -------------------------------------------------------------------------------------------
 echo "\nThe fence follows the design's source page\n";
 $src  = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'vtx fence source' ) );
-$copy = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'vtx fence copy', 'post_content' => '<!-- wp:dxai-ui/box --><div class="x"></div><!-- /wp:dxai-ui/box -->' ) );
-update_post_meta( $src, '_dxai_ui_css_url', 'dxai-ui/vtx-none.css' );
-update_post_meta( $src, DXAI_UI\Structures\Page_Scope::META, $src );
-update_post_meta( $copy, DXAI_UI\Structures\Design_Attach::META, $src );
+$copy = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'vtx fence copy', 'post_content' => '<!-- wp:dx-ui/box --><div class="x"></div><!-- /wp:dx-ui/box -->' ) );
+update_post_meta( $src, '_dx_ui_css_url', 'dx-ui/vtx-none.css' );
+update_post_meta( $src, DX_UI\Structures\Page_Scope::META, $src );
+update_post_meta( $copy, DX_UI\Structures\Design_Attach::META, $src );
 $fences = static function () use ( $copy ): bool {
-	DXAI_UI\Structures\Design_Attach::forget( $copy );
+	DX_UI\Structures\Design_Attach::forget( $copy );
 
-	return DXAI_UI\Theme\Theme_Fence::fences( $copy );
+	return DX_UI\Theme\Theme_Fence::fences( $copy );
 };
-update_post_meta( $src, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
+update_post_meta( $src, '_wp_page_template', DX_UI\Theme\Blank_Template::SLUG );
 $expect( 'a copy of a design whose page shows without the theme\'s CSS is fenced', $fences() === true );
 update_post_meta( $src, '_wp_page_template', 'default' );
 $expect( 'a copy of a design whose page is a page of the theme is not (it matches that page)', $fences() === false );
-update_post_meta( $src, '_dxai_ui_static_html', '1' );
+update_post_meta( $src, '_dx_ui_static_html', '1' );
 $expect( '…unless that page is a static design, fenced on the theme\'s template as its copy is', $fences() === true );
-delete_post_meta( $src, '_dxai_ui_static_html' );
-update_post_meta( $copy, '_dxai_ui_fence_theme', '1' );
+delete_post_meta( $src, '_dx_ui_static_html' );
+update_post_meta( $copy, '_dx_ui_fence_theme', '1' );
 $expect( 'the page\'s own custom field decides over the source', $fences() === true );
-update_post_meta( $copy, '_dxai_ui_fence_theme', '0' );
-update_post_meta( $src, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
+update_post_meta( $copy, '_dx_ui_fence_theme', '0' );
+update_post_meta( $src, '_wp_page_template', DX_UI\Theme\Blank_Template::SLUG );
 $expect( '… both ways', $fences() === false );
-$expect( 'a page that shows no design is never fenced', DXAI_UI\Theme\Theme_Fence::fences( 0 ) === false );
+$expect( 'a page that shows no design is never fenced', DX_UI\Theme\Theme_Fence::fences( 0 ) === false );
 wp_trash_post( $copy );
 wp_trash_post( $src );
 
@@ -194,7 +194,7 @@ add_filter(
 	3
 );
 $path = Upload_Paths::path( Upload_Paths::DIR . '/pattern-vtx-speed.css' );
-$orig = "@import url(\"https://fonts.googleapis.com/css2?family=Vtx+Sans:wght@400%3B700&display=swap\");\n.dxai-ui.dxai-ui--1 { max-width:100% }\n.x{font-family:'Vtx Sans'}\n";
+$orig = "@import url(\"https://fonts.googleapis.com/css2?family=Vtx+Sans:wght@400%3B700&display=swap\");\n.dx-ui.dx-ui--1 { max-width:100% }\n.x{font-family:'Vtx Sans'}\n";
 wp_mkdir_p( dirname( $path ) );
 file_put_contents( $path, $orig );
 $mine = array( Upload_Paths::path( Upload_Paths::DIR . '/fonts/' . Font_Host::key( $google ) . '.css' ), Upload_Paths::path( Upload_Paths::DIR . '/fonts/' . Font_Host::key( $google2 ) . '.css' ) );
@@ -212,7 +212,7 @@ $after = (string) file_get_contents( $path );
 $expect( 'localising changes the sheet and finishes', $r['changed'] && $r['complete'], json_encode( $r ) );
 $expect( 'no request to Google is left in it, and the rules are', ! str_contains( $after, 'fonts.googleapis.com/css2?family=Vtx+Sans:wght@400%3B700&display=swap");' ) && ! str_contains( $after, 'https://fonts.gstatic.com' ) && substr_count( $after, '@font-face' ) === 3, $after );
 $expect( 'its font files are on this site, named in the sheet', preg_match_all( '#url\(fonts/([0-9a-f]{20})\.woff2\)#', $after, $m ) === 3 && is_file( Upload_Paths::path( Upload_Paths::DIR . '/fonts/' . $m[1][0] . '.woff2' ) ) );
-$expect( 'the design\'s own rules follow, untouched', str_contains( $after, ".dxai-ui.dxai-ui--1 { max-width:100% }\n.x{font-family:'Vtx Sans'}\n" ) );
+$expect( 'the design\'s own rules follow, untouched', str_contains( $after, ".dx-ui.dx-ui--1 { max-width:100% }\n.x{font-family:'Vtx Sans'}\n" ) );
 $expect( 'the sheet is local and says which stylesheets it carries', Font_Host::state( $path, array( $google, $google2 ) ) === 'local' && count( Font_Host::covered( $path ) ) === 2 );
 $expect( 'a listed stylesheet the sheet does not import comes with it', str_contains( $after, "'Vtx Serif'" ) );
 $hits_before = count( $hits );
@@ -232,7 +232,7 @@ $expect( 'a file that cannot be fetched keeps its address and the copy is partia
 $broken_file = '';
 $full        = Font_Host::localize_sheet( $path );
 $expect( 'the next run finishes it', $full['changed'] && $full['complete'] && Font_Host::state( $path ) === 'local' && ! str_contains( (string) file_get_contents( $path ), 'https://fonts.gstatic.com' ) );
-$expect( 'a sheet with no Google fonts is not touched', Font_Host::state( '' ) === 'none' && ! Font_Host::localize_sheet( DXAI_UI_DIR . 'index.php' )['changed'] );
+$expect( 'a sheet with no Google fonts is not touched', Font_Host::state( '' ) === 'none' && ! Font_Host::localize_sheet( DX_UI_DIR . 'index.php' )['changed'] );
 Font_Host::revert( $path );
 wp_delete_file( $path );
 foreach ( $mine as $f ) {
@@ -240,7 +240,7 @@ foreach ( $mine as $f ) {
 		wp_delete_file( $f );
 	}
 }
-delete_transient( 'dxai_ui_fonts_wait_' . Font_Host::key( $google ) );
+delete_transient( 'dx_ui_fonts_wait_' . Font_Host::key( $google ) );
 
 echo "\nThe theme's button rules a design page loads\n";
 // As American Restoration's sheets on the team's network have them: its editor sheet's rules for the editor's own screen (`#editor …`, 503 of
@@ -251,7 +251,7 @@ $theme_css = '#editor .wp-block-button.is-style-primary-button div{color:red;dis
 	. '@media (max-width:600px){#editor .wp-block-button.is-style-primary-button .wp-block-button__link{padding:0}}'
 	. '@media (min-width:782px){.wp-block-button.is-style-secondary-button .wp-block-button__link{padding:18px 24px}}'
 	. '.site-header a{color:#000}';
-$rules = \DXAI_UI\Theme\Theme_Buttons::extract( $theme_css );
+$rules = \DX_UI\Theme\Theme_Buttons::extract( $theme_css );
 $expect( 'no rule of the editor\'s own screen is kept (`#editor …`), in a rule or a media query', ! str_contains( $rules['css'], '#editor' ), $rules['css'] );
 $expect( 'a rule that names both keeps the page\'s selector, with its declarations', str_contains( $rules['css'], '.wp-block-button.is-style-primary-button .wp-block-button__link{background:#8e251f;color:#fff}' ), $rules['css'] );
 $expect( 'a media query left with nothing is not written; one with the page\'s rules is', ! str_contains( $rules['css'], 'max-width:600px' ) && str_contains( $rules['css'], '@media (min-width:782px){.wp-block-button.is-style-secondary-button' ), $rules['css'] );

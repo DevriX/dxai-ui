@@ -1,6 +1,6 @@
 <?php
 /**
- * dxai-ui/countup must put back the element the design wrote, including the
+ * dx-ui/countup must put back the element the design wrote, including the
  * screen-reader copy nested inside it.
  *
  * The visible figure is animated from 0 by the runtime, so a design pairs it
@@ -29,9 +29,9 @@ if ( PHP_SAPI !== 'cli' ) {
 
 require __DIR__ . '/wp-boot.php';
 
-use DXAI_UI\Compiler\Html_To_Blocks;
+use DX_UI\Compiler\Html_To_Blocks;
 
-/** [ label, source html, should become dxai-ui/countup ] */
+/** [ label, source html, should become dx-ui/countup ] */
 $cases = array(
 	// The two shapes the corpus actually ships.
 	array(
@@ -97,12 +97,12 @@ foreach ( $cases as [ $label, $html, $want_countup ] ) {
 	$blocks = parse_blocks( $markup );
 	$row    = $blocks[0] ?? array();
 	$name   = (string) ( $row['blockName'] ?? '(none)' );
-	$is     = $name === 'dxai-ui/countup';
+	$is     = $name === 'dx-ui/countup';
 
 	$notes = array();
 	if ( $is !== $want_countup ) {
 		++$fail;
-		$notes[] = 'FAIL expected ' . ( $want_countup ? 'dxai-ui/countup' : 'a refusal' );
+		$notes[] = 'FAIL expected ' . ( $want_countup ? 'dx-ui/countup' : 'a refusal' );
 	}
 
 	/*
@@ -149,7 +149,7 @@ if ( $json !== false ) {
 	foreach ( $cases as [ $label, $html, $want_countup ] ) {
 		$blocks = parse_blocks( ( new Html_To_Blocks() )->convert( $html ) );
 		$row    = $blocks[0] ?? array();
-		if ( (string) ( $row['blockName'] ?? '' ) !== 'dxai-ui/countup' ) {
+		if ( (string) ( $row['blockName'] ?? '' ) !== 'dx-ui/countup' ) {
 			continue;
 		}
 		$rows[] = array(

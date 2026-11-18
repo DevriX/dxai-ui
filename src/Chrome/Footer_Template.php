@@ -2,14 +2,14 @@
 /**
  * A converted design's footer, split into its frame and its widget areas.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Chrome;
+namespace DX_UI\Chrome;
 
-use DXAI_UI\Compiler\Utility_Classes;
+use DX_UI\Compiler\Utility_Classes;
 
 /**
  * The design supplies the footer's structure; Appearance > Widgets holds its
@@ -17,11 +17,11 @@ use DXAI_UI\Compiler\Utility_Classes;
  * DevriX theme's footer.php does it by hand: the element whose children are
  * the footer's columns (brand/about, link lists, contact…) is found, and each
  * column's CHILDREN become the widgets of `footer-column-N` while the column
- * element itself — its classes, its dxaiCss, its place in the grid — stays in
+ * element itself — its classes, its dxuiCss, its place in the grid — stays in
  * the frame. The bottom bar (copyright, legal and social links) is split the
  * same way into `footer-copyright`. Everything else — the `<footer>`, its
  * containers, background decorations — is the frame, and each place a column's
- * children were is left holding one `dxai-ui/footer-slot` block naming its
+ * children were is left holding one `dx-ui/footer-slot` block naming its
  * area.
  *
  * The slot is a block rather than a marker string so the column keeps the
@@ -44,10 +44,10 @@ use DXAI_UI\Compiler\Utility_Classes;
 final class Footer_Template {
 
 	/** The stored footer: its frame, its areas and where it came from. */
-	public const OPTION = 'dxai_ui_site_footer';
+	public const OPTION = 'dx_ui_site_footer';
 
 	/** The block that stands in the frame where an area's widgets render. */
-	public const SLOT = 'dxai-ui/footer-slot';
+	public const SLOT = 'dx-ui/footer-slot';
 
 	/** The DevriX theme's ids, so the areas coincide with such a theme's own. */
 	public const COLUMN_PREFIX = 'footer-column-';
@@ -60,7 +60,7 @@ final class Footer_Template {
 	 * not one (a list item cannot leave its list), and neither is a
 	 * core/columns row (a column cannot leave its row) — core/column itself is.
 	 */
-	private const CONTAINERS = array( 'core/group', 'core/column', 'dxai-ui/box' );
+	private const CONTAINERS = array( 'core/group', 'core/column', 'dx-ui/box' );
 
 	/**
 	 * What a copyright line looks like. The bar that holds it is the footer's
@@ -246,7 +246,7 @@ final class Footer_Template {
 		$page_id = (int) ( $context['page_id'] ?? 0 );
 		$scope   = (int) ( $context['scope'] ?? 0 );
 		if ( $scope < 1 && $page_id > 0 ) {
-			$scope = (int) get_post_meta( $page_id, \DXAI_UI\Structures\Page_Scope::META, true );
+			$scope = (int) get_post_meta( $page_id, \DX_UI\Structures\Page_Scope::META, true );
 		}
 		$record = array(
 			'version'  => self::VERSION,
@@ -613,7 +613,7 @@ final class Footer_Template {
 		 * Utility_Classes writes in place of the declarations they match — so
 		 * `display` may be a class while the columns are still CSS.
 		 */
-		$css     = strtolower( ';' . (string) ( $attrs['dxaiCss'] ?? '' ) . ';' . (string) ( $attrs['dxaiStyle'] ?? '' ) );
+		$css     = strtolower( ';' . (string) ( $attrs['dxuiCss'] ?? '' ) . ';' . (string) ( $attrs['dxuiStyle'] ?? '' ) );
 		$class   = ' ' . strtolower( (string) ( $attrs['className'] ?? '' ) ) . ' ';
 		$variant = '(?:[a-z0-9-]+:|(?:sm|md|lg|xl)-)?';
 		$tracks  = '/\s' . $variant . '(?:grid-cols|grid)-(?:[2-9]|1[0-2])\s/';
@@ -670,9 +670,9 @@ final class Footer_Template {
 	 *
 	 * A block's paint can be in three places: the theme utility classes
 	 * Style_Hoister wrote for the longhands a utility declares exactly
-	 * (`text-16`, `fw-700`, `uppercase`), what is left in its dxaiCss, and
+	 * (`text-16`, `fw-700`, `uppercase`), what is left in its dxuiCss, and
 	 * its preset colours. The utilities are read first — by construction they
-	 * never set a longhand that is still in dxaiCss.
+	 * never set a longhand that is still in dxuiCss.
 	 *
 	 * @param array<int, array<string, mixed>> $roots
 	 * @param array<int, int>                  $parent
@@ -691,7 +691,7 @@ final class Footer_Template {
 				unset( $props[ $prop ] );
 				$props[ $prop ] = $value;
 			}
-			foreach ( self::declarations( (string) ( $attrs['dxaiCss'] ?? '' ) ) as $prop => $value ) {
+			foreach ( self::declarations( (string) ( $attrs['dxuiCss'] ?? '' ) ) as $prop => $value ) {
 				if ( in_array( $prop, self::PAINT, true ) ) {
 					unset( $props[ $prop ] );
 					$props[ $prop ] = $value;
@@ -742,7 +742,7 @@ final class Footer_Template {
 			 * The class's own base declarations, from Utility_Classes: the
 			 * theme's rules that name the class itself outside any media query,
 			 * in cascade order, and the plugin's own classes too (`fw-900`,
-			 * `text-dxai-*`, `bg-dxai-*`), which a read of the theme catalogue
+			 * `text-dxui-*`, `bg-dxui-*`), which a read of the theme catalogue
 			 * alone missed. Lengths as px, `!important` kept.
 			 */
 			foreach ( self::declarations( Utility_Classes::base_declarations( $class ) ) as $prop => $value ) {

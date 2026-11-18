@@ -21,15 +21,15 @@
  *
  * Run: wp eval-file bin/verify-coverage.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use DXAI_UI\Content\Content_Types;
-use DXAI_UI\Verification\Design_Coverage;
+use DX_UI\Content\Content_Types;
+use DX_UI\Verification\Design_Coverage;
 
 /*
  * The conversion records, by post type rather than by a title search:
@@ -53,7 +53,7 @@ $measured = 0;
 $unknown  = 0;
 
 foreach ( $records as $record ) {
-	$json = DXAI_UI\Structures\Conversion_Snapshot::decode( (string) get_post_field( 'post_content', (int) $record ) );
+	$json = DX_UI\Structures\Conversion_Snapshot::decode( (string) get_post_field( 'post_content', (int) $record ) );
 	if ( ! is_array( $json ) ) {
 		continue;
 	}

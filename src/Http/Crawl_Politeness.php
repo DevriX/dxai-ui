@@ -2,12 +2,12 @@
 /**
  * What an old site asks of the crawler that rebuilds its pages.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Http;
+namespace DX_UI\Http;
 
 /**
  * The page builder fetches a client's old site page by page (Site_From_Menu).
@@ -48,7 +48,7 @@ final class Crawl_Politeness {
 		if ( $origin === '' ) {
 			return $none;
 		}
-		$key    = 'dxai_ui_robots_' . md5( $origin );
+		$key    = 'dx_ui_robots_' . md5( $origin );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) && isset( $cached['delay'] ) ) {
 			return $cached;
@@ -70,7 +70,7 @@ final class Crawl_Politeness {
 	}
 
 	/**
-	 * robots.txt read for this crawler: its own group when there is one (`dxai-ui`), else the `*` group.
+	 * robots.txt read for this crawler: its own group when there is one (`dx-ui`), else the `*` group.
 	 *
 	 * @return array{disallow: array<int, string>, allow: array<int, string>, delay: float}
 	 */
@@ -113,8 +113,8 @@ final class Crawl_Politeness {
 		}
 		$group = null;
 		foreach ( $groups as $agent => $rules ) {
-			// A group names a crawler by a token its name contains (`dxai`, `dxai-ui`).
-			if ( $agent !== '*' && $agent !== '' && str_contains( 'dxai-ui', $agent ) ) {
+			// A group names a crawler by a token its name contains (`dxui`, `dx-ui`).
+			if ( $agent !== '*' && $agent !== '' && str_contains( 'dx-ui', $agent ) ) {
 				$group = $rules;
 				break;
 			}
@@ -176,7 +176,7 @@ final class Crawl_Politeness {
 	}
 
 	private static function slot_key( string $url ): string {
-		return 'dxai_ui_crawl_slot_' . md5( self::origin( $url ) );
+		return 'dx_ui_crawl_slot_' . md5( self::origin( $url ) );
 	}
 
 	private static function origin( string $url ): string {

@@ -11,14 +11,14 @@
  *
  * Needs the American Restoration theme: the team's layouts are made of its blocks. Exit 77 (SKIP) without it.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Blocks\Native\Library_Style;
-use DXAI_UI\Pages\Block_Library;
-use DXAI_UI\Structures\Page_Scope;
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Theme\Capabilities;
+use DX_UI\Blocks\Native\Library_Style;
+use DX_UI\Pages\Block_Library;
+use DX_UI\Structures\Page_Scope;
+use DX_UI\Support\Color_Math;
+use DX_UI\Theme\Capabilities;
 
 $fail   = 0;
 $pass   = 0;
@@ -73,13 +73,13 @@ $eyebrow = static fn( string $t ): string => '<!-- wp:paragraph {"className":"te
 $ground  = static fn( string $slug, string $inner ): string => '<!-- wp:group {"tagName":"section","backgroundColor":"' . $slug . '"} --><section class="wp-block-group has-' . $slug . '-background-color has-background">' . $inner . '</section><!-- /wp:group -->';
 $plain   = static fn( string $inner ): string => '<!-- wp:group {"tagName":"section"} --><section class="wp-block-group">' . $inner . '</section><!-- /wp:group -->';
 // The Home's cards: one box, each card with a hover class of its own (the importer writes one per element).
-$svc  = static fn( int $n, string $t ) => '<!-- wp:group {"className":"dxai-sh-' . $n . ' rounded-sm px-6 pt-6 pb-5 bg-dxai-neutral-96","dxaiCss":"border:1px solid var(--dxai-neutral-91);border-bottom:3px solid var(--dxai-brand)"} --><div class="wp-block-group dxai-sh-' . $n . ' rounded-sm px-6 pt-6 pb-5 bg-dxai-neutral-96 dxs-svc">' . $heading( $t, 3 ) . $para( 'Extraction, drying and readings after a leak.' ) . '</div><!-- /wp:group -->';
+$svc  = static fn( int $n, string $t ) => '<!-- wp:group {"className":"dxui-sh-' . $n . ' rounded-sm px-6 pt-6 pb-5 bg-dxui-neutral-96","dxuiCss":"border:1px solid var(--dxui-neutral-91);border-bottom:3px solid var(--dxui-brand)"} --><div class="wp-block-group dxui-sh-' . $n . ' rounded-sm px-6 pt-6 pb-5 bg-dxui-neutral-96 dxs-svc">' . $heading( $t, 3 ) . $para( 'Extraction, drying and readings after a leak.' ) . '</div><!-- /wp:group -->';
 // A strip of six claims under the hero: a little padding each, no box — more of them than of the cards.
 $claim = static fn( string $t ) => '<!-- wp:group {"className":"px-1 py-0"} --><div class="wp-block-group px-1 py-0">' . $heading( $t, 3 ) . $para( 'Since 1972.' ) . '</div><!-- /wp:group -->';
 // A question as the importer writes one (a box that is a <details>, its question a <summary>), a line under it.
-$faq   = static fn( string $q ) => '<!-- wp:dxai-ui/box {"tagName":"details","dxaiCss":"border-bottom:1px solid var(--dxai-surface)"} --><details class="dxs-faq"><!-- wp:group {"tagName":"summary","className":"px-1 py-5 d-flex justify-between"} --><summary class="wp-block-group px-1 py-5 d-flex justify-between">' . $heading( $q, 3 ) . '</summary><!-- /wp:group -->' . $para( 'Within the hour, day or night.' ) . '</details><!-- /wp:dxai-ui/box -->';
+$faq   = static fn( string $q ) => '<!-- wp:dx-ui/box {"tagName":"details","dxuiCss":"border-bottom:1px solid var(--dxui-surface)"} --><details class="dxs-faq"><!-- wp:group {"tagName":"summary","className":"px-1 py-5 d-flex justify-between"} --><summary class="wp-block-group px-1 py-5 d-flex justify-between">' . $heading( $q, 3 ) . '</summary><!-- /wp:group -->' . $para( 'Within the hour, day or night.' ) . '</details><!-- /wp:dx-ui/box -->';
 // Three call cards in the hero, one box alike: more alike than any one of the four service cards, fewer than the four together.
-$call  = static fn( string $t ) => '<!-- wp:group {"className":"rounded-sm px-5 pt-5 pb-5 shadow-dxai-shadow-1 bg-dxai-on-accent"} --><div class="wp-block-group rounded-sm px-5 pt-5 pb-5 shadow-dxai-shadow-1 bg-dxai-on-accent">' . $heading( $t, 3 ) . $para( 'Call the office.' ) . '</div><!-- /wp:group -->';
+$call  = static fn( string $t ) => '<!-- wp:group {"className":"rounded-sm px-5 pt-5 pb-5 shadow-dxui-shadow-1 bg-dxui-on-accent"} --><div class="wp-block-group rounded-sm px-5 pt-5 pb-5 shadow-dxui-shadow-1 bg-dxui-on-accent">' . $heading( $t, 3 ) . $para( 'Call the office.' ) . '</div><!-- /wp:group -->';
 $home  = $ground( $dark, $heading( 'Restoration in Harborview', 1 ) . $para( 'Water, fire and mold, day or night.' ) . '<!-- wp:group {"className":"grid"} --><div class="wp-block-group grid">' . implode( '', array_map( $call, array( 'Harborview', 'Bayside', 'Northgate' ) ) ) . '</div><!-- /wp:group -->' )
 	. $plain( '<!-- wp:group {"className":"grid"} --><div class="wp-block-group grid">' . implode( '', array_map( $claim, array( 'Fast', 'Local', 'Certified', 'Insured', 'Licensed', 'Trusted' ) ) ) . '</div><!-- /wp:group -->' )
 	. $ground( $light, $eyebrow( 'Services' ) . $heading( 'What we restore', 2, $dark ) . $para( 'Every job by our own crews.' ) . '<!-- wp:group {"className":"grid"} --><div class="wp-block-group grid">' . implode( '', array_map( $svc, range( 1, 4 ), array( 'Water', 'Fire', 'Mold', 'Storm' ) ) ) . '</div><!-- /wp:group -->' )
@@ -89,14 +89,14 @@ $home  = $ground( $dark, $heading( 'Restoration in Harborview', 1 ) . $para( 'Wa
 $home_id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Harborview Styled ' . $run, 'post_content' => wp_slash( $home ) ) );
 $made[]  = $home_id;
 update_post_meta( $home_id, Page_Scope::META, $home_id );
-update_post_meta( $home_id, '_dxai_ui_generated_page', '1' );
+update_post_meta( $home_id, '_dx_ui_generated_page', '1' );
 
 echo "What the Home looks like (Library_Style::look())\n";
 $look = Library_Style::look( $home_id );
-$expect( 'its cards are the four boxes with a hover class each, not the six claims with a little padding nor the three call cards (a card is a box; a hover class of its own does not make four looks of one)', in_array( 'bg-dxai-neutral-96', (array) ( $look['card']['class'] ?? array() ), true ) && in_array( 'border:1px solid var(--dxai-neutral-91)', (array) ( $look['card']['css'] ?? array() ), true ), wp_json_encode( $look['card'] ?? null ) );
+$expect( 'its cards are the four boxes with a hover class each, not the six claims with a little padding nor the three call cards (a card is a box; a hover class of its own does not make four looks of one)', in_array( 'bg-dxui-neutral-96', (array) ( $look['card']['class'] ?? array() ), true ) && in_array( 'border:1px solid var(--dxui-neutral-91)', (array) ( $look['card']['css'] ?? array() ), true ), wp_json_encode( $look['card'] ?? null ) );
 $expect( 'its light ground and the band of its call to action', ( $look['ground']['light']['css'] ?? null ) === array( 'background-color:var(--wp--preset--color--' . $light . ')' ) && ( $look['ground']['cta']['css'] ?? null ) === array( 'background-color:var(--wp--preset--color--' . $dark . ')' ), wp_json_encode( $look['ground'] ?? null ) );
 $expect( 'its section titles stand at the left, in one colour', ( $look['head']['left'] ?? null ) === true && ( $look['head']['color'] ?? '' ) === $dark, wp_json_encode( $look['head'] ?? null ) );
-$expect( 'its questions: a line under each, no box', ( $look['faq']['css'] ?? null ) === array( 'border-bottom:1px solid var(--dxai-surface)' ), wp_json_encode( $look['faq'] ?? null ) );
+$expect( 'its questions: a line under each, no box', ( $look['faq']['css'] ?? null ) === array( 'border-bottom:1px solid var(--dxui-surface)' ), wp_json_encode( $look['faq'] ?? null ) );
 
 // A page of that Home: the team's layouts made for it.
 $facts = array(
@@ -165,7 +165,7 @@ foreach ( array( 'layout-cta-7', 'layout-cta-6' ) as $id ) {
 		}
 	}
 	$hex = $title !== null ? $colour_of( $title ) : '';
-	$expect( "$id: on the Home's band, set in its Colour panel (the team's white, orange or navy ground off), and its title reads on it", $cta !== null && ( $cta['attrs']['backgroundColor'] ?? '' ) === $dark && ! isset( $cta['attrs']['style']['color']['background'] ) && ! str_contains( (string) ( $cta['attrs']['dxaiCss'] ?? '' ), 'background' ) && $hex !== '' && Color_Math::contrast( $hex, $band_hex ) >= 3.0, $why . ' ' . wp_json_encode( array( $cta['attrs'] ?? null, $hex ) ) );
+	$expect( "$id: on the Home's band, set in its Colour panel (the team's white, orange or navy ground off), and its title reads on it", $cta !== null && ( $cta['attrs']['backgroundColor'] ?? '' ) === $dark && ! isset( $cta['attrs']['style']['color']['background'] ) && ! str_contains( (string) ( $cta['attrs']['dxuiCss'] ?? '' ), 'background' ) && $hex !== '' && Color_Math::contrast( $hex, $band_hex ) >= 3.0, $why . ' ' . wp_json_encode( array( $cta['attrs'] ?? null, $hex ) ) );
 }
 // (Call to action · team layout 2: a strip of claims and a call, no title — on Taylored Restoration's pages a band with drawings that vanished.)
 $strip = 'layout-cta-2';
@@ -217,7 +217,7 @@ list( $related, $why ) = $made_as( 'layout-related-2', 'related' );
 $boxes = 0;
 $twice = array();
 foreach ( $related !== null ? $flat( $related ) : array() as $b ) {
-	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'bg-dxai-neutral-96' ) ) {
+	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'bg-dxui-neutral-96' ) ) {
 		++$boxes;
 		// Nothing inside the card paints a ground of its own (it was a white box in a grey one).
 		foreach ( array_slice( $flat( $b ), 1 ) as $in ) {
@@ -232,8 +232,8 @@ list( $questions, $why ) = $made_as( 'layout-faq-1', 'faq' );
 $lines = 0;
 $boxed = array();
 foreach ( $questions !== null ? $flat( $questions ) : array() as $b ) {
-	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxai-lib-card' ) ) {
-		if ( str_contains( (string) ( $b['attrs']['dxaiCss'] ?? '' ), 'border-bottom:1px solid var(--dxai-surface)' ) && ! isset( $b['attrs']['style']['color']['background'] ) && ! isset( $b['attrs']['style']['border'] ) ) {
+	if ( str_contains( (string) ( $b['attrs']['className'] ?? '' ), 'dxui-lib-card' ) ) {
+		if ( str_contains( (string) ( $b['attrs']['dxuiCss'] ?? '' ), 'border-bottom:1px solid var(--dxui-surface)' ) && ! isset( $b['attrs']['style']['color']['background'] ) && ! isset( $b['attrs']['style']['border'] ) ) {
 			++$lines;
 		} else {
 			$boxed[] = wp_json_encode( $b['attrs'] );
@@ -282,7 +282,7 @@ foreach ( $caps !== null ? $flat( $caps ) : array() as $b ) {
 $expect( '…and the call it says twice (for a phone and for a screen) is said both times: no link to the phone is left with no words', $tels >= 2 && $mute === array(), $tels . ' ' . implode( ' | ', $mute ) );
 
 echo "A Home that draws its buttons as links (a design kept as it was)\n";
-// Its calls to action are the design's links with a fill of its colours (bg-dxai-accent text-dxai-ink), and its colours follow the
+// Its calls to action are the design's links with a fill of its colours (bg-dxui-accent text-dxui-ink), and its colours follow the
 // theme's: the library's buttons keep the theme's style and take the Home's fill and text in their Colour panel (H2O Away, 2026-10-23).
 $ink = '';
 foreach ( $palette as $slug => $hex ) {
@@ -291,13 +291,13 @@ foreach ( $palette as $slug => $hex ) {
 		break;
 	}
 }
-$cta_link  = static fn( string $t ): string => '<!-- wp:dxai-ui/link {"url":"tel:+15550100101","text":"' . $t . '","className":"rounded-10px px-7 gap-2-5 items-center flex-inline text-dxai-ink fw-900 bg-dxai-accent"} /-->';
+$cta_link  = static fn( string $t ): string => '<!-- wp:dx-ui/link {"url":"tel:+15550100101","text":"' . $t . '","className":"rounded-10px px-7 gap-2-5 items-center flex-inline text-dxui-ink fw-900 bg-dxui-accent"} /-->';
 // (The second call is a text the design drew as a link — a call with its icon, as H2O Away's are.)
-$cta_text  = static fn( string $t ): string => '<!-- wp:dxai-ui/text {"tagName":"a","url":"tel:+15550100101","className":"dxai-sh-71 rounded-10px px-6-5 gap-2-5 items-center flex-inline text-18 text-dxai-ink fw-900 bg-dxai-accent"} /-->';
+$cta_text  = static fn( string $t ): string => '<!-- wp:dx-ui/text {"tagName":"a","url":"tel:+15550100101","className":"dxui-sh-71 rounded-10px px-6-5 gap-2-5 items-center flex-inline text-18 text-dxui-ink fw-900 bg-dxui-accent"} /-->';
 $link_home = $ground( $light, $heading( 'Restoration in Harborview', 1 ) . $cta_link( 'Call now' ) ) . $plain( $heading( 'Water damage?' ) . $cta_text( 'Get help now' ) );
 $binding   = static fn( string $mode ): array => array(
 	get_stylesheet() => array(
-		'schema' => DXAI_UI\Theme\Theme_Binding::SCHEMA,
+		'schema' => DX_UI\Theme\Theme_Binding::SCHEMA,
 		'mode'   => $mode,
 		'tokens' => array(
 			'accent' => array( 'to' => $dark ),
@@ -308,8 +308,8 @@ $binding   = static fn( string $mode ): array => array(
 $link_id = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Harborview Links ' . $run, 'post_content' => wp_slash( $link_home ) ) );
 $made[]  = $link_id;
 update_post_meta( $link_id, Page_Scope::META, $link_id );
-update_post_meta( $link_id, '_dxai_ui_generated_page', '1' );
-update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
+update_post_meta( $link_id, '_dx_ui_generated_page', '1' );
+update_post_meta( $link_id, DX_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
 $look = Library_Style::look( $link_id );
 $expect( 'its buttons are read from its links: the presets their fill and their text follow', ( $look['button']['primary']['fill'] ?? '' ) === $dark && ( $look['button']['primary']['text'] ?? '' ) === $ink, wp_json_encode( $look['button'] ?? null ) );
 $band = parse_blocks(
@@ -328,10 +328,10 @@ $first = $buttons[0] ?? array();
 $expect( 'the library\'s button keeps the theme\'s style and wears the Home\'s fill and text in its Colour panel', ( $first['attrs']['backgroundColor'] ?? '' ) === $dark && ( $first['attrs']['textColor'] ?? '' ) === $ink && str_contains( (string) ( $first['attrs']['className'] ?? '' ), 'is-style-primary-button' ), wp_json_encode( $first['attrs'] ?? null ) );
 $expect( '…with the classes core\'s Button writes for them on its link, in core\'s order', str_contains( (string) ( $first['innerHTML'] ?? '' ), 'class="wp-block-button__link has-' . $ink . '-color has-' . $dark . '-background-color has-text-color has-background has-link-color wp-element-button"' ), (string) ( $first['innerHTML'] ?? '' ) );
 $expect( 'the second button (an outline) keeps its own look', ! isset( $buttons[1]['attrs']['backgroundColor'] ) && ! str_contains( (string) ( $buttons[1]['innerHTML'] ?? '' ), 'has-background' ) );
-update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'keep' ) );
+update_post_meta( $link_id, DX_UI\Theme\Theme_Binding::META, $binding( 'keep' ) );
 wp_update_post( array( 'ID' => $link_id, 'post_content' => wp_slash( $link_home . ' ' ) ) );
 $expect( 'a Home that keeps its own colours (they follow no preset) says nothing about its buttons', ( Library_Style::look( $link_id )['button'] ?? null ) === null );
-update_post_meta( $link_id, DXAI_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
+update_post_meta( $link_id, DX_UI\Theme\Theme_Binding::META, $binding( 'follow' ) );
 wp_update_post( array( 'ID' => $link_id, 'post_content' => wp_slash( $ground( $light, $heading( 'Restoration in Harborview', 1 ) . $cta_link( 'Call now' ) ) ) ) );
 $expect( '…nor does a Home with one such link', ( Library_Style::look( $link_id )['button'] ?? null ) === null );
 

@@ -1,5 +1,5 @@
 /**
- * The editor side of dxai-ui/site-footer (Site_Footer_Block).
+ * The editor side of dx-ui/site-footer (Site_Footer_Block).
  *
  * The block stores nothing: the footer is the design's frame around the
  * widgets of Appearance > Widgets, rendered on the server. So the canvas shows
@@ -21,7 +21,7 @@
 	const { __ } = wp.i18n;
 	const ServerSideRender = wp.serverSideRender;
 
-	const cfg = window.dxaiUISiteFooter || {};
+	const cfg = window.dxUISiteFooter || {};
 
 	/*
 	 * Not offered where the footer's own areas are edited: a footer placed in
@@ -68,7 +68,7 @@
 		const where = window.location || {};
 		const post = /[?&]post=(\d+)(?:&|$)/.exec( where.search || '' );
 		return post && /\/post\.php$/.test( where.pathname || '' ) && ! inWidgetsEditor
-			? '/wp/v2/block-renderer/dxai-ui/site-footer?context=edit&post_id=' + post[ 1 ]
+			? '/wp/v2/block-renderer/dx-ui/site-footer?context=edit&post_id=' + post[ 1 ]
 			: '';
 	}() );
 	let first = typeof cfg.initial === 'string' && cfg.initial !== '' ? cfg.initial : '';
@@ -118,7 +118,7 @@
 		return el(
 			Button,
 			{ variant: variant || 'secondary', href: cfg.widgetsUrl, target: '_blank', rel: 'noopener' },
-			__( 'Edit in Widgets', 'dxai-ui' )
+			__( 'Edit in Widgets', 'dx-ui' )
 		);
 	}
 
@@ -127,10 +127,10 @@
 	function Empty() {
 		return el(
 			Placeholder,
-			{ icon, label: __( 'Site Footer', 'dxai-ui' ) },
+			{ icon, label: __( 'Site Footer', 'dx-ui' ) },
 			el( 'p', null, cfg.hasFooter
-				? __( 'The footer’s widget areas are empty. Add blocks to them in Appearance > Widgets.', 'dxai-ui' )
-				: __( 'No footer has been imported yet. Import a design with a footer, and its footer appears here.', 'dxai-ui' ) )
+				? __( 'The footer’s widget areas are empty. Add blocks to them in Appearance > Widgets.', 'dx-ui' )
+				: __( 'No footer has been imported yet. Import a design with a footer, and its footer appears here.', 'dx-ui' ) )
 		);
 	}
 
@@ -154,7 +154,7 @@
 		if ( first !== '' ) {
 			return el( RawHTML, null, first );
 		}
-		return el( 'div', { className: 'dxai-ui-site-footer__loading', style: { padding: '24px', textAlign: 'center' } }, el( Spinner ) );
+		return el( 'div', { className: 'dx-ui-site-footer__loading', style: { padding: '24px', textAlign: 'center' } }, el( Spinner ) );
 	}
 
 	function Edit( props ) {
@@ -172,7 +172,7 @@
 				el(
 					ToolbarGroup,
 					null,
-					el( ToolbarButton, { href: cfg.widgetsUrl, target: '_blank', rel: 'noopener', text: __( 'Edit in Widgets', 'dxai-ui' ), label: __( 'Edit the footer in Appearance > Widgets', 'dxai-ui' ) } )
+					el( ToolbarButton, { href: cfg.widgetsUrl, target: '_blank', rel: 'noopener', text: __( 'Edit in Widgets', 'dx-ui' ), label: __( 'Edit the footer in Appearance > Widgets', 'dx-ui' ) } )
 				)
 			),
 			el(
@@ -180,8 +180,8 @@
 				null,
 				el(
 					PanelBody,
-					{ title: __( 'Footer content', 'dxai-ui' ) },
-					el( 'p', null, __( 'The footer’s frame comes from the imported design. Its columns and bottom bar are widget areas: change their blocks in Appearance > Widgets, and every page with this block shows the change.', 'dxai-ui' ) ),
+					{ title: __( 'Footer content', 'dx-ui' ) },
+					el( 'p', null, __( 'The footer’s frame comes from the imported design. Its columns and bottom bar are widget areas: change their blocks in Appearance > Widgets, and every page with this block shows the change.', 'dx-ui' ) ),
 					editLink( 'secondary' )
 				)
 			),
@@ -191,7 +191,7 @@
 				first !== ''
 					? el( RawHTML, null, first )
 					: el( ServerSideRender, {
-						block: 'dxai-ui/site-footer',
+						block: 'dx-ui/site-footer',
 						attributes: props.attributes,
 						EmptyResponsePlaceholder: Empty,
 						LoadingResponsePlaceholder: Loading,
@@ -200,10 +200,10 @@
 		);
 	}
 
-	registerBlockType( 'dxai-ui/site-footer', {
+	registerBlockType( 'dx-ui/site-footer', {
 		apiVersion: 3,
-		title: __( 'DX Site Footer', 'dxai-ui' ),
-		description: __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dxai-ui' ),
+		title: __( 'DX Site Footer', 'dx-ui' ),
+		description: __( 'The footer of the imported design. Its content is edited in Appearance > Widgets.', 'dx-ui' ),
 		category: 'dx-blocks',
 		keywords: [ 'footer', 'widgets' ],
 		icon,

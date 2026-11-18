@@ -2,15 +2,15 @@
 /**
  * An AI's choice of the sections of a page, checked before it is used.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Compiler\Json_Repair;
-use DXAI_UI\Engines\LLM_Provider_Interface;
+use DX_UI\Compiler\Json_Repair;
+use DX_UI\Engines\LLM_Provider_Interface;
 
 /**
  * The pages are put together without an AI (Team_Pages): the order of the sections is what the team's sites do, and each
@@ -266,6 +266,6 @@ final class Page_Planner {
 	}
 
 	private static function refuse( string $why ): \WP_Error {
-		return new \WP_Error( 'dxai_ui_plan', $why );
+		return new \WP_Error( 'dx_ui_plan', $why );
 	}
 }

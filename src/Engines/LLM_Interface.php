@@ -2,12 +2,12 @@
 /**
  * LLM provider contract.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Engines;
+namespace DX_UI\Engines;
 
 interface LLM_Provider_Interface {
 

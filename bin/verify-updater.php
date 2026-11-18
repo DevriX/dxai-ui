@@ -10,10 +10,10 @@
  *
  * Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Update\Github_Updater;
+use DX_UI\Update\Github_Updater;
 
 if ( ! function_exists( 'get_plugin_data' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -31,14 +31,14 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$file     = plugin_basename( DXAI_UI_FILE );
+$file     = plugin_basename( DX_UI_FILE );
 $was      = get_site_transient( 'update_plugins' );
 $releases = array();
 $api      = 200;
 $calls    = array();
 $asset    = static fn( string $v, string $name = '' ): array => array(
-	'name'                 => $name !== '' ? $name : 'dxai-ui-' . $v . '.zip',
-	'browser_download_url' => 'https://github.com/DevriX/dxai-ui/releases/download/v' . $v . '/' . ( $name !== '' ? $name : 'dxai-ui-' . $v . '.zip' ),
+	'name'                 => $name !== '' ? $name : 'dx-ui-' . $v . '.zip',
+	'browser_download_url' => 'https://github.com/DevriX/dxai-ui/releases/download/v' . $v . '/' . ( $name !== '' ? $name : 'dx-ui-' . $v . '.zip' ),
 );
 $release  = static fn( string $v, array $extra = array() ): array => array_merge(
 	array(
@@ -78,12 +78,12 @@ add_filter( 'pre_http_request', $fake, 10, 3 );
 // This copy is a development checkout (it has bin/), which is offered nothing: the offer is checked as for an installed ZIP.
 $installed = static fn() => false;
 $on_checkout = Github_Updater::is_checkout();
-add_filter( 'dxai_ui_update_checkout', $installed );
+add_filter( 'dx_ui_update_checkout', $installed );
 $channel     = '';
 $set_channel = static function ( $default ) use ( &$channel ) {
 	return $channel !== '' ? $channel : $default;
 };
-add_filter( 'dxai_ui_update_channel', $set_channel );
+add_filter( 'dx_ui_update_channel', $set_channel );
 // Every case reads the releases afresh unless it is about the cache.
 $fresh = static function () use ( &$calls ): void {
 	delete_site_transient( Github_Updater::CACHE );
@@ -91,8 +91,8 @@ $fresh = static function () use ( &$calls ): void {
 };
 $finish = static function () use ( $fake, $set_channel, $was, $installed ): void {
 	remove_filter( 'pre_http_request', $fake, 10 );
-	remove_filter( 'dxai_ui_update_checkout', $installed );
-	remove_filter( 'dxai_ui_update_channel', $set_channel );
+	remove_filter( 'dx_ui_update_checkout', $installed );
+	remove_filter( 'dx_ui_update_channel', $set_channel );
 	delete_site_transient( Github_Updater::CACHE );
 	if ( $was === false ) {
 		delete_site_transient( 'update_plugins' );
@@ -107,7 +107,7 @@ $releases = array( $release( '99.0.0' ) );
 $channel  = 'stable';
 $fresh();
 $up = Github_Updater::update( false, array(), $file );
-$expect( 'a newer release with its ZIP is offered: its version, its ZIP, its page', is_array( $up ) && $up['version'] === '99.0.0' && $up['package'] === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dxai-ui-99.0.0.zip' && $up['slug'] === 'dxai-ui' && str_contains( (string) $up['url'], '/releases/tag/v99.0.0' ), wp_json_encode( $up ) );
+$expect( 'a newer release with its ZIP is offered: its version, its ZIP, its page', is_array( $up ) && $up['version'] === '99.0.0' && $up['package'] === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dx-ui-99.0.0.zip' && $up['slug'] === 'dx-ui' && str_contains( (string) $up['url'], '/releases/tag/v99.0.0' ), wp_json_encode( $up ) );
 $expect( 'GitHub is asked for this repository\'s releases, as DX', count( $calls ) === 1 && str_contains( $calls[0]['url'], 'https://api.github.com/repos/DevriX/dxai-ui/releases' ) && str_starts_with( $calls[0]['ua'], 'DX-UI/' ), wp_json_encode( $calls ) );
 $expect( 'another plugin\'s question is left alone', Github_Updater::update( false, array(), 'akismet/akismet.php' ) === false && Github_Updater::update( array( 'version' => '1' ), array(), $file ) === array( 'version' => '1' ) );
 
@@ -126,7 +126,7 @@ $fresh();
 $expect( '…the newest release on the stable channel, whatever order GitHub lists them in', ( Github_Updater::latest()['version'] ?? '' ) === '99.0.0' );
 $channel = '';
 $fresh();
-$expect( 'the default channel is the version running\'s: ' . ( str_contains( DXAI_UI_VERSION, '-' ) ? 'beta' : 'stable' ) . ' for ' . DXAI_UI_VERSION, Github_Updater::channel() === ( str_contains( DXAI_UI_VERSION, '-' ) ? 'beta' : 'stable' ) );
+$expect( 'the default channel is the version running\'s: ' . ( str_contains( DX_UI_VERSION, '-' ) ? 'beta' : 'stable' ) . ' for ' . DX_UI_VERSION, Github_Updater::channel() === ( str_contains( DX_UI_VERSION, '-' ) ? 'beta' : 'stable' ) );
 $channel = 'stable';
 
 echo "\nWhat does not count\n";
@@ -136,10 +136,10 @@ $expect( 'a draft', Github_Updater::latest() === null );
 $releases = array( $release( '99.0.0', array( 'tag_name' => 'nightly' ) ) );
 $fresh();
 $expect( 'a tag that is not a version', Github_Updater::latest() === null );
-$releases = array( $release( '99.0.0', array( 'assets' => array() ) ), $release( '98.0.0', array( 'assets' => array( $asset( '98.0.0', 'dxai-ui.zip' ) ) ) ) );
+$releases = array( $release( '99.0.0', array( 'assets' => array() ) ), $release( '98.0.0', array( 'assets' => array( $asset( '98.0.0', 'dx-ui.zip' ) ) ) ) );
 $fresh();
 $expect( 'a release without its ZIP, or with a ZIP of another name', Github_Updater::latest() === null );
-$releases = array( $release( '99.0.0', array( 'assets' => array( array( 'name' => 'dxai-ui-99.0.0.zip', 'browser_download_url' => 'http://example.com/dxai-ui-99.0.0.zip' ) ) ) ) );
+$releases = array( $release( '99.0.0', array( 'assets' => array( array( 'name' => 'dx-ui-99.0.0.zip', 'browser_download_url' => 'http://example.com/dx-ui-99.0.0.zip' ) ) ) ) );
 $fresh();
 $expect( 'a ZIP that is not on https', Github_Updater::latest() === null );
 
@@ -158,24 +158,24 @@ Github_Updater::update( false, array(), $file );
 $expect( 'the releases are read once, then from the cache', count( $calls ) === 1, count( $calls ) . ' requests' );
 $fresh();
 $off = static fn() => '';
-add_filter( 'dxai_ui_update_repository', $off );
-$expect( 'dxai_ui_update_repository \'\' switches the updates off: nothing is asked', Github_Updater::update( false, array(), $file ) === false && $calls === array() );
-remove_filter( 'dxai_ui_update_repository', $off );
+add_filter( 'dx_ui_update_repository', $off );
+$expect( 'dx_ui_update_repository \'\' switches the updates off: nothing is asked', Github_Updater::update( false, array(), $file ) === false && $calls === array() );
+remove_filter( 'dx_ui_update_repository', $off );
 $bad = static fn() => 'not a repository';
-add_filter( 'dxai_ui_update_repository', $bad );
+add_filter( 'dx_ui_update_repository', $bad );
 $expect( '…and so does a name that is not owner/name', Github_Updater::repository() === '' );
-remove_filter( 'dxai_ui_update_repository', $bad );
+remove_filter( 'dx_ui_update_repository', $bad );
 
 echo "\nView details\n";
 $releases = array( $release( '99.0.0', array( 'body' => "Fixed things.\n\n<script>alert(1)</script>" ) ) );
 $fresh();
-$info = Github_Updater::details( false, 'plugin_information', (object) array( 'slug' => 'dxai-ui' ) );
-$expect( 'this plugin\'s details: the version, the ZIP, what it needs', is_object( $info ) && $info->version === '99.0.0' && $info->download_link === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dxai-ui-99.0.0.zip' && $info->requires_php === '8.2' );
+$info = Github_Updater::details( false, 'plugin_information', (object) array( 'slug' => 'dx-ui' ) );
+$expect( 'this plugin\'s details: the version, the ZIP, what it needs', is_object( $info ) && $info->version === '99.0.0' && $info->download_link === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dx-ui-99.0.0.zip' && $info->requires_php === '8.2' );
 $expect( 'the release\'s notes, escaped', is_object( $info ) && str_contains( $info->sections['changelog'], 'Fixed things.' ) && ! str_contains( $info->sections['changelog'], '<script>' ) );
-$expect( 'another plugin\'s details are left alone', Github_Updater::details( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ) === false && Github_Updater::details( false, 'query_plugins', (object) array( 'slug' => 'dxai-ui' ) ) === false );
+$expect( 'another plugin\'s details are left alone', Github_Updater::details( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ) === false && Github_Updater::details( false, 'query_plugins', (object) array( 'slug' => 'dx-ui' ) ) === false );
 
 echo "\nWordPress' own update check, through the header's Update URI\n";
-$data = get_plugin_data( DXAI_UI_FILE, false, false );
+$data = get_plugin_data( DX_UI_FILE, false, false );
 $expect( 'the header names the repository as the Update URI', ( $data['UpdateURI'] ?? '' ) === 'https://github.com/DevriX/dxai-ui', (string) ( $data['UpdateURI'] ?? '' ) );
 $releases = array( $release( '99.0.0' ) );
 $fresh();
@@ -183,7 +183,7 @@ delete_site_transient( 'update_plugins' );
 wp_update_plugins();
 $t   = get_site_transient( 'update_plugins' );
 $got = is_object( $t ) ? ( $t->response[ $file ] ?? null ) : null;
-$expect( 'Dashboard › Updates offers the release: the new version and its ZIP', is_object( $got ) && $got->new_version === '99.0.0' && $got->package === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dxai-ui-99.0.0.zip', wp_json_encode( $got ) );
+$expect( 'Dashboard › Updates offers the release: the new version and its ZIP', is_object( $got ) && $got->new_version === '99.0.0' && $got->package === 'https://github.com/DevriX/dxai-ui/releases/download/v99.0.0/dx-ui-99.0.0.zip', wp_json_encode( $got ) );
 $releases = array( $release( '0.0.1' ) );
 $fresh();
 delete_site_transient( 'update_plugins' );
@@ -193,7 +193,7 @@ $expect( 'an older release is not an update: the plugin is listed as up to date'
 
 echo "\nA development checkout is offered nothing (WordPress would delete its folder: through a link, the repository)\n";
 $expect( 'this copy is seen as a checkout (it carries the suites)', $on_checkout );
-remove_filter( 'dxai_ui_update_checkout', $installed );
+remove_filter( 'dx_ui_update_checkout', $installed );
 $releases = array( $release( '99.0.0' ) );
 $fresh();
 $expect( 'on it a newer release is not offered', Github_Updater::update( false, array(), $file ) === false );
@@ -201,7 +201,7 @@ delete_site_transient( 'update_plugins' );
 wp_update_plugins();
 $t = get_site_transient( 'update_plugins' );
 $expect( '…and Dashboard › Updates has none for it', is_object( $t ) && ! isset( $t->response[ $file ] ) );
-add_filter( 'dxai_ui_update_checkout', $installed );
+add_filter( 'dx_ui_update_checkout', $installed );
 
 $finish();
 echo "\n$pass passed, $fail failed\n";

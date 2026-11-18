@@ -1,23 +1,23 @@
 <?php
 /**
- * WP-CLI: wp dxai-ui native-blocks.
+ * WP-CLI: wp dx-ui native-blocks.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Structures\Design_Attach;
+use DX_UI\Structures\Design_Attach;
 
 /**
  * The Library's "Native blocks" panel from the command line, for a network of sites: run it per site with the
  * standard `--url=<site>`, or over the whole network with `wp site list --field=url | xargs -I% wp --url=% ...`.
  *
- *   wp dxai-ui native-blocks status
- *   wp dxai-ui native-blocks apply  [--design=<home-id>] [--dry-run]
- *   wp dxai-ui native-blocks revert [--design=<home-id>]
+ *   wp dx-ui native-blocks status
+ *   wp dx-ui native-blocks apply  [--design=<home-id>] [--dry-run]
+ *   wp dx-ui native-blocks revert [--design=<home-id>]
  *
  * Without --design it works on every imported design of the site. Each changed page keeps its content from before,
  * so `revert` puts it back (a page edited since is left as its editor made it).
@@ -26,7 +26,7 @@ final class Native_Cli {
 
 	public static function register(): void {
 		\WP_CLI::add_command(
-			'dxai-ui native-blocks',
+			'dx-ui native-blocks',
 			array( self::class, 'run' ),
 			array(
 				'shortdesc' => 'Use WordPress\'s and the theme\'s own blocks in place of the plugin\'s where they say the same thing (status, apply, revert).',

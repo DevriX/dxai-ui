@@ -4,7 +4,7 @@
  *
  * Usage: php bin/fix-home-and-empty-pages.php <wp-root> [home-id]
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
@@ -29,13 +29,13 @@ if ( $home_id < 1 ) {
 			'post_type'      => 'page',
 			'posts_per_page' => 1,
 			'post_status'    => 'publish',
-			'meta_key'       => '_dxai_ui_generated_page',
+			'meta_key'       => '_dx_ui_generated_page',
 			'meta_value'     => '1',
 			'orderby'        => 'ID',
 			'order'          => 'DESC',
 			'meta_query'     => array(
 				array(
-					'key'     => '_dxai_ui_from_live_menu',
+					'key'     => '_dx_ui_from_live_menu',
 					'compare' => 'NOT EXISTS',
 				),
 			),
@@ -50,8 +50,8 @@ if ( $home_id < 1 ) {
 }
 
 $uploads = wp_upload_dir();
-$pattern_url = trailingslashit( (string) $uploads['baseurl'] ) . 'dxai-ui/pattern-' . $home_id . '.css';
-$pattern_path = trailingslashit( (string) $uploads['basedir'] ) . 'dxai-ui/pattern-' . $home_id . '.css';
+$pattern_url = trailingslashit( (string) $uploads['baseurl'] ) . 'dx-ui/pattern-' . $home_id . '.css';
+$pattern_path = trailingslashit( (string) $uploads['basedir'] ) . 'dx-ui/pattern-' . $home_id . '.css';
 
 if ( ! is_readable( $pattern_path ) ) {
 	fwrite( STDERR, "pattern_css_missing={$pattern_path}\n" );
@@ -59,12 +59,12 @@ if ( ! is_readable( $pattern_path ) ) {
 }
 
 // 1) Restore Home to its original compiled sheet (never the live site sheet).
-update_post_meta( $home_id, '_dxai_ui_css_url', DXAI_UI\Support\Upload_Paths::for_storage( $pattern_url ) );
+update_post_meta( $home_id, '_dx_ui_css_url', DX_UI\Support\Upload_Paths::for_storage( $pattern_url ) );
 echo 'home_css_restored=' . $pattern_url . PHP_EOL;
 
 $home_content = (string) get_post_field( 'post_content', $home_id );
-preg_match( '/"slug":"(dxai-header-[^"]+)"/', $home_content, $h );
-preg_match( '/"slug":"(dxai-footer-[^"]+)"/', $home_content, $f );
+preg_match( '/"slug":"(dxui-header-[^"]+)"/', $home_content, $h );
+preg_match( '/"slug":"(dxui-footer-[^"]+)"/', $home_content, $f );
 $header_slug = $h[1] ?? '';
 $footer_slug = $f[1] ?? '';
 if ( $header_slug === '' || $footer_slug === '' ) {
@@ -93,8 +93,8 @@ $footer_json = wp_json_encode(
 $header_ref = sprintf( '<!-- wp:template-part %s /-->', is_string( $header_json ) ? $header_json : '{}' );
 $footer_ref = sprintf( '<!-- wp:template-part %s /-->', is_string( $footer_json ) ? $footer_json : '{}' );
 
-$home_wrap = (string) get_post_meta( $home_id, '_dxai_ui_wrapper_class', true );
-$class     = trim( 'dxai-ui dxai-ui--' . $home_id . ' ' . $home_wrap );
+$home_wrap = (string) get_post_meta( $home_id, '_dx_ui_wrapper_class', true );
+$class     = trim( 'dx-ui dx-ui--' . $home_id . ' ' . $home_wrap );
 $encoded   = wp_json_encode(
 	array(
 		'align'     => 'full',
@@ -117,7 +117,7 @@ $empty_body = sprintf(
 );
 
 // Rebuild site CSS for children from clean pattern sheet.
-$site = DXAI_UI\Structures\Live_Content_Shell::persist_site_css( $home_id, $pattern_url );
+$site = DX_UI\Structures\Live_Content_Shell::persist_site_css( $home_id, $pattern_url );
 $site_url = is_wp_error( $site ) ? $pattern_url : $site;
 echo 'site_css=' . $site_url . PHP_EOL;
 
@@ -126,7 +126,7 @@ $children = get_posts(
 		'post_type'      => 'page',
 		'posts_per_page' => 50,
 		'post_status'    => 'any',
-		'meta_key'       => '_dxai_ui_from_live_menu',
+		'meta_key'       => '_dx_ui_from_live_menu',
 		'meta_value'     => '1',
 	)
 );
@@ -139,19 +139,19 @@ foreach ( $children as $child ) {
 			'post_content' => wp_slash( $empty_body ),
 		)
 	);
-	update_post_meta( $child->ID, '_dxai_ui_css_url', DXAI_UI\Support\Upload_Paths::for_storage( is_string( $site_url ) ? $site_url : $pattern_url ) );
-	update_post_meta( $child->ID, '_dxai_ui_wrapper_class', $home_wrap );
-	update_post_meta( $child->ID, '_wp_page_template', DXAI_UI\Theme\Blank_Template::SLUG );
-	if ( get_post_meta( $home_id, '_dxai_ui_static_html', true ) ) {
-		update_post_meta( $child->ID, '_dxai_ui_static_html', '1' );
+	update_post_meta( $child->ID, '_dx_ui_css_url', DX_UI\Support\Upload_Paths::for_storage( is_string( $site_url ) ? $site_url : $pattern_url ) );
+	update_post_meta( $child->ID, '_dx_ui_wrapper_class', $home_wrap );
+	update_post_meta( $child->ID, '_wp_page_template', DX_UI\Theme\Blank_Template::SLUG );
+	if ( get_post_meta( $home_id, '_dx_ui_static_html', true ) ) {
+		update_post_meta( $child->ID, '_dx_ui_static_html', '1' );
 	}
-	$fonts = get_post_meta( $home_id, '_dxai_ui_font_urls', true );
+	$fonts = get_post_meta( $home_id, '_dx_ui_font_urls', true );
 	if ( is_array( $fonts ) ) {
-		update_post_meta( $child->ID, '_dxai_ui_font_urls', $fonts );
+		update_post_meta( $child->ID, '_dx_ui_font_urls', $fonts );
 	}
-	$js = (string) get_post_meta( $home_id, '_dxai_ui_js_url', true );
+	$js = (string) get_post_meta( $home_id, '_dx_ui_js_url', true );
 	if ( $js !== '' ) {
-		update_post_meta( $child->ID, '_dxai_ui_js_url', DXAI_UI\Support\Upload_Paths::for_storage( $js ) );
+		update_post_meta( $child->ID, '_dx_ui_js_url', DX_UI\Support\Upload_Paths::for_storage( $js ) );
 	}
 	++$emptied;
 	echo 'emptied #' . $child->ID . ' ' . $child->post_title . PHP_EOL;

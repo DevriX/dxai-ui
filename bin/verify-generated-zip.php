@@ -11,13 +11,13 @@
  * design's own colours compiled to no rule at all, and Northlight Roofing's hero and call-to-action bands came out
  * with no background, white text on white.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Compiler\Tailwind\Theme;
-use DXAI_UI\Compiler\Tailwind_Purger;
-use DXAI_UI\Connectors\Zip_Router;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Compiler\Tailwind\Theme;
+use DX_UI\Compiler\Tailwind_Purger;
+use DX_UI\Connectors\Zip_Router;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,7 +35,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$dir = trailingslashit( get_temp_dir() ) . 'dxai-ui-verify-generated-' . wp_generate_password( 8, false, false );
+$dir = trailingslashit( get_temp_dir() ) . 'dx-ui-verify-generated-' . wp_generate_password( 8, false, false );
 wp_mkdir_p( $dir );
 $made = array();
 register_shutdown_function(
@@ -93,7 +93,7 @@ $cdn_page = '<!DOCTYPE html><html><head>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = ' . $object . ';
-  window.dxaiReady = { done: true };
+  window.dxuiReady = { done: true };
 </script>
 </head><body class="bg-white text-slate-800">
 <section class="bg-brand-900 text-white"><h1 class="font-display text-4xl">A roof that outlasts the next storm.</h1><a href="#quote" class="rounded-lg bg-flame px-6 py-3">Book a free inspection</a></section>

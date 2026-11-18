@@ -5,20 +5,20 @@
  * Progress and the finishing pass run through the import's own crawl routes
  * (crawl-step / crawl-status): the job is a Crawl_Job like the import's.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\API;
+namespace DX_UI\API;
 
-use DXAI_UI\Pages\Site_Pages;
+use DX_UI\Pages\Site_Pages;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class Site_Pages_Controller {
 
-	private string $namespace = 'dxai-ui/v1';
+	private string $namespace = 'dx-ui/v1';
 
 	public function register_routes(): void {
 		register_rest_route(
@@ -92,20 +92,20 @@ final class Site_Pages_Controller {
 		$out = array();
 		// Homes only, asked of the database as such: the pages made for a design are generated too, and with enough of them
 		// the Home fell outside the first results and the panel disappeared.
-		foreach ( \DXAI_UI\Structures\Design_Attach::home_ids() as $home_id ) {
+		foreach ( \DX_UI\Structures\Design_Attach::home_ids() as $home_id ) {
 			$page = get_post( $home_id );
 			if ( ! $page instanceof \WP_Post ) {
 				continue;
 			}
-			$scope = (int) get_post_meta( $page->ID, \DXAI_UI\Structures\Page_Scope::META, true );
-			if ( $scope !== (int) $page->ID || get_post_meta( $page->ID, '_dxai_ui_from_live_menu', true ) ) {
+			$scope = (int) get_post_meta( $page->ID, \DX_UI\Structures\Page_Scope::META, true );
+			if ( $scope !== (int) $page->ID || get_post_meta( $page->ID, '_dx_ui_from_live_menu', true ) ) {
 				continue;
 			}
 			$out[] = array(
 				'id'      => (int) $page->ID,
 				'title'   => html_entity_decode( get_the_title( $page ), ENT_QUOTES, 'UTF-8' ),
 				'view'    => (string) get_permalink( $page ),
-				'archive' => (string) get_post_meta( $page->ID, '_dxai_ui_source_zip', true ),
+				'archive' => (string) get_post_meta( $page->ID, '_dx_ui_source_zip', true ),
 			);
 		}
 
@@ -115,12 +115,12 @@ final class Site_Pages_Controller {
 	public function list_pages( WP_REST_Request $request ): WP_REST_Response|\WP_Error {
 		$home = (int) $request->get_param( 'home' );
 		if ( get_post_type( $home ) !== 'page' ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'That design page no longer exists.', 'dxai-ui' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'dx_ui_site_pages', __( 'That design page no longer exists.', 'dx-ui' ), array( 'status' => 404 ) );
 		}
 
 		$origin = (string) $request->get_param( 'origin' );
-		if ( $origin !== '' && \DXAI_UI\Connectors\Site_Origin::normalize( $origin ) === '' ) {
-			return new \WP_Error( 'dxai_ui_site_pages', __( 'That is not a site address. Enter it like example.com or https://www.example.com.', 'dxai-ui' ), array( 'status' => 400 ) );
+		if ( $origin !== '' && \DX_UI\Connectors\Site_Origin::normalize( $origin ) === '' ) {
+			return new \WP_Error( 'dx_ui_site_pages', __( 'That is not a site address. Enter it like example.com or https://www.example.com.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		return rest_ensure_response( Site_Pages::listing( $home, $origin ) );

@@ -2,16 +2,16 @@
 /**
  * The pages made for a design, measured against its Home.
  *
- * @package DXAI_UI\Pages
+ * @package DX_UI\Pages
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Pages;
+namespace DX_UI\Pages;
 
-use DXAI_UI\Chrome\Page_Chrome;
-use DXAI_UI\Structures\Design_Attach;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Chrome\Page_Chrome;
+use DX_UI\Structures\Design_Attach;
+use DX_UI\Structures\Page_Scope;
 
 /**
  * The rules the pages of a design are held to (docs/PLAN-TEAM-PAGES.md, section 5), the ones the database can answer:
@@ -284,7 +284,7 @@ final class Team_Quality {
 				// How many top-level blocks of the page are the Home's header and footer (0 when they are template parts), and the header the site draws.
 				'chrome'   => array( 'header' => $header_in ? count( $hb ) + ( $header_drawn ? 1 : 0 ) : 0, 'footer' => $footer_in ? count( $fb ) : 0 ),
 			),
-			'tokens' => array_map( 'strval', \DXAI_UI\Compiler\Design_Tokens::for_page( $home ) ),
+			'tokens' => array_map( 'strval', \DX_UI\Compiler\Design_Tokens::for_page( $home ) ),
 			'pages'  => array_values( $pages ),
 			'gates'  => array_map( static fn( $g ) => array_filter( $g ), $gates ),
 		);
@@ -351,7 +351,7 @@ final class Team_Quality {
 
 	/** Whether a part of the Home's chrome is in its content (not a template part or the site's header block). */
 	private static function embedded( string $markup ): bool {
-		return $markup !== '' && ! str_contains( $markup, '<!-- wp:template-part' ) && ! str_contains( $markup, '<!-- wp:dxai-ui/site-' );
+		return $markup !== '' && ! str_contains( $markup, '<!-- wp:template-part' ) && ! str_contains( $markup, '<!-- wp:dx-ui/site-' );
 	}
 
 	/**
@@ -372,7 +372,7 @@ final class Team_Quality {
 			if ( ! is_array( $b ) ) {
 				continue;
 			}
-			if ( \DXAI_UI\Blocks\Library_View::has_section( (string) ( $b['attrs']['className'] ?? '' ) ) ) {
+			if ( \DX_UI\Blocks\Library_View::has_section( (string) ( $b['attrs']['className'] ?? '' ) ) ) {
 				$n += substr_count( serialize_block( $b ), ' style="' );
 				continue;
 			}

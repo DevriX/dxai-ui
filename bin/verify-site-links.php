@@ -12,12 +12,12 @@
  * The site is put in a folder for the checks by `home_url` (as a network in folders has it); nothing about the site is changed. Makes its
  * pages, a widget record and a menu item's mark, and takes them away, also when a check dies half-way. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Chrome\Footer_Widgets;
-use DXAI_UI\Chrome\Site_Links;
-use DXAI_UI\Structures\Page_Scope;
+use DX_UI\Chrome\Footer_Widgets;
+use DX_UI\Chrome\Site_Links;
+use DX_UI\Structures\Page_Scope;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -133,10 +133,10 @@ $got = $hrefs( (string) apply_filters( 'the_content', $body ) );
 $expect( 'a page that is no design\'s: nothing read (a person\'s links are theirs)', in_array( '/careers/', $got, true ) && in_array( '#why', $got, true ), implode( ' ', $got ) );
 
 $view( $sub );
-add_filter( 'dxai_ui_site_links', '__return_false' );
+add_filter( 'dx_ui_site_links', '__return_false' );
 $got = $hrefs( (string) apply_filters( 'the_content', $body ) );
-remove_filter( 'dxai_ui_site_links', '__return_false' );
-$expect( 'dxai_ui_site_links false: as they are', in_array( '/careers/', $got, true ) && in_array( '#why', $got, true ) );
+remove_filter( 'dx_ui_site_links', '__return_false' );
+$expect( 'dx_ui_site_links false: as they are', in_array( '/careers/', $got, true ) && in_array( '#why', $got, true ) );
 
 echo "\nThe footer's widgets and the header's menu items\n";
 $options[ Footer_Widgets::OWNED ] = get_option( Footer_Widgets::OWNED, null );
@@ -152,7 +152,7 @@ $got = $hrefs( (string) apply_filters( 'widget_block_content', $w_html, array(),
 $expect( 'a widget a person made: as it is', array( '/careers/', '/privacy-policy/' ) === $got, implode( ' ', $got ) );
 
 $item = $page( 'Item', '', 0, 'nav_menu_item' );
-update_post_meta( $item, '_dxai_ui_generated', '1' );
+update_post_meta( $item, '_dx_ui_generated', '1' );
 $mine  = (array) apply_filters( 'nav_menu_link_attributes', array( 'href' => '/mold-remediation/' ), get_post( $item ), (object) array(), 0 );
 $other = $page( 'Other item', '', 0, 'nav_menu_item' );
 $their = (array) apply_filters( 'nav_menu_link_attributes', array( 'href' => '/mold-remediation/' ), get_post( $other ), (object) array(), 0 );

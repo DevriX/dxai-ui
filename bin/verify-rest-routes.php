@@ -27,12 +27,12 @@
  * Nothing leaves the machine (every HTTP request is refused and counted), nothing is saved, the settings are not written and no
  * engine is asked (fidelity off). Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\API\Converter_Controller;
-use DXAI_UI\Security\Secret_Store;
-use DXAI_UI\Settings\Options;
+use DX_UI\API\Converter_Controller;
+use DX_UI\Security\Secret_Store;
+use DX_UI\Settings\Options;
 
 $fail   = 0;
 $pass   = 0;
@@ -46,7 +46,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$ns       = DXAI_UI_REST_NAMESPACE;
+$ns       = DX_UI_REST_NAMESPACE;
 $original = get_current_user_id();
 
 // Nothing leaves the machine: every request is refused and written down.
@@ -56,7 +56,7 @@ add_filter(
 	static function ( $pre, $args, $url ) use ( &$http ) {
 		$http[] = (string) $url;
 
-		return new WP_Error( 'dxai_test_no_network', 'Refused by bin/verify-rest-routes.php' );
+		return new WP_Error( 'dxui_test_no_network', 'Refused by bin/verify-rest-routes.php' );
 	},
 	1,
 	3
@@ -282,7 +282,7 @@ $expect( "a visitor is refused (401 or 403) by all $asked routes that are not pu
 echo "\n3. Bad input, as an administrator\n";
 $act_as( 'administrator' );
 $not_there = 999999999;
-$text_file = wp_tempnam( 'dxai-route-test.zip' );
+$text_file = wp_tempnam( 'dxui-route-test.zip' );
 file_put_contents( $text_file, 'this is not a zip archive' );
 $upload = static fn( array $over = array() ): array => array(
 	'file' => $over + array(
@@ -322,7 +322,7 @@ $cases = array(
 	'upload-chunk: a piece of an archive nobody sent'  => array( 'POST', '/upload-chunk', array( 'name' => 'a.zip', 'index' => 1, 'total' => 2, 'size' => 10, 'stage' => str_repeat( '0', 32 ) ), array( 'chunk' => $upload()['file'] ), 'error' ),
 	'settings/test: an engine nobody has'               => array( 'POST', '/settings/test', array( 'provider' => 'nonexistent' ), null, 'error' ),
 	'settings/test: Lovable, which has no API'          => array( 'POST', '/settings/test', array( 'provider' => 'lovable' ), null, 'error' ),
-	'forms/submit: the trap field filled (a bot)'       => array( 'POST', '/forms/submit', array( DXAI_UI\Blocks\Form_Block::HONEYPOT => 'x', 'email' => 'a@example.org' ), null, 'ok' ),
+	'forms/submit: the trap field filled (a bot)'       => array( 'POST', '/forms/submit', array( DX_UI\Blocks\Form_Block::HONEYPOT => 'x', 'email' => 'a@example.org' ), null, 'ok' ),
 	'forms/submit: the old trap field filled'           => array( 'POST', '/forms/submit', array( 'website' => 'x', 'email' => 'a@example.org' ), null, 'ok' ),
 	'transfer/import: no package'                       => array( 'POST', '/transfer/import', array(), null, 'error' ),
 	'transfer/import: a file that is not a package'     => array( 'POST', '/transfer/import', array( 'dry_run' => true ), array( 'package' => $upload()['file'] ), 'error' ),
@@ -368,7 +368,7 @@ foreach ( $cases as $label => $case ) {
 	}
 }
 $expect( count( $cases ) . ' cases of bad input each get an answer, never a fatal (4xx with a code, or 200 where nothing is wrong)', $wrong === array(), implode( ' | ', $wrong ) );
-$expect( 'and the trap field of the public form stores nothing and still says ok', ( $call( 'POST', '/forms/submit', array( DXAI_UI\Blocks\Form_Block::HONEYPOT => 'x' ) )['data']['ok'] ?? false ) === true );
+$expect( 'and the trap field of the public form stores nothing and still says ok', ( $call( 'POST', '/forms/submit', array( DX_UI\Blocks\Form_Block::HONEYPOT => 'x' ) )['data']['ok'] ?? false ) === true );
 $expect( 'and no post was written by any of them', $posts() === $before_posts, $before_posts . ' → ' . $posts() );
 // The check above must be able to fail: a call that does throw is reported as such.
 $boom = $call( 'GET', '/forms/entries', array() );
@@ -439,7 +439,7 @@ add_filter( 'map_meta_cap', $no_html, 10, 2 );
 $refused = $call( 'POST', '/generate-block', $body );
 $info    = $call( 'GET', '/import-info' );
 remove_filter( 'map_meta_cap', $no_html, 10 );
-$expect( 'generate-block says why it refuses (403, with the sentence the import screen shows)', $refused['status'] === 403 && $code_of( $refused ) === 'dxai_ui_unfiltered_html' && is_array( $refused['data'] ) && ( $refused['data']['message'] ?? '' ) === Converter_Controller::unfiltered_html_message(), $refused['status'] . ' ' . $code_of( $refused ) );
+$expect( 'generate-block says why it refuses (403, with the sentence the import screen shows)', $refused['status'] === 403 && $code_of( $refused ) === 'dx_ui_unfiltered_html' && is_array( $refused['data'] ) && ( $refused['data']['message'] ?? '' ) === Converter_Controller::unfiltered_html_message(), $refused['status'] . ' ' . $code_of( $refused ) );
 $expect( 'import-info tells the screen before anything is uploaded', $info['status'] === 200 && ( $info['data']['can_import'] ?? null ) === false && (string) ( $info['data']['import_refusal'] ?? '' ) !== '', $info['status'] . ' ' . wp_json_encode( array( $info['data']['can_import'] ?? null ) ) );
 
 // --- 6. The key never comes back. -------------------------------------------------------------------------------------------------
@@ -510,7 +510,7 @@ $routes = array();
 foreach ( $table as $row ) {
 	$routes[ $row['route'] ][] = $row['method'];
 }
-$dir   = DXAI_UI_DIR . 'assets/src/admin';
+$dir   = DX_UI_DIR . 'assets/src/admin';
 $files = array();
 if ( is_dir( $dir ) ) {
 	foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) ) as $f ) {
@@ -532,7 +532,7 @@ if ( $files === array() ) {
 		}
 	}
 	$expect( 'all ' . count( $files ) . ' scripts of the admin app call only routes that exist, with the methods they have (' . $n . ' route strings)', $bad === array() && $n > 20, implode( '; ', $bad ) . ( $n > 20 ? '' : " (only $n route strings found: is the pattern still right?)" ) );
-	$made_up = "apiFetch( { path: '/dxai-ui/v1/does-not-exist' } ); postForm( 'also-not-there', body ); apiFetch( { path: '/dxai-ui/v1/settings', method: 'DELETE' } );";
+	$made_up = "apiFetch( { path: '/dx-ui/v1/does-not-exist' } ); postForm( 'also-not-there', body ); apiFetch( { path: '/dx-ui/v1/settings', method: 'DELETE' } );";
 	$expect( 'a path, a form post and a method the server does not have are each reported (the check is able to catch them)', count( $contract( $made_up, $routes ) ) === 3, implode( '; ', $contract( $made_up, $routes ) ) );
 }
 

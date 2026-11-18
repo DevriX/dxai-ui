@@ -2,12 +2,12 @@
 /**
  * Any other classic theme.
  *
- * @package DXAI_UI\Theme\Adapters
+ * @package DX_UI\Theme\Adapters
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Theme\Adapters;
+namespace DX_UI\Theme\Adapters;
 
 /**
  * A classic theme that is not a DX theme (Astra, Kadence, GeneratePress, a custom one): it renders the site's header and footer itself from

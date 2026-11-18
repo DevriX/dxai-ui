@@ -10,13 +10,13 @@
  *
  * Builds its archives in a temporary folder and removes them; writes nothing to the site. Exit code 1 when a check fails.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
-use DXAI_UI\Compiler\Dc_Renderer;
-use DXAI_UI\Compiler\Dc_Script;
-use DXAI_UI\Compiler\Source_Compiler;
-use DXAI_UI\Connectors\Zip_Router;
+use DX_UI\Compiler\Dc_Renderer;
+use DX_UI\Compiler\Dc_Script;
+use DX_UI\Compiler\Source_Compiler;
+use DX_UI\Connectors\Zip_Router;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -34,7 +34,7 @@ $expect = static function ( string $what, bool $ok, string $detail = '' ) use ( 
 	}
 };
 
-$dir = trailingslashit( get_temp_dir() ) . 'dxai-ui-verify-dc-site-' . wp_generate_password( 8, false, false );
+$dir = trailingslashit( get_temp_dir() ) . 'dx-ui-verify-dc-site-' . wp_generate_password( 8, false, false );
 wp_mkdir_p( $dir );
 $made = array();
 register_shutdown_function(
@@ -124,8 +124,8 @@ $html       = $out['html'];
 $expect( 'the page\'s first import is drawn as its header, its last as its footer', preg_match( '/^\s*<div[^>]*>\s*<header\b/', $html ) === 1 && preg_match( '/<\/footer>\s*<\/div>\s*$/', $html ) === 1, substr( $html, 0, 160 ) );
 $expect( 'the part\'s own root becomes the landmark: no extra level', substr_count( $html, '<header' ) === 1 && str_contains( $html, '<header style="width:100%;background:#fff"' ), substr( $html, 0, 200 ) );
 $expect( 'with the part\'s content in it', str_contains( $html, 'About us' ) && str_contains( $html, '© 2026 Acme' ) );
-preg_match_all( '/dxai-sh-(\d+)/', $html, $ids );
-preg_match_all( '/\.dxai-sh-(\d+):hover/', $out['css'], $rules );
+preg_match_all( '/dxui-sh-(\d+)/', $html, $ids );
+preg_match_all( '/\.dxui-sh-(\d+):hover/', $out['css'], $rules );
 $expect( 'the part\'s classes and the page\'s are numbered as one: each class is one rule', count( array_unique( $ids[1] ) ) === 3 && count( $rules[1] ) === count( array_unique( $rules[1] ) ) && count( $rules[1] ) === 3, wp_json_encode( array( $ids[1], $rules[1] ) ) );
 $none = $render( '<div><dc-import name="Missing"></dc-import><p>x</p></div>', $components );
 $expect( 'an import of a part the export does not hold draws nothing, as before', ! str_contains( $none['html'], 'dc-import' ) && str_contains( $none['html'], '<p>x</p>' ) );
@@ -146,7 +146,7 @@ $expect( 'each with the header and the footer too', ( $types( $pages['/contact']
 $header = array_values( array_filter( $result['structures'] ?? array(), static fn( $s ) => $s['type'] === 'header' ) )[0] ?? array();
 $expect( 'the header\'s menu is read from the part, its links at the routes', in_array( '/about', array_column( $header['menu_items'] ?? array(), 'url' ), true ) && in_array( '/services', array_column( $header['menu_items'] ?? array(), 'url' ), true ), wp_json_encode( $header['menu_items'] ?? null ) );
 $css = (string) ( $result['custom_css'] ?? '' );
-preg_match_all( '/\.dxai-sh-(\d+):hover/', $css, $all );
+preg_match_all( '/\.dxui-sh-(\d+):hover/', $css, $all );
 $expect( 'the hover rules of every page reach the stylesheet, each class once', in_array( 'color:#f0f !important', array_map( 'trim', explode( ';', $css ) ), true ) || str_contains( $css, 'color:#f0f' ), substr( $css, 0, 200 ) );
 $expect( '…and no two pages share a class number', count( $all[1] ) === count( array_unique( $all[1] ) ) && count( $all[1] ) >= 5, wp_json_encode( $all[1] ) );
 $expect( 'no link names a file any more', ! str_contains( (string) ( $result['gutenberg_markup'] ?? '' ) . implode( '', array_column( $result['pages'] ?? array(), 'gutenberg_markup' ) ), '.dc.html' ) );
@@ -158,16 +158,16 @@ if ( $pid < 1 ) {
 	echo "  skip  this site has no published page to point at\n";
 } else {
 	$link = (string) get_permalink( $pid );
-	$html = ( new DXAI_UI\Compiler\Internal_Links() )->rewrite_html(
+	$html = ( new DX_UI\Compiler\Internal_Links() )->rewrite_html(
 		'<a href="/about">a</a><a href="/about#careers">b</a><!-- wp:x {"url":"/about?tab=2"} --><a href="/about-us#x">c</a><a href="#about">d</a>',
 		array( array( 'id' => $pid, 'paths' => array( '/about' ) ) )
 	);
 	$expect( 'a link to a part of a page, or with a query, gets the page\'s address with the part kept', str_contains( $html, 'href="' . $link . '#careers"' ) && str_contains( $html, '"url":"' . $link . '?tab=2"' ) && str_contains( $html, 'href="' . $link . '"' ), $html );
 	$expect( 'a longer path and an anchor of the page itself are left alone', str_contains( $html, 'href="/about-us#x"' ) && str_contains( $html, 'href="#about"' ), $html );
-	$bind = new ReflectionMethod( DXAI_UI\Structures\Navigation_Factory::class, 'bind_pages' );
+	$bind = new ReflectionMethod( DX_UI\Structures\Navigation_Factory::class, 'bind_pages' );
 	$bind->setAccessible( true );
 	$menu = $bind->invoke(
-		new DXAI_UI\Structures\Navigation_Factory( 'verify-dc-site', 'verify' ),
+		new DX_UI\Structures\Navigation_Factory( 'verify-dc-site', 'verify' ),
 		array(
 			array( 'label' => 'About', 'url' => '/about' ),
 			array( 'label' => 'Careers', 'url' => '/about#careers' ),

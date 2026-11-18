@@ -3,15 +3,15 @@
  * Persist a fake structured generation without calling an LLM.
  * Run: wp eval-file bin/verify-structures.php
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require DXAI_UI_DIR . 'bin/verify-cleanup.php';
-$dxai_snapshot = dxai_verify_snapshot();
+require DX_UI_DIR . 'bin/verify-cleanup.php';
+$dxui_snapshot = dxui_verify_snapshot();
 
 $user = get_user_by( 'login', 'admin' );
 if ( $user instanceof WP_User ) {
@@ -45,8 +45,8 @@ $footer = '<!-- wp:group {"className":"px-8 py-12 bg-slate-900 text-white"} -->'
 
 $body = $hero . "\n" . $blog;
 
-$save = new WP_REST_Request( 'POST', '/dxai-ui/v1/save-pattern' );
-$save->set_param( 'block_title', 'DXAI Structure Smoke' );
+$save = new WP_REST_Request( 'POST', '/dx-ui/v1/save-pattern' );
+$save->set_param( 'block_title', 'DXUI Structure Smoke' );
 $save->set_param( 'gutenberg_markup', $body );
 $save->set_param( 'custom_css', '.hero { min-height: 100vh; }' );
 $save->set_param( 'custom_js', '' );
@@ -143,18 +143,18 @@ echo 'pattern_count=' . count( $created['patterns'] ?? array() ) . PHP_EOL;
 $page = $page_id ? get_post( $page_id ) : null;
 $content = $page instanceof WP_Post ? (string) $page->post_content : '';
 echo 'has_query=' . ( str_contains( $content, 'wp:query' ) || str_contains( $content, 'wp:block' ) ? 'yes' : 'no' ) . PHP_EOL;
-echo 'has_form_block=' . ( str_contains( $content, 'dxai-ui/form' ) || str_contains( $content, 'wp:block' ) ? 'yes' : 'no' ) . PHP_EOL;
-echo 'has_slider_block=' . ( str_contains( $content, 'dxai-ui/slider' ) || str_contains( $content, 'wp:block' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'has_form_block=' . ( str_contains( $content, 'dx-ui/form' ) || str_contains( $content, 'wp:block' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'has_slider_block=' . ( str_contains( $content, 'dx-ui/slider' ) || str_contains( $content, 'wp:block' ) ? 'yes' : 'no' ) . PHP_EOL;
 echo 'page_template=' . (string) get_post_meta( $page_id, '_wp_page_template', true ) . PHP_EOL;
-echo 'page_css=' . ( get_post_meta( $page_id, '_dxai_ui_css_url', true ) ? 'set' : 'missing' ) . PHP_EOL;
+echo 'page_css=' . ( get_post_meta( $page_id, '_dx_ui_css_url', true ) ? 'set' : 'missing' ) . PHP_EOL;
 
 $registry = WP_Block_Type_Registry::get_instance();
-echo 'form_registered=' . ( $registry->is_registered( 'dxai-ui/form' ) ? 'yes' : 'no' ) . PHP_EOL;
-echo 'slider_registered=' . ( $registry->is_registered( 'dxai-ui/slider' ) ? 'yes' : 'no' ) . PHP_EOL;
-echo 'conversion_supports_revisions=' . ( post_type_supports( 'dxai_conversion', 'revisions' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'form_registered=' . ( $registry->is_registered( 'dx-ui/form' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'slider_registered=' . ( $registry->is_registered( 'dx-ui/slider' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'conversion_supports_revisions=' . ( post_type_supports( 'dxui_conversion', 'revisions' ) ? 'yes' : 'no' ) . PHP_EOL;
 
-$nonce = wp_create_nonce( 'dxai_ui_form' );
-$form  = new WP_REST_Request( 'POST', '/dxai-ui/v1/forms/submit' );
+$nonce = wp_create_nonce( 'dx_ui_form' );
+$form  = new WP_REST_Request( 'POST', '/dx-ui/v1/forms/submit' );
 $form->set_param( 'nonce', $nonce );
 $form->set_param( 'website', '' );
 $form->set_param( 'page_id', $page_id );
@@ -163,7 +163,7 @@ $submitted = rest_do_request( $form );
 echo 'form_submit_status=' . $submitted->get_status() . PHP_EOL;
 echo 'form_submit_ok=' . ( ! empty( $submitted->get_data()['ok'] ) ? 'yes' : 'no' ) . PHP_EOL;
 
-$list = rest_do_request( new WP_REST_Request( 'GET', '/dxai-ui/v1/patterns' ) );
+$list = rest_do_request( new WP_REST_Request( 'GET', '/dx-ui/v1/patterns' ) );
 $lib  = $list->get_data();
 echo 'library_pages=' . count( $lib['pages'] ?? array() ) . PHP_EOL;
 echo 'library_parts=' . count( $lib['template_parts'] ?? array() ) . PHP_EOL;
@@ -179,7 +179,7 @@ foreach ( $created['patterns'] ?? array() as $pattern ) {
 	}
 }
 echo 'blog_is_query_loop=' . ( $blog_ok ? 'yes' : 'no' ) . PHP_EOL;
-echo 'form_rewritten=' . ( $blog_ok && $registry->is_registered( 'dxai-ui/form' ) ? 'yes' : 'no' ) . PHP_EOL;
+echo 'form_rewritten=' . ( $blog_ok && $registry->is_registered( 'dx-ui/form' ) ? 'yes' : 'no' ) . PHP_EOL;
 
 $slider_ok = false;
 $form_ok   = false;
@@ -188,18 +188,18 @@ foreach ( $created['patterns'] ?? array() as $pattern ) {
 	if ( ! $p instanceof WP_Post ) {
 		continue;
 	}
-	if ( str_contains( $p->post_content, 'dxai-ui/slider' ) ) {
+	if ( str_contains( $p->post_content, 'dx-ui/slider' ) ) {
 		$slider_ok = true;
 	}
-	if ( str_contains( $p->post_content, 'dxai-ui/form' ) ) {
+	if ( str_contains( $p->post_content, 'dx-ui/form' ) ) {
 		$form_ok = true;
 	}
 }
 echo 'slider_is_block=' . ( $slider_ok ? 'yes' : 'no' ) . PHP_EOL;
 echo 'form_is_block=' . ( $form_ok ? 'yes' : 'no' ) . PHP_EOL;
 
-$page_save = new WP_REST_Request( 'POST', '/dxai-ui/v1/save-pattern' );
-$page_save->set_param( 'block_title', 'DXAI Page Scope Smoke' );
+$page_save = new WP_REST_Request( 'POST', '/dx-ui/v1/save-pattern' );
+$page_save->set_param( 'block_title', 'DXUI Page Scope Smoke' );
 $page_save->set_param( 'gutenberg_markup', $body );
 $page_save->set_param( 'custom_css', '' );
 $page_save->set_param( 'synced', true );
@@ -238,7 +238,7 @@ echo 'page_scope_header_id=' . (int) ( $page_created['header_id'] ?? 0 ) . PHP_E
 echo 'page_scope_footer_id=' . (int) ( $page_created['footer_id'] ?? 0 ) . PHP_EOL;
 echo 'page_scope_page_id=' . (int) ( $page_created['page_id'] ?? 0 ) . PHP_EOL;
 
-$preview = new WP_REST_Request( 'POST', '/dxai-ui/v1/preview' );
+$preview = new WP_REST_Request( 'POST', '/dx-ui/v1/preview' );
 $preview->set_param( 'gutenberg_markup', $hero );
 $preview->set_param( 'custom_css', '.hero { min-height: 100vh; }' );
 $previewed = rest_do_request( $preview );
@@ -255,14 +255,14 @@ $expect = static function ( string $what, bool $ok ) use ( &$fail, &$pass ): voi
 	echo ( $ok ? '  ok    ' : '  FAIL  ' ) . $what . "\n";
 };
 $expect( 'a site save answers 200 and makes the page, its header and footer parts, its navigation and its conversion record', 200 === $saved->get_status() && $page_id > 0 && (int) ( $created['header_id'] ?? 0 ) > 0 && (int) ( $created['footer_id'] ?? 0 ) > 0 && count( $created['navigation_ids'] ?? array() ) > 0 && (int) ( $created['conversion_id'] ?? 0 ) > 0 );
-$expect( 'the page holds the query loop, the form and the slider, on the plugin\'s template with its stylesheet', ( str_contains( $content, 'wp:query' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dxai-ui/form' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dxai-ui/slider' ) || str_contains( $content, 'wp:block' ) ) && '' !== (string) get_post_meta( $page_id, '_wp_page_template', true ) && (bool) get_post_meta( $page_id, '_dxai_ui_css_url', true ) );
-$expect( 'the form and slider blocks are registered', $registry->is_registered( 'dxai-ui/form' ) && $registry->is_registered( 'dxai-ui/slider' ) );
+$expect( 'the page holds the query loop, the form and the slider, on the plugin\'s template with its stylesheet', ( str_contains( $content, 'wp:query' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dx-ui/form' ) || str_contains( $content, 'wp:block' ) ) && ( str_contains( $content, 'dx-ui/slider' ) || str_contains( $content, 'wp:block' ) ) && '' !== (string) get_post_meta( $page_id, '_wp_page_template', true ) && (bool) get_post_meta( $page_id, '_dx_ui_css_url', true ) );
+$expect( 'the form and slider blocks are registered', $registry->is_registered( 'dx-ui/form' ) && $registry->is_registered( 'dx-ui/slider' ) );
 $expect( 'a form entry is accepted', 200 === $submitted->get_status() && ! empty( $submitted->get_data()['ok'] ) );
 $expect( 'the library lists the page, its parts, its navigation and its conversion', count( $lib['pages'] ?? array() ) > 0 && count( $lib['template_parts'] ?? array() ) > 0 && count( $lib['navigations'] ?? array() ) > 0 && count( $lib['conversions'] ?? array() ) > 0 );
 $expect( 'a blog list becomes a query loop, a slider and a form become their blocks', $blog_ok && $slider_ok && $form_ok );
 $expect( 'a page-scoped save makes its own page, header and footer', 200 === $page_res->get_status() && (int) ( $page_created['header_id'] ?? 0 ) > 0 && (int) ( $page_created['footer_id'] ?? 0 ) > 0 && (int) ( $page_created['page_id'] ?? 0 ) > 0 );
 $expect( 'the preview answers with HTML and CSS', 200 === $previewed->get_status() && ! empty( $preview_data['html'] ) && ! empty( $preview_data['css'] ) );
 
-dxai_verify_cleanup( $dxai_snapshot );
+dxui_verify_cleanup( $dxui_snapshot );
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

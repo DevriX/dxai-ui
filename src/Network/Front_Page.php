@@ -2,12 +2,12 @@
 /**
  * The imported Home as the site's front page.
  *
- * @package DXAI_UI\Network
+ * @package DX_UI\Network
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Network;
+namespace DX_UI\Network;
 
 /**
  * A site imported from a design whose Home is not its front page shows the theme's list of posts, or WordPress's sample
@@ -25,7 +25,7 @@ namespace DXAI_UI\Network;
 final class Front_Page {
 
 	/** Option: what the front page was before a Home was made it ({show, page, home}). */
-	public const BEFORE = 'dxai_ui_front_before';
+	public const BEFORE = 'dx_ui_front_before';
 
 	/**
 	 * What the site's front page is now, for this Home. Before the Home is saved ($home 0), the archive it comes from says
@@ -41,7 +41,7 @@ final class Front_Page {
 			'id'    => $post instanceof \WP_Post ? (int) $post->ID : 0,
 			'title' => $post instanceof \WP_Post ? html_entity_decode( (string) get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) : '',
 		);
-		if ( $id > 0 && ( $id === $home || ( $home === 0 && $archive !== '' && (string) get_post_meta( $id, '_dxai_ui_source_zip', true ) === $archive ) ) ) {
+		if ( $id > 0 && ( $id === $home || ( $home === 0 && $archive !== '' && (string) get_post_meta( $id, '_dx_ui_source_zip', true ) === $archive ) ) ) {
 			return array( 'state' => 'this' ) + $out;
 		}
 		if ( ! $post instanceof \WP_Post || $post->post_status !== 'publish' ) {

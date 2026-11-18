@@ -2,20 +2,20 @@
 /**
  * A call to action: core's Buttons, in the theme's button style.
  *
- * @package DXAI_UI\Blocks\Native
+ * @package DX_UI\Blocks\Native
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Blocks\Native;
+namespace DX_UI\Blocks\Native;
 
-use DXAI_UI\Support\Color_Math;
-use DXAI_UI\Theme\Theme_Binding;
-use DXAI_UI\Theme\Theme_Buttons;
-use DXAI_UI\Theme\Theme_Palette;
+use DX_UI\Support\Color_Math;
+use DX_UI\Theme\Theme_Binding;
+use DX_UI\Theme\Theme_Buttons;
+use DX_UI\Theme\Theme_Palette;
 
 /**
- * A `dxai-ui/link` that is a button of the design — padding and a fill or a border — becomes core's Buttons block
+ * A `dx-ui/link` that is a button of the design — padding and a fill or a border — becomes core's Buttons block
  * with one Button per call to action, wearing the theme's own button style: the filled one `primary-button`, the
  * outlined or white one `secondary-button`, a small filled one `small-primary-button`. That is how the theme's own
  * pages are built (a Buttons block, its Button blocks, `is-style-…`), so the button is edited in the Button block's
@@ -30,7 +30,7 @@ use DXAI_UI\Theme\Theme_Palette;
  */
 final class Button extends Converter {
 
-	private const KNOWN = array( 'url', 'text', 'className', 'dxaiCss', 'target', 'rel', 'title', 'suffix', 'suffixClass', 'suffixTight' );
+	private const KNOWN = array( 'url', 'text', 'className', 'dxuiCss', 'target', 'rel', 'title', 'suffix', 'suffixClass', 'suffixTight' );
 
 	/** The design's classes that place the button and stay on it. */
 	private const KEEP_CLASS = '/^(?:(?:xs|sm|md|lg|xl)-)?(?:m[trblxy]?-[\w.-]+|w-(?:full|auto|fit|[\w.-]+)|min-w-[\w.-]+|max-w-[\w.-]+|self-[\w-]+|grow|shrink|flex-none|flex-1|order-[\w-]+|d-none|d-block|hidden)$/';
@@ -43,11 +43,11 @@ final class Button extends Converter {
 	}
 
 	public function label(): string {
-		return __( 'Calls to action → Buttons', 'dxai-ui' );
+		return __( 'Calls to action → Buttons', 'dx-ui' );
 	}
 
 	public function source(): string {
-		return 'dxai-ui/link';
+		return 'dx-ui/link';
 	}
 
 	public function target(): string {
@@ -145,10 +145,10 @@ final class Button extends Converter {
 			}
 		}
 		$class = ' ' . trim( (string) ( $a['className'] ?? '' ) ) . ' ';
-		$css   = (string) ( $a['dxaiCss'] ?? '' );
+		$css   = (string) ( $a['dxuiCss'] ?? '' );
 		// The skip link, anything positioned out of the flow, and the hooks of the design's own controls.
 		if ( preg_match( '/\s(?:absolute|fixed|sticky)\s/', $class ) === 1 || preg_match( '/-\d{3,}px|(?:^|;)\s*position\s*:\s*(?:absolute|fixed)/', $css ) === 1
-			|| preg_match( '/\sdxai-(?:toggle|on|set|open|close|tab|reveal)[\w-]*\s/', $class ) === 1 ) {
+			|| preg_match( '/\sdxui-(?:toggle|on|set|open|close|tab|reveal)[\w-]*\s/', $class ) === 1 ) {
 			return null;
 		}
 		$look = self::look( $class, $css );
@@ -178,7 +178,7 @@ final class Button extends Converter {
 			'css'     => self::keep_css( $css ),
 			'align'   => '',
 			// The design's own fill, for a button the theme's style would lose on its band (on_band()).
-			'fill'    => \DXAI_UI\Compiler\Color_Usage::background_of( $a, (int) ( self::$context['home'] ?? 0 ) ),
+			'fill'    => \DX_UI\Compiler\Color_Usage::background_of( $a, (int) ( self::$context['home'] ?? 0 ) ),
 		);
 	}
 
@@ -199,8 +199,8 @@ final class Button extends Converter {
 			return null;
 		}
 		$transparent = preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*(?:transparent|none)/i', $css ) === 1;
-		$white       = preg_match( '/\sbg-(?:dxai-neutral-100|white)\s/', $class ) === 1 || preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*(?:#fff\b|#ffffff|white|var\(--dxai-neutral-100\))/i', $css ) === 1;
-		$filled      = ! $transparent && ( preg_match( '/\sbg-dxai-(?!neutral-\d+-a\d)[a-z0-9-]+\s/', $class ) === 1 || preg_match( '/\sbg-[a-z]/', $class ) === 1 || preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*(?!transparent|none)/i', $css ) === 1 );
+		$white       = preg_match( '/\sbg-(?:dxui-neutral-100|white)\s/', $class ) === 1 || preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*(?:#fff\b|#ffffff|white|var\(--dxui-neutral-100\))/i', $css ) === 1;
+		$filled      = ! $transparent && ( preg_match( '/\sbg-dxui-(?!neutral-\d+-a\d)[a-z0-9-]+\s/', $class ) === 1 || preg_match( '/\sbg-[a-z]/', $class ) === 1 || preg_match( '/(?:^|;)\s*background(?:-color)?\s*:\s*(?!transparent|none)/i', $css ) === 1 );
 		$border      = preg_match( '/\sborder(?:-[0-9a-z-]+)?\s/', $class ) === 1 || preg_match( '/(?:^|;)\s*border(?:-width)?\s*:\s*[1-9]/', $css ) === 1;
 		if ( $white || ( $border && ! $filled ) ) {
 			return 'secondary-button';
@@ -291,7 +291,7 @@ final class Button extends Converter {
 			array_unshift( $around, $parent );
 		}
 		foreach ( $around as $attrs ) {
-			$paint = \DXAI_UI\Compiler\Color_Usage::background_of( is_array( $attrs ) ? $attrs : array(), $home );
+			$paint = \DX_UI\Compiler\Color_Usage::background_of( is_array( $attrs ) ? $attrs : array(), $home );
 			if ( $paint === '' ) {
 				continue;
 			}
@@ -321,7 +321,7 @@ final class Button extends Converter {
 	 * @param array<string, mixed> $attrs A block's attributes as the importer or the library stored them.
 	 */
 	public static function ground_hex( array $attrs, int $home, bool $on_white = false ): string {
-		$paint = \DXAI_UI\Compiler\Color_Usage::background_of( $attrs, $home );
+		$paint = \DX_UI\Compiler\Color_Usage::background_of( $attrs, $home );
 		if ( $paint === '' || $paint === 'image' ) {
 			return '';
 		}
@@ -347,7 +347,7 @@ final class Button extends Converter {
 			return Theme_Palette::hex( $preset );
 		}
 		if ( preg_match( '/^(?:token|preset):([a-z0-9-]+)$/', $paint, $m ) === 1 ) {
-			$palette = get_post_meta( $home, \DXAI_UI\Compiler\Token_Styles::META, true );
+			$palette = get_post_meta( $home, \DX_UI\Compiler\Token_Styles::META, true );
 			foreach ( is_array( $palette['colors'] ?? null ) ? $palette['colors'] : array() as $row ) {
 				if ( is_array( $row ) && (string) ( $row['slug'] ?? '' ) === $m[1] ) {
 					return (string) ( $row['value'] ?? '' );
@@ -389,7 +389,7 @@ final class Button extends Converter {
 
 	private static function keep_css( string $css ): string {
 		$keep = array();
-		foreach ( \DXAI_UI\Compiler\Utility_Classes::declarations( $css ) as $d ) {
+		foreach ( \DX_UI\Compiler\Utility_Classes::declarations( $css ) as $d ) {
 			if ( $d['prop'] !== '' && preg_match( self::KEEP_PROP, $d['prop'] ) === 1 ) {
 				$keep[] = $d['raw'];
 			}
@@ -415,7 +415,7 @@ final class Button extends Converter {
 			$cta     = $own['cta'];
 			$text    = $own['text'] !== '' ? $own['text'] : ( in_array( $cta['style'], array( 'primary-button', 'small-primary-button' ), true ) ? $slug : '' );
 			// (A colour whose class WordPress gives a meaning of its own — `has-border-color` is a border — is left to the button's style.)
-			if ( $text !== '' && ! \DXAI_UI\Theme\Capabilities::text_slug_ok( $text ) ) {
+			if ( $text !== '' && ! \DX_UI\Theme\Capabilities::text_slug_ok( $text ) ) {
 				$text = '';
 			}
 			$fill    = $own['fill'];
@@ -432,7 +432,7 @@ final class Button extends Converter {
 				$attrs['style'] = array( 'elements' => array( 'link' => array( 'color' => array( 'text' => 'var:preset|color|' . $text ) ) ) );
 			}
 			if ( $cta['css'] !== '' ) {
-				$attrs['dxaiCss'] = $cta['css'];
+				$attrs['dxuiCss'] = $cta['css'];
 			}
 			$wrap = 'wp-block-button ' . self::class_tail( $attrs );
 			// The classes core's Button writes for its colour settings, in core's order.
@@ -497,7 +497,7 @@ final class Button extends Converter {
 			return true;
 		}
 		$class = ' ' . trim( (string) ( $parent['className'] ?? '' ) ) . ' ';
-		$css   = (string) ( $parent['dxaiCss'] ?? '' );
+		$css   = (string) ( $parent['dxuiCss'] ?? '' );
 
 		return preg_match( '/\s(?:(?:xs|sm|md|lg|xl)-)?(?:overflow-(?:x-)?(?:auto|scroll)|snap-x|no-scrollbar|scrollbar-(?:none|hide))\s/', $class ) === 1
 			|| preg_match( '/(?:^|;)\s*overflow(?:-x)?\s*:\s*(?:auto|scroll)/', $css ) === 1;
@@ -523,7 +523,7 @@ final class Button extends Converter {
 	/** The space between the buttons: the container's own gap when the design set one, else the theme pages' 12px. */
 	private static function gap( ?array $parent ): string {
 		foreach ( preg_split( '/\s+/', trim( (string) ( $parent['className'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $token ) {
-			if ( preg_match( '/^gap-[\w.-]+$/', $token ) === 1 && preg_match( '/gap:\s*(\d+(?:\.\d+)?)px/', \DXAI_UI\Compiler\Utility_Classes::base_declarations( $token ), $m ) === 1 ) {
+			if ( preg_match( '/^gap-[\w.-]+$/', $token ) === 1 && preg_match( '/gap:\s*(\d+(?:\.\d+)?)px/', \DX_UI\Compiler\Utility_Classes::base_declarations( $token ), $m ) === 1 ) {
 				return $m[1] . 'px';
 			}
 		}

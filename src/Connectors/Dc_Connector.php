@@ -2,14 +2,14 @@
 /**
  * Claude Design (`<Name>.dc.html`) export connector.
  *
- * @package DXAI_UI
+ * @package DX_UI
  */
 
 declare(strict_types=1);
 
-namespace DXAI_UI\Connectors;
+namespace DX_UI\Connectors;
 
-use DXAI_UI\Media\Asset_Harvester;
+use DX_UI\Media\Asset_Harvester;
 
 /**
  * A Claude Design export is one HTML file plus its runtime: `<x-dc>` holds a
@@ -98,7 +98,7 @@ final class Dc_Connector {
 		}
 
 		if ( $files === array() ) {
-			return new \WP_Error( 'dxai_ui_zip', __( 'No .dc.html page was found in the ZIP.', 'dxai-ui' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'dx_ui_zip', __( 'No .dc.html page was found in the ZIP.', 'dx-ui' ), array( 'status' => 400 ) );
 		}
 
 		$site  = Dc_Site::read( $files );
