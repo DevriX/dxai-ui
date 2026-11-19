@@ -20,7 +20,7 @@
 			"step": "installPlugin",
 			"pluginData": {
 				"resource": "url",
-				"url": "https://github.com/DevriX/dxai-ui/releases/download/v0.5.0-beta.1/dx-ui-0.5.0-beta.1.zip"
+				"url": "https://github.com/DevriX/dxai-ui/releases/download/v0.5.0-beta.2/dx-ui-0.5.0-beta.2.zip"
 			},
 			"options": {
 				"activate": true

@@ -4,7 +4,7 @@ Tags: gutenberg, figma, lovable, ai, blocks, patterns
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.5.0-beta.1
+Stable tag: 0.5.0-beta.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,11 @@ A converted page's look is not in its blocks: the blocks carry `dxs-` classes an
 * Same rules as a design import: manage_options and unfiltered_html (a Super Admin on multisite). A package with an unsafe path, server-side code, an unknown manifest, a newer format or altered files is refused before anything is written.
 
 == Changelog ==
+
+= 0.5.0-beta.2 =
+* A site moved to another address (a staging install given the client's domain) no longer loads the design's fonts and pictures from the old one. The design's stylesheet in uploads kept the address the site had when it was imported: geminirestoration.com loaded 91 fonts and pictures from its staging address, the hero picture twice. The first request after the move (and after this update) brings every address of a file the site has under wp-content to where it is now, in the plugin's files in uploads, its stored styles and markup, and the content of posts; a block whose own CSS names such a file keeps its look. An address of a file the site does not have is left alone. `wp dx-ui site-address [--network]` runs it at once. Measured on the Gemini home (mobile, lab): 68 to 94, LCP 7.9 s to 2.9 s, 1.3 MB to 0.6 MB.
+* After the rename, a few checks that looked for the plugin's classes by their old prefix also matched its full name, and no longer did: the site-wide rules of a page made only of the plugin's blocks, the classes the stylesheet trim always keeps, the theme's components, the heading scale and the restyle. They look for both forms again.
+* For developers: `verify-site-address` (19 checks, each guard proved by undoing it: 9 mutations).
 
 = 0.5.0-beta.1 =
 * The plugin is now `dx-ui`: its folder, file names, classes, blocks, CSS classes and custom properties, settings, uploads folder (`uploads/dx-ui/`) and page slugs no longer carry the old `dxai` prefix. `dxai-ui` became `dx-ui` and every other `dxai` became `dxui` (`dxui-lib-card`, `--dxui-brand`).
