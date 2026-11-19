@@ -344,8 +344,8 @@ Converters, in the order they run.
 
 `dx_ui_network_activation_sites`: how many sites of the network a network-wide (de)activation goes through, at most (500).
 
-- `src/Plugin.php:223` — value and arguments: `500`
-- `src/Plugin.php:335` — value and arguments: `500`
+- `src/Plugin.php:225` — value and arguments: `500`
+- `src/Plugin.php:337` — value and arguments: `500`
 - `src/Support/Runtime.php:95` — value and arguments: `500`
 
 ### dx_ui_new_page_status
@@ -421,7 +421,7 @@ strings for the same content.
 @param array<int, string> $markup  Block markup strings.
 @param int                $post_id The page being styled.
 
-- `src/Blocks/Style_Rules.php:832` — value and arguments: `array()`, `$post_id`
+- `src/Blocks/Style_Rules.php:833` — value and arguments: `array()`, `$post_id`
 
 ### dx_ui_team_library
 

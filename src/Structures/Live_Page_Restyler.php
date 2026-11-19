@@ -552,7 +552,7 @@ final class Live_Page_Restyler {
 							continue;
 						}
 						// Prefer design tokens over Gutenberg chrome.
-						if ( preg_match( '/^(dxui-|sc-|section-|btn|container|hero|cta)/i', $token )
+						if ( preg_match( '/^(dxui-|dx-ui|sc-|section-|btn|container|hero|cta)/i', $token )
 							|| str_contains( $token, 'dxui-sh-' )
 						) {
 							$classes[ $token ] = ( $classes[ $token ] ?? 0 ) + 10;

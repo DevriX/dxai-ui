@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DX_BASE_VERSION', '0.1.0' );
+define( 'DX_BASE_VERSION', '0.1.1' );
 
 /**
  * What the theme supports and the locations and areas it names — the ids American Restoration uses, so a header and a footer installed by

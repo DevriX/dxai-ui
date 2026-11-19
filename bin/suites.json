@@ -28,6 +28,7 @@
 		{ "file": "verify-html-chrome.php", "group": "ci" },
 		{ "file": "verify-site-links.php", "group": "ci" },
 		{ "file": "verify-site-chrome.php", "group": "ci" },
+		{ "file": "verify-site-address.php", "group": "ci" },
 		{ "file": "verify-wrap-fold.php", "group": "ci" },
 		{ "file": "verify-theme-drawn.php", "group": "ci" },
 		{ "file": "verify-library-pour.php", "group": "ci" },

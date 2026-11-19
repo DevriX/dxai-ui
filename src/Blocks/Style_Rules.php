@@ -325,7 +325,7 @@ final class Style_Rules {
 			update_option( self::GENERATION, (int) get_option( self::GENERATION, 0 ) + 1, false );
 		}
 		$content = $post instanceof \WP_Post ? $post->post_content : (string) get_post_field( 'post_content', $post_id );
-		if ( $type !== 'nav_menu_item' && $type !== 'revision' && ( $content === '' || str_contains( $content, 'dxui' ) ) ) {
+		if ( $type !== 'nav_menu_item' && $type !== 'revision' && ( $content === '' || str_contains( $content, 'dxui' ) || str_contains( $content, 'dx-ui' ) ) ) {
 			update_option( self::SITE_GENERATION, (int) get_option( self::SITE_GENERATION, 0 ) + 1, false );
 		}
 	}
@@ -555,8 +555,9 @@ final class Style_Rules {
 		for ( $offset = 0; $offset < self::SITE_SCAN; $offset += 50 ) {
 			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a bounded scan, cached until content changes.
 				$wpdb->prepare(
-					"SELECT ID, post_content FROM {$wpdb->posts} WHERE post_type NOT IN ({$skip}) AND post_status NOT IN ('trash','auto-draft','inherit') AND post_content LIKE %s ORDER BY post_modified_gmt DESC, ID DESC LIMIT %d, 50", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $skip is constants, escaped.
+					"SELECT ID, post_content FROM {$wpdb->posts} WHERE post_type NOT IN ({$skip}) AND post_status NOT IN ('trash','auto-draft','inherit') AND ( post_content LIKE %s OR post_content LIKE %s ) ORDER BY post_modified_gmt DESC, ID DESC LIMIT %d, 50", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $skip is constants, escaped.
 					'%' . $wpdb->esc_like( 'dxui' ) . '%',
+					'%' . $wpdb->esc_like( 'dx-ui' ) . '%',
 					$offset
 				),
 				ARRAY_A

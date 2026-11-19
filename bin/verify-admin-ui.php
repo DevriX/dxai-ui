@@ -63,7 +63,7 @@ $expect( 'no Library screen in the menu', ! isset( $subs['dx-ui-library'] ) && !
 $expect( 'the screens the Dashboard knows are the menu’s', array_values( Dashboard::SCREENS ) === array_keys( $want ) );
 $options = array();
 foreach ( (array) ( $submenu['options-general.php'] ?? array() ) as $sub ) {
-	if ( str_contains( (string) $sub[2], 'dxui' ) ) {
+	if ( str_contains( (string) $sub[2], 'dx-ui' ) ) {
 		$options[] = (string) $sub[2];
 	}
 }

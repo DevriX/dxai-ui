@@ -34,7 +34,7 @@ use DX_UI\Support\Upload_Paths;
 final class Theme_Components {
 
 	/** Classes that are WordPress's or the plugin's own, never a theme's component. */
-	private const NOT_COMPONENTS = '/^(?:wp-|has-|is-layout-|is-content-|is-vertical$|is-nowrap$|is-resized$|is-style-[\w-]*button$|align|size-|screen-reader|admin-bar|current-|menu-|page-|post-|attachment-|dxui-|dxs-|sc-)/';
+	private const NOT_COMPONENTS = '/^(?:wp-|has-|is-layout-|is-content-|is-vertical$|is-nowrap$|is-resized$|is-style-[\w-]*button$|align|size-|screen-reader|admin-bar|current-|menu-|page-|post-|attachment-|dxui-|dx-ui|dxs-|sc-)/';
 
 	/** @var array<string, array<string, true>> Design sheet path + time => its class names. */
 	private static array $designs = array();

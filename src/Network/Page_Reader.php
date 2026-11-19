@@ -270,7 +270,7 @@ final class Page_Reader {
 		foreach ( $frames as $src ) {
 			$kinds[] = preg_match( '/youtube|vimeo|google|maps|wistia|calendly|form/', $src, $m ) === 1 ? $m[0] : 'other';
 		}
-		$keep = array_values( array_filter( self::classes( $el ), static fn( string $c ): bool => preg_match( '/^(wp-block-[a-z-]+|amr-[a-z-]+|alignfull|has-[a-z-]+-background-color|dxui-[a-z-]+)$/', $c ) === 1 ) );
+		$keep = array_values( array_filter( self::classes( $el ), static fn( string $c ): bool => preg_match( '/^(wp-block-[a-z-]+|amr-[a-z-]+|alignfull|has-[a-z-]+-background-color|dxui-[a-z-]+|dx-ui[a-z0-9-]*)$/', $c ) === 1 ) );
 
 		return array(
 			'role'       => self::role( $xp, $el, $index, $raw, $head, $frames ),

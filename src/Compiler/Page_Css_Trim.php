@@ -30,7 +30,7 @@ final class Page_Css_Trim {
 	public const MIN_BYTES = 1000000;
 
 	/** Classes a script adds at run time, never written in the markup. */
-	private const RUNTIME = '/^(?:is-|has-|dxui-|wp-|js|no-js|admin-bar|logged-in|customize-|screen-reader|sticky|active|open|opened|show|shown|visible|hidden|current|focus|hover|lazy|loaded|swiper-|e--|e-lazyloaded|animated|dxg-anim)/';
+	private const RUNTIME = '/^(?:is-|has-|dxui-|dx-ui|wp-|js|no-js|admin-bar|logged-in|customize-|screen-reader|sticky|active|open|opened|show|shown|visible|hidden|current|focus|hover|lazy|loaded|swiper-|e--|e-lazyloaded|animated|dxg-anim)/';
 
 	/** At-rules whose block holds rules to test; every other block at-rule (keyframes, font-face…) stays whole. */
 	private const GROUPING = array( 'media', 'supports', 'container', 'layer', 'document', 'scope' );

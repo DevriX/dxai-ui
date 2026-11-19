@@ -146,6 +146,8 @@ final class Plugin {
 		}
 		// The must-use loader that does the above while the plugin is deactivated.
 		( new \DX_UI\Support\Runtime() )->register();
+		// A site moved to another address: the plugin's files and stored styles follow it (render-only too: the runtime serves them).
+		\DX_UI\Support\Site_Address::register();
 		// New versions in Dashboard › Updates, from the plugin's GitHub releases (the header's Update URI).
 		if ( ! $render_only ) {
 			( new \DX_UI\Update\Github_Updater() )->register();
