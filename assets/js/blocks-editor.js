@@ -2012,7 +2012,9 @@
 			const blockProps = useBlockProps( Object.assign( dxuiReactProps( dxuiBoxProps( a ), tag, { inert: isLeaf } ), {
 				className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/box' ) ) || undefined,
 			} ) );
-			const inner = useInnerBlocksProps( blockProps, {} );
+			// A leaf takes no blocks: nothing can be inserted or dropped into it (List View included), since it could not show
+			// them and save() writes none.
+			const inner = useInnerBlocksProps( blockProps, isLeaf ? { allowedBlocks: [] } : {} );
 			const fields = [
 				el( TextControl, {
 					key: 'tag',
@@ -2060,7 +2062,13 @@
 		save: function ( props ) {
 			const a = props.attributes;
 			const tag = dxuiBoxTag( a );
-			if ( DXUI_VOID_TAGS.indexOf( tag ) > -1 ) {
+			/*
+			 * A void element has no children, and a textarea's would be its
+			 * text: blocks inside one reached the page as their own markup,
+			 * typed into the field. Neither writes any. A box with none writes
+			 * the same markup as before, so a stored post stays valid.
+			 */
+			if ( DXUI_VOID_TAGS.indexOf( tag ) > -1 || tag === 'textarea' ) {
 				return el( tag, dxuiHoist( dxuiBoxProps( a ), a ) );
 			}
 

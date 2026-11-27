@@ -30,7 +30,7 @@ then keeps its own literal colours from its stylesheet, and the
 site's global styles are left as they are. `dx_ui_adopt_brand`
 overrides this.
 
-- `src/Theme/Design_Theme_Json.php:167` — value and arguments: `\DX_UI\Theme\Theme_Compat::may_install_chrome()`, `$page_id`
+- `src/Theme/Design_Theme_Json.php:169` — value and arguments: `\DX_UI\Theme\Theme_Compat::may_install_chrome()`, `$page_id`
 
 ### dx_ui_arrange_sections
 

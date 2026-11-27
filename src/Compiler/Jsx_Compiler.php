@@ -343,16 +343,16 @@ final class Jsx_Compiler {
 	private ?array $window_map = null;
 
 	/**
-	 * Items the component shows by an index a state holds: name => the list it is picked from and the state. `const d =
-	 * DELIVERABLES[active]` is one, with a tab per item that calls `setActive(i)`.
+	 * Items the component shows by an index a state holds: name => the list it is picked from, the state, and what its copies
+	 * need (picked_items()). `const d = DELIVERABLES[active]` is one, with a tab per item that calls `setActive(i)`.
 	 *
-	 * @var array<string, array{source:string, state:string, list:array<int, mixed>}>
+	 * @var array<string, array{source:string, state:string, list:array<int, mixed>, derive?:array<int, array{kind:string, lhs:string, rhs:string}>, aliases?:array<int, string>, follows?:array<int, string>, unsafe?:array<int, string>, controls?:array<int, string>}>
 	 */
 	private array $picks = array();
 
 	/**
-	 * Where the panel of each picked item starts in the component's JSX: the JSX the offsets are in, and offset => the item's
-	 * name (pick_panels_of()).
+	 * Where the panels of each picked state start in the component's JSX: the JSX the offsets are in, and offset => the state
+	 * (pick_panels_of()).
 	 *
 	 * @var array{src:string, at:array<int, string>}
 	 */
@@ -361,8 +361,12 @@ final class Jsx_Compiler {
 		'at'  => array(),
 	);
 
-	/** While a panel's copies are written: a copy is not copied again. */
-	private bool $in_pick = false;
+	/**
+	 * The states whose panel's copies are being written: a copy is not copied again. Another state's panel inside one is.
+	 *
+	 * @var array<string, bool>
+	 */
+	private array $in_pick = array();
 
 	/** The most items a picked panel is written for; a longer list keeps its starting item only. */
 	private const PICK_MAX = 24;
@@ -563,7 +567,7 @@ final class Jsx_Compiler {
 			'src' => '',
 			'at'  => array(),
 		);
-		$this->in_pick       = false;
+		$this->in_pick       = array();
 		$this->unresolved    = array();
 		$this->load_file( $source );
 		$this->load_imports( $source, $files );
@@ -1613,6 +1617,9 @@ final class Jsx_Compiler {
 		$prev_windows = $this->windows;
 		$prev_picks   = $this->picks;
 		$prev_panels  = $this->pick_panels;
+		// A component inside a panel's copy has panels of its own, whatever its state is called.
+		$prev_in_pick  = $this->in_pick;
+		$this->in_pick = array();
 
 		$scope   = array_merge( $this->globals, $props );
 		// `$props` as well as the merged scope: the rest element must collect the
@@ -1651,6 +1658,7 @@ final class Jsx_Compiler {
 		$this->windows       = $prev_windows;
 		$this->picks         = $prev_picks;
 		$this->pick_panels   = $prev_panels;
+		$this->in_pick       = $prev_in_pick;
 		--$this->depth;
 		return $html;
 	}
@@ -2341,35 +2349,733 @@ final class Jsx_Compiler {
 	 * item at the state's starting value, so the panel that shows it would keep the first item's words whichever tab is pressed;
 	 * the panel is written once per item instead (pick_panel()), and the state decides which copy shows.
 	 *
+	 * Each pick carries what its copies need (pick_derivations()): the consts computed from the item or the state, to compute
+	 * again in every copy; the names that stand for the item (`const tag = d.label.toUpperCase()`), which are uses of it too; the
+	 * ones no copy can compute again; and the names that write the state, which a copy must never hold.
+	 *
 	 * @param array<string, mixed> $scope
-	 * @return array<string, array{source:string, state:string, list:array<int, mixed>}>
+	 * @return array<string, array{source:string, state:string, list:array<int, mixed>, derive:array<int, array{kind:string, lhs:string, rhs:string}>, aliases:array<int, string>, follows:array<int, string>, unsafe:array<int, string>, controls:array<int, string>}>
 	 */
 	private function picked_items( string $prelude, array $scope ): array {
 		$out = array();
 		if ( ! preg_match_all( '/const\s+([A-Za-z_]\w*)\s*(?::[^=;\n]+)?=\s*([A-Za-z_]\w*)\s*\[\s*([A-Za-z_]\w*)\s*\]\s*;/', $prelude, $rows, PREG_SET_ORDER ) ) {
 			return $out;
 		}
+		$by_state = array();
 		foreach ( $rows as $row ) {
 			[ , $name, $source, $state ] = $row;
 			$list = $scope[ $source ] ?? null;
-			if ( ! isset( $this->toggles[ $state ], $this->driven[ $state ] ) || ! is_int( $this->state_init[ $state ] ?? null ) || ! is_array( $list ) || ! array_is_list( $list ) || count( $list ) < 2 || count( $list ) > self::PICK_MAX ) {
+			$init = $this->state_init[ $state ] ?? null;
+			if ( ! isset( $this->toggles[ $state ], $this->driven[ $state ] ) || ! is_int( $init ) || ! is_array( $list ) || ! array_is_list( $list ) || count( $list ) < 2 || count( $list ) > self::PICK_MAX || $init < 0 || $init >= count( $list ) ) {
 				continue;
 			}
-			$out[ $name ] = array(
+			$out[ $name ]                = array(
 				'source' => $source,
 				'state'  => $state,
 				'list'   => $list,
 			);
+			$by_state[ $state ][] = $name;
+		}
+		foreach ( $by_state as $state => $names ) {
+			$derived = $this->pick_derivations( $prelude, (string) $state, $names );
+			foreach ( $names as $name ) {
+				$out[ $name ] += $derived;
+			}
 		}
 
 		return $out;
 	}
 
 	/**
-	 * Where in a component's JSX the panel of each picked item starts: the element React remounts per item (`key={active}`)
-	 * when there is one around every use of the item, else the smallest element around every use. Uses are read in `{…}`
-	 * expressions only, so a word in the copy that spells the same is not one. An element is found by a scan of the tags that
-	 * steps over every `{…}` whole: an element written inside an expression (a `.map()` callback's) is part of the expression.
+	 * What the copies of a state's picks need from the component's prelude, read declaration by declaration in order, at the depth
+	 * of the picks themselves (a helper's own consts are its business):
+	 *
+	 * - derive: every const computed from the state or an item, as a step pick_scope() runs again in each copy. Without it copy
+	 *   k showed item k's title next to item 0's `const tag = d.label.toUpperCase()`.
+	 * - aliases: the consts computed from an item. `<b>{tag}</b>` shows the item as surely as `{d.label}`, so it is a use.
+	 * - follows: the consts computed from the state alone (`const num = String(active + 1)`). A copy shows its own, so an
+	 *   element that shows one is copied when it can be; when it cannot (it holds the tabs), it keeps the starting value.
+	 * - unsafe: consts computed from them that no copy can compute again (a `let`, a hook other than useMemo and useCallback).
+	 *   A panel that shows one is not copied.
+	 * - controls: the setter and every const that calls it (`const go = (i) => setActive(i)`); pick_panels_of() never copies
+	 *   an element that holds one, or the button pressed would hide itself.
+	 *
+	 * @param array<int, string> $picks
+	 * @return array{derive:array<int, array{kind:string, lhs:string, rhs:string}>, aliases:array<int, string>, follows:array<int, string>, unsafe:array<int, string>, controls:array<int, string>}
+	 */
+	private function pick_derivations( string $prelude, string $state, array $picks ): array {
+		$from_state = array( $state => true );
+		$from_item  = array_fill_keys( $picks, true );
+		$controls   = array_fill_keys( array_keys( $this->setters, $state, true ), true );
+		$derive     = array();
+		$unsafe     = array();
+		$decls      = $this->prelude_declarations( $prelude );
+		$depth      = null;
+		foreach ( $decls as $decl ) {
+			if ( array_intersect( $decl['names'], $picks ) !== array() ) {
+				$depth = $decl['depth'];
+				break;
+			}
+		}
+		foreach ( $decls as $decl ) {
+			if ( $decl['depth'] !== $depth ) {
+				continue;
+			}
+			$hits = array();
+			$this->scan_refs( $decl['rhs'], 0, strlen( $decl['rhs'] ), array_keys( $from_state + $from_item + $controls ), array(), false, $hits );
+			$refs = array_keys( $hits );
+			if ( array_intersect( $refs, array_keys( $controls ) ) !== array() ) {
+				$controls += array_fill_keys( $decl['names'], true );
+			}
+			$item = array_intersect( $refs, array_keys( $from_item ) ) !== array();
+			if ( ! $item && array_intersect( $refs, array_keys( $from_state ) ) === array() ) {
+				continue;
+			}
+			$from_state += array_fill_keys( $decl['names'], true );
+			if ( $item ) {
+				$from_item += array_fill_keys( $decl['names'], true );
+			}
+			if ( array_intersect( $decl['names'], $picks ) !== array() ) {
+				continue; // A pick itself: each copy takes its item from the list.
+			}
+			$step = $this->derivation_step( $decl );
+			if ( $step === null ) {
+				array_push( $unsafe, ...$decl['names'] );
+				continue;
+			}
+			$derive[] = $step;
+		}
+
+		return array(
+			'derive'   => $derive,
+			'aliases'  => array_values( array_diff( array_keys( $from_item ), $picks ) ),
+			'follows'  => array_values( array_diff( array_map( 'strval', array_keys( $from_state ) ), array_keys( $from_item ), array( $state ) ) ),
+			'unsafe'   => $unsafe,
+			'controls' => array_map( 'strval', array_keys( $controls ) ),
+		);
+	}
+
+	/**
+	 * A declaration of the prelude as a copy computes it again, or null when it cannot be: a `let` (code below may assign it), a
+	 * hook. useMemo(() => x, deps) is x and useCallback(fn, deps) is fn, as React gives them for the state of that render.
+	 *
+	 * @param array{kind:string, lhs:string, rhs:string, names:array<int, string>, end:int, depth:int} $decl
+	 * @return array{kind:string, lhs:string, rhs:string}|null
+	 */
+	private function derivation_step( array $decl ): ?array {
+		if ( $decl['kind'] !== 'const' ) {
+			return null;
+		}
+		$rhs = $decl['rhs'];
+		if ( preg_match( '/^(?:React\.)?use(Memo|Callback)\s*(?:<[^>]*>)?\s*\(/', $rhs, $hook ) ) {
+			$open  = strlen( $hook[0] ) - 1;
+			$close = $this->match_pair( $rhs, $open );
+			if ( $close < 0 ) {
+				return null;
+			}
+			$args = self::top_level_split( substr( $rhs, $open + 1, $close - $open - 1 ) );
+			$fn   = trim( $args[0] ?? '' );
+			if ( $hook[1] === 'Callback' ) {
+				$rhs = $fn;
+			} elseif ( preg_match( '/^\(\s*\)\s*=>\s*(?!\{)([\s\S]+)$/', $fn, $body ) ) {
+				$rhs = trim( $body[1] );
+			} else {
+				return null;
+			}
+		} elseif ( preg_match( '/^(?:React\.)?use[A-Z]/', $rhs ) ) {
+			return null;
+		}
+		$lhs  = $decl['lhs'];
+		$kind = 'value';
+		if ( $lhs[0] === '{' ) {
+			$kind = 'object';
+		} elseif ( $lhs[0] === '[' ) {
+			$kind = 'array';
+		} elseif ( $this->is_arrow_source( $rhs ) ) {
+			$kind = 'fn';
+		}
+
+		return array(
+			'kind' => $kind,
+			'lhs'  => $lhs,
+			'rhs'  => $rhs,
+		);
+	}
+
+	/**
+	 * The `const`, `let` and `var` declarations of a component's code, in order, each with the brackets around it (the component's
+	 * own body is one level in), the names it binds, its right-hand side and where it ends. A declaration's right-hand side is
+	 * stepped over whole, so a helper's own consts are not read as the component's.
+	 *
+	 * @return array<int, array{kind:string, lhs:string, rhs:string, names:array<int, string>, end:int, depth:int}>
+	 */
+	private function prelude_declarations( string $src ): array {
+		$out   = array();
+		$len   = strlen( $src );
+		$depth = 0;
+		$i     = 0;
+		while ( $i < $len ) {
+			$c = $src[ $i ];
+			if ( $c === '`' ) {
+				$hits = array();
+				$i    = $this->template_refs( $src, $i, $len, array(), array(), $hits );
+				continue;
+			}
+			$skip = $this->js_skip( $src, $i );
+			if ( $skip > $i ) {
+				$i = $skip;
+				continue;
+			}
+			if ( $c === '{' || $c === '(' || $c === '[' ) {
+				++$depth;
+				++$i;
+				continue;
+			}
+			if ( $c === '}' || $c === ')' || $c === ']' ) {
+				--$depth;
+				++$i;
+				continue;
+			}
+			if ( ! preg_match( '/\G[A-Za-z_$][\w$]*/', $src, $word, 0, $i ) ) {
+				++$i;
+				continue;
+			}
+			$after = $i + strlen( $word[0] );
+			if ( in_array( $word[0], array( 'const', 'let', 'var' ), true ) && ( $i === 0 || $src[ $i - 1 ] !== '.' ) && preg_match( '/\G\s+/', $src, $gap, 0, $after ) ) {
+				$decl = $this->declaration_at( $src, $after + strlen( $gap[0] ), $word[0] );
+				if ( $decl !== null ) {
+					$decl['depth'] = $depth;
+					$out[]         = $decl;
+					$i             = $decl['end'];
+					continue;
+				}
+			}
+			$i = $after;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The declaration whose binding starts at $at: `name`, `{ a, b: c }` or `[a, b]`, an optional type, `=`, and the right-hand
+	 * side up to the `;` that ends it, the bracket that closes around it, or a line break no operator carries on.
+	 *
+	 * @return array{kind:string, lhs:string, rhs:string, names:array<int, string>, end:int}|null
+	 */
+	private function declaration_at( string $src, int $at, string $kind ): ?array {
+		$len = strlen( $src );
+		if ( $at >= $len ) {
+			return null;
+		}
+		if ( $src[ $at ] === '{' || $src[ $at ] === '[' ) {
+			$close = $this->match_pair( $src, $at );
+			if ( $close < 0 ) {
+				return null;
+			}
+			$lhs = substr( $src, $at, $close - $at + 1 );
+			$i   = $close + 1;
+		} elseif ( preg_match( '/\G[A-Za-z_$][\w$]*/', $src, $m, 0, $at ) ) {
+			$lhs = $m[0];
+			$i   = $at + strlen( $lhs );
+		} else {
+			return null;
+		}
+		// The `=` after the binding and its type, which may hold brackets and `=>` of its own.
+		$eq    = -1;
+		$depth = 0;
+		while ( $i < $len ) {
+			$skip = $this->js_skip( $src, $i );
+			if ( $skip > $i ) {
+				$i = $skip;
+				continue;
+			}
+			$c = $src[ $i ];
+			if ( $c === '(' || $c === '[' || $c === '{' ) {
+				++$depth;
+			} elseif ( $c === ')' || $c === ']' || $c === '}' ) {
+				if ( $depth === 0 ) {
+					return null;
+				}
+				--$depth;
+			} elseif ( $depth === 0 && ( $c === ';' || $c === ',' ) ) {
+				return null; // `let x;`: no value.
+			} elseif ( $depth === 0 && $c === '=' && ! in_array( $src[ $i + 1 ] ?? '', array( '=', '>' ), true ) ) {
+				$eq = $i;
+				break;
+			}
+			++$i;
+		}
+		if ( $eq < 0 ) {
+			return null;
+		}
+		$start = $eq + 1;
+		$end   = $len;
+		$last  = -1; // The last character of code before the line break, comments aside.
+		$depth = 0;
+		for ( $i = $start; $i < $len; ) {
+			$c = $src[ $i ];
+			if ( $c === '`' ) {
+				$hits = array();
+				$i    = $this->template_refs( $src, $i, $len, array(), array(), $hits );
+				$last = $i - 1;
+				continue;
+			}
+			$comment = false;
+			$skip    = $this->js_skip( $src, $i, $comment );
+			if ( $skip > $i ) {
+				$last = $comment ? $last : $skip - 1;
+				$i    = $skip;
+				continue;
+			}
+			if ( $c === '(' || $c === '[' || $c === '{' ) {
+				++$depth;
+			} elseif ( $c === ')' || $c === ']' || $c === '}' ) {
+				if ( $depth === 0 ) {
+					$end = $i;
+					break;
+				}
+				--$depth;
+			} elseif ( $depth === 0 && $c === ';' ) {
+				$end = $i;
+				break;
+			} elseif ( $depth === 0 && $c === "\n" && $last >= $start && self::statement_ends( $src, $last, $i ) ) {
+				$end = $i;
+				break;
+			}
+			if ( ! ctype_space( $c ) ) {
+				$last = $i;
+			}
+			++$i;
+		}
+		if ( $lhs[0] === '{' ) {
+			$names = array_values( self::destructured_names( $lhs ) );
+		} elseif ( $lhs[0] === '[' ) {
+			$names = array();
+			foreach ( explode( ',', trim( $lhs, '[] ' ) ) as $piece ) {
+				$piece = trim( (string) preg_replace( '/=.*$/s', '', ltrim( trim( $piece ), '.' ) ) );
+				if ( preg_match( '/^[A-Za-z_$][\w$]*$/', $piece ) ) {
+					$names[] = $piece;
+				}
+			}
+		} else {
+			$names = array( $lhs );
+		}
+
+		return array(
+			'kind'  => $kind,
+			'lhs'   => $lhs,
+			'rhs'   => trim( substr( $src, $start, $end - $start ) ),
+			'names' => $names,
+			'end'   => $end,
+		);
+	}
+
+	/** Whether the line break at $nl ends the statement whose last code character is at $last (no operator carries it on). */
+	private static function statement_ends( string $src, int $last, int $nl ): bool {
+		$tail = $src[ $last ];
+		if ( str_contains( '=+-*/%&|^?:,(<[{!~.', $tail ) || ( $tail === '>' && ( $src[ $last - 1 ] ?? '' ) === '=' ) ) {
+			return false;
+		}
+		if ( ! preg_match( '/\G\s*(\S)/', $src, $next, 0, $nl ) ) {
+			return true;
+		}
+
+		return ! str_contains( '.?:+-*/%&|^,)]}=<>', $next[1] );
+	}
+
+	/**
+	 * $src split at its commas outside brackets and strings: the arguments of a call.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function top_level_split( string $src ): array {
+		$out   = array();
+		$depth = 0;
+		$from  = 0;
+		$quote = '';
+		$len   = strlen( $src );
+		for ( $i = 0; $i < $len; $i++ ) {
+			$c = $src[ $i ];
+			if ( $quote !== '' ) {
+				if ( $c === '\\' ) {
+					++$i;
+				} elseif ( $c === $quote ) {
+					$quote = '';
+				}
+				continue;
+			}
+			if ( $c === '"' || $c === "'" || $c === '`' ) {
+				$quote = $c;
+			} elseif ( $c === '(' || $c === '[' || $c === '{' ) {
+				++$depth;
+			} elseif ( $c === ')' || $c === ']' || $c === '}' ) {
+				--$depth;
+			} elseif ( $c === ',' && $depth === 0 ) {
+				$out[] = substr( $src, $from, $i - $from );
+				$from  = $i + 1;
+			}
+		}
+		$out[] = substr( $src, $from );
+
+		return $out;
+	}
+
+	/**
+	 * The end of the comment or string that starts at $i, or $i when none does. An apostrophe between two letters is a word's
+	 * (`don't` in a JSX string), not a quote, as match_pair() reads it too. A template literal is template_refs()'s.
+	 */
+	private function js_skip( string $src, int $i, bool &$comment = false ): int {
+		$comment = false;
+		$c       = $src[ $i ];
+		$next    = $src[ $i + 1 ] ?? '';
+		$len     = strlen( $src );
+		if ( $c === '/' && ( $next === '/' || $next === '*' ) ) {
+			$comment = true;
+			$stop    = $next === '/' ? strpos( $src, "\n", $i ) : strpos( $src, '*/', $i + 2 );
+			if ( $stop === false ) {
+				return $len;
+			}
+
+			return $next === '/' ? $stop : $stop + 2;
+		}
+		if ( $c !== '"' && $c !== "'" ) {
+			return $i;
+		}
+		if ( $c === "'" && $i > 0 && ctype_alpha( $src[ $i - 1 ] ) && ctype_alpha( $next ) ) {
+			return $i;
+		}
+		for ( $j = $i + 1; $j < $len; $j++ ) {
+			if ( $src[ $j ] === '\\' ) {
+				++$j;
+				continue;
+			}
+			if ( $src[ $j ] === $c || $src[ $j ] === "\n" ) {
+				return $j + 1;
+			}
+		}
+
+		return $len;
+	}
+
+	/**
+	 * Where a JavaScript expression reads one of $names, by name: the offsets in $src of each read React would make. What only
+	 * spells a name is not a read: a property (`x.d`), an object key (`{ d: 1 }`), a string, a comment, an attribute's name or
+	 * its quoted value in JSX (`<path d="…">`), JSX text, and a name an arrow or function takes as a parameter inside its body
+	 * (`.map((d) => …)`). A JSX tag is a read of its component (`<Icon />`).
+	 *
+	 * Reads from $i to the bracket that closes the expression, or, for an arrow's expression body ($body), to the comma or
+	 * semicolon that ends it; returns where it stopped. $prev is the character before $i.
+	 *
+	 * @param array<int, string>             $names
+	 * @param array<int, string>             $shadow
+	 * @param array<string, array<int, int>> $hits
+	 */
+	private function scan_refs( string $src, int $i, int $end, array $names, array $shadow, bool $body, array &$hits, string $prev = '' ): int {
+		$word_before = '';
+		while ( $i < $end ) {
+			$c = $src[ $i ];
+			if ( ctype_space( $c ) ) {
+				++$i;
+				continue;
+			}
+			if ( $c === '`' ) {
+				$i           = $this->template_refs( $src, $i, $end, $names, $shadow, $hits );
+				$prev        = '"';
+				$word_before = '';
+				continue;
+			}
+			$comment = false;
+			$skip    = $this->js_skip( $src, $i, $comment );
+			if ( $skip > $i ) {
+				$i = $skip;
+				if ( ! $comment ) {
+					$prev        = '"';
+					$word_before = '';
+				}
+				continue;
+			}
+			if ( $c === ')' || $c === ']' || $c === '}' ) {
+				return $i;
+			}
+			if ( $body && ( $c === ',' || $c === ';' ) ) {
+				return $i;
+			}
+			if ( $c === '(' || $c === '[' || $c === '{' ) {
+				$close = $this->match_pair( $src, $i );
+				if ( $close < 0 || $close >= $end ) {
+					return $end;
+				}
+				if ( $c === '(' && preg_match( '/\G\s*(?::\s*[\w$.<>\[\]|&, ]+?\s*)?=>/', $src, $arrow, 0, $close + 1 ) ) {
+					$params      = self::param_names( substr( $src, $i + 1, $close - $i - 1 ) );
+					$i           = $this->arrow_refs( $src, $close + 1 + strlen( $arrow[0] ), $end, $names, array_merge( $shadow, $params ), $hits );
+					$prev        = ')';
+					$word_before = '';
+					continue;
+				}
+				$this->scan_refs( $src, $i + 1, $close, $names, $shadow, false, $hits, $c );
+				$i           = $close + 1;
+				$prev        = $src[ $close ];
+				$word_before = '';
+				continue;
+			}
+			if ( $c === '<' && preg_match( '/\G<[A-Za-z_>]/', $src, $tag, 0, $i ) && ( $prev === '' || str_contains( '(,=?:&|{[>!;', $prev ) || ( $prev === 'a' && in_array( $word_before, array( 'return', 'yield', 'await', 'case', 'default' ), true ) ) ) ) {
+				$spans       = array();
+				$i           = $this->jsx_refs( $src, $i, $end, $names, $shadow, $hits, $spans, false );
+				$prev        = '>';
+				$word_before = '';
+				continue;
+			}
+			if ( preg_match( '/\G[A-Za-z_$][\w$]*/', $src, $w, 0, $i ) ) {
+				$word  = $w[0];
+				$after = $i + strlen( $word );
+				if ( $word === 'function' && preg_match( '/\G\s*[\w$]*\s*\(/', $src, $head, 0, $after ) ) {
+					$open  = $after + strlen( $head[0] ) - 1;
+					$close = $this->match_pair( $src, $open );
+					$brace = $close < 0 ? false : strpos( $src, '{', $close );
+					$stop  = $brace === false || $brace >= $end ? -1 : $this->match_pair( $src, $brace );
+					if ( $stop < 0 || $stop >= $end ) {
+						return $end;
+					}
+					$params = self::param_names( substr( $src, $open + 1, $close - $open - 1 ) );
+					$this->scan_refs( $src, (int) $brace + 1, $stop, $names, array_merge( $shadow, $params ), false, $hits, '{' );
+					$i           = $stop + 1;
+					$prev        = '}';
+					$word_before = '';
+					continue;
+				}
+				if ( $prev !== '.' && preg_match( '/\G\s*=>/', $src, $arrow, 0, $after ) ) {
+					$i           = $this->arrow_refs( $src, $after + strlen( $arrow[0] ), $end, $names, array_merge( $shadow, array( $word ) ), $hits );
+					$prev        = ')';
+					$word_before = '';
+					continue;
+				}
+				$member = $prev === '.' && substr( $src, max( 0, $i - 3 ), 3 ) !== '...';
+				$key    = ( $prev === '{' || $prev === ',' ) && preg_match( '/\G\s*:(?!:)/', $src, $colon, 0, $after ) === 1;
+				if ( ! $member && ! $key && in_array( $word, $names, true ) && ! in_array( $word, $shadow, true ) ) {
+					$hits[ $word ][] = $i;
+				}
+				$i           = $after;
+				$prev        = 'a';
+				$word_before = $word;
+				continue;
+			}
+			if ( ctype_digit( $c ) && preg_match( '/\G[\w.]+/', $src, $number, 0, $i ) ) {
+				$i           += strlen( $number[0] );
+				$prev         = '0';
+				$word_before  = '';
+				continue;
+			}
+			$prev        = $c;
+			$word_before = '';
+			++$i;
+		}
+
+		return $i;
+	}
+
+	/**
+	 * An arrow's body, from just after its `=>`: a block to its `}`, or an expression to what ends it. Returns where it stopped.
+	 *
+	 * @param array<int, string>             $names
+	 * @param array<int, string>             $shadow
+	 * @param array<string, array<int, int>> $hits
+	 */
+	private function arrow_refs( string $src, int $i, int $end, array $names, array $shadow, array &$hits ): int {
+		while ( $i < $end && ctype_space( $src[ $i ] ) ) {
+			++$i;
+		}
+		if ( $i < $end && $src[ $i ] === '{' ) {
+			$close = $this->match_pair( $src, $i );
+			if ( $close < 0 || $close >= $end ) {
+				return $end;
+			}
+			$this->scan_refs( $src, $i + 1, $close, $names, $shadow, false, $hits, '{' );
+
+			return $close + 1;
+		}
+
+		return $this->scan_refs( $src, $i, $end, $names, $shadow, true, $hits, '>' );
+	}
+
+	/**
+	 * A template literal from its opening backtick: the reads in each `${…}`. Returns the offset after its closing backtick.
+	 *
+	 * @param array<int, string>             $names
+	 * @param array<int, string>             $shadow
+	 * @param array<string, array<int, int>> $hits
+	 */
+	private function template_refs( string $src, int $i, int $end, array $names, array $shadow, array &$hits ): int {
+		$end = min( $end, strlen( $src ) );
+		for ( $j = $i + 1; $j < $end; $j++ ) {
+			$c = $src[ $j ];
+			if ( $c === '\\' ) {
+				++$j;
+				continue;
+			}
+			if ( $c === '`' ) {
+				return $j + 1;
+			}
+			if ( $c === '$' && ( $src[ $j + 1 ] ?? '' ) === '{' ) {
+				$close = $this->match_pair( $src, $j + 1 );
+				if ( $close < 0 ) {
+					return $end;
+				}
+				if ( $names !== array() ) {
+					$this->scan_refs( $src, $j + 2, $close, $names, $shadow, false, $hits, '{' );
+				}
+				$j = $close;
+			}
+		}
+
+		return $end;
+	}
+
+	/**
+	 * A JSX element from its `<`: the reads in its tag name, its attribute expressions and its children's expressions. With
+	 * $record, each element of this JSX tree (not one inside an expression) goes into $spans as [start, offset of the closing
+	 * `>`, opening tag]. Returns the offset after the element.
+	 *
+	 * @param array<int, string>                       $names
+	 * @param array<int, string>                       $shadow
+	 * @param array<string, array<int, int>>           $hits
+	 * @param array<int, array{0:int, 1:int, 2:string}> $spans
+	 */
+	private function jsx_refs( string $src, int $i, int $end, array $names, array $shadow, array &$hits, array &$spans, bool $record ): int {
+		$start = $i;
+		++$i;
+		if ( preg_match( '/\G([A-Za-z_$][\w$]*)[\w$.:-]*/', $src, $tag, 0, $i ) ) {
+			if ( in_array( $tag[1], $names, true ) && ! in_array( $tag[1], $shadow, true ) ) {
+				$hits[ $tag[1] ][] = $i;
+			}
+			$i += strlen( $tag[0] );
+		}
+		$open = -1;
+		while ( $i < $end ) {
+			$c = $src[ $i ];
+			if ( $c === '/' && ( $src[ $i + 1 ] ?? '' ) === '>' ) {
+				if ( $record ) {
+					$spans[] = array( $start, $i + 1, substr( $src, $start, $i + 2 - $start ) );
+				}
+				return $i + 2;
+			}
+			if ( $c === '>' ) {
+				$open = $i;
+				++$i;
+				break;
+			}
+			if ( $c === '{' ) {
+				$close = $this->match_pair( $src, $i );
+				if ( $close < 0 ) {
+					return $end;
+				}
+				$this->scan_refs( $src, $i + 1, $close, $names, $shadow, false, $hits, '{' );
+				$i = $close + 1;
+				continue;
+			}
+			if ( $c === '"' || $c === "'" ) {
+				$quote = strpos( $src, $c, $i + 1 );
+				if ( $quote === false ) {
+					return $end;
+				}
+				$i = $quote + 1;
+				continue;
+			}
+			++$i;
+		}
+		if ( $open < 0 ) {
+			return $end;
+		}
+		$opening = substr( $src, $start, $open - $start + 1 );
+		while ( $i < $end ) {
+			$c = $src[ $i ];
+			if ( $c === '{' ) {
+				$close = $this->match_pair( $src, $i );
+				if ( $close < 0 ) {
+					return $end;
+				}
+				$this->scan_refs( $src, $i + 1, $close, $names, $shadow, false, $hits, '{' );
+				$i = $close + 1;
+				continue;
+			}
+			if ( $c === '<' && ( $src[ $i + 1 ] ?? '' ) === '/' ) {
+				$close = strpos( $src, '>', $i );
+				if ( $close === false ) {
+					return $end;
+				}
+				if ( $record ) {
+					$spans[] = array( $start, $close, $opening );
+				}
+				return $close + 1;
+			}
+			if ( $c === '<' && preg_match( '/\G<[A-Za-z_>]/', $src, $child, 0, $i ) ) {
+				$i = $this->jsx_refs( $src, $i, $end, $names, $shadow, $hits, $spans, $record );
+				continue;
+			}
+			++$i;
+		}
+
+		return $end;
+	}
+
+	/**
+	 * The names a parameter list binds: `d`, `(d, i)`, `({ label, note: text })`, `([k, v])`, `(d: Item = FALLBACK)`. A key
+	 * followed by its alias binds the alias; a type or a default binds nothing.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function param_names( string $params ): array {
+		$out = array();
+		if ( ! preg_match_all( '/[A-Za-z_$][\w$]*|\.\.\.|[{}\[\]:=,<>()]/', $params, $tokens ) ) {
+			return $out;
+		}
+		$tokens = $tokens[0];
+		$mode   = 'bind'; // bind | type | default
+		$nest   = array(); // the brackets the list is inside: a pattern's or a type's
+		$count  = count( $tokens );
+		foreach ( $tokens as $k => $token ) {
+			if ( $token === '{' || $token === '[' || $token === '<' || $token === '(' ) {
+				$nest[] = $mode;
+				continue;
+			}
+			if ( $token === '}' || $token === ']' || $token === '>' || $token === ')' ) {
+				$mode = array_pop( $nest ) ?? 'bind';
+				continue;
+			}
+			if ( $token === ',' ) {
+				$mode = $nest === array() || end( $nest ) === 'bind' ? 'bind' : $mode;
+				continue;
+			}
+			if ( $token === '=' ) {
+				$mode = 'default';
+				continue;
+			}
+			if ( $token === ':' ) {
+				// Inside a pattern's braces a colon leads to the alias; anywhere else, to a type.
+				$mode = $nest !== array() && end( $nest ) === 'bind' ? 'bind' : 'type';
+				continue;
+			}
+			if ( $token === '...' || $mode !== 'bind' ) {
+				continue;
+			}
+			$in_pattern = $nest !== array() && end( $nest ) === 'bind';
+			if ( $in_pattern && ( $tokens[ $k + 1 ] ?? '' ) === ':' && $k + 1 < $count ) {
+				continue; // A key: its alias follows.
+			}
+			$out[] = $token;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Where in a component's JSX the panels of each picked state start: offset => the state. A panel is the element React remounts
+	 * per item (`key={active}`) when there is one around every use of the items, else the smallest element around every use;
+	 * uses are the reads scan_refs() finds of each pick and of the consts made from it.
+	 *
+	 * A panel never holds what writes the state. When the element around every use holds the tabs as well, it is split: each of
+	 * its children with a use is a panel of its own, down to the elements that hold no control, so the tabs are written once and
+	 * the one pressed is never hidden. A use no such element holds, or a const no copy can compute again (pick_derivations())
+	 * inside a panel, leaves the state's panels unwritten: the page shows the starting item, as it did.
 	 *
 	 * @return array{src:string, at:array<int, string>}
 	 */
@@ -2381,108 +3087,74 @@ final class Jsx_Compiler {
 		if ( $this->picks === array() || $jsx === '' ) {
 			return $out;
 		}
-		$spans = array(); // [start, end, opening tag]
-		$uses  = array(); // name => offsets
-		$stack = array();
+		$groups = array();
+		foreach ( $this->picks as $name => $pick ) {
+			$group                    = $groups[ $pick['state'] ] ?? array(
+				'uses'     => array(),
+				'follows'  => array(),
+				'controls' => array(),
+				'unsafe'   => array(),
+			);
+			$group['uses']            = array_merge( $group['uses'], array( (string) $name ), $pick['aliases'] ?? array() );
+			$group['follows']         = array_merge( $group['follows'], $pick['follows'] ?? array() );
+			$group['controls']        = array_merge( $group['controls'], $pick['controls'] ?? array() );
+			$group['unsafe']          = array_merge( $group['unsafe'], $pick['unsafe'] ?? array() );
+			$groups[ $pick['state'] ] = $group;
+		}
+		$names = array();
+		foreach ( $groups as $group ) {
+			$names = array_merge( $names, $group['uses'], $group['follows'], $group['controls'], $group['unsafe'] );
+		}
+		$names = array_values( array_unique( $names ) );
+		$spans = array();
+		$hits  = array();
 		$len   = strlen( $jsx );
-		$read  = function ( int $open ) use ( $jsx, &$uses ): int {
-			$close = $this->match_pair( $jsx, $open );
-			if ( $close < 0 ) {
-				return -1;
+		for ( $i = 0; $i < $len; ) {
+			if ( $jsx[ $i ] === '<' && preg_match( '/\G<[A-Za-z_>]/', $jsx, $tag, 0, $i ) ) {
+				$i = $this->jsx_refs( $jsx, $i, $len, $names, array(), $hits, $spans, true );
+				continue;
 			}
-			$expr = substr( $jsx, $open, $close - $open + 1 );
-			foreach ( array_keys( $this->picks ) as $name ) {
-				if ( preg_match_all( '/(?<![\w$.])' . preg_quote( $name, '/' ) . '(?![\w$])/', $expr, $hits, PREG_OFFSET_CAPTURE ) ) {
-					foreach ( $hits[0] as $hit ) {
-						$uses[ $name ][] = $open + (int) $hit[1];
-					}
-				}
-			}
-
-			return $close;
-		};
-		$i = 0;
-		while ( $i < $len ) {
-			$ch = $jsx[ $i ];
-			if ( $ch === '{' ) {
-				$close = $read( $i );
+			if ( $jsx[ $i ] === '{' ) {
+				$close = $this->match_pair( $jsx, $i );
 				if ( $close < 0 ) {
 					return $out;
 				}
+				$this->scan_refs( $jsx, $i + 1, $close, $names, array(), false, $hits, '{' );
 				$i = $close + 1;
 				continue;
 			}
-			if ( $ch !== '<' ) {
-				++$i;
-				continue;
-			}
-			if ( ( $jsx[ $i + 1 ] ?? '' ) === '/' ) {
-				$close = strpos( $jsx, '>', $i );
-				if ( $close === false ) {
-					return $out;
-				}
-				$open = array_pop( $stack );
-				if ( is_array( $open ) ) {
-					$spans[] = array( $open[0], $close, $open[1] );
-				}
-				$i = $close + 1;
-				continue;
-			}
-			// The opening tag, its attribute expressions and quoted values stepped over whole.
-			$j = $i + 1;
-			while ( $j < $len && $jsx[ $j ] !== '>' ) {
-				$c = $jsx[ $j ];
-				if ( $c === '{' ) {
-					$close = $read( $j );
-					if ( $close < 0 ) {
-						return $out;
-					}
-					$j = $close + 1;
-					continue;
-				}
-				if ( $c === '"' || $c === "'" ) {
-					$quote = strpos( $jsx, $c, $j + 1 );
-					if ( $quote === false ) {
-						return $out;
-					}
-					$j = $quote + 1;
-					continue;
-				}
-				++$j;
-			}
-			if ( $j >= $len ) {
-				return $out;
-			}
-			$tag = substr( $jsx, $i, $j - $i + 1 );
-			if ( $jsx[ $j - 1 ] === '/' ) {
-				$spans[] = array( $i, $j, $tag );
-			} else {
-				$stack[] = array( $i, $tag );
-			}
-			$i = $j + 1;
+			++$i;
 		}
+		$offsets = static function ( array $of ) use ( $hits ): array {
+			$all = array();
+			foreach ( array_unique( $of ) as $name ) {
+				$all = array_merge( $all, $hits[ $name ] ?? array() );
+			}
+			sort( $all );
 
-		foreach ( $this->picks as $name => $pick ) {
-			if ( empty( $uses[ $name ] ) ) {
+			return $all;
+		};
+		foreach ( $groups as $state => $group ) {
+			$uses = $offsets( $group['uses'] );
+			if ( $uses === array() ) {
 				continue;
 			}
-			$first  = min( $uses[ $name ] );
-			$last   = max( $uses[ $name ] );
-			$keyed  = -1;
-			$around = -1;
-			foreach ( $spans as $span ) {
-				if ( $span[0] > $first || $span[1] < $last ) {
-					continue;
+			$panels = $this->pick_spans( $spans, $uses, $offsets( $group['follows'] ), $offsets( $group['controls'] ), (string) $state );
+			if ( $panels === null ) {
+				continue;
+			}
+			foreach ( $panels as $panel ) {
+				foreach ( $offsets( $group['unsafe'] ) as $at ) {
+					if ( $at >= $panel[0] && $at <= $panel[1] ) {
+						continue 3;
+					}
 				}
-				// Spans around the same uses nest, so the one that starts last is the smallest.
-				$around = max( $around, $span[0] );
-				if ( preg_match( '/\skey=\{\s*' . preg_quote( $pick['state'], '/' ) . '\s*\}/', $span[2] ) === 1 ) {
-					$keyed = max( $keyed, $span[0] );
+				if ( isset( $out['at'][ $panel[0] ] ) ) {
+					continue 2;
 				}
 			}
-			$at = $keyed >= 0 ? $keyed : $around;
-			if ( $at >= 0 && ! isset( $out['at'][ $at ] ) ) {
-				$out['at'][ $at ] = $name;
+			foreach ( $panels as $panel ) {
+				$out['at'][ $panel[0] ] = (string) $state;
 			}
 		}
 
@@ -2490,40 +3162,339 @@ final class Jsx_Compiler {
 	}
 
 	/**
-	 * A picked item's panel, cursor on its `<`: written once per item of the list, each copy read with the item and the state's
-	 * value it is picked at (so `D-{active + 1}` in it reads its own number too), and shown for that value. The copies that do
-	 * not show at first are hidden and carry no id: the starting copy keeps the ids the design gave the panel.
+	 * The elements a state's copies are written for (pick_panels_of()), or null when its uses cannot all be held by one.
+	 *
+	 * @param array<int, array{0:int, 1:int, 2:string}> $spans
+	 * @param array<int, int>                           $uses
+	 * @param array<int, int>                           $follows
+	 * @param array<int, int>                           $controls
+	 * @return array<int, array{0:int, 1:int, 2:string}>|null
+	 */
+	private function pick_spans( array $spans, array $uses, array $follows, array $controls, string $state ): ?array {
+		$all    = array_merge( $uses, $follows );
+		$first  = min( $all );
+		$last   = max( $all );
+		$around = null;
+		$keyed  = null;
+		foreach ( $spans as $span ) {
+			if ( $span[0] > $first || $span[1] < $last ) {
+				continue;
+			}
+			// Spans around the same uses nest, so the one that starts last is the smallest.
+			if ( $around === null || $span[0] > $around[0] ) {
+				$around = $span;
+			}
+			if ( preg_match( '/\skey=\{\s*' . preg_quote( $state, '/' ) . '\s*\}/', $span[2] ) === 1 && ( $keyed === null || $span[0] > $keyed[0] ) ) {
+				$keyed = $span;
+			}
+		}
+		$top = $keyed ?? $around;
+
+		return $top === null ? null : $this->split_pick_span( $top, $spans, $uses, $follows, $controls );
+	}
+
+	/**
+	 * $span as the panels of the uses inside it: itself when it holds no control, else each child with a use, split the same way.
+	 * Null when a use of an item sits in a span that holds a control but in none of its children (its own attributes, its
+	 * text); a use of a const that follows the state ($follows) left there keeps the starting value instead.
+	 *
+	 * @param array{0:int, 1:int, 2:string}             $span
+	 * @param array<int, array{0:int, 1:int, 2:string}> $spans
+	 * @param array<int, int>                           $uses
+	 * @param array<int, int>                           $follows
+	 * @param array<int, int>                           $controls
+	 * @return array<int, array{0:int, 1:int, 2:string}>|null
+	 */
+	private function split_pick_span( array $span, array $spans, array $uses, array $follows, array $controls ): ?array {
+		$inside = static fn( int $at, array $s ): bool => $at >= $s[0] && $at <= $s[1];
+		$held   = array_filter( $controls, static fn( int $at ): bool => $inside( $at, $span ) );
+		if ( $held === array() ) {
+			return array( $span );
+		}
+		// The children: the spans inside this one that no other span inside it holds.
+		$within   = array_filter( $spans, static fn( array $s ): bool => $s[0] > $span[0] && $s[1] < $span[1] );
+		$children = array_filter(
+			$within,
+			static function ( array $s ) use ( $within ): bool {
+				foreach ( $within as $other ) {
+					if ( $other !== $s && $other[0] <= $s[0] && $other[1] >= $s[1] ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		);
+		$out = array();
+		foreach ( $uses as $use ) {
+			if ( ! $inside( $use, $span ) ) {
+				continue;
+			}
+			$found = false;
+			foreach ( $children as $child ) {
+				if ( $inside( $use, $child ) ) {
+					$found = true;
+					break;
+				}
+			}
+			if ( ! $found ) {
+				return null;
+			}
+		}
+		foreach ( $children as $child ) {
+			$mine    = array_values( array_filter( $uses, static fn( int $at ): bool => $inside( $at, $child ) ) );
+			$follow  = array_values( array_filter( $follows, static fn( int $at ): bool => $inside( $at, $child ) ) );
+			if ( $mine === array() && $follow === array() ) {
+				continue;
+			}
+			$part = $this->split_pick_span( $child, $spans, $mine, $follow, $controls );
+			if ( $part === null ) {
+				return null;
+			}
+			$out = array_merge( $out, $part );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * A picked state's panel, cursor on its `<`: written once per item of the list, each copy read as React renders it for that
+	 * item: the state at its index, every pick of the state at its item, the consts made from them computed again
+	 * (pick_scope()). Each copy shows for its value of the state (pick_copies()). When a copy cannot be read that way, or is not
+	 * made of elements only, the panel is written once, at the starting item, as it was before: never a copy that disagrees with
+	 * itself.
 	 *
 	 * @param array<string, mixed> $scope
 	 */
-	private function pick_panel( string $name, array $scope ): string {
-		$pick  = $this->picks[ $name ];
-		$state = $pick['state'];
+	private function pick_panel( string $state, array $scope ): string {
+		$group = array_filter( $this->picks, static fn( array $pick ): bool => $pick['state'] === $state );
+		$first = reset( $group );
 		$init  = (int) ( $this->state_init[ $state ] ?? 0 );
 		$start = $this->i;
-		$end   = $start;
-		$html  = '';
-		$this->in_pick = true;
+		$this->in_pick[ $state ] = true;
 		try {
-			foreach ( array_values( $pick['list'] ) as $k => $item ) {
-				$this->i         = $start;
-				$local           = $scope;
-				$local[ $name ]  = $item;
-				$local[ $state ] = $k;
-				$part            = $this->parse_element( $local );
-				$end             = $this->i;
-				$part            = self::add_class( $part, 'dxui-on-' . sanitize_html_class( $state ) . '--' . $k );
-				if ( $k !== $init ) {
-					$part = (string) preg_replace( '/\sid="[^"]*"/', '', self::add_class( $part, 'hidden' ) );
+			$scopes = array();
+			foreach ( array_keys( $first['list'] ) as $k ) {
+				$local = $this->pick_scope( $group, $state, (int) $k, $scope );
+				if ( $local === null ) {
+					$scopes = array();
+					break;
 				}
-				$html .= $part;
+				$scopes[ $k ] = $local;
+			}
+			$html = null;
+			if ( $scopes !== array() ) {
+				$parts = array();
+				foreach ( $scopes as $k => $local ) {
+					$this->i     = $start;
+					$parts[ $k ] = $this->parse_element( $local );
+				}
+				$html = $this->pick_copies( $parts, $state, $init );
+			}
+			if ( $html === null ) {
+				$this->i = $start;
+				$html    = $this->parse_element( $scope );
 			}
 		} finally {
-			$this->in_pick = false;
+			unset( $this->in_pick[ $state ] );
 		}
-		$this->i = $end;
 
 		return $html;
+	}
+
+	/**
+	 * The scope copy $k of a state's panel is read in, or null when a const made from the item cannot be computed for it.
+	 *
+	 * @param array<string, array<string, mixed>> $group
+	 * @param array<string, mixed>                $scope
+	 * @return array<string, mixed>|null
+	 */
+	private function pick_scope( array $group, string $state, int $k, array $scope ): ?array {
+		$local           = $scope;
+		$local[ $state ] = $k;
+		foreach ( $group as $name => $pick ) {
+			$local[ $name ] = $pick['list'][ $k ] ?? null;
+		}
+		$first = reset( $group );
+		foreach ( $first['derive'] ?? array() as $step ) {
+			$lhs = $step['lhs'];
+			if ( $step['kind'] === 'fn' ) {
+				if ( array_key_exists( $lhs, $scope ) ) {
+					$local[ $lhs ] = $this->make_fn( $step['rhs'], $local );
+				}
+				continue;
+			}
+			if ( $step['kind'] === 'value' ) {
+				// A useMemo the prelude left unbound is computed here as well: every copy shows it, the starting one included.
+				$value = $this->eval_source( $step['rhs'], $local );
+				if ( $value === null && ( $scope[ $lhs ] ?? null ) !== null ) {
+					return null;
+				}
+				$local[ $lhs ] = $value;
+				continue;
+			}
+			$value = $this->eval_source( $step['rhs'], $local );
+			if ( $step['kind'] === 'object' ) {
+				$names = self::destructured_names( $lhs );
+			} else {
+				$names = array();
+				foreach ( explode( ',', trim( $lhs, '[] ' ) ) as $index => $piece ) {
+					$piece = trim( (string) preg_replace( '/=.*$/s', '', trim( $piece ) ) );
+					if ( $piece !== '' && ! str_starts_with( $piece, '...' ) ) {
+						$names[ $index ] = $piece;
+					}
+				}
+			}
+			if ( ! is_array( $value ) ) {
+				foreach ( $names as $alias ) {
+					if ( ( $scope[ $alias ] ?? null ) !== null ) {
+						return null;
+					}
+				}
+				continue;
+			}
+			foreach ( $names as $key => $alias ) {
+				$local[ $alias ] = $value[ $key ] ?? null;
+			}
+		}
+
+		return $local;
+	}
+
+	/**
+	 * The copies of a state's panel as the page holds them: every root element of copy k marked to show for k, hidden unless k
+	 * is where the state starts. A fragment, or a component with several roots, has every root marked; a copy with text outside
+	 * an element cannot be hidden, so null.
+	 *
+	 * The starting copy keeps the panel's ids. An id another copy repeats from it takes the copy's number (`id="del-h--2"`), and
+	 * what points at it from inside that copy follows (`for`, `aria-*`, `href="#…"`, `url(#…)`), so a label or a gradient in a copy
+	 * reaches its own copy's element. An id the copy has to itself (`id={\`panel-${active}\`}`) is kept, and the tabs' `aria-controls`
+	 * still find it.
+	 *
+	 * @param array<int, string> $parts
+	 */
+	private function pick_copies( array $parts, string $state, int $init ): ?string {
+		$ids = array();
+		if ( preg_match_all( '/\sid="([^"]*)"/', $parts[ $init ] ?? '', $found ) ) {
+			$ids = array_fill_keys( $found[1], true );
+		}
+		$html = '';
+		foreach ( $parts as $k => $part ) {
+			if ( $k !== $init && $ids !== array() ) {
+				$part = self::renumber_ids( $part, $ids, '--' . $k );
+			}
+			$roots = self::root_offsets( $part );
+			if ( $roots === null ) {
+				return null;
+			}
+			foreach ( array_reverse( $roots ) as $at ) {
+				$root = self::add_class( substr( $part, $at ), 'dxui-on-' . sanitize_html_class( $state ) . '--' . $k );
+				if ( $k !== $init ) {
+					$root = self::add_class( $root, 'hidden' );
+				}
+				$part = substr( $part, 0, $at ) . $root;
+			}
+			$html .= $part;
+		}
+
+		return $html;
+	}
+
+	/**
+	 * $html with each id in $ids suffixed, and the references to those ids inside it with them.
+	 *
+	 * @param array<string, bool> $ids
+	 */
+	private static function renumber_ids( string $html, array $ids, string $suffix ): string {
+		$map  = array();
+		$html = (string) preg_replace_callback(
+			'/(\sid=")([^"]*)(")/',
+			static function ( array $m ) use ( $ids, $suffix, &$map ): string {
+				if ( ! isset( $ids[ $m[2] ] ) ) {
+					return $m[0];
+				}
+				$map[ $m[2] ] = $m[2] . $suffix;
+				return $m[1] . $map[ $m[2] ] . $m[3];
+			},
+			$html
+		);
+		if ( $map === array() ) {
+			return $html;
+		}
+		$html = (string) preg_replace_callback(
+			'/(\s(?:for|headers|list|form|aria-(?:labelledby|describedby|controls|owns|activedescendant|details|errormessage|flowto))=")([^"]*)(")/',
+			static fn( array $m ): string => $m[1] . implode( ' ', array_map( static fn( string $id ): string => $map[ $id ] ?? $id, preg_split( '/\s+/', $m[2], -1, PREG_SPLIT_NO_EMPTY ) ?: array() ) ) . $m[3],
+			$html
+		);
+		$html = (string) preg_replace_callback(
+			'/(\s(?:href|xlink:href)="#)([^"]*)(")/',
+			static fn( array $m ): string => $m[1] . ( $map[ $m[2] ] ?? $m[2] ) . $m[3],
+			$html
+		);
+
+		return (string) preg_replace_callback(
+			'/(url\(\s*(?:&quot;|&#0?39;|[\'"])?#)([^)\'"&\s]+)/',
+			static fn( array $m ): string => $m[1] . ( $map[ $m[2] ] ?? $m[2] ),
+			$html
+		);
+	}
+
+	/**
+	 * Where each top-level element of $html starts, or null when there is text between them or the markup does not close.
+	 *
+	 * @return array<int, int>|null
+	 */
+	private static function root_offsets( string $html ): ?array {
+		static $void = array( 'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr' );
+		$out   = array();
+		$depth = 0;
+		$len   = strlen( $html );
+		$i     = 0;
+		while ( $i < $len ) {
+			$lt = strpos( $html, '<', $i );
+			if ( $depth === 0 && trim( substr( $html, $i, ( $lt === false ? $len : $lt ) - $i ) ) !== '' ) {
+				return null;
+			}
+			if ( $lt === false ) {
+				break;
+			}
+			if ( substr( $html, $lt, 4 ) === '<!--' ) {
+				$close = strpos( $html, '-->', $lt );
+				if ( $close === false ) {
+					return null;
+				}
+				$i = $close + 3;
+				continue;
+			}
+			if ( ! preg_match( '/\G<(\/?)([a-zA-Z][\w:-]*)(?:[^>"\']|"[^"]*"|\'[^\']*\')*>/', $html, $tag, 0, $lt ) ) {
+				return null;
+			}
+			$i    = $lt + strlen( $tag[0] );
+			$name = strtolower( $tag[2] );
+			if ( $tag[1] === '/' ) {
+				if ( --$depth < 0 ) {
+					return null;
+				}
+				continue;
+			}
+			if ( $depth === 0 ) {
+				$out[] = $lt;
+			}
+			if ( in_array( $name, $void, true ) || str_ends_with( $tag[0], '/>' ) ) {
+				continue;
+			}
+			if ( in_array( $name, array( 'script', 'style', 'textarea', 'title' ), true ) ) {
+				$close = stripos( $html, '</' . $name, $i );
+				$gt    = $close === false ? false : strpos( $html, '>', $close );
+				if ( $gt === false ) {
+					return null;
+				}
+				$i = $gt + 1;
+				continue;
+			}
+			++$depth;
+		}
+
+		return $depth === 0 ? $out : null;
 	}
 
 	/**
@@ -4094,7 +5065,7 @@ final class Jsx_Compiler {
 			return '';
 		}
 		// The panel of an item a state picks: written once per item (pick_panel()).
-		if ( ! $this->in_pick && isset( $this->pick_panels['at'][ $this->i ] ) && $this->src === $this->pick_panels['src'] ) {
+		if ( isset( $this->pick_panels['at'][ $this->i ] ) && ! isset( $this->in_pick[ $this->pick_panels['at'][ $this->i ] ] ) && $this->src === $this->pick_panels['src'] ) {
 			return $this->pick_panel( $this->pick_panels['at'][ $this->i ], $scope );
 		}
 		++$this->i;

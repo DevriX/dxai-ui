@@ -293,6 +293,39 @@ rest_do_request( $save );
 $kept_fewer = $dxui_snapshots( $page_id );
 remove_filter( 'dx_ui_snapshots_kept', $fewer );
 
+// The brand's page goes to the trash: the brand passes to the design imported last whose page is still published, however
+// many snapshots the designs after it keep. Two designs with 60 each (the brand's, and a draft's) are newer than the one that
+// can take it; reading a fixed number of snapshot rows never reached it, and the brand was cleared.
+global $wpdb;
+$brand_before = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+$adopt_any    = static fn(): bool => true;
+add_filter( 'dx_ui_adopt_brand', $adopt_any );
+$brand_pages = array();
+foreach ( array( 'publish', 'draft', 'publish' ) as $k => $status ) {
+	$brand_pages[ $k ] = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => $status, 'post_title' => 'Brand fixture ' . $k ) );
+	update_post_meta( $brand_pages[ $k ], \DX_UI\Compiler\Design_Tokens::META, array( 'brand' => '#11223' . $k ) );
+}
+[ $brand_page, $draft_page, $older_page ] = $brand_pages;
+// Dated ahead of every design the site holds, so the one that takes the brand is this fixture's, whatever else is there.
+$dated = static function ( int $id, string $when ) use ( $wpdb ): void {
+	$wpdb->update( $wpdb->posts, array( 'post_modified' => $when, 'post_modified_gmt' => $when ), array( 'ID' => $id ) );
+	clean_post_cache( $id );
+};
+$older_snapshot = (int) wp_insert_post( array( 'post_type' => 'dxui_conversion', 'post_status' => 'publish', 'post_title' => 'Older design', 'meta_input' => array( '_dx_ui_page_id' => $older_page ) ) );
+$dated( $older_snapshot, '2099-01-01 00:00:00' );
+for ( $i = 0; $i < 120; $i++ ) {
+	$dated( (int) wp_insert_post( array( 'post_type' => 'dxui_conversion', 'post_status' => 'publish', 'post_title' => 'Newer snapshot ' . $i, 'meta_input' => array( '_dx_ui_page_id' => $i % 2 ? $draft_page : $brand_page ) ) ), '2099-01-02 00:00:00' );
+}
+update_option( \DX_UI\Theme\Design_Theme_Json::OPTION, array( 'tokens' => array( 'brand' => '#112230' ), 'page_id' => $brand_page, 'source' => '' ), false );
+wp_trash_post( $brand_page );
+$brand_after = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+remove_filter( 'dx_ui_adopt_brand', $adopt_any );
+if ( false === $brand_before ) {
+	delete_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+} else {
+	update_option( \DX_UI\Theme\Design_Theme_Json::OPTION, $brand_before, false );
+}
+
 // What the save, the form, the library, the page-scoped save and the preview gave: each must be what a working site gives.
 $fail   = 0;
 $pass   = 0;
@@ -313,6 +346,7 @@ $expect( 'the newest ' . \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT 
 $expect( 'a restore answers 200, writes the same page and keeps a snapshot of its own, marked with the one it came from', 200 === $restored->get_status() && (int) ( $restored_data['page']['id'] ?? 0 ) === $page_id && count( $kept_restore ) === \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT && $kept_restore[0] > $kept_after[0] && (int) get_post_meta( $kept_restore[0], '_dx_ui_restored_from', true ) === $restore_from );
 $expect( 'History lists the snapshots newest first, the restore naming its source, an import none', count( $history ) === count( $kept_restore ) && (int) ( $history[0]['id'] ?? 0 ) === $kept_restore[0] && (int) ( $history[0]['restored_from'] ?? 0 ) === $restore_from && '' !== (string) ( $history[0]['restored_date'] ?? '' ) && 0 === (int) ( $history[1]['restored_from'] ?? -1 ) );
 $expect( 'dx_ui_snapshots_kept keeps fewer', 2 === count( $kept_fewer ) && $kept_fewer[1] === $kept_restore[0] );
+$expect( 'the brand\'s page trashed: the brand passes to the latest design still published, past the snapshots of newer ones', is_array( $brand_after ) && (int) ( $brand_after['page_id'] ?? 0 ) === $older_page );
 
 dxui_verify_cleanup( $dxui_snapshot );
 echo "\n$pass passed, $fail failed\n";
