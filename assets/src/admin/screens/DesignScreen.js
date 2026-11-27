@@ -231,7 +231,16 @@ function HistoryTab( { status, onRestored } ) {
 			<div className="dxui-section-head">
 				<div>
 					<h3>{ __( 'Imports of this design', 'dx-ui' ) }</h3>
-					<p className="dxui-muted">{ __( 'Every import keeps a snapshot of what it compiled and what it made. Restoring one writes the Home again from it; the page’s own revisions keep every edit since.', 'dx-ui' ) }</p>
+					<p className="dxui-muted">{ sprintf(
+						/* translators: %d: how many snapshots are kept. */
+						_n(
+							'Every import keeps a snapshot of what it compiled and what it made; the latest is kept. Restoring one writes the Home again from it and keeps that as the latest snapshot; the page’s own revisions keep every edit since.',
+							'Every import keeps a snapshot of what it compiled and what it made; the latest %d are kept. Restoring one writes the Home again from it and keeps that as the latest snapshot; the page’s own revisions keep every edit since.',
+							status.snapshots_kept || 5,
+							'dx-ui'
+						),
+						status.snapshots_kept || 5
+					) }</p>
 				</div>
 				{ link( 'convert' ) && <a className="components-button is-secondary" href={ link( 'convert' ) }>{ __( 'Import again', 'dx-ui' ) }</a> }
 			</div>
@@ -248,10 +257,22 @@ function HistoryTab( { status, onRestored } ) {
 						</tr>
 					</thead>
 					<tbody>
-						{ rows.map( ( c ) => (
+						{ rows.map( ( c, i ) => (
 							<tr key={ c.id }>
 								<td className="dxui-history__date">{ dateOf( c.date, true ) }</td>
-								<td>{ c.title } <span className="dxui-muted">· ID { c.id }</span></td>
+								<td>
+									{ c.title } <span className="dxui-muted">· ID { c.id }</span>
+									{ i === 0 && <> <span className="dxui-pill">{ __( 'Latest', 'dx-ui' ) }</span></> }
+									{ c.restored_from > 0 && (
+										<div className="dxui-muted">
+											{ c.restored_date
+												/* translators: %s: the date of the snapshot it was restored from. */
+												? sprintf( __( 'Restored from the snapshot of %s', 'dx-ui' ), dateOf( c.restored_date, true ) )
+												/* translators: %d: the id of a snapshot that is no longer kept. */
+												: sprintf( __( 'Restored from snapshot ID %d', 'dx-ui' ), c.restored_from ) }
+										</div>
+									) }
+								</td>
 								<td className="dxui-history__actions">
 									<Button variant="secondary" size="small" onClick={ () => restore( c ) } disabled={ busy }>{ __( 'Restore', 'dx-ui' ) }</Button>
 								</td>

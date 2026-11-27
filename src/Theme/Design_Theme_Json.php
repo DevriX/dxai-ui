@@ -113,16 +113,19 @@ final class Design_Theme_Json {
 				'post_status'    => 'publish',
 				'orderby'        => 'modified',
 				'order'          => 'DESC',
-				'posts_per_page' => 20,
+				// A design keeps several snapshots (Structure_Repository::SNAPSHOTS_KEPT): enough rows for 20 designs.
+				'posts_per_page' => 20 * \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
 			)
 		);
+		$seen = array();
 		foreach ( $conversions as $conversion ) {
 			$page = (int) get_post_meta( (int) $conversion, '_dx_ui_page_id', true );
-			if ( $page < 1 || $page === $post_id || get_post_status( $page ) !== 'publish' ) {
+			if ( $page < 1 || $page === $post_id || isset( $seen[ $page ] ) || get_post_status( $page ) !== 'publish' ) {
 				continue;
 			}
+			$seen[ $page ] = true;
 			self::adopt( $page, (string) get_post_meta( $page, '_dx_ui_source_zip', true ) );
 			$now = get_option( self::OPTION );
 			if ( is_array( $now ) && (int) ( $now['page_id'] ?? 0 ) === $page ) {

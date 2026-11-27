@@ -24,8 +24,8 @@ export function chipsOf( status, id = 0 ) {
 			: __( 'Imported', 'dx-ui' ),
 		title: status.built_with
 			/* translators: 1: a date, 2: the plugin version. */
-			? sprintf( __( 'Imported %1$s with DX %2$s. History shows every import.', 'dx-ui' ), dateOf( status.imported_at, true ), status.built_with )
-			: __( 'When the design was last imported. History shows every import.', 'dx-ui' ),
+			? sprintf( __( 'Imported %1$s with DX %2$s. History keeps the latest imports.', 'dx-ui' ), dateOf( status.imported_at, true ), status.built_with )
+			: __( 'When the design was last imported. History keeps the latest imports.', 'dx-ui' ),
 		href: to( 'history' ),
 	} );
 

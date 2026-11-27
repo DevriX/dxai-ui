@@ -247,6 +247,52 @@ echo 'preview_status=' . $previewed->get_status() . PHP_EOL;
 echo 'preview_has_html=' . ( ! empty( $preview_data['html'] ) ? 'yes' : 'no' ) . PHP_EOL;
 echo 'preview_has_css=' . ( ! empty( $preview_data['css'] ) ? 'yes' : 'no' ) . PHP_EOL;
 
+// History: every import keeps a snapshot of its own, the newest Structure_Repository::SNAPSHOTS_KEPT are kept, and a
+// restore keeps one marked with the snapshot it came from.
+$dxui_snapshots = static function ( int $page ): array {
+	return array_map(
+		'intval',
+		get_posts(
+			array(
+				'post_type'      => 'dxui_conversion',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'orderby'        => 'ID',
+				'order'          => 'DESC',
+				'meta_key'       => '_dx_ui_page_id',
+				'meta_value'     => (string) $page,
+			)
+		)
+	);
+};
+$first_conversion = (int) ( $created['conversion_id'] ?? 0 );
+$again_ids        = array();
+$again_pages      = array();
+for ( $i = 0; $i < 6; $i++ ) {
+	$again         = rest_do_request( $save );
+	$again_created = (array) ( $again->get_data()['structures'] ?? array() );
+	$again_ids[]   = (int) ( $again_created['conversion_id'] ?? 0 );
+	$again_pages[] = (int) ( $again_created['page_id'] ?? 0 );
+}
+$kept_after = $dxui_snapshots( $page_id );
+echo 'history_kept=' . implode( ',', $kept_after ) . PHP_EOL;
+
+$restore_from = (int) ( $kept_after[1] ?? 0 );
+$restore_req  = new WP_REST_Request( 'POST', '/dx-ui/v1/restore' );
+$restore_req->set_param( 'conversion_id', $restore_from );
+$restored      = rest_do_request( $restore_req );
+$restored_data = (array) $restored->get_data();
+$kept_restore  = $dxui_snapshots( $page_id );
+$history       = \DX_UI\Design\Design_Status::conversions( $page_id );
+echo 'history_restore_status=' . $restored->get_status() . ' kept=' . implode( ',', $kept_restore ) . PHP_EOL;
+
+$fewer = static fn(): int => 2;
+add_filter( 'dx_ui_snapshots_kept', $fewer );
+rest_do_request( $save );
+$kept_fewer = $dxui_snapshots( $page_id );
+remove_filter( 'dx_ui_snapshots_kept', $fewer );
+
 // What the save, the form, the library, the page-scoped save and the preview gave: each must be what a working site gives.
 $fail   = 0;
 $pass   = 0;
@@ -262,6 +308,11 @@ $expect( 'the library lists the page, its parts, its navigation and its conversi
 $expect( 'a blog list becomes a query loop, a slider and a form become their blocks', $blog_ok && $slider_ok && $form_ok );
 $expect( 'a page-scoped save makes its own page, header and footer', 200 === $page_res->get_status() && (int) ( $page_created['header_id'] ?? 0 ) > 0 && (int) ( $page_created['footer_id'] ?? 0 ) > 0 && (int) ( $page_created['page_id'] ?? 0 ) > 0 );
 $expect( 'the preview answers with HTML and CSS', 200 === $previewed->get_status() && ! empty( $preview_data['html'] ) && ! empty( $preview_data['css'] ) );
+$expect( 'every import of the same design writes the same page and a snapshot of its own', count( array_unique( $again_pages ) ) === 1 && $again_pages[0] === $page_id && count( array_unique( array_filter( $again_ids ) ) ) === 6 && min( $again_ids ) > $first_conversion );
+$expect( 'the newest ' . \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT . ' snapshots are kept, the older ones deleted', array_slice( array_reverse( $again_ids ), 0, \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT ) === $kept_after && ! get_post( $first_conversion ) && ! get_post( $again_ids[0] ) );
+$expect( 'a restore answers 200, writes the same page and keeps a snapshot of its own, marked with the one it came from', 200 === $restored->get_status() && (int) ( $restored_data['page']['id'] ?? 0 ) === $page_id && count( $kept_restore ) === \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT && $kept_restore[0] > $kept_after[0] && (int) get_post_meta( $kept_restore[0], '_dx_ui_restored_from', true ) === $restore_from );
+$expect( 'History lists the snapshots newest first, the restore naming its source, an import none', count( $history ) === count( $kept_restore ) && (int) ( $history[0]['id'] ?? 0 ) === $kept_restore[0] && (int) ( $history[0]['restored_from'] ?? 0 ) === $restore_from && '' !== (string) ( $history[0]['restored_date'] ?? '' ) && 0 === (int) ( $history[1]['restored_from'] ?? -1 ) );
+$expect( 'dx_ui_snapshots_kept keeps fewer', 2 === count( $kept_fewer ) && $kept_fewer[1] === $kept_restore[0] );
 
 dxui_verify_cleanup( $dxui_snapshot );
 echo "\n$pass passed, $fail failed\n";
