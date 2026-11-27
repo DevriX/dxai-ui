@@ -98,6 +98,7 @@
 		{ "file": "verify-chrome-flow.mjs", "group": "browser", "needs": "a browser and a test site" },
 		{ "file": "verify-editor-canvas.cjs", "group": "browser", "needs": "a browser, a test site and its editor" },
 		{ "file": "verify-import.cjs", "group": "browser", "needs": "a browser, design archives and the React oracle (see full-verification notes)" },
+		{ "file": "verify-picked-item.cjs", "group": "browser", "needs": "a browser and PHP (no site)" },
 		{ "file": "verify-rail.cjs", "group": "browser", "needs": "a browser and a test site" },
 		{ "file": "verify-reveal.cjs", "group": "browser", "needs": "a browser and PHP (no site); CI runs it in the static job" },
 		{ "file": "verify-video-facade-view.cjs", "group": "browser", "needs": "a browser and a test site" },

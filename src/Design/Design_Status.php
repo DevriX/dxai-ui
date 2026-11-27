@@ -15,6 +15,7 @@ use DX_UI\Content\Content_Types;
 use DX_UI\Pages\Menu_Pages;
 use DX_UI\Pages\Team_Pages;
 use DX_UI\Structures\Page_Scope;
+use DX_UI\Structures\Structure_Repository;
 use DX_UI\Theme\Theme_Binding;
 use DX_UI\Theme\Theme_Fonts;
 use DX_UI\Theme\Theme_Palette;
@@ -85,16 +86,19 @@ final class Design_Status {
 		);
 		if ( $items ) {
 			$out['items']       = $pages;
-			$out['conversions'] = self::conversions( $home );
+			$out['conversions']    = self::conversions( $home );
+			$out['snapshots_kept'] = Structure_Repository::snapshots_kept( $home );
 		}
 
 		return $out;
 	}
 
 	/**
-	 * The conversion snapshots of a design's Home, newest first: every import keeps one (Structure_Repository::save_conversion()).
+	 * The conversion snapshots of a design's Home, newest first: every import keeps one, and the newest
+	 * Structure_Repository::SNAPSHOTS_KEPT are kept (Structure_Repository::save_conversion()). A restore keeps one too, and
+	 * `restored_from` names the snapshot it wrote the Home from (0 for an import), with that one's date while it is still kept.
 	 *
-	 * @return array<int, array{id:int, title:string, date:string}>
+	 * @return array<int, array{id:int, title:string, date:string, restored_from:int, restored_date:string}>
 	 */
 	public static function conversions( int $home ): array {
 		$out = array();
@@ -109,11 +113,16 @@ final class Design_Status {
 				'meta_value'     => (string) $home, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		) as $post ) {
-			$date  = get_post_time( 'c', true, $post );
-			$out[] = array(
-				'id'    => (int) $post->ID,
-				'title' => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
-				'date'  => is_string( $date ) ? $date : '',
+			$date   = get_post_time( 'c', true, $post );
+			$from   = (int) get_post_meta( $post->ID, '_dx_ui_restored_from', true );
+			$source = $from > 0 ? get_post( $from ) : null;
+			$when   = $source instanceof \WP_Post && $source->post_type === Content_Types::CONVERSION ? get_post_time( 'c', true, $source ) : '';
+			$out[]  = array(
+				'id'            => (int) $post->ID,
+				'title'         => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
+				'date'          => is_string( $date ) ? $date : '',
+				'restored_from' => $from,
+				'restored_date' => is_string( $when ) ? $when : '',
 			);
 		}
 

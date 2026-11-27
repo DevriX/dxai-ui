@@ -1661,6 +1661,34 @@
 		return /^[a-z][a-z0-9]*$/.test( tag ) ? tag : 'span';
 	}
 
+	/*
+	 * A <textarea> holds text, not markup: rich text cannot edit inside one
+	 * (typing changed only the field, never the block, and the edit was lost
+	 * on save), so a textarea run is edited as a plain field. `content` holds
+	 * the element's innerHTML, as the parser reads it back, so the field is
+	 * given the text that markup stands for, and what is typed is stored as
+	 * the markup a textarea serializes it to. Both go through a textarea of
+	 * the browser's own, so `&`, `<`, `>` and a no-break space come out
+	 * escaped exactly as the block's `html` source will read them.
+	 *
+	 * A leading line break is not kept: the parser drops the first one after
+	 * `<textarea>`, so a saved one would be gone on reload and the block
+	 * would no longer match what save() writes for it.
+	 */
+	function dxuiTextareaValue( html ) {
+		const field = document.createElement( 'textarea' );
+		field.innerHTML = html || '';
+
+		return field.value;
+	}
+
+	function dxuiTextareaContent( value ) {
+		const field = document.createElement( 'textarea' );
+		field.textContent = String( value ).replace( /^(?:\r?\n)+/, '' );
+
+		return field.innerHTML;
+	}
+
 	// The serializer renders attributes in prop insertion order, so inserting
 	// them in the source's own order — attrOrder when the design's order was
 	// not the canonical one — is what keeps the saved element byte-identical to
@@ -1753,6 +1781,11 @@
 		edit: function ( props ) {
 			const a = props.attributes;
 			const tag = dxuiTextTag( a );
+			// The element save() writes — its attributes, the design's class
+			// and the dxs- class for its CSS — as the editable element.
+			const blockProps = useBlockProps( Object.assign( dxuiReactProps( dxuiTextProps( a ), tag ), {
+				className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/text' ) ) || undefined,
+			} ) );
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null,
 					el( PanelBody, { title: 'Text' },
@@ -1769,24 +1802,26 @@
 						} )
 					)
 				),
-				// The element save() writes — its attributes, the design's class
-				// and the dxs- class for its CSS — as the editable element.
-				el( RichText, Object.assign( {}, useBlockProps( Object.assign( dxuiReactProps( dxuiTextProps( a ), tag ), {
-					className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/text' ) ) || undefined,
-				} ) ), {
-					tagName: tag,
-					value: a.content || '',
-					// The design's own leaves carry no formatting, and letting
-					// one in would put markup the design never had inside a
-					// chip or a display number.
-					allowedFormats: [],
-					// `<span class="rv-obj-num"> 01 </span>` — the boundary
-					// space is layout. Without this, rich text trims it at the
-					// root and 92 of these leaves lose a space on first edit.
-					preserveWhiteSpace: true,
-					placeholder: a.placeholder || 'Text',
-					onChange: function ( value ) { props.setAttributes( { content: value } ); },
-				} ) )
+				tag === 'textarea'
+					? el( 'textarea', Object.assign( {}, blockProps, {
+						value: dxuiTextareaValue( a.content ),
+						placeholder: a.placeholder || 'Text',
+						onChange: function ( event ) { props.setAttributes( { content: dxuiTextareaContent( event.target.value ) } ); },
+					} ) )
+					: el( RichText, Object.assign( {}, blockProps, {
+						tagName: tag,
+						value: a.content || '',
+						// The design's own leaves carry no formatting, and letting
+						// one in would put markup the design never had inside a
+						// chip or a display number.
+						allowedFormats: [],
+						// `<span class="rv-obj-num"> 01 </span>` — the boundary
+						// space is layout. Without this, rich text trims it at the
+						// root and 92 of these leaves lose a space on first edit.
+						preserveWhiteSpace: true,
+						placeholder: a.placeholder || 'Text',
+						onChange: function ( value ) { props.setAttributes( { content: value } ); },
+					} ) )
 			);
 		},
 		save: function ( props ) {
@@ -1961,16 +1996,25 @@
 		edit: function ( props ) {
 			const a = props.attributes;
 			const tag = dxuiBoxTag( a );
-			const isVoid = DXUI_VOID_TAGS.indexOf( tag ) > -1;
+			/*
+			 * Drawn without children: a void element, and a <textarea>. React
+			 * writes a textarea's children into it as its text, so the block
+			 * list (an object) showed as "[object Object]" in an empty field.
+			 * A textarea box never holds text of its own (one with text is a
+			 * dx-ui/text), so it is drawn empty, as save() writes it.
+			 */
+			const isLeaf = DXUI_VOID_TAGS.indexOf( tag ) > -1 || tag === 'textarea';
 			// Every attribute save() writes, through the same builder — an
 			// <img> box without its src was a blank box, and a <details> box
 			// without `open` a closed one — plus the design's class and the
-			// dxs- class for its CSS. A void element has no editable children,
-			// so it keeps a real `disabled`.
-			const blockProps = useBlockProps( Object.assign( dxuiReactProps( dxuiBoxProps( a ), tag, { inert: isVoid } ), {
+			// dxs- class for its CSS. A leaf has no editable children, so it
+			// keeps a real `disabled`.
+			const blockProps = useBlockProps( Object.assign( dxuiReactProps( dxuiBoxProps( a ), tag, { inert: isLeaf } ), {
 				className: dxuiJoin( a.className, dxuiCanvasClass( a, 'dx-ui/box' ) ) || undefined,
 			} ) );
-			const inner = useInnerBlocksProps( blockProps, {} );
+			// A leaf takes no blocks: nothing can be inserted or dropped into it (List View included), since it could not show
+			// them and save() writes none.
+			const inner = useInnerBlocksProps( blockProps, isLeaf ? { allowedBlocks: [] } : {} );
 			const fields = [
 				el( TextControl, {
 					key: 'tag',
@@ -2010,14 +2054,21 @@
 			}
 			return el( wp.element.Fragment, null,
 				el( InspectorControls, null, el( PanelBody, { title: 'Box' }, fields ) ),
-				// A void element takes no children, in the editor as in save().
-				isVoid ? el( tag, blockProps ) : el( tag, inner )
+				// A leaf takes no children in the editor; save() writes a void
+				// element without them and a textarea box with none to write.
+				isLeaf ? el( tag, blockProps ) : el( tag, inner )
 			);
 		},
 		save: function ( props ) {
 			const a = props.attributes;
 			const tag = dxuiBoxTag( a );
-			if ( DXUI_VOID_TAGS.indexOf( tag ) > -1 ) {
+			/*
+			 * A void element has no children, and a textarea's would be its
+			 * text: blocks inside one reached the page as their own markup,
+			 * typed into the field. Neither writes any. A box with none writes
+			 * the same markup as before, so a stored post stays valid.
+			 */
+			if ( DXUI_VOID_TAGS.indexOf( tag ) > -1 || tag === 'textarea' ) {
 				return el( tag, dxuiHoist( dxuiBoxProps( a ), a ) );
 			}
 

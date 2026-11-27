@@ -40,6 +40,12 @@ final class Structure_Repository {
 		'widgets' => true,
 	);
 
+	/** How many conversion snapshots of a design's Home are kept (filter dx_ui_snapshots_kept); see prune_conversions(). */
+	public const SNAPSHOTS_KEPT = 5;
+
+	/** The snapshot restore() is writing the Home again from, while it saves; 0 otherwise. */
+	private int $restoring = 0;
+
 	/**
 	 * @param array<string, mixed> $result LLM generation result.
 	 * @return array<string, mixed>|\WP_Error
@@ -2318,7 +2324,17 @@ final class Structure_Repository {
 			$result['scope'] = 'site';
 		}
 
-		return $this->save( $result );
+		/*
+		 * The restore is saved as an import, and so keeps a snapshot of its own, marked with the one it came from: the newest
+		 * snapshot is then always what the Home was last written from, which is what Document_Store::rebuild() and the
+		 * design's "imported" date read.
+		 */
+		$this->restoring = $conversion_id;
+		try {
+			return $this->save( $result );
+		} finally {
+			$this->restoring = 0;
+		}
 	}
 
 	/**
@@ -2807,16 +2823,14 @@ final class Structure_Repository {
 			)
 		);
 
-		$page_id  = (int) ( $created['page_id'] ?? 0 );
-		$existing = get_posts(
-			array(
-				'post_type'      => Content_Types::CONVERSION,
-				'posts_per_page' => 1,
-				'post_status'    => 'any',
-				'meta_key'       => '_dx_ui_page_id',
-				'meta_value'     => (string) $page_id,
-			)
+		$page_id = (int) ( $created['page_id'] ?? 0 );
+		$meta    = array(
+			'_dx_ui_generated' => '1',
+			'_dx_ui_page_id'   => $page_id,
 		);
+		if ( $this->restoring > 0 ) {
+			$meta['_dx_ui_restored_from'] = $this->restoring;
+		}
 
 		$data = array(
 			'post_type'    => Content_Types::CONVERSION,
@@ -2835,20 +2849,63 @@ final class Structure_Repository {
 			 * page itself was never affected: that insert was already slashed.
 			 */
 			'post_content' => wp_slash( $payload ),
-			'meta_input'   => array(
-				'_dx_ui_generated' => '1',
-				'_dx_ui_page_id'   => $page_id,
-			),
+			'meta_input'   => $meta,
 		);
 
-		if ( isset( $existing[0] ) && $existing[0] instanceof \WP_Post ) {
-			$data['ID'] = $existing[0]->ID;
-			$id         = wp_update_post( $data, true );
-		} else {
-			$id = wp_insert_post( $data, true );
+		/*
+		 * A record of its own for every import, so the design's History lists
+		 * the imports before this one to go back to. It used to update the
+		 * page's one record in place: History showed a single row, the import
+		 * just made, and "Restore" could only write the Home again as it was.
+		 */
+		$id = wp_insert_post( $data, true );
+		if ( is_wp_error( $id ) ) {
+			return 0;
 		}
+		$this->prune_conversions( $page_id, (int) $id );
 
-		return is_wp_error( $id ) ? 0 : (int) $id;
+		return (int) $id;
+	}
+
+	/** How many conversion snapshots of a design's Home are kept, at least 1. */
+	public static function snapshots_kept( int $page_id ): int {
+		/*
+		 * How many snapshots of a design's Home are kept: the newest, the import just made, and the ones before it that the
+		 * design's History offers to restore. At least 1. A host short of database space can keep fewer.
+		 *
+		 * @param int $kept    5 by default.
+		 * @param int $page_id The design's Home.
+		 */
+		return max( 1, (int) apply_filters( 'dx_ui_snapshots_kept', self::SNAPSHOTS_KEPT, $page_id ) );
+	}
+
+	/**
+	 * Keep the newest snapshots of a page and delete the rest, the one just written included in the count.
+	 *
+	 * A whole site's snapshot is megabytes even compressed (Conversion_Snapshot), which is why the type keeps no revisions:
+	 * every import keeping one for good would grow the database without end.
+	 */
+	private function prune_conversions( int $page_id, int $kept_id ): void {
+		$keep = self::snapshots_kept( $page_id );
+		$ids  = get_posts(
+			array(
+				'post_type'        => Content_Types::CONVERSION,
+				'post_status'      => 'any',
+				'posts_per_page'   => -1,
+				'fields'           => 'ids',
+				'orderby'          => 'ID',
+				'order'            => 'DESC',
+				'no_found_rows'    => true,
+				'suppress_filters' => true,
+				'meta_key'         => '_dx_ui_page_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'       => (string) $page_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			)
+		);
+		foreach ( array_slice( array_map( 'intval', $ids ), $keep ) as $old ) {
+			if ( $old !== $kept_id ) {
+				wp_delete_post( $old, true );
+			}
+		}
 	}
 
 	/**

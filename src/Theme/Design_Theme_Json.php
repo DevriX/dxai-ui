@@ -107,19 +107,24 @@ final class Design_Theme_Json {
 		if ( $post_id < 1 || ! is_array( $design ) || (int) ( $design['page_id'] ?? 0 ) !== $post_id ) {
 			return;
 		}
-		$conversions = get_posts(
-			array(
-				'post_type'      => \DX_UI\Content\Content_Types::CONVERSION,
-				'post_status'    => 'publish',
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-				'posts_per_page' => 20,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
+		global $wpdb;
+		/*
+		 * Each design once, the one imported last first. A design keeps several snapshots, as many as
+		 * the dx_ui_snapshots_kept filter says, so a fixed number of snapshot rows could be filled by a
+		 * few designs and never reach an older one whose page is still published: the brand was then
+		 * cleared while a design that could hold it was on the site.
+		 */
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$pages = (array) $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT m.meta_value FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
+				WHERE p.post_type = %s AND p.post_status = 'publish' AND m.meta_key = '_dx_ui_page_id'
+				GROUP BY m.meta_value ORDER BY MAX(p.post_modified) DESC, MAX(p.ID) DESC",
+				\DX_UI\Content\Content_Types::CONVERSION
 			)
 		);
-		foreach ( $conversions as $conversion ) {
-			$page = (int) get_post_meta( (int) $conversion, '_dx_ui_page_id', true );
+		foreach ( $pages as $page ) {
+			$page = (int) $page;
 			if ( $page < 1 || $page === $post_id || get_post_status( $page ) !== 'publish' ) {
 				continue;
 			}

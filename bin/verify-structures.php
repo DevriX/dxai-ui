@@ -247,6 +247,85 @@ echo 'preview_status=' . $previewed->get_status() . PHP_EOL;
 echo 'preview_has_html=' . ( ! empty( $preview_data['html'] ) ? 'yes' : 'no' ) . PHP_EOL;
 echo 'preview_has_css=' . ( ! empty( $preview_data['css'] ) ? 'yes' : 'no' ) . PHP_EOL;
 
+// History: every import keeps a snapshot of its own, the newest Structure_Repository::SNAPSHOTS_KEPT are kept, and a
+// restore keeps one marked with the snapshot it came from.
+$dxui_snapshots = static function ( int $page ): array {
+	return array_map(
+		'intval',
+		get_posts(
+			array(
+				'post_type'      => 'dxui_conversion',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'orderby'        => 'ID',
+				'order'          => 'DESC',
+				'meta_key'       => '_dx_ui_page_id',
+				'meta_value'     => (string) $page,
+			)
+		)
+	);
+};
+$first_conversion = (int) ( $created['conversion_id'] ?? 0 );
+$again_ids        = array();
+$again_pages      = array();
+for ( $i = 0; $i < 6; $i++ ) {
+	$again         = rest_do_request( $save );
+	$again_created = (array) ( $again->get_data()['structures'] ?? array() );
+	$again_ids[]   = (int) ( $again_created['conversion_id'] ?? 0 );
+	$again_pages[] = (int) ( $again_created['page_id'] ?? 0 );
+}
+$kept_after = $dxui_snapshots( $page_id );
+echo 'history_kept=' . implode( ',', $kept_after ) . PHP_EOL;
+
+$restore_from = (int) ( $kept_after[1] ?? 0 );
+$restore_req  = new WP_REST_Request( 'POST', '/dx-ui/v1/restore' );
+$restore_req->set_param( 'conversion_id', $restore_from );
+$restored      = rest_do_request( $restore_req );
+$restored_data = (array) $restored->get_data();
+$kept_restore  = $dxui_snapshots( $page_id );
+$history       = \DX_UI\Design\Design_Status::conversions( $page_id );
+echo 'history_restore_status=' . $restored->get_status() . ' kept=' . implode( ',', $kept_restore ) . PHP_EOL;
+
+$fewer = static fn(): int => 2;
+add_filter( 'dx_ui_snapshots_kept', $fewer );
+rest_do_request( $save );
+$kept_fewer = $dxui_snapshots( $page_id );
+remove_filter( 'dx_ui_snapshots_kept', $fewer );
+
+// The brand's page goes to the trash: the brand passes to the design imported last whose page is still published, however
+// many snapshots the designs after it keep. Two designs with 60 each (the brand's, and a draft's) are newer than the one that
+// can take it; reading a fixed number of snapshot rows never reached it, and the brand was cleared.
+global $wpdb;
+$brand_before = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+$adopt_any    = static fn(): bool => true;
+add_filter( 'dx_ui_adopt_brand', $adopt_any );
+$brand_pages = array();
+foreach ( array( 'publish', 'draft', 'publish' ) as $k => $status ) {
+	$brand_pages[ $k ] = (int) wp_insert_post( array( 'post_type' => 'page', 'post_status' => $status, 'post_title' => 'Brand fixture ' . $k ) );
+	update_post_meta( $brand_pages[ $k ], \DX_UI\Compiler\Design_Tokens::META, array( 'brand' => '#11223' . $k ) );
+}
+[ $brand_page, $draft_page, $older_page ] = $brand_pages;
+// Dated ahead of every design the site holds, so the one that takes the brand is this fixture's, whatever else is there.
+$dated = static function ( int $id, string $when ) use ( $wpdb ): void {
+	$wpdb->update( $wpdb->posts, array( 'post_modified' => $when, 'post_modified_gmt' => $when ), array( 'ID' => $id ) );
+	clean_post_cache( $id );
+};
+$older_snapshot = (int) wp_insert_post( array( 'post_type' => 'dxui_conversion', 'post_status' => 'publish', 'post_title' => 'Older design', 'meta_input' => array( '_dx_ui_page_id' => $older_page ) ) );
+$dated( $older_snapshot, '2099-01-01 00:00:00' );
+for ( $i = 0; $i < 120; $i++ ) {
+	$dated( (int) wp_insert_post( array( 'post_type' => 'dxui_conversion', 'post_status' => 'publish', 'post_title' => 'Newer snapshot ' . $i, 'meta_input' => array( '_dx_ui_page_id' => $i % 2 ? $draft_page : $brand_page ) ) ), '2099-01-02 00:00:00' );
+}
+update_option( \DX_UI\Theme\Design_Theme_Json::OPTION, array( 'tokens' => array( 'brand' => '#112230' ), 'page_id' => $brand_page, 'source' => '' ), false );
+wp_trash_post( $brand_page );
+$brand_after = get_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+remove_filter( 'dx_ui_adopt_brand', $adopt_any );
+if ( false === $brand_before ) {
+	delete_option( \DX_UI\Theme\Design_Theme_Json::OPTION );
+} else {
+	update_option( \DX_UI\Theme\Design_Theme_Json::OPTION, $brand_before, false );
+}
+
 // What the save, the form, the library, the page-scoped save and the preview gave: each must be what a working site gives.
 $fail   = 0;
 $pass   = 0;
@@ -262,6 +341,12 @@ $expect( 'the library lists the page, its parts, its navigation and its conversi
 $expect( 'a blog list becomes a query loop, a slider and a form become their blocks', $blog_ok && $slider_ok && $form_ok );
 $expect( 'a page-scoped save makes its own page, header and footer', 200 === $page_res->get_status() && (int) ( $page_created['header_id'] ?? 0 ) > 0 && (int) ( $page_created['footer_id'] ?? 0 ) > 0 && (int) ( $page_created['page_id'] ?? 0 ) > 0 );
 $expect( 'the preview answers with HTML and CSS', 200 === $previewed->get_status() && ! empty( $preview_data['html'] ) && ! empty( $preview_data['css'] ) );
+$expect( 'every import of the same design writes the same page and a snapshot of its own', count( array_unique( $again_pages ) ) === 1 && $again_pages[0] === $page_id && count( array_unique( array_filter( $again_ids ) ) ) === 6 && min( $again_ids ) > $first_conversion );
+$expect( 'the newest ' . \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT . ' snapshots are kept, the older ones deleted', array_slice( array_reverse( $again_ids ), 0, \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT ) === $kept_after && ! get_post( $first_conversion ) && ! get_post( $again_ids[0] ) );
+$expect( 'a restore answers 200, writes the same page and keeps a snapshot of its own, marked with the one it came from', 200 === $restored->get_status() && (int) ( $restored_data['page']['id'] ?? 0 ) === $page_id && count( $kept_restore ) === \DX_UI\Structures\Structure_Repository::SNAPSHOTS_KEPT && $kept_restore[0] > $kept_after[0] && (int) get_post_meta( $kept_restore[0], '_dx_ui_restored_from', true ) === $restore_from );
+$expect( 'History lists the snapshots newest first, the restore naming its source, an import none', count( $history ) === count( $kept_restore ) && (int) ( $history[0]['id'] ?? 0 ) === $kept_restore[0] && (int) ( $history[0]['restored_from'] ?? 0 ) === $restore_from && '' !== (string) ( $history[0]['restored_date'] ?? '' ) && 0 === (int) ( $history[1]['restored_from'] ?? -1 ) );
+$expect( 'dx_ui_snapshots_kept keeps fewer', 2 === count( $kept_fewer ) && $kept_fewer[1] === $kept_restore[0] );
+$expect( 'the brand\'s page trashed: the brand passes to the latest design still published, past the snapshots of newer ones', is_array( $brand_after ) && (int) ( $brand_after['page_id'] ?? 0 ) === $older_page );
 
 dxui_verify_cleanup( $dxui_snapshot );
 echo "\n$pass passed, $fail failed\n";
