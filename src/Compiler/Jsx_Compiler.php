@@ -343,6 +343,31 @@ final class Jsx_Compiler {
 	private ?array $window_map = null;
 
 	/**
+	 * Items the component shows by an index a state holds: name => the list it is picked from and the state. `const d =
+	 * DELIVERABLES[active]` is one, with a tab per item that calls `setActive(i)`.
+	 *
+	 * @var array<string, array{source:string, state:string, list:array<int, mixed>}>
+	 */
+	private array $picks = array();
+
+	/**
+	 * Where the panel of each picked item starts in the component's JSX: the JSX the offsets are in, and offset => the item's
+	 * name (pick_panels_of()).
+	 *
+	 * @var array{src:string, at:array<int, string>}
+	 */
+	private array $pick_panels = array(
+		'src' => '',
+		'at'  => array(),
+	);
+
+	/** While a panel's copies are written: a copy is not copied again. */
+	private bool $in_pick = false;
+
+	/** The most items a picked panel is written for; a longer list keeps its starting item only. */
+	private const PICK_MAX = 24;
+
+	/**
 	 * States some handler prop actually assigns, for this component render.
 	 *
 	 * A projection with no transition is not a control, and marking one costs
@@ -533,6 +558,12 @@ final class Jsx_Compiler {
 		$this->state_init    = array();
 		$this->windows       = array();
 		$this->window_map    = null;
+		$this->picks         = array();
+		$this->pick_panels   = array(
+			'src' => '',
+			'at'  => array(),
+		);
+		$this->in_pick       = false;
 		$this->unresolved    = array();
 		$this->load_file( $source );
 		$this->load_imports( $source, $files );
@@ -1580,6 +1611,8 @@ final class Jsx_Compiler {
 		$prev_scroll  = $this->scroll_states;
 		$prev_derived = $this->derived;
 		$prev_windows = $this->windows;
+		$prev_picks   = $this->picks;
+		$prev_panels  = $this->pick_panels;
 
 		$scope   = array_merge( $this->globals, $props );
 		// `$props` as well as the merged scope: the rest element must collect the
@@ -1601,6 +1634,8 @@ final class Jsx_Compiler {
 		 * not have. React evaluates the guard; so does this now.
 		 */
 		$jsx     = $this->returns_early( $code, $scope ) ? '' : $this->extract_return_jsx( $code );
+		// The offsets are in the JSX as eval_jsx() reads it, trimmed.
+		$this->pick_panels = $this->pick_panels_of( trim( $jsx ) );
 		$html    = $jsx === '' ? '' : $this->eval_jsx( $jsx, $scope );
 
 		if ( $html !== '' && self::declares_reveal( $code ) ) {
@@ -1614,6 +1649,8 @@ final class Jsx_Compiler {
 		$this->scroll_states = $prev_scroll;
 		$this->derived       = $prev_derived;
 		$this->windows       = $prev_windows;
+		$this->picks         = $prev_picks;
+		$this->pick_panels   = $prev_panels;
 		--$this->depth;
 		return $html;
 	}
@@ -1993,6 +2030,7 @@ final class Jsx_Compiler {
 		$this->toggles    = array();
 		$this->driven     = array();
 		$this->windows    = array();
+		$this->picks      = array();
 
 		$prelude = $code;
 		if ( preg_match( '/\breturn\s*\(\s*</', $code, $hit, PREG_OFFSET_CAPTURE ) ) {
@@ -2292,8 +2330,200 @@ final class Jsx_Compiler {
 		}
 
 		$this->windows = $this->window_lists( $prelude, $scope );
+		$this->picks   = $this->picked_items( $prelude, $scope );
 
 		return $scope;
+	}
+
+	/**
+	 * The items a component shows by an index a state holds: `const d = DELIVERABLES[active]`, where active is a useState that
+	 * starts at a number, a handler writes it (the tabs), and the list is data the compiler has. The binding above evaluates the
+	 * item at the state's starting value, so the panel that shows it would keep the first item's words whichever tab is pressed;
+	 * the panel is written once per item instead (pick_panel()), and the state decides which copy shows.
+	 *
+	 * @param array<string, mixed> $scope
+	 * @return array<string, array{source:string, state:string, list:array<int, mixed>}>
+	 */
+	private function picked_items( string $prelude, array $scope ): array {
+		$out = array();
+		if ( ! preg_match_all( '/const\s+([A-Za-z_]\w*)\s*(?::[^=;\n]+)?=\s*([A-Za-z_]\w*)\s*\[\s*([A-Za-z_]\w*)\s*\]\s*;/', $prelude, $rows, PREG_SET_ORDER ) ) {
+			return $out;
+		}
+		foreach ( $rows as $row ) {
+			[ , $name, $source, $state ] = $row;
+			$list = $scope[ $source ] ?? null;
+			if ( ! isset( $this->toggles[ $state ], $this->driven[ $state ] ) || ! is_int( $this->state_init[ $state ] ?? null ) || ! is_array( $list ) || ! array_is_list( $list ) || count( $list ) < 2 || count( $list ) > self::PICK_MAX ) {
+				continue;
+			}
+			$out[ $name ] = array(
+				'source' => $source,
+				'state'  => $state,
+				'list'   => $list,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Where in a component's JSX the panel of each picked item starts: the element React remounts per item (`key={active}`)
+	 * when there is one around every use of the item, else the smallest element around every use. Uses are read in `{…}`
+	 * expressions only, so a word in the copy that spells the same is not one. An element is found by a scan of the tags that
+	 * steps over every `{…}` whole: an element written inside an expression (a `.map()` callback's) is part of the expression.
+	 *
+	 * @return array{src:string, at:array<int, string>}
+	 */
+	private function pick_panels_of( string $jsx ): array {
+		$out = array(
+			'src' => $jsx,
+			'at'  => array(),
+		);
+		if ( $this->picks === array() || $jsx === '' ) {
+			return $out;
+		}
+		$spans = array(); // [start, end, opening tag]
+		$uses  = array(); // name => offsets
+		$stack = array();
+		$len   = strlen( $jsx );
+		$read  = function ( int $open ) use ( $jsx, &$uses ): int {
+			$close = $this->match_pair( $jsx, $open );
+			if ( $close < 0 ) {
+				return -1;
+			}
+			$expr = substr( $jsx, $open, $close - $open + 1 );
+			foreach ( array_keys( $this->picks ) as $name ) {
+				if ( preg_match_all( '/(?<![\w$.])' . preg_quote( $name, '/' ) . '(?![\w$])/', $expr, $hits, PREG_OFFSET_CAPTURE ) ) {
+					foreach ( $hits[0] as $hit ) {
+						$uses[ $name ][] = $open + (int) $hit[1];
+					}
+				}
+			}
+
+			return $close;
+		};
+		$i = 0;
+		while ( $i < $len ) {
+			$ch = $jsx[ $i ];
+			if ( $ch === '{' ) {
+				$close = $read( $i );
+				if ( $close < 0 ) {
+					return $out;
+				}
+				$i = $close + 1;
+				continue;
+			}
+			if ( $ch !== '<' ) {
+				++$i;
+				continue;
+			}
+			if ( ( $jsx[ $i + 1 ] ?? '' ) === '/' ) {
+				$close = strpos( $jsx, '>', $i );
+				if ( $close === false ) {
+					return $out;
+				}
+				$open = array_pop( $stack );
+				if ( is_array( $open ) ) {
+					$spans[] = array( $open[0], $close, $open[1] );
+				}
+				$i = $close + 1;
+				continue;
+			}
+			// The opening tag, its attribute expressions and quoted values stepped over whole.
+			$j = $i + 1;
+			while ( $j < $len && $jsx[ $j ] !== '>' ) {
+				$c = $jsx[ $j ];
+				if ( $c === '{' ) {
+					$close = $read( $j );
+					if ( $close < 0 ) {
+						return $out;
+					}
+					$j = $close + 1;
+					continue;
+				}
+				if ( $c === '"' || $c === "'" ) {
+					$quote = strpos( $jsx, $c, $j + 1 );
+					if ( $quote === false ) {
+						return $out;
+					}
+					$j = $quote + 1;
+					continue;
+				}
+				++$j;
+			}
+			if ( $j >= $len ) {
+				return $out;
+			}
+			$tag = substr( $jsx, $i, $j - $i + 1 );
+			if ( $jsx[ $j - 1 ] === '/' ) {
+				$spans[] = array( $i, $j, $tag );
+			} else {
+				$stack[] = array( $i, $tag );
+			}
+			$i = $j + 1;
+		}
+
+		foreach ( $this->picks as $name => $pick ) {
+			if ( empty( $uses[ $name ] ) ) {
+				continue;
+			}
+			$first  = min( $uses[ $name ] );
+			$last   = max( $uses[ $name ] );
+			$keyed  = -1;
+			$around = -1;
+			foreach ( $spans as $span ) {
+				if ( $span[0] > $first || $span[1] < $last ) {
+					continue;
+				}
+				// Spans around the same uses nest, so the one that starts last is the smallest.
+				$around = max( $around, $span[0] );
+				if ( preg_match( '/\skey=\{\s*' . preg_quote( $pick['state'], '/' ) . '\s*\}/', $span[2] ) === 1 ) {
+					$keyed = max( $keyed, $span[0] );
+				}
+			}
+			$at = $keyed >= 0 ? $keyed : $around;
+			if ( $at >= 0 && ! isset( $out['at'][ $at ] ) ) {
+				$out['at'][ $at ] = $name;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * A picked item's panel, cursor on its `<`: written once per item of the list, each copy read with the item and the state's
+	 * value it is picked at (so `D-{active + 1}` in it reads its own number too), and shown for that value. The copies that do
+	 * not show at first are hidden and carry no id: the starting copy keeps the ids the design gave the panel.
+	 *
+	 * @param array<string, mixed> $scope
+	 */
+	private function pick_panel( string $name, array $scope ): string {
+		$pick  = $this->picks[ $name ];
+		$state = $pick['state'];
+		$init  = (int) ( $this->state_init[ $state ] ?? 0 );
+		$start = $this->i;
+		$end   = $start;
+		$html  = '';
+		$this->in_pick = true;
+		try {
+			foreach ( array_values( $pick['list'] ) as $k => $item ) {
+				$this->i         = $start;
+				$local           = $scope;
+				$local[ $name ]  = $item;
+				$local[ $state ] = $k;
+				$part            = $this->parse_element( $local );
+				$end             = $this->i;
+				$part            = self::add_class( $part, 'dxui-on-' . sanitize_html_class( $state ) . '--' . $k );
+				if ( $k !== $init ) {
+					$part = (string) preg_replace( '/\sid="[^"]*"/', '', self::add_class( $part, 'hidden' ) );
+				}
+				$html .= $part;
+			}
+		} finally {
+			$this->in_pick = false;
+		}
+		$this->i = $end;
+
+		return $html;
 	}
 
 	/**
@@ -2489,9 +2719,11 @@ final class Jsx_Compiler {
 		$scroll  = $this->scroll_states;
 		$derived = $this->derived;
 		$windows = $this->windows;
+		$picks   = $this->picks;
 
 		$scope = $this->bind_prelude( $code, $scope );
 
+		$this->picks         = $picks;
 		$this->setters       = $setters;
 		$this->toggles       = $toggles;
 		$this->driven        = $driven;
@@ -3330,6 +3562,9 @@ final class Jsx_Compiler {
 			'driven'         => $this->driven,
 			'state_init'     => $this->state_init,
 			'windows'        => $this->windows,
+			'picks'          => $this->picks,
+			'pick_panels'    => $this->pick_panels,
+			'in_pick'        => $this->in_pick,
 		);
 		try {
 			$html = $this->parse_jsx( $scope );
@@ -3857,6 +4092,10 @@ final class Jsx_Compiler {
 		$this->ws();
 		if ( $this->peek() !== '<' ) {
 			return '';
+		}
+		// The panel of an item a state picks: written once per item (pick_panel()).
+		if ( ! $this->in_pick && isset( $this->pick_panels['at'][ $this->i ] ) && $this->src === $this->pick_panels['src'] ) {
+			return $this->pick_panel( $this->pick_panels['at'][ $this->i ], $scope );
 		}
 		++$this->i;
 		if ( $this->peek() === '>' ) {
